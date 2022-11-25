@@ -1,0 +1,148 @@
+.container {
+    width: clamp(300px, 50%, 500px);
+    aspect-ratio: 8 / 16;
+    border-radius: 5px;
+    background-color: var(--background-secondary);
+}
+
+/**
+* Display
+**/
+
+.display {
+    height: 32%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    background-color: var(--background-tertiary);
+    border-radius: 5px 5px 15px 15px;
+}
+
+.display > div {
+    padding-right: 5%;
+    display: flex;
+    align-items: center;
+}
+
+.displaySettings {
+    height: 20%;
+}
+
+.displayString {
+    height: 50%;
+    width: 100%;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    font-size: 3.5rem;
+    text-align: end;
+    padding: 0 5%;
+    color: var(--foreground-primary);
+}
+
+.displayResult {
+    height: 30%;
+    padding-bottom: 5%;
+}
+
+/**
+* Secondary Button
+**/
+
+.secondaryButtons {
+    height: 10%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5%;
+    padding: 4%;
+}
+
+.secondaryButtonsGrid {
+    width: 90%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2%;
+    align-items: center;
+    justify-items: center;
+}
+
+.secondaryButton {
+    width: 100%;
+    height: 180%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    cursor: pointer;
+    color: var(--foreground-primary);
+    border-radius: 100vw;
+    border: none;
+    font-size: 1.1rem;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.secondaryButton:hover {
+    background-color: var(--background-primary);
+}
+
+.secondaryButtonHidden {
+    display: none;
+}
+
+.dropDownButton {
+    width: 10%;
+    height: fit-content;
+    display: flex;
+    fill: var(--foreground-primary);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background-color: var(--background-primary);
+    border-radius: 50%;
+    aspect-ratio: 1 / 1;
+}
+
+.dropDownIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/**
+* Primary Button
+**/
+
+.primaryButtons {
+    height: 58%;
+    padding: 0 5% 5% 5%;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    gap: 2%;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.primaryButton,
+.primaryButtonClear,
+.primaryButtonOperator {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-primary);
+    cursor: pointer;
+    color: var(--foreground-primary);
+    border-radius: 50%;
+    border: none;
+    font-size: 1.1rem;
+}
+
+.primaryButtonClear {
+    background-color: var(--accent-secondary);
+}
+
+.primaryButtonOperator {
+    background-color: var(--accent-primary);
+}
