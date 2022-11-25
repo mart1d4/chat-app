@@ -1,4 +1,10 @@
 {
+    "author": {
+        "name": "Martin Danton",
+        "email": "mart1danton@gmail.com",
+        "url": "https://mart1d4.com"
+    },
+    "description": "A simple and fast calculator",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
