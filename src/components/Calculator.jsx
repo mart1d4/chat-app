@@ -76,7 +76,7 @@ const Calculator = () => {
                     type='text'
                     className={styles.displayString}
                     value={string}
-                    onChange={(e) => setString(e.target.button)}
+                    onChange={(e) => setString(prev => prev + e.target.value)}
                 />
                 
                 <div
@@ -85,16 +85,24 @@ const Calculator = () => {
                     {
                         isNaN(result) || result === Infinity || result === -Infinity
                             ? ''
-                            : result
+                            : result.toLocaleString()
                     }
                 </div>
             </div>
 
             <div
-                className={styles.secondaryButtons}
+                className={
+                    !displayOtherSecondaryButtons
+                        ? styles.secondaryButtons
+                        : styles.secondaryButtonsExtended
+                }
             >
                 <div
-                    className={styles.secondaryButtonsGrid}
+                    className={
+                        !displayOtherSecondaryButtons
+                            ? styles.secondaryButtonsGrid
+                            : styles.secondaryButtonsGridExtended
+                    }
                 >
                     {secondaryButtons.map((button, index) => (
                         <button
@@ -112,18 +120,23 @@ const Calculator = () => {
 
                 <button
                     className={styles.dropDownButton}
+                    onClick={() => setDisplayOtherSecondaryButtons(prev => !prev)}
                 >
                     <svg
                         xmlns='http://www.w3.org/2000/svg'
                         className={styles.dropDownIcon}
                     >
-                        <path d='M12 14.375q-.15 0-.287-.05-.138-.05-.288-.2L7.05 9.75q-.175-.175-.175-.363 0-.187.175-.337.15-.175.35-.175.2 0 .35.175L12 13.275l4.25-4.25q.15-.15.35-.15.2 0 .35.175.175.15.175.35 0 .2-.175.35l-4.375 4.375q-.15.15-.287.2-.138.05-.288.05Z'/>
+                        <path d='M12 14.375q-.15 0-.287-.05-.138-.05-.288-.2L7.05 9.75q-.175-.175-.175-.363 0-.187.175-.337.15-.175.35-.175.2 0 .35.175L12 13.275l4.25-4.25q.15-.15.35-.15.2 0 .35.175.175.15.175.35 0 .2-.175.35l-4.375 4.375q-.15.15-.287.2-.138.05-.288.05Z' />
                     </svg>
                 </button>
             </div>
 
             <div
-                className={styles.primaryButtons}
+                className={
+                    !displayOtherSecondaryButtons
+                        ? styles.primaryButtons
+                        : styles.primaryButtonsShrink
+                }
             >
                 {primaryButtons.map((button, index) => (
                     <button

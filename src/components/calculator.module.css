@@ -34,7 +34,7 @@
     background-color: transparent;
     outline: none;
     border: none;
-    font-size: 3.5rem;
+    font-size: 3rem;
     text-align: end;
     padding: 0 5%;
     color: var(--foreground-primary);
@@ -43,22 +43,30 @@
 .displayResult {
     height: 30%;
     padding-bottom: 5%;
+    font-size: 2.5rem;
 }
 
 /**
 * Secondary Button
 **/
 
-.secondaryButtons {
+.secondaryButtons,
+.secondaryButtonsExtended {
     height: 10%;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     gap: 5%;
     padding: 4%;
 }
 
-.secondaryButtonsGrid {
+.secondaryButtonsExtended {
+    animation: extended 0.2s ease-in-out;
+    height: 23%;
+}
+
+.secondaryButtonsGrid,
+.secondaryButtonsGridExtended {
     width: 90%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -69,7 +77,7 @@
 
 .secondaryButton {
     width: 100%;
-    height: 180%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -91,6 +99,7 @@
 }
 
 .dropDownButton {
+    margin-top: 2%;
     width: 10%;
     height: fit-content;
     display: flex;
@@ -104,6 +113,11 @@
     aspect-ratio: 1 / 1;
 }
 
+.secondaryButtonsExtended .dropDownButton {
+    animation: rotate 0.2s ease-in-out;
+    transform: rotate(-180deg);
+}
+
 .dropDownIcon {
     width: 24px;
     height: 24px;
@@ -113,7 +127,8 @@
 * Primary Button
 **/
 
-.primaryButtons {
+.primaryButtons,
+.primaryButtonsShrink {
     height: 58%;
     padding: 0 5% 5% 5%;
     display: grid;
@@ -121,6 +136,11 @@
     justify-items: center;
     gap: 2%;
     grid-template-columns: repeat(4, 1fr);
+}
+
+.primaryButtonsShrink {
+    animation: shrink 0.2s ease-in-out;
+    height: 45%;
 }
 
 .primaryButton,
@@ -136,7 +156,14 @@
     color: var(--foreground-primary);
     border-radius: 50%;
     border: none;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+}
+
+.primaryButtonsShrink > .primaryButton,
+.primaryButtonsShrink > .primaryButtonClear,
+.primaryButtonsShrink > .primaryButtonOperator {
+    border-radius: 25px;
+    font-size: 1.2rem;
 }
 
 .primaryButtonClear {
@@ -145,4 +172,35 @@
 
 .primaryButtonOperator {
     background-color: var(--accent-primary);
+}
+
+/**
+* Keyframes
+**/
+
+@keyframes shrink {
+    from {
+        height: 58%;
+    }
+    to {
+        height: 45%;
+    }
+}
+
+@keyframes extended {
+    from {
+        height: 10%;
+    }
+    to {
+        height: 23%;
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-180deg);
+    }
 }
