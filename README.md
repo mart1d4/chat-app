@@ -14,7 +14,7 @@ To run this project, you need to have [Node.js](https://nodejs.org/en/) installe
 Clone the repository:
 
 ```bash
-git clone ...
+git clone git@github.com:mart1d4/next-calculator.git
 ```
 
 Install the dependencies:
