@@ -1,2 +1,7 @@
-.next
-node_modules
+**/node_modules
+**.next
+**.env
+**.DS_Store
+**.vercel
+**.git
+.vercel
