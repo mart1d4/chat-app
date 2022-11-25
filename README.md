@@ -1,7 +1,7 @@
 # Next Calculator
 
 This project was bootstrapped with [Next.js](https://nextjs.org/) and uses [React](https://reactjs.org/).<br>
-It is hosted [here](https://vercel.app.com) on [Vercel](https://vercel.com/).
+It is hosted [here](https://next-calculator-three.vercel.app) on [Vercel](https://vercel.com/).
 
 # A simple yet powerful calculator
 
