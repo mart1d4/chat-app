@@ -15,8 +15,14 @@
     box-sizing: border-box;
 }
 
+*::selection {
+    background-color: var(--accent-primary);
+    color: var(--foreground-primary);
+}
+
 html,
-body {
+body,
+#__next {
     width: 100%;
     height: 100%;
     display: flex;

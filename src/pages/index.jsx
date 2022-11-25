@@ -6,7 +6,7 @@ const Main = () => {
         <>
             <Head>
                 <title>Calculator</title>
-                <link rel='icon' href='/favicon.svg' />
+                <link rel='icon' href='/images/favicon.webp' />
             </Head>
             <Calculator />
         </>

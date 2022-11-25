@@ -1,5 +1,6 @@
 .container {
-    width: clamp(300px, 50%, 500px);
+    height: 100vh;
+    max-width: 100vw;
     aspect-ratio: 8 / 16;
     border-radius: 5px;
     background-color: var(--background-secondary);
@@ -19,13 +20,33 @@
 }
 
 .display > div {
-    padding-right: 5%;
     display: flex;
     align-items: center;
 }
 
 .displaySettings {
     height: 20%;
+}
+
+.displaySettings button {
+    display: flex;
+    width: fit-content;
+    height: fit-content;
+    cursor: pointer;
+    background-color: transparent;
+    border-radius: 50%;
+    border: none;
+    padding: 0.2rem;
+}
+
+.displaySettings button:hover {
+    background-color: var(--background-primary);
+}
+
+.settingsIcon {
+    width: 24px;
+    height: 24px;
+    fill: var(--foreground-primary);
 }
 
 .displayString {
@@ -43,6 +64,7 @@
 .displayResult {
     height: 30%;
     padding-bottom: 5%;
+    padding-right: 5%;
     font-size: 2.5rem;
 }
 
@@ -111,6 +133,11 @@
     background-color: var(--background-primary);
     border-radius: 50%;
     aspect-ratio: 1 / 1;
+}
+
+.secondaryButtons .dropDownButton {
+    animation: rotate2 0.2s ease-in-out;
+    transform: rotate(0deg);
 }
 
 .secondaryButtonsExtended .dropDownButton {
@@ -202,5 +229,14 @@
     }
     to {
         transform: rotate(-180deg);
+    }
+}
+
+@keyframes rotat2e {
+    from {
+        transform: rotate(-180deg);
+    }
+    to {
+        transform: rotate(0deg);
     }
 }
