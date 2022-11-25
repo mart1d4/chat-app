@@ -11,10 +11,11 @@ This is a simple calculator that can do basic math operations and some more adva
 
 To run this project, you need to have [Node.js](https://nodejs.org/en/) installed on your computer. After that, you can run the following commands:
 
-Clone the repository:
+Clone the repository and cd into it:
 
 ```bash
 git clone git@github.com:mart1d4/next-calculator.git
+cd next-calculator
 ```
 
 Install the dependencies:
