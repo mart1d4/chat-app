@@ -24,7 +24,8 @@ const Calculator = () => {
     const [result, setResult] = useState('');
 
     const handleButtonClick = (button) => {
-        if (operators.includes(string[string.length-1]) && operators.includes(button)) {
+        if (operators.includes(string[string.length - 1]) && operators.includes(button)
+            || string === '' && operators.includes(button)) {
             return;
         }
         if (button === 'AC') {
@@ -97,14 +98,6 @@ const Calculator = () => {
             const result = calculateFromArray(newArray);
             setResult(result);
         }
-
-        const input = document.querySelector('input');
-
-        // if (string.length > 16) input.style.fontSize = '1.5rem';
-        // else if (string.length > 10) input.style.fontSize = '2.5rem';
-        // else if (string.length > 8) input.style.fontSize = '3.5rem';
-        // else if (string.length > 6) input.style.fontSize = '4.5rem';
-        // else input.style.fontSize = '5rem';
     }, [string]);
 
     return (
@@ -130,7 +123,7 @@ const Calculator = () => {
                 <input
                     type='text'
                     className={styles.displayString}
-                    value={string.toLocaleString()}
+                    value={string.replace(/·/g, '.').toLocaleString()}
                     onKeyDown={handleInput}
                 />
                 
