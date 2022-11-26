@@ -16,7 +16,7 @@ const primaryButtons = [
     '0', '·', 'd', '='
 ];
 
-const operators = ['+', '-', '*', '×', '/', '÷', '^', '%', '( )', '√', '!', 'π', 'e', 'ln', 'log', 'sin', 'cos', 'tan'];
+const operators = ['+', '-', '*', '×', '/', '÷', '^', '%', '( )', '(', ')', '√', 's', '!', 'π', 'p', 'e', 'ln', 'log', 'sin', 'cos', 'tan',];
 
 const Calculator = () => {
     const [displayOtherSecondaryButtons, setDisplayOtherSecondaryButtons] = useState(false);
@@ -24,6 +24,9 @@ const Calculator = () => {
     const [result, setResult] = useState('');
 
     const handleButtonClick = (button) => {
+        if (operators.includes(string[string.length-1]) && operators.includes(button)) {
+            return;
+        }
         if (button === 'AC') {
             setString('');
             setResult('');
@@ -34,6 +37,43 @@ const Calculator = () => {
             setString(string.slice(0, -1));
         } else {
             setString(string + button);
+        }
+    }
+
+    const handleInput = (e) => {
+        if (operators.includes(string[string.length-1]) && operators.includes(e.key)) {
+            return;
+        }
+        if (e.key === 'Enter') {
+            setString(result.toString());
+            setResult('');
+        } else if (e.key === 'Backspace') {
+            setString(string.slice(0, -1));
+        } else if (e.key === 'Escape') {
+            setString('');
+            setResult('');
+        } else if (e.key === ' ' || e.key === '.') {
+            setString(string + '·');
+        } else if (
+            e.key === '0' || e.key === '1'
+            || e.key === '2' || e.key === '3'
+            || e.key === '4' || e.key === '5'
+            || e.key === '6' || e.key === '7'
+            || e.key === '8' || e.key === '9'
+            || e.key === '+' || e.key === '-'
+            || e.key === '^' || e.key === '%'
+            || e.key === '(' || e.key === ')'
+            || e.key === '!' || e.key === 'e'
+        ) {
+            setString(string + e.key);
+        } else if (e.key === '*') {
+            setString(string + '×');
+        } else if (e.key === '/') {
+            setString(string + '÷');
+        } else if (e.key === 's') {
+            setString(string + '√');
+        } else if (e.key === 'p') {
+            setString(string + 'π');
         }
     }
 
@@ -57,6 +97,14 @@ const Calculator = () => {
             const result = calculateFromArray(newArray);
             setResult(result);
         }
+
+        const input = document.querySelector('input');
+
+        // if (string.length > 16) input.style.fontSize = '1.5rem';
+        // else if (string.length > 10) input.style.fontSize = '2.5rem';
+        // else if (string.length > 8) input.style.fontSize = '3.5rem';
+        // else if (string.length > 6) input.style.fontSize = '4.5rem';
+        // else input.style.fontSize = '5rem';
     }, [string]);
 
     return (
@@ -82,19 +130,20 @@ const Calculator = () => {
                 <input
                     type='text'
                     className={styles.displayString}
-                    value={string}
-                    onChange={(e) => setString(prev => prev + e.target.value)}
+                    value={string.toLocaleString()}
+                    onKeyDown={handleInput}
                 />
                 
-                <div
+                <input
+                    type='text'
                     className={styles.displayResult}
-                >
-                    {
+                    value={
                         isNaN(result) || result === Infinity || result === -Infinity
                             ? ''
-                            : result.toLocaleString()
+                            : result.toLocaleString()   
                     }
-                </div>
+                    readOnly
+                />
             </div>
 
             <div

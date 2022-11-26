@@ -1,5 +1,5 @@
 .container {
-    height: 100vh;
+    height: 95vh;
     max-width: 100vw;
     aspect-ratio: 8 / 16;
     border-radius: 5px;
@@ -50,22 +50,30 @@
 }
 
 .displayString {
+    container-type: inline-size;
     height: 50%;
     width: 100%;
     background-color: transparent;
     outline: none;
     border: none;
-    font-size: 3rem;
+    font-size: 5cqw;
     text-align: end;
     padding: 0 5%;
     color: var(--foreground-primary);
+    animation: font-size 0.5s ease-in-out;
 }
 
 .displayResult {
+    background-color: transparent;
+    outline: none;
+    border: none;
     height: 30%;
+    max-width: 100%;
     padding-bottom: 5%;
     padding-right: 5%;
     font-size: 2.5rem;
+    color: var(--foreground-primary);
+    text-align: end;
 }
 
 /**
@@ -184,6 +192,13 @@
     border-radius: 50%;
     border: none;
     font-size: 1.5rem;
+    transition: border-radius 0.2s ease-in-out;
+}
+
+.primaryButton:active,
+.primaryButtonClear:active,
+.primaryButtonOperator:active {
+    border-radius: 25%;
 }
 
 .primaryButtonsShrink > .primaryButton,
@@ -191,6 +206,12 @@
 .primaryButtonsShrink > .primaryButtonOperator {
     border-radius: 25px;
     font-size: 1.2rem;
+}
+
+.primaryButtonsShrink > .primaryButton:active,
+.primaryButtonsShrink > .primaryButtonClear:active,
+.primaryButtonsShrink > .primaryButtonOperator:active {
+    border-radius: 10px;
 }
 
 .primaryButtonClear {
