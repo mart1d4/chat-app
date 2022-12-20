@@ -1,19 +1,28 @@
 {
-    "author": {
-        "name": "Martin Danton",
-        "email": "mart1danton@gmail.com",
-        "url": "https://mart1d4.com"
-    },
-    "description": "A simple and fast calculator",
-    "scripts": {
-        "dev": "next dev",
-        "build": "next build",
-        "start": "next start"
-    },
-    "dependencies": {
-        "@vercel/analytics": "^0.1.5",
-        "next": "^13.0.5",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
-    }
+  "author": "Martin Danton <mart1danton@gmail.com> (https://mart1d4.com)",
+  "description": "A simple and fast calculator",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^0.1.5",
+    "next": "^13.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "name": "next-calculator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mart1d4/next-calculator.git"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mart1d4/next-calculator/issues"
+  },
+  "homepage": "https://github.com/mart1d4/next-calculator#readme"
 }
