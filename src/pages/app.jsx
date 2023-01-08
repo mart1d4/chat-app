@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import styles from "../styles/App.module.css";
 import { useRouter } from "next/router";
-import { Nav } from '../components';
+import { AppNav } from '../components';
 
 const app = () => {
     const { auth } = useAuth();
@@ -16,7 +16,7 @@ const app = () => {
         <div
             className={styles.main}
         >
-            <Nav />
+            <AppNav />
             <div
                 className={styles.content}
             >

@@ -23,6 +23,10 @@ const convSchema = new Schema(
                     type: Date,
                     default: Date.now,
                 },
+                edited: {
+                    type: Boolean,
+                    default: false,
+                },
             },
         ],
     },

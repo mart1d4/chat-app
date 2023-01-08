@@ -4,14 +4,14 @@
     align-items: center;
     justify-content: space-between;
     height: 100vh;
-    width: 80px;
+    width: 70px;
     background: var(--background-primary);
     color: white;
     padding: 1rem 0;
 }
 
 .logo svg {
-    width: 64px;
+    width: 54px;
     aspect-ratio: 1;
     stroke-width: 1;
 }
@@ -40,14 +40,6 @@
 .account {
     position: relative;
     display: flex;
-}
-
-.account > div:first-child {
-    width: 35px;
-}
-
-.avatar:hover {
-    background: var(--background-secondary);
 }
 
 .menu {

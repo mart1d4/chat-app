@@ -1,0 +1,123 @@
+.searchContainer {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem;
+    border-bottom: 1px solid var(--background-primary);
+    box-shadow: 0 1px 3px 0 var(--background-primary);
+}
+
+.searchContainer > div {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.search {
+    width: 100%;
+    height: 100%;
+    padding: 0 0.5rem;
+    background-color: var(--background-primary);
+    border-radius: 5px;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.search:focus {
+    outline: none;
+}
+
+.searchButton {
+    height: 100%;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    padding: 0 0.5rem;
+}
+
+.searchButton > svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.friends {
+    width: 245px;
+    height: 100vh;
+    background-color: var(--background-secondary);
+    user-select: none;
+}
+
+.friendsList {
+    width: 100%;
+    height: calc(100% - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+    list-style: none;
+    color: #96989D;
+}
+
+.link,
+.friendsLink {
+    width: 100%;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #96989D;
+    margin-bottom: 2px;
+}
+
+.friendsLink {
+    margin-bottom: 1rem;
+}
+
+.title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.title:hover {
+    color: #fff;
+}
+
+.link:hover,
+.friendsLink:hover {
+    background-color: var(--background-tertiary);
+}
+
+.avatarContainer {
+    margin-right: 12px;
+}
+
+.friendUsername {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #96989D;
+    font-size: 16px;
+}
+
+.friendUsername span {
+    font-size: 12px;
+}
+
+.requests {
+    width: calc(100% - 300px);
+    height: 100vh;
+    background-color: var(--background-primary);
+}

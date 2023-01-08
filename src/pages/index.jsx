@@ -1,4 +1,4 @@
-import { Home } from '../components';
+import { Header, Main, Footer } from '../components';
 import Head from 'next/head';
 
 const Index = () => {
@@ -8,7 +8,9 @@ const Index = () => {
                 <title>Unthrust | Chat with your friends</title>
                 <link rel='icon' href='/images/favicon.svg' />
             </Head>
-            <Home />
+            <Header />
+            <Main />
+            <Footer />
         </>
     );
 }

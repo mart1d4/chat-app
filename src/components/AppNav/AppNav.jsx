@@ -1,9 +1,9 @@
 import Link from "next/link";
-import styles from "./Nav.module.css";
+import styles from "./AppNav.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import icons from "../../../public/icons/icons";
-import { Tooltip, Avatar } from "../";
+import { Tooltip, Avatar } from "..";
 import { useRef, useState, useEffect } from "react";
 import useLogout from "../../hooks/useLogout";
 
@@ -30,7 +30,7 @@ const navLinks = [
     },
 ];
 
-const Nav = () => {
+const AppNav = () => {
     const { auth } = useAuth();
     const [show, setShow] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
@@ -49,6 +49,14 @@ const Nav = () => {
         };
     }, []);
 
+    const handleRoute = () => {
+        if (localStorage.getItem("url")) {
+            window.location.href = localStorage.getItem("url");
+        } else {
+            window.location.href = "/friends";
+        }
+    };
+
     return (
         <nav className={styles.nav}>
             <div className={styles.logo}>
@@ -66,31 +74,45 @@ const Nav = () => {
                         pos="right"
                         arrow
                     >
-                        <Link
-                            href={link.path}
-                            className={styles.link}
-                            onMouseEnter={() => setShow(index)}
-                            onMouseLeave={() => setShow(null)}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
+                        {link.name === "Friends" ? (
+                            <li
+                                className={styles.link}
+                                onMouseEnter={() => setShow(index)}
+                                onMouseLeave={() => setShow(null)}
+                                onClick={() => handleRoute()}
                             >
-                                {link.icon}
-                            </svg>
-                        </Link>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                >
+                                    {link.icon}
+                                </svg>
+                            </li>
+                        ) : (
+                            <Link
+                                href={link.path}
+                                className={styles.link}
+                                onMouseEnter={() => setShow(index)}
+                                onMouseLeave={() => setShow(null)}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                >
+                                    {link.icon}
+                                </svg>
+                            </Link>
+                        )}
                     </Tooltip>
                 ))}
             </ul>
 
             <div className={styles.account}>
-                <div
-                    onClick={() => setShowMenu(!showMenu)}
-                >
+                <div onClick={() => setShowMenu(!showMenu)}>
                     <Avatar
                         avatar={auth.user?.avatar}
                         username={auth.user?.username}
-                        status={auth?.user.status}
+                        status={auth?.user?.status}
                         size="35px"
                     />
                 </div>
@@ -122,6 +144,15 @@ const Nav = () => {
                                         Logout
                                     </Link>
                                 </li>
+                                <li
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(
+                                            auth.user?._id
+                                        );
+                                    }}
+                                >
+                                    Copy UserID
+                                </li>
                             </ul>
                         </motion.div>
                     )}
@@ -131,4 +162,4 @@ const Nav = () => {
     );
 };
 
-export default Nav;
+export default AppNav;

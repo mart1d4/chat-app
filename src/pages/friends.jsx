@@ -2,30 +2,42 @@ import { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import styles from "../styles/Friends.module.css";
 import { useRouter } from "next/router";
-import { Nav } from "../components";
+import {
+    AppNav,
+    AppHeader,
+    FriendList,
+    AddFriend,
+    All,
+    Blocked,
+    Online,
+    Pending,
+} from "../components";
+import Head from "next/head";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
-import { Avatar } from "../components";
 
 const Friends = () => {
-    const { auth } = useAuth();
-    const router = useRouter();
+    const [content, setContent] = useState(
+        localStorage.getItem("friendsContent") || "online"
+    );
     const [friends, setFriends] = useState([]);
-    const axiosPrivate = useAxiosPrivate();
+    const [sent, setSent] = useState([]);
+    const [received, setReceived] = useState([]);
+    const [refresh, setRefresh] = useState(false);
 
-    const [showTooltip, setShowTooltip] = useState(null);
+    const router = useRouter();
+    const { auth } = useAuth();
+    const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
         if (!auth?.accessToken) router.push("/login");
-    }, []);
 
-    useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const getFriends = async () => {
             try {
                 const response = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/friends`,
+                    `/users/${auth?.user._id}/channels`,
                     {
                         signal: controller.signal,
                     }
@@ -36,47 +48,88 @@ const Friends = () => {
             }
         };
 
+        const getSent = async () => {
+            try {
+                const response = await axiosPrivate.get(
+                    `/users/${auth?.user._id}/friendrequests/sent`,
+                    {
+                        signal: controller.signal,
+                    }
+                );
+                isMounted && setSent(response.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const getReceived = async () => {
+            try {
+                const response = await axiosPrivate.get(
+                    `/users/${auth?.user._id}/friendrequests/received`,
+                    {
+                        signal: controller.signal,
+                    }
+                );
+                isMounted && setReceived(response.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
         getFriends();
+        getSent();
+        getReceived();
 
         return () => {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [refresh]);
+
+    const handleContent = (content) => {
+        setContent(content);
+        localStorage.setItem("friendsContent", content);
+    };
+
+    const refreshData = () => {
+        setRefresh(!refresh);
+    };
 
     return (
-        <div className={styles.main}>
-            <Nav />
-            <div className={styles.content}>
-                <div className={styles.friends}>
-                    <h1>Friends</h1>
+        <>
+            <Head>
+                <title>Unthrust | Friends</title>
+            </Head>
+            <div className={styles.container}>
+                <AppNav />
+                <FriendList friends={friends} refresh={refreshData} />
 
-                    <ul className={styles.friendsList}>
-                        {friends.map((friend, index) => (
-                            <li key={friend._id} className={styles.friend}>
-                                <div className={styles.avatarContainer}>
-                                    <Avatar
-                                        avatar={friend.avatar}
-                                        username={friend.username}
-                                        status={friend.status}
-                                        size="32px"
-                                        show
-                                    />
-                                </div>
-                                <p
-                                    className={styles.friendUsername}
-                                >
-                                    {friend.username}
-                                    <br /> <span>{friend.customStatus}</span>
-                                </p>
-                            </li>
-                        ))}
-                    </ul>
+                <div className={styles.main}>
+                    <AppHeader
+                        content="friends"
+                        setContent={handleContent}
+                        active={content}
+                    />
+                    <div className={styles.content}>
+                        {content === "online" && (
+                            <Online friends={friends} refresh={refreshData} />
+                        )}
+                        {content === "all" && (
+                            <All friends={friends} refresh={refreshData} />
+                        )}
+                        {content === "pending" && (
+                            <Pending sent={sent} received={received} refresh={refreshData} />
+                        )}
+                        {content === "blocked" && (
+                            <Blocked refresh={refreshData} />
+                        )}
+                        {content === "add" && (
+                            <AddFriend refresh={refreshData} />
+                        )}
+                    </div>
                 </div>
-
-                <div className={styles.messages}>messages</div>
             </div>
-        </div>
+        </>
     );
 };
 
