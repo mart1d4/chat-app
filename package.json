@@ -1,28 +1,39 @@
 {
-  "author": "Martin Danton <mart1danton@gmail.com> (https://mart1d4.com)",
-  "description": "A simple and fast calculator",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@vercel/analytics": "^0.1.5",
-    "next": "^13.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "name": "next-calculator",
-  "version": "1.0.0",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mart1d4/next-calculator.git"
-  },
-  "keywords": [],
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mart1d4/next-calculator/issues"
-  },
-  "homepage": "https://github.com/mart1d4/next-calculator#readme"
+    "author": "Martin Danton <mart1danton@gmail.com> (https://mart1d4.com)",
+    "description": "A simple chat app",
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start"
+    },
+    "dependencies": {
+        "@vercel/analytics": "^0.1.5",
+        "axios": "^1.2.2",
+        "bcryptjs": "^2.4.3",
+        "cookie": "^0.5.0",
+        "framer-motion": "^8.1.9",
+        "jsonwebtoken": "^9.0.0",
+        "mongodb": "^4.13.0",
+        "mongoose": "^6.8.2",
+        "next": "^13.0.6",
+        "nodemailer": "^6.8.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^6.6.1",
+        "socket.io": "^4.5.4",
+        "socket.io-client": "^4.5.4"
+    },
+    "name": "unthrust",
+    "version": "1.0.0",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mart1d4/unthrust.git"
+    },
+    "keywords": [],
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/mart1d4/unthrust/issues"
+    },
+    "homepage": "https://unthrust.mart1d4.com/"
 }

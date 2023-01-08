@@ -1,16 +1,16 @@
+import { Home } from '../components';
 import Head from 'next/head';
-import Calculator from '../components/Calculator';
 
-const Main = () => {
+const Index = () => {
     return (
         <>
             <Head>
-                <title>Calculator</title>
-                <link rel='icon' href='/images/favicon.webp' />
+                <title>Unthrust | Chat with your friends</title>
+                <link rel='icon' href='/images/favicon.svg' />
             </Head>
-            <Calculator />
+            <Home />
         </>
-    )
+    );
 }
 
-export default Main
+export default Index;

@@ -1,12 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400&display=swap');
 
-:root {
-    --background-primary: #252525;
-    --background-secondary: #202020;
-    --background-tertiary: #353535;
-    --foreground-primary: #ffffff;
-    --accent-primary: #252b2b;
-    --accent-secondary: #253030;
+:root.dark {
+    --background-primary: #282c34;
+    --background-secondary: #1a1d24;
+    --background-tertiary: #303030;
+    --foreground-primary: #e5e9f0;
+    --foreground-secondary: #eceff4;
+    --accent-primary: #8FBCBB;
+}
+
+:root.light {
+    --background-primary: #e5e9f0;
+    --background-secondary: #eceff4;
+    --background-tertiary: #d8dee9;
+    --foreground-primary: #2e3440;
+    --foreground-secondary: #3b4252;
+    --accent-primary: #8FBCBB;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-primary: #151515;
+        --background-secondary: #202020;
+        --background-tertiary: #303030;
+        --foreground-primary: #e5e9f0;
+    --foreground-secondary: #eceff4;
+        --accent-primary: #8FBCBB;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background-primary: #e5e9f0;
+    --background-secondary: #eceff4;
+        --background-tertiary: #d8dee9;
+        --foreground-primary: #2e3440;
+        --foreground-secondary: #3b4252;
+        --accent-primary: #8FBCBB;
+    }
 }
 
 * {
@@ -16,21 +47,33 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-*::selection {
-    background-color: var(--accent-primary);
-    color: var(--foreground-primary);
-}
-
 html,
 body,
 #__next {
-    width: 100%;
-    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     background-color: var(--background-primary);
     color: var(--foreground-primary);
     font-size: 16px;
     font-family: 'Roboto', sans-serif;
+    color-scheme: dark light;
+}
+
+svg {
+    width: 24px;
+    aspect-ratio: 1;
+    stroke-width: 1.5;
+    stroke: var(--foreground-primary);
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+img {
+    user-select: none;
 }

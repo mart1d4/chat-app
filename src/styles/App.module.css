@@ -1,0 +1,11 @@
+.main {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+.content {
+    width: calc(100% - 80px);
+    height: 100vh;
+    background: #5f81c5;
+}

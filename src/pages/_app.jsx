@@ -1,13 +1,16 @@
 import '../styles/global.css';
 import { Analytics } from '@vercel/analytics/react';
-
+import { AuthProvider } from '../context/AuthProvider';
+import PersistLogin from '../hooks/persistLogin';
 
 const App = ({ Component, pageProps }) => {
     return (
-        <>
-            <Component {...pageProps} />
-            <Analytics />
-        </>
+        <AuthProvider>
+            <PersistLogin>
+                <Component {...pageProps} />
+                <Analytics />
+            </PersistLogin>
+        </AuthProvider>
     );
 };
 
