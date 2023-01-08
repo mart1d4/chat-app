@@ -5,3 +5,4 @@
 **.vercel
 **.git
 .vercel
+.env.local
