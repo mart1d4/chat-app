@@ -13,5 +13,54 @@
 .content {
     background-color: var(--background-tertiary);
     height: calc(100% - 50px);
-    padding: 1.5rem 3rem;
+    padding: 0 0 2rem 0;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column-reverse;
+    height: calc(100% - 50px);
+    padding-bottom: 1rem;
+    list-style: none;
+    overflow-y: auto;
+}
+
+.messages li {
+    height: fit-content;
+}
+
+.messages li:hover {
+    background-color: #96989d25;
+}
+
+.messageInput {
+    display: flex;
+    align-items: center;
+    background-color: var(--background-secondary);
+    border-radius: 5px;
+    margin: 0 3rem;
+}
+
+.messageInput input {
+    width: 100%;
+    height: 50px;
+    background-color: var(--background-secondary);
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0 1.5rem;
+    font-size: 1rem;
+}
+
+.messageInput input:focus {
+    outline: none;
+}
+
+.messageInput button {
+    background-color: transparent;
+    border: 0;
+    background-color: var(--background-primary);
+    cursor: pointer;
+    height: 50px;
+    padding: 0 1.5rem;
+    border-radius: 0 5px 5px 0;
 }

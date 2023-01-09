@@ -37,7 +37,7 @@ const Friends = () => {
         const getFriends = async () => {
             try {
                 const response = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/channels`,
+                    `/users/${auth?.user._id}/friends`,
                     {
                         signal: controller.signal,
                     }

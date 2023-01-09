@@ -6,6 +6,7 @@ import Footer from './Footer/Footer';
 import FriendList from './FriendList/FriendList';
 import Header from './Header/Header';
 import Main from './Main/Main';
+import Message from './Message/Message';
 import Tooltip from './Tooltip/Tooltip';
 import AddFriend from './Friends/AddFriend';
 import All from './Friends/All';
@@ -22,6 +23,7 @@ export {
     FriendList,
     Header,
     Main,
+    Message,
     Tooltip,
     AddFriend,
     All,

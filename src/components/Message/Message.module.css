@@ -1,0 +1,30 @@
+.message {
+    width: fit-content;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    margin: 0 3rem;
+    padding: 0.2rem 0;
+}
+
+.aside {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    margin-right: 1rem;
+}
+
+.aside img {
+    width: 48px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.time {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--foreground-secondary);
+    cursor: default;
+}

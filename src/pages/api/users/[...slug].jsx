@@ -1,6 +1,7 @@
 import User from "../../../utils/models/User";
 import Conversation from "../../../utils/models/Conversation";
 import connectDB from "../../../utils/connectDB";
+import mongoose from "mongoose";
 
 connectDB();
 
@@ -13,7 +14,7 @@ export default async (req, res) => {
         return res.status(400).json({ error: "Bad request" });
     }
 
-    if (slug[1] === "channels") {
+    if (slug[1] === "friends") {
         const user = await User.findById(userID);
         const friends = await User.find({ _id: { $in: user.friends } });
 
@@ -29,31 +30,65 @@ export default async (req, res) => {
         return res.status(200).json(friendsClean);
     }
 
-    if (slug[1] === "conversation") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
+    if (slug[1] === "channels") {
+        if (req.method === "POST") {
+            const friendID = slug[2];
+            const content = req.body.content;
 
-        const conversation = await Conversation.findOne({
-            $or: [
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: userID } } },
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                    ],
-                },
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                        { participants: { $elemMatch: { $eq: userID } } },
-                    ],
-                },
-            ],
-        });
+            const user = await User.findById(userID);
+            if (!user.friends.includes(friendID)) {
+                return res.status(200).json({ error: "Not friends" });
+            }
 
-        if (conversation) {
-            return res.status(200).json(conversation);
-        } else {
-            return res.status(200).json({ error: "No conversation found" });
+            const conversation = await Conversation.findOne({
+                users: { $all: [userID, friendID] },
+            });
+
+            if (conversation) {
+                const message = {
+                    sender: userID,
+                    content: content,
+                };
+
+                conversation.messages.unshift(message);
+                await conversation.save();
+
+                return res.status(200).json({ success: "Message sent" });
+            } else {
+                const newConversation = new Conversation({
+                    users: [userID, friendID],
+                    messages: [
+                        {
+                            sender: userID,
+                            content: content,
+                        },
+                    ],
+                });
+
+                await newConversation.save();
+
+                return res.status(200).json({ success: "Message sent" });
+            }
+        }
+
+        if (req.method === "GET") {
+            const friendID = slug[2];
+
+            const user = await User.findById(userID);
+            if (!user.friends.includes(friendID)) {
+                return res.status(200).json({ error: "Not friends" });
+            }
+
+            // Get conversation between only 2 users (userID and friendID) and populate messages
+            const conversation = await Conversation.findOne({
+                users: { $all: [userID, friendID] },
+            }).populate("messages.sender");
+
+            if (conversation) {
+                return res.status(200).json(conversation);
+            } else {
+                return res.status(200).json({ error: "No conversation" });
+            }
         }
     }
 
@@ -249,43 +284,5 @@ export default async (req, res) => {
         await user.save();
 
         return res.status(200).json({ success: "Friend removed" });
-    }
-
-    if (slug[1] === "send") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
-        const message = req.body.message;
-
-        const conversation = await Conversation.findOne({
-            $or: [
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: userID } } },
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                    ],
-                },
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                        { participants: { $elemMatch: { $eq: userID } } },
-                    ],
-                },
-            ],
-        });
-
-        if (conversation) {
-            const newMessage = {
-                sender: userID,
-                content: message,
-            };
-
-            conversation.messages.push(newMessage);
-
-            await conversation.save();
-
-            return res.status(200).json({ message: "Message sent" });
-        } else {
-            return res.status(200).json({ error: "No conversation found" });
-        }
     }
 };

@@ -5,7 +5,7 @@
     --background-secondary: #1a1d24;
     --background-tertiary: #303030;
     --foreground-primary: #e5e9f0;
-    --foreground-secondary: #eceff4;
+    --foreground-secondary: #96989D;
     --accent-primary: #8FBCBB;
 }
 
@@ -24,7 +24,7 @@
         --background-secondary: #202020;
         --background-tertiary: #303030;
         --foreground-primary: #e5e9f0;
-    --foreground-secondary: #eceff4;
+        --foreground-secondary: #96989D;
         --accent-primary: #8FBCBB;
     }
 }
@@ -32,7 +32,7 @@
 @media (prefers-color-scheme: light) {
     :root {
         --background-primary: #e5e9f0;
-    --background-secondary: #eceff4;
+        --background-secondary: #eceff4;
         --background-tertiary: #d8dee9;
         --foreground-primary: #2e3440;
         --foreground-secondary: #3b4252;
