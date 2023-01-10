@@ -2,24 +2,29 @@ import { useRouter } from "next/router";
 import { AppNav, AppHeader, FriendList, Message } from "../../components";
 import styles from "./Conversation.module.css";
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import io from "socket.io-client";
+
+let socket;
 
 const Conversation = () => {
     const [friends, setFriends] = useState([]);
     const [refresh, setRefresh] = useState(false);
+    const [friend, setFriend] = useState(null);
     const [conversation, setConversation] = useState(null);
     const [message, setMessage] = useState("");
     const [hover, setHover] = useState(false);
+
+    const input = useRef(null);
+    const list = useRef(null);
 
     const { auth } = useAuth();
     const axiosPrivate = useAxiosPrivate();
 
     const router = useRouter();
     const { friendID } = router.query;
-
-    const friend = friends.find((friend) => friend._id === friendID);
 
     useEffect(() => {
         if (!auth?.accessToken) router.push("/login");
@@ -58,31 +63,55 @@ const Conversation = () => {
         getFriends();
         getConversation();
 
+        list.current?.scrollTo({
+            top: list.current?.scrollHeight + 1000,
+            behavior: "smooth",
+        });
+
         return () => {
             isMounted = false;
             controller.abort();
         };
-    }, [refresh]);
+    }, [refresh, router.query]);
+
+    useEffect(() => {
+        setFriend(friends.find((friend) => friend._id === friendID));
+    }, [friends]);
+
+    useEffect(() => {
+        const socketInitializer = async () => {
+            await fetch("/api/socket/socket");
+            socket = io();
+
+            socket.on("newIncomingMessage", () => {
+                refreshData();
+            });
+        };
+
+        socketInitializer();
+    }, []);
 
     const sendMessage = async () => {
         if (message === "") return;
+        if (message.length > 2000) {
+            window.alert("Message is too long!");
+            return;
+        }
+
+        socket.emit("createdMessage", {
+            message,
+        });
 
         try {
-            const response = await axiosPrivate.post(
+            await axiosPrivate.post(
                 `/users/${auth?.user._id}/channels/${friendID}`,
-                {
-                    content: message,
-                }
+                { content: message }
             );
             setMessage("");
             refreshData();
         } catch (err) {
             console.error(err);
         }
-    };
-
-    const refreshData = () => {
-        setRefresh(!refresh);
     };
 
     const checkMessageSender = (index) => {
@@ -92,6 +121,10 @@ const Conversation = () => {
         )
             return true;
         return false;
+    };
+
+    const refreshData = () => {
+        setRefresh(!refresh);
     };
 
     return (
@@ -104,9 +137,9 @@ const Conversation = () => {
                 <FriendList friends={friends} refresh={refresh} />
 
                 <div className={styles.main}>
-                    <AppHeader content="friends" />
+                    <AppHeader content="channels" friend={friend} />
                     <div className={styles.content}>
-                        <ul className={styles.messages}>
+                        <ul className={styles.messages} ref={list}>
                             {conversation &&
                                 conversation.messages &&
                                 conversation?.messages.map((message, index) => (
@@ -114,6 +147,15 @@ const Conversation = () => {
                                         key={index}
                                         onMouseEnter={() => setHover(index)}
                                         onMouseLeave={() => setHover(false)}
+                                        style={{
+                                            marginTop: !checkMessageSender(
+                                                index
+                                            )
+                                                ? "0"
+                                                : index === 0
+                                                ? "10rem"
+                                                : "1.5rem",
+                                        }}
                                     >
                                         <Message
                                             message={message}
@@ -125,7 +167,8 @@ const Conversation = () => {
                         </ul>
                         <div className={styles.messageInput}>
                             <input
-                                type="text"
+                                ref={input}
+                                type="text-area"
                                 placeholder="Type a message..."
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}

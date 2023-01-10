@@ -13,16 +13,18 @@
 .content {
     background-color: var(--background-tertiary);
     height: calc(100% - 50px);
-    padding: 0 0 2rem 0;
+    padding: 0.25rem 0.25rem 2rem 0;
 }
 
 .messages {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     height: calc(100% - 50px);
+    width: 100%;
     padding-bottom: 1rem;
     list-style: none;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .messages li {
@@ -30,7 +32,7 @@
 }
 
 .messages li:hover {
-    background-color: #96989d25;
+    background-color: #1a1d244d;
 }
 
 .messageInput {
@@ -49,6 +51,8 @@
     border-radius: 0.5rem;
     padding: 0 1.5rem;
     font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
 }
 
 .messageInput input:focus {

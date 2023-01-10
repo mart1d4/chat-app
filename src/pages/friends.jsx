@@ -51,7 +51,7 @@ const Friends = () => {
         const getSent = async () => {
             try {
                 const response = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/friendrequests/sent`,
+                    `/users/${auth?.user._id}/friends/sent`,
                     {
                         signal: controller.signal,
                     }
@@ -65,7 +65,7 @@ const Friends = () => {
         const getReceived = async () => {
             try {
                 const response = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/friendrequests/received`,
+                    `/users/${auth?.user._id}/friends/received`,
                     {
                         signal: controller.signal,
                     }

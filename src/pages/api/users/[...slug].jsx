@@ -8,59 +8,41 @@ connectDB();
 export default async (req, res) => {
     const { slug } = req.query;
     const userID = slug[0];
+    const friendID = slug[2];
 
-    // Bad request
-    if (slug[3]) {
-        return res.status(400).json({ error: "Bad request" });
-    }
-
-    if (slug[1] === "friends") {
-        const user = await User.findById(userID);
-        const friends = await User.find({ _id: { $in: user.friends } });
-
-        const friendsClean = friends.map((friend) => {
-            return {
-                _id: friend._id,
-                username: friend.username,
-                avatar: friend.avatar,
-                status: friend.status,
-                customStatus: friend.customStatus,
-            };
-        });
-        return res.status(200).json(friendsClean);
+    const user = await User.findById(userID);
+    let friend;
+    if (mongoose.Types.ObjectId.isValid(friendID)) {
+        friend = await User.findById(friendID);
     }
 
     if (slug[1] === "channels") {
         if (req.method === "POST") {
-            const friendID = slug[2];
-            const content = req.body.content;
-
-            const user = await User.findById(userID);
             if (!user.friends.includes(friendID)) {
                 return res.status(200).json({ error: "Not friends" });
             }
 
             const conversation = await Conversation.findOne({
-                users: { $all: [userID, friendID] },
+                participants: { $all: [userID, friendID] },
             });
 
             if (conversation) {
                 const message = {
                     sender: userID,
-                    content: content,
+                    content: req.body.content,
                 };
 
-                conversation.messages.unshift(message);
+                conversation.messages.push(message);
                 await conversation.save();
 
                 return res.status(200).json({ success: "Message sent" });
             } else {
                 const newConversation = new Conversation({
-                    users: [userID, friendID],
+                    participants: [userID, friendID],
                     messages: [
                         {
                             sender: userID,
-                            content: content,
+                            content: req.body.content,
                         },
                     ],
                 });
@@ -72,16 +54,12 @@ export default async (req, res) => {
         }
 
         if (req.method === "GET") {
-            const friendID = slug[2];
-
-            const user = await User.findById(userID);
             if (!user.friends.includes(friendID)) {
                 return res.status(200).json({ error: "Not friends" });
             }
 
-            // Get conversation between only 2 users (userID and friendID) and populate messages
             const conversation = await Conversation.findOne({
-                users: { $all: [userID, friendID] },
+                participants: { $all: [userID, friendID] },
             }).populate("messages.sender");
 
             if (conversation) {
@@ -92,31 +70,29 @@ export default async (req, res) => {
         }
     }
 
-    if (slug[1] === "addfriend") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
-
-        const friend = await User.findById(friendID);
-        const user = await User.findById(userID);
-
+    if (slug[1] === "friends" && slug[3] == "add") {
         if (friendID === userID) {
             return res.status(200).json({ error: "Cannot add yourself" });
         }
 
-        // Check if request has already been sent
-        if (friend.friendRequests.includes(userID)) {
+        if (friend.friendRequests.received.includes(userID)) {
             return res.status(200).json({ error: "Request already sent" });
         }
 
-        // Check if user already has friend
+        if (friend.friendRequests.sent.includes(userID)) {
+            return res.status(200).json({
+                error: "Request already received from this user",
+            });
+        }
+
         if (friend.friends.includes(userID)) {
             return res
                 .status(200)
                 .json({ error: "User is already your friend" });
         }
 
-        friend.friendRequests.push(userID);
-        user.friendRequestsSent.push(friendID);
+        friend.friendRequests.received.push(userID);
+        user.friendRequests.sent.push(friendID);
 
         await friend.save();
         await user.save();
@@ -124,12 +100,11 @@ export default async (req, res) => {
         return res.status(200).json({ success: "Friend request sent" });
     }
 
-    if (slug[1] === "friendrequests") {
+    if (slug[1] === "friends") {
         if (slug[2] === "received") {
-            const user = await User.findById(userID);
             const friendRequests = await User.find({
-                _id: { $in: user.friendRequests },
-            });
+                _id: { $in: user.friendRequests.received },
+            }).populate("friendRequests.received");
 
             const friendRequestsClean = friendRequests.map((friend) => {
                 return {
@@ -143,12 +118,11 @@ export default async (req, res) => {
 
             return res.status(200).json(friendRequestsClean);
         } else if (slug[2] === "sent") {
-            const user = await User.findById(userID);
-            const friendRequestsSent = await User.find({
-                _id: { $in: user.friendRequestsSent },
-            });
+            const friendRequests = await User.find({
+                _id: { $in: user.friendRequests.sent },
+            }).populate("friendRequests.sent");
 
-            const friendRequestsSentClean = friendRequestsSent.map((friend) => {
+            const friendRequestsClean = friendRequests.map((friend) => {
                 return {
                     _id: friend._id,
                     username: friend.username,
@@ -158,131 +132,143 @@ export default async (req, res) => {
                 };
             });
 
-            return res.status(200).json(friendRequestsSentClean);
-        } else {
-            return res.status(400).json({ error: "Bad request" });
-        }
-    }
+            return res.status(200).json(friendRequestsClean);
+        } else if (slug[2] === "blocked") {
+            const blocked = await User.find({
+                _id: { $in: user.blocked },
+            }).populate("blocked");
 
-    if (slug[1] === "acceptrequest") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
+            const blockedClean = blocked.map((friend) => {
+                return {
+                    _id: friend._id,
+                    username: friend.username,
+                    avatar: friend.avatar,
+                    status: friend.status,
+                    customStatus: friend.customStatus,
+                };
+            });
 
-        const friend = await User.findById(friendID);
-        const user = await User.findById(userID);
+            return res.status(200).json(blockedClean);
+        } else if (slug[3] === "accept") {
+            friend.friends.push(userID);
+            user.friends.push(friendID);
 
-        friend.friends.push(userID);
-        user.friends.push(friendID);
+            friend.friendRequests.sent = friend.friendRequests.sent.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            friend.friendRequests.received = friend.friendRequests.received.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            user.friendRequests.sent = user.friendRequests.sent.filter((request) => {
+                return request.toString() !== friendID;
+            });
+            user.friendRequests.received = user.friendRequests.received.filter((request) => {
+                return request.toString() !== friendID;
+            });
 
-        friend.friendRequestsSent = friend.friendRequestsSent.filter(
-            (request) => {
-                const id = request.toString();
-                return id !== userID;
+            await friend.save();
+            await user.save();
+
+            const conversation = await Conversation.findOne({
+                participants: { $all: [userID, friendID] },
+            });
+
+            if (conversation) {
+                return res
+                    .status(200)
+                    .json({ success: "Friend request accepted" });
             }
-        );
-        user.friendRequests = user.friendRequests.filter((request) => {
-            const id = request.toString();
-            return id !== friendID;
-        });
 
-        await friend.save();
-        await user.save();
+            const newConversation = new Conversation({
+                participants: [userID, friendID],
+            });
 
-        const conversation = await Conversation.findOne({
-            $or: [
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: userID } } },
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                    ],
-                },
-                {
-                    $and: [
-                        { participants: { $elemMatch: { $eq: friendID } } },
-                        { participants: { $elemMatch: { $eq: userID } } },
-                    ],
-                },
-            ],
-        });
+            await newConversation.save();
 
-        if (conversation) {
             return res.status(200).json({ success: "Friend request accepted" });
+        } else if (slug[3] === "decline") {
+            friend.friendRequests.sent = friend.friendRequests.sent.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            friend.friendRequests.received = friend.friendRequests.received.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            user.friendRequests.sent = user.friendRequests.sent.filter((request) => {
+                return request.toString() !== friendID;
+            });
+            user.friendRequests.received = user.friendRequests.received.filter((request) => {
+                return request.toString() !== friendID;
+            });
+
+            await friend.save();
+            await user.save();
+
+            return res.status(200).json({ success: "Friend request declined" });
+        } else if (slug[3] === "cancel") {
+            friend.friendRequests.sent = friend.friendRequests.sent.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            friend.friendRequests.received = friend.friendRequests.received.filter(
+                (request) => {
+                    return request.toString() !== userID;
+                }
+            );
+            user.friendRequests.sent = user.friendRequests.sent.filter((request) => {
+                return request.toString() !== friendID;
+            });
+            user.friendRequests.received = user.friendRequests.received.filter((request) => {
+                return request.toString() !== friendID;
+            });
+
+            await friend.save();
+            await user.save();
+
+            return res
+                .status(200)
+                .json({ success: "Friend request cancelled" });
+        } else if (slug[3] === "remove") {
+            friend.friends = friend.friends.filter((friend) => {
+                return friend.toString() !== userID;
+            });
+            user.friends = user.friends.filter((friend) => {
+                return friend.toString() !== friendID;
+            });
+
+            await friend.save();
+            await user.save();
+
+            return res.status(200).json({ success: "Friend removed" });
+        } else if (slug[3] === "unblock") {
+            user.blocked = user.blocked.filter((blocked) => {
+                return blocked.toString() !== friendID;
+            });
+
+            await user.save();
+
+            return res.status(200).json({ success: "User unblocked" });
+        } else {
+            const friends = await User.find({ _id: { $in: user.friends } });
+
+            const friendsClean = friends.map((friend) => {
+                return {
+                    _id: friend._id,
+                    username: friend.username,
+                    avatar: friend.avatar,
+                    status: friend.status,
+                    customStatus: friend.customStatus,
+                };
+            });
+            return res.status(200).json(friendsClean);
         }
-
-        const newConversation = new Conversation({
-            participants: [userID, friendID],
-        });
-
-        await newConversation.save();
-
-        return res.status(200).json({ success: "Friend request accepted" });
-    }
-
-    if (slug[1] === "declinerequest") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
-
-        const friend = await User.findById(friendID);
-        const user = await User.findById(userID);
-
-        friend.friendRequestsSent = friend.friendRequestsSent.filter(
-            (request) => {
-                const id = request.toString();
-                return id !== userID;
-            }
-        );
-        user.friendRequests = user.friendRequests.filter((request) => {
-            const id = request.toString();
-            return id !== friendID;
-        });
-
-        await friend.save();
-        await user.save();
-
-        return res.status(200).json({ success: "Friend request declined" });
-    }
-
-    if (slug[1] === "cancelrequest") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
-
-        const friend = await User.findById(friendID);
-        const user = await User.findById(userID);
-
-        friend.friendRequests = friend.friendRequests.filter((request) => {
-            const id = request.toString();
-            return id !== userID;
-        });
-        user.friendRequestsSent = user.friendRequestsSent.filter((request) => {
-            const id = request.toString();
-            return id !== friendID;
-        });
-
-        await friend.save();
-        await user.save();
-
-        return res.status(200).json({ success: "Friend request cancelled" });
-    }
-
-    if (slug[1] === "removefriend") {
-        const userID = req.body.userID;
-        const friendID = slug[0];
-
-        const friend = await User.findById(friendID);
-        const user = await User.findById(userID);
-
-        friend.friends = friend.friends.filter((friend) => {
-            const id = friend.toString();
-            return id !== userID;
-        });
-        user.friends = user.friends.filter((friend) => {
-            const id = friend.toString();
-            return id !== friendID;
-        });
-
-        await friend.save();
-        await user.save();
-
-        return res.status(200).json({ success: "Friend removed" });
     }
 };

@@ -1,30 +1,76 @@
 .message {
-    width: fit-content;
     position: relative;
-    display: flex;
-    align-items: center;
-    border-radius: 5px;
-    margin: 0 3rem;
-    padding: 0.2rem 0;
+    min-height: 2.75rem;
+    padding: 0.3rem 48px 0.3rem 72px;
+    word-wrap: break-word;
+    user-select: text;
 }
 
-.aside {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    margin-right: 1rem;
+.messageLittle {
+    overflow: hidden;
+    position: relative;
+    padding: 0.125rem 48px 0.125rem 72px;
 }
 
-.aside img {
-    width: 48px;
-    aspect-ratio: 1;
+.avatar {
+    position: absolute;
+    left: 16px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
 }
 
-.time {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--foreground-secondary);
+.avatar:hover {
+    box-shadow: 0 2px 0 2px rgba(0, 0, 0, 0.15);
+}
+
+.messageHeader {
+    overflow: hidden;
+    line-height: 1.375rem;
+    min-height: 1.375rem;
+    white-space: break-spaces;
+}
+
+.username {
+    margin-right: 0.25rem;
+    line-height: 1.375rem;
+    font-weight: inherit;
+    font-style: inherit;
+    font-size: 100%;
+}
+
+.username:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.timestamp {
+    display: inline-block;
+    height: 1.25rem;
     cursor: default;
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1.375rem;
+    margin-left: 0.25rem;
+    color: var(--foreground-secondary);
+}
+
+.timestampLittle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1.375rem;
+    width: 72px;
+    user-select: none;
+    text-align: right;
+    line-height: 1.375rem;
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--foreground-secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

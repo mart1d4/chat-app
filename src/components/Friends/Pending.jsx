@@ -1,7 +1,6 @@
 import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useEffect, useState } from "react";
 import styles from "./Style.module.css";
 
 const Pending = ({ sent, received, refresh }) => {
@@ -10,53 +9,38 @@ const Pending = ({ sent, received, refresh }) => {
 
     const cancelRequest = async (friendID) => {
         try {
-            const response = await axiosPrivate.post(
-                `/users/${friendID}/cancelrequest`,
-                {
-                    userID: auth?.user._id,
-                }
+            await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/${friendID}/cancel`,
             );
-            console.log(response.data);
         } catch (err) {
             console.error(err);
         }
-
         refresh();
     };
 
     const acceptRequest = async (friendID) => {
         try {
-            const response = await axiosPrivate.post(
-                `/users/${friendID}/acceptrequest`,
-                {
-                    userID: auth?.user._id,
-                }
+            await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/${friendID}/accept`,
             );
-            console.log(response.data);
         } catch (err) {
             console.error(err);
         }
-
         refresh();
     };
 
     const declineRequest = async (friendID) => {
         try {
-            const response = await axiosPrivate.post(
-                `/users/${friendID}/declinerequest`,
-                {
-                    userID: auth?.user._id,
-                }
+            await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/${friendID}/decline`,
             );
-            console.log(response.data);
         } catch (err) {
             console.error(err);
         }
-
         refresh();
     };
 
-    if (sent.length === 0 && received.length === 0) {
+    if (!sent.length && !received.length) {
         return (
             <div className={styles.content}>
                 <h2>No pending requests</h2>

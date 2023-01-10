@@ -1,7 +1,6 @@
 import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useEffect, useState } from "react";
 import styles from "./Style.module.css";
 
 const All = ({ friends, refresh }) => {
@@ -10,18 +9,22 @@ const All = ({ friends, refresh }) => {
 
     const removeFriend = async (friendID) => {
         try {
-            const response = await axiosPrivate.post(
-                `/users/${friendID}/removefriend`,
-                {
-                    userID: auth?.user._id,
-                }
+            await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/${friendID}/remove`,
             );
-            console.log(response.data);
         } catch (err) {
             console.error(err);
         }
         refresh();
     };
+
+    if (!friends.length) {
+        return (
+            <div className={styles.content}>
+                <h2>You don't have any friends</h2>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.content}>

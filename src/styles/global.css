@@ -40,9 +40,28 @@
     }
 }
 
+/* Change scrollbar */
+
+::-webkit-scrollbar {
+    width: 10px;
+    background: var(--background-secondary);
+    border-radius: 100vw;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--background-primary);
+    border-radius: 100vw;
+}
+
 * {
     margin: 0;
     padding: 0;
+    border: 0;
+    font-weight: inherit;
+    font-style: inherit;
+    font-family: inherit;
+    font-size: 100%;
+    vertical-align: baseline;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }

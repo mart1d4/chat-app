@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 async function getRandomAvatar() {
@@ -29,45 +29,54 @@ const userSchema = new Schema(
         },
         avatar: {
             type: String,
-            default: '',
+            default: "",
         },
         description: {
             type: String,
-            default: '',
+            default: "",
         },
         role: {
             type: String,
-            default: 'user',
+            default: "user",
         },
-        friendRequests: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: 'User',
-            },
-        ],
-        friendRequestsSent: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: 'User',
-            },
-        ],
+        friendRequests: {
+            sent: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: "User",
+                },
+            ],
+            received: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: "User",
+                },
+            ],
+        },
         friends: [
             {
                 type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        blocked: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
             },
         ],
         status: {
             type: String,
-            default: 'offline',
+            default: "offline",
         },
         customStatus: {
             type: String,
-            default: '',
+            default: "",
         },
         conversations: [
             {
                 type: Schema.Types.ObjectId,
-                ref: 'Conversation',
+                ref: "Conversation",
                 default: [],
             },
         ],
@@ -75,11 +84,11 @@ const userSchema = new Schema(
             {
                 content: {
                     type: String,
-                    default: '',
+                    default: "",
                 },
                 sender: {
                     type: Schema.Types.ObjectId,
-                    ref: 'User',
+                    ref: "User",
                 },
                 sentAt: {
                     type: Date,
@@ -94,23 +103,23 @@ const userSchema = new Schema(
     }
 );
 
-userSchema.pre('save', async function () {
-    if (this.avatar === '') {
+userSchema.pre("save", async function () {
+    if (this.avatar === "") {
         this.avatar = await getAvatarurl();
     }
 });
 
-userSchema.virtual('url').get(function () {
+userSchema.virtual("url").get(function () {
     return `/users/${this._id}`;
 });
 
-userSchema.virtual('createdAtFormatted').get(function () {
+userSchema.virtual("createdAtFormatted").get(function () {
     return this.createdAt.toLocaleString();
 });
 
-userSchema.virtual('updatedAtFormatted').get(function () {
+userSchema.virtual("updatedAtFormatted").get(function () {
     return this.updatedAt.toLocaleString();
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);  
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

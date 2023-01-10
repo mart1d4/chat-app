@@ -21,10 +21,7 @@ const FriendList = ({ friends, refresh }) => {
     const requestFriend = async (friendID) => {
         try {
             const response = await axiosPrivate.post(
-                `/users/${friendID}/addfriend`,
-                {
-                    userID: auth?.user._id,
-                }
+                `/users/${auth?.user._id}/friends/${friendID}/add`,
             );
             console.log(response.data);
         } catch (err) {

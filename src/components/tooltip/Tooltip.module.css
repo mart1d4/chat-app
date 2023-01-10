@@ -1,9 +1,14 @@
 .container {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tooltip {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     font-size: 0.70rem;
     font-weight: 500;
@@ -16,7 +21,8 @@
     cursor: initial;
     word-wrap: break-word;
     white-space: nowrap;
-    z-index: 10000;
+    z-index: 1000000;
+    user-select: none;
 }
 
 .cursorConsistency {
