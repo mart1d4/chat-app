@@ -42,9 +42,10 @@ const Login = () => {
                     withCredentials: true,
                 }
             );
-            const accessToken = response?.data?.accessToken;
-            const user = response?.data?.user;
-            setAuth({ accessToken, user });
+            setAuth({
+                accessToken: response.data.accessToken,
+                user: response.data.user,
+            });
             setUsername("");
             setPassword("");
             router.push("/app");
@@ -126,110 +127,94 @@ const Login = () => {
 
                     <div className={styles.inputsContainer}>
                         <div className={styles.inputContainer}>
-                        <AnimatePresence>
-                                    <motion.label
-                                        htmlFor="username"
-                                        className={styles.label}
-                                        animate={{
-                                            opacity:
-                                                usernameFocus || username
-                                                    ? 1
-                                                    : 0.5,
-                                            top:
-                                                usernameFocus || username
-                                                    ? "-40%"
-                                                    : "50%",
-                                            left:
-                                                usernameFocus || username
-                                                    ? "5px"
-                                                    : "15px",
-                                            transform:
-                                                usernameFocus || username
-                                                    ? "translateY(0%)"
-                                                    : "translateY(-50%)",
-                                        }}
-                                        transition={{
-                                            duration: 0.2,
-                                            ease: "easeInOut",
-                                        }}
-                                    >
-                                        Username
-                                    </motion.label>
-                                </AnimatePresence>
-                                <input
-                                    type="text"
-                                    id="username"
-                                    ref={usernameRef}
-                                    autoComplete="off"
-                                    onChange={(e) =>
-                                        setUsername(e.target.value)
-                                    }
-                                    value={username}
-                                    required
-                                    aria-describedby="uidnote"
-                                    onFocus={() => setUsernameFocus(true)}
-                                    onBlur={() => setUsernameFocus(false)}
-                                    className={styles.input}
-                                    placeholder={
-                                        usernameFocus ? "Username" : ""
-                                    }
-                                />
+                            <AnimatePresence>
+                                <motion.label
+                                    htmlFor="username"
+                                    className={styles.label}
+                                    animate={{
+                                        opacity:
+                                            usernameFocus || username ? 1 : 0.5,
+                                        top:
+                                            usernameFocus || username
+                                                ? "-40%"
+                                                : "50%",
+                                        left:
+                                            usernameFocus || username
+                                                ? "5px"
+                                                : "15px",
+                                        transform:
+                                            usernameFocus || username
+                                                ? "translateY(0%)"
+                                                : "translateY(-50%)",
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    Username
+                                </motion.label>
+                            </AnimatePresence>
+                            <input
+                                type="text"
+                                id="username"
+                                ref={usernameRef}
+                                autoComplete="off"
+                                onChange={(e) => setUsername(e.target.value)}
+                                value={username}
+                                required
+                                aria-describedby="uidnote"
+                                onFocus={() => setUsernameFocus(true)}
+                                onBlur={() => setUsernameFocus(false)}
+                                className={styles.input}
+                                placeholder={usernameFocus ? "Username" : ""}
+                            />
                         </div>
 
                         <div className={styles.inputContainer}>
-                        <AnimatePresence>
-                                    <motion.label
-                                        htmlFor="password"
-                                        className={styles.label}
-                                        animate={{
-                                            opacity:
-                                                passwordFocus || password
-                                                    ? 1
-                                                    : 0.5,
-                                            top:
-                                                passwordFocus || password
-                                                    ? "-40%"
-                                                    : "50%",
-                                            left:
-                                                passwordFocus || password
-                                                    ? "5px"
-                                                    : "15px",
-                                            transform:
-                                                passwordFocus || password
-                                                    ? "translateY(0%)"
-                                                    : "translateY(-50%)",
-                                        }}
-                                        transition={{
-                                            duration: 0.2,
-                                            ease: "easeInOut",
-                                        }}
-                                    >
-                                        Password
-                                    </motion.label>
-                                </AnimatePresence>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    value={password}
-                                    required
-                                    aria-describedby="passwordnote"
-                                    onFocus={() => setPasswordFocus(true)}
-                                    onBlur={() => setPasswordFocus(false)}
-                                    className={styles.input}
-                                    placeholder={
-                                        passwordFocus ? "Password" : ""
-                                    }
-                                />
+                            <AnimatePresence>
+                                <motion.label
+                                    htmlFor="password"
+                                    className={styles.label}
+                                    animate={{
+                                        opacity:
+                                            passwordFocus || password ? 1 : 0.5,
+                                        top:
+                                            passwordFocus || password
+                                                ? "-40%"
+                                                : "50%",
+                                        left:
+                                            passwordFocus || password
+                                                ? "5px"
+                                                : "15px",
+                                        transform:
+                                            passwordFocus || password
+                                                ? "translateY(0%)"
+                                                : "translateY(-50%)",
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    Password
+                                </motion.label>
+                            </AnimatePresence>
+                            <input
+                                type="password"
+                                id="password"
+                                onChange={(e) => setPassword(e.target.value)}
+                                value={password}
+                                required
+                                aria-describedby="passwordnote"
+                                onFocus={() => setPasswordFocus(true)}
+                                onBlur={() => setPasswordFocus(false)}
+                                className={styles.input}
+                                placeholder={passwordFocus ? "Password" : ""}
+                            />
                         </div>
 
-                        <button
-                            className={styles.button}
-                        >
-                            Login
-                        </button>
+                        <button className={styles.button}>Login</button>
                     </div>
 
                     <div className={styles.bottomLinks}>

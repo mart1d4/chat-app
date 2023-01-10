@@ -55,6 +55,7 @@ const Conversation = () => {
                     }
                 );
                 isMounted && setConversation(response.data);
+                isMounted && scrollToBottom();
             } catch (err) {
                 console.error(err);
             }
@@ -63,16 +64,17 @@ const Conversation = () => {
         getFriends();
         getConversation();
 
-        list.current?.scrollTo({
-            top: list.current?.scrollHeight + 1000,
-            behavior: "smooth",
-        });
-
         return () => {
             isMounted = false;
             controller.abort();
         };
     }, [refresh, router.query]);
+
+    const scrollToBottom = () => {
+        list.current?.scrollTo({
+            top: list.current?.scrollHeight + 10000000
+        });
+    };
 
     useEffect(() => {
         setFriend(friends.find((friend) => friend._id === friendID));

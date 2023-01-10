@@ -25,7 +25,7 @@ export default async (req, res) => {
                     },
                 },
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '10d' }
+                { expiresIn: "10d" }
             );
             res.json({
                 accessToken,

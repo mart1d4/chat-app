@@ -1,4 +1,4 @@
-import { Header, Main, Footer } from '../components';
+import { Header, Main, Footer, Loader } from '../components';
 import Head from 'next/head';
 
 const Index = () => {

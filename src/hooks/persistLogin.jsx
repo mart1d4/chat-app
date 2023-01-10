@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useRefreshToken from "./useRefreshToken";
 import useAuth from "./useAuth";
+import { Loader } from "../components";
 
 export default function PersistLogin({ children }) {
     const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +29,6 @@ export default function PersistLogin({ children }) {
     }, []);
 
     return (
-        <>{!persist ? children : isLoading ? <h1>Loading...</h1> : children}</>
+        <>{!persist ? children : isLoading ? <Loader/> : children}</>
     );
 }

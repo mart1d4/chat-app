@@ -5,6 +5,7 @@ import Avatar from './Avatar/Avatar';
 import Footer from './Footer/Footer';
 import FriendList from './FriendList/FriendList';
 import Header from './Header/Header';
+import Loader from './Loader/Loader';
 import Main from './Main/Main';
 import Message from './Message/Message';
 import Tooltip from './Tooltip/Tooltip';
@@ -22,6 +23,7 @@ export {
     Footer,
     FriendList,
     Header,
+    Loader,
     Main,
     Message,
     Tooltip,

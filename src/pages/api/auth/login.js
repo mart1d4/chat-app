@@ -2,7 +2,7 @@ import User from "../../../utils/models/User";
 import connectDB from "../../../utils/connectDB";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { serialize } from 'cookie';
+import { serialize } from "cookie";
 
 connectDB();
 
