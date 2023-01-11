@@ -1,0 +1,10 @@
+.container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.main {
+    height: 100%;
+    width: calc(100% - 245px);
+}

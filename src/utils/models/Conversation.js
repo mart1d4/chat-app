@@ -1,32 +1,18 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const convSchema = new Schema(
+const conversationSchema = new Schema(
     {
-        participants: [
+        members: [
             {
                 type: Schema.Types.ObjectId,
-                ref: 'User',
+                ref: "User",
             },
         ],
         messages: [
             {
-                sender: {
-                    type: Schema.Types.ObjectId,
-                    ref: 'User',
-                },
-                content: {
-                    type: String,
-                    default: '',
-                },
-                sentAt: {
-                    type: Date,
-                    default: Date.now,
-                },
-                edited: {
-                    type: Boolean,
-                    default: false,
-                },
+                type: Schema.Types.ObjectId,
+                ref: "Message",
             },
         ],
     },
@@ -35,13 +21,11 @@ const convSchema = new Schema(
     }
 );
 
-convSchema.virtual('url').get(function () {
-    return `/conversations/${this._id}`;
+conversationSchema.virtual("url").get(function () {
+    return `/friends/channels/${this._id}`;
 });
 
-convSchema.virtual('createdAtFormatted').get(function () {
-    return this.createdAt.toLocaleString();
-});
-
-const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', convSchema);  
+const Conversation =
+    mongoose.models.Conversation ||
+    mongoose.model("Conversation", conversationSchema);
 export default Conversation;

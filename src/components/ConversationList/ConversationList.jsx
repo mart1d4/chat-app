@@ -1,36 +1,11 @@
-import { useEffect, useState } from "react";
-import useAuth from "../../hooks/useAuth";
-import styles from "./FriendList.module.css";
+import styles from "./ConversationList.module.css";
 import { useRouter } from "next/router";
 import { Avatar } from "..";
-import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import Link from "next/link";
 
-const FriendList = ({ friends, refresh }) => {
-    const [search, setSearch] = useState("");
-
-    const { auth } = useAuth();
+const ConversationList = ({ conversations }) => {
     const router = useRouter();
-    const axiosPrivate = useAxiosPrivate();
     const currentPath = router.asPath;
-
-    useEffect(() => {
-        if (!auth?.accessToken) router.push("/login");
-    }, []);
-
-    const requestFriend = async (friendID) => {
-        try {
-            const response = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/${friendID}/add`,
-            );
-            console.log(response.data);
-        } catch (err) {
-            console.error(err);
-        }
-
-        setSearch("");
-        refresh();
-    };
 
     const handleUrl = (url) => {
         localStorage.setItem("url", url);
@@ -42,14 +17,11 @@ const FriendList = ({ friends, refresh }) => {
                 <div>
                     <input
                         type="text"
-                        placeholder="Search friends"
+                        placeholder="Search channels"
                         className={styles.search}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
                     />
                     <button
                         className={styles.searchButton}
-                        onClick={() => requestFriend(search)}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -77,30 +49,30 @@ const FriendList = ({ friends, refresh }) => {
                 </Link>
 
                 <h3 className={styles.title}>Direct Messages</h3>
-                {friends?.map((friend, index) => (
-                    <li key={friend._id}>
+                {conversations?.map((conv) => (
+                    <li key={conv.members[0]._id}>
                         <Link
-                            href={`/channels/${friend._id}`}
+                            href={`/channels/${conv._id}`}
                             className={styles.link}
                             style={{
                                 backgroundColor:
-                                    currentPath === `/channels/${friend._id}` &&
+                                    currentPath === `/channels/${conv._id}` &&
                                     "#96989d3f",
                             }}
-                            onClick={() => handleUrl(`/channels/${friend._id}`)}
+                            onClick={() => handleUrl(`/channels/${conv._id}`)}
                         >
                             <div className={styles.avatarContainer}>
                                 <Avatar
-                                    avatar={friend.avatar}
-                                    username={friend.username}
-                                    status={friend.status}
+                                    avatar={conv.members[0].avatar}
+                                    username={conv.members[0].username}
+                                    status={conv.members[0].status}
                                     size="32px"
                                     show
                                 />
                             </div>
                             <p className={styles.friendUsername}>
-                                {friend.username}
-                                <br /> <span>{friend.customStatus}</span>
+                                {conv.members[0].username}
+                                <br /> <span>{conv.members[0].customStatus}</span>
                             </p>
                         </Link>
                     </li>
@@ -110,4 +82,4 @@ const FriendList = ({ friends, refresh }) => {
     );
 };
 
-export default FriendList;
+export default ConversationList;

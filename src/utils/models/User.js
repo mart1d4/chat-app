@@ -65,6 +65,12 @@ const userSchema = new Schema(
                 ref: "User",
             },
         ],
+        blockers: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            }
+        ],
         status: {
             type: String,
             default: "offline",
@@ -82,18 +88,8 @@ const userSchema = new Schema(
         ],
         notifications: [
             {
-                content: {
-                    type: String,
-                    default: "",
-                },
-                sender: {
-                    type: Schema.Types.ObjectId,
-                    ref: "User",
-                },
-                sentAt: {
-                    type: Date,
-                    default: Date.now,
-                },
+                type: Schema.Types.ObjectId,
+                ref: "Notification",
             },
         ],
         refreshToken: String,
@@ -107,18 +103,6 @@ userSchema.pre("save", async function () {
     if (this.avatar === "") {
         this.avatar = await getAvatarurl();
     }
-});
-
-userSchema.virtual("url").get(function () {
-    return `/users/${this._id}`;
-});
-
-userSchema.virtual("createdAtFormatted").get(function () {
-    return this.createdAt.toLocaleString();
-});
-
-userSchema.virtual("updatedAtFormatted").get(function () {
-    return this.updatedAt.toLocaleString();
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

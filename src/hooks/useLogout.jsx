@@ -1,17 +1,18 @@
 import axios from "../api/axios";
 import useAuth from "./useAuth";
+import { useRouter } from "next/router";
 
 export default function useLogout() {
     const { setAuth } = useAuth();
+    const router = useRouter();
 
     const logout = async () => {
         setAuth({});
+        router.push("/login");
         try {
             await axios('/auth/logout', {
                 withCredentials: true
-            }).then(() => {
-                window.location.href = "/login";
-            })
+            });
         } catch (err) {
             console.error(err);
         }

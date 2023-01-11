@@ -14,7 +14,7 @@ export default async (req, res) => {
         if (!user)
             return res
                 .status(404)
-                .send(`No user exists with username ${username}`);
+                .send({ message: "User with that username does not exist" });
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
         if (passwordsMatch) {
@@ -55,14 +55,15 @@ export default async (req, res) => {
                     role: user.role,
                     friendRequests: user.friendRequests,
                     friends: user.friends,
+                    conversations: user.conversations,
                     _id: user._id,
                 },
             });
         } else {
-            res.status(401).send("Passwords do not match");
+            res.status(401).send({ message: "Incorrect password" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error logging in user");
+        res.status(500).send({ message: "Internal server error" });
     }
 };

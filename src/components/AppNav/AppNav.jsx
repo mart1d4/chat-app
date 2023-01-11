@@ -6,11 +6,12 @@ import icons from "../../../public/icons/icons";
 import { Tooltip, Avatar } from "..";
 import { useRef, useState, useEffect } from "react";
 import useLogout from "../../hooks/useLogout";
+import { useRouter } from "next/router";
 
 const navLinks = [
     {
         name: "Dashboard",
-        path: "/app",
+        path: "/dashboard",
         icon: icons.dashboard,
     },
     {
@@ -36,6 +37,7 @@ const AppNav = () => {
     const [showMenu, setShowMenu] = useState(false);
     const { logout } = useLogout();
     const menuRef = useRef(null);
+    const router = useRouter();
 
     useEffect(() => {
         document.addEventListener("click", (event) => {
@@ -72,7 +74,6 @@ const AppNav = () => {
                         show={show === index}
                         text={link.name}
                         pos="right"
-                        arrow
                     >
                         {link.name === "Friends" ? (
                             <li
@@ -80,6 +81,12 @@ const AppNav = () => {
                                 onMouseEnter={() => setShow(index)}
                                 onMouseLeave={() => setShow(null)}
                                 onClick={() => handleRoute()}
+                                style={{
+                                    backgroundColor:
+                                        router.pathname === link.path
+                                            ? "var(--background-secondary)"
+                                            : "",
+                                }}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -94,6 +101,12 @@ const AppNav = () => {
                                 className={styles.link}
                                 onMouseEnter={() => setShow(index)}
                                 onMouseLeave={() => setShow(null)}
+                                style={{
+                                    backgroundColor:
+                                        router.pathname === link.path
+                                            ? "var(--background-secondary)"
+                                            : "",
+                                }}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -110,8 +123,8 @@ const AppNav = () => {
             <div className={styles.account}>
                 <div onClick={() => setShowMenu(!showMenu)}>
                     <Avatar
-                        avatar={auth.user?.avatar}
-                        username={auth.user?.username}
+                        avatar={auth?.user?.avatar}
+                        username={auth?.user?.username}
                         status={auth?.user?.status}
                         size="35px"
                     />
@@ -136,14 +149,7 @@ const AppNav = () => {
                                         Account
                                     </Link>
                                 </li>
-                                <li onClick={logout}>
-                                    <Link
-                                        href="/logout"
-                                        className={styles.menuLink}
-                                    >
-                                        Logout
-                                    </Link>
-                                </li>
+                                <li onClick={logout}>Logout</li>
                                 <li
                                     onClick={() => {
                                         navigator.clipboard.writeText(

@@ -1,13 +1,8 @@
-.container {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-}
-
 .main {
     display: flex;
     flex-direction: column;
-    width: calc(100% - 315px);
+    height: 100%;
+    width: 100%;
 }
 
 .content {

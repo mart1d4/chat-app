@@ -3,33 +3,46 @@ import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
+import { useRouter } from "next/router";
 
-const Blocked = ({ refresh }) => {
+const Blocked = () => {
     const [blocked, setBlocked] = useState([]);
+    const [refresh, setRefresh] = useState(false);
 
-    const axiosPrivate = useAxiosPrivate();
     const { auth } = useAuth();
+    const router = useRouter();
+    const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
         const getBlocked = async () => {
             try {
-                const response = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/blocked`
+                const { data } = await axiosPrivate.get(
+                    `/users/${auth?.user._id}/friends/blocked`,
+                    controller.signal
                 );
-                setBlocked(response.data);
+                if (isMounted) setBlocked(data);
             } catch (err) {
                 console.error(err);
             }
         };
 
         getBlocked();
-    }, []);
 
-    const unblock = async (id) => {
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, [refresh]);
+
+    const unblock = async (blockedID) => {
         try {
             await axiosPrivate.post(
-                `/users/${auth?.user._id}/${id}/unblock`
+                `/${auth?.user._id}/friends/${blockedID}/unblock`,
             );
+            setRefresh(!refresh);
         } catch (err) {
             console.error(err);
         }

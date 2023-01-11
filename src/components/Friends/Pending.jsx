@@ -2,10 +2,54 @@ import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
-const Pending = ({ sent, received, refresh }) => {
-    const axiosPrivate = useAxiosPrivate();
+const Pending = () => {
+    const [received, setReceived] = useState([]);
+    const [sent, setSent] = useState([]);
+    const [refresh, setRefresh] = useState(false);
+
     const { auth } = useAuth();
+    const router = useRouter();
+    const axiosPrivate = useAxiosPrivate();
+
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const fetchReceived = async () => {
+            try {
+                const { data } = await axiosPrivate.get(
+                    `/users/${auth.user._id}/friends/received`,
+                    controller.signal
+                );
+                if (isMounted) setReceived(data);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        const fetchSent = async () => {
+            try {
+                const { data } = await axiosPrivate.get(
+                    `/users/${auth.user._id}/friends/sent`,
+                    controller.signal
+                );
+                if (isMounted) setSent(data);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        fetchReceived();
+        fetchSent();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, [refresh]);
 
     const cancelRequest = async (friendID) => {
         try {
@@ -15,7 +59,7 @@ const Pending = ({ sent, received, refresh }) => {
         } catch (err) {
             console.error(err);
         }
-        refresh();
+        setRefresh(!refresh);
     };
 
     const acceptRequest = async (friendID) => {
@@ -26,7 +70,7 @@ const Pending = ({ sent, received, refresh }) => {
         } catch (err) {
             console.error(err);
         }
-        refresh();
+        setRefresh(!refresh);
     };
 
     const declineRequest = async (friendID) => {
@@ -37,7 +81,7 @@ const Pending = ({ sent, received, refresh }) => {
         } catch (err) {
             console.error(err);
         }
-        refresh();
+        setRefresh(!refresh);
     };
 
     if (!sent.length && !received.length) {

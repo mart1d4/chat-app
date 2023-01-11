@@ -83,6 +83,12 @@ body,
     color-scheme: dark light;
 }
 
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
 svg {
     width: 24px;
     aspect-ratio: 1;

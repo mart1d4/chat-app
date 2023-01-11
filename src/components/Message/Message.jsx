@@ -25,7 +25,7 @@ const Message = ({ message, big, hover }) => {
                     >
                         <Tooltip
                             show={showTooltip === 1}
-                            text={format(new Date(message.sentAt), "PPPP p")}
+                            text={format(new Date(message.createdAt), "PPPP p")}
                             arrow
                             pos="top"
                             dist='5px'
@@ -34,7 +34,7 @@ const Message = ({ message, big, hover }) => {
                                 onMouseEnter={() => setShowTooltip(1)}
                                 onMouseLeave={() => setShowTooltip(false)}
                             >
-                                {format(new Date(message.sentAt), "P p")}
+                                {format(new Date(message.createdAt), "P p")}
                             </span>
                         </Tooltip>
                     </span>
@@ -52,7 +52,7 @@ const Message = ({ message, big, hover }) => {
             </div>
             {hover && (
                 <div className={styles.timestampLittle}>
-                    {format(new Date(message.sentAt), "p")}
+                    {format(new Date(message.createdAt), "p")}
                 </div>
             )}
         </div>

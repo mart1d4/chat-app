@@ -179,10 +179,22 @@ const Register = () => {
                                         htmlFor="username"
                                         className={styles.label}
                                         animate={{
-                                            opacity: usernameFocus || username ? 1 : 0.5,
-                                            top: usernameFocus || username ? '-40%' : '50%',
-                                            left: usernameFocus || username ? '5px' : '15px',
-                                            transform: usernameFocus || username ? 'translateY(0%)' : 'translateY(-50%)',
+                                            opacity:
+                                                usernameFocus || username
+                                                    ? 1
+                                                    : 0.5,
+                                            top:
+                                                usernameFocus || username
+                                                    ? "-40%"
+                                                    : "50%",
+                                            left:
+                                                usernameFocus || username
+                                                    ? "5px"
+                                                    : "15px",
+                                            transform:
+                                                usernameFocus || username
+                                                    ? "translateY(0%)"
+                                                    : "translateY(-50%)",
                                         }}
                                         transition={{
                                             duration: 0.2,
@@ -234,10 +246,22 @@ const Register = () => {
                                         htmlFor="password"
                                         className={styles.label}
                                         animate={{
-                                            opacity: passwordFocus || password ? 1 : 0.5,
-                                            top: passwordFocus || password ? '-40%' : '50%',
-                                            left: passwordFocus || password ? '5px' : '15px',
-                                            transform: passwordFocus || password ? 'translateY(0%)' : 'translateY(-50%)',
+                                            opacity:
+                                                passwordFocus || password
+                                                    ? 1
+                                                    : 0.5,
+                                            top:
+                                                passwordFocus || password
+                                                    ? "-40%"
+                                                    : "50%",
+                                            left:
+                                                passwordFocus || password
+                                                    ? "5px"
+                                                    : "15px",
+                                            transform:
+                                                passwordFocus || password
+                                                    ? "translateY(0%)"
+                                                    : "translateY(-50%)",
                                         }}
                                         transition={{
                                             duration: 0.2,
@@ -283,17 +307,29 @@ const Register = () => {
                                         htmlFor="password"
                                         className={styles.label}
                                         animate={{
-                                            opacity: matchFocus || matchPassword ? 1 : 0.5,
-                                            top: matchFocus || matchPassword ? '-40%' : '50%',
-                                            left: matchFocus || matchPassword ? '5px' : '15px',
-                                            transform: matchFocus || matchPassword ? 'translateY(0%)' : 'translateY(-50%)',
+                                            opacity:
+                                                matchFocus || matchPassword
+                                                    ? 1
+                                                    : 0.5,
+                                            top:
+                                                matchFocus || matchPassword
+                                                    ? "-40%"
+                                                    : "50%",
+                                            left:
+                                                matchFocus || matchPassword
+                                                    ? "5px"
+                                                    : "15px",
+                                            transform:
+                                                matchFocus || matchPassword
+                                                    ? "translateY(0%)"
+                                                    : "translateY(-50%)",
                                         }}
                                         transition={{
                                             duration: 0.2,
                                             ease: "easeInOut",
                                         }}
                                     >
-                                        Password Confirmation
+                                        Confirm Password
                                     </motion.label>
                                 </AnimatePresence>
                                 <input

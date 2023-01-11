@@ -1,15 +1,3 @@
-.container {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-}
-
-.main {
-    display: flex;
-    flex-direction: column;
-    width: calc(100% - 315px);
-}
-
 .content {
     background-color: var(--background-tertiary);
     height: calc(100% - 50px);

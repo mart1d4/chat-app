@@ -75,6 +75,11 @@
     background-color: #303030;
 }
 
+.input:focus {
+    outline: none;
+    border: 1px solid #ffffff52;
+}
+
 .button {
     width: 100%;
     height: 50px;

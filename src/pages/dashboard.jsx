@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import styles from "../styles/App.module.css";
 import { useRouter } from "next/router";
-import { AppNav } from '../components';
+import { Layout } from "../components";
 
-const app = () => {
+const Dashboard = () => {
     const { auth } = useAuth();
     const router = useRouter();
 
@@ -16,14 +16,21 @@ const app = () => {
         <div
             className={styles.main}
         >
-            <AppNav />
             <div
                 className={styles.content}
             >
-                e
+                App dashboard
             </div>
         </div>
     );
 }
 
-export default app;
+Dashboard.getLayout = function getLayout(page) {
+    return (
+        <Layout>
+            {page}
+        </Layout>
+    );
+};
+
+export default Dashboard;

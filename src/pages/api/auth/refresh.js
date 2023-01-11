@@ -39,6 +39,7 @@ export default async (req, res) => {
                     role: user.role,
                     friendRequests: user.friendRequests,
                     friends: user.friends,
+                    conversations: user.conversations,
                     _id: user._id,
                 },
             });

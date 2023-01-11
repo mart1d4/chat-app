@@ -12,7 +12,7 @@ export default async (req, res) => {
         if (user) return res.status(422).send(`User already exists with username ${username}`);
 
         const hash = await bcrypt.hash(password, 10);
-        const newUser = await new User({
+        await new User({
             username,
             password: hash
         }).save();
