@@ -83,7 +83,9 @@ const AppNav = () => {
                                 onClick={() => handleRoute()}
                                 style={{
                                     backgroundColor:
-                                        router.pathname === link.path
+                                        router.pathname === link.path ||
+                                        localStorage.getItem("url") ===
+                                            router.asPath
                                             ? "var(--background-secondary)"
                                             : "",
                                 }}

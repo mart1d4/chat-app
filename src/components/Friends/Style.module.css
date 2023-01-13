@@ -1,92 +1,157 @@
 .content {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+  position: relative;
 }
 
-.content h2 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
+.searchBarContainer {
+  margin: 16px 20px 8px 30px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  background-color: var(--background-primary);
 }
 
-.list {
-    width: 100%;
-    height: fit-content;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    column-gap: 1rem;
+.searchBarInner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1px;
+  align-items: center;
+  flex: 1 1 auto;
 }
 
-.userCard {
-    position: relative;
-    height: fit-content;
-    display: flex;
-    align-items: center;
-    background-color: var(--background-secondary);
-    border-radius: 5px;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    min-width: 300px;
+.searchBarInner input {
+  font-size: 1rem;
+  line-height: 32px;
+  height: 30px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  resize: none;
+  flex: 1;
+  margin: 1px;
+  outline: none;
+  font-weight: 400;
 }
 
-.userCard p {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-left: 1rem;
-    text-overflow: ellipsis;
+.inputButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.buttons {
-    position: absolute;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-right: 0.5rem;
+.title {
+  display: block;
+  margin: 16px 20px 8px 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02rem;
+  font-weight: 600;
+  color: #b9bbbe;
+  user-select: none;
+  box-sizing: border-box;
 }
 
-.buttons button {
-    border: none;
-    background-color: var(--background-tertiary);
-    cursor: pointer;
-    border-radius: 5px;
-    padding: 0.5rem;
-    user-select: none;
+.listContainer {
+  overflow: hidden scroll;
+  padding-bottom: 8px;
+  margin-top: 8px;
+  position: relative;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.inputContainer {
-    width: 100%;
-    height: fit-content;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.liContainer {
+  height: 62px;
+  opacity: 1;
+  display: flex;
+  margin: 0 20px 0 30px;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 20px;
+  border-top: 1px solid rgba(79, 84, 92, 0.5);
 }
 
-.inputContainer input {
-    width: 100%;
-    height: 40px;
-    border: none;
-    border-radius: 5px 0 0 5px;
-    padding: 0 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--foreground-primary);
-    background-color: var(--background-secondary);
-    outline: none;
+.liContainer:hover {
+  border-radius: 8px;
+  margin: 0 10px 0 20px;
+  padding: 16px 10px;
+  background-color: rgba(79, 84, 92, 0.4);
+  border-color: transparent;
+  cursor: pointer;
 }
 
-.inputContainer button {
-    height: 40px;
-    border: none;
-    background-color: var(--background-secondary);
-    cursor: pointer;
-    border-radius: 0 5px 5px 0;
-    padding: 0.5rem;
-    user-select: none;
+.liContainer:hover .actions button {
+  background-color: var(--background-primary);
+}
+
+.li {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 100%;
+}
+
+.userInfo {
+  display: flex;
+  overflow: hidden;
+}
+
+.avatarWrapper {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  position: relative;
+  border-radius: 50%;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.textUsername {
+  display: flex;
+  overflow: hidden;
+  flex-grow: 1;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.textStatus {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14px;
+  color: #b9bbbe;
+}
+
+.actions {
+  margin-left: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.actions button {
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-secondary);
 }

@@ -5,9 +5,9 @@ const Layout = ({ children }) => {
     return (
         <div className={styles.container}>
             <AppNav />
-            <main className={styles.main}>
+            <div className={styles.wrapper}>
                 {children}
-            </main>
+            </div>
         </div>
     );
 };

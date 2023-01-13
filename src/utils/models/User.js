@@ -59,7 +59,7 @@ const userSchema = new Schema(
                 ref: "User",
             },
         ],
-        blocked: [
+        blockedUsers: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "User",

@@ -11,9 +11,9 @@ const blockUser = async (userID, blockID) => {
     if (!block) return "No block found";
 
     // Check if user already blocked
-    if (user.blocked.includes(blockID)) return "User already blocked";
+    if (user.blockedUsers.includes(blockID)) return "User already blocked";
 
-    user.blocked.push(blockID);
+    user.blockedUsers.push(blockID);
     block.blockers.push(userID);
 
     // Remove friend if they are friends

@@ -8,6 +8,8 @@ export default function useLogout() {
 
     const logout = async () => {
         setAuth({});
+        localStorage.removeItem("url");
+        localStorage.removeItem("friendsContent");
         router.push("/login");
         try {
             await axios('/auth/logout', {

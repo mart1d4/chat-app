@@ -11,14 +11,15 @@
     border-radius: 50%;
 }
 
-.status {
-    box-sizing: content-box;
+.statusContainer {
     position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 10px;
-    aspect-ratio: 1;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border-radius: 50%;
-    background-color: var(--background-primary);
-    border: 3px solid var(--background-secondary);
+    border: 2px solid var(--background-secondary);
 }

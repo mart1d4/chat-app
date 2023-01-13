@@ -48,7 +48,7 @@ const Login = () => {
             });
             setUsername("");
             setPassword("");
-            router.push("/app");
+            router.push("/dashboard");
         } catch (err) {
             if (!err?.response) {
                 setErrorMessage("No Server Response");

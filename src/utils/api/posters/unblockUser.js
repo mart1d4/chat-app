@@ -11,9 +11,9 @@ const unblockUser = async (userID, blockedUserID) => {
     if (!blockedUser) return "No blocked user found";
 
     // Check if user already blocked
-    if (!user.blocked.includes(blockedUserID)) return "User not blocked";
+    if (!user.blockedUsers.includes(blockedUserID)) return "User not blocked";
 
-    user.blocked = user.blocked.filter(
+    user.blockedUsers = user.blocked.filter(
         (blocked) => blocked._id !== blockedUserID
     );
     blockedUser.blockers = blockedUser.blockers.filter(

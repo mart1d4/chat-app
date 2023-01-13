@@ -1,65 +1,31 @@
 import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
+import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 
 const Pending = () => {
-    const [received, setReceived] = useState([]);
-    const [sent, setSent] = useState([]);
-    const [refresh, setRefresh] = useState(false);
-
     const { auth } = useAuth();
-    const router = useRouter();
+    const {
+        friendRequestsSent,
+        setFriendRequestsSent,
+        friendRequestsReceived,
+        setFriendRequestsReceived,
+        friends,
+        setFriends,
+        getChannels,
+    } = useUserData();
     const axiosPrivate = useAxiosPrivate();
-
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-
-        const fetchReceived = async () => {
-            try {
-                const { data } = await axiosPrivate.get(
-                    `/users/${auth.user._id}/friends/received`,
-                    controller.signal
-                );
-                if (isMounted) setReceived(data);
-            } catch (err) {
-                console.log(err);
-            }
-        };
-
-        const fetchSent = async () => {
-            try {
-                const { data } = await axiosPrivate.get(
-                    `/users/${auth.user._id}/friends/sent`,
-                    controller.signal
-                );
-                if (isMounted) setSent(data);
-            } catch (err) {
-                console.log(err);
-            }
-        };
-
-        fetchReceived();
-        fetchSent();
-
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
-    }, [refresh]);
 
     const cancelRequest = async (friendID) => {
         try {
             await axiosPrivate.post(
                 `/users/${auth?.user._id}/friends/${friendID}/cancel`,
             );
+            setFriendRequestsSent(friendRequestsSent.filter((friend) => friend._id !== friendID));
         } catch (err) {
             console.error(err);
         }
-        setRefresh(!refresh);
     };
 
     const acceptRequest = async (friendID) => {
@@ -67,10 +33,12 @@ const Pending = () => {
             await axiosPrivate.post(
                 `/users/${auth?.user._id}/friends/${friendID}/accept`,
             );
+            setFriendRequestsReceived(friendRequestsReceived.filter((friend) => friend._id !== friendID));
+            setFriends([...friends, friendRequestsReceived.find((friend) => friend._id === friendID)]);
+            getChannels();
         } catch (err) {
             console.error(err);
         }
-        setRefresh(!refresh);
     };
 
     const declineRequest = async (friendID) => {
@@ -78,13 +46,13 @@ const Pending = () => {
             await axiosPrivate.post(
                 `/users/${auth?.user._id}/friends/${friendID}/decline`,
             );
+            setFriendRequestsReceived(friendRequestsReceived.filter((friend) => friend._id !== friendID));
         } catch (err) {
             console.error(err);
         }
-        setRefresh(!refresh);
     };
 
-    if (!sent.length && !received.length) {
+    if (!friendRequestsSent.length && !friendRequestsReceived.length) {
         return (
             <div className={styles.content}>
                 <h2>No pending requests</h2>
@@ -94,22 +62,22 @@ const Pending = () => {
 
     return (
         <div className={styles.content}>
-            {sent.length > 0 && (
+            {friendRequestsSent.length > 0 && (
                 <>
-                    <h2>Sent</h2>
+                    <h2>Requests Sent = {friendRequestsSent.length}</h2>
                     <div className={styles.list}>
-                        {sent.map((friend) => (
-                            <div key={friend._id} className={styles.userCard}>
+                        {friendRequestsSent.map((user) => (
+                            <div key={user._id} className={styles.userCard}>
                                 <Avatar
-                                    username={friend.username}
-                                    avatar={friend.avatar}
+                                    username={user.username}
+                                    avatar={user.avatar}
                                     size="48px"
                                 />
-                                <p>{friend.username}</p>
+                                <p>{user.username}</p>
                                 <div className={styles.buttons}>
                                     <button
                                         onClick={() =>
-                                            cancelRequest(friend._id)
+                                            cancelRequest(user._id)
                                         }
                                     >
                                         Cancel
@@ -120,29 +88,29 @@ const Pending = () => {
                     </div>
                 </>
             )}
-            {received.length > 0 && (
+            {friendRequestsReceived.length > 0 && (
                 <>
-                    <h2>Received</h2>
+                    <h2>Requests Received - {friendRequestsReceived.length}</h2>
                     <div className={styles.list}>
-                        {received.map((friend) => (
-                            <div key={friend._id} className={styles.userCard}>
+                        {friendRequestsReceived.map((user) => (
+                            <div key={user._id} className={styles.userCard}>
                                 <Avatar
-                                    username={friend.username}
-                                    avatar={friend.avatar}
+                                    username={user.username}
+                                    avatar={user.avatar}
                                     size="48px"
                                 />
-                                <p>{friend.username}</p>
+                                <p>{user.username}</p>
                                 <div className={styles.buttons}>
                                     <button
                                         onClick={() =>
-                                            acceptRequest(friend._id)
+                                            acceptRequest(user._id)
                                         }
                                     >
                                         Accept
                                     </button>
                                     <button
                                         onClick={() =>
-                                            declineRequest(friend._id)
+                                            declineRequest(user._id)
                                         }
                                     >
                                         Decline

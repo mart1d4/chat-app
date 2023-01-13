@@ -34,7 +34,7 @@ const Register = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        if (auth?.accessToken) router.push("/login");
+        if (auth?.accessToken) router.push("/dashboard");
         usernameRef?.current?.focus();
     }, []);
 

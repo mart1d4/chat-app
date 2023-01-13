@@ -3,12 +3,12 @@ import User from "../../models/User";
 const getBlocked = async (userID) => {
     if (!userID) return "No user ID provided";
 
-    const user = await User.findById(userID).populate("blocked");
+    const user = await User.findById(userID).populate("blockedUsers");
 
     if (!user) return "No user found";
 
     // Clean the users so there's no sensitive data
-    const cleanBlocked = user.blocked.map((blocked) => {
+    const cleanBlocked = user.blockedUsers.map((blocked) => {
         const blockedObj = blocked.toObject();
         const cleanBlocked = {
             _id: blockedObj._id,

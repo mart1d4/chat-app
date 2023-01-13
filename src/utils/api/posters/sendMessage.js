@@ -9,8 +9,6 @@ const sendMessage = async (conversationID, messageContent) => {
         .populate("members")
         .populate("messages");
 
-    console.log(conversation);
-
     if (!conversation) return "No conversation found";
 
     // Check if a participant removed the conversation

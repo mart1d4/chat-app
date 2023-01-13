@@ -1,49 +1,25 @@
 import { Avatar } from "..";
 import useAuth from "../../hooks/useAuth";
+import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const Online = () => {
-    const [friends, setFriends] = useState([]);
-    const [refresh, setRefresh] = useState(false);
-
     const { auth } = useAuth();
+    const { friends, setFriends, channels, getChannels } = useUserData();
     const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-
-        const fetchFriends = async () => {
-            try {
-                const { data } = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/friends`,
-                    controller.signal
-                );
-                if (isMounted)
-                    setFriends(data.filter((friend) => friend.online));
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        fetchFriends();
-
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
-    }, [refresh]);
+    const onlineFriends = friends.filter((friend) => friend.status === "online");
 
     const removeFriend = async (friendID) => {
         try {
             await axiosPrivate.post(
                 `/users/${auth?.user._id}/friends/${friendID}/remove`,
             );
-            setRefresh(!refresh);
+            setFriends(friends.filter((friend) => friend._id !== friendID));
+            getChannels();
         } catch (err) {
             console.error(err);
         }
@@ -52,15 +28,15 @@ const Online = () => {
     const startConversation = async (friendID) => {
         try {
             await axiosPrivate.post(
-                `/users/${auth?.user._id}/channels/${friendID}/add`,
+                `/users/${auth?.user._id}/channels/${getFriendConversation(friendID)}/add`,
             );
-            router.push(`/channels/${friendID}`);
+            router.push(`/channels/${getFriendConversation(friendID)}`);
         } catch (err) {
             console.error(err);
         }
     };
 
-    if (!friends.length) {
+    if (!onlineFriends.length) {
         return (
             <div className={styles.content}>
                 <h2>No friends online</h2>
@@ -68,11 +44,20 @@ const Online = () => {
         );
     }
 
+    const getFriendConversation = (friendID) => {
+        const channel = channels.find(
+            (channel) =>
+                channel.members.length === 2 &&
+                channel.members.includes(friendID)
+        );
+        return channel._id;
+    };
+
     return (
         <div className={styles.content}>
-            <h2>Online Friends</h2>
+            <h2>Online Friends - {onlineFriends.length}</h2>
             <div className={styles.list}>
-                {friends.map((friend) => (
+                {onlineFriends.map((friend) => (
                     <div key={friend._id} className={styles.userCard}>
                         <Avatar
                             username={friend.username}

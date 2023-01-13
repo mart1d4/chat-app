@@ -1,84 +1,158 @@
 import { useRouter } from "next/router";
-import {
-    AppHeader,
-    Conversation,
-    Layout,
-    NestedLayout
-} from "../../components";
+import { AppHeader, Layout, NestedLayout, Message } from "../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const Channels = () => {
-    const [conversationID, setConversationID] = useState(null);
-    const [conversation, setConversation] = useState(null);
+    const [channelID, setChannelID] = useState(null);
     const [friend, setFriend] = useState(null);
+    const [messages, setMessages] = useState(null);
+    const [message, setMessage] = useState("");
+    const [hover, setHover] = useState(false);
+    const [listHeight, setListHeight] = useState(0);
 
     const { auth } = useAuth();
     const router = useRouter();
-
+    const list = useRef(null);
     const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
-        const { channelID } = router.query;
-        if (channelID) setConversationID(channelID);
-    }, [router.query]);
+        if (list.current) {
+            setListHeight(list.current.scrollHeight);
+        }
+    }, [messages]);
 
     useEffect(() => {
-        if (!auth?.accessToken) router.push("/login");
+        if (list.current) {
+            list.current.scrollTop = list.current.scrollHeight;
+        }
+    }, [listHeight]);
 
+    useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
+
+        const { channelID } = router.query;
+        setChannelID(channelID);
 
         const fetchConversation = async () => {
             try {
                 const { data } = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/channels/${conversationID}/get`,
+                    `/users/${auth?.user._id}/channels/${channelID}/get`,
                     controller.signal
                 );
-                if (isMounted) setConversation(data);
+                if (isMounted) {
+                    setMessages(data.messages);
+                    setFriend(
+                        data.members?.find(
+                            (member) => member._id !== auth?.user._id
+                        )
+                    );
+                }
             } catch (err) {
                 console.error(err);
             }
         };
 
-        conversationID && fetchConversation();
-        // if (conversationID && auth?.user  && auth?.user?.conversations ) {
-        //     // If conversation not in user's conversation list, redirect to /friends
-        //     if (
-        //         auth.user.conversations.filter(
-        //             (channel) =>
-        //                 channel.toString() === conversationID.toString()
-        //         ).length === 0
-        //     ) {
-        //         router.push("/friends");
-        //     }
-        // }
+        fetchConversation();
 
         return () => {
             isMounted = false;
             controller.abort();
         };
-    }, [conversationID]);
+    }, [router.query]);
 
-    useEffect(() => {
-        const friend = conversation?.members?.filter(
-            (member) => member._id !== auth?.user._id
-        )[0];
-        setFriend(friend);
-    }, [conversation]);
+    const sendMessage = () => {
+        if (message.length > 4000) return;
+        if (message.length === 0) return;
+
+        setMessages((messages) => [
+            ...messages,
+            {
+                sender: auth?.user,
+                content: message,
+                createdAt: new Date(),
+            },
+        ]);
+
+        axiosPrivate.post(
+            `/users/${auth?.user._id}/channels/${channelID}/send`,
+            {
+                message: {
+                    sender: auth?.user._id,
+                    content: message,
+                },
+            }
+        );
+
+        setMessage("");
+    };
+
+    const checkMessageSender = (index) => {
+        if (
+            messages[index]?.sender?._id
+            !== messages[index - 1]?.sender?._id
+        ) return true;
+        return false;
+    };
 
     return (
         <>
             <Head>
                 <title>Unthrust | @{friend?.username}</title>
             </Head>
-            <div className={styles.container}>
-                <div className={styles.main}>
-                    <AppHeader content="channels" friend={friend} />
-                    <Conversation conversationID={conversationID} friend={friend} />
+            <div className={styles.main}>
+                <AppHeader content="channels" friend={friend} />
+                <div className={styles.content}>
+                    <ul className={styles.messages} ref={list}>
+                        {messages &&
+                            messages.map((message, index) => (
+                                <li
+                                    key={index}
+                                    onMouseEnter={() => setHover(index)}
+                                    onMouseLeave={() => setHover(false)}
+                                    style={{
+                                        marginTop: !checkMessageSender(index)
+                                            ? ""
+                                            : index === 0
+                                                ? "10rem"
+                                                : "1.5rem",
+                                    }}
+                                >
+                                    <Message
+                                        message={message}
+                                        big={checkMessageSender(index)}
+                                        hover={hover === index}
+                                    />
+                                </li>
+                            ))}
+                    </ul>
+                    <div className={styles.messageInput}>
+                        <div className={styles.typingIndicator}></div>
+                        <input
+                            type="text-area"
+                            placeholder={`Send a message to @${friend?.username}`}
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") sendMessage();
+                            }}
+                        />
+                        <div className={styles.lettersCount}>
+                            <span
+                                style={{
+                                    color:
+                                        message.length > 4000 ? "#ff6868" : "",
+                                }}
+                            >
+                                {message.length}
+                            </span>
+                            /4000
+                        </div>
+                    </div>
                 </div>
             </div>
         </>

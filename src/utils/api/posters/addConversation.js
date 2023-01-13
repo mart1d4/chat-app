@@ -1,4 +1,5 @@
 import User from "../../models/User";
+import Conversation from "../../models/Conversation";
 
 const addConversation = async (userID, conversationID) => {
     if (!userID) return "No user ID provided";

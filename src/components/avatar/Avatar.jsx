@@ -12,31 +12,34 @@ const Avatar = ({ username, avatar, status, size, show }) => {
                 alt={username}
                 style={{ width: size ?? "48px" }}
             />
-            <Tooltip
-                text={status?.charAt(0).toUpperCase() + status?.slice(1)}
-                pos="top"
-                show={show ? showTooltip : false}
-                dist="-50%"
-                arrow
-            >
-                {status && (
-                    <div
-                        className={styles.status}
-                        style={{
-                            backgroundColor:
-                                status === "online"
-                                    ? "green"
-                                    : status === "away"
-                                    ? "yellow"
-                                    : status === "busy"
-                                    ? "red"
-                                    : "grey",
-                        }}
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                    />
-                )}
-            </Tooltip>
+            {status && (
+                <div
+                    className={styles.statusContainer}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    style={{
+                        backgroundColor:
+                            status === "online"
+                                ? "green"
+                                : status === "away"
+                                ? "yellow"
+                                : status === "busy"
+                                ? "red"
+                                : "grey",
+                    }}
+                >
+                    <Tooltip
+                        text={
+                            status?.charAt(0).toUpperCase() + status?.slice(1)
+                        }
+                        pos="top"
+                        show={showTooltip}
+                        dist="15px"
+                        arrow
+                    >
+                    </Tooltip>
+                </div>
+            )}
         </div>
     );
 };

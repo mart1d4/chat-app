@@ -1,12 +1,15 @@
 .main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  background-color: var(--background-tertiary);
 }
 
 .content {
-    background-color: var(--background-tertiary);
-    height: calc(100% - 50px);
-    padding: 1.5rem 3rem;
+  height: 100%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
 }

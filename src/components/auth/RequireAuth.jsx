@@ -1,14 +1,11 @@
-import { useLocation, Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import { useRouter } from 'next/router';
 
 export default function RequireAuth() {
     const { auth } = useAuth();
-    const location = useLocation();
+    const router = useRouter();
 
     return (
-        !auth?.accessToken &&
-            <Navigate
-                to={{ pathname: '/login', state: { from: location } }}
-            />
+        !auth?.accessToken && router.push('/login')
     );
 }

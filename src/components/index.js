@@ -2,9 +2,8 @@ import AppHeader from './AppHeader/AppHeader';
 import AppNav from './AppNav/AppNav';
 import RequireAuth from './Auth/RequireAuth';
 import Avatar from './Avatar/Avatar';
-import Conversation from './Conversation/Conversation';
 import Footer from './Footer/Footer';
-import ConversationList from './ConversationList/ConversationList';
+import ChannelList from './ChannelList/ChannelList';
 import Header from './Header/Header';
 import Loader from './Loader/Loader';
 import Main from './Main/Main';
@@ -23,9 +22,8 @@ export {
     AppNav,
     RequireAuth,
     Avatar,
-    Conversation,
     Footer,
-    ConversationList,
+    ChannelList,
     Header,
     Loader,
     Main,

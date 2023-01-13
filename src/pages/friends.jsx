@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import styles from "../styles/Friends.module.css";
 import {
     AppHeader,
-    ConversationList,
     AddFriend,
     All,
     Blocked,

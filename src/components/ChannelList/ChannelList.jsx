@@ -1,9 +1,9 @@
-import styles from "./ConversationList.module.css";
+import styles from "./ChannelList.module.css";
 import { useRouter } from "next/router";
 import { Avatar } from "..";
 import Link from "next/link";
 
-const ConversationList = ({ conversations }) => {
+const ConversationList = ({ channels }) => {
     const router = useRouter();
     const currentPath = router.asPath;
 
@@ -49,7 +49,7 @@ const ConversationList = ({ conversations }) => {
                 </Link>
 
                 <h3 className={styles.title}>Direct Messages</h3>
-                {conversations?.map((conv) => (
+                {channels?.map((conv) => (
                     <li key={conv.members[0]._id}>
                         <Link
                             href={`/channels/${conv._id}`}

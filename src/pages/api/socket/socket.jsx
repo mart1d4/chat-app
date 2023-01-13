@@ -9,15 +9,12 @@ const socketHandler = (req, res) => {
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
 
-    const onConnection = (socket) => {
-        const createdMessage = (msg) => {
-            socket.broadcast.emit('newIncomingMessage', msg);
-        };
-        
-        socket.on('createdMessage', createdMessage);
-    };
+    io.on('connection', socket => {
+        socket.on('messageSent', message => {
+            socket.broadcast.emit('messageReceived', message)
+        })
+    })
 
-    io.on('connection', onConnection);
     res.end();
 }
 

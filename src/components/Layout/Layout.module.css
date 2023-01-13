@@ -4,7 +4,7 @@
     display: flex;
 }
 
-.main {
+.wrapper {
     width: calc(100% - 70px);
     height: 100%;
 }

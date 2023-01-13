@@ -1,4 +1,6 @@
 import User from "../../../utils/models/User";
+import Conversation from "../../../utils/models/Conversation";
+import Message from "../../../utils/models/Message";
 import connectDB from "../../../utils/connectDB";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -53,9 +55,6 @@ export default async (req, res) => {
                     customStatus: user.customStatus,
                     createdAt: user.createdAtFormatted,
                     role: user.role,
-                    friendRequests: user.friendRequests,
-                    friends: user.friends,
-                    conversations: user.conversations,
                     _id: user._id,
                 },
             });

@@ -1,76 +1,88 @@
 .message {
-    position: relative;
-    min-height: 2.75rem;
-    padding: 0.3rem 48px 0.3rem 72px;
-    word-wrap: break-word;
-    user-select: text;
+  position: relative;
+  min-height: 2.75rem;
+  padding: 0.3rem 48px 0.3rem 72px;
+  word-wrap: break-word;
+  user-select: text;
 }
 
 .messageLittle {
-    overflow: hidden;
-    position: relative;
-    padding: 0.125rem 48px 0.125rem 72px;
+  position: relative;
+  padding: 0.125rem 48px 0.125rem 72px;
 }
 
 .avatar {
-    position: absolute;
-    left: 16px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-    user-select: none;
+  position: absolute;
+  left: 16px;
+  margin-top: 0.15rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 .avatar:hover {
-    box-shadow: 0 2px 0 2px rgba(0, 0, 0, 0.15);
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
 }
 
 .messageHeader {
-    overflow: hidden;
-    line-height: 1.375rem;
-    min-height: 1.375rem;
-    white-space: break-spaces;
+  line-height: 1.375rem;
+  min-height: 1.375rem;
+  white-space: break-spaces;
 }
 
 .username {
-    margin-right: 0.25rem;
-    line-height: 1.375rem;
-    font-weight: inherit;
-    font-style: inherit;
-    font-size: 100%;
+  margin-right: 0.25rem;
+  line-height: 1.375rem;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
 }
 
 .username:hover {
-    text-decoration: underline;
-    cursor: pointer;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.messageContent {
+  position: relative;
+  line-height: 1.5rem;
+  font-size: 1rem;
+  margin-left: -72px;
+  padding-left: 72px;
 }
 
 .timestamp {
-    display: inline-block;
-    height: 1.25rem;
-    cursor: default;
-    font-weight: 500;
-    font-size: 0.75rem;
-    line-height: 1.375rem;
-    margin-left: 0.25rem;
-    color: var(--foreground-secondary);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.25rem;
+  cursor: default;
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+  margin-left: 0.25rem;
+  color: var(--foreground-secondary);
 }
 
 .timestampLittle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 1.375rem;
-    width: 72px;
-    user-select: none;
-    text-align: right;
-    line-height: 1.375rem;
-    font-weight: 500;
-    font-size: 0.75rem;
-    color: var(--foreground-secondary);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: calc(1.5rem + 0.25rem);
+  width: 72px;
+  user-select: none;
+  text-align: right;
+  line-height: 1.5rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--foreground-secondary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
