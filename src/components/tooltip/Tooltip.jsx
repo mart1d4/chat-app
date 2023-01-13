@@ -15,12 +15,12 @@ const Tooltip = ({ children, show, text, pos, dist, arrow }) => {
             if (position === 'top') {
                 objects[0].bottom = `calc(100% + ${distance})`;
                 objects[1].top = '100%';
-                objects[2].borderTop = '4px solid var(--background-quaternary)';
+                objects[2].borderTop = '4px solid var(--background-dark)';
                 objects[2].bottom = '-4px';
             } else if (position === 'bottom') {
                 objects[0].top = `calc(100% + ${distance})`;
                 objects[1].bottom = '100%';
-                objects[2].borderBottom = '4px solid var(--background-quaternary)';
+                objects[2].borderBottom = '4px solid var(--background-dark)';
                 objects[2].top = '-4px';
             }
 
@@ -38,12 +38,12 @@ const Tooltip = ({ children, show, text, pos, dist, arrow }) => {
             if (position === 'left') {
                 objects[0].right = `calc(100% + ${distance})`;
                 objects[1].left = '100%';
-                objects[2].borderLeft = '4px solid var(--background-quaternary)';
+                objects[2].borderLeft = '4px solid var(--background-dark)';
                 objects[2].right = '-4px';
             } else if (position === 'right') {
                 objects[0].left = `calc(100% + ${distance})`;
                 objects[1].right = '100%';
-                objects[2].borderRight = '4px solid var(--background-quaternary)';
+                objects[2].borderRight = '4px solid var(--background-dark)';
                 objects[2].left = '-4px';
             }
 

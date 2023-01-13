@@ -1,10 +1,11 @@
-import { Avatar, Tooltip } from "..";
+import { Tooltip } from "..";
 import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRef, useState } from "react";
+
 
 const All = () => {
     const [search, setSearch] = useState("");
@@ -85,12 +86,12 @@ const All = () => {
                         {search.length ? (
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
+                                width="20"
+                                height="20"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
                             >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                <path d="M15.5 4.5l-11 11m11 0l-11-11" />
                             </svg>
                         ) : (
                             <svg

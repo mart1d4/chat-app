@@ -1,10 +1,9 @@
 .container {
+  position: relative;
   display: flex;
-  height: 100%;
-  width: 100%;
-}
-
-.main {
-  height: 100%;
-  width: calc(100% - 245px);
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 auto;
 }

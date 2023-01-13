@@ -9,9 +9,7 @@ const NestedLayout = ({ children }) => {
     return (
         <div className={styles.container}>
             <ChannelList channels={channels} />
-            <main className={styles.main}>
-                {children}
-            </main>
+            {children}
         </div>
     );
 };

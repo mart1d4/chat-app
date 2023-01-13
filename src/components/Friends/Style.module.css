@@ -12,6 +12,7 @@
   overflow: hidden;
   display: flex;
   background-color: var(--background-primary);
+  flex: none;
 }
 
 .searchBarInner {
@@ -37,6 +38,10 @@
   font-weight: 400;
 }
 
+.searchBarInner input::placeholder {
+  user-select: none;
+}
+
 .inputButton {
   width: 32px;
   height: 32px;
@@ -59,10 +64,12 @@
   color: #b9bbbe;
   user-select: none;
   box-sizing: border-box;
+  flex: none;
 }
 
 .listContainer {
   overflow: hidden scroll;
+  padding-right: 0px;
   padding-bottom: 8px;
   margin-top: 8px;
   position: relative;
@@ -86,7 +93,7 @@
   border-radius: 8px;
   margin: 0 10px 0 20px;
   padding: 16px 10px;
-  background-color: rgba(79, 84, 92, 0.4);
+  background-color: var(--background-transparent);
   border-color: transparent;
   cursor: pointer;
 }
@@ -116,10 +123,15 @@
   border-radius: 50%;
 }
 
+.avatarWrapper img {
+  border-radius: 50%;
+}
+
 .text {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  user-select: none;
 }
 
 .textUsername {
@@ -153,5 +165,5 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--background-secondary);
+  background-color: var(--background-tertiary);
 }

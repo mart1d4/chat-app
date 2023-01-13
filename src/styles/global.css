@@ -3,11 +3,14 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background-primary: hsl(216, 7%, 14%);
-    --background-secondary: hsl(223, 7%, 20%);
-    --background-tertiary: hsl(220, 8%, 23%);
-    --background-quaternary: hsl(225, 8%, 10%);
+    --background-secondary: hsl(220, 7%, 17%);
+    --background-tertiary: hsl(223, 7%, 20%);
+    --background-quaternary: hsl(220, 8%, 23%);
+    --background-dark: hsl(225, 8%, 10%);
+    --background-transparent: hsla(217, 8%, 34%, 0.5);
     --foreground-primary: hsl(0, 0%, 100%);
     --foreground-secondary: hsl(216, 4%, 74%);
+    --foreground-tertiary: hsl(214, 4%, 65%);
     --accent-primary: hsl(235, 86%, 65%);
   }
 }
@@ -26,13 +29,14 @@
 /* Change scrollbar */
 
 ::-webkit-scrollbar {
+  background-color: var(--background-tertiary);
   width: 8px;
-  background: var(--background-secondary);
   border-radius: 100vw;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--background-primary);
+  border: 10px solid var(--background-primary);
+  background-clip: padding-box;
   border-radius: 100vw;
 }
 
@@ -73,7 +77,7 @@ body,
 }
 
 svg {
-  fill: var(--foreground-primary);
+  fill: var(--foreground-secondary);
 }
 
 img {

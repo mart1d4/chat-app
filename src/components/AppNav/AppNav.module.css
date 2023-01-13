@@ -1,39 +1,40 @@
 .nav {
+  position: relative;
+  width: 72px;
+  flex-shrink: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  height: 100vh;
-  width: 70px;
-  background: var(--background-primary);
-  padding: 1rem 0;
 }
 
-.logo svg {
-  width: 54px;
-  aspect-ratio: 1;
-  stroke-width: 1;
+.list {
+  overflow: hidden scroll;
+  padding-right: 0px;
+  user-select: none;
+  padding-top: 12px;
+  background-color: var(--background-primary);
+  contain: layout size;
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
-.links {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
-  border-radius: 15px;
-  cursor: pointer;
-}
-
-.link:hover {
+.list::-webkit-scrollbar {
+  width: 0px;
   background: var(--background-secondary);
+  border-radius: 100vw;
+}
+
+.channelList {
+  position: relative;
+}
+
+.listItem {
+  position: relative;
+  margin: 0 0 8px;
+  display: flex;
+  justify-content: center;
+  width: 72px;
 }
 
 .account {

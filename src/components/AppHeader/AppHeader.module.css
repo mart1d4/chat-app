@@ -1,45 +1,72 @@
 .header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
   width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  height: 50px;
-  background-color: var(--background-tertiary);
-  border-bottom: 1px solid var(--background-primary);
-  box-shadow: 0 1px 3px 0 var(--background-primary);
-}
-
-.header h1 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-right: 1rem;
-}
-
-.split {
-  height: 60%;
-  width: 1px;
-  background-color: var(--background-secondary);
-}
-
-.list {
-  margin-left: 1rem;
-  list-style: none;
-  gap: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.item {
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
+  flex: 0 0 auto;
+  height: 48px;
+  padding: 0 8px;
+  font-size: 16px;
+  line-height: 20px;
+  cursor: default;
+  z-index: 2;
   user-select: none;
 }
 
+.nav {
+  position: relative;
+  flex-direction: 1 1 auto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.icon {
+  position: relative;
+  height: 24px;
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0 8px;
+}
+
+.title {
+  margin-right: 8px;
+  flex: 0 0 auto;
+  min-width: auto;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 8px;
+  flex: 0 0 auto;
+  background-color: var(--background-transparent);
+}
+
+.list {
+  display: flex;
+}
+
+.item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-width: 40px;
+  border-radius: 4px;
+  margin: 0 8px;
+  padding: 2px 8px;
+  position: relative;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--foreground-secondary);
+}
+
 .item:hover {
-  background-color: #96989d31;
+  background-color: var(--background-transparent);
+  color: var(--foreground-primary);
 }
 
 .status {
@@ -47,4 +74,11 @@
   height: 15px;
   border-radius: 50%;
   margin-right: 1rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
 }

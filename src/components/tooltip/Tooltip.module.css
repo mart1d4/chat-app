@@ -11,7 +11,7 @@
   position: absolute;
   font-size: 12px;
   font-weight: 500;
-  background-color: var(--background-quaternary);
+  background-color: var(--background-dark);
   color: var(--foreground-primary);
   border-radius: 5px;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);

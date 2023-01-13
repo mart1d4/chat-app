@@ -1,123 +1,107 @@
-.searchContainer {
-  width: 100%;
-  height: 50px;
+.nav {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem;
-  border-bottom: 1px solid var(--background-primary);
-  box-shadow: 0 1px 3px 0 var(--background-primary);
-}
-
-.searchContainer > div {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.search {
-  width: 100%;
-  height: 100%;
-  padding: 0 0.5rem;
-  background-color: var(--background-primary);
-  border-radius: 5px;
-  border: none;
-  font-size: 0.95rem;
-}
-
-.search:focus {
-  outline: none;
-}
-
-.searchButton {
-  height: 100%;
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: 0;
-  right: 0;
-  cursor: pointer;
-  border: none;
-  background-color: transparent;
-  padding: 0 0.5rem;
-}
-
-.searchButton > svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.friends {
-  width: 245px;
-  height: 100vh;
-  background-color: var(--background-secondary);
-  user-select: none;
-}
-
-.friendsList {
-  width: 100%;
-  height: calc(100% - 80px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 1rem;
-  list-style: none;
-  color: #96989d;
-}
-
-.link,
-.friendsLink {
-  width: 100%;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border-radius: 5px;
-  cursor: pointer;
-  text-decoration: none;
-  color: #96989d;
-  margin-bottom: 2px;
-}
-
-.friendsLink {
-  margin-bottom: 1rem;
-}
-
-.title {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.title:hover {
-  color: #fff;
-}
-
-.link:hover,
-.friendsLink:hover {
+  flex-direction: column;
+  width: 240px;
+  min-height: 0;
+  flex: 0 0 auto;
   background-color: var(--background-tertiary);
 }
 
-.avatarContainer {
-  margin-right: 12px;
+.privateChannel {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  flex: 1;
+  flex-direction: column;
 }
 
-.friendUsername {
+.searchContainer {
+  z-index: 2;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  height: 48px;
+  align-items: center;
+  position: relative;
+  display: flex;
+}
+
+.searchButton {
+  width: 100%;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 4px;
+  text-align: left;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: 0;
+  border: 0;
+  padding: 1px 6px;
+  color: var(--foreground-tertiary);
+  background-color: var(--background-primary);
+}
+
+.scroller {
+  overflow: hidden scroll;
+  padding-right: 0px;
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.channelList {
+  position: relative;
+  list-style: none;
+}
+
+.channelList:first-child {
+  height: 8px;
+}
+
+.channelList .title {
+  display: flex;
+  padding: 18px 8px 4px 18px;
+  height: 40px;
+  text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  color: #96989d;
-  font-size: 16px;
-}
-
-.friendUsername span {
+  text-transform: uppercase;
   font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02rem;
+  font-weight: 600;
 }
 
-.requests {
-  width: calc(100% - 300px);
-  height: 100vh;
-  background-color: var(--background-primary);
+.liContainer {
+  position: relative;
+  max-width: 224px;
+  margin-left: 8px;
+  padding: 1px 0;
+  border-radius: 4px;
+}
+
+.liInner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-radius: 4px;
+  height: 42px;
+  padding: 0 8px;
+}
+
+.userSection {
+  flex: 0 0 auto;
+  background-color: var(--background-secondary);
+  z-index: 1;
 }
