@@ -22,7 +22,7 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        if (auth?.accessToken) router.push("/app");
+        if (auth?.accessToken) router.push("/dashboard");
         usernameRef.current.focus();
     }, []);
 

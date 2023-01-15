@@ -1,34 +1,34 @@
 import User from "../../models/User";
-import Conversation from "../../models/Conversation";
+import mongoose from "mongoose";
 
-const removeFriend = async (userID, friendID) => {
-    if (!userID) return "No user ID provided";
-    if (!friendID) return "No friend ID provided";
+const removeFriend = async (userIDUnclean, friendIDUnclean) => {
+    if (!userIDUnclean || !friendIDUnclean) return { error: "Missing parameters" };
+
+    if (userIDUnclean === friendIDUnclean) return { error: "You can't be friends with yourself" };
+
+    if (
+        !mongoose.Types.ObjectId.isValid(userIDUnclean) ||
+        !mongoose.Types.ObjectId.isValid(friendIDUnclean)
+    ) return { error: "Invalid user ID" };
+
+    const userID = mongoose.Types.ObjectId(userIDUnclean);
+    const friendID = mongoose.Types.ObjectId(friendIDUnclean);
 
     const user = await User.findById(userID);
     const friend = await User.findById(friendID);
 
-    const conversation = await Conversation.findOne({
-        members: { $all: [userID, friendID] },
-    });
+    if (!user || !friend) return { error: "User not found" };
 
-    // If conversation empty, delete it
-    if (conversation) {
-        if (conversation.messages?.length === 0) {
-            await Conversation.findByIdAndDelete(conversation._id);
-        }
-    }
+    if (!user.friends.includes(friendID)) return { error: "You are not friends with this user" };
 
-    if (!user) return "No user found";
-    if (!friend) return "No friend found";
-
-    user.friends = user.friends.filter((id) => id.toString() !== friendID);
-    friend.friends = friend.friends.filter((id) => id.toString() !== userID);
+    // Remove friend
+    user.friends = user.friends.filter((friend) => friend.toString() !== friendID.toString());
+    friend.friends = friend.friends.filter((friend) => friend.toString() !== userID.toString());
 
     await user.save();
     await friend.save();
 
-    return "Friend removed";
+    return { success: "Friend removed" };
 };
 
 export default removeFriend;

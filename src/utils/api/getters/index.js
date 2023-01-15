@@ -1,15 +1,13 @@
-import getBlocked from "./getBlocked";
-import getAllConversations from "./getAllConversations";
-import getConversation from "./getConversation";
-import getFriends from "./getFriends";
-import getRequestsReceived from "./getRequestsReceived";
-import getRequestsSent from "./getRequestsSent";
+import getBlockedUsers from './getBlockedUsers';
+import getChannelMessages from './getChannelMessages';
+import getChannelList from './getChannelList';
+import getFriendRequests from './getFriendRequests';
+import getFriends from './getFriends';
 
 export {
-    getBlocked,
-    getAllConversations,
+    getBlockedUsers,
+    getChannelMessages,
+    getChannelList,
+    getFriendRequests,
     getFriends,
-    getRequestsReceived,
-    getRequestsSent,
-    getConversation,
 }

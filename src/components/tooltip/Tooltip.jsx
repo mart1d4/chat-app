@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Tooltip.module.css';
 
-const Tooltip = ({ children, show, text, pos, dist, arrow }) => {
-    const showTooltip = show ?? true;
+const Tooltip = ({ children, show, pos, dist, arrow }) => {
     const distance = dist ?? '6px';
     const position = pos ?? 'top';
     const showArrow = arrow ?? true;
@@ -65,34 +63,32 @@ const Tooltip = ({ children, show, text, pos, dist, arrow }) => {
     const positions = getTooltipPosition();
 
     return (
-        <div
-            className={styles.container}
-        >
-            {children}
-
+        show && (
             <AnimatePresence>
-                {(showTooltip) && (
-                    <motion.span
+                <motion.div
+                    className={styles.container}
+                    style={positions[0]}
+                    initial={{
+                        opacity: 0,
+                        transform: positions[0].transform + ' scale(0.5)',
+                    }}
+                    animate={{
+                        opacity: 1,
+                        transform: positions[0].transform + ' scale(1)',
+                    }}
+                    exit={{
+                        opacity: 0,
+                        transform: positions[0].transform + ' scale(0.5)',
+                    }}
+                    transition={{
+                        duration: 0.05,
+                    }}
+                    onClick={(e) => e.preventDefault()}
+                >
+                    <span
                         className={styles.tooltip}
-                        style={positions[0]}
-                        initial={{
-                            opacity: 0,
-                            transform: positions[0].transform + ' scale(0.5)',
-                        }}
-                        animate={{
-                            opacity: 1,
-                            transform: positions[0].transform + ' scale(1)',
-                        }}
-                        exit={{
-                            opacity: 0,
-                            transform: positions[0].transform + ' scale(0.5)',
-                        }}
-                        transition={{
-                            duration: 0.05,
-                        }}
-                        onClick={(e) => e.preventDefault()}
                     >
-                        {text}
+                        {children}
 
                         <span
                             className={styles.cursorConsistency}
@@ -107,10 +103,9 @@ const Tooltip = ({ children, show, text, pos, dist, arrow }) => {
                             >
                             </span>
                         )}
-                    </motion.span>
-                )}
-            </AnimatePresence>
-        </div>
+                    </span>
+                </motion.div>
+            </AnimatePresence>)
     );
 }
 

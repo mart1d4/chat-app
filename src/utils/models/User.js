@@ -24,9 +24,6 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
-        email: {
-            type: String,
-        },
         avatar: {
             type: String,
             default: "",
@@ -35,24 +32,26 @@ const userSchema = new Schema(
             type: String,
             default: "",
         },
-        role: {
+        customStatus: {
             type: String,
-            default: "user",
+            default: "",
         },
-        friendRequests: {
-            sent: [
-                {
+        status: {
+            type: String,
+            enum: ["Online", "Offline", "Away", "Busy"],
+            default: "Offline",
+        },
+        friendRequests: [
+            {
+                user: {
                     type: Schema.Types.ObjectId,
                     ref: "User",
                 },
-            ],
-            received: [
-                {
-                    type: Schema.Types.ObjectId,
-                    ref: "User",
-                },
-            ],
-        },
+                type: {
+                    type: String,
+                }
+            },
+        ],
         friends: [
             {
                 type: Schema.Types.ObjectId,
@@ -65,25 +64,10 @@ const userSchema = new Schema(
                 ref: "User",
             },
         ],
-        blockers: [
+        privateChannels: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "User",
-            }
-        ],
-        status: {
-            type: String,
-            default: "offline",
-        },
-        customStatus: {
-            type: String,
-            default: "",
-        },
-        conversations: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Conversation",
-                default: [],
+                ref: "Channel",
             },
         ],
         notifications: [

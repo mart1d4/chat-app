@@ -1,50 +1,54 @@
 import User from "../../models/User";
+import mongoose from "mongoose";
 
-const blockUser = async (userID, blockID) => {
-    if (!userID) return "No user ID provided";
-    if (!blockID) return "No block ID provided";
+const blockUser = async (userIDUnclean, blockedUserIDUnclean) => {
+    if (!userIDUnclean || !blockedUserIDUnclean) return { error: "Missing parameters" };
+
+    if (userIDUnclean === blockedUserIDUnclean) return { error: "You can't block yourself" };
+
+    if (
+        !mongoose.Types.ObjectId.isValid(userIDUnclean) ||
+        !mongoose.Types.ObjectId.isValid(blockedUserIDUnclean)
+    ) return { error: "Invalid user ID" };
+
+    const userID = mongoose.Types.ObjectId(userIDUnclean);
+    const blockedUserID = mongoose.Types.ObjectId(blockedUserIDUnclean);
 
     const user = await User.findById(userID);
-    const block = await User.findById(blockID);
+    const blockedUser = await User.findById(blockedUserID);
 
-    if (!user) return "No user found";
-    if (!block) return "No block found";
+    if (!user || !blockedUser) return { error: "User not found" };
 
-    // Check if user already blocked
-    if (user.blockedUsers.includes(blockID)) return "User already blocked";
+    if (user.blockedUsers.includes(blockedUserID)) return { error: "You have already blocked this user" };
 
-    user.blockedUsers.push(blockID);
-    block.blockers.push(userID);
+    // Block user
+    user.blockedUsers.push(blockedUserID);
 
     // Remove friend if they are friends
-    if (user.friends.includes(blockID)) {
-        user.friends = user.friends.filter((friend) => friend._id !== blockID);
-        block.friends = block.friends.filter((friend) => friend._id !== userID);
+    if (user.friends.map((friend) => friend.toString()).includes(blockedUserID.toString())) {
+        user.friends = user.friends.filter((friend) => friend.toString() !== blockedUserID.toString());
+        blockedUser.friends = blockedUser.friends.filter((friend) => friend.toString() !== userID.toString());
     }
 
-    // Cancel friend request if they have sent one
+    // Remove friend request if they have sent one or received one
     if (
-        user.friendRequests.sent.includes(blockID) ||
-        user.friendRequests.received.includes(blockID)
+        user.friendRequests.map((request) => request.user.toString()).includes(blockedUserID.toString())
     ) {
-        user.friendRequests.sent = user.friendRequests.sent.filter(
-            (sent) => sent._id !== blockID
-        );
-        user.friendRequests.received = user.friendRequests.received.filter(
-            (received) => received._id !== blockID
-        );
-        block.friendRequests.received = block.friendRequests.received.filter(
-            (received) => received._id !== userID
-        );
-        block.friendRequests.sent = block.friendRequests.sent.filter(
-            (sent) => sent._id !== userID
-        );
+        user.friendRequests = user.friendRequests.filter((request) => request.user.toString() !== blockedUserID.toString());
+        blockedUser.friendRequests = blockedUser.friendRequests.filter((request) => request.user.toString() !== userID.toString());
     }
 
     await user.save();
-    await block.save();
+    await blockedUser.save();
 
-    return "User blocked";
+    return {
+        success: "User blocked",
+        user: {
+            _id: blockedUser._id,
+            username: blockedUser.username,
+            avatar: blockedUser.avatar,
+        },
+    };
 };
 
 export default blockUser;

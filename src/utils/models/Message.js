@@ -15,10 +15,6 @@ const messageSchema = new Schema(
             type: Boolean,
             default: false,
         },
-        editedContent: {
-            type: String,
-            default: "",
-        },
     },
     {
         timestamps: true,

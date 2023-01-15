@@ -47,16 +47,16 @@
   top: 20px;
   left: 50%;
   font-size: 0.9rem;
-  color: #ff6868;
+  color: var(--error-primary);
   text-align: center;
   padding: 12px 16px;
   z-index: 1000;
-  background-color: #ff68681a;
+  background-color: var(--error-secondary);
   border-radius: 5px;
 }
 
 .error svg {
-  stroke: #ff6868;
+  stroke: var(--error-primary);
 }
 
 .label {
@@ -77,7 +77,7 @@
 
 .input:focus {
   outline: none;
-  border: 1px solid #ffffff52;
+  border: 1px solid var(--background-transparent);
 }
 
 .button {
@@ -85,7 +85,7 @@
   height: 50px;
   border: none;
   border-radius: 3px;
-  background-color: #ff6868;
+  background-color: var(--error-primary);
   color: var(--background-primary);
   cursor: pointer;
   font-weight: 600;
@@ -94,8 +94,8 @@
 }
 
 .button:disabled {
-  background-color: #ff68681a;
-  color: #ff6868;
+  background-color: var(--error-secondary);
+  color: var(--error-primary);
   cursor: not-allowed;
 }
 

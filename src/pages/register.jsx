@@ -39,10 +39,6 @@ const Register = () => {
     }, []);
 
     useEffect(() => {
-        if (success) router.push("/login");
-    }, [success]);
-
-    useEffect(() => {
         setValidUsername(USER_REGEX.test(username));
     }, [username]);
 
@@ -82,6 +78,7 @@ const Register = () => {
             setUsername("");
             setPassword("");
             setMatchPassword("");
+            router.push("/login");
         } catch (err) {
             if (!err?.response) {
                 setErrorMessage("No Server Response");

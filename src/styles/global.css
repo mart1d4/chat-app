@@ -12,6 +12,10 @@
     --foreground-secondary: hsl(216, 4%, 74%);
     --foreground-tertiary: hsl(214, 4%, 65%);
     --accent-primary: hsl(235, 86%, 65%);
+    --valid-primary: hsl(139, 86%, 65%);
+    --valid-secondary: hsla(139, 86%, 65%, 0.102);
+    --error-primary: hsl(359, 83%, 59%);
+    --error-secondary: hsla(0, 100%, 50%, 0.102);
   }
 }
 
@@ -78,8 +82,4 @@ body,
 
 svg {
   fill: var(--foreground-secondary);
-}
-
-img {
-  user-select: none;
 }

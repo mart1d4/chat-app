@@ -1,27 +1,37 @@
 import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const AddFriend = () => {
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
 
+    useEffect(() => {
+        console.log(error);
+    }, [error]);
+
     const { auth } = useAuth();
-    const { friendRequestsSent, setFriendRequestsSent } = useUserData();
+    const { friendRequests, setFriendRequests, friends, setFriends } = useUserData();
     const axiosPrivate = useAxiosPrivate();
 
     const requestFriend = async () => {
         try {
             const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/${input}/request`,
+                `/users/${auth?.user._id}/friends/request`,
+                {
+                    userID: input,
+                },
             );
             setInput("");
             if (data.data.error) {
                 setError(data.data.error);
+            } else if (data.data.success === "Friend request accepted") {
+                setFriendRequests(friendRequests.filter((request) => request.user._id.toString() !== input));
+                setFriends([...friends, data.data.user]);
             } else {
-                setFriendRequestsSent([...friendRequestsSent, data.data]);
+                setFriendRequests([...friendRequests, data.data.request]);
             }
         } catch (err) {
             console.error(err);

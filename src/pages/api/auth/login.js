@@ -1,6 +1,4 @@
 import User from "../../../utils/models/User";
-import Conversation from "../../../utils/models/Conversation";
-import Message from "../../../utils/models/Message";
 import connectDB from "../../../utils/connectDB";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -48,14 +46,13 @@ export default async (req, res) => {
             res.json({
                 accessToken,
                 user: {
-                    username: user.username,
-                    description: user.description,
-                    avatar: user.avatar,
-                    status: user.status,
-                    customStatus: user.customStatus,
-                    createdAt: user.createdAtFormatted,
-                    role: user.role,
                     _id: user._id,
+                    username: user.username,
+                    avatar: user.avatar,
+                    description: user.description,
+                    customStatus: user.customStatus,
+                    status: user.status,
+                    createdAt: user.createdAt,
                 },
             });
         } else {

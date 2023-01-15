@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const conversationSchema = new Schema(
+const channelSchema = new Schema(
     {
         members: [
             {
@@ -15,17 +15,22 @@ const conversationSchema = new Schema(
                 ref: "Message",
             },
         ],
+        type: {
+            type: String,
+            enum: ["private", "public"],
+            required: true,
+        },
     },
     {
         timestamps: true,
     }
 );
 
-conversationSchema.virtual("url").get(function () {
-    return `/friends/channels/${this._id}`;
+channelSchema.virtual("url").get(function () {
+    return `/channels/${this._id}`;
 });
 
-const Conversation =
-    mongoose.models.Conversation ||
-    mongoose.model("Conversation", conversationSchema);
-export default Conversation;
+const Channel =
+    mongoose.models.Channel ||
+    mongoose.model("Channel", channelSchema);
+export default Channel;

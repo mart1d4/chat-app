@@ -6,26 +6,48 @@ import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRef, useState } from "react";
 
-
 const All = () => {
     const [search, setSearch] = useState("");
     const [hover, setHover] = useState(null);
     const [borderRemove, setBorderRemove] = useState(null);
+    const [menu, setMenu] = useState(null);
+    const [error, setError] = useState(null);
 
     const searchBar = useRef(null);
 
     const { auth } = useAuth();
-    const { friends, setFriends, channels, getChannels } = useUserData();
+    const { friends, setFriends, setBlockedUsers } = useUserData();
     const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
 
     const removeFriend = async (friendID) => {
         try {
-            await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/${friendID}/remove`
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/remove`,
+                { userID: friendID }
             );
-            setFriends(friends.filter((friend) => friend._id !== friendID));
-            getChannels();
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriends(friends.filter((friend) => friend._id.toString() !== friendID));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const blockUser = async (friendID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/block`,
+                { userID: friendID }
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriends(friends.filter((friend) => friend._id.toString() !== friendID));
+                setBlockedUsers((prev) => [...prev, data.data.user]);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -33,33 +55,27 @@ const All = () => {
 
     const startConversation = async (friendID) => {
         try {
-            await axiosPrivate.post(
-                `/users/${auth?.user._id}/channels/${getFriendConversation(
-                    friendID
-                )}/add`
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/create`,
+                { userID: friendID }
             );
-            router.push(`/channels/${getFriendConversation(friendID)}`);
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                router.push(`/channels/${data.data.channelID}`);
+            }
         } catch (err) {
             console.error(err);
         }
     };
 
-    if (!friends.length) {
-        return (
-            <div className={styles.content}>
-                <h2>You don't have any friends</h2>
-            </div>
-        );
-    }
-
-    const getFriendConversation = (friendID) => {
-        const channel = channels.find(
-            (channel) =>
-                channel.members.length === 2 &&
-                channel.members.includes(friendID)
-        );
-        return channel._id;
-    };
+    // if (!friends.length) {
+    //     return (
+    //         <div className={styles.content}>
+    //             <h2>You don't have any friends</h2>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className={styles.content}>
@@ -111,8 +127,12 @@ const All = () => {
                     <li
                         key={friend._id}
                         className={styles.liContainer}
+                        onClick={() => startConversation(friend._id)}
                         onMouseEnter={() => setBorderRemove(index + 1)}
-                        onMouseLeave={() => setBorderRemove(null)}
+                        onMouseLeave={() => {
+                            setBorderRemove(null)
+                            setMenu(null)
+                        }}
                         style={{
                             borderColor: borderRemove === index && "transparent",
                         }}
@@ -153,47 +173,104 @@ const All = () => {
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{friend.username}</p>
                                     <p className={styles.textStatus}>
-                                        {friend.status.charAt(0).toUpperCase() +
-                                            friend.status.slice(1)}
+                                        {friend.customStatus === "" ? (friend.status)
+                                            : (
+                                                <span title="Custom Status">{friend.customStatus}</span>
+                                            )}
                                     </p>
                                 </div>
                             </div>
                             <div className={styles.actions}>
                                 <button
-                                    onClick={() => removeFriend(friend._id)}
+                                    onClick={() => startConversation(friend._id)}
                                     onMouseEnter={() => setHover(friend._id + 0)}
                                     onMouseLeave={() => setHover(null)}
                                 >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                    >
+                                        <path d="M1.667 18.333V3.417q0-.729.51-1.24.511-.51 1.24-.51h13.166q.729 0 1.24.51.51.511.51 1.24v9.833q0 .729-.51 1.24-.511.51-1.24.51H5Z" />
+                                    </svg>
                                     <Tooltip
-                                        text='Message'
                                         show={hover === friend._id + 0}
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="20"
-                                            height="20"
-                                        >
-                                            <path d="M1.667 18.333V3.417q0-.729.51-1.24.511-.51 1.24-.51h13.166q.729 0 1.24.51.51.511.51 1.24v9.833q0 .729-.51 1.24-.511.51-1.24.51H5Z" />
-                                        </svg>
+                                        Message
                                     </Tooltip>
                                 </button>
                                 <button
-                                    onClick={() => startConversation(friend._id)}
                                     onMouseEnter={() => setHover(friend._id + 1)}
                                     onMouseLeave={() => setHover(null)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMenu(
+                                            menu === null ? friend._id : null
+                                        );
+                                        setHover(null);
+                                    }}
                                 >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                    >
+                                        <path d="M10 16q-.625 0-1.062-.438Q8.5 15.125 8.5 14.5t.438-1.062Q9.375 13 10 13t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 16 10 16Zm0-4.5q-.625 0-1.062-.438Q8.5 10.625 8.5 10t.438-1.062Q9.375 8.5 10 8.5t1.062.438q.438.437.438 1.062t-.438 1.062q-.437.438-1.062.438ZM10 7q-.625 0-1.062-.438Q8.5 6.125 8.5 5.5t.438-1.062Q9.375 4 10 4t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 7 10 7Z" />
+                                    </svg>
                                     <Tooltip
-                                        text='More'
                                         show={hover === friend._id + 1}
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="20"
-                                            height="20"
-                                        >
-                                            <path d="M10 16q-.625 0-1.062-.438Q8.5 15.125 8.5 14.5t.438-1.062Q9.375 13 10 13t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 16 10 16Zm0-4.5q-.625 0-1.062-.438Q8.5 10.625 8.5 10t.438-1.062Q9.375 8.5 10 8.5t1.062.438q.438.437.438 1.062t-.438 1.062q-.437.438-1.062.438ZM10 7q-.625 0-1.062-.438Q8.5 6.125 8.5 5.5t.438-1.062Q9.375 4 10 4t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 7 10 7Z" />
-                                        </svg>
+                                        More
                                     </Tooltip>
+
+                                    {menu === friend._id && (
+                                        <div
+                                            onMouseEnter={() => setHover(null)}
+                                            className={styles.menuContainer}
+                                        >
+                                            <div className={styles.menu}>
+                                                <div
+                                                    className={styles.red}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMenu(null);
+                                                        removeFriend(friend._id);
+                                                    }}
+                                                >
+                                                    <div>Remove Friend</div>
+                                                </div>
+                                                <div
+                                                    className={styles.red}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMenu(null);
+                                                        blockUser(friend._id);
+                                                    }}
+                                                >
+                                                    <div>Block</div>
+                                                </div>
+                                                <div
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMenu(null);
+                                                        startConversation(friend._id);
+                                                    }}
+                                                >
+                                                    <div>Message</div>
+                                                </div>
+                                                <div className={styles.divider}></div>
+                                                <div
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setMenu(null);
+                                                        navigator.clipboard.writeText(friend._id);
+                                                    }}
+                                                >
+                                                    <div>Copy ID</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </button>
                             </div>
                         </div>

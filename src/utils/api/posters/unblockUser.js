@@ -1,29 +1,35 @@
 import User from "../../models/User";
+import mongoose from "mongoose";
 
-const unblockUser = async (userID, blockedUserID) => {
-    if (!userID) return "No user ID provided";
-    if (!blockedUserID) return "No unblock ID provided";
+const unblockUser = async (userIDUnclean, blockedUserIDUnclean) => {
+    if (!userIDUnclean || !blockedUserIDUnclean) return { error: "Missing parameters" };
+    if (userIDUnclean === blockedUserIDUnclean) return { error: "You can't block yourself" };
+
+    if (
+        !mongoose.Types.ObjectId.isValid(userIDUnclean) ||
+        !mongoose.Types.ObjectId.isValid(blockedUserIDUnclean)
+    ) return { error: "Invalid user ID" };
+
+    const userID = mongoose.Types.ObjectId(userIDUnclean);
+    const blockedUserID = mongoose.Types.ObjectId(blockedUserIDUnclean);
 
     const user = await User.findById(userID);
     const blockedUser = await User.findById(blockedUserID);
 
-    if (!user) return "No user found";
-    if (!blockedUser) return "No blocked user found";
+    if (!user || !blockedUser) return { error: "User not found" };
 
-    // Check if user already blocked
-    if (!user.blockedUsers.includes(blockedUserID)) return "User not blocked";
+    if (
+        !user.blockedUsers.map(
+            (blockedUser) => blockedUser.toString()).includes(blockedUserID.toString()
+            )
+    ) return { error: "You have not blocked this user" };
 
-    user.blockedUsers = user.blocked.filter(
-        (blocked) => blocked._id !== blockedUserID
-    );
-    blockedUser.blockers = blockedUser.blockers.filter(
-        (blocker) => blocker._id !== userID
-    );
+    // Unblock user
+    user.blockedUsers = user.blockedUsers.filter((blockedUser) => blockedUser.toString() !== blockedUserID.toString());
 
     await user.save();
-    await blockedUser.save();
 
-    return "User unblocked";
+    return { success: "User unblocked" };
 };
 
 export default unblockUser;

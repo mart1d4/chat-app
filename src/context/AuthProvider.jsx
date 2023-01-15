@@ -6,10 +6,9 @@ export const AuthContext = createContext({});
 export function AuthProvider({ children }) {
     const [auth, setAuth] = useState({});
     const [friends, setFriends] = useState([]);
-    const [friendRequestsSent, setFriendRequestsSent] = useState([]);
-    const [friendRequestsReceived, setFriendRequestsReceived] = useState([]);
+    const [friendRequests, setFriendRequests] = useState([]);
     const [blockedUsers, setBlockedUsers] = useState([]);
-    const [channels, setChannels] = useState([]);
+    const [channelList, setChannelList] = useState([]);
     const [persist, setPersist] = useState(true);
 
     const axiosPrivate = useAxiosPrivate();
@@ -18,10 +17,9 @@ export function AuthProvider({ children }) {
         if (!auth?.accessToken) return;
 
         getFriends();
-        getFriendRequestsSent();
-        getFriendRequestsReceived();
+        getFriendRequests();
         getBlockedUsers();
-        getChannels();
+        getChannelList();
     }, [auth]);
 
     const getFriends = async () => {
@@ -29,24 +27,19 @@ export function AuthProvider({ children }) {
         setFriends(res.data);
     };
 
-    const getFriendRequestsSent = async () => {
-        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/friends/sent`);
-        setFriendRequestsSent(res.data);
-    };
-
-    const getFriendRequestsReceived = async () => {
-        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/friends/received`);
-        setFriendRequestsReceived(res.data);
+    const getFriendRequests = async () => {
+        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/friendRequests`);
+        setFriendRequests(res.data);
     };
 
     const getBlockedUsers = async () => {
-        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/friends/blocked`);
+        const res = await axiosPrivate.get(`/users/${auth?.user?._id}//blocked`);
         setBlockedUsers(res.data);
     };
 
-    const getChannels = async () => {
-        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/channels`);
-        setChannels(res.data);
+    const getChannelList = async () => {
+        const res = await axiosPrivate.get(`/users/${auth?.user?._id}/private/channels`);
+        setChannelList(res.data);
     };
 
     const value = {
@@ -55,18 +48,15 @@ export function AuthProvider({ children }) {
         friends,
         setFriends,
         getFriends,
-        friendRequestsSent,
-        setFriendRequestsSent,
-        getFriendRequestsSent,
-        friendRequestsReceived,
-        setFriendRequestsReceived,
-        getFriendRequestsReceived,
+        friendRequests,
+        setFriendRequests,
+        getFriendRequests,
         blockedUsers,
         setBlockedUsers,
         getBlockedUsers,
-        channels,
-        setChannels,
-        getChannels,
+        channelList,
+        setChannelList,
+        getChannelList,
         persist,
         setPersist
     };

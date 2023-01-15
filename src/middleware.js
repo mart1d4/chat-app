@@ -19,6 +19,7 @@ export const middleware = (req) => {
                 { status: 401, headers: { "content-type": "application/json" } }
             );
         }
+        console.log("jbnskwhbehkdjbwejuibn2ujqwuhdbnujwehn");
         req.user = decoded.UserInfo;
         next();
     });

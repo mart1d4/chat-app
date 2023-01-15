@@ -1,27 +1,26 @@
 .container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  z-index: 1000000;
+  pointer-events: none;
+  user-select: none;
 }
 
 .tooltip {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
+  position: relative;
   font-size: 12px;
   font-weight: 500;
   background-color: var(--background-dark);
   color: var(--foreground-primary);
   border-radius: 5px;
-  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0 , 0.25);
   padding: 0.5rem 0.75rem;
   letter-spacing: 0.05rem;
   cursor: initial;
   word-wrap: break-word;
   white-space: nowrap;
-  z-index: 1000000;
-  user-select: none;
 }
 
 .cursorConsistency {
@@ -30,6 +29,7 @@
 
 .arrow {
   position: absolute;
+  overflow: hidden;
   width: 0;
   height: 0;
 }

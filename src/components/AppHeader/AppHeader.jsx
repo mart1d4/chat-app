@@ -1,9 +1,13 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip } from "../";
 import { useState } from "react";
+import useUserData from "../../hooks/useUserData";
 
 const AppHeader = ({ content, setContent, active, friend }) => {
     const [showTooltip, setShowTooltip] = useState(false);
+
+    const { friendRequests } = useUserData();
+    const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
     const tabs = [
         {
@@ -59,6 +63,9 @@ const AppHeader = ({ content, setContent, active, friend }) => {
                                 className={styles.item}
                             >
                                 {tab.name}
+                                {tab.name === "Pending" && requestReceived > 0 && (
+                                    <div className={styles.badge}>{requestReceived}</div>
+                                )}
                             </li>
                         ))}
                     </ul>

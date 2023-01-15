@@ -1,23 +1,25 @@
-import acceptFriend from "./acceptFriend";
-import addConversation from "./addConversation";
-import addFriend from "./addFriend";
-import blockUser from "./blockUser";
-import cancelFriend from "./cancelFriend";
-import declineFriend from "./declineFriend";
-import removeConversation from "./removeConversation";
-import removeFriend from "./removeFriend";
-import sendMessage from "./sendMessage";
-import unblockUser from "./unblockUser";
+import acceptFriendRequest from './acceptFriendRequest';
+import createPrivateChannel from './createPrivateChannel';
+import blockUser from './blockUser';
+import cancelFriendRequest from './cancelFriendRequest';
+import editPrivateMessage from './editPrivateMessage';
+import ignoreFriendRequest from './ignoreFriendRequest';
+import removeFriend from './removeFriend';
+import removePrivateChannel from './removePrivateChannel';
+import requestFriend from './requestFriend';
+import sendPrivateMessage from './sendPrivateMessage';
+import unblockUser from './unblockUser';
 
 export {
-    acceptFriend,
-    addConversation,
-    addFriend,
+    acceptFriendRequest,
+    createPrivateChannel,
     blockUser,
-    cancelFriend,
-    declineFriend,
-    removeConversation,
+    cancelFriendRequest,
+    editPrivateMessage,
+    ignoreFriendRequest,
     removeFriend,
-    sendMessage,
+    removePrivateChannel,
+    requestFriend,
+    sendPrivateMessage,
     unblockUser,
 };
