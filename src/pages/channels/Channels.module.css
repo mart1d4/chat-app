@@ -4,10 +4,10 @@
     height: 100%;
     width: calc(100%);
     overflow-x: visible;
+    background-color: var(--background-quaternary);
 }
 
 .content {
-    background-color: var(--background-tertiary);
     height: calc(100% - 50px);
     padding: 0 0.25rem;
     overflow-x: visible;

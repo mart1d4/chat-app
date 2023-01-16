@@ -2,13 +2,14 @@ import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Tooltip } from "../"
+import Image from "next/image";
 
 const Blocked = () => {
     const [search, setSearch] = useState("");
-    const [hover, setHover] = useState(null);
-    const [borderRemove, setBorderRemove] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [liHover, setLiHover] = useState(null);
     const [error, setError] = useState(null);
 
     const searchBar = useRef(null);
@@ -90,49 +91,35 @@ const Blocked = () => {
                 {blockedUsers.map((user, index) => (
                     <li
                         key={user._id}
-                        className={styles.liContainer}
-                        onMouseEnter={() => setBorderRemove(index + 1)}
-                        onMouseLeave={() => setBorderRemove(null)}
+                        className={
+                            liHover === index
+                                ? styles.liContainerHover
+                                : styles.liContainer
+                        }
+                        onMouseEnter={() => setLiHover(index)}
+                        onMouseLeave={() => setLiHover(null)}
                         style={{
-                            borderColor: borderRemove === index && "transparent",
+                            borderColor: liHover === index - 1 && "transparent",
                         }}
                     >
                         <div className={styles.li}>
                             <div className={styles.userInfo}>
                                 <div className={styles.avatarWrapper}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="40"
-                                        height="40"
-                                        viewBox="0 0 40 40"
-                                    >
-                                        <foreignObject
-                                            x="0"
-                                            y="0"
-                                            width="32"
-                                            height="32"
-                                            mask="url(#mask-status-round-32)"
-                                        >
-                                            <img
-                                                src={user.avatar}
-                                                alt="avatar"
-                                                width="32"
-                                                height="32"
-                                            />
-                                        </foreignObject>
-                                        <rect
-                                            x="22"
-                                            y="22"
-                                            width="10"
-                                            height="10"
-                                            fill="#747f8d"
-                                            mask={`url(#mask-status-${user.status})`}
-                                        ></rect>
-                                    </svg>
+                                    <Image
+                                        src={user.avatar}
+                                        width={32}
+                                        height={32}
+                                        alt="Avatar"
+                                    />
                                 </div>
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{user.username}</p>
-                                    <p className={styles.textStatus}>
+                                    <p
+                                        className={styles.textStatus}
+                                        style={{
+                                            fontSize: "12px",
+                                        }}
+                                    >
                                         Blocked
                                     </p>
                                 </div>
@@ -140,8 +127,8 @@ const Blocked = () => {
                             <div className={styles.actions}>
                                 <button
                                     onClick={() => unblockUser(user._id)}
-                                    onMouseEnter={() => setHover(user._id + 1)}
-                                    onMouseLeave={() => setHover(null)}
+                                    onMouseEnter={() => setShowTooltip(index)}
+                                    onMouseLeave={() => setShowTooltip(null)}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -150,14 +137,14 @@ const Blocked = () => {
                                     >
                                         <path
                                             fill={
-                                                hover === user._id + 1
+                                                showTooltip === index
                                                     ? "var(--error-primary)"
                                                     : "var(--foreground-secondary)"
                                             }
                                             d="M13 9.5V8h5v1.5ZM8 10q-1.25 0-2.125-.875T5 7q0-1.25.875-2.125T8 4q1.25 0 2.125.875T11 7q0 1.25-.875 2.125T8 10Zm-6 6v-1.917q0-.541.26-.989.261-.448.719-.719 1.146-.667 2.417-1.021Q6.667 11 8 11q1.333 0 2.604.354 1.271.354 2.417 1.021.458.271.719.719.26.448.26.989V16Z" />
                                     </svg>
                                     <Tooltip
-                                        show={hover === user._id + 1}
+                                        show={showTooltip === index}
                                     >
                                         Unblock
                                     </Tooltip>

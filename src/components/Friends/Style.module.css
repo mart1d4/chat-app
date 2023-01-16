@@ -69,7 +69,7 @@
 }
 
 .listContainer {
-  overflow: visible;
+  overflow: hidden scroll;
   padding-right: 0px;
   padding-bottom: 8px;
   margin-top: 8px;
@@ -79,7 +79,8 @@
   min-height: 0;
 }
 
-.liContainer {
+.liContainer,
+.liContainerHover {
   height: 62px;
   opacity: 1;
   display: flex;
@@ -90,7 +91,7 @@
   border-top: 1px solid rgba(79, 84, 92, 0.5);
 }
 
-.liContainer:hover {
+.liContainerHover {
   border-radius: 8px;
   margin: 0 10px 0 20px;
   padding: 16px 10px;
@@ -99,7 +100,7 @@
   cursor: pointer;
 }
 
-.liContainer:hover .actions > button {
+.liContainerHover .actions > button {
   background-color: var(--background-primary);
 }
 
@@ -125,6 +126,25 @@
 }
 
 .avatarWrapper img {
+  border-radius: 50%;
+}
+
+.avatarStatus {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--background-quaternary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarStatus > div {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
 }
 
@@ -171,8 +191,8 @@
 
 .menuContainer {
   position: absolute;
-  top: calc(100% - 2px);
-  right: calc(100% - 2px);
+  top: calc(100% + 8px);
+  right: 0;
   z-index: 1;
   display: flex;
   min-width: 190px;

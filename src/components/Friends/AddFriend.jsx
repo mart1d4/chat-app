@@ -1,16 +1,12 @@
 import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const AddFriend = () => {
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
-
-    useEffect(() => {
-        console.log(error);
-    }, [error]);
 
     const { auth } = useAuth();
     const { friendRequests, setFriendRequests, friends, setFriends } = useUserData();

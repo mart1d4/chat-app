@@ -24,23 +24,35 @@ const addPrivateChannel = async (userIDUnclean, friendIDUnclean) => {
     });
 
     if (channel) {
+        // Add channel to user's channels if not already there
+        if (!user.privateChannels.map((channel) => channel.toString()).includes(channel._id.toString())) {
+            user.privateChannels.unshift(channel._id);
+            await user.save();
+        }
+
         return {
             success: "Channel already exists",
             channelID: channel._id,
         }
+    } else {
+        const newChannel = new Channel({
+            members: [userID, friendID],
+            type: "private",
+        });
+
+        await newChannel.save();
+
+        // Add channel to user's channels if not already there
+        if (!user.privateChannels.map((channel) => channel.toString()).includes(newChannel._id.toString())) {
+            user.privateChannels.unshift(newChannel._id);
+            await user.save();
+        }
+
+        return {
+            success: "Channel created",
+            channelID: newChannel._id,
+        };
     }
-
-    const newChannel = new Channel({
-        members: [userID, friendID],
-        type: "private",
-    });
-
-    await newChannel.save();
-
-    return {
-        success: "Channel created",
-        channelID: newChannel._id,
-    };
 }
 
 export default addPrivateChannel;

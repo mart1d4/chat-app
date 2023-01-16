@@ -2,14 +2,15 @@ import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Tooltip } from "../"
+import Image from "next/image";
 
 const Pending = () => {
     const [search, setSearch] = useState("");
-    const [hover, setHover] = useState(null);
-    const [borderRemove, setBorderRemove] = useState(null);
-    const [error, setError] = useState("");
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [liHover, setLiHover] = useState(null);
+    const [error, setError] = useState(null);
 
     const searchBar = useRef(null);
 
@@ -134,41 +135,57 @@ const Pending = () => {
                 {friendRequests.map((request, index) => (
                     <li
                         key={index}
-                        className={styles.liContainer}
-                        onMouseEnter={() => setBorderRemove(index + 1)}
-                        onMouseLeave={() => setBorderRemove(null)}
+                        className={
+                            liHover === index
+                                ? styles.liContainerHover
+                                : styles.liContainer
+                        }
+                        onMouseEnter={() => setLiHover(index)}
+                        onMouseLeave={() => setLiHover(null)}
                         style={{
-                            borderColor: borderRemove === index && "transparent",
+                            borderColor: liHover === index - 1 && "transparent",
                         }}
                     >
                         <div className={styles.li}>
                             <div className={styles.userInfo}>
                                 <div className={styles.avatarWrapper}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="40"
-                                        height="40"
-                                        viewBox="0 0 40 40"
-                                    >
-                                        <foreignObject
-                                            x="0"
-                                            y="0"
-                                            width="32"
-                                            height="32"
-                                            mask="url(#mask-status-round-32)"
-                                        >
-                                            <img
-                                                src={request.user.avatar}
-                                                alt="avatar"
-                                                width="32"
-                                                height="32"
-                                            />
-                                        </foreignObject>
-                                    </svg>
+                                    <Image
+                                        src={request.user.avatar}
+                                        width={32}
+                                        height={32}
+                                        alt="Avatar"
+                                    />
+                                    {
+                                        request.type === "received" && (
+                                            <div
+                                                className={styles.avatarStatus}
+                                            >
+                                                <div
+                                                    style={{
+                                                        backgroundColor:
+                                                            request.user.status === "Online"
+                                                                ? "var(--valid-primary)"
+                                                                : request.user.status === "Idle"
+                                                                    ? "var(--warning-primary)"
+                                                                    : request.user.status === "Busy"
+                                                                        ? "var(--error-primary)"
+                                                                        : "var(--foreground-quaternary)",
+                                                    }}
+                                                >
+
+                                                </div>
+                                            </div>
+                                        )
+                                    }
                                 </div>
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{request.user.username}</p>
-                                    <p className={styles.textStatus}>
+                                    <p
+                                        className={styles.textStatus}
+                                        style={{
+                                            fontSize: "12px",
+                                        }}
+                                    >
                                         {request.type === "sent"
                                             ? "Outgoing Friend Request"
                                             : "Incoming Friend Request"}
@@ -180,15 +197,15 @@ const Pending = () => {
                                     request.type === "received" && (
                                         <button
                                             onClick={() => acceptRequest(request.user._id)}
-                                            onMouseEnter={() => setHover(request.user._id + 0)}
-                                            onMouseLeave={() => setHover(null)}
+                                            onMouseEnter={() => setShowTooltip(index)}
+                                            onMouseLeave={() => setShowTooltip(null)}
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 width="24"
                                                 height="24"
                                                 stroke={
-                                                    hover === request.user._id + 0
+                                                    showTooltip === index
                                                         ? "var(--valid-primary)"
                                                         : "var(--foreground-secondary)"
                                                 }
@@ -196,7 +213,7 @@ const Pending = () => {
                                                 <path d="m9.55 17.3-4.975-4.95.725-.725 4.25 4.25 9.15-9.15.725.725Z" />
                                             </svg>
                                             <Tooltip
-                                                show={hover === request.user._id + 0}
+                                                show={showTooltip === index}
                                             >
                                                 Accept
                                             </Tooltip>
@@ -208,15 +225,15 @@ const Pending = () => {
                                         if (request.type === "sent") cancelRequest(request.user._id);
                                         else ignoreRequest(request.user._id);
                                     }}
-                                    onMouseEnter={() => setHover(request.user._id + 1)}
-                                    onMouseLeave={() => setHover(null)}
+                                    onMouseEnter={() => setShowTooltip(index + 1)}
+                                    onMouseLeave={() => setShowTooltip(null)}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="20"
                                         height="20"
                                         stroke={
-                                            hover === request.user._id + 1
+                                            showTooltip === index + 1
                                                 ? "var(--error-primary)"
                                                 : "var(--foreground-secondary)"
                                         }
@@ -225,7 +242,7 @@ const Pending = () => {
                                         <path d="M15.5 4.5l-11 11m11 0l-11-11" />
                                     </svg>
                                     <Tooltip
-                                        show={hover === request.user._id + 1}
+                                        show={showTooltip === index + 1}
                                     >
                                         {request.type === "sent" ? "Cancel" : "Ignore"}
                                     </Tooltip>

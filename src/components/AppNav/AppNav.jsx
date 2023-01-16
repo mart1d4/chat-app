@@ -78,61 +78,6 @@ const AppNav = () => {
                         </Link>
                     </div>
                 </div>
-
-                <div className={styles.account}>
-                    <div onClick={() => setShowMenu(!showMenu)}>
-                        <Avatar
-                            avatar={auth?.user?.avatar}
-                            username={auth?.user?.username}
-                            status={auth?.user?.status}
-                            size="35px"
-                        />
-                        <li
-                            onClick={() => {
-                                navigator.clipboard.writeText(
-                                    auth.user?._id
-                                );
-                            }}
-                        >
-                            Copy UserID
-                        </li>
-                        <li onClick={logout}>Logout</li>
-                    </div>
-
-                    <AnimatePresence>
-                        {showMenu && (
-                            <motion.div
-                                ref={menuRef}
-                                className={styles.menu}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <ul className={styles.menuList}>
-                                    <li>
-                                        <Link
-                                            href="/account"
-                                            className={styles.menuLink}
-                                        >
-                                            Account
-                                        </Link>
-                                    </li>
-                                    <li onClick={logout}>Logout</li>
-                                    <li
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(
-                                                auth.user?._id
-                                            );
-                                        }}
-                                    >
-                                        Copy UserID
-                                    </li>
-                                </ul>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
             </ul>
         </nav>
     );

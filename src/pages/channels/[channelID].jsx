@@ -5,12 +5,13 @@ import Head from "next/head";
 import { useState, useEffect, useRef } from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import useUserData from "../../hooks/useUserData";
 
 const Channels = () => {
     const [channelID, setChannelID] = useState(null);
-    const [friend, setFriend] = useState(null);
     const [messages, setMessages] = useState(null);
     const [message, setMessage] = useState("");
+    const [friend, setFriend] = useState(null);
     const [hover, setHover] = useState(false);
     const [listHeight, setListHeight] = useState(0);
 
@@ -18,6 +19,7 @@ const Channels = () => {
     const router = useRouter();
     const list = useRef(null);
     const axiosPrivate = useAxiosPrivate();
+    const { channelList } = useUserData();
 
     useEffect(() => {
         if (list.current) {
@@ -32,37 +34,9 @@ const Channels = () => {
     }, [listHeight]);
 
     useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-
-        const { channelID } = router.query;
-        setChannelID(channelID);
-
-        const fetchConversation = async () => {
-            try {
-                const { data } = await axiosPrivate.get(
-                    `/users/${auth?.user._id}/channels/${channelID}/get`,
-                    controller.signal
-                );
-                if (isMounted) {
-                    setMessages(data.messages);
-                    setFriend(
-                        data.members?.find(
-                            (member) => member._id !== auth?.user._id
-                        )
-                    );
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        fetchConversation();
-
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
+        setFriend(channelList?.filter(
+            (channel) => channel._id.toString() === router.query.channelID
+        )[0]?.members[0]);
     }, [router.query]);
 
     const sendMessage = () => {
@@ -102,7 +76,7 @@ const Channels = () => {
     return (
         <>
             <Head>
-                <title>Unthrust | @{friend?.username}</title>
+                <title>Discord | @{friend?.username}</title>
             </Head>
             <div className={styles.main}>
                 <AppHeader content="channels" friend={friend} />

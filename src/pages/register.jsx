@@ -157,195 +157,186 @@ const Register = () => {
 
                     <div className={styles.inputsContainer}>
                         <div className={styles.inputContainer}>
+                            <AnimatePresence>
+                                <motion.label
+                                    htmlFor="username"
+                                    className={styles.label}
+                                    animate={{
+                                        opacity:
+                                            usernameFocus || username
+                                                ? 1
+                                                : 0.5,
+                                        top:
+                                            usernameFocus || username
+                                                ? "-40%"
+                                                : "50%",
+                                        left:
+                                            usernameFocus || username
+                                                ? "5px"
+                                                : "15px",
+                                        transform:
+                                            usernameFocus || username
+                                                ? "translateY(0%)"
+                                                : "translateY(-50%)",
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    Username
+                                </motion.label>
+                            </AnimatePresence>
+                            <input
+                                type="text"
+                                id="username"
+                                ref={usernameRef}
+                                autoComplete="off"
+                                onChange={(e) =>
+                                    setUsername(e.target.value)
+                                }
+                                value={username}
+                                required
+                                aria-invalid={
+                                    validUsername ? "false" : "true"
+                                }
+                                aria-describedby="uidnote"
+                                onFocus={() => setUsernameFocus(true)}
+                                onBlur={() => setUsernameFocus(false)}
+                                className={styles.input}
+                                placeholder={
+                                    usernameFocus ? "Username" : ""
+                                }
+                            />
                             <Tooltip
                                 show={
                                     usernameFocus && username && !validUsername
                                 }
-                                text={
-                                    <div>
-                                        4 to 24 characters <br />
-                                        Must begin with a letter <br />
-                                        Special character allowed: _ - . ! ?
-                                    </div>
-                                }
                                 pos="left"
-                                arrow
                             >
-                                <AnimatePresence>
-                                    <motion.label
-                                        htmlFor="username"
-                                        className={styles.label}
-                                        animate={{
-                                            opacity:
-                                                usernameFocus || username
-                                                    ? 1
-                                                    : 0.5,
-                                            top:
-                                                usernameFocus || username
-                                                    ? "-40%"
-                                                    : "50%",
-                                            left:
-                                                usernameFocus || username
-                                                    ? "5px"
-                                                    : "15px",
-                                            transform:
-                                                usernameFocus || username
-                                                    ? "translateY(0%)"
-                                                    : "translateY(-50%)",
-                                        }}
-                                        transition={{
-                                            duration: 0.2,
-                                            ease: "easeInOut",
-                                        }}
-                                    >
-                                        Username
-                                    </motion.label>
-                                </AnimatePresence>
-                                <input
-                                    type="text"
-                                    id="username"
-                                    ref={usernameRef}
-                                    autoComplete="off"
-                                    onChange={(e) =>
-                                        setUsername(e.target.value)
-                                    }
-                                    value={username}
-                                    required
-                                    aria-invalid={
-                                        validUsername ? "false" : "true"
-                                    }
-                                    aria-describedby="uidnote"
-                                    onFocus={() => setUsernameFocus(true)}
-                                    onBlur={() => setUsernameFocus(false)}
-                                    className={styles.input}
-                                    placeholder={
-                                        usernameFocus ? "Username" : ""
-                                    }
-                                />
+                                <div>
+                                    4 to 24 characters <br />
+                                    Must begin with a letter <br />
+                                    Special character allowed: _ - . ! ?
+                                </div>
                             </Tooltip>
                         </div>
 
                         <div className={styles.inputContainer}>
+                            <AnimatePresence>
+                                <motion.label
+                                    htmlFor="password"
+                                    className={styles.label}
+                                    animate={{
+                                        opacity:
+                                            passwordFocus || password
+                                                ? 1
+                                                : 0.5,
+                                        top:
+                                            passwordFocus || password
+                                                ? "-40%"
+                                                : "50%",
+                                        left:
+                                            passwordFocus || password
+                                                ? "5px"
+                                                : "15px",
+                                        transform:
+                                            passwordFocus || password
+                                                ? "translateY(0%)"
+                                                : "translateY(-50%)",
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    Password
+                                </motion.label>
+                            </AnimatePresence>
+                            <input
+                                type="password"
+                                id="password"
+                                onChange={(e) =>
+                                    setPassword(e.target.value)
+                                }
+                                value={password}
+                                required
+                                aria-invalid={
+                                    validPassword ? "false" : "true"
+                                }
+                                aria-describedby="passwordnote"
+                                onFocus={() => setPasswordFocus(true)}
+                                onBlur={() => setPasswordFocus(false)}
+                                className={styles.input}
+                                placeholder={
+                                    passwordFocus ? "Password" : ""
+                                }
+                            />
                             <Tooltip
                                 show={passwordFocus && !validPassword}
-                                text={
-                                    <div>
-                                        Must have at least 8 letters <br />
-                                        Upper & lower case letters <br />
-                                        A symbole (#$&!) <br />A longer password
-                                    </div>
-                                }
                                 pos="left"
-                                arrow
                             >
-                                <AnimatePresence>
-                                    <motion.label
-                                        htmlFor="password"
-                                        className={styles.label}
-                                        animate={{
-                                            opacity:
-                                                passwordFocus || password
-                                                    ? 1
-                                                    : 0.5,
-                                            top:
-                                                passwordFocus || password
-                                                    ? "-40%"
-                                                    : "50%",
-                                            left:
-                                                passwordFocus || password
-                                                    ? "5px"
-                                                    : "15px",
-                                            transform:
-                                                passwordFocus || password
-                                                    ? "translateY(0%)"
-                                                    : "translateY(-50%)",
-                                        }}
-                                        transition={{
-                                            duration: 0.2,
-                                            ease: "easeInOut",
-                                        }}
-                                    >
-                                        Password
-                                    </motion.label>
-                                </AnimatePresence>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    value={password}
-                                    required
-                                    aria-invalid={
-                                        validPassword ? "false" : "true"
-                                    }
-                                    aria-describedby="passwordnote"
-                                    onFocus={() => setPasswordFocus(true)}
-                                    onBlur={() => setPasswordFocus(false)}
-                                    className={styles.input}
-                                    placeholder={
-                                        passwordFocus ? "Password" : ""
-                                    }
-                                />
+                                <div>
+                                    Must have at least 8 letters <br />
+                                    Upper & lower case letters <br />
+                                    A symbole (#$&!) <br />A longer password
+                                </div>
                             </Tooltip>
                         </div>
 
                         <div className={styles.inputContainer}>
+                            <AnimatePresence>
+                                <motion.label
+                                    htmlFor="password"
+                                    className={styles.label}
+                                    animate={{
+                                        opacity:
+                                            matchFocus || matchPassword
+                                                ? 1
+                                                : 0.5,
+                                        top:
+                                            matchFocus || matchPassword
+                                                ? "-40%"
+                                                : "50%",
+                                        left:
+                                            matchFocus || matchPassword
+                                                ? "5px"
+                                                : "15px",
+                                        transform:
+                                            matchFocus || matchPassword
+                                                ? "translateY(0%)"
+                                                : "translateY(-50%)",
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    Confirm Password
+                                </motion.label>
+                            </AnimatePresence>
+                            <input
+                                type="password"
+                                id="passwordConfirm"
+                                onChange={(e) =>
+                                    setMatchPassword(e.target.value)
+                                }
+                                value={matchPassword}
+                                required
+                                aria-invalid={validMatch ? "false" : "true"}
+                                aria-describedby="confirmnote"
+                                onFocus={() => setMatchFocus(true)}
+                                onBlur={() => setMatchFocus(false)}
+                                className={styles.input}
+                                placeholder={
+                                    matchFocus ? "Confirm Password" : ""
+                                }
+                            />
                             <Tooltip
                                 show={matchFocus && !validMatch}
-                                text={
-                                    "Must match the first password input field."
-                                }
                                 pos="left"
-                                arrow
                             >
-                                <AnimatePresence>
-                                    <motion.label
-                                        htmlFor="password"
-                                        className={styles.label}
-                                        animate={{
-                                            opacity:
-                                                matchFocus || matchPassword
-                                                    ? 1
-                                                    : 0.5,
-                                            top:
-                                                matchFocus || matchPassword
-                                                    ? "-40%"
-                                                    : "50%",
-                                            left:
-                                                matchFocus || matchPassword
-                                                    ? "5px"
-                                                    : "15px",
-                                            transform:
-                                                matchFocus || matchPassword
-                                                    ? "translateY(0%)"
-                                                    : "translateY(-50%)",
-                                        }}
-                                        transition={{
-                                            duration: 0.2,
-                                            ease: "easeInOut",
-                                        }}
-                                    >
-                                        Confirm Password
-                                    </motion.label>
-                                </AnimatePresence>
-                                <input
-                                    type="password"
-                                    id="passwordConfirm"
-                                    onChange={(e) =>
-                                        setMatchPassword(e.target.value)
-                                    }
-                                    value={matchPassword}
-                                    required
-                                    aria-invalid={validMatch ? "false" : "true"}
-                                    aria-describedby="confirmnote"
-                                    onFocus={() => setMatchFocus(true)}
-                                    onBlur={() => setMatchFocus(false)}
-                                    className={styles.input}
-                                    placeholder={
-                                        matchFocus ? "Confirm Password" : ""
-                                    }
-                                />
+                                Must match the first password input field.
                             </Tooltip>
                         </div>
 

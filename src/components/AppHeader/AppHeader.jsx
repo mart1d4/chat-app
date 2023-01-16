@@ -1,13 +1,23 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip } from "../";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useUserData from "../../hooks/useUserData";
+import { useRouter } from "next/router";
 
-const AppHeader = ({ content, setContent, active, friend }) => {
+const AppHeader = ({ content, setContent, active }) => {
     const [showTooltip, setShowTooltip] = useState(false);
+    const [friend, setFriend] = useState(null);
 
-    const { friendRequests } = useUserData();
+    const router = useRouter();
+    const { friendRequests, channelList } = useUserData();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
+
+    useEffect(() => {
+        router.query.channelID && setFriend(
+            channelList?.filter(
+                (channel) => channel._id.toString() === router.query.channelID
+            )[0]?.members[0]);
+    }, [router.query.channelID]);
 
     const tabs = [
         {
@@ -44,7 +54,10 @@ const AppHeader = ({ content, setContent, active, friend }) => {
                             width="24"
                             height="24"
                         >
-                            <path d="M1 20v-2.8q0-.85.438-1.563.437-.712 1.162-1.087 1.55-.775 3.15-1.163Q7.35 13 9 13t3.25.387q1.6.388 3.15 1.163.725.375 1.162 1.087Q17 16.35 17 17.2V20Zm18 0v-3q0-1.1-.612-2.113-.613-1.012-1.738-1.737 1.275.15 2.4.512 1.125.363 2.1.888.9.5 1.375 1.112Q23 16.275 23 17v3ZM9 12q-1.65 0-2.825-1.175Q5 9.65 5 8q0-1.65 1.175-2.825Q7.35 4 9 4q1.65 0 2.825 1.175Q13 6.35 13 8q0 1.65-1.175 2.825Q10.65 12 9 12Zm10-4q0 1.65-1.175 2.825Q16.65 12 15 12q-.275 0-.7-.062-.425-.063-.7-.138.675-.8 1.037-1.775Q15 9.05 15 8q0-1.05-.363-2.025Q14.275 5 13.6 4.2q.35-.125.7-.163Q14.65 4 15 4q1.65 0 2.825 1.175Q19 6.35 19 8Z" />
+                            <g fill="none" fillRule="evenodd">
+                                <path fill="var(--foreground-tertiary)" fillRule="nonzero" d="M0.5,0 L0.5,1.5 C0.5,5.65 2.71,9.28 6,11.3 L6,16 L21,16 L21,14 C21,11.34 15.67,10 13,10 C13,10 12.83,10 12.75,10 C8,10 4,6 4,1.5 L4,0 L0.5,0 Z M13,0 C10.790861,0 9,1.790861 9,4 C9,6.209139 10.790861,8 13,8 C15.209139,8 17,6.209139 17,4 C17,1.790861 15.209139,0 13,0 Z" transform="translate(2 4)" />
+                                <path d="M0,0 L24,0 L24,24 L0,24 L0,0 Z M0,0 L24,0 L24,24 L0,24 L0,0 Z M0,0 L24,0 L24,24 L0,24 L0,0 Z" />
+                            </g>
                         </svg>
                     </div>
                     <h1 className={styles.title}>Friends</h1>
@@ -76,37 +89,61 @@ const AppHeader = ({ content, setContent, active, friend }) => {
                 >
 
                 </div>
-            </div>
+            </div >
         );
     } else if (content === "channels") {
         return (
             <div className={styles.header}>
-                <h1>@{friend?.username}</h1>
-                <Tooltip
-                    text={friend?.status}
-                    pos="bottom"
-                    arrow
-                    dist="10px"
-                    show={showTooltip}
-                >
+                <div className={styles.nav}>
+                    <div className={styles.icon}>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                        >
+                            <path fill="var(--foreground-tertiary)" d="M12 2C6.486 2 2 6.486 2 12C2 17.515 6.486 22 12 22C14.039 22 15.993 21.398 17.652 20.259L16.521 18.611C15.195 19.519 13.633 20 12 20C7.589 20 4 16.411 4 12C4 7.589 7.589 4 12 4C16.411 4 20 7.589 20 12V12.782C20 14.17 19.402 15 18.4 15L18.398 15.018C18.338 15.005 18.273 15 18.209 15H18C17.437 15 16.6 14.182 16.6 13.631V12C16.6 9.464 14.537 7.4 12 7.4C9.463 7.4 7.4 9.463 7.4 12C7.4 14.537 9.463 16.6 12 16.6C13.234 16.6 14.35 16.106 15.177 15.313C15.826 16.269 16.93 17 18 17L18.002 16.981C18.064 16.994 18.129 17 18.195 17H18.4C20.552 17 22 15.306 22 12.782V12C22 6.486 17.514 2 12 2ZM12 14.599C10.566 14.599 9.4 13.433 9.4 11.999C9.4 10.565 10.566 9.399 12 9.399C13.434 9.399 14.6 10.565 14.6 11.999C14.6 13.433 13.434 14.599 12 14.599Z" />
+                        </svg>
+                    </div>
+                    <h1 className={styles.titleFriend}>{friend?.username}</h1>
                     <div
                         className={styles.status}
-                        style={{
-                            backgroundColor:
-                                friend?.status === "online"
-                                    ? "green"
-                                    : friend?.status === "away"
-                                        ? "#ffbf00"
-                                        : friend?.status === "busy"
-                                            ? "#ff0000"
-                                            : friend?.status === "offline" && "#96989d",
-                        }}
                         onMouseEnter={() => setShowTooltip(true)}
                         onMouseLeave={() => setShowTooltip(false)}
-                    />
-                </Tooltip>
-                <div className={styles.split}></div>
-            </div>
+                    >
+                        <div
+                            style={{
+                                backgroundColor:
+                                    friend?.status === "Online"
+                                        ? "var(--valid-primary)"
+                                        : friend?.status === "Idle"
+                                            ? "var(--warning-primary)"
+                                            : friend?.status === "Busy"
+                                                ? "var(--error-primary)"
+                                                : "var(--foreground-quaternary)",
+                                width: "10px",
+                                height: "10px",
+                                borderRadius: "50%",
+                                position: "relative",
+                            }}
+                        >
+                            <Tooltip
+                                show={showTooltip}
+                                pos="bottom"
+                                dist="10px"
+                            >
+                                {friend?.status}
+                            </Tooltip>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    className={styles.toolbar}
+                >
+
+                </div>
+            </div >
         );
     }
 };

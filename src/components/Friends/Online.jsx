@@ -4,16 +4,26 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import Image from "next/image";
 
 const Online = () => {
     const [search, setSearch] = useState("");
-    const [hover, setHover] = useState(null);
-    const [borderRemove, setBorderRemove] = useState(null);
-    const [menu, setMenu] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [liHover, setLiHover] = useState(null);
+    const [showMenu, setShowMenu] = useState(null);
     const [error, setError] = useState(null);
 
+    useEffect(() => {
+        window.addEventListener("click", (e) => {
+            if (e.target === menuRef.current) return;
+            setShowMenu(null);
+            setLiHover(null);
+        });
+    }, []);
+
     const searchBar = useRef(null);
+    const menuRef = useRef(null);
 
     const { auth } = useAuth();
     const { friends, setFriends, setBlockedUsers } = useUserData();
@@ -128,49 +138,53 @@ const Online = () => {
                 {onlineFriends.map((friend, index) => (
                     <li
                         key={friend._id}
-                        className={styles.liContainer}
+                        className={
+                            liHover === index
+                                ? styles.liContainerHover
+                                : styles.liContainer
+                        }
                         onClick={() => startConversation(friend._id)}
-                        onMouseEnter={() => setBorderRemove(index + 1)}
+                        onMouseEnter={() => {
+                            setLiHover(index);
+                            if (showMenu !== null && showMenu !== index) {
+                                setShowMenu(null);
+                            }
+                        }}
                         onMouseLeave={() => {
-                            setBorderRemove(null)
-                            setMenu(null)
+                            if (showMenu === index) return;
+                            setLiHover(null);
                         }}
                         style={{
-                            borderColor: borderRemove === index && "transparent",
+                            borderColor: liHover === index - 1 && "transparent",
                         }}
                     >
                         <div className={styles.li}>
                             <div className={styles.userInfo}>
                                 <div className={styles.avatarWrapper}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="40"
-                                        height="40"
-                                        viewBox="0 0 40 40"
+                                    <Image
+                                        src={friend.avatar}
+                                        width={32}
+                                        height={32}
+                                        alt="Avatar"
+                                    />
+                                    <div
+                                        className={styles.avatarStatus}
                                     >
-                                        <foreignObject
-                                            x="0"
-                                            y="0"
-                                            width="32"
-                                            height="32"
-                                            mask="url(#mask-status-round-32)"
+                                        <div
+                                            style={{
+                                                backgroundColor:
+                                                    friend.status === "Online"
+                                                        ? "var(--valid-primary)"
+                                                        : friend.status === "Idle"
+                                                            ? "var(--warning-primary)"
+                                                            : friend.status === "Busy"
+                                                                ? "var(--error-primary)"
+                                                                : "var(--foreground-quaternary)",
+                                            }}
                                         >
-                                            <img
-                                                src={friend.avatar}
-                                                alt="avatar"
-                                                width="32"
-                                                height="32"
-                                            />
-                                        </foreignObject>
-                                        <rect
-                                            x="22"
-                                            y="22"
-                                            width="10"
-                                            height="10"
-                                            fill="#747f8d"
-                                            mask={`url(#mask-status-${friend.status})`}
-                                        ></rect>
-                                    </svg>
+
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{friend.username}</p>
@@ -184,9 +198,12 @@ const Online = () => {
                             </div>
                             <div className={styles.actions}>
                                 <button
-                                    onClick={() => startConversation(friend._id)}
-                                    onMouseEnter={() => setHover(friend._id + 0)}
-                                    onMouseLeave={() => setHover(null)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        startConversation(friend._id);
+                                    }}
+                                    onMouseEnter={() => setShowTooltip(friend._id)}
+                                    onMouseLeave={() => setShowTooltip(null)}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -196,20 +213,18 @@ const Online = () => {
                                         <path d="M1.667 18.333V3.417q0-.729.51-1.24.511-.51 1.24-.51h13.166q.729 0 1.24.51.51.511.51 1.24v9.833q0 .729-.51 1.24-.511.51-1.24.51H5Z" />
                                     </svg>
                                     <Tooltip
-                                        show={hover === friend._id + 0}
+                                        show={showTooltip === friend._id}
                                     >
                                         Message
                                     </Tooltip>
                                 </button>
                                 <button
-                                    onMouseEnter={() => setHover(friend._id + 1)}
-                                    onMouseLeave={() => setHover(null)}
+                                    onMouseEnter={() => setShowTooltip(friend._id + 1)}
+                                    onMouseLeave={() => setShowTooltip(null)}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setMenu(
-                                            menu === null ? friend._id : null
-                                        );
-                                        setHover(null);
+                                        setShowMenu(index);
+                                        setShowTooltip(null);
                                     }}
                                 >
                                     <svg
@@ -220,22 +235,24 @@ const Online = () => {
                                         <path d="M10 16q-.625 0-1.062-.438Q8.5 15.125 8.5 14.5t.438-1.062Q9.375 13 10 13t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 16 10 16Zm0-4.5q-.625 0-1.062-.438Q8.5 10.625 8.5 10t.438-1.062Q9.375 8.5 10 8.5t1.062.438q.438.437.438 1.062t-.438 1.062q-.437.438-1.062.438ZM10 7q-.625 0-1.062-.438Q8.5 6.125 8.5 5.5t.438-1.062Q9.375 4 10 4t1.062.438q.438.437.438 1.062t-.438 1.062Q10.625 7 10 7Z" />
                                     </svg>
                                     <Tooltip
-                                        show={hover === friend._id + 1}
+                                        show={showTooltip === friend._id + 1}
                                     >
                                         More
                                     </Tooltip>
 
-                                    {menu === friend._id && (
+                                    {showMenu === index && (
                                         <div
-                                            onMouseEnter={() => setHover(null)}
+                                            onMouseEnter={() => setShowTooltip(null)}
                                             className={styles.menuContainer}
+                                            ref={menuRef}
                                         >
                                             <div className={styles.menu}>
                                                 <div
                                                     className={styles.red}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setMenu(null);
+                                                        setShowMenu(null);
+                                                        setLiHover(null);
                                                         removeFriend(friend._id);
                                                     }}
                                                 >
@@ -245,7 +262,8 @@ const Online = () => {
                                                     className={styles.red}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setMenu(null);
+                                                        setShowMenu(null);
+                                                        setLiHover(null);
                                                         blockUser(friend._id);
                                                     }}
                                                 >
@@ -254,7 +272,8 @@ const Online = () => {
                                                 <div
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setMenu(null);
+                                                        setShowMenu(null);
+                                                        setLiHover(null);
                                                         startConversation(friend._id);
                                                     }}
                                                 >
@@ -264,7 +283,8 @@ const Online = () => {
                                                 <div
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setMenu(null);
+                                                        setShowMenu(null);
+                                                        setLiHover(null);
                                                         navigator.clipboard.writeText(friend._id);
                                                     }}
                                                 >
@@ -279,7 +299,7 @@ const Online = () => {
                     </li>
                 ))}
             </ul>
-        </div >
+        </div>
     );
 };
 

@@ -3,7 +3,13 @@ import User from "../../models/User";
 const getChannelList = async (userID) => {
     if (!userID) return { error: "No user ID provided" };
 
-    const user = await User.findById(userID).populate("privateChannels");
+    const user = await User.findById(userID).populate("privateChannels").populate({
+        path: "privateChannels",
+        populate: {
+            path: "members",
+            model: "User",
+        },
+    });
     if (!user) return { error: "No user found" };
 
     const channelList = user.privateChannels;
@@ -24,8 +30,7 @@ const getChannelList = async (userID) => {
                     createdAt: member.createdAt,
                 };
                 return cleanMember;
-            }),
-            messages: channel.messages,
+            }).filter((member) => member._id.toString() !== userID.toString()),
         };
         return cleanChannel;
     });

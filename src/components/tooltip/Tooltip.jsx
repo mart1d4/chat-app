@@ -63,8 +63,8 @@ const Tooltip = ({ children, show, pos, dist, arrow }) => {
     const positions = getTooltipPosition();
 
     return (
-        show && (
-            <AnimatePresence>
+        <AnimatePresence>
+            {show && (
                 <motion.div
                     className={styles.container}
                     style={positions[0]}
@@ -82,6 +82,7 @@ const Tooltip = ({ children, show, pos, dist, arrow }) => {
                     }}
                     transition={{
                         duration: 0.05,
+                        ease: 'easeInOut',
                     }}
                     onClick={(e) => e.preventDefault()}
                 >
@@ -104,9 +105,10 @@ const Tooltip = ({ children, show, pos, dist, arrow }) => {
                             </span>
                         )}
                     </span>
-                </motion.div>
-            </AnimatePresence>)
+                </motion.div>)}
+        </AnimatePresence>
     );
+
 }
 
 export default Tooltip;
