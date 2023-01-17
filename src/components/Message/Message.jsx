@@ -3,9 +3,11 @@ import { format, formatRelative } from "date-fns";
 import { Tooltip } from "../";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
-const Message = ({ message, big, hover }) => {
-    const [showTooltip, setShowTooltip] = useState(false);
+const Message = ({ message, start }) => {
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [hover, setHover] = useState(false);
 
     const checkMessageDate = (date) => {
         // Checks if the date was today or yesterday
@@ -19,72 +21,71 @@ const Message = ({ message, big, hover }) => {
         );
     };
 
-    return big ? (
-        <div className={styles.message}>
-            <motion.img
-                src={message.sender.avatar}
-                alt={message.sender.username}
-                className={styles.avatar}
-                whileTap={{ scale: 0.955 }}
-            />
-            <div>
-                <h3 className={styles.messageHeader}>
-                    <span className={styles.username}>
-                        {message.sender.username}
-                    </span>
-                    <span className={styles.timestamp}>
-                        <span
-                            onMouseEnter={() => setShowTooltip(1)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                        >
-                            <Tooltip
-                                show={showTooltip === 1}
-                                text={format(new Date(message.createdAt), "PPPP p")}
+    return (
+        <div
+            className={styles.li}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+        >
+            {start ? (
+                <div className={styles.messageStart}>
+                    <div className={styles.messageContent}>
+                        <Image
+                            src={message.sender.avatar}
+                            alt="Avatar"
+                            width={40}
+                            height={40}
+                        />
+                        <h3>
+                            <span className={styles.titleUsername}>
+                                {message.sender.username}
+                            </span>
+                            <span
+                                className={styles.titleTimestamp}
+                                onMouseEnter={() => setShowTooltip(1)}
+                                onMouseLeave={() => setShowTooltip(null)}
                             >
                                 {checkMessageDate(message.createdAt)
                                     ? formatRelative(
                                         new Date(message.createdAt),
                                         new Date()
-                                    )
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                    formatRelative(
+                                    ).charAt(0).toUpperCase() + formatRelative(
                                         new Date(message.createdAt),
-                                        new Date()
-                                    ).slice(1)
-                                    : format(
-                                        new Date(message.createdAt),
-                                        "P p"
-                                    )}
-                            </Tooltip>
-                        </span>
-                    </span>
-                </h3>
-                <div className={styles.messageContent}>{message.content}</div>
-            </div>
-        </div>
-    ) : (
-        <div className={styles.messageLittle}>
-            <div
-                className={styles.messageContent}
-                onMouseEnter={() => setShowTooltip(3)}
-                onMouseLeave={() => setShowTooltip(false)}
-            >
-                {message.content}
-            </div>
-            {hover && (
-                <div className={styles.timestampLittle}>
-                    <span
-                        onMouseEnter={() => setShowTooltip(2)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                    >
-                        <Tooltip
-                            show={showTooltip === 2}
-                            text={format(new Date(message.createdAt), "PPPP p")}
-                        >
-                            {format(new Date(message.createdAt), "p")}
-                        </Tooltip>
-                    </span>
+                                        new Date()).slice(1)
+                                    : format(new Date(message.createdAt), "P p")}
+                                <Tooltip
+                                    show={showTooltip === 1}
+                                    delay={1}
+                                >
+                                    {format(new Date(message.createdAt), "PPPP p")}
+                                </Tooltip>
+                            </span>
+                        </h3>
+                        <div>{message.content}</div>
+                    </div>
+                </div>
+            ) : (
+                <div className={styles.message}>
+                    <div className={styles.messageContent}>
+                        {hover && (
+                            <span
+                                className={styles.messageTimestamp}
+                                onMouseEnter={() => setShowTooltip(2)}
+                                onMouseLeave={() => setShowTooltip(null)}
+                            >
+                                <span>
+                                    {format(new Date(message.createdAt), "p")}
+                                    <Tooltip
+                                        show={showTooltip === 2}
+                                        delay={1}
+                                    >
+                                        {format(new Date(message.createdAt), "PPPP p")}
+                                    </Tooltip>
+                                </span>
+                            </span>
+                        )}
+                        <div>{message.content}</div>
+                    </div>
                 </div>
             )}
         </div>

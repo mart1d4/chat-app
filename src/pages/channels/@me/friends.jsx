@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import styles from "../styles/Friends.module.css";
+import styles from "./Friends.module.css";
 import {
     AppHeader,
     AddFriend,
@@ -9,14 +9,14 @@ import {
     Pending,
     Layout,
     NestedLayout,
-} from "../components";
+} from "../../../components";
 import Head from "next/head";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../../../hooks/useAuth";
 import { useRouter } from "next/router";
 
 const Friends = () => {
     const [content, setContent] = useState(
-        localStorage.getItem("friendsContent") || "online"
+        localStorage.getItem("friends-tab") || "online"
     );
 
     const { auth } = useAuth();
@@ -28,7 +28,7 @@ const Friends = () => {
 
     const handleContent = (content) => {
         setContent(content);
-        localStorage.setItem("friendsContent", content);
+        localStorage.setItem("friends-tab", content);
     };
 
     return (

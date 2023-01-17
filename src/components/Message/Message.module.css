@@ -1,88 +1,112 @@
-.message {
+.li {
   position: relative;
+}
+
+.li:hover {
+  background-color: var(--background-transparent-2);
+}
+
+.messageStart {
+  margin-top: 1.0625rem;
   min-height: 2.75rem;
-  padding: 0.3rem 48px 0.3rem 72px;
+  padding: 0.125rem 48px 0.125rem 72px;
+  position: relative;
   word-wrap: break-word;
   user-select: text;
 }
 
-.messageLittle {
-  position: relative;
+.message {
   padding: 0.125rem 48px 0.125rem 72px;
+  position: relative;
+  word-wrap: break-word;
+  user-select: text;
+  min-height: 1.375rem;
 }
 
-.avatar {
+.messageContent {
+  position: static;
+  margin-left: 0;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+.messageContent img {
+  pointer-events: auto;
   position: absolute;
   left: 16px;
-  margin-top: 0.15rem;
-  width: 40px;
-  height: 40px;
+  margin-top: calc(4px - 0.125rem);
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
   user-select: none;
-  pointer-events: auto;
-  z-index: 10;
+  z-index: 1;
 }
 
-.avatar:hover {
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
-}
-
-.messageHeader {
+.messageContent h3 {
+  display: block;
+  position: relative;
   line-height: 1.375rem;
   min-height: 1.375rem;
   white-space: break-spaces;
 }
 
-.username {
+.titleUsername {
   margin-right: 0.25rem;
-  line-height: 1.375rem;
-  font-weight: inherit;
-  font-style: inherit;
-  font-size: 100%;
-}
-
-.username:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.messageContent {
-  position: relative;
-  line-height: 1.5rem;
   font-size: 1rem;
-  margin-left: -72px;
-  padding-left: 72px;
+  font-weight: 500;
+  line-height: 1.375rem;
+  display: inline;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--foreground-primary);
 }
 
-.timestamp {
+.titleUsername:hover {
+  text-decoration: underline;
+}
+
+.titleTimestamp {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.25rem;
+  font-size: 0.75rem;
+  line-height: 1.375rem;
+  color: var(--foreground-quinternary);
+  margin-left: 0.25rem;
+  display: inline-block;
   cursor: default;
   font-weight: 500;
-  font-size: 0.75rem;
-  line-height: 1.5rem;
-  margin-left: 0.25rem;
+  height: 1.375rem;
+}
+
+.messageContent > div {
+  font-weight: 400;
+  user-select: text;
+  margin-left: -72px;
+  padding-left: 72px;
+  overflow: hidden;
+  position: relative;
+  text-indent: 0;
   color: var(--foreground-secondary);
 }
 
-.timestampLittle {
+.messageTimestamp {
   position: absolute;
-  top: 0;
   left: 0;
-  height: calc(1.5rem + 0.25rem);
-  width: 72px;
+  height: 1.375rem;
+  line-height: 1.375rem;
+  width: 56px;
   user-select: none;
   text-align: right;
-  line-height: 1.5rem;
+  z-index: 1;
+  font-size: 0.6875rem;
+  margin-right: 0.25rem;
+  text-indent: 0;
   font-weight: 500;
-  font-size: 0.75rem;
-  color: var(--foreground-secondary);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  cursor: default;
+  display: inline-block;
+  color: var(--foreground-quinternary);
+}
+
+.messageTimestamp > span {
+  position: relative;
 }

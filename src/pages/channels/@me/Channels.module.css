@@ -1,0 +1,293 @@
+.container {
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--background-quaternary);
+}
+
+.content {
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    position: relative;
+}
+
+.main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.messagesWrapper {
+    display: flex;
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    z-index: 0;
+}
+
+.messagesScrollableContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden scroll;
+    overflow-anchor: none;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.scrollContent {
+    overflow-anchor: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    min-height: 100%;
+    position: relative;
+}
+
+.scrollContentInner {
+    min-height: 0;
+    overflow: hidden;
+    list-style: none;
+}
+
+.firstTimeMessageContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 16px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.imageWrapper {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    border-radius: 50%;
+}
+
+.imageWrapper img {
+    border-radius: 50%;
+}
+
+.friendUsername {
+    font-weight: 700;
+    margin: 8px 0;
+    font-size: 32px;
+    line-height: 40px;
+    color: var(--foreground-primary);
+}
+
+.descriptionContainer {
+    color: var(--foreground-tertiary);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.descriptionContainer strong {
+    font-weight: 600;
+}
+
+.descriptionActions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.descriptionActions button {
+    cursor: pointer;
+    margin-right: 8px;
+    width: auto;
+    height: 24px;
+    min-width: 52px;
+    min-height: 24px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16px;
+    padding: 2px 16px;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.scrollerSpacer {
+    display: block;
+    height: 30px;
+    width: 1px;
+    pointer-events: none;
+}
+
+.form {
+    position: relative;
+    flex-shrink: 0;
+    padding: 0 16px;
+    margin-top: -8px;
+}
+
+.textArea {
+    margin-bottom: 24px;
+    background-color: var(--background-quinternary);
+    position: relative;
+    width: 100%;
+    text-indent: 0;
+    border-radius: 8px;
+}
+
+.scrollableContainer {
+    overflow: hidden scroll;
+    max-height: 50vh;
+    border-radius: 8px;
+}
+
+.scrollableContainer::-webkit-scrollbar {
+    width: 4px;
+    background-color: transparent;
+}
+
+.input {
+    padding-left: 16px;
+    display: flex;
+    position: relative;
+}
+
+.attachWrapper {
+    position: sticky;
+    flex: 0 0 auto;
+    align-self: stretch;
+}
+
+.attachWrapper > button {
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    height: 44px;
+    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    margin-left: -16px;
+    width: auto;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.attachWrapper > button path {
+    fill: var(--foreground-tertiary);
+}
+
+.attachWrapper > button:hover path {
+    fill: var(--foreground-secondary);
+}
+
+.attachWrapper > button > div {
+    height: 24px;
+}
+
+.textContainer {
+    padding: 0;
+    resize: none;
+    border: 0;
+    appearance: none;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.375rem;
+    width: 100%;
+    height: 44px;
+    color: var(--foreground-secondary);
+    position: relative;
+}
+
+.textContainerPlaceholder {
+    padding: 11px 10px 11px 0;
+    position: absolute;
+    left: 0;
+    right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    color: var(--foreground-light);
+}
+
+.textContainerInner {
+    outline: none;
+    position: relative;
+    overflow-wrap: break-word;
+    padding: 11px 10px 11px 0;
+    left: 0;
+    right: 10px;
+    text-align: left;
+    word-break: break-word;
+    white-space: break-spaces;
+}
+
+.toolsContainer {
+    margin-right: -6px;
+    display: flex;
+    height: 44px;
+    position: sticky;
+    top: 0;
+}
+
+.toolsContainer > button {
+    cursor: pointer;
+    width: auto;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.toolsContainer > button:last-child {
+    padding-right: 16px;
+    max-height: 50px;
+}
+
+.toolsContainer > button > .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin: 0 4px;
+}
+
+.emojiButton {
+    background-image: url("../../../../public/images/emoji-picker.png");
+    background-repeat: no-repeat;
+    background-size: 242px 110px;
+    width: 22px;
+    height: 22px;
+    background-position: -176px -66px;
+    background-size: 242px 110px;
+}

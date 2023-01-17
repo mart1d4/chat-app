@@ -74,7 +74,7 @@ const Online = () => {
             if (data.data.error) {
                 setError(data.data.error);
             } else {
-                router.push(`/channels/${data.data.channelID}`);
+                router.push(`/channels/@me/${data.data.channelID}`);
             }
         } catch (err) {
             console.error(err);

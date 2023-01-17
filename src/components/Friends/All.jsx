@@ -69,11 +69,10 @@ const All = () => {
                 `/users/${auth?.user._id}/friends/create`,
                 { userID: friendID }
             );
-            console.log(data);
             if (data.data.error) {
                 setError(data.data.error);
             } else {
-                router.push(`/channels/${data.data.channelID}`);
+                router.push(`/channels/@me/${data.data.channelID}`);
             }
         } catch (err) {
             console.error(err);

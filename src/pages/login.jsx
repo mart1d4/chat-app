@@ -22,7 +22,7 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        if (auth?.accessToken) router.push("/dashboard");
+        if (auth?.accessToken) router.push("/channels/@me/friends");
         usernameRef.current.focus();
     }, []);
 
@@ -48,7 +48,7 @@ const Login = () => {
             });
             setUsername("");
             setPassword("");
-            router.push("/dashboard");
+            router.push("/channels/@me/friends");
         } catch (err) {
             if (!err?.response) {
                 setErrorMessage("No Server Response");

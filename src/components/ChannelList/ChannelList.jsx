@@ -18,7 +18,7 @@ const ConversationList = () => {
     const menuRef = useRef(null);
 
     const { auth } = useAuth();
-    const { friendRequests, channelList } = useUserData();
+    const { friends, friendRequests, channelList } = useUserData();
     const { logout } = useLogout();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
@@ -29,8 +29,8 @@ const ConversationList = () => {
         });
     }, []);
 
-    const handleUrl = (url) => {
-        localStorage.setItem("url", url);
+    const isFriend = (id) => {
+        return friends.some((friend) => friend._id.toString() === id);
     };
 
     return (
@@ -51,13 +51,19 @@ const ConversationList = () => {
                         <div></div>
                         <div
                             className={styles.liContainer}
-                            onClick={() => router.push("/friends")}
+                            onClick={() => {
+                                localStorage.setItem(
+                                    "private-channel-url",
+                                    `/channels/@me/friends`
+                                );
+                                router.push("/channels/@me/friends")
+                            }}
                         >
                             <div
                                 className={styles.liWrapper}
                                 style={{
-                                    backgroundColor: currentPath === "/friends" && "var(--background-transparent)",
-                                    color: currentPath === "/friends" && "var(--foreground-primary)",
+                                    backgroundColor: currentPath === "/channels/@me/friends" && "var(--background-transparent)",
+                                    color: currentPath === "/channels/@me/friends" && "var(--foreground-primary)",
                                 }}
                             >
                                 <div className={styles.linkFriends}>
@@ -132,15 +138,18 @@ const ConversationList = () => {
                                 onMouseEnter={() => setHover(conv.members[0]._id)}
                                 onMouseLeave={() => setHover(null)}
                                 onClick={() => {
-                                    handleUrl(`/channels/${conv._id}`)
-                                    router.push(`/channels/${conv._id}`);
+                                    localStorage.setItem(
+                                        "private-channel-url",
+                                        `/channels/@me/${conv._id}`
+                                    );
+                                    router.push(`/channels/@me/${conv._id}`);
                                 }}
                             >
                                 <div
                                     className={styles.liWrapper}
                                     style={{
-                                        backgroundColor: currentPath === `/channels/${conv._id}` && "var(--background-transparent)",
-                                        color: currentPath === `/channels/${conv._id}` && "var(--foreground-primary)",
+                                        backgroundColor: currentPath === `/channels/@me/${conv._id}` && "var(--background-transparent)",
+                                        color: currentPath === `/channels/@me/${conv._id}` && "var(--foreground-primary)",
                                     }}
                                 >
                                     <div className={styles.link}>
@@ -167,8 +176,9 @@ const ConversationList = () => {
                                                     >
                                                         <div
                                                             style={{
-                                                                backgroundColor:
-                                                                    conv.members[0].status === "Online"
+                                                                backgroundColor: !isFriend(conv.members[0]._id)
+                                                                    ? "var(--foreground-quaternary)"
+                                                                    : conv.members[0].status === "Online"
                                                                         ? "var(--valid-primary)"
                                                                         : conv.members[0].status === "Idle"
                                                                             ? "var(--warning-primary)"
@@ -181,7 +191,9 @@ const ConversationList = () => {
                                                                 show={showStatus === conv.members[0]._id}
                                                                 dist="8px"
                                                             >
-                                                                {conv.members[0].status}
+                                                                {isFriend(conv.members[0]._id)
+                                                                    ? conv.members[0].status
+                                                                    : "Offline"}
                                                             </Tooltip>
                                                         </div>
                                                     </div>
@@ -193,7 +205,7 @@ const ConversationList = () => {
                                                         {conv.members[0].username}
                                                     </div>
                                                 </div>
-                                                {conv.members[0].customStatus !== ""
+                                                {(conv.members[0].customStatus !== "" && isFriend(conv.members[0]._id))
                                                     && (<div className={styles.contentStatus}>
                                                         {conv.members[0].customStatus}
                                                     </div>)}
@@ -261,14 +273,12 @@ const ConversationList = () => {
                         </div>
                         <div className={styles.contentWrapper}>
                             <div>
-                                {
-                                    auth?.user?.customStatus === ""
-                                        ? auth?.user?.username
-                                        : auth?.user?.customStatus
-                                }
+                                {auth?.user?.username}
                             </div>
                             <div>
-                                #0001
+                                {auth?.user?.customStatus === ""
+                                    ? "0001"
+                                    : auth?.user?.customStatus}
                             </div>
                         </div>
 

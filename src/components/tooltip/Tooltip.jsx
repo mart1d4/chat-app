@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Tooltip.module.css';
 
-const Tooltip = ({ children, show, pos, dist, arrow }) => {
+const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
     const distance = dist ?? '6px';
     const position = pos ?? 'top';
     const showArrow = arrow ?? true;
@@ -79,10 +79,16 @@ const Tooltip = ({ children, show, pos, dist, arrow }) => {
                     exit={{
                         opacity: 0,
                         transform: positions[0].transform + ' scale(0.5)',
+                        transition: {
+                            duration: 0.05,
+                            ease: 'easeInOut',
+                            delay: 0,
+                        },
                     }}
                     transition={{
                         duration: 0.05,
                         ease: 'easeInOut',
+                        delay: delay ?? 0,
                     }}
                     onClick={(e) => e.preventDefault()}
                 >

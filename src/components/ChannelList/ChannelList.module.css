@@ -343,6 +343,9 @@
 }
 
 .contentWrapper > div:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 13px;
   font-size: 12px;
   font-weight: 400;

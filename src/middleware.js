@@ -19,12 +19,16 @@ export const middleware = (req) => {
                 { status: 401, headers: { "content-type": "application/json" } }
             );
         }
-        console.log("jbnskwhbehkdjbwejuibn2ujqwuhdbnujwehn");
         req.user = decoded.UserInfo;
         next();
     });
 };
 
 export const config = {
-    matcher: ["/users", "/users/:id*", "/conversations", "/conversations/:id*"],
+    matcher: [
+        "/users",
+        "/users/:id*",
+        "/private",
+        "/private/channels"
+    ],
 };

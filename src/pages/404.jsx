@@ -6,7 +6,7 @@ const Custom404 = () => {
             <h1>404 - Page Not Found</h1>
 
             <p>
-                <Link href="/dashboard">
+                <Link href="/channels/@me/friends">
                     Go back home
                 </Link>
             </p>

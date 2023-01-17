@@ -34,7 +34,7 @@ const Register = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        if (auth?.accessToken) router.push("/dashboard");
+        if (auth?.accessToken) router.push("/channels/@me/friends");
         usernameRef?.current?.focus();
     }, []);
 

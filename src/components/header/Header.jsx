@@ -74,7 +74,7 @@ const Header = () => {
 
                 <div className={styles.buttons}>
                     {auth?.user ? (
-                        <Link href="/friends">Start chatting</Link>
+                        <Link href="/channels/@me/friends">Start chatting</Link>
                     ) : (
                         <>
                             <Link href="/login">Login</Link>
