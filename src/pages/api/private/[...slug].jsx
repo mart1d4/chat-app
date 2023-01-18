@@ -6,7 +6,7 @@ import {
     removePrivateChannel,
     sendPrivateMessage,
     editPrivateMessage,
-} from "../../../utils/api/setters";
+} from "../../../utils/api/posters";
 
 connectDB();
 

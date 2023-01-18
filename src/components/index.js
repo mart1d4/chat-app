@@ -16,6 +16,7 @@ import Online from './Friends/Online';
 import Pending from './Friends/Pending';
 import Layout from './Layout/Layout';
 import NestedLayout from './NestedLayout/NestedLayout';
+import Alert from './Alert/Alert';
 
 export {
     AppHeader,
@@ -36,4 +37,5 @@ export {
     Pending,
     Layout,
     NestedLayout,
+    Alert,
 };

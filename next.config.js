@@ -4,11 +4,19 @@ module.exports = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'media3.giphy.com',
+                hostname: 'media0.giphy.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'media1.giphy.com',
             },
             {
                 protocol: 'https',
                 hostname: 'media2.giphy.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'media3.giphy.com',
             },
         ],
     },

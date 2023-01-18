@@ -61,7 +61,13 @@ const Message = ({ message, start }) => {
                                 </Tooltip>
                             </span>
                         </h3>
-                        <div>{message.content}</div>
+                        <div
+                            style={{
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {message.content}
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -84,7 +90,13 @@ const Message = ({ message, start }) => {
                                 </span>
                             </span>
                         )}
-                        <div>{message.content}</div>
+                        <div
+                            style={{
+                                whiteSpace: "pre-line",
+                            }}
+                        >
+                            {message.content}
+                        </div>
                     </div>
                 </div>
             )}

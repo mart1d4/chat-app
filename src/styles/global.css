@@ -128,6 +128,8 @@
   font-display: swap;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background-primary: hsl(216, 7%, 14%);
@@ -169,15 +171,22 @@
 /* Change scrollbar */
 
 ::-webkit-scrollbar {
-  background-color: var(--background-tertiary);
-  width: 8px;
+  width: 16px;
+}
+
+::-webkit-scrollbar-track {
   border-radius: 100vw;
+  border: 4px var(--background-quaternary) solid;
+  background-color: var(--background-tertiary);
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 10px solid var(--background-primary);
-  background-clip: padding-box;
   border-radius: 100vw;
+  border: 4px var(--background-quaternary) solid;
+  border-color: transparent;
+  background-color: var(--background-primary);
+  background-clip: padding-box;
 }
 
 * {

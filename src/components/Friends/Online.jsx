@@ -1,4 +1,4 @@
-import { Tooltip } from "..";
+import { Tooltip, Alert } from "..";
 import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import { AnimatePresence } from "framer-motion";
 
 const Online = () => {
     const [search, setSearch] = useState("");
@@ -13,6 +14,14 @@ const Online = () => {
     const [liHover, setLiHover] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setError("");
+        }, 7500);
+
+        return () => clearTimeout(timeout);
+    }, [error]);
 
     useEffect(() => {
         window.addEventListener("click", (e) => {
@@ -91,6 +100,11 @@ const Online = () => {
 
     return (
         <div className={styles.content}>
+            <AnimatePresence>
+                {error && (
+                    <Alert type="error" message={error} />
+                )}
+            </AnimatePresence>
             <div className={styles.searchBarContainer}>
                 <div className={styles.searchBarInner}>
                     <input

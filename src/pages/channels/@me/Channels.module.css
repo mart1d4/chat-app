@@ -49,6 +49,10 @@
     flex: 1 1 auto;
 }
 
+.messagesScrollableContainer::-webkit-scrollbar-track {
+    margin-bottom: 8px;
+}
+
 .scrollContent {
     overflow-anchor: none;
     display: flex;
@@ -139,11 +143,51 @@
     pointer-events: none;
 }
 
+.messageDivider {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    left: auto;
+    right: auto;
+    z-index: 1;
+    height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    margin-left: 1rem;
+    margin-right: 0.875rem;
+    border-top: thin solid var(--background-transparent);
+}
+
+.messageDivider span {
+    display: block;
+    flex: 0 0 auto;
+    padding: 2px 4px;
+    line-height: 13px;
+    font-size: 12px;
+    margin-top: -1px;
+    font-weight: 600;
+    border-radius: 8px;
+    color: var(--foreground-tertiary);
+    background-color: var(--background-quaternary);
+}
+
 .form {
     position: relative;
     flex-shrink: 0;
     padding: 0 16px;
     margin-top: -8px;
+}
+
+.textCounter {
+    position: absolute;
+    right: 16px;
+    bottom: 3px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--foreground-tertiary);
+    font-weight: 400;
 }
 
 .textArea {
@@ -162,8 +206,17 @@
 }
 
 .scrollableContainer::-webkit-scrollbar {
-    width: 4px;
-    background-color: transparent;
+    width: 12px;
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+    border: 4px var(--background-quinternary) solid;
+    background-color: var(--background-quinternary);
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+    border: 4px var(--background-quinternary) solid;
+    background-color: var(--background-primary);
 }
 
 .input {
@@ -270,7 +323,6 @@
 }
 
 .toolsContainer > button:last-child {
-    padding-right: 16px;
     max-height: 50px;
 }
 

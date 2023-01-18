@@ -57,15 +57,25 @@
 }
 
 .scroller::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
+}
+
+.scroller::-webkit-scrollbar-track {
+  border-radius: 100vw;
+  border: 2px var(--background-tertiary) solid;
+  background-color: transparent;
+  background-clip: padding-box;
 }
 
 .scroller::-webkit-scrollbar-thumb {
-  border: 10px solid transparent;
+  border-radius: 100vw;
+  border: 2px var(--background-tertiary) solid;
+  background-color: transparent;
+  background-clip: padding-box;
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
-  border: 10px solid var(--background-primary);
+  background-color: var(--background-primary);
 }
 
 .channelList {

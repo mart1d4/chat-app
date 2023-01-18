@@ -68,12 +68,12 @@
   position: relative;
   cursor: pointer;
   font-weight: 500;
-  color: var(--foreground-secondary);
+  color: var(--foreground-tertiary);
 }
 
 .item:hover {
   background-color: var(--background-transparent);
-  color: var(--foreground-primary);
+  color: var(--foreground-secondary);
 }
 
 .status {

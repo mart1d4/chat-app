@@ -42,6 +42,10 @@
   z-index: 1;
 }
 
+.messageContent img:hover {
+  filter: drop-shadow(0 4px 4px hsla(0, 0%, 0%, 0.16));
+}
+
 .messageContent h3 {
   display: block;
   position: relative;
@@ -79,7 +83,8 @@
 }
 
 .messageContent > div {
-  font-weight: 400;
+  font-weight: 300;
+  font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   user-select: text;
   margin-left: -72px;
   padding-left: 72px;

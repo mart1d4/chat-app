@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { AppHeader, Layout, NestedLayout, Message } from "../../../components";
+import { AppHeader, Layout, NestedLayout, Message, Alert } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
 import { useState, useEffect, useRef } from "react";
@@ -7,14 +7,30 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { parseISO, format } from "date-fns";
+import React from "react";
+
+const emojisPos = [
+    { x: 0, y: 0 }, { x: 0, y: -22 }, { x: 0, y: -44 }, { x: 0, y: -66 }, { x: 0, y: -88 },
+    { x: -22, y: 0 }, { x: -22, y: -22 }, { x: -22, y: -44 }, { x: -22, y: -66 }, { x: -22, y: -88 },
+    { x: -44, y: 0 }, { x: -44, y: -22 }, { x: -44, y: -44 }, { x: -44, y: -66 }, { x: -44, y: -88 },
+    { x: -66, y: 0 }, { x: -66, y: -22 }, { x: -66, y: -44 }, { x: -66, y: -66 }, { x: -66, y: -88 },
+    { x: -88, y: 0 }, { x: -88, y: -22 }, { x: -88, y: -44 }, { x: -88, y: -66 }, { x: -88, y: -88 },
+    { x: -110, y: 0 }, { x: -110, y: -22 }, { x: -110, y: -44 }, { x: -110, y: -66 }, { x: -110, y: -88 },
+    { x: -132, y: 0 }, { x: -132, y: -22 }, { x: -132, y: -44 }, { x: -132, y: -66 },
+    { x: -154, y: 0 }, { x: -154, y: -22 }, { x: -154, y: -44 }, { x: -154, y: -66 },
+    { x: -176, y: 0 }, { x: -176, y: -22 }, { x: -176, y: -44 }, { x: -176, y: -66 },
+    { x: -198, y: 0 }, { x: -198, y: -22 }, { x: -198, y: -44 }, { x: -198, y: -66 },
+    { x: -220, y: 0 }, { x: -220, y: -22 }, { x: -220, y: -44 }, { x: -220, y: -66 },
+];
 
 const scale = {
     hover: {
         scale: 1.15,
         transition: {
             duration: 0.1,
-            ease: "circOut",
+            ease: "circInOut",
         }
     }
 };
@@ -26,95 +42,98 @@ const Channels = () => {
     const [hover, setHover] = useState(null);
     const [emojisPosIndex, setEmojisPosIndex] = useState(0);
     const [textContainerHeight, setTextContainerHeight] = useState(44);
+    const [messagesContainerHeight, setMessagesContainerHeight] = useState(0);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        console.log(message);
+        const timeout = setTimeout(() => {
+            setError("");
+        }, 7500);
 
-        // Count the number of lines
+        return () => clearTimeout(timeout);
+    }, [error]);
+
+    useEffect(() => {
         const lines = message.split("\n").length - 1;
         setTextContainerHeight(44 + (lines * 22));
     }, [message]);
 
-    const emojisPos = [
-        { x: 0, y: 0 },
-        { x: 0, y: -22 },
-        { x: 0, y: -44 },
-        { x: 0, y: -66 },
-        { x: 0, y: -88 },
-        { x: -22, y: 0 },
-        { x: -22, y: -22 },
-        { x: -22, y: -44 },
-        { x: -22, y: -66 },
-        { x: -22, y: -88 },
-        { x: -44, y: 0 },
-        { x: -44, y: -22 },
-        { x: -44, y: -44 },
-        { x: -44, y: -66 },
-        { x: -44, y: -88 },
-        { x: -66, y: 0 },
-        { x: -66, y: -22 },
-        { x: -66, y: -44 },
-        { x: -66, y: -66 },
-        { x: -66, y: -88 },
-        { x: -88, y: 0 },
-        { x: -88, y: -22 },
-        { x: -88, y: -44 },
-        { x: -88, y: -66 },
-        { x: -88, y: -88 },
-        { x: -110, y: 0 },
-        { x: -110, y: -22 },
-        { x: -110, y: -44 },
-        { x: -110, y: -66 },
-        { x: -110, y: -88 },
-        { x: -132, y: 0 },
-        { x: -132, y: -22 },
-        { x: -132, y: -44 },
-        { x: -132, y: -66 },
-        { x: -154, y: 0 },
-        { x: -154, y: -22 },
-        { x: -154, y: -44 },
-        { x: -154, y: -66 },
-        { x: -176, y: 0 },
-        { x: -176, y: -22 },
-        { x: -176, y: -44 },
-        { x: -176, y: -66 },
-        { x: -198, y: 0 },
-        { x: -198, y: -22 },
-        { x: -198, y: -44 },
-        { x: -198, y: -66 },
-        { x: -220, y: 0 },
-        { x: -220, y: -22 },
-        { x: -220, y: -44 },
-        { x: -220, y: -66 },
-    ]
+    useEffect(() => {
+        setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
+    }, [messages]);
+
+    useEffect(() => {
+        scrollableContainer.current.scrollTop = messagesContainerHeight;
+    }, [messagesContainerHeight]);
 
     const { auth } = useAuth();
     const { channelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const textContainerRef = useRef(null);
+    const textContainer = useRef(null);
     const scrollableContainer = useRef(null);
 
     useEffect(() => {
         if (!auth?.accessToken) router.push("/login");
 
-        if (
-            channelList?.filter(
-                (channel) => channel._id.toString() === router.query.channelID
-            ).length === 0
-        ) {
-            router.push("/channels/@me/friends");
-        }
+        // if (
+        //     channelList?.filter(
+        //         (channel) => channel._id.toString() === router.query.channelID
+        //     ).length === 0
+        // ) {
+        //     router.push("/channels/@me/friends");
+        // }
 
         setFriend(channelList?.filter(
             (channel) => channel._id.toString() === router.query.channelID
         )[0]?.members[0]);
+
+        const getMessages = async () => {
+            const data = await axiosPrivate.get(
+                `/private/${router.query.channelID}/messages`
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setMessages(data.data.messages);
+            }
+        }
+
+        getMessages();
+
+        textContainer.current.focus();
     }, [router.query]);
+
+    const isMoreThan5Minutes = (date1, date2) => {
+        if (typeof date1 === "string") date1 = parseISO(date1);
+        if (typeof date2 === "string") date2 = parseISO(date2);
+        return Math.abs(date1 - date2) > 300000;
+    };
 
     const isStart = (index) => {
         if (index === 0) return true;
         if (messages[index - 1].sender._id !== messages[index].sender._id) return true;
+        if (isMoreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
         return false;
+    };
+
+    const isNewDay = (index) => {
+        if (index === 0) return true;
+        let date1 = messages[index - 1].createdAt;
+        let date2 = messages[index].createdAt;
+        if (typeof date1 === "string") date1 = parseISO(date1);
+        if (typeof date2 === "string") date2 = parseISO(date2);
+        return date1.getDate() !== date2.getDate();
+    };
+
+    const moveCursorToEnd = () => {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(textContainer.current.childNodes[0], textContainer.current.innerText.length);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        textContainer.current.focus();
     };
 
     const sendMessage = () => {
@@ -123,13 +142,24 @@ const Channels = () => {
 
         const newMessage = {
             sender: auth?.user,
-            content: message,
+            content: message.toString(),
             createdAt: new Date(),
         }
 
-        setMessages((messages) => [...messages, newMessage]);
-        setMessage("");
-        textContainerRef.current.innerHTML = "";
+        const data = axiosPrivate.post(
+            `/private/${router.query.channelID}/send`,
+            {
+                message: newMessage,
+            }
+        );
+
+        if (data?.data?.error) {
+            setError(data.data.error);
+        } else {
+            setMessages((messages) => [...messages, newMessage]);
+            setMessage("");
+            textContainer.current.innerHTML = "";
+        }
     };
 
     return (
@@ -137,6 +167,13 @@ const Channels = () => {
             <Head>
                 <title>Discord | @{friend?.username}</title>
             </Head>
+
+            <AnimatePresence>
+                {error && (
+                    <Alert type="error" message={error} />
+                )}
+            </AnimatePresence>
+
             <div className={styles.container}>
                 <AppHeader
                     content="channels"
@@ -145,7 +182,10 @@ const Channels = () => {
                 <div className={styles.content}>
                     <main className={styles.main}>
                         <div className={styles.messagesWrapper}>
-                            <div className={styles.messagesScrollableContainer}>
+                            <div
+                                ref={scrollableContainer}
+                                className={styles.messagesScrollableContainer}
+                            >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
                                         <div className={styles.firstTimeMessageContainer}>
@@ -184,11 +224,19 @@ const Channels = () => {
                                         </div>
 
                                         {messages?.map((message, index) =>
-                                            <Message
-                                                key={index}
-                                                message={message}
-                                                start={isStart(index)}
-                                            />
+                                            <React.Fragment key={index}>
+                                                {isNewDay(index) && (
+                                                    <div className={styles.messageDivider}>
+                                                        <span>
+                                                            {format(new Date(message.createdAt), "PPP")}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <Message
+                                                    message={message}
+                                                    start={isStart(index)}
+                                                />
+                                            </React.Fragment>
                                         )}
 
                                         <div className={styles.scrollerSpacer} />
@@ -197,13 +245,22 @@ const Channels = () => {
                             </div>
                         </div>
 
-                        <form
-                            className={styles.form}
-                        >
+                        <form className={styles.form}>
+                            <div className={styles.textCounter}>
+                                <span
+                                    style={{
+                                        color: message.length > 4000
+                                            ? "var(--error-primary)"
+                                            : "var(--foreground-tertiary)",
+                                    }}
+                                >
+                                    {message.length}
+                                </span>/4000
+                            </div>
+
                             <div className={styles.textArea}>
                                 <div
                                     className={styles.scrollableContainer}
-                                    ref={scrollableContainer}
                                 >
                                     <div className={styles.input}>
                                         <div className={styles.attachWrapper}>
@@ -234,7 +291,7 @@ const Channels = () => {
                                                 )}
 
                                                 <div
-                                                    ref={textContainerRef}
+                                                    ref={textContainer}
                                                     className={styles.textContainerInner}
                                                     role="textbox"
                                                     spellCheck="true"
@@ -248,20 +305,28 @@ const Channels = () => {
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter" && e.shiftKey) {
                                                             e.preventDefault();
-                                                            textContainerRef.current.innerHTML += "\n";
-                                                            setMessage(textContainerRef.current.innerText);
-                                                            // Place cursor at the end of the text
-                                                            const range = document.createRange();
-                                                            const sel = window.getSelection();
-                                                            range.setStart(textContainerRef.current.childNodes[0], textContainerRef.current.innerText.length);
-                                                            range.collapse(true);
-                                                            sel.removeAllRanges();
-                                                            sel.addRange(range);
+                                                            textContainer.current.innerHTML += "\n";
+                                                            setMessage(textContainer.current.innerText);
+                                                            moveCursorToEnd();
 
                                                         } else if (e.key === "Enter" && !e.shiftKey) {
                                                             e.preventDefault();
                                                             sendMessage();
                                                         }
+                                                    }}
+                                                    onPaste={(e) => {
+                                                        e.preventDefault();
+                                                        const text = e.clipboardData.getData("text/plain").toString();
+                                                        textContainer.current.innerHTML += text;
+                                                        setMessage(textContainer.current.innerText);
+                                                        moveCursorToEnd();
+                                                    }}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        const text = e.dataTransfer.getData("text/plain").toString();
+                                                        textContainer.current.innerHTML += text;
+                                                        setMessage(textContainer.current.innerText);
+                                                        moveCursorToEnd();
                                                     }}
                                                 />
                                             </div>
