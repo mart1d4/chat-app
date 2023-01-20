@@ -1,0 +1,130 @@
+.buttonContainer {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.buttonWrapper {
+    pointer-events: auto;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+    padding: 0 14px 0 32px;
+}
+
+.buttons {
+    background-color: var(--background-quaternary);
+    display: grid;
+    grid-auto-flow: column;
+    height: 32px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+    position: relative;
+    box-shadow: var(--elevation-low);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.buttons:hover {
+    box-shadow: var(--elevation-low), var(--elevation-medium);
+}
+
+.buttons > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 4px;
+    width: 32px;
+    cursor: pointer;
+    position: relative;
+    color: var(--foreground-secondary);
+}
+
+.buttons > div:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.buttons > div:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.buttons > div:hover {
+    background-color: var(--background-transparent);
+}
+
+.buttons > div > svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+}
+
+.menu {
+    right: 54px;
+    position: absolute;
+    min-width: 188px;
+    max-width: 320px;
+    display: flex;
+    cursor: default;
+    max-height: calc(100vh - 32px);
+    border-radius: 4px;
+    background-color: var(--background-dark);
+    box-shadow: var(--elevation-high);
+    z-index: 10000000000;
+}
+
+.menuWrapper {
+    padding: 6px 8px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.menuItem,
+.menuItemDanger {
+    color: var(--foreground-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.menuItemDanger {
+    color: var(--error-primary);
+}
+
+.menuItemDanger:hover {
+    background-color: var(--error-primary);
+    color: var(--foreground-primary);
+}
+
+.menuItem:hover {
+    background-color: var(--accent-primary);
+    color: var(--foregroun-primary);
+}
+
+.menuItem > .label,
+.menuItemDanger > .label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menuItem > .icon,
+.menuItemDanger > .icon {
+    flex: 0 0 auto;
+    height: 18px;
+    width: 18px;
+    margin-left: 8px;
+}

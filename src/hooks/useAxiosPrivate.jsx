@@ -1,11 +1,11 @@
 import { axiosPrivate } from '../api/axios';
 import { useEffect } from 'react';
 import useRefreshToken from './useRefreshToken';
-import useAuth from './useAuth';
+import useUserData from './useUserData';
 
 export default function useAxiosPrivate() {
     const refresh = useRefreshToken();
-    const { auth } = useAuth();
+    const { auth } = useUserData();
 
     useEffect(() => {
         const requestIntercept = axiosPrivate.interceptors.request.use(
@@ -24,7 +24,7 @@ export default function useAxiosPrivate() {
             (response) => response,
             async (error) => {
                 const prevRequest = error?.config;
-                if (error?.response?.status === 403 && !prevRequest?.sent) {
+                if (!prevRequest?.sent) {
                     prevRequest.sent = true;
                     const newAccessToken = await refresh();
                     prevRequest.headers[

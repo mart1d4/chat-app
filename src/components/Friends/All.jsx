@@ -1,5 +1,4 @@
 import { Tooltip, Alert } from "..";
-import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useRouter } from "next/router";
@@ -34,8 +33,7 @@ const All = () => {
     const searchBar = useRef(null);
     const menuRef = useRef(null);
 
-    const { auth } = useAuth();
-    const { friends, setFriends, setBlockedUsers } = useUserData();
+    const { auth, friends, setFriends, setBlockedUsers } = useUserData();
     const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
 
@@ -87,14 +85,6 @@ const All = () => {
             console.error(err);
         }
     };
-
-    // if (!friends.length) {
-    //     return (
-    //         <div className={styles.content}>
-    //             <h2>You don't have any friends</h2>
-    //         </div>
-    //     );
-    // }
 
     return (
         <div className={styles.content}>

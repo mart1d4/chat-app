@@ -1,4 +1,3 @@
-import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
@@ -23,8 +22,8 @@ const Pending = () => {
 
     const searchBar = useRef(null);
 
-    const { auth } = useAuth();
     const {
+        auth,
         friendRequests,
         setFriendRequests,
         friends,
@@ -86,14 +85,6 @@ const Pending = () => {
             console.error(err);
         }
     };
-
-    // if (!friendRequests.length) {
-    //     return (
-    //         <div className={styles.content}>
-    //             <h2>No pending requests</h2>
-    //         </div>
-    //     );
-    // }
 
     return (
         <div className={styles.content}>

@@ -9,6 +9,7 @@ import removePrivateChannel from './removePrivateChannel';
 import requestFriend from './requestFriend';
 import sendPrivateMessage from './sendPrivateMessage';
 import unblockUser from './unblockUser';
+import deletePrivateMessage from './deletePrivateMessage';
 
 export {
     acceptFriendRequest,
@@ -22,4 +23,5 @@ export {
     requestFriend,
     sendPrivateMessage,
     unblockUser,
+    deletePrivateMessage,
 };

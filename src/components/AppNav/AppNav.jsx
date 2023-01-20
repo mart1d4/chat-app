@@ -1,43 +1,10 @@
 import Link from "next/link";
 import styles from "./AppNav.module.css";
-import { motion, AnimatePresence } from "framer-motion";
-import useAuth from "../../hooks/useAuth";
-import icons from "../../../public/icons/icons";
-import { Tooltip, Avatar } from "..";
 import { useRef, useState, useEffect } from "react";
-import useLogout from "../../hooks/useLogout";
-import { useRouter } from "next/router";
-
-const navLinks = [
-    {
-        name: "Dashboard",
-        path: "/dashboard",
-        icon: icons.dashboard,
-    },
-    {
-        name: "Friends",
-        path: "/friends",
-        icon: icons.friends,
-    },
-    {
-        name: "Servers",
-        path: "/servers",
-        icon: icons.messages,
-    },
-    {
-        name: "Account",
-        path: "/account",
-        icon: icons.user,
-    },
-];
 
 const AppNav = () => {
-    const { auth } = useAuth();
-    const [show, setShow] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
-    const { logout } = useLogout();
     const menuRef = useRef(null);
-    const router = useRouter();
 
     useEffect(() => {
         document.addEventListener("click", (event) => {
@@ -50,14 +17,6 @@ const AppNav = () => {
             document.removeEventListener("click", () => setShowMenu(false));
         };
     }, []);
-
-    const handleRoute = () => {
-        if (localStorage.getItem("url")) {
-            window.location.href = localStorage.getItem("url");
-        } else {
-            window.location.href = "/friends";
-        }
-    };
 
     return (
         <nav className={styles.nav}>

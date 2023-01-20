@@ -11,20 +11,17 @@ import {
     NestedLayout,
 } from "../../../components";
 import Head from "next/head";
-import useAuth from "../../../hooks/useAuth";
-import { useRouter } from "next/router";
 
 const Friends = () => {
-    const [content, setContent] = useState(
-        localStorage.getItem("friends-tab") || "online"
-    );
-
-    const { auth } = useAuth();
-    const router = useRouter();
+    const [content, setContent] = useState("online");
 
     useEffect(() => {
-        if (!auth?.accessToken) router.push("/login");
-    }, []);
+        setContent(
+            localStorage.getItem("friends-tab")
+            || "online"
+        );
+    }, [])
+
 
     const handleContent = (content) => {
         setContent(content);

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import axios from "../api/axios";
-import useAuth from "../hooks/useAuth";
+import useUserData from "../hooks/useUserData";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
@@ -12,7 +12,7 @@ const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,256}$/;
 
 const Register = () => {
-    const { auth } = useAuth();
+    const { auth } = useUserData();
     const router = useRouter();
 
     const usernameRef = useRef();
@@ -34,7 +34,7 @@ const Register = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        if (auth?.accessToken) router.push("/channels/@me/friends");
+        if (auth?.accessToken) router.push("/channels/@me");
         usernameRef?.current?.focus();
     }, []);
 

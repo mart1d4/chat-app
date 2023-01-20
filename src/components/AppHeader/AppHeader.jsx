@@ -69,9 +69,9 @@ const AppHeader = ({ content, setContent, active }) => {
                                 onClick={() => setContent(tab.func)}
                                 style={{
                                     backgroundColor:
-                                        active === tab.func && "var(--background-transparent)",
-                                    cursor: active === tab.func && "default",
-                                    color: active === tab.func && "var(--foreground-primary)",
+                                        active === tab.func ? "var(--background-transparent)" : "",
+                                    cursor: active === tab.func ? "default" : "",
+                                    color: active === tab.func ? "var(--foreground-primary)" : "",
                                 }}
                                 className={styles.item}
                             >

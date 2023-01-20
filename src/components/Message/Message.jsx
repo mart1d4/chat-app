@@ -1,17 +1,14 @@
 import styles from "./Message.module.css";
 import { format, formatRelative } from "date-fns";
-import { Tooltip } from "../";
+import { Tooltip, MessageMenu } from "../";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 
-const Message = ({ message, start }) => {
+const Message = ({ message, start, functions }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [hover, setHover] = useState(false);
 
     const checkMessageDate = (date) => {
-        // Checks if the date was today or yesterday
-        // Return true if it is, false otherwise
         const today = new Date();
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -27,14 +24,24 @@ const Message = ({ message, start }) => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
         >
+
+            {hover && (
+                <MessageMenu
+                    message={message}
+                    start={start}
+                    functions={functions}
+                />
+            )}
+
             {start ? (
                 <div className={styles.messageStart}>
                     <div className={styles.messageContent}>
-                        <Image
+                        <motion.img
                             src={message.sender.avatar}
                             alt="Avatar"
                             width={40}
                             height={40}
+                            whileTap={{ y: 1 }}
                         />
                         <h3>
                             <span className={styles.titleUsername}>

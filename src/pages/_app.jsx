@@ -8,18 +8,16 @@ const App = ({ Component, pageProps }) => {
     const getLayout = Component.getLayout || ((page) => page)
 
     return (
-        <>
-            <Head>
-                <title>Discord | Your Place to Talk and to Hang Out</title>
-                <link rel='icon' href='/images/favicon.svg' />
-            </Head>
-            <AuthProvider>
-                <PersistLogin>
-                    {getLayout(<Component {...pageProps} />)}
-                    <Analytics />
-                </PersistLogin>
-            </AuthProvider>
-        </>
+        <AuthProvider>
+            <PersistLogin>
+                <Head>
+                    <title>Discord | Your Place to Talk and to Hang Out</title>
+                    <link rel='icon' href='/images/favicon.svg' />
+                </Head>
+                {getLayout(<Component {...pageProps} />)}
+                <Analytics />
+            </PersistLogin>
+        </AuthProvider>
     );
 };
 

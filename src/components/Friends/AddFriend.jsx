@@ -1,4 +1,3 @@
-import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useState, useEffect } from "react";
@@ -18,8 +17,7 @@ const AddFriend = () => {
         return () => clearTimeout(timeout);
     }, [error]);
 
-    const { auth } = useAuth();
-    const { friendRequests, setFriendRequests, friends, setFriends } = useUserData();
+    const { auth, friendRequests, setFriendRequests, friends, setFriends } = useUserData();
     const axiosPrivate = useAxiosPrivate();
 
     const requestFriend = async () => {

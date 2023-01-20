@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import useRefreshToken from "./useRefreshToken";
-import useAuth from "./useAuth";
-import { Loader } from "../components";
+import useUserData from "./useUserData";
 
 export default function PersistLogin({ children }) {
-    const [isLoading, setIsLoading] = useState(true);
     const refresh = useRefreshToken();
-    const { auth, persist } = useAuth();
+    const { auth, setIsLoading } = useUserData();
 
     useEffect(() => {
         let isMounted = true;
@@ -16,19 +14,15 @@ export default function PersistLogin({ children }) {
                 await refresh();
             } catch (err) {
                 console.error(err);
-            } finally {
-                isMounted && setIsLoading(false);
             }
         };
 
-        !auth?.accessToken && persist
+        !auth?.accessToken
             ? verifyRefreshToken()
             : setIsLoading(false);
 
-        return () => (isMounted = false);
-    }, []);
+        return () => isMounted = false;
+    }, [auth]);
 
-    return (
-        <>{!persist ? children : isLoading ? <Loader/> : children}</>
-    );
+    return children;
 }

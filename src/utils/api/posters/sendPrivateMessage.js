@@ -15,17 +15,15 @@ const sendPrivateMessage = async (channelIDUnclean, message) => {
     const member1 = channel.members[0];
     const member2 = channel.members[1];
 
-    // Check if one of the members doesn't have this channel in their channel list
-    // If so, add it
-    if (!member1.privateChannels.map((channel) => channel.toString()).includes(channelID.toString())) {
-        member1.privateChannels.push(channelID);
-        await member1.save();
-    }
+    // Remove the channel from both members
+    // Then add it back at the top of the list
+    member1.privateChannels = member1.privateChannels.filter((channel) => channel.toString() !== channelID.toString());
+    member1.privateChannels.unshift(channelID);
+    await member1.save();
 
-    if (!member2.privateChannels.map((channel) => channel.toString()).includes(channelID.toString())) {
-        member2.privateChannels.push(channelID);
-        await member2.save();
-    }
+    member2.privateChannels = member2.privateChannels.filter((channel) => channel.toString() !== channelID.toString());
+    member2.privateChannels.unshift(channelID);
+    await member2.save();
 
     const newMessage = new Message(message);
     await newMessage.save();
@@ -33,7 +31,15 @@ const sendPrivateMessage = async (channelIDUnclean, message) => {
     channel.messages.push(newMessage._id);
     await channel.save();
 
-    return { succes: "Message sent" };
+    return {
+        succes: "Message sent",
+        message: {
+            _id: newMessage._id,
+            sender: message.sender,
+            content: newMessage.content,
+            createdAt: newMessage.createdAt,
+        },
+    };
 };
 
 export default sendPrivateMessage;

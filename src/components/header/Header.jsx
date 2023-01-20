@@ -2,7 +2,7 @@ import styles from "./Header.module.css";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import useAuth from "../../hooks/useAuth";
+import useUserData from "../../hooks/useUserData";
 
 const navLinks = [
     {
@@ -25,7 +25,7 @@ const navLinks = [
 
 const Header = () => {
     const [isHovered, setIsHovered] = useState(null);
-    const { auth } = useAuth();
+    const { auth } = useUserData();
 
     return (
         <div className={styles.wrapper}>
@@ -73,8 +73,8 @@ const Header = () => {
                 </nav>
 
                 <div className={styles.buttons}>
-                    {auth?.user ? (
-                        <Link href="/channels/@me/friends">Start chatting</Link>
+                    {auth?.accessToken ? (
+                        <Link href="/login">Start chatting</Link>
                     ) : (
                         <>
                             <Link href="/login">Login</Link>

@@ -1,34 +1,31 @@
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from 'jose';
 
 export const middleware = (req) => {
     const authHeader = req.headers.authorization || req.headers.Authorization;
     if (!authHeader?.startsWith("Bearer ")) {
-        return res.sendStatus(401);
+        console.log("middleware: no auth header");
+        return NextResponse.next();
     }
+    console.log("middleware: auth header found");
     const token = authHeader.split(" ")[1];
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            return new NextResponse(
-                JSON.stringify({
-                    success: false,
-                    message: "authentication failed",
-                }),
-                { status: 401, headers: { "content-type": "application/json" } }
-            );
+            req.nextUrl.searchParams.set('from', request.nextUrl.pathname)
+            req.nextUrl.pathname = '/login'
+
+            return NextResponse.next();
         }
         req.user = decoded.UserInfo;
-        next();
+        return NextResponse.next();
     });
 };
 
-export const config = {
-    matcher: [
-        "/users",
-        "/users/:id*",
-        "/private",
-        "/private/channels"
-    ],
-};
+// export const config = {
+//     matcher: [
+//         "/users/:path*",
+//         "/private/:path*",
+//         "/socket/:path*",
+//     ],
+// };

@@ -1,9 +1,15 @@
 import { useRouter } from "next/router";
-import { AppHeader, Layout, NestedLayout, Message, Alert } from "../../../components";
+import {
+    RequireAuth,
+    AppHeader,
+    Layout,
+    NestedLayout,
+    Message,
+    Alert
+} from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
 import { useState, useEffect, useRef } from "react";
-import useAuth from "../../../hooks/useAuth";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import Image from "next/image";
@@ -37,6 +43,7 @@ const scale = {
 
 const Channels = () => {
     const [friend, setFriend] = useState(null);
+    const [isFriendTyping, setIsFriendTyping] = useState(false);
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
     const [hover, setHover] = useState(null);
@@ -59,49 +66,46 @@ const Channels = () => {
     }, [message]);
 
     useEffect(() => {
-        setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
-    }, [messages]);
-
-    useEffect(() => {
         scrollableContainer.current.scrollTop = messagesContainerHeight;
     }, [messagesContainerHeight]);
 
-    const { auth } = useAuth();
-    const { channelList } = useUserData();
+    const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
     const textContainer = useRef(null);
     const scrollableContainer = useRef(null);
+    const effectRun = useRef(false);
 
     useEffect(() => {
-        if (!auth?.accessToken) router.push("/login");
-
-        // if (
-        //     channelList?.filter(
-        //         (channel) => channel._id.toString() === router.query.channelID
-        //     ).length === 0
-        // ) {
-        //     router.push("/channels/@me/friends");
-        // }
-
-        setFriend(channelList?.filter(
-            (channel) => channel._id.toString() === router.query.channelID
-        )[0]?.members[0]);
+        let isMounted = true;
+        const controller = new AbortController();
 
         const getMessages = async () => {
             const data = await axiosPrivate.get(
-                `/private/${router.query.channelID}/messages`
+                `/private/${router.query.channelID}/messages`,
+                { signal: controller.signal }
             );
             if (data.data.error) {
-                setError(data.data.error);
+                isMounted && setError(data.data.error);
             } else {
-                setMessages(data.data.messages);
+                isMounted && setMessages(data.data.messages);
             }
         }
 
-        getMessages();
+        if (effectRun.current) {
+            setFriend(channelList?.filter(
+                (channel) => channel._id.toString() === router.query.channelID
+            )[0]?.members[0]);
 
-        textContainer.current.focus();
+            getMessages();
+            setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
+        }
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+            effectRun.current = false;
+        };
     }, [router.query]);
 
     const isMoreThan5Minutes = (date1, date2) => {
@@ -112,8 +116,12 @@ const Channels = () => {
 
     const isStart = (index) => {
         if (index === 0) return true;
-        if (messages[index - 1].sender._id !== messages[index].sender._id) return true;
-        if (isMoreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
+        if ((messages[index - 1].sender._id !== messages[index].sender._id)
+            || isMoreThan5Minutes(
+                messages[index - 1].createdAt,
+                messages[index].createdAt
+            )
+        ) return true;
         return false;
     };
 
@@ -127,39 +135,100 @@ const Channels = () => {
     };
 
     const moveCursorToEnd = () => {
+        if (!textContainer.current) return;
+        if (textContainer.current.innerHTML === "") return;
         const range = document.createRange();
         const sel = window.getSelection();
-        range.setStart(textContainer.current.childNodes[0], textContainer.current.innerText.length);
+        range.setStart(textContainer.current, 1);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
-        textContainer.current.focus();
     };
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (message.length === 0) return;
-        if (message.length > 4000) return;
+        if (message.length > 4000) {
+            setError("Message too long");
+            return;
+        }
+
+        while (message[0] === "\\" && message[1] === "n") {
+            setMessage(message.slice(2));
+        }
 
         const newMessage = {
-            sender: auth?.user,
-            content: message.toString(),
+            sender: auth.user,
+            content: message,
             createdAt: new Date(),
         }
 
-        const data = axiosPrivate.post(
+        const data = await axiosPrivate.post(
             `/private/${router.query.channelID}/send`,
             {
                 message: newMessage,
             }
         );
 
+        console.log(data.data);
+
+        if (data.data.error) {
+            setError(data.data.error);
+        } else {
+            setMessages((messages) => [...messages, data.data.message]);
+            setMessage("");
+            textContainer.current.innerHTML = "";
+
+            // Move the channel to the top of the list
+            const channelIndex = channelList.findIndex(
+                (channel) => channel._id.toString() === router.query.channelID
+            );
+            const channel = channelList[channelIndex];
+            const newChannelList = [
+                channel,
+                ...channelList.slice(0, channelIndex),
+                ...channelList.slice(channelIndex + 1),
+            ];
+            setChannelList(newChannelList);
+            setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
+        }
+    };
+
+    const deleteMessage = async (messageID) => {
+        const data = await axiosPrivate.delete(
+            `/private/${router.query.channelID}/messages/${messageID}`
+        );
+
         if (data?.data?.error) {
             setError(data.data.error);
         } else {
-            setMessages((messages) => [...messages, newMessage]);
-            setMessage("");
-            textContainer.current.innerHTML = "";
+            setMessages((messages) => messages.filter(
+                (message) => message._id.toString() !== messageID.toString()
+            ));
         }
+    };
+
+    const editMessage = async (messageID, newContent) => {
+        console.log(messageID, newContent);
+    };
+
+    const pinMessage = async (messageID) => {
+        console.log(messageID);
+    };
+
+    const replyToMessage = async (messageID) => {
+        console.log(messageID);
+    };
+
+    const markUnread = async (messageID) => {
+        console.log(messageID);
+    };
+
+    const copyMessageLink = async (messageID) => {
+        console.log(messageID);
+    };
+
+    const copyMessageID = (messageID) => {
+        navigator.clipboard.writeText(messageID);
     };
 
     return (
@@ -235,6 +304,15 @@ const Channels = () => {
                                                 <Message
                                                     message={message}
                                                     start={isStart(index)}
+                                                    functions={{
+                                                        deleteMessage,
+                                                        editMessage,
+                                                        pinMessage,
+                                                        replyToMessage,
+                                                        markUnread,
+                                                        copyMessageLink,
+                                                        copyMessageID,
+                                                    }}
                                                 />
                                             </React.Fragment>
                                         )}
@@ -246,16 +324,36 @@ const Channels = () => {
                         </div>
 
                         <form className={styles.form}>
-                            <div className={styles.textCounter}>
-                                <span
-                                    style={{
-                                        color: message.length > 4000
-                                            ? "var(--error-primary)"
-                                            : "var(--foreground-tertiary)",
-                                    }}
-                                >
-                                    {message.length}
-                                </span>/4000
+                            <div className={styles.bottomForm}>
+                                <div className={styles.typingContainer}>
+                                    {isFriendTyping && (
+                                        <>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="24.5"
+                                                height="7"
+                                            >
+                                                <circle cx="3.5" cy="3.5" r="3.5" />
+                                                <circle cx="12.25" cy="3.5" r="3.5" />
+                                                <circle cx="21" cy="3.5" r="3.5" />
+                                            </svg>
+                                            <span>
+                                                <strong>{friend?.username}</strong> is typing...
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                                <div className={styles.counterContainer}>
+                                    <span
+                                        style={{
+                                            color: message.length > 4000
+                                                ? "var(--error-primary)"
+                                                : "var(--foreground-tertiary)",
+                                        }}
+                                    >
+                                        {message.length}
+                                    </span>/4000
+                                </div>
                             </div>
 
                             <div className={styles.textArea}>
@@ -286,40 +384,34 @@ const Channels = () => {
                                             <div>
                                                 {message.length === 0 && (
                                                     <div className={styles.textContainerPlaceholder}>
-                                                        Message @{friend?.username}
+                                                        Message @{friend?.username || "username"}
                                                     </div>
                                                 )}
 
                                                 <div
                                                     ref={textContainer}
                                                     className={styles.textContainerInner}
-                                                    role="textbox"
+                                                    role="textarea"
                                                     spellCheck="true"
                                                     autoCorrect="off"
                                                     aria-multiline="true"
                                                     aria-label={`Message @${friend?.username}`}
                                                     aria-autocomplete="list"
                                                     contentEditable="true"
-                                                    placeholder={`Message @${friend?.username}`}
-                                                    onInput={(e) => setMessage(e.target.innerText)}
+                                                    onInput={(e) => {
+                                                        setMessage(e.target.innerText.toString())
+                                                        textContainer.current.innerHTML = e.target.innerText.toString();
+                                                        moveCursorToEnd();
+                                                    }}
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter" && e.shiftKey) {
-                                                            e.preventDefault();
                                                             textContainer.current.innerHTML += "\n";
                                                             setMessage(textContainer.current.innerText);
                                                             moveCursorToEnd();
 
                                                         } else if (e.key === "Enter" && !e.shiftKey) {
-                                                            e.preventDefault();
                                                             sendMessage();
                                                         }
-                                                    }}
-                                                    onPaste={(e) => {
-                                                        e.preventDefault();
-                                                        const text = e.clipboardData.getData("text/plain").toString();
-                                                        textContainer.current.innerHTML += text;
-                                                        setMessage(textContainer.current.innerText);
-                                                        moveCursorToEnd();
                                                     }}
                                                     onDrop={(e) => {
                                                         e.preventDefault();

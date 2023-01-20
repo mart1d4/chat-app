@@ -1,4 +1,3 @@
-import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
@@ -23,8 +22,7 @@ const Blocked = () => {
 
     const searchBar = useRef(null);
 
-    const { auth } = useAuth();
-    const { blockedUsers, setBlockedUsers } = useUserData();
+    const { auth, blockedUsers, setBlockedUsers } = useUserData();
     const axiosPrivate = useAxiosPrivate();
 
     const unblockUser = async (userID) => {
@@ -41,15 +39,7 @@ const Blocked = () => {
         } catch (err) {
             console.error(err);
         }
-    }
-
-    // if (!blockedUsers.length) {
-    //     return (
-    //         <div className={styles.content}>
-    //             <h2>You haven't blocked anyone</h2>
-    //         </div>
-    //     );
-    // }
+    };
 
     return (
         <div className={styles.content}>

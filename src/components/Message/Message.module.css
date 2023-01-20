@@ -30,7 +30,7 @@
   text-indent: 0;
 }
 
-.messageContent img {
+.messageContent img  {
   pointer-events: auto;
   position: absolute;
   left: 16px;
@@ -86,6 +86,8 @@
   font-weight: 300;
   font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   user-select: text;
+  font-size: 1rem;
+  line-height: 1.375rem;
   margin-left: -72px;
   padding-left: 72px;
   overflow: hidden;

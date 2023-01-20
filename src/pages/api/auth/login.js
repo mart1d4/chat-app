@@ -59,7 +59,7 @@ export default async (req, res) => {
             res.status(401).send({ message: "Incorrect password" });
         }
     } catch (error) {
-        console.error(error);
+        console.error("error:" + error);
         res.status(500).send({ message: "Internal server error" });
     }
 };

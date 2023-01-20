@@ -9,17 +9,17 @@ const getChannelMessages = async (channelIDUnclean) => {
 
     const channelID = mongoose.Types.ObjectId(channelIDUnclean);
 
-    const channel = await Channel.findById(channelID).populate("messages").populate({
-        path: "messages",
-        populate: {
-            path: "sender",
-            model: "User",
-        },
-    });
+    const channel = await Channel.findById(channelID)
+        .populate("messages")
+        .populate({
+            path: "messages",
+            populate: {
+                path: "sender",
+                model: "User",
+            },
+        });
 
     if (!channel) return { error: "No conversation found" };
-
-    console.log(channel);
 
     // Clean the channel's messages so there's no sensitive data being sent
     const messages = channel.messages.map((message) => {

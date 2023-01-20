@@ -1,7 +1,6 @@
 import styles from "./ChannelList.module.css";
 import { useRouter } from "next/router";
 import { Tooltip } from "..";
-import useAuth from "../../hooks/useAuth";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
 import { useState, useRef, useEffect } from "react";
@@ -17,8 +16,7 @@ const ConversationList = () => {
     const currentPath = router.asPath;
     const menuRef = useRef(null);
 
-    const { auth } = useAuth();
-    const { friends, friendRequests, channelList } = useUserData();
+    const { auth, friends, friendRequests, channelList } = useUserData();
     const { logout } = useLogout();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
@@ -133,37 +131,37 @@ const ConversationList = () => {
                         </h2>
                         {channelList?.map((conv) => (
                             <li
-                                key={conv.members[0]._id}
+                                key={conv?.members[0]._id}
                                 className={styles.liContainer}
-                                onMouseEnter={() => setHover(conv.members[0]._id)}
+                                onMouseEnter={() => setHover(conv?.members[0]._id)}
                                 onMouseLeave={() => setHover(null)}
                                 onClick={() => {
                                     localStorage.setItem(
                                         "private-channel-url",
-                                        `/channels/@me/${conv._id}`
+                                        `/channels/@me/${conv?._id}`
                                     );
-                                    router.push(`/channels/@me/${conv._id}`);
+                                    router.push(`/channels/@me/${conv?._id}`);
                                 }}
                             >
                                 <div
                                     className={styles.liWrapper}
                                     style={{
-                                        backgroundColor: currentPath === `/channels/@me/${conv._id}` && "var(--background-transparent)",
-                                        color: currentPath === `/channels/@me/${conv._id}` && "var(--foreground-primary)",
+                                        backgroundColor: currentPath === `/channels/@me/${conv?._id}` && "var(--background-transparent)",
+                                        color: currentPath === `/channels/@me/${conv?._id}` && "var(--foreground-primary)",
                                     }}
                                 >
                                     <div className={styles.link}>
                                         <div className={styles.layout}>
                                             <div className={styles.layoutAvatar}>
                                                 <Image
-                                                    src={conv.members[0].avatar}
+                                                    src={conv?.members[0].avatar}
                                                     width={32}
                                                     height={32}
                                                     alt="Avatar"
                                                 />
                                                 <div
                                                     className={styles.avatarStatus}
-                                                    onMouseEnter={() => setShowStatus(conv.members[0]._id)}
+                                                    onMouseEnter={() => setShowStatus(conv?.members[0]._id)}
                                                     onMouseLeave={() => setShowStatus(null)}
                                                     style={{
                                                         backgroundColor: "var(--background-tertiary)",
@@ -176,23 +174,23 @@ const ConversationList = () => {
                                                     >
                                                         <div
                                                             style={{
-                                                                backgroundColor: !isFriend(conv.members[0]._id)
+                                                                backgroundColor: !isFriend(conv?.members[0]._id)
                                                                     ? "var(--foreground-quaternary)"
-                                                                    : conv.members[0].status === "Online"
+                                                                    : conv?.members[0].status === "Online"
                                                                         ? "var(--valid-primary)"
-                                                                        : conv.members[0].status === "Idle"
+                                                                        : conv?.members[0].status === "Idle"
                                                                             ? "var(--warning-primary)"
-                                                                            : conv.members[0].status === "Busy"
+                                                                            : conv?.members[0].status === "Busy"
                                                                                 ? "var(--error-primary)"
                                                                                 : "var(--foreground-quaternary)",
                                                             }}
                                                         >
                                                             <Tooltip
-                                                                show={showStatus === conv.members[0]._id}
+                                                                show={showStatus === conv?.members[0]._id}
                                                                 dist="8px"
                                                             >
-                                                                {isFriend(conv.members[0]._id)
-                                                                    ? conv.members[0].status
+                                                                {isFriend(conv?.members[0]._id)
+                                                                    ? conv?.members[0].status
                                                                     : "Offline"}
                                                             </Tooltip>
                                                         </div>
@@ -202,17 +200,17 @@ const ConversationList = () => {
                                             <div className={styles.layoutContent}>
                                                 <div className={styles.contentName}>
                                                     <div className={styles.nameWrapper}>
-                                                        {conv.members[0].username}
+                                                        {conv?.members[0].username}
                                                     </div>
                                                 </div>
-                                                {(conv.members[0].customStatus !== "" && isFriend(conv.members[0]._id))
+                                                {(conv?.members[0].customStatus !== "" && isFriend(conv?.members[0]._id))
                                                     && (<div className={styles.contentStatus}>
-                                                        {conv.members[0].customStatus}
+                                                        {conv?.members[0].customStatus}
                                                     </div>)}
                                             </div>
                                         </div>
                                     </div>
-                                    {hover === conv.members[0]._id && (
+                                    {hover === conv?.members[0]._id && (
                                         <div className={styles.closeButton}>
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -243,12 +241,14 @@ const ConversationList = () => {
                         }}
                     >
                         <div>
-                            <Image
-                                src={auth?.user?.avatar}
-                                width={32}
-                                height={32}
-                                alt="Avatar"
-                            />
+                            {auth?.user?.avatar && (
+                                <Image
+                                    src={auth?.user?.avatar}
+                                    width={32}
+                                    height={32}
+                                    alt="Avatar"
+                                />
+                            )}
                             <div
                                 className={styles.avatarStatus}
                                 style={{
@@ -277,7 +277,7 @@ const ConversationList = () => {
                             </div>
                             <div>
                                 {auth?.user?.customStatus === ""
-                                    ? "0001"
+                                    ? "#0001"
                                     : auth?.user?.customStatus}
                             </div>
                         </div>

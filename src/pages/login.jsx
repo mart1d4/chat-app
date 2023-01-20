@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import axios from "../api/axios";
-import useAuth from "../hooks/useAuth";
+import useUserData from "../hooks/useUserData";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Head from "next/head";
 
 const Login = () => {
-    const { auth, setAuth } = useAuth();
+    const { auth, setAuth } = useUserData();
     const router = useRouter();
 
     const usernameRef = useRef();
@@ -52,6 +52,7 @@ const Login = () => {
         } catch (err) {
             if (!err?.response) {
                 setErrorMessage("No Server Response");
+                console.log(err);
             } else {
                 setErrorMessage(err.response.data.message);
             }
