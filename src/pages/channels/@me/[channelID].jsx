@@ -48,8 +48,8 @@ const Channels = () => {
     const [message, setMessage] = useState("");
     const [hover, setHover] = useState(null);
     const [emojisPosIndex, setEmojisPosIndex] = useState(0);
-    const [textContainerHeight, setTextContainerHeight] = useState(44);
-    const [messagesContainerHeight, setMessagesContainerHeight] = useState(0);
+    const [textAreaRefHeight, setTextContainerHeight] = useState(44);
+    const [messagesHeight, setMessagesHeight] = useState(0);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -61,20 +61,21 @@ const Channels = () => {
     }, [error]);
 
     useEffect(() => {
-        const lines = message.split("\n").length - 1;
-        setTextContainerHeight(44 + (lines * 22));
-    }, [message]);
+        scrollableContainer.current.scrollTop = messagesHeight;
+        console.log(messagesHeight);
+    }, [messagesHeight]);
 
     useEffect(() => {
-        scrollableContainer.current.scrollTop = messagesContainerHeight;
-    }, [messagesContainerHeight]);
+        const lines = message.split("\n").length - 1;
+        setTextContainerHeight(44 + (lines * 22));
+        setMessagesHeight(scrollableContainer.current.scrollHeight);
+    }, [message]);
 
     const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const textContainer = useRef(null);
+    const textAreaRef = useRef(null);
     const scrollableContainer = useRef(null);
-    const effectRun = useRef(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -92,21 +93,22 @@ const Channels = () => {
             }
         }
 
-        if (effectRun.current) {
-            setFriend(channelList?.filter(
-                (channel) => channel._id.toString() === router.query.channelID
-            )[0]?.members[0]);
+        setFriend(channelList?.filter(
+            (channel) => channel._id.toString() === router.query.channelID
+        )[0]?.members[0]);
 
-            getMessages();
-            setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
-        }
+        getMessages();
+        console.log(
+            '%c[channelID]',
+            'color: hsl(38, 96%, 54%)',
+            ': Fetching data...'
+        );
 
         return () => {
             isMounted = false;
             controller.abort();
-            effectRun.current = false;
         };
-    }, [router.query]);
+    }, []);
 
     const isMoreThan5Minutes = (date1, date2) => {
         if (typeof date1 === "string") date1 = parseISO(date1);
@@ -135,11 +137,11 @@ const Channels = () => {
     };
 
     const moveCursorToEnd = () => {
-        if (!textContainer.current) return;
-        if (textContainer.current.innerHTML === "") return;
+        if (!textAreaRef.current) return;
+        if (textAreaRef.current.innerHTML === "") return;
         const range = document.createRange();
         const sel = window.getSelection();
-        range.setStart(textContainer.current, 1);
+        range.setStart(textAreaRef.current, 1);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -169,14 +171,12 @@ const Channels = () => {
             }
         );
 
-        console.log(data.data);
-
         if (data.data.error) {
             setError(data.data.error);
         } else {
             setMessages((messages) => [...messages, data.data.message]);
             setMessage("");
-            textContainer.current.innerHTML = "";
+            textAreaRef.current.innerHTML = "";
 
             // Move the channel to the top of the list
             const channelIndex = channelList.findIndex(
@@ -376,21 +376,21 @@ const Channels = () => {
                                             </button>
                                         </div>
                                         <div
-                                            className={styles.textContainer}
+                                            className={styles.textAreaRef}
                                             style={{
-                                                height: `${textContainerHeight}px`,
+                                                height: `${textAreaRefHeight}px`,
                                             }}
                                         >
                                             <div>
                                                 {message.length === 0 && (
-                                                    <div className={styles.textContainerPlaceholder}>
+                                                    <div className={styles.textAreaRefPlaceholder}>
                                                         Message @{friend?.username || "username"}
                                                     </div>
                                                 )}
 
                                                 <div
-                                                    ref={textContainer}
-                                                    className={styles.textContainerInner}
+                                                    ref={textAreaRef}
+                                                    className={styles.textAreaRefInner}
                                                     role="textarea"
                                                     spellCheck="true"
                                                     autoCorrect="off"
@@ -398,26 +398,25 @@ const Channels = () => {
                                                     aria-label={`Message @${friend?.username}`}
                                                     aria-autocomplete="list"
                                                     contentEditable="true"
-                                                    onInput={(e) => {
-                                                        setMessage(e.target.innerText.toString())
-                                                        textContainer.current.innerHTML = e.target.innerText.toString();
-                                                        moveCursorToEnd();
-                                                    }}
+                                                    onInput={(e) => setMessage(e.target.innerText)}
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter" && e.shiftKey) {
-                                                            textContainer.current.innerHTML += "\n";
-                                                            setMessage(textContainer.current.innerText);
+                                                            e.preventDefault();
+                                                            textAreaRef.current.innerHTML += "\n";
+                                                            setMessage(textAreaRef.current.innerText);
                                                             moveCursorToEnd();
-
+                                                            return;
                                                         } else if (e.key === "Enter" && !e.shiftKey) {
+                                                            e.preventDefault();
                                                             sendMessage();
+                                                            return;
                                                         }
                                                     }}
                                                     onDrop={(e) => {
                                                         e.preventDefault();
                                                         const text = e.dataTransfer.getData("text/plain").toString();
-                                                        textContainer.current.innerHTML += text;
-                                                        setMessage(textContainer.current.innerText);
+                                                        textAreaRef.current.innerHTML += text;
+                                                        setMessage(textAreaRef.current.innerText);
                                                         moveCursorToEnd();
                                                     }}
                                                 />

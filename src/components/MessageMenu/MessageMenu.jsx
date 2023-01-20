@@ -2,6 +2,7 @@ import styles from './MessageMenu.module.css';
 import { Tooltip } from '../';
 import { useEffect, useState } from 'react';
 import useUserData from '../../hooks/useUserData';
+import React from 'react';
 
 const pinIcon = (
     <svg
@@ -200,41 +201,53 @@ const MessageMenu = ({ message, start, functions }) => {
                 >
                     <div className={styles.menuWrapper}>
                         {menuType === 'sender' ? senderItems.map((item) => (
-                            <div
-                                key={item.name}
-                                className={
-                                    item.type === 'danger'
-                                        ? styles.menuItemDanger
-                                        : styles.menuItem
+                            <React.Fragment key={item.name}>
+                                {
+                                    item.name === 'Copy Message ID' && (
+                                        <div className={styles.divider}></div>
+                                    )
                                 }
-                                onClick={() => {
-                                    setShowMenu(false);
-                                    item.function(message._id);
-                                }}
-                            >
-                                <div className={styles.label}>
-                                    {item.name}
+                                <div
+                                    className={
+                                        item.type === 'danger'
+                                            ? styles.menuItemDanger
+                                            : styles.menuItem
+                                    }
+                                    onClick={() => {
+                                        setShowMenu(false);
+                                        item.function(message._id);
+                                    }}
+                                >
+                                    <div className={styles.label}>
+                                        {item.name}
+                                    </div>
+                                    <div className={styles.icon}>
+                                        {item.icon}
+                                    </div>
                                 </div>
-                                <div className={styles.icon}>
-                                    {item.icon}
-                                </div>
-                            </div>
+                            </React.Fragment>
                         )) : receiverItems.map((item) => (
-                            <div
-                                key={item.name}
-                                className={styles.menuItem}
-                                onClick={() => {
-                                    setShowMenu(false);
-                                    item.function(message._id);
-                                }}
-                            >
-                                <div className={styles.label}>
-                                    {item.name}
+                            <React.Fragment key={item.name}>
+                                {
+                                    item.name === 'Copy Message ID' && (
+                                        <div className={styles.divider}></div>
+                                    )
+                                }
+                                <div
+                                    className={styles.menuItem}
+                                    onClick={() => {
+                                        setShowMenu(false);
+                                        item.function(message._id);
+                                    }}
+                                >
+                                    <div className={styles.label}>
+                                        {item.name}
+                                    </div>
+                                    <div className={styles.icon}>
+                                        {item.icon}
+                                    </div>
                                 </div>
-                                <div className={styles.icon}>
-                                    {item.icon}
-                                </div>
-                            </div>
+                            </React.Fragment>
                         ))}
                     </div>
                 </div>

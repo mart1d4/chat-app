@@ -1,5 +1,5 @@
 import { AppNav, Loader } from "../";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
@@ -9,7 +9,6 @@ const Layout = ({ children }) => {
     const [isFetching, setIsFetching] = useState(true);
 
     const axiosPrivate = useAxiosPrivate();
-    const effectRun = useRef(false);
     const router = useRouter();
     const {
         auth,
@@ -21,6 +20,7 @@ const Layout = ({ children }) => {
     } = useUserData();
 
     useEffect(() => {
+        if (isLoading) return;
         if (!auth?.accessToken) router.push("/login");
 
         let isMounted = true;
@@ -58,25 +58,23 @@ const Layout = ({ children }) => {
             isMounted && setChannelList(res.data);
         };
 
-        if (effectRun.current) {
-            getFriends();
-            getFriendRequests();
-            getBlockedUsers();
-            getChannelList();
-            console.log(
-                '%c[AuthProvider]',
-                'color: hsl(38, 96%, 54%)',
-                ': Fetching data...'
-            );
-            setIsFetching(false);
-        }
+        getFriends();
+        getFriendRequests();
+        getBlockedUsers();
+        getChannelList();
+        console.log(
+            '%c[AuthProvider]',
+            'color: hsl(38, 96%, 54%)',
+            ': Fetching data...'
+        );
+
+        setIsFetching(false);
 
         return () => {
             controller.abort();
             isMounted = false;
-            effectRun.current = true;
         };
-    }, [auth?.accessToken]);
+    }, [isLoading]);
 
     return (
         isLoading || isFetching ? (

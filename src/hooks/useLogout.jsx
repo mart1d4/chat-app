@@ -11,7 +11,7 @@ export default function useLogout() {
         localStorage.removeItem("private-channel-url");
         localStorage.removeItem("friends-tab");
         try {
-            await axios('/auth/logout', {
+            const response = await axios('/auth/logout', {
                 withCredentials: true
             });
             router.push('/login');

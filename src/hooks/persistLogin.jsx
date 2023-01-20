@@ -10,11 +10,9 @@ export default function PersistLogin({ children }) {
         let isMounted = true;
 
         const verifyRefreshToken = async () => {
-            try {
-                await refresh();
-            } catch (err) {
-                console.error(err);
-            }
+            const response = await refresh();
+            isMounted && setIsLoading(false);
+            response?.error && setIsLoading(false);
         };
 
         !auth?.accessToken
