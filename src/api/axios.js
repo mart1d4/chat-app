@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 export default axios.create({
-    baseURL: "https://www.unthrust.com/api",
+    baseURL: process.env.BASE_URL,
 });
 
 export const axiosPrivate = axios.create({
-    baseURL: "https://www.unthrust.com/api",
+    baseURL: process.env.BASE_URL,
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true,
 });
