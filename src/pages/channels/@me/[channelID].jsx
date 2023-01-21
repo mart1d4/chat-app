@@ -47,7 +47,7 @@ const Channels = () => {
     const [message, setMessage] = useState("");
     const [hover, setHover] = useState(null);
     const [emojisPosIndex, setEmojisPosIndex] = useState(0);
-    const [textAreaRefHeight, setTextContainerHeight] = useState(44);
+    const [textContainerHeight, setTextContainerHeight] = useState(44);
     const [messagesHeight, setMessagesHeight] = useState(0);
     const [error, setError] = useState(null);
 
@@ -187,7 +187,7 @@ const Channels = () => {
                 ...channelList.slice(channelIndex + 1),
             ];
             setChannelList(newChannelList);
-            setMessagesContainerHeight(scrollableContainer.current.scrollHeight);
+            setMessagesHeight(scrollableContainer.current.scrollHeight);
         }
     };
 
