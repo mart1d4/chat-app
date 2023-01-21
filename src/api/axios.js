@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.unthrust.com/api';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || '/api';
 
 export default axios.create({
     baseURL: BASE_URL,
