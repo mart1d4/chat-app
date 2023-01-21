@@ -376,7 +376,7 @@ const Channels = () => {
                                         <div
                                             className={styles.textContainer}
                                             style={{
-                                                height: `${textAreaRefHeight}px`,
+                                                height: `${textContainerHeight}px`,
                                             }}
                                         >
                                             <div>
