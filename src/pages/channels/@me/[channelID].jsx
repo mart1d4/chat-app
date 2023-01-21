@@ -67,7 +67,6 @@ const Channels = () => {
     useEffect(() => {
         const lines = message.split("\n").length - 1;
         setTextContainerHeight(44 + (lines * 22));
-        setMessagesHeight(scrollableContainer.current.scrollHeight);
     }, [message]);
 
     const { auth, channelList, setChannelList } = useUserData();
@@ -375,21 +374,21 @@ const Channels = () => {
                                             </button>
                                         </div>
                                         <div
-                                            className={styles.textAreaRef}
+                                            className={styles.textContainer}
                                             style={{
                                                 height: `${textAreaRefHeight}px`,
                                             }}
                                         >
                                             <div>
                                                 {message.length === 0 && (
-                                                    <div className={styles.textAreaRefPlaceholder}>
+                                                    <div className={styles.textContainerPlaceholder}>
                                                         Message @{friend?.username || "username"}
                                                     </div>
                                                 )}
 
                                                 <div
                                                     ref={textAreaRef}
-                                                    className={styles.textAreaRefInner}
+                                                    className={styles.textContainerInner}
                                                     role="textarea"
                                                     spellCheck="true"
                                                     autoCorrect="off"
