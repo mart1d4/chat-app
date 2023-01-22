@@ -176,6 +176,7 @@ const TextArea = ({ friend, sendMessage }) => {
                                             e.preventDefault();
                                             sendMessage(message);
                                             setMessage("");
+                                            e.target.innerText = "";
                                         }
                                     }}
                                 />

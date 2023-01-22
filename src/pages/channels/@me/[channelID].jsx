@@ -18,13 +18,7 @@ import React from "react";
 const Channels = () => {
     const [friend, setFriend] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [messagesHeight, setMessagesHeight] = useState(0);
     const [error, setError] = useState(null);
-
-    useEffect(() => {
-        scrollableContainer.current.scrollTop = messagesHeight;
-        console.log(messagesHeight);
-    }, [messagesHeight]);
 
     const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
@@ -53,6 +47,7 @@ const Channels = () => {
         )[0]?.members[0]);
 
         getMessages();
+        scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
         console.log(
             '%c[channelID]',
             'color: hsl(38, 96%, 54%)',
@@ -102,15 +97,21 @@ const Channels = () => {
         sel.addRange(range);
     };
 
-    const sendMessage = async () => {
+    const sendMessage = async (message) => {
         if (message.length === 0) return;
         if (message.length > 4000) {
             setError("Message too long");
             return;
         }
 
+        console.log(message);
+
         while (message[0] === "\\" && message[1] === "n") {
-            setMessage(message.slice(2));
+            message = message.slice(2);
+        }
+
+        while (message[message.length - 2] === "\\" && message[message.length - 1] === "n") {
+            message = message.slice(0, message.length - 2);
         }
 
         const newMessage = {
@@ -130,8 +131,6 @@ const Channels = () => {
             setError(data.data.error);
         } else {
             setMessages((messages) => [...messages, data.data.message]);
-            setMessage("");
-            textAreaRef.current.innerHTML = "";
 
             // Move the channel to the top of the list
             const channelIndex = channelList.findIndex(

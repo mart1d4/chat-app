@@ -164,9 +164,7 @@ const ConversationList = () => {
                                                     onMouseEnter={() => setShowStatus(conv?.members[0]._id)}
                                                     onMouseLeave={() => setShowStatus(null)}
                                                     style={{
-                                                        backgroundColor: hover === conv?.members[0]._id
-                                                            ? "var(--background-transparent)"
-                                                            : "var(--background-tertiary)",
+                                                        backgroundColor: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) ? "var(--background-transparent)" : "var(--background-tertiary)",
                                                     }}
                                                 >
                                                     <div
