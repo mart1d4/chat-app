@@ -86,17 +86,6 @@ const Channels = () => {
         return date1.getDate() !== date2.getDate();
     };
 
-    const moveCursorToEnd = () => {
-        if (!textAreaRef.current) return;
-        if (textAreaRef.current.innerHTML === "") return;
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.setStart(textAreaRef.current, 1);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-    };
-
     const sendMessage = async (message) => {
         if (message.length === 0) return;
         if (message.length > 4000) {
@@ -143,7 +132,7 @@ const Channels = () => {
                 ...channelList.slice(channelIndex + 1),
             ];
             setChannelList(newChannelList);
-            setMessagesHeight(scrollableContainer.current.scrollHeight);
+            scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
         }
     };
 

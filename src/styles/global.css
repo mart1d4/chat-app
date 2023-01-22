@@ -241,6 +241,7 @@ body,
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;
     color-scheme: dark light;
+    scroll-behavior: smooth;
 }
 
 .container {
