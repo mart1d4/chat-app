@@ -1,155 +1,155 @@
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-Bold.eot");
-    src: local("gg sans Bold"), local("ggsans-Bold"),
-        url("../../public/fonts/ggsans/ggsans-Bold.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-Bold.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-Bold.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-Bold.ttf") format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-Bold.eot');
+    src: local('gg sans Bold'), local('ggsans-Bold'),
+        url('../../public/fonts/ggsans/ggsans-Bold.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-Bold.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-Bold.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-SemiboldItalic.eot");
-    src: local("gg sans SemiBold Italic"), local("ggsans-SemiboldItalic"),
-        url("../../public/fonts/ggsans/ggsans-SemiboldItalic.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-SemiboldItalic.woff2")
-            format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-SemiboldItalic.woff")
-            format("woff"),
-        url("../../public/fonts/ggsans/ggsans-SemiboldItalic.ttf")
-            format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-SemiboldItalic.eot');
+    src: local('gg sans SemiBold Italic'), local('ggsans-SemiboldItalic'),
+        url('../../public/fonts/ggsans/ggsans-SemiboldItalic.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-SemiboldItalic.woff2')
+            format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-SemiboldItalic.woff')
+            format('woff'),
+        url('../../public/fonts/ggsans/ggsans-SemiboldItalic.ttf')
+            format('truetype');
     font-weight: 600;
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-MediumItalic.eot");
-    src: local("gg sans Medium Italic"), local("ggsans-MediumItalic"),
-        url("../../public/fonts/ggsans/ggsans-MediumItalic.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-MediumItalic.woff2")
-            format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-MediumItalic.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-MediumItalic.ttf")
-            format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-MediumItalic.eot');
+    src: local('gg sans Medium Italic'), local('ggsans-MediumItalic'),
+        url('../../public/fonts/ggsans/ggsans-MediumItalic.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-MediumItalic.woff2')
+            format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-MediumItalic.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-MediumItalic.ttf')
+            format('truetype');
     font-weight: 500;
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans Normal";
-    src: url("../../public/fonts/ggsans/ggsans-BoldItalic.eot");
-    src: local("gg sans Bold Italic"), local("ggsans-BoldItalic"),
-        url("../../public/fonts/ggsans/ggsans-BoldItalic.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-BoldItalic.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-BoldItalic.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-BoldItalic.ttf")
-            format("truetype");
+    font-family: 'gg sans Normal';
+    src: url('../../public/fonts/ggsans/ggsans-BoldItalic.eot');
+    src: local('gg sans Bold Italic'), local('ggsans-BoldItalic'),
+        url('../../public/fonts/ggsans/ggsans-BoldItalic.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-BoldItalic.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-BoldItalic.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-BoldItalic.ttf')
+            format('truetype');
     font-weight: bold;
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-Semibold.eot");
-    src: local("gg sans SemiBold"), local("ggsans-Semibold"),
-        url("../../public/fonts/ggsans/ggsans-Semibold.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-Semibold.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-Semibold.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-Semibold.ttf") format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-Semibold.eot');
+    src: local('gg sans SemiBold'), local('ggsans-Semibold'),
+        url('../../public/fonts/ggsans/ggsans-Semibold.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-Semibold.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-Semibold.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-Semibold.ttf') format('truetype');
     font-weight: 600;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-Medium.eot");
-    src: local("gg sans Medium"), local("ggsans-Medium"),
-        url("../../public/fonts/ggsans/ggsans-Medium.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-Medium.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-Medium.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-Medium.ttf") format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-Medium.eot');
+    src: local('gg sans Medium'), local('ggsans-Medium'),
+        url('../../public/fonts/ggsans/ggsans-Medium.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-Medium.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-Medium.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-Medium.ttf') format('truetype');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-ExtraBold.eot");
-    src: local("gg sans ExtraBold"), local("ggsans-ExtraBold"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBold.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBold.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBold.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBold.ttf") format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-ExtraBold.eot');
+    src: local('gg sans ExtraBold'), local('ggsans-ExtraBold'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBold.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBold.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBold.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans";
-    src: url("../../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot");
-    src: local("gg sans ExtraBold Italic"), local("ggsans-ExtraBoldItalic"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff2")
-            format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff")
-            format("woff"),
-        url("../../public/fonts/ggsans/ggsans-ExtraBoldItalic.ttf")
-            format("truetype");
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot');
+    src: local('gg sans ExtraBold Italic'), local('ggsans-ExtraBoldItalic'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff2')
+            format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff')
+            format('woff'),
+        url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.ttf')
+            format('truetype');
     font-weight: bold;
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans Normal";
-    src: url("../../public/fonts/ggsans/ggsans-Normal.eot");
-    src: local("gg sans Normal"), local("ggsans-Normal"),
-        url("../../public/fonts/ggsans/ggsans-Normal.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-Normal.woff2") format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-Normal.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-Normal.ttf") format("truetype");
+    font-family: 'gg sans Normal';
+    src: url('../../public/fonts/ggsans/ggsans-Normal.eot');
+    src: local('gg sans Normal'), local('ggsans-Normal'),
+        url('../../public/fonts/ggsans/ggsans-Normal.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-Normal.woff2') format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-Normal.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-Normal.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: "gg sans Normal";
-    src: url("../../public/fonts/ggsans/ggsans-NormalItalic.eot");
-    src: local("gg sans Normal Italic"), local("ggsans-NormalItalic"),
-        url("../../public/fonts/ggsans/ggsans-NormalItalic.eot?#iefix")
-            format("embedded-opentype"),
-        url("../../public/fonts/ggsans/ggsans-NormalItalic.woff2")
-            format("woff2"),
-        url("../../public/fonts/ggsans/ggsans-NormalItalic.woff") format("woff"),
-        url("../../public/fonts/ggsans/ggsans-NormalItalic.ttf")
-            format("truetype");
+    font-family: 'gg sans Normal';
+    src: url('../../public/fonts/ggsans/ggsans-NormalItalic.eot');
+    src: local('gg sans Normal Italic'), local('ggsans-NormalItalic'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.eot?#iefix')
+            format('embedded-opentype'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff2')
+            format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff') format('woff'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.ttf')
+            format('truetype');
     font-weight: normal;
     font-style: italic;
     font-display: swap;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
 
 @media (prefers-color-scheme: dark) {
     :root {
@@ -160,7 +160,7 @@
         --background-quinternary: hsl(218, 8%, 27%);
         --background-light: rgb(79, 84, 92);
         --background-dark: hsl(225, 8%, 10%);
-        --background-transparent: hsla(217, 8%, 34%, 0.5);
+        --background-transparent: hsl(218, 8%, 28%);
         --background-transparent-2: rgba(4, 4, 5, 0.07);
         --foreground-primary: #ffffff;
         --foreground-secondary: #dcddde;
@@ -239,7 +239,7 @@ body,
     background-color: var(--background-primary);
     color: var(--foreground-primary);
     font-size: 16px;
-    font-family: "gg sans", "Noto sans", sans-serif;
+    font-family: 'gg sans', 'Noto sans', sans-serif;
     color-scheme: dark light;
 }
 

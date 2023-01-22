@@ -1,7 +1,7 @@
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Tooltip, Alert } from "../"
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
@@ -11,14 +11,6 @@ const Blocked = () => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [liHover, setLiHover] = useState(null);
     const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setError("");
-        }, 7500);
-
-        return () => clearTimeout(timeout);
-    }, [error]);
 
     const searchBar = useRef(null);
 
@@ -43,11 +35,6 @@ const Blocked = () => {
 
     return (
         <div className={styles.content}>
-            <AnimatePresence>
-                {error && (
-                    <Alert type="error" message={error} />
-                )}
-            </AnimatePresence>
             <div className={styles.searchBarContainer}>
                 <div className={styles.searchBarInner}>
                     <input

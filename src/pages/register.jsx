@@ -96,7 +96,7 @@ const Register = () => {
     return (
         <>
             <Head>
-                <title>Unthrust | Register</title>
+                <title>Discord | Register</title>
             </Head>
             <motion.main
                 className={styles.main}

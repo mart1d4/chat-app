@@ -63,7 +63,7 @@ const Login = () => {
     return (
         <>
             <Head>
-                <title>Unthrust | Login</title>
+                <title>Discord | Login</title>
             </Head>
             <motion.main
                 className={styles.main}

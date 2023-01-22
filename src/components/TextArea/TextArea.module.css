@@ -1,0 +1,212 @@
+.form {
+    position: relative;
+    flex-shrink: 0;
+    padding: 0 16px;
+    margin-top: -8px;
+}
+
+.bottomForm {
+    overflow: visible;
+    position: absolute;
+    bottom: 1px;
+    left: 16px;
+    right: 16px;
+    height: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 24px;
+    resize: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--foreground-tertiary);
+}
+
+.typingContainer {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.typingContainer svg {
+    flex: 0 0 auto;
+    display: block;
+    margin-left: 9px;
+    color: var(--foreground-secondary);
+    pointer-events: none;
+}
+
+.typingContainer span {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+    user-select: none;
+}
+
+.typingContainer strong {
+    font-weight: 700;
+}
+
+.counterContainer {
+    user-select: none;
+}
+
+.textArea {
+    margin-bottom: 24px;
+    background-color: var(--background-quinternary);
+    position: relative;
+    width: 100%;
+    text-indent: 0;
+    border-radius: 8px;
+}
+
+.scrollableContainer {
+    overflow: hidden scroll;
+    max-height: 50vh;
+    border-radius: 8px;
+}
+
+.scrollableContainer::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+    border: 4px var(--background-quinternary) solid;
+    background-color: var(--background-quinternary);
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+    border: 4px var(--background-quinternary) solid;
+    background-color: var(--background-primary);
+}
+
+.input {
+    padding-left: 16px;
+    display: flex;
+    position: relative;
+}
+
+.attachWrapper {
+    position: sticky;
+    flex: 0 0 auto;
+    align-self: stretch;
+}
+
+.attachWrapper > button {
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    height: 44px;
+    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    margin-left: -16px;
+    width: auto;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.attachWrapper > button path {
+    fill: var(--foreground-tertiary);
+}
+
+.attachWrapper > button:hover path {
+    fill: var(--foreground-secondary);
+}
+
+.attachWrapper > button > div {
+    height: 24px;
+}
+
+.textContainer {
+    padding: 0;
+    resize: none;
+    border: 0;
+    appearance: none;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.375rem;
+    font-weight: 300;
+    font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    width: 100%;
+    height: 44px;
+    color: var(--foreground-secondary);
+    position: relative;
+}
+
+.textContainerPlaceholder {
+    padding: 11px 10px 11px 0;
+    position: absolute;
+    left: 0;
+    right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    color: var(--foreground-light);
+}
+
+.textContainerInner {
+    outline: none;
+    position: relative;
+    overflow-wrap: break-word;
+    padding: 11px 10px 11px 0;
+    left: 0;
+    right: 10px;
+    text-align: left;
+    word-break: break-word;
+    white-space: break-spaces;
+}
+
+.toolsContainer {
+    margin-right: -6px;
+    display: flex;
+    height: 44px;
+    position: sticky;
+    top: 0;
+}
+
+.toolsContainer > button {
+    cursor: pointer;
+    width: auto;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.toolsContainer > button:last-child {
+    max-height: 50px;
+}
+
+.toolsContainer > button > .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin: 0 4px;
+}
+
+.emojiButton {
+    background-image: url('../../../public/images/emoji-picker.png');
+    background-repeat: no-repeat;
+    background-size: 242px 110px;
+    width: 22px;
+    height: 22px;
+    background-position: -176px -66px;
+    background-size: 242px 110px;
+}

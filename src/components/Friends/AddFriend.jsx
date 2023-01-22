@@ -1,6 +1,6 @@
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { Alert } from "../";
 import { AnimatePresence } from "framer-motion";
@@ -8,14 +8,6 @@ import { AnimatePresence } from "framer-motion";
 const AddFriend = () => {
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setError("");
-        }, 7500);
-
-        return () => clearTimeout(timeout);
-    }, [error]);
 
     const { auth, friendRequests, setFriendRequests, friends, setFriends } = useUserData();
     const axiosPrivate = useAxiosPrivate();
@@ -44,11 +36,6 @@ const AddFriend = () => {
 
     return (
         <div className={styles.content}>
-            <AnimatePresence>
-                {error && (
-                    <Alert type="error" message={error} />
-                )}
-            </AnimatePresence>
             <h2>Add Friends</h2>
             <div className={styles.inputContainer}>
                 <input

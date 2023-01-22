@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
     const [friendRequests, setFriendRequests] = useState([]);
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [channelList, setChannelList] = useState([]);
+    const [erros, setErros] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const value = {
@@ -21,6 +22,8 @@ export function AuthProvider({ children }) {
         setBlockedUsers,
         channelList,
         setChannelList,
+        erros,
+        setErros,
         isLoading,
         setIsLoading,
     };

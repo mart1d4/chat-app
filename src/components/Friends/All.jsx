@@ -15,14 +15,6 @@ const All = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            setError("");
-        }, 7500);
-
-        return () => clearTimeout(timeout);
-    }, [error]);
-
-    useEffect(() => {
         window.addEventListener("click", (e) => {
             if (e.target === menuRef.current) return;
             setShowMenu(null);
@@ -88,11 +80,6 @@ const All = () => {
 
     return (
         <div className={styles.content}>
-            <AnimatePresence>
-                {error && (
-                    <Alert type="error" message={error} />
-                )}
-            </AnimatePresence>
             <div className={styles.searchBarContainer}>
                 <div className={styles.searchBarInner}>
                     <input
@@ -171,6 +158,9 @@ const All = () => {
                                     />
                                     <div
                                         className={styles.avatarStatus}
+                                        style={{
+                                            backgroundColor: liHover === index ? "var(--background-transparent)" : "var(--background-quaternary)",
+                                        }}
                                     >
                                         <div
                                             style={{
@@ -301,7 +291,7 @@ const All = () => {
                     </li>
                 ))}
             </ul>
-        </div>
+        </div >
     );
 };
 

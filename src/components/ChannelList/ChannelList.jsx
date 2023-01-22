@@ -146,8 +146,8 @@ const ConversationList = () => {
                                 <div
                                     className={styles.liWrapper}
                                     style={{
-                                        backgroundColor: currentPath === `/channels/@me/${conv?._id}` && "var(--background-transparent)",
-                                        color: currentPath === `/channels/@me/${conv?._id}` && "var(--foreground-primary)",
+                                        backgroundColor: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) && "var(--background-transparent)",
+                                        color: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) && "var(--foreground-primary)",
                                     }}
                                 >
                                     <div className={styles.link}>
@@ -164,7 +164,9 @@ const ConversationList = () => {
                                                     onMouseEnter={() => setShowStatus(conv?.members[0]._id)}
                                                     onMouseLeave={() => setShowStatus(null)}
                                                     style={{
-                                                        backgroundColor: "var(--background-tertiary)",
+                                                        backgroundColor: hover === conv?.members[0]._id
+                                                            ? "var(--background-transparent)"
+                                                            : "var(--background-tertiary)",
                                                     }}
                                                 >
                                                     <div

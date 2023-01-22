@@ -13,9 +13,10 @@ import Online from './Friends/Online';
 import Pending from './Friends/Pending';
 import Layout from './Layout/Layout';
 import NestedLayout from './NestedLayout/NestedLayout';
-import Alert from './Alert/Alert';
+import Alerts from './Alerts/Alerts';
 import MessageMenu from './MessageMenu/MessageMenu';
 import Loader from './Loader/Loader';
+import TextArea from './TextArea/TextArea';
 
 export {
     AppHeader,
@@ -33,7 +34,8 @@ export {
     Pending,
     Layout,
     NestedLayout,
-    Alert,
+    Alerts,
     MessageMenu,
-    Loader
+    Loader,
+    TextArea
 };
