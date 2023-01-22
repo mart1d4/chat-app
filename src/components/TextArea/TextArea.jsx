@@ -70,34 +70,14 @@ const TextArea = ({ friend, sendMessage }) => {
         ) {
             const range = document.createRange();
             range.selectNodeContents(textAreaRef.current);
-            range.collapse(true);
+            range.collapse(false);
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
         } else if (typeof document.body.createTextRange != "undefined") {
             const textRange = document.body.createTextRange();
             textRange.moveToElementText(textAreaRef.current);
-            textRange.collapse(true);
-            textRange.select();
-        }
-    };
-
-    const moveCursorToDropPosition = () => {
-        textAreaRef.current.focus();
-        if (
-            typeof window.getSelection != "undefined" &&
-            typeof document.createRange != "undefined"
-        ) {
-            const range = document.createRange();
-            range.selectNodeContents(textAreaRef.current);
-            range.collapse(true);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        } else if (typeof document.body.createTextRange != "undefined") {
-            const textRange = document.body.createTextRange();
-            textRange.moveToElementText(textAreaRef.current);
-            textRange.collapse(true);
+            textRange.collapse(false);
             textRange.select();
         }
     };
@@ -182,10 +162,9 @@ const TextArea = ({ friend, sendMessage }) => {
                                     contentEditable="true"
                                     onInput={(e) => {
                                         const text = e.target.innerText.toString();
-                                        setMessage(text);
                                         e.target.innerText = text;
-                                        e.target.focus();
-                                        // moveCursorToEnd();
+                                        setMessage(text);
+                                        moveCursorToEnd();
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter" && e.shiftKey) {

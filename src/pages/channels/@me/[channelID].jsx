@@ -272,7 +272,10 @@ const Channels = () => {
                             </div>
                         </div>
 
-                        <TextArea friend={friend} />
+                        <TextArea
+                            friend={friend}
+                            sendMessage={sendMessage}
+                        />
                     </main>
                 </div>
             </div>
