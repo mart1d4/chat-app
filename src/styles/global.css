@@ -153,28 +153,31 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --background-primary: hsl(216, 7%, 14%);
-        --background-secondary: hsl(220, 7%, 17%);
-        --background-tertiary: hsl(223, 7%, 20%);
-        --background-quaternary: hsl(220, 8%, 23%);
-        --background-quinternary: hsl(218, 8%, 27%);
+        --background-1: hsl(216, 7%, 14%);
+        --background-2: hsl(220, 7%, 17%);
+        --background-3: hsl(223, 7%, 20%);
+        --background-4: hsl(220, 8%, 23%);
+        --background-5: hsl(218, 8%, 27%);
         --background-light: rgb(79, 84, 92);
         --background-dark: hsl(225, 8%, 10%);
-        --background-transparent: hsl(218, 8%, 28%);
+        --background-transparent-1: hsl(218, 8%, 28%);
         --background-transparent-2: rgba(4, 4, 5, 0.07);
-        --foreground-primary: #ffffff;
-        --foreground-secondary: #dcddde;
-        --foreground-tertiary: #babcbf;
-        --foreground-quaternary: hsl(214, 4%, 65%);
-        --foreground-quinternary: hsl(213, 4%, 57%);
+        --background-transparent-3: rgba(4, 4, 5, 0.07);
+        --background-transparent-4: rgba(4, 4, 5, 0.07);
+        --background-transparent-5: rgba(4, 4, 5, 0.07);
+        --foreground-1: #ffffff;
+        --foreground-2: #dcddde;
+        --foreground-3: #babcbf;
+        --foreground-4: hsl(214, 4%, 65%);
+        --foreground-5: hsl(213, 4%, 57%);
         --foreground-light: hsl(218, 5%, 47%);
-        --accent-primary: hsl(235, 86%, 65%);
-        --valid-primary: hsl(139, 86%, 65%);
-        --valid-secondary: hsla(139, 86%, 65%, 0.102);
-        --error-primary: hsl(359, 83%, 59%);
-        --error-secondary: hsla(0, 100%, 50%, 0.102);
-        --warning-primary: hsl(38, 96%, 54%);
-        --warning-secondary: hsla(38, 96%, 54%, 0.102);
+        --accent-1: hsl(235, 86%, 65%);
+        --valid-1: hsl(139, 86%, 65%);
+        --valid-2: hsla(139, 86%, 65%, 0.102);
+        --error-1: hsl(359, 83%, 59%);
+        --error-2: hsla(0, 100%, 50%, 0.102);
+        --warning-1: hsl(38, 96%, 54%);
+        --warning-2: hsla(38, 96%, 54%, 0.102);
         --elevation-low: 0 0 0 1px rgba(0, 0, 0, 0.15);
         --elevation-medium: 0 4px 4px rgba(0, 0, 0, 0.15);
         --elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
@@ -183,12 +186,34 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-        --background-primary: #e5e9f0;
-        --background-secondary: #eceff4;
-        --background-tertiary: #d8dee9;
-        --foreground-primary: #2e3440;
-        --foreground-secondary: #3b4252;
-        --accent-primary: #8fbcbb;
+        --background-1: hsl(216, 7%, 14%);
+        --background-2: hsl(220, 7%, 17%);
+        --background-3: hsl(223, 7%, 20%);
+        --background-4: hsl(220, 8%, 23%);
+        --background-5: hsl(218, 8%, 27%);
+        --background-light: rgb(79, 84, 92);
+        --background-dark: hsl(225, 8%, 10%);
+        --background-transparent-1: hsl(218, 8%, 28%);
+        --background-transparent-2: rgba(4, 4, 5, 0.07);
+        --background-transparent-3: rgba(4, 4, 5, 0.07);
+        --background-transparent-4: rgba(4, 4, 5, 0.07);
+        --background-transparent-5: rgba(4, 4, 5, 0.07);
+        --foreground-1: #ffffff;
+        --foreground-2: #dcddde;
+        --foreground-3: #babcbf;
+        --foreground-4: hsl(214, 4%, 65%);
+        --foreground-5: hsl(213, 4%, 57%);
+        --foreground-light: hsl(218, 5%, 47%);
+        --accent-1: hsl(235, 86%, 65%);
+        --valid-1: hsl(139, 86%, 65%);
+        --valid-2: hsla(139, 86%, 65%, 0.102);
+        --error-1: hsl(359, 83%, 59%);
+        --error-2: hsla(0, 100%, 50%, 0.102);
+        --warning-1: hsl(38, 96%, 54%);
+        --warning-2: hsla(38, 96%, 54%, 0.102);
+        --elevation-low: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        --elevation-medium: 0 4px 4px rgba(0, 0, 0, 0.15);
+        --elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
     }
 }
 
@@ -200,16 +225,16 @@
 
 ::-webkit-scrollbar-track {
     border-radius: 100vw;
-    border: 4px var(--background-quaternary) solid;
-    background-color: var(--background-tertiary);
+    border: 4px var(--background-4) solid;
+    background-color: var(--background-3);
     background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb {
     border-radius: 100vw;
-    border: 4px var(--background-quaternary) solid;
+    border: 4px var(--background-4) solid;
     border-color: transparent;
-    background-color: var(--background-primary);
+    background-color: var(--background-1);
     background-clip: padding-box;
 }
 
@@ -236,8 +261,8 @@ body,
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background-color: var(--background-primary);
-    color: var(--foreground-primary);
+    background-color: var(--background-1);
+    color: var(--foreground-1);
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;
     color-scheme: dark light;
@@ -251,5 +276,5 @@ body,
 }
 
 svg {
-    fill: var(--foreground-secondary);
+    fill: var(--foreground-2);
 }

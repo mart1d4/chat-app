@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import styles from "./TextArea.module.css";
+import { Icon } from "../../components";
 
 const emojisPos = [
     { x: 0, y: 0 }, { x: 0, y: -22 }, { x: 0, y: -44 }, { x: 0, y: -66 }, { x: 0, y: -88 },
@@ -108,8 +109,8 @@ const TextArea = ({ friend, sendMessage }) => {
                     <span
                         style={{
                             color: message.length > 4000
-                                ? "var(--error-primary)"
-                                : "var(--foreground-tertiary)",
+                                ? "var(--error-1)"
+                                : "var(--foreground-3)",
                         }}
                     >
                         {message.length}
@@ -123,16 +124,7 @@ const TextArea = ({ friend, sendMessage }) => {
                         <div className={styles.attachWrapper}>
                             <button>
                                 <div>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        width="24"
-                                        height="24"
-                                    >
-                                        <path
-                                            d="M12 2.00098C6.486 2.00098 2 6.48698 2 12.001C2 17.515 6.486 22.001 12 22.001C17.514 22.001 22 17.515 22 12.001C22 6.48698 17.514 2.00098 12 2.00098ZM17 13.001H13V17.001H11V13.001H7V11.001H11V7.00098H13V11.001H17V13.001Z"
-                                        />
-                                    </svg>
+                                    <Icon name="attach" />
                                 </div>
                             </button>
                         </div>
@@ -189,30 +181,11 @@ const TextArea = ({ friend, sendMessage }) => {
                                 onMouseLeave={() => setHover(null)}
                             >
                                 <div className={styles.button}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        width="30"
-                                        height="30"
-                                    >
-                                        <g
-                                            fill="none"
-                                            fillRule="evenodd"
-                                        >
-                                            <path
-                                                d="m20 5h-16c-1.1 0-1.99.9-1.99 2l-.01 10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-10c0-1.1-.9-2-2-2zm-9 3h2v2h-2zm0 3h2v2h-2zm-3-3h2v2h-2zm0 3h2v2h-2zm-1 2h-2v-2h2zm0-3h-2v-2h2zm9 7h-8v-2h8zm0-4h-2v-2h2zm0-3h-2v-2h2zm3 3h-2v-2h2zm0-3h-2v-2h2z"
-                                                fill={
-                                                    hover === 1
-                                                        ? "var(--foreground-secondary)"
-                                                        : "var(--foreground-tertiary)"
-                                                }
-                                                fillRule="nonzero"
-                                            />
-                                            <path
-                                                d="m0 0h24v24h-24zm0 0h24v24h-24z"
-                                            />
-                                        </g>
-                                    </svg>
+                                    <Icon
+                                        name="keyboard"
+                                        size={30}
+                                        fill={hover === 1 && "var(--foreground-2)"}
+                                    />
                                 </div>
                             </button>
                             <button
@@ -220,21 +193,10 @@ const TextArea = ({ friend, sendMessage }) => {
                                 onMouseLeave={() => setHover(null)}
                             >
                                 <div className={styles.button}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        width="24"
-                                        height="24"
-                                    >
-                                        <path
-                                            fill={
-                                                hover === 2
-                                                    ? "var(--foreground-secondary)"
-                                                    : "var(--foreground-tertiary)"
-                                            }
-                                            d="M2 2C0.895431 2 0 2.89543 0 4V20C0 21.1046 0.89543 22 2 22H22C23.1046 22 24 21.1046 24 20V4C24 2.89543 23.1046 2 22 2H2ZM9.76445 11.448V15.48C8.90045 16.044 7.88045 16.356 6.74045 16.356C4.11245 16.356 2.66045 14.628 2.66045 12.072C2.66045 9.504 4.23245 7.764 6.78845 7.764C7.80845 7.764 8.66045 8.004 9.32045 8.376L9.04445 10.164C8.42045 9.768 7.68845 9.456 6.83645 9.456C5.40845 9.456 4.71245 10.512 4.71245 12.06C4.71245 13.62 5.43245 14.712 6.86045 14.712C7.31645 14.712 7.64045 14.616 7.97645 14.448V12.972H6.42845V11.448H9.76445ZM11.5481 7.92H13.6001V16.2H11.5481V7.92ZM20.4724 7.92V9.636H17.5564V11.328H19.8604V13.044H17.5564V16.2H15.5164V7.92H20.4724Z"
-                                        />
-                                    </svg>
+                                    <Icon
+                                        name="gif"
+                                        fill={hover === 2 && "var(--foreground-2)"}
+                                    />
                                 </div>
                             </button>
                             <motion.button

@@ -1,76 +1,76 @@
 .nav {
-  position: relative;
-  width: 72px;
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    width: 72px;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .list {
-  overflow: hidden scroll;
-  padding-right: 0px;
-  user-select: none;
-  padding-top: 12px;
-  background-color: var(--background-primary);
-  contain: layout size;
-  position: relative;
-  min-height: 0;
-  flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    user-select: none;
+    padding-top: 12px;
+    background-color: var(--background-1);
+    contain: layout size;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .list::-webkit-scrollbar {
-  width: 0px;
-  background: var(--background-secondary);
-  border-radius: 100vw;
+    width: 0px;
+    background: var(--background-2);
+    border-radius: 100vw;
 }
 
 .channelList {
-  position: relative;
+    position: relative;
 }
 
 .listItem {
-  position: relative;
-  margin: 0 0 8px;
-  display: flex;
-  justify-content: center;
-  width: 72px;
+    position: relative;
+    margin: 0 0 8px;
+    display: flex;
+    justify-content: center;
+    width: 72px;
 }
 
 .account {
-  position: relative;
-  display: flex;
+    position: relative;
+    display: flex;
 }
 
 .menu {
-  position: absolute;
-  bottom: 0;
-  left: calc(100% + 0.5rem);
-  width: 200px;
-  background: var(--background-quaternary);
-  border-radius: 5px;
-  padding: 0.5rem;
-  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+    position: absolute;
+    bottom: 0;
+    left: calc(100% + 0.5rem);
+    width: 200px;
+    background: var(--background-4);
+    border-radius: 5px;
+    padding: 0.5rem;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
 }
 
 .menuList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
 }
 
 .menuList li {
-  padding: 0.5rem;
-  border-radius: 5px;
-  cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 .menuLink {
-  color: var(--foreground-primary);
-  text-decoration: none;
+    color: var(--foreground-1);
+    text-decoration: none;
 }
 
 .menuList li:hover {
-  background: var(--background-primary);
+    background: var(--background-1);
 }

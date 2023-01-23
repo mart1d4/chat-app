@@ -6,7 +6,7 @@
     flex: 1 1 auto;
     overflow: hidden;
     position: relative;
-    background-color: var(--background-quaternary);
+    background-color: var(--background-4);
 }
 
 .content {
@@ -94,11 +94,11 @@
     margin: 8px 0;
     font-size: 32px;
     line-height: 40px;
-    color: var(--foreground-primary);
+    color: var(--foreground-1);
 }
 
 .descriptionContainer {
-    color: var(--foreground-tertiary);
+    color: var(--foreground-3);
     font-size: 16px;
     line-height: 20px;
     font-weight: 400;
@@ -157,7 +157,7 @@
     pointer-events: none;
     margin-left: 1rem;
     margin-right: 0.875rem;
-    border-top: thin solid var(--background-transparent);
+    border-top: thin solid var(--background-transparent-1);
 }
 
 .messageDivider span {
@@ -169,6 +169,6 @@
     margin-top: -1px;
     font-weight: 600;
     border-radius: 8px;
-    color: var(--foreground-tertiary);
-    background-color: var(--background-quaternary);
+    color: var(--foreground-3);
+    background-color: var(--background-4);
 }

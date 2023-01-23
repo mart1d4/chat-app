@@ -2,9 +2,8 @@ import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
 import { useRef, useState } from "react";
-import { Tooltip, Alert } from "../"
+import { Tooltip, Icon } from "../"
 import Image from "next/image";
-import { AnimatePresence } from "framer-motion";
 
 const Pending = () => {
     const [search, setSearch] = useState("");
@@ -100,25 +99,7 @@ const Pending = () => {
                             searchBar.current.focus();
                         }}
                     >
-                        {search.length ? (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                            >
-                                <path d="M15.5 4.5l-11 11m11 0l-11-11" />
-                            </svg>
-                        ) : (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                            >
-                                <path d="m15.938 17-4.98-4.979q-.625.458-1.375.719Q8.833 13 8 13q-2.083 0-3.542-1.458Q3 10.083 3 8q0-2.083 1.458-3.542Q5.917 3 8 3q2.083 0 3.542 1.458Q13 5.917 13 8q0 .833-.26 1.583-.261.75-.719 1.375L17 15.938ZM8 11.5q1.458 0 2.479-1.021Q11.5 9.458 11.5 8q0-1.458-1.021-2.479Q9.458 4.5 8 4.5q-1.458 0-2.479 1.021Q4.5 6.542 4.5 8q0 1.458 1.021 2.479Q6.542 11.5 8 11.5Z" />
-                            </svg>
-                        )}
+                        <Icon name={search.length ? "cross" : "search"} size={20} />
                     </div>
                 </div>
             </div>
@@ -152,19 +133,19 @@ const Pending = () => {
                                             <div
                                                 className={styles.avatarStatus}
                                                 style={{
-                                                    backgroundColor: liHover === index ? "var(--background-transparent)" : "var(--background-quaternary)",
+                                                    backgroundColor: liHover === index ? "var(--background-transparent-1)" : "var(--background-4)",
                                                 }}
                                             >
                                                 <div
                                                     style={{
                                                         backgroundColor:
                                                             request.user.status === "Online"
-                                                                ? "var(--valid-primary)"
+                                                                ? "var(--valid-1)"
                                                                 : request.user.status === "Idle"
-                                                                    ? "var(--warning-primary)"
+                                                                    ? "var(--warning-1)"
                                                                     : request.user.status === "Busy"
-                                                                        ? "var(--error-primary)"
-                                                                        : "var(--foreground-quaternary)",
+                                                                        ? "var(--error-1)"
+                                                                        : "var(--foreground-4)",
                                                     }}
                                                 >
 
@@ -195,18 +176,14 @@ const Pending = () => {
                                             onMouseEnter={() => setShowTooltip(index)}
                                             onMouseLeave={() => setShowTooltip(null)}
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="24"
-                                                height="24"
-                                                stroke={
+                                            <Icon
+                                                name="accept"
+                                                size={20}
+                                                fill={
                                                     showTooltip === index
-                                                        ? "var(--valid-primary)"
-                                                        : "var(--foreground-secondary)"
+                                                    && "var(--valid-1)"
                                                 }
-                                            >
-                                                <path d="m9.55 17.3-4.975-4.95.725-.725 4.25 4.25 9.15-9.15.725.725Z" />
-                                            </svg>
+                                            />
                                             <Tooltip
                                                 show={showTooltip === index}
                                             >
@@ -223,19 +200,14 @@ const Pending = () => {
                                     onMouseEnter={() => setShowTooltip(index + 1)}
                                     onMouseLeave={() => setShowTooltip(null)}
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="20"
-                                        height="20"
-                                        stroke={
+                                    <Icon
+                                        name="cancel"
+                                        size={20}
+                                        fill={
                                             showTooltip === index + 1
-                                                ? "var(--error-primary)"
-                                                : "var(--foreground-secondary)"
+                                            && "var(--error-1)"
                                         }
-                                        strokeWidth="1.5"
-                                    >
-                                        <path d="M15.5 4.5l-11 11m11 0l-11-11" />
-                                    </svg>
+                                    />
                                     <Tooltip
                                         show={showTooltip === index + 1}
                                     >

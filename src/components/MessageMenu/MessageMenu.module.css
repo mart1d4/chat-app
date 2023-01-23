@@ -13,7 +13,7 @@
 }
 
 .buttons {
-    background-color: var(--background-quaternary);
+    background-color: var(--background-4);
     display: grid;
     grid-auto-flow: column;
     height: 32px;
@@ -39,7 +39,7 @@
     width: 32px;
     cursor: pointer;
     position: relative;
-    color: var(--foreground-secondary);
+    color: var(--foreground-2);
 }
 
 .buttons > div:first-child {
@@ -51,7 +51,7 @@
 }
 
 .buttons > div:hover {
-    background-color: var(--background-transparent);
+    background-color: var(--background-transparent-1);
 }
 
 .buttons > div > svg {
@@ -84,7 +84,7 @@
 
 .menuItem,
 .menuItemDanger {
-    color: var(--foreground-tertiary);
+    color: var(--foreground-3);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -100,17 +100,17 @@
 }
 
 .menuItemDanger {
-    color: var(--error-primary);
+    color: var(--error-1);
 }
 
 .menuItemDanger:hover {
-    background-color: var(--error-primary);
-    color: var(--foreground-primary);
+    background-color: var(--error-1);
+    color: var(--foreground-1);
 }
 
 .menuItem:hover {
-    background-color: var(--accent-primary);
-    color: var(--foregroun-primary);
+    background-color: var(--accent-1);
+    color: var(--foregroun-1);
 }
 
 .menuItem > .label,
@@ -131,5 +131,5 @@
 
 .divider {
     margin: 4px;
-    border-bottom: 1px solid var(--background-transparent);
+    border-bottom: 1px solid var(--background-transparent-1);
 }

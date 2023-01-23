@@ -1,487 +1,486 @@
 .nav {
-  display: flex;
-  flex-direction: column;
-  width: 240px;
-  min-height: 0;
-  flex: 0 0 auto;
-  background-color: var(--background-tertiary);
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    min-height: 0;
+    flex: 0 0 auto;
+    background-color: var(--background-3);
 }
 
 .privateChannels {
-  position: relative;
-  display: flex;
-  overflow: hidden;
-  user-select: none;
-  flex: 1;
-  flex-direction: column;
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    flex: 1;
+    flex-direction: column;
 }
 
 .searchContainer {
-  z-index: 2;
-  flex: 0 0 auto;
-  padding: 0 10px;
-  height: 48px;
-  align-items: center;
-  position: relative;
-  display: flex;
-  box-shadow: 0 1px 0 rgba(0, 0, 0 ,0.2),
-              0 1.5px 0 rgba(0, 0, 0 ,0.05),
-              0 2px 0 rgba(0, 0, 0 ,0.05);
+    z-index: 2;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    height: 48px;
+    align-items: center;
+    position: relative;
+    display: flex;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
+        0 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .searchButton {
-  width: 100%;
-  height: 28px;
-  overflow: hidden;
-  border-radius: 4px;
-  text-align: left;
-  text-overflow: ellipsis;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 24px;
-  white-space: nowrap;
-  cursor: pointer;
-  outline: 0;
-  border: 0;
-  padding: 1px 6px;
-  color: var(--foreground-tertiary);
-  background-color: var(--background-primary);
+    width: 100%;
+    height: 28px;
+    overflow: hidden;
+    border-radius: 4px;
+    text-align: left;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 24px;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: 0;
+    border: 0;
+    padding: 1px 6px;
+    color: var(--foreground-3);
+    background-color: var(--background-1);
 }
 
 .scroller {
-  overflow: hidden scroll;
-  padding-right: 0px;
-  position: relative;
-  min-height: 0;
-  flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .scroller::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 
 .scroller::-webkit-scrollbar-track {
-  border-radius: 100vw;
-  border: 2px var(--background-tertiary) solid;
-  background-color: transparent;
-  background-clip: padding-box;
+    border-radius: 100vw;
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+    background-clip: padding-box;
 }
 
 .scroller::-webkit-scrollbar-thumb {
-  border-radius: 100vw;
-  border: 2px var(--background-tertiary) solid;
-  background-color: transparent;
-  background-clip: padding-box;
+    border-radius: 100vw;
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+    background-clip: padding-box;
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
-  background-color: var(--background-primary);
+    background-color: var(--background-1);
 }
 
 .channelList {
-  position: relative;
-  list-style: none;
+    position: relative;
+    list-style: none;
 }
 
 .channelList > div:first-child {
-  height: 8px;
+    height: 8px;
 }
 
 .title {
-  display: flex;
-  padding: 18px 8px 4px 18px;
-  height: 40px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  text-transform: uppercase;
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.02rem;
-  font-weight: 600;
+    display: flex;
+    padding: 18px 8px 4px 18px;
+    height: 40px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    font-weight: 600;
 }
 
 .title > span {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--foreground-secondary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground-2);
 }
 
 .title:hover span {
-  color: var(--foreground-primary);
+    color: var(--foreground-1);
 }
 
 .title > div {
-  flex: 0;
-  width: 16px;
-  height: 16px;
-  margin: 0 8px;
-  margin-left: 0;
-  margin-right: 2px;
-  position: relative;
-  cursor: pointer;
+    flex: 0;
+    width: 16px;
+    height: 16px;
+    margin: 0 8px;
+    margin-left: 0;
+    margin-right: 2px;
+    position: relative;
+    cursor: pointer;
 }
 
 .title svg {
-  margin-left: 0;
-  margin-right: 2px;
-  display: block;
-  cursor: pointer;
+    margin-left: 0;
+    margin-right: 2px;
+    display: block;
+    cursor: pointer;
 }
 
 .liContainer {
-  position: relative;
-  max-width: 224px;
-  margin-left: 8px;
-  padding: 1px 0;
-  border-radius: 4px;
-  margin-right: 0px;
+    position: relative;
+    max-width: 224px;
+    margin-left: 8px;
+    padding: 1px 0;
+    border-radius: 4px;
+    margin-right: 0px;
 }
 
 .liWrapper {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  border-radius: 4px;
-  color: var(--foreground-secondary);
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: 4px;
+    color: var(--foreground-2);
 }
 
 .liWrapper:hover {
-  color: var(--foreground-primary);
-  background-color: var(--background-transparent);
+    color: var(--foreground-1);
+    background-color: var(--background-transparent-1);
 }
 
 .liWrapper:hover svg path:first-child {
-  fill: var(--foreground-primary);
+    fill: var(--foreground-1);
 }
 
 .link,
 .linkFriends {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-  white-space: nowrap;
-  /* overflow: hidden; */
-  text-overflow: ellipsis;
-  align-items: center;
-  cursor: pointer;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    /* overflow: hidden; */
+    text-overflow: ellipsis;
+    align-items: center;
+    cursor: pointer;
 }
 
 .linkFriends {
-  padding-right: 8px;
+    padding-right: 8px;
 }
 
 .layout,
 .layoutFriends {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  height: 42px;
-  padding: 0 8px;
-  border-radius: 4px;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 42px;
+    padding: 0 8px;
+    border-radius: 4px;
 }
 
 .layoutFriends {
-  flex-grow: 1;
+    flex-grow: 1;
 }
 
 .layoutAvatar {
-  display: flex;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  margin-right: 12px;
-  align-items: center;
-  position: relative;
+    display: flex;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    align-items: center;
+    position: relative;
 }
 
 .layoutAvatar img {
-  border-radius: 50%;
+    border-radius: 50%;
 }
 
 .layoutContent {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .contentName {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .nameWrapper {
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 500;
-  flex: 0 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .contentStatus {
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
 }
 
 .avatarStatus {
-  position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .avatarStatus > div > div {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
 }
 
 .closeButton {
-  display: block;
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
-  margin: 2px;
-  padding-right: 8px;
+    display: block;
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    margin: 2px;
+    padding-right: 8px;
 }
 
 .closeButton:hover {
-  opacity: 1;
-  cursor: pointer;
+    opacity: 1;
+    cursor: pointer;
 }
 
 .userSectionContainer {
-  flex: 0 0 auto;
-  background-color: var(--background-secondary);
-  z-index: 1;
+    flex: 0 0 auto;
+    background-color: var(--background-2);
+    z-index: 1;
 }
 
 .userSection {
-  height: 52px;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  margin-bottom: 1px;
-  user-select: none;
+    height: 52px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    margin-bottom: 1px;
+    user-select: none;
 }
 
 .avatarWrapper {
-  display: flex;
-  align-items: center;
-  margin-left: -2px;
-  min-width: 120px;
-  padding-left: 2px;
-  margin-right: 8px;
-  cursor: pointer;
-  position: relative;
-  border-radius: 4px;
+    display: flex;
+    align-items: center;
+    margin-left: -2px;
+    min-width: 120px;
+    padding-left: 2px;
+    margin-right: 8px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 4px;
 }
 
 .avatarWrapper:hover {
-  background-color: var(--background-transparent);
+    background-color: var(--background-transparent-1);
 }
 
 .avatarWrapper > div:first-child {
-  position: relative;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-left: 2px;
+    position: relative;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-left: 2px;
 }
 
 .avatarWrapper > div > img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
 }
 
 .avatarStatus {
-  position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--background-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--background-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .avatarStatus > div {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
 }
 
 .contentWrapper {
-  padding: 4px 0 4px 8px;
-  flex-grow: 1;
-  margin-right: 4px;
-  min-width: 0;
+    padding: 4px 0 4px 8px;
+    flex-grow: 1;
+    margin-right: 4px;
+    min-width: 0;
 }
 
 .contentWrapper > div:first-child {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 14px;
-  line-height: 18px;
-  font-weight: 600;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
 }
 
 .contentWrapper > div:last-child {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 13px;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--foreground-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 13px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--foreground-3);
 }
 
 .toolbar {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: stretch;
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
 }
 
 .toolbar > button {
-  cursor: pointer;
-  line-height: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  position: relative;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0;
+    cursor: pointer;
+    line-height: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
 }
 
 .toolbar > button:hover {
-  background-color: var(--background-transparent);
+    background-color: var(--background-transparent-1);
 }
 
 .menuContainer {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 1;
-  display: flex;
-  min-width: 190px;
-  max-width: 320px;
-  height: auto;
-  cursor: default;
-  max-height: calc(100vh - 32px);
-  border-radius: 4px;
-  background-color: var(--background-dark);
-  box-shadow: 0 8px 16px rgba(0, 0, 0 , 0.25);
-  user-select: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 1;
+    display: flex;
+    min-width: 190px;
+    max-width: 320px;
+    height: auto;
+    cursor: default;
+    max-height: calc(100vh - 32px);
+    border-radius: 4px;
+    background-color: var(--background-dark);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    user-select: none;
 }
 
 .menu {
-  overflow: hidden scroll;
-  padding-right: 0px;
-  padding: 6px 8px;
-  position: relative;
-  min-height: 0;
-  flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    padding: 6px 8px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .menu::-webkit-scrollbar {
-  width: 0px;
+    width: 0px;
 }
 
 .menu > div:not(.divider) {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 32px;
-  width: 100%;
-  padding: 6px 8px;
-  margin: 2px 0;
-  border-radius: 2px;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 18px;
-  cursor: pointer;
-  outline: 0;
-  border: 0;
-  color: var(--foreground-secondary);
-  background-color: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 32px;
+    width: 100%;
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    outline: 0;
+    border: 0;
+    color: var(--foreground-2);
+    background-color: transparent;
 }
 
 .menu > div:not(.divider).red {
-  color: var(--error-primary);
+    color: var(--error-1);
 }
 
 .menu > div:not(.divider):hover {
-  background-color: var(--accent-primary);
-  color: var(--foreground-primary);
+    background-color: var(--accent-1);
+    color: var(--foreground-1);
 }
 
 .menu > div:not(.divider).red:hover {
-  background-color: var(--error-primary);
+    background-color: var(--error-1);
 }
 
 .menu > div:not(.divider) > div {
-  text-align: left;
-  flex: 1 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    text-align: left;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .divider {
-  margin: 4px;
-  border-bottom: 1px solid var(--background-transparent);
+    margin: 4px;
+    border-bottom: 1px solid var(--background-transparent-1);
 }
 
 .friendsPending {
-  background-color: var(--error-primary);
-  width: 16px;
-  height: 16px;
-  padding-right: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  min-height: 16px;
-  min-width: 16px;
-  color: var(--foreground-primary);
-  text-align: center;
-  flex: 0 0 auto;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02rem;
+    background-color: var(--error-1);
+    width: 16px;
+    height: 16px;
+    padding-right: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    min-height: 16px;
+    min-width: 16px;
+    color: var(--foreground-1);
+    text-align: center;
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
 }

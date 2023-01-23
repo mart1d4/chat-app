@@ -17,6 +17,9 @@ import Alerts from './Alerts/Alerts';
 import MessageMenu from './MessageMenu/MessageMenu';
 import Loader from './Loader/Loader';
 import TextArea from './TextArea/TextArea';
+import Icon from './Icon/Icon';
+import AvatarStatus from './AvatarStatus/AvatarStatus';
+import Menu from './Menu/Menu';
 
 export {
     AppHeader,
@@ -37,5 +40,8 @@ export {
     Alerts,
     MessageMenu,
     Loader,
-    TextArea
+    TextArea,
+    Icon,
+    AvatarStatus,
+    Menu,
 };

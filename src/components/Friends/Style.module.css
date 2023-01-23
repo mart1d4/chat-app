@@ -1,264 +1,264 @@
 .content {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  overflow: hidden;
-  position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
 }
 
 .searchBarContainer {
-  margin: 16px 20px 8px 30px;
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  background-color: var(--background-primary);
-  flex: none;
+    margin: 16px 20px 8px 30px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    background-color: var(--background-1);
+    flex: none;
 }
 
 .searchBarInner {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  padding: 1px;
-  align-items: center;
-  flex: 1 1 auto;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 1px;
+    align-items: center;
+    flex: 1 1 auto;
 }
 
 .searchBarInner input {
-  font-size: 1rem;
-  line-height: 32px;
-  height: 30px;
-  padding: 0 8px;
-  background: transparent;
-  border: none;
-  resize: none;
-  flex: 1;
-  margin: 1px;
-  outline: none;
-  font-weight: 400;
+    font-size: 1rem;
+    line-height: 32px;
+    height: 30px;
+    padding: 0 8px;
+    background: transparent;
+    border: none;
+    resize: none;
+    flex: 1;
+    margin: 1px;
+    outline: none;
+    font-weight: 400;
 }
 
 .searchBarInner input::placeholder {
-  user-select: none;
+    user-select: none;
 }
 
 .inputButton {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .title {
-  display: block;
-  margin: 16px 20px 8px 30px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  text-transform: uppercase;
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.02rem;
-  font-weight: 600;
-  color: #b9bbbe;
-  user-select: none;
-  box-sizing: border-box;
-  flex: none;
-  position: relative;
+    display: block;
+    margin: 16px 20px 8px 30px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    font-weight: 600;
+    color: #b9bbbe;
+    user-select: none;
+    box-sizing: border-box;
+    flex: none;
+    position: relative;
 }
 
 .listContainer {
-  overflow: hidden scroll;
-  padding-right: 0px;
-  padding-bottom: 8px;
-  margin-top: 8px;
-  position: relative;
-  box-sizing: border-box;
-  flex: 1 1 auto;
-  min-height: 0;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    padding-bottom: 8px;
+    margin-top: 8px;
+    position: relative;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .liContainer,
 .liContainerHover {
-  height: 62px;
-  opacity: 1;
-  display: flex;
-  margin: 0 20px 0 30px;
-  font-weight: 500;
-  font-size: 1rem;
-  line-height: 20px;
-  border-top: 1px solid rgba(79, 84, 92, 0.5);
+    height: 62px;
+    opacity: 1;
+    display: flex;
+    margin: 0 20px 0 30px;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 20px;
+    border-top: 1px solid rgba(79, 84, 92, 0.5);
 }
 
 .liContainerHover {
-  border-radius: 8px;
-  margin: 0 10px 0 20px;
-  padding: 16px 10px;
-  background-color: var(--background-transparent);
-  border-color: transparent;
-  cursor: pointer;
+    border-radius: 8px;
+    margin: 0 10px 0 20px;
+    padding: 16px 10px;
+    background-color: var(--background-transparent-1);
+    border-color: transparent;
+    cursor: pointer;
 }
 
 .liContainerHover .actions > button {
-  background-color: var(--background-primary);
+    background-color: var(--background-1);
 }
 
 .li {
-  display: flex;
-  flex-grow: 1;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 100%;
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 100%;
 }
 
 .userInfo {
-  display: flex;
-  overflow: hidden;
+    display: flex;
+    overflow: hidden;
 }
 
 .avatarWrapper {
-  width: 32px;
-  height: 32px;
-  margin-right: 12px;
-  position: relative;
-  border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    position: relative;
+    border-radius: 50%;
 }
 
 .avatarWrapper img {
-  border-radius: 50%;
+    border-radius: 50%;
 }
 
 .avatarStatus {
-  position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--background-quaternary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--background-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .avatarStatus > div {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
 }
 
 .text {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  user-select: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
 }
 
 .textUsername {
-  display: flex;
-  overflow: hidden;
-  flex-grow: 1;
-  align-items: flex-end;
-  line-height: 1.1;
+    display: flex;
+    overflow: hidden;
+    flex-grow: 1;
+    align-items: flex-end;
+    line-height: 1.1;
 }
 
 .textStatus {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  font-size: 14px;
-  color: #b9bbbe;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 14px;
+    color: #b9bbbe;
 }
 
 .actions {
-  margin-left: 8px;
-  display: flex;
-  gap: 10px;
+    margin-left: 8px;
+    display: flex;
+    gap: 10px;
 }
 
 .actions > button {
-  cursor: pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--background-tertiary);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-3);
 }
 
 .menuContainer {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 1;
-  display: flex;
-  min-width: 190px;
-  max-width: 320px;
-  height: auto;
-  cursor: default;
-  max-height: calc(100vh - 32px);
-  border-radius: 4px;
-  background-color: var(--background-dark);
-  box-shadow: 0 8px 16px rgba(0, 0, 0 , 0.25);
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1;
+    display: flex;
+    min-width: 190px;
+    max-width: 320px;
+    height: auto;
+    cursor: default;
+    max-height: calc(100vh - 32px);
+    border-radius: 4px;
+    background-color: var(--background-dark);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
 }
 
 .menu {
-  overflow: hidden scroll;
-  padding-right: 0px;
-  padding: 6px 8px;
-  position: relative;
-  min-height: 0;
-  flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    padding: 6px 8px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .menu::-webkit-scrollbar {
-  width: 0px;
+    width: 0px;
 }
 
 .menu > div:not(.divider) {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 32px;
-  width: 100%;
-  padding: 6px 8px;
-  margin: 2px 0;
-  border-radius: 2px;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 18px;
-  cursor: pointer;
-  outline: 0;
-  border: 0;
-  color: var(--foreground-secondary);
-  background-color: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 32px;
+    width: 100%;
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    outline: 0;
+    border: 0;
+    color: var(--foreground-2);
+    background-color: transparent;
 }
 
 .menu > div:not(.divider).red {
-  color: var(--error-primary);
+    color: var(--error-1);
 }
 
 .menu > div:not(.divider):hover {
-  background-color: var(--accent-primary);
-  color: var(--foreground-primary);
+    background-color: var(--accent-1);
+    color: var(--foreground-1);
 }
 
 .menu > div:not(.divider).red:hover {
-  background-color: var(--error-primary);
+    background-color: var(--error-1);
 }
 
 .menu > div:not(.divider) > div {
-  text-align: left;
-  flex: 1 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    text-align: left;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .divider {
-  margin: 4px;
-  border-bottom: 1px solid var(--background-transparent);
+    margin: 4px;
+    border-bottom: 1px solid var(--background-transparent-1);
 }

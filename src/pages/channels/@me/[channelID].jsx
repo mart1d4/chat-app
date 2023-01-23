@@ -18,13 +18,20 @@ import React from "react";
 const Channels = () => {
     const [friend, setFriend] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [scrollHeight, setScrollHeight] = useState(500000);
     const [error, setError] = useState(null);
 
     const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const textAreaRef = useRef(null);
     const scrollableContainer = useRef(null);
+
+    useState(() => {
+        if (scrollableContainer.current) {
+            scrollableContainer.current.scrollTop = scrollHeight;
+        }
+        console.log(scrollHeight);
+    }, [scrollHeight]);
 
     useEffect(() => {
         let isMounted = true;
@@ -39,6 +46,7 @@ const Channels = () => {
                 isMounted && setError(data.data.error);
             } else {
                 isMounted && setMessages(data.data.messages);
+                isMounted && setScrollHeight(scrollableContainer.current.scrollHeight);
             }
         }
 
@@ -47,7 +55,6 @@ const Channels = () => {
         )[0]?.members[0]);
 
         getMessages();
-        scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
         console.log(
             '%c[channelID]',
             'color: hsl(38, 96%, 54%)',
@@ -132,7 +139,7 @@ const Channels = () => {
                 ...channelList.slice(channelIndex + 1),
             ];
             setChannelList(newChannelList);
-            scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
+            setScrollHeight(scrollableContainer.current.scrollHeight);
         }
     };
 
@@ -213,7 +220,7 @@ const Channels = () => {
                                                 <div className={styles.descriptionActions}>
                                                     <button
                                                         style={{
-                                                            backgroundColor: "var(--accent-primary)",
+                                                            backgroundColor: "var(--accent-1)",
                                                         }}
                                                     >
                                                         Add Friend

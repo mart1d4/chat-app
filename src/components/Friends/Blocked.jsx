@@ -2,9 +2,8 @@ import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
 import { useRef, useState } from "react";
-import { Tooltip, Alert } from "../"
+import { Tooltip, Icon } from "../"
 import Image from "next/image";
-import { AnimatePresence } from "framer-motion";
 
 const Blocked = () => {
     const [search, setSearch] = useState("");
@@ -55,25 +54,7 @@ const Blocked = () => {
                             searchBar.current.focus();
                         }}
                     >
-                        {search.length ? (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                            >
-                                <path d="M15.5 4.5l-11 11m11 0l-11-11" />
-                            </svg>
-                        ) : (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                            >
-                                <path d="m15.938 17-4.98-4.979q-.625.458-1.375.719Q8.833 13 8 13q-2.083 0-3.542-1.458Q3 10.083 3 8q0-2.083 1.458-3.542Q5.917 3 8 3q2.083 0 3.542 1.458Q13 5.917 13 8q0 .833-.26 1.583-.261.75-.719 1.375L17 15.938ZM8 11.5q1.458 0 2.479-1.021Q11.5 9.458 11.5 8q0-1.458-1.021-2.479Q9.458 4.5 8 4.5q-1.458 0-2.479 1.021Q4.5 6.542 4.5 8q0 1.458 1.021 2.479Q6.542 11.5 8 11.5Z" />
-                            </svg>
-                        )}
+                        <Icon name={search.length ? "cross" : "search"} size={20} />
                     </div>
                 </div>
             </div>
@@ -121,19 +102,14 @@ const Blocked = () => {
                                     onMouseEnter={() => setShowTooltip(index)}
                                     onMouseLeave={() => setShowTooltip(null)}
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="20"
-                                        height="20"
-                                    >
-                                        <path
-                                            fill={
-                                                showTooltip === index
-                                                    ? "var(--error-primary)"
-                                                    : "var(--foreground-secondary)"
-                                            }
-                                            d="M13 9.5V8h5v1.5ZM8 10q-1.25 0-2.125-.875T5 7q0-1.25.875-2.125T8 4q1.25 0 2.125.875T11 7q0 1.25-.875 2.125T8 10Zm-6 6v-1.917q0-.541.26-.989.261-.448.719-.719 1.146-.667 2.417-1.021Q6.667 11 8 11q1.333 0 2.604.354 1.271.354 2.417 1.021.458.271.719.719.26.448.26.989V16Z" />
-                                    </svg>
+                                    <Icon
+                                        name="userDelete"
+                                        size={20}
+                                        fill={
+                                            showTooltip === index
+                                            && "var(--error-1)"
+                                        }
+                                    />
                                     <Tooltip
                                         show={showTooltip === index}
                                     >

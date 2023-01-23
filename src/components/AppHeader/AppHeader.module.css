@@ -1,112 +1,111 @@
 .header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  width: 100%;
-  flex: 0 0 auto;
-  height: 48px;
-  padding: 0 8px;
-  font-size: 16px;
-  line-height: 20px;
-  cursor: default;
-  z-index: 2;
-  user-select: none;
-  box-shadow: 0 1px 0 rgba(0, 0, 0 ,0.2),
-              0 1.5px 0 rgba(0, 0, 0 ,0.05),
-              0 2px 0 rgba(0, 0, 0 ,0.05);
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
+    flex: 0 0 auto;
+    height: 48px;
+    padding: 0 8px;
+    font-size: 16px;
+    line-height: 20px;
+    cursor: default;
+    z-index: 2;
+    user-select: none;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
+        0 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .nav {
-  position: relative;
-  flex-direction: 1 1 auto;
-  display: flex;
-  align-items: center;
-  min-width: 0;
+    position: relative;
+    flex-direction: 1 1 auto;
+    display: flex;
+    align-items: center;
+    min-width: 0;
 }
 
 .icon {
-  position: relative;
-  height: 24px;
-  width: auto;
-  flex: 0 0 auto;
-  margin: 0 8px;
+    position: relative;
+    height: 24px;
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0 8px;
 }
 
 .title,
 .titleFriend {
-  margin-right: 8px;
-  flex: 0 0 auto;
-  min-width: auto;
+    margin-right: 8px;
+    flex: 0 0 auto;
+    min-width: auto;
 }
 
 .titleFriend {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .divider {
-  width: 1px;
-  height: 24px;
-  margin: 0 8px;
-  flex: 0 0 auto;
-  background-color: var(--background-transparent);
+    width: 1px;
+    height: 24px;
+    margin: 0 8px;
+    flex: 0 0 auto;
+    background-color: var(--background-transparent-1);
 }
 
 .list {
-  display: flex;
+    display: flex;
 }
 
 .item {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  min-width: 40px;
-  border-radius: 4px;
-  margin: 0 8px;
-  padding: 2px 8px;
-  position: relative;
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--foreground-tertiary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-width: 40px;
+    border-radius: 4px;
+    margin: 0 8px;
+    padding: 2px 8px;
+    position: relative;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--foreground-3);
 }
 
 .item:hover {
-  background-color: var(--background-transparent);
-  color: var(--foreground-secondary);
+    background-color: var(--background-transparent-1);
+    color: var(--foreground-2);
 }
 
 .status {
-  flex: 0 0 auto;
-  margin-right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    flex: 0 0 auto;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toolbar {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  min-width: 0;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .badge {
-  background-color: var(--error-primary);
-  width: 16px;
-  height: 16px;
-  padding-right: 0px;
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: var(--foreground-primary);
-  text-align: center;
-  flex: 0 0 auto;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02rem;
+    background-color: var(--error-1);
+    width: 16px;
+    height: 16px;
+    padding-right: 0px;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: var(--foreground-1);
+    text-align: center;
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
 }
