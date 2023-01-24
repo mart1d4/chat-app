@@ -2,8 +2,6 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { Alert } from "../";
-import { AnimatePresence } from "framer-motion";
 
 const AddFriend = () => {
     const [input, setInput] = useState("");
@@ -16,15 +14,15 @@ const AddFriend = () => {
         try {
             const data = await axiosPrivate.post(
                 `/users/${auth?.user._id}/friends/request`,
-                {
-                    userID: input,
-                },
+                { userID: input },
             );
             setInput("");
             if (data.data.error) {
                 setError(data.data.error);
             } else if (data.data.success === "Friend request accepted") {
-                setFriendRequests(friendRequests.filter((request) => request.user._id.toString() !== input));
+                setFriendRequests(friendRequests.filter(
+                    (request) => request._id.toString() !== input
+                ));
                 setFriends([...friends, data.data.user]);
             } else {
                 setFriendRequests([...friendRequests, data.data.request]);

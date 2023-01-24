@@ -66,11 +66,9 @@ const requestFriend = async (userIDUnclean, friendIDUnclean) => {
         success: "Friend request sent",
         request: {
             type: "sent",
-            user: {
-                _id: friend._id,
-                username: friend.username,
-                avatar: friend.avatar,
-            },
+            _id: friend._id,
+            username: friend.username,
+            avatar: friend.avatar,
         },
     };
 };

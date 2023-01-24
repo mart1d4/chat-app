@@ -6,12 +6,8 @@ import Header from './Header/Header';
 import Main from './Main/Main';
 import Message from './Message/Message';
 import Tooltip from './Tooltip/Tooltip';
-import AddFriend from './Friends/AddFriend';
-import UserLists from './Friends/UserLists';
-import All from './Friends/All';
-import Blocked from './Friends/Blocked';
-import Online from './Friends/Online';
-import Pending from './Friends/Pending';
+import AddFriend from './UserLists/AddFriend';
+import UserLists from './UserLists/UserLists';
 import Layout from './Layout/Layout';
 import NestedLayout from './NestedLayout/NestedLayout';
 import Alerts from './Alerts/Alerts';
@@ -33,10 +29,6 @@ export {
     Tooltip,
     AddFriend,
     UserLists,
-    All,
-    Blocked,
-    Online,
-    Pending,
     Layout,
     NestedLayout,
     Alerts,

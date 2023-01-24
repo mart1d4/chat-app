@@ -269,6 +269,8 @@ body,
     font-family: 'gg sans', 'Noto sans', sans-serif;
     color-scheme: dark light;
     scroll-behavior: smooth;
+    min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
 }
 
 .container {

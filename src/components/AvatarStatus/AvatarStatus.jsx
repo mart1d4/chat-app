@@ -9,7 +9,7 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
     const tooltipPosition = tooltipPos ?? 'top';
 
     return (
-        <div className={!onlyStatus && styles.container}>
+        <div className={!onlyStatus ? styles.container : ""}>
             <div
                 className={styles.firstLayer}
                 onMouseEnter={() => setShowTooltip(true)}

@@ -189,3 +189,26 @@
     justify-content: center;
     background-color: var(--background-3);
 }
+
+.noData {
+    flex: 1 1 auto;
+    max-width: 440px;
+    margin: 0 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.noData > img {
+    margin-bottom: 40px;
+}
+
+.noData > div {
+    flex: 0 1 auto;
+    line-height: 20px;
+    text-align: center;
+    color: var(--foreground-5);
+    margin-top: 8px;
+}

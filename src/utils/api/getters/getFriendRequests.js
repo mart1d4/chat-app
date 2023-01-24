@@ -11,15 +11,13 @@ const getFriendRequests = async (userID) => {
     // Clean the users so there's no sensitive data being sent
     const cleanRequests = user.friendRequests.map((request) => {
         const cleanRequest = {
-            user: {
-                _id: request.user._id,
-                username: request.user.username,
-                avatar: request.user.avatar,
-                description: request.user.description,
-                customStatus: request.user.customStatus,
-                status: request.user.status,
-                createdAt: request.user.createdAt,
-            },
+            _id: request.user._id,
+            username: request.user.username,
+            avatar: request.user.avatar,
+            description: request.user.description,
+            customStatus: request.user.customStatus,
+            status: request.user.status,
+            createdAt: request.user.createdAt,
             type: request.type,
         };
         return cleanRequest;

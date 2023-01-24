@@ -9,29 +9,21 @@ import {
 import styles from "./Channels.module.css";
 import Head from "next/head";
 import { useState, useEffect, useRef } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import Image from "next/image";
 import { parseISO, format } from "date-fns";
-import React from "react";
 
 const Channels = () => {
     const [friend, setFriend] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [scrollHeight, setScrollHeight] = useState(500000);
     const [error, setError] = useState(null);
 
     const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
     const scrollableContainer = useRef(null);
-
-    useState(() => {
-        if (scrollableContainer.current) {
-            scrollableContainer.current.scrollTop = scrollHeight;
-        }
-        console.log(scrollHeight);
-    }, [scrollHeight]);
 
     useEffect(() => {
         let isMounted = true;
@@ -46,7 +38,6 @@ const Channels = () => {
                 isMounted && setError(data.data.error);
             } else {
                 isMounted && setMessages(data.data.messages);
-                isMounted && setScrollHeight(scrollableContainer.current.scrollHeight);
             }
         }
 
@@ -60,6 +51,7 @@ const Channels = () => {
             'color: hsl(38, 96%, 54%)',
             ': Fetching data...'
         );
+        scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
 
         return () => {
             isMounted = false;
@@ -96,11 +88,8 @@ const Channels = () => {
     const sendMessage = async (message) => {
         if (message.length === 0) return;
         if (message.length > 4000) {
-            setError("Message too long");
-            return;
+            return setError("Message too long");
         }
-
-        console.log(message);
 
         while (message[0] === "\\" && message[1] === "n") {
             message = message.slice(2);
@@ -118,9 +107,7 @@ const Channels = () => {
 
         const data = await axiosPrivate.post(
             `/private/${router.query.channelID}/send`,
-            {
-                message: newMessage,
-            }
+            { message: newMessage }
         );
 
         if (data.data.error) {
@@ -139,7 +126,7 @@ const Channels = () => {
                 ...channelList.slice(channelIndex + 1),
             ];
             setChannelList(newChannelList);
-            setScrollHeight(scrollableContainer.current.scrollHeight);
+            scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
         }
     };
 
@@ -198,23 +185,30 @@ const Channels = () => {
                                             </div>
                                         </div>
 
-                                        {messages?.map((message, index) =>
-                                            <React.Fragment key={index}>
+                                        {messages?.map((message, index) => {
+                                            <>
                                                 {isNewDay(index) && (
-                                                    <div className={styles.messageDivider}>
+                                                    <div
+                                                        key={uuidv4()}
+                                                        className={styles.messageDivider}
+                                                    >
                                                         <span>
-                                                            {format(new Date(message.createdAt), "PPP")}
+                                                            {format(
+                                                                new Date(message.createdAt),
+                                                                "PPP"
+                                                            )}
                                                         </span>
                                                     </div>
                                                 )}
                                                 <Message
+                                                    key={uuidv4()}
                                                     message={message}
                                                     start={isStart(index)}
                                                     setError={setError}
                                                     setMessages={setMessages}
                                                 />
-                                            </React.Fragment>
-                                        )}
+                                            </>
+                                        })}
 
                                         <div className={styles.scrollerSpacer} />
                                     </ol>
