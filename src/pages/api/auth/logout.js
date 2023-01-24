@@ -6,7 +6,10 @@ connectDB();
 
 export default async (req, res) => {
     const { cookies } = req;
-    if (!cookies?.jwt) return res.status(204);
+    if (!cookies?.jwt) {
+        res.status(204);
+        return res.redirect("/login");
+    }
     const refreshToken = cookies.jwt;
 
     const user = await User.findOne({ refreshToken });
@@ -17,7 +20,8 @@ export default async (req, res) => {
                 path: "/",
             }),
         ]);
-        return res.status(204);
+        res.status(204);
+        return res.redirect("/login");
     }
 
     user.refreshToken = "";
@@ -29,5 +33,6 @@ export default async (req, res) => {
             path: "/",
         }),
     ]);
-    return res.status(204);
+    res.status(204);
+    return res.redirect("/login");
 };

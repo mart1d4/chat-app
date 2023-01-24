@@ -3,7 +3,7 @@
 }
 
 .li:hover {
-    background-color: var(--background-transparent-2);
+    background-color: var(--background-hover-4);
 }
 
 .messageStart {

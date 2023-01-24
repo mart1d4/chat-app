@@ -1,6 +1,6 @@
 .container {
     position: absolute;
-    z-index: 1000000;
+    z-index: 100000;
     pointer-events: none;
     user-select: none;
 }

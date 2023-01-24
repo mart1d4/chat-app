@@ -1,35 +1,39 @@
 import styles from "./ChannelList.module.css";
 import { useRouter } from "next/router";
-import { Tooltip, Icon } from "..";
+import { Tooltip, Icon, AvatarStatus, Menu } from "..";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 const ConversationList = () => {
     const [hover, setHover] = useState(null);
-    const [showStatus, setShowStatus] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
     const [showTooltip, setShowTooltip] = useState(null);
 
     const router = useRouter();
     const currentPath = router.asPath;
-    const menuRef = useRef(null);
 
     const { auth, friends, friendRequests, channelList } = useUserData();
     const { logout } = useLogout();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
-    useEffect(() => {
-        window.addEventListener("click", (e) => {
-            if (e.target === menuRef.current) return;
-            setShowMenu(null);
-        });
-    }, []);
-
     const isFriend = (id) => {
         return friends.some((friend) => friend._id.toString() === id);
     };
+
+    const menuItems = [
+        { name: "Profile", func: () => { } },
+        { name: "Set Status", func: () => { } },
+        { name: "Divider" },
+        { name: "Logout", icon: "logout", func: () => logout() },
+        { name: "Divider" },
+        {
+            name: "Copy ID", icon: "id", func: () => {
+                navigator.clipboard.writeText(auth?.user?._id);
+            }
+        },
+    ]
 
     return (
         <div className={styles.nav}>
@@ -48,7 +52,9 @@ const ConversationList = () => {
                     <ul className={styles.channelList}>
                         <div></div>
                         <div
-                            className={styles.liContainer}
+                            className={currentPath === "/channels/@me"
+                                ? styles.liContainerActive
+                                : styles.liContainer}
                             onClick={() => {
                                 localStorage.setItem(
                                     "private-channel-url",
@@ -57,23 +63,11 @@ const ConversationList = () => {
                                 router.push("/channels/@me")
                             }}
                         >
-                            <div
-                                className={styles.liWrapper}
-                                style={{
-                                    backgroundColor: currentPath === "/channels/@me" && "var(--background-transparent-1)",
-                                    color: currentPath === "/channels/@me" && "var(--foreground-1)",
-                                }}
-                            >
+                            <div className={styles.liWrapper}>
                                 <div className={styles.linkFriends}>
                                     <div className={styles.layoutFriends}>
                                         <div className={styles.layoutAvatar}>
-                                            <Icon
-                                                name="friends"
-                                                fill={
-                                                    currentPath === "/channels/@me"
-                                                    && "var(--foreground-1)"
-                                                }
-                                            />
+                                            <Icon name="friends" />
                                         </div>
                                         <div className={styles.layoutContent}>
                                             <div className={styles.contentName}>
@@ -96,29 +90,12 @@ const ConversationList = () => {
                         <h2 className={styles.title}>
                             <span>Direct Messages</span>
                             <div>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 18 18"
-                                    x="0"
-                                    y="0"
-                                    onMouseEnter={() => setHover("create")}
-                                    onMouseLeave={() => setHover(false)}
-                                >
-                                    <polygon
-                                        fillRule="nonzero"
-                                        fill={
-                                            hover === "create"
-                                                ? "var(--foreground-1)"
-                                                : "var(--foreground-2)"
-                                        }
-                                        points="15 10 10 10 10 15 8 15 8 10 3 10 3 8 8 8 8 3 10 3 10 8 15 8"
-                                    />
-                                </svg>
-                                <Tooltip
-                                    show={hover === "create"}
-                                >
+                                <Icon
+                                    name="add"
+                                    size={16}
+                                    viewbox="0 0 18 18"
+                                />
+                                <Tooltip show={hover === "create"}>
                                     Create DM
                                 </Tooltip>
                             </div>
@@ -126,7 +103,9 @@ const ConversationList = () => {
                         {channelList?.map((conv) => (
                             <li
                                 key={conv?.members[0]._id}
-                                className={styles.liContainer}
+                                className={currentPath === `/channels/@me/${conv?._id}`
+                                    ? styles.liContainerActive
+                                    : styles.liContainer}
                                 onMouseEnter={() => setHover(conv?.members[0]._id)}
                                 onMouseLeave={() => setHover(null)}
                                 onClick={() => {
@@ -137,13 +116,7 @@ const ConversationList = () => {
                                     router.push(`/channels/@me/${conv?._id}`);
                                 }}
                             >
-                                <div
-                                    className={styles.liWrapper}
-                                    style={{
-                                        backgroundColor: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) && "var(--background-transparent-1)",
-                                        color: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) && "var(--foreground-1)",
-                                    }}
-                                >
+                                <div className={styles.liWrapper}>
                                     <div className={styles.link}>
                                         <div className={styles.layout}>
                                             <div className={styles.layoutAvatar}>
@@ -153,43 +126,18 @@ const ConversationList = () => {
                                                     height={32}
                                                     alt="Avatar"
                                                 />
-                                                <div
-                                                    className={styles.avatarStatus}
-                                                    onMouseEnter={() => setShowStatus(conv?.members[0]._id)}
-                                                    onMouseLeave={() => setShowStatus(null)}
-                                                    style={{
-                                                        backgroundColor: (currentPath === `/channels/@me/${conv?._id}` || hover == conv?.members[0]._id) ? "var(--background-transparent-1)" : "var(--background-3)",
-                                                    }}
-                                                >
-                                                    <div
-                                                        style={{
-                                                            position: "relative",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                backgroundColor: !isFriend(conv?.members[0]._id)
-                                                                    ? "var(--foreground-4)"
-                                                                    : conv?.members[0].status === "Online"
-                                                                        ? "var(--valid-1)"
-                                                                        : conv?.members[0].status === "Idle"
-                                                                            ? "var(--warning-1)"
-                                                                            : conv?.members[0].status === "Busy"
-                                                                                ? "var(--error-1)"
-                                                                                : "var(--foreground-4)",
-                                                            }}
-                                                        >
-                                                            <Tooltip
-                                                                show={showStatus === conv?.members[0]._id}
-                                                                dist="8px"
-                                                            >
-                                                                {isFriend(conv?.members[0]._id)
-                                                                    ? conv?.members[0].status
-                                                                    : "Offline"}
-                                                            </Tooltip>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <AvatarStatus
+                                                    status={conv?.members[0].status}
+                                                    background={
+                                                        hover === conv?.members[0]._id
+                                                            ? "var(--background-hover-2)"
+                                                            : currentPath === `/channels/@me/${conv?._id}`
+                                                                ? "var(--background-active)"
+                                                                : "var(--background-3)"
+                                                    }
+                                                    tooltip={true}
+                                                    friend={isFriend(conv?.members[0]._id)}
+                                                />
                                             </div>
                                             <div className={styles.layoutContent}>
                                                 <div className={styles.contentName}>
@@ -228,11 +176,13 @@ const ConversationList = () => {
                         className={styles.avatarWrapper}
                         onClick={(e) => {
                             e.stopPropagation();
-                            setShowMenu(true);
+                            setShowMenu(!showMenu);
                         }}
                         style={{
-                            backgroundColor: showMenu && "var(--background-transparent-1)",
+                            backgroundColor: showMenu && "var(--background-hover-1)",
                         }}
+                        onMouseEnter={() => setHover("user")}
+                        onMouseLeave={() => setHover(null)}
                     >
                         <div>
                             {auth?.user?.avatar && (
@@ -243,27 +193,11 @@ const ConversationList = () => {
                                     alt="Avatar"
                                 />
                             )}
-                            <div
-                                className={styles.avatarStatus}
-                                style={{
-                                    backgroundColor: "var(--background-2)",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        backgroundColor:
-                                            auth?.user?.status === "Online"
-                                                ? "var(--valid-1)"
-                                                : auth?.user?.status === "Idle"
-                                                    ? "var(--warning-1)"
-                                                    : auth?.user?.status === "Busy"
-                                                        ? "var(--error-1)"
-                                                        : "var(--foreground-4)",
-                                    }}
-                                >
-
-                                </div>
-                            </div>
+                            <AvatarStatus
+                                status={auth?.user?.status}
+                                background={hover === "user" || showMenu
+                                    ? "var(--background-hover-1)" : "var(--background-2)"}
+                            />
                         </div>
                         <div className={styles.contentWrapper}>
                             <div>
@@ -276,67 +210,25 @@ const ConversationList = () => {
                             </div>
                         </div>
 
-                        {showMenu && (
-                            <div
-                                className={styles.menuContainer}
-                                ref={menuRef}
-                            >
-                                <div className={styles.menu}>
-                                    <div
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenu(null);
-                                        }}
-                                    >
-                                        <div>I Do Not Know</div>
-                                    </div>
-                                    <div
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenu(null);
-                                        }}
-                                    >
-                                        <div>Show Profile</div>
-                                    </div>
-                                    <div
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenu(null);
-                                            logout();
-                                        }}
-                                    >
-                                        <div>Logout</div>
-                                    </div>
-                                    <div className={styles.divider}></div>
-                                    <div
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenu(null);
-                                            navigator.clipboard.writeText(auth?.user?._id);
-                                        }}
-                                    >
-                                        <div>Copy ID</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {showMenu &&
+                            <Menu
+                                items={menuItems}
+                                position={{
+                                    bottom: "calc(100% + 12px)",
+                                    left: "0",
+                                }}
+                            />}
                     </div>
                     <div className={styles.toolbar}>
                         <button
                             onMouseEnter={() => setShowTooltip(1)}
                             onMouseLeave={() => setShowTooltip(null)}
                         >
-                            <Tooltip
-                                show={showTooltip === 1}
-                            >
+                            <Tooltip show={showTooltip === 1}>
                                 Mute
                             </Tooltip>
                             <div className={styles.toolbar}>
-                                <Icon
-                                    name="mic"
-                                    size="20"
-                                    fill={showTooltip === 1 && "var(--foreground-1)"}
-                                />
+                                <Icon name="mic" size="20" />
                             </div>
                         </button>
 
@@ -344,17 +236,11 @@ const ConversationList = () => {
                             onMouseEnter={() => setShowTooltip(2)}
                             onMouseLeave={() => setShowTooltip(null)}
                         >
-                            <Tooltip
-                                show={showTooltip === 2}
-                            >
+                            <Tooltip show={showTooltip === 2}>
                                 Deafen
                             </Tooltip>
                             <div className={styles.toolbar}>
-                                <Icon
-                                    name="headset"
-                                    size="20"
-                                    fill={showTooltip === 2 && "var(--foreground-1)"}
-                                />
+                                <Icon name="headset" size="20" />
                             </div>
                         </button>
 
@@ -362,17 +248,11 @@ const ConversationList = () => {
                             onMouseEnter={() => setShowTooltip(3)}
                             onMouseLeave={() => setShowTooltip(null)}
                         >
-                            <Tooltip
-                                show={showTooltip === 3}
-                            >
+                            <Tooltip show={showTooltip === 3}>
                                 User Settings
                             </Tooltip>
                             <div className={styles.toolbar}>
-                                <Icon
-                                    name="settings"
-                                    size="20"
-                                    fill={showTooltip === 3 && "var(--foreground-1)"}
-                                />
+                                <Icon name="settings" size="20" />
                             </div>
                         </button>
                     </div>

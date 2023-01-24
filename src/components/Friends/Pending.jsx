@@ -2,7 +2,7 @@ import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import styles from "./Style.module.css";
 import { useRef, useState } from "react";
-import { Tooltip, Icon } from "../"
+import { Tooltip, Icon, AvatarStatus } from "../"
 import Image from "next/image";
 
 const Pending = () => {
@@ -128,31 +128,11 @@ const Pending = () => {
                                         height={32}
                                         alt="Avatar"
                                     />
-                                    {
-                                        request.type === "received" && (
-                                            <div
-                                                className={styles.avatarStatus}
-                                                style={{
-                                                    backgroundColor: liHover === index ? "var(--background-transparent-1)" : "var(--background-4)",
-                                                }}
-                                            >
-                                                <div
-                                                    style={{
-                                                        backgroundColor:
-                                                            request.user.status === "Online"
-                                                                ? "var(--valid-1)"
-                                                                : request.user.status === "Idle"
-                                                                    ? "var(--warning-1)"
-                                                                    : request.user.status === "Busy"
-                                                                        ? "var(--error-1)"
-                                                                        : "var(--foreground-4)",
-                                                    }}
-                                                >
-
-                                                </div>
-                                            </div>
-                                        )
-                                    }
+                                    {request.type === "received" &&
+                                        <AvatarStatus
+                                            status={request.user.status}
+                                            background={liHover === index ? "var(--background-hover-1)" : "var(--background-4)"}
+                                        />}
                                 </div>
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{request.user.username}</p>

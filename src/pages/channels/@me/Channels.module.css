@@ -155,9 +155,10 @@
     align-items: center;
     justify-content: center;
     pointer-events: none;
+    user-select: none;
     margin-left: 1rem;
     margin-right: 0.875rem;
-    border-top: thin solid var(--background-transparent-1);
+    border-top: thin solid var(--border-light);
 }
 
 .messageDivider span {

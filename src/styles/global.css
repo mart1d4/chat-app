@@ -158,16 +158,16 @@
         --background-3: hsl(223, 7%, 20%);
         --background-4: hsl(220, 8%, 23%);
         --background-5: hsl(218, 8%, 27%);
-        --background-light: rgb(79, 84, 92);
+        --background-light: hsl(217, 8%, 34%);
         --background-dark: hsl(225, 8%, 10%);
-        --background-transparent-1: hsl(218, 8%, 28%);
-        --background-transparent-2: rgba(4, 4, 5, 0.07);
-        --background-transparent-3: rgba(4, 4, 5, 0.07);
-        --background-transparent-4: rgba(4, 4, 5, 0.07);
-        --background-transparent-5: rgba(4, 4, 5, 0.07);
-        --foreground-1: #ffffff;
-        --foreground-2: #dcddde;
-        --foreground-3: #babcbf;
+        --background-hover-1: hsl(218, 8%, 27%);
+        --background-hover-2: hsl(220, 7%, 25%);
+        --background-hover-3: hsl(218, 7%, 29%);
+        --background-hover-4: hsl(220, 8%, 21%);
+        --background-active: hsl(218, 8%, 28%);
+        --foreground-1: hsl(0, 0%, 100%);
+        --foreground-2: hsl(210, 3%, 87%);
+        --foreground-3: hsl(216, 4%, 74%);
         --foreground-4: hsl(214, 4%, 65%);
         --foreground-5: hsl(213, 4%, 57%);
         --foreground-light: hsl(218, 5%, 47%);
@@ -178,9 +178,11 @@
         --error-2: hsla(0, 100%, 50%, 0.102);
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
+        --offline: hsl(214, 10%, 50%);
         --elevation-low: 0 0 0 1px rgba(0, 0, 0, 0.15);
         --elevation-medium: 0 4px 4px rgba(0, 0, 0, 0.15);
         --elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
+        --border-light: hsla(217, 8%, 34%, 0.5);
     }
 }
 

@@ -7,6 +7,7 @@ import Main from './Main/Main';
 import Message from './Message/Message';
 import Tooltip from './Tooltip/Tooltip';
 import AddFriend from './Friends/AddFriend';
+import UserLists from './Friends/UserLists';
 import All from './Friends/All';
 import Blocked from './Friends/Blocked';
 import Online from './Friends/Online';
@@ -31,6 +32,7 @@ export {
     Message,
     Tooltip,
     AddFriend,
+    UserLists,
     All,
     Blocked,
     Online,

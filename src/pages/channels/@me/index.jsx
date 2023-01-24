@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styles from "./Friends.module.css";
 import {
     AppHeader,
+    UserLists,
     AddFriend,
     All,
     Blocked,
@@ -11,6 +12,7 @@ import {
     NestedLayout,
 } from "../../../components";
 import Head from "next/head";
+import useUserData from "../../../hooks/useUserData";
 
 const Friends = () => {
     const [content, setContent] = useState("online");
@@ -28,6 +30,15 @@ const Friends = () => {
         localStorage.setItem("friends-tab", content);
     };
 
+    const { friends, friendRequests, blockedUsers } = useUserData();
+
+    const lists = {
+        online: friends.filter((friend) => friend.status === "Online"),
+        all: friends,
+        pending: friendRequests,
+        blocked: blockedUsers,
+    };
+
     return (
         <>
             <Head>
@@ -40,11 +51,14 @@ const Friends = () => {
                     active={content}
                 />
                 <div className={styles.content}>
-                    {content === "online" && <Online />}
+                    {/* {content === "online" && <Online />}
                     {content === "all" && <All />}
                     {content === "pending" && <Pending />}
                     {content === "blocked" && <Blocked />}
-                    {content === "add" && <AddFriend />}
+                    {content === "add" && <AddFriend />} */}
+                    {content === "add"
+                        ? <AddFriend />
+                        : <UserLists list={lists[content]} content={content} />}
                 </div>
             </div>
         </>

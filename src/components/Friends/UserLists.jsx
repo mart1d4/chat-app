@@ -1,34 +1,31 @@
-import { Tooltip, Icon, AvatarStatus } from "..";
+import { Tooltip, Icon, AvatarStatus, Menu } from "..";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 
-const Online = () => {
+const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [showTooltip, setShowTooltip] = useState(null);
     const [liHover, setLiHover] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        window.addEventListener("click", (e) => {
-            if (e.target === menuRef.current) return;
-            setShowMenu(null);
-            setLiHover(null);
-        });
-    }, []);
-
     const searchBar = useRef(null);
-    const menuRef = useRef(null);
 
     const { auth, friends, setFriends, setBlockedUsers } = useUserData();
     const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
 
-    const onlineFriends = friends.filter((friend) => friend.status === "Online");
+    const moreMenuItems = [
+        { name: "Remove Friend", func: () => removeFriend(list[showMenu]._id), danger: true },
+        { name: "Block", func: () => blockUser(list[showMenu]._id), danger: true },
+        { name: "Message", func: () => startConversation(list[showMenu]._id) },
+        { name: "Divider" },
+        { name: "Copy ID", icon: "id", func: () => navigator.clipboard.writeText(list[showMenu]._id) },
+    ];
 
     const removeFriend = async (friendID) => {
         try {
@@ -105,17 +102,21 @@ const Online = () => {
                     </div>
                 </div>
             </div>
-            <h2 className={styles.title}>Online — {onlineFriends.length}</h2>
+            <h2 className={styles.title}>
+                {content === "all" ? "All Friends" : content === "online"
+                    ? "Online" : content === "pending" ? "Pending" : "Blocked"}
+                — {list.length}
+            </h2>
             <ul className={styles.listContainer}>
-                {onlineFriends.map((friend, index) => (
+                {list.map((user, index) => (
                     <li
-                        key={friend._id}
+                        key={user._id}
                         className={
                             liHover === index
                                 ? styles.liContainerHover
                                 : styles.liContainer
                         }
-                        onClick={() => startConversation(friend._id)}
+                        onClick={() => startConversation(user._id)}
                         onMouseEnter={() => {
                             setLiHover(index);
                             if (showMenu !== null && showMenu !== index) {
@@ -134,22 +135,26 @@ const Online = () => {
                             <div className={styles.userInfo}>
                                 <div className={styles.avatarWrapper}>
                                     <Image
-                                        src={friend.avatar}
+                                        src={user.avatar}
                                         width={32}
                                         height={32}
                                         alt="Avatar"
                                     />
-                                    <AvatarStatus
-                                        status={friend.status}
-                                        background={liHover === index ? "var(--background-hover-1)" : "var(--background-4)"}
-                                    />
+                                    {(content === "online" || content === "all" || (
+                                        content === "pending" && user.sender !== auth?.user?._id
+                                    )) && (
+                                            <AvatarStatus
+                                                status={user.status}
+                                                background={liHover === index ? "var(--background-hover-1)" : "var(--background-4)"}
+                                            />
+                                        )}
                                 </div>
                                 <div className={styles.text}>
-                                    <p className={styles.textUsername}>{friend.username}</p>
+                                    <p className={styles.textUsername}>{user.username}</p>
                                     <p className={styles.textStatus}>
-                                        {friend.customStatus === "" ? (friend.status)
+                                        {user.customStatus === "" ? (user.status)
                                             : (
-                                                <span title="Custom Status">{friend.customStatus}</span>
+                                                <span title="Custom Status">{user.customStatus}</span>
                                             )}
                                     </p>
                                 </div>
@@ -158,86 +163,39 @@ const Online = () => {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        startConversation(friend._id);
+                                        startConversation(user._id);
                                     }}
-                                    onMouseEnter={() => setShowTooltip(friend._id)}
+                                    onMouseEnter={() => setShowTooltip(user._id)}
                                     onMouseLeave={() => setShowTooltip(null)}
                                 >
                                     <Icon name="message" size={20} />
                                     <Tooltip
-                                        show={showTooltip === friend._id}
+                                        show={showTooltip === user._id}
                                     >
                                         Message
                                     </Tooltip>
                                 </button>
                                 <button
-                                    onMouseEnter={() => setShowTooltip(friend._id + 1)}
+                                    onMouseEnter={() => setShowTooltip(user._id + 1)}
                                     onMouseLeave={() => setShowTooltip(null)}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setShowMenu(index);
+                                        setShowMenu(showMenu === index ? null : index);
                                         setShowTooltip(null);
                                     }}
                                 >
                                     <Icon name="more" size={20} />
                                     <Tooltip
-                                        show={showTooltip === friend._id + 1}
+                                        show={showTooltip === user._id + 1}
                                     >
                                         More
                                     </Tooltip>
 
                                     {showMenu === index && (
-                                        <div
-                                            onMouseEnter={() => setShowTooltip(null)}
-                                            className={styles.menuContainer}
-                                            ref={menuRef}
-                                        >
-                                            <div className={styles.menu}>
-                                                <div
-                                                    className={styles.red}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowMenu(null);
-                                                        setLiHover(null);
-                                                        removeFriend(friend._id);
-                                                    }}
-                                                >
-                                                    <div>Remove Friend</div>
-                                                </div>
-                                                <div
-                                                    className={styles.red}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowMenu(null);
-                                                        setLiHover(null);
-                                                        blockUser(friend._id);
-                                                    }}
-                                                >
-                                                    <div>Block</div>
-                                                </div>
-                                                <div
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowMenu(null);
-                                                        setLiHover(null);
-                                                        startConversation(friend._id);
-                                                    }}
-                                                >
-                                                    <div>Message</div>
-                                                </div>
-                                                <div className={styles.divider}></div>
-                                                <div
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowMenu(null);
-                                                        setLiHover(null);
-                                                        navigator.clipboard.writeText(friend._id);
-                                                    }}
-                                                >
-                                                    <div>Copy ID</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <Menu items={moreMenuItems} position={{
+                                            top: "calc(100% + 5px)",
+                                            right: "0",
+                                        }} />
                                     )}
                                 </button>
                             </div>
@@ -245,8 +203,8 @@ const Online = () => {
                     </li>
                 ))}
             </ul>
-        </div>
+        </div >
     );
 };
 
-export default Online;
+export default UserLists;

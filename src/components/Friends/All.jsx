@@ -1,4 +1,4 @@
-import { Tooltip, Icon } from "..";
+import { Tooltip, Icon, AvatarStatus } from "..";
 import useUserData from "../../hooks/useUserData";
 import styles from "./Style.module.css";
 import { useRouter } from "next/router";
@@ -137,27 +137,10 @@ const All = () => {
                                         height={32}
                                         alt="Avatar"
                                     />
-                                    <div
-                                        className={styles.avatarStatus}
-                                        style={{
-                                            backgroundColor: liHover === index ? "var(--background-transparent-1)" : "var(--background-4)",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                backgroundColor:
-                                                    friend.status === "Online"
-                                                        ? "var(--valid-1)"
-                                                        : friend.status === "Idle"
-                                                            ? "var(--warning-1)"
-                                                            : friend.status === "Busy"
-                                                                ? "var(--error-1)"
-                                                                : "var(--foreground-4)",
-                                            }}
-                                        >
-
-                                        </div>
-                                    </div>
+                                    <AvatarStatus
+                                        status={friend.status}
+                                        background={liHover === index ? "var(--background-hover-1)" : "var(--background-4)"}
+                                    />
                                 </div>
                                 <div className={styles.text}>
                                     <p className={styles.textUsername}>{friend.username}</p>

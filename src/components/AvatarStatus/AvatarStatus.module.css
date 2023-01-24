@@ -1,0 +1,36 @@
+.container {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+}
+
+.firstLayer {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.firstLayer > div {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.offline {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+
+.busy {
+    width: 7px;
+    height: 3px;
+    border-radius: 100vw;
+}

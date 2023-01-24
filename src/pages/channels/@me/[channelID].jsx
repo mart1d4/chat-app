@@ -143,44 +143,6 @@ const Channels = () => {
         }
     };
 
-    const deleteMessage = async (messageID) => {
-        const data = await axiosPrivate.delete(
-            `/private/${router.query.channelID}/messages/${messageID}`
-        );
-
-        if (data?.data?.error) {
-            setError(data.data.error);
-        } else {
-            setMessages((messages) => messages.filter(
-                (message) => message._id.toString() !== messageID.toString()
-            ));
-        }
-    };
-
-    const editMessage = async (messageID, newContent) => {
-        console.log(messageID, newContent);
-    };
-
-    const pinMessage = async (messageID) => {
-        console.log(messageID);
-    };
-
-    const replyToMessage = async (messageID) => {
-        console.log(messageID);
-    };
-
-    const markUnread = async (messageID) => {
-        console.log(messageID);
-    };
-
-    const copyMessageLink = async (messageID) => {
-        console.log(messageID);
-    };
-
-    const copyMessageID = (messageID) => {
-        navigator.clipboard.writeText(messageID);
-    };
-
     return (
         <>
             <Head>
@@ -248,15 +210,8 @@ const Channels = () => {
                                                 <Message
                                                     message={message}
                                                     start={isStart(index)}
-                                                    functions={{
-                                                        deleteMessage,
-                                                        editMessage,
-                                                        pinMessage,
-                                                        replyToMessage,
-                                                        markUnread,
-                                                        copyMessageLink,
-                                                        copyMessageID,
-                                                    }}
+                                                    setError={setError}
+                                                    setMessages={setMessages}
                                                 />
                                             </React.Fragment>
                                         )}

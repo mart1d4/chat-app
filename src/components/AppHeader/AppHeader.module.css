@@ -48,14 +48,15 @@
     height: 24px;
     margin: 0 8px;
     flex: 0 0 auto;
-    background-color: var(--background-transparent-1);
+    background-color: var(--border-light);
 }
 
 .list {
     display: flex;
 }
 
-.item {
+.item,
+.itemActive {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -70,8 +71,15 @@
     color: var(--foreground-3);
 }
 
-.item:hover {
-    background-color: var(--background-transparent-1);
+.itemActive {
+    background-color: var(--background-hover-3);
+    color: var(--foreground-1);
+    cursor: default;
+}
+
+.item:hover,
+.itemActive:hover {
+    background-color: var(--background-hover-1);
     color: var(--foreground-2);
 }
 

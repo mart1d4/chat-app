@@ -104,11 +104,11 @@
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--foreground-2);
+    color: var(--foreground-5);
 }
 
 .title:hover span {
-    color: var(--foreground-1);
+    color: var(--foreground-2);
 }
 
 .title > div {
@@ -129,13 +129,36 @@
     cursor: pointer;
 }
 
-.liContainer {
+.title svg:hover polygon {
+    fill: var(--foreground-2);
+}
+
+.liContainer,
+.liContainerActive {
     position: relative;
     max-width: 224px;
-    margin-left: 8px;
-    padding: 1px 0;
+    margin: 0 0 2px 8px;
     border-radius: 4px;
-    margin-right: 0px;
+    color: var(--foreground-4);
+}
+
+.liContainerActive {
+    color: var(--foreground-1);
+    background-color: var(--background-active);
+}
+
+.liContainer:hover,
+.liContainerActive:hover {
+    color: var(--foreground-1);
+    background-color: var(--background-hover-2);
+}
+
+.liContainerActive svg path:first-child {
+    fill: var(--foreground-1);
+}
+
+.liContainer:hover svg path:first-child {
+    fill: var(--foreground-1);
 }
 
 .liWrapper {
@@ -143,16 +166,6 @@
     align-items: center;
     width: 100%;
     border-radius: 4px;
-    color: var(--foreground-2);
-}
-
-.liWrapper:hover {
-    color: var(--foreground-1);
-    background-color: var(--background-transparent-1);
-}
-
-.liWrapper:hover svg path:first-child {
-    fill: var(--foreground-1);
 }
 
 .link,
@@ -161,7 +174,6 @@
     min-width: 0;
     flex: 1 1 auto;
     white-space: nowrap;
-    /* overflow: hidden; */
     text-overflow: ellipsis;
     align-items: center;
     cursor: pointer;
@@ -234,24 +246,6 @@
     font-weight: 500;
 }
 
-.avatarStatus {
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatarStatus > div > div {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-
 .closeButton {
     display: block;
     width: 16px;
@@ -296,7 +290,7 @@
 }
 
 .avatarWrapper:hover {
-    background-color: var(--background-transparent-1);
+    background-color: var(--background-hover-1);
 }
 
 .avatarWrapper > div:first-child {
@@ -386,82 +380,11 @@
 }
 
 .toolbar > button:hover {
-    background-color: var(--background-transparent-1);
+    background-color: var(--background-hover-1);
 }
 
-.menuContainer {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    z-index: 1;
-    display: flex;
-    min-width: 190px;
-    max-width: 320px;
-    height: auto;
-    cursor: default;
-    max-height: calc(100vh - 32px);
-    border-radius: 4px;
-    background-color: var(--background-dark);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-    user-select: none;
-}
-
-.menu {
-    overflow: hidden scroll;
-    padding-right: 0px;
-    padding: 6px 8px;
-    position: relative;
-    min-height: 0;
-    flex: 1 1 auto;
-}
-
-.menu::-webkit-scrollbar {
-    width: 0px;
-}
-
-.menu > div:not(.divider) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 32px;
-    width: 100%;
-    padding: 6px 8px;
-    margin: 2px 0;
-    border-radius: 2px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 18px;
-    cursor: pointer;
-    outline: 0;
-    border: 0;
-    color: var(--foreground-2);
-    background-color: transparent;
-}
-
-.menu > div:not(.divider).red {
-    color: var(--error-1);
-}
-
-.menu > div:not(.divider):hover {
-    background-color: var(--accent-1);
-    color: var(--foreground-1);
-}
-
-.menu > div:not(.divider).red:hover {
-    background-color: var(--error-1);
-}
-
-.menu > div:not(.divider) > div {
-    text-align: left;
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.divider {
-    margin: 4px;
-    border-bottom: 1px solid var(--background-transparent-1);
+.toolbar > button:hover path {
+    fill: var(--foreground-1);
 }
 
 .friendsPending {
