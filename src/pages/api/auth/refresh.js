@@ -7,21 +7,18 @@ connectDB();
 export default async (req, res) => {
     const { cookies } = req;
     if (!cookies?.jwt) {
-        res.status(401).json({ error: "Unauthorized" });
-        return res.redirect("/login");
+        return res.status(401).json({ error: "Unauthorized" });
     }
     const refreshToken = cookies.jwt;
 
     const user = await User.findOne({ refreshToken });
     if (!user) {
-        res.status(403).json({ error: "Forbidden" });
-        return res.redirect("/login");
+        return res.status(403).json({ error: "Forbidden" });
     }
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
         if (err || user.username !== decoded.username) {
-            res.status(403).json({ error: "Forbidden" });
-            return res.redirect("/login");
+            return res.status(403).json({ error: "Forbidden" });
         }
         const accessToken = jwt.sign(
             {

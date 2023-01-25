@@ -1,84 +1,119 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useCallback, useState } from 'react';
 import styles from './Tooltip.module.css';
 
 const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
-    const distance = dist ?? '6px';
+    const [parentRect, setParentRect] = useState({});
+    const [containerRect, setContainerRect] = useState({});
+    const [tooltipPos, setTooltipPos] = useState({});
+
+    const distance = dist ?? 6;
     const position = pos ?? 'top';
     const showArrow = arrow ?? true;
 
-    const getTooltipPosition = () => {
-        const objects = [{}, {}, {}];
+    const containerRef = useCallback(node => {
+        if (node !== null) {
+            setParentRect(node.parentElement.getBoundingClientRect());
+            setContainerRect(node.getBoundingClientRect());
+        }
+    }, []);
 
-        if (position === 'top' || position === 'bottom') {
-            if (position === 'top') {
-                objects[0].bottom = `calc(100% + ${distance})`;
-                objects[1].top = '100%';
-                objects[2].borderTop = '4px solid var(--background-dark)';
-                objects[2].bottom = '-4px';
-            } else if (position === 'bottom') {
-                objects[0].top = `calc(100% + ${distance})`;
-                objects[1].bottom = '100%';
-                objects[2].borderBottom = '4px solid var(--background-dark)';
-                objects[2].top = '-4px';
-            }
+    useEffect(() => {
+        if (!parent) return;
 
-            objects[0].left = '50%';
-            objects[1].left = '50%';
-            objects[2].left = '50%';
-            objects[0].transform = 'translateX(-50%)';
-            objects[1].transform = 'translateX(-50%)';
-            objects[2].transform = 'translateX(-50%)';
-            objects[1].width = '100%';
-            objects[1].height = distance;
-            objects[2].borderLeft = '4px solid transparent';
-            objects[2].borderRight = '4px solid transparent';
-        } else if (position === 'left' || position === 'right') {
-            if (position === 'left') {
-                objects[0].right = `calc(100% + ${distance})`;
-                objects[1].left = '100%';
-                objects[2].borderLeft = '4px solid var(--background-dark)';
-                objects[2].right = '-4px';
-            } else if (position === 'right') {
-                objects[0].left = `calc(100% + ${distance})`;
-                objects[1].right = '100%';
-                objects[2].borderRight = '4px solid var(--background-dark)';
-                objects[2].left = '-4px';
-            }
-
-            objects[0].top = '50%';
-            objects[1].top = '50%';
-            objects[2].top = '50%';
-            objects[0].transform = 'translateY(-50%)';
-            objects[1].transform = 'translateY(-50%)';
-            objects[2].transform = 'translateY(-50%)';
-            objects[1].width = distance;
-            objects[1].height = '100%';
-            objects[2].borderTop = '4px solid transparent';
-            objects[2].borderBottom = '4px solid transparent';
+        switch (position) {
+            case 'top':
+                setTooltipPos({
+                    top: parentRect.top - containerRect.height * 2 - distance,
+                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                });
+                break;
+            case 'bottom':
+                setTooltipPos({
+                    bottom: parentRect.bottom - containerRect.height * 2 - distance,
+                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                });
+                break;
+            case 'left':
+                setTooltipPos({
+                    top: parentRect.top - containerRect.height + parentRect.height / 2,
+                    left: parentRect.left - containerRect.width * 2 - distance,
+                });
+                break;
+            case 'right':
+                setTooltipPos({
+                    top: parentRect.top - containerRect.height + parentRect.height / 2,
+                    right: parentRect.right - containerRect.width * 2 - distance,
+                });
+                break;
+            default:
+                setTooltipPos({
+                    top: parentRect.top - containerRect.height * 2 - distance,
+                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                });
+                break;
         }
 
-        return objects;
-    }
+    }, [containerRect]);
 
-    const positions = getTooltipPosition();
+    const arrowPosition = {
+        top: {
+            borderTop: '4px solid var(--background-dark)',
+            bottom: '-4px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            borderLeft: '4px solid transparent',
+            borderRight: '4px solid transparent',
+        },
+        bottom: {
+            borderBottom: '4px solid var(--background-dark)',
+            top: '-4px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            borderLeft: '4px solid transparent',
+            borderRight: '4px solid transparent',
+        },
+        left: {
+            borderLeft: '4px solid var(--background-dark)',
+            right: '-4px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            borderTop: '4px solid transparent',
+            borderBottom: '4px solid transparent',
+        },
+        right: {
+            borderRight: '4px solid var(--background-dark)',
+            left: '-4px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            borderTop: '4px solid transparent',
+            borderBottom: '4px solid transparent',
+        },
+    };
 
     return (
         <AnimatePresence>
             {show && (
                 <motion.div
+                    ref={containerRef}
                     className={styles.container}
-                    style={positions[0]}
+                    style={{
+                        top: position !== "bottom" && `${tooltipPos.top}px`,
+                        left: position !== "right" && `${tooltipPos.left}px`,
+                        bottom: position === "bottom" && `${tooltipPos.bottom}px`,
+                        right: position === "right" && `${tooltipPos.right}px`,
+                    }}
                     initial={{
                         opacity: 0,
-                        transform: positions[0].transform + ' scale(0.5)',
+                        transform: `scale(0.5)`
                     }}
                     animate={{
                         opacity: 1,
-                        transform: positions[0].transform + ' scale(1)',
+                        transform: `scale(1)`
                     }}
                     exit={{
                         opacity: 0,
-                        transform: positions[0].transform + ' scale(0.5)',
+                        transform: `scale(0.5)`,
                         transition: {
                             duration: 0.05,
                             ease: 'easeInOut',
@@ -88,31 +123,23 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                     transition={{
                         duration: 0.05,
                         ease: 'easeInOut',
-                        delay: delay ?? 0,
+                        delay: delay ?? 0
                     }}
                     onClick={(e) => e.preventDefault()}
                 >
-                    <span
-                        className={styles.tooltip}
-                    >
+                    <span className={styles.tooltip}>
                         {children}
-
-                        <span
-                            className={styles.cursorConsistency}
-                            style={positions[1]}
-                        >
-                        </span>
 
                         {showArrow && (
                             <span
                                 className={styles.arrow}
-                                style={positions[2]}
-                            >
-                            </span>
+                                style={arrowPosition[position]}
+                            />
                         )}
                     </span>
-                </motion.div>)}
-        </AnimatePresence>
+                </motion.div>)
+            }
+        </AnimatePresence >
     );
 
 }

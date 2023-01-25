@@ -265,10 +265,12 @@ const UserLists = ({ list, content }) => {
                                                         top: "calc(100% + 5px)",
                                                         right: "0",
                                                     }}
-                                                    setMenu={() => {
-                                                        setShowMenu(null);
-                                                        setShowTooltip(null);
-                                                        setLiHover(null);
+                                                    setMenu={{
+                                                        func: () => {
+                                                            setShowMenu(null);
+                                                            setShowTooltip(null);
+                                                            setLiHover(null);
+                                                        }
                                                     }}
                                                 />
                                             )}

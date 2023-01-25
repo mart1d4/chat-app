@@ -8,7 +8,7 @@ import {
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
@@ -23,7 +23,13 @@ const Channels = () => {
     const { auth, channelList, setChannelList } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const scrollableContainer = useRef(null);
+
+    const scrollableContainer = useCallback(node => {
+        if (node !== null) {
+            node.scrollTop = node.scrollHeight;
+            console.log(node.scrollHeight);
+        }
+    }, [messages]);
 
     useEffect(() => {
         let isMounted = true;
@@ -51,7 +57,6 @@ const Channels = () => {
             'color: hsl(38, 96%, 54%)',
             ': Fetching data...'
         );
-        scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
 
         return () => {
             isMounted = false;
@@ -126,7 +131,6 @@ const Channels = () => {
                 ...channelList.slice(channelIndex + 1),
             ];
             setChannelList(newChannelList);
-            scrollableContainer.current.scrollTop = scrollableContainer.current.scrollHeight;
         }
     };
 
@@ -185,7 +189,7 @@ const Channels = () => {
                                             </div>
                                         </div>
 
-                                        {messages?.map((message, index) => {
+                                        {messages.map((message, index) => (
                                             <>
                                                 {isNewDay(index) && (
                                                     <div
@@ -208,7 +212,7 @@ const Channels = () => {
                                                     setMessages={setMessages}
                                                 />
                                             </>
-                                        })}
+                                        ))}
 
                                         <div className={styles.scrollerSpacer} />
                                     </ol>

@@ -1,35 +1,35 @@
 import { Icon } from "../";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
 
 const Menu = ({ items, position, setMenu }) => {
-    const [showMenu, setShowMenu] = useState(true);
-
+    const menuLoaded = useRef(false);
     const menuRef = useRef(null);
 
-    useEffect(() => {
-        window.addEventListener("click", (e) => {
-            if (e.target === menuRef.current) return;
-            setShowMenu(false);
-            setMenu && setMenu();
-        });
+    // useEffect(() => {
+    //     const handleClickOutside = (event) => {
+    //         if (menuRef.current && !menuRef.current.contains(event.target)) {
+    //             setMenu.func(false);
+    //         }
+    //     };
 
-        return () => {
-            window.removeEventListener("click", (e) => {
-                if (e.target === menuRef.current) return;
-                setShowMenu(false);
-                setMenu && setMenu();
-            });
-        };
-    }, []);
+    //     if (menuLoaded) {
+    //         document.addEventListener("click", handleClickOutside);
+    //     }
+
+    //     return () => {
+    //         menuLoaded && document.removeEventListener("click", handleClickOutside);
+    //         menuLoaded.current = true;
+    //     };
+    // }, []);
 
     return (
-        showMenu &&
         <div
             ref={menuRef}
             className={styles.menuContainer}
             style={position ?? {}}
+            onClick={(e) => e.stopPropagation()}
         >
             <div>
                 {items?.map((item) => (
@@ -40,24 +40,19 @@ const Menu = ({ items, position, setMenu }) => {
                             key={uuidv4()}
                             className={item.danger ? styles.menuItemDanger : styles.menuItem}
                             onClick={() => {
-                                setShowMenu(false);
-                                setMenu && setMenu();
+                                setMenu.func();
                                 item.func();
                             }}
                         >
                             <div className={styles.label}>
                                 {item.name}
                             </div>
-                            {
-                                item.icon && (
-                                    <div className={styles.icon}>
-                                        <Icon
-                                            name={item.icon}
-                                            size={18}
-                                        />
-                                    </div>
-                                )
-                            }
+
+                            {item.icon && (
+                                <div className={styles.icon}>
+                                    <Icon name={item.icon} size={18} />
+                                </div>
+                            )}
                         </div>
                     )
                 ))}

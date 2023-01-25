@@ -67,7 +67,6 @@ const Message = ({ message, start, setError, setMessages }) => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
         >
-
             {hover && (
                 <MessageMenu
                     message={message}

@@ -18,6 +18,22 @@ module.exports = {
                 protocol: 'https',
                 hostname: 'media3.giphy.com',
             },
+            {
+                protocol: 'https',
+                hostname: 'media4.giphy.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'media5.giphy.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'media6.giphy.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'media7.giphy.com',
+            },
         ],
     },
 }

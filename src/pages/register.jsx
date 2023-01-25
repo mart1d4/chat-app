@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "../components";
 import Head from "next/head";
 
-const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,256}$/;
+const USER_REGEX = /^.{1,32}$/;
+const PWD_REGEX = /^.{8,256}$/;
 
 const Register = () => {
     const { auth } = useUserData();
@@ -215,9 +215,7 @@ const Register = () => {
                                 pos="left"
                             >
                                 <div>
-                                    4 to 24 characters <br />
-                                    Must begin with a letter <br />
-                                    Special character allowed: _ - . ! ?
+                                    Must be less than 32 characters
                                 </div>
                             </Tooltip>
                         </div>
@@ -277,9 +275,7 @@ const Register = () => {
                                 pos="left"
                             >
                                 <div>
-                                    Must have at least 8 letters <br />
-                                    Upper & lower case letters <br />
-                                    A symbole (#$&!) <br />A longer password
+                                    Must have at least 8 caracters
                                 </div>
                             </Tooltip>
                         </div>

@@ -25,7 +25,7 @@ const Friends = () => {
     const lists = {
         online: friends.filter((friend) =>
             friend.status === "Online"
-            || friend.status === "Idle"
+            || friend.status === "Away"
             || friend.status === "Busy"
         ),
         all: friends,

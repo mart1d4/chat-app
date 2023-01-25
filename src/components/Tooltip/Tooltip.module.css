@@ -1,5 +1,5 @@
 .container {
-    position: absolute;
+    position: fixed;
     z-index: 100000;
     pointer-events: none;
     user-select: none;
@@ -13,18 +13,13 @@
     font-size: 14px;
     line-height: 20px;
     font-weight: 600;
-    background-color: var(--background-dark);
-    color: var(--foreground-2);
     border-radius: 4px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
     padding: 6px 12px;
-    cursor: initial;
     word-wrap: break-word;
     white-space: nowrap;
-}
-
-.cursorConsistency {
-    position: absolute;
+    color: var(--foreground-2);
+    background-color: var(--background-dark);
+    box-shadow: var(--elevation-high);
 }
 
 .arrow {

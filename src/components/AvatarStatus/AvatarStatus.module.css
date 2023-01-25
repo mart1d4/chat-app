@@ -2,6 +2,7 @@
     position: absolute;
     bottom: -3px;
     right: -3px;
+    overflow: hidden;
 }
 
 .firstLayer {
@@ -31,6 +32,16 @@
 
 .busy {
     width: 7px;
-    height: 3px;
+    height: 2px;
+    border-radius: 100vw;
+}
+
+.away {
+    position: absolute;
+    bottom: 50%;
+    right: 50%;
+    transform: translate(25%, 25%);
+    width: 8px;
+    height: 8px;
     border-radius: 100vw;
 }

@@ -3,13 +3,17 @@ import { useRouter } from "next/router";
 import { Tooltip, Icon, AvatarStatus, Menu } from "..";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 
 const ConversationList = () => {
     const [hover, setHover] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
+
+    useEffect(() => {
+        console.log("Show menu:", showMenu);
+    }, [showMenu]);
 
     const router = useRouter();
     const currentPath = router.asPath;
@@ -21,10 +25,6 @@ const ConversationList = () => {
     const isFriend = (id) => {
         return friends.some((friend) => friend._id.toString() === id);
     };
-
-    useEffect(() => {
-        console.log(showMenu);
-    }, [showMenu]);
 
     const menuItems = [
         { name: "Profile", func: () => { } },
@@ -178,7 +178,7 @@ const ConversationList = () => {
                 <div className={styles.userSection}>
                     <div
                         className={styles.avatarWrapper}
-                        onClick={() => setShowMenu(true)}
+                        onClick={() => setShowMenu(!showMenu)}
                         style={{ backgroundColor: showMenu && "var(--background-hover-1)" }}
                         onMouseEnter={() => setHover("user")}
                         onMouseLeave={() => setHover(false)}
@@ -209,15 +209,19 @@ const ConversationList = () => {
                             </div>
                         </div>
 
-                        {showMenu &&
+                        {
+                            showMenu &&
                             <Menu
                                 items={menuItems}
                                 position={{
                                     bottom: "calc(100% + 12px)",
-                                    left: "0",
+                                    left: "0px",
                                 }}
-                            />}
+                                setMenu={{ func: () => setShowMenu(false) }}
+                            />
+                        }
                     </div>
+
                     <div className={styles.toolbar}>
                         <button
                             onMouseEnter={() => setShowTooltip(1)}
