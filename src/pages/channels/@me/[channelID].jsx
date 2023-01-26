@@ -8,7 +8,7 @@ import {
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
@@ -27,7 +27,6 @@ const Channels = () => {
     const scrollableContainer = useCallback(node => {
         if (node !== null) {
             node.scrollTop = node.scrollHeight;
-            console.log(node.scrollHeight);
         }
     }, [messages]);
 
@@ -190,10 +189,9 @@ const Channels = () => {
                                         </div>
 
                                         {messages.map((message, index) => (
-                                            <>
+                                            <React.Fragment key={uuidv4()}>
                                                 {isNewDay(index) && (
                                                     <div
-                                                        key={uuidv4()}
                                                         className={styles.messageDivider}
                                                     >
                                                         <span>
@@ -205,13 +203,12 @@ const Channels = () => {
                                                     </div>
                                                 )}
                                                 <Message
-                                                    key={uuidv4()}
                                                     message={message}
                                                     start={isStart(index)}
                                                     setError={setError}
                                                     setMessages={setMessages}
                                                 />
-                                            </>
+                                            </React.Fragment>
                                         ))}
 
                                         <div className={styles.scrollerSpacer} />

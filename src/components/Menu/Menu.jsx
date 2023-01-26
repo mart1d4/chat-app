@@ -3,8 +3,7 @@ import { useRef, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
 
-const Menu = ({ items, position, setMenu }) => {
-    const menuLoaded = useRef(false);
+const Menu = ({ items, position, setMenu, mousePos }) => {
     const menuRef = useRef(null);
 
     // useEffect(() => {
@@ -24,11 +23,20 @@ const Menu = ({ items, position, setMenu }) => {
     //     };
     // }, []);
 
+    if (position == "mouse") {
+        // Get the mouse position
+        position = { x: mousePos.x, y: mousePos.y };
+        console.log(position);
+    }
+
     return (
         <div
             ref={menuRef}
             className={styles.menuContainer}
-            style={position ?? {}}
+            style={position !== "mouse" ? position : {
+                top: "1200px",
+                left: "1000px",
+            }}
             onClick={(e) => e.stopPropagation()}
         >
             <div>

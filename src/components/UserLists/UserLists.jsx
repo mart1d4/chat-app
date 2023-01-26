@@ -1,10 +1,11 @@
 import { Tooltip, Icon, AvatarStatus, Menu, Alerts } from "..";
 import { useEffect, useRef, useState } from "react";
 import useUserData from "../../hooks/useUserData";
-import userActions from "../../utils/functions/usersActions";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
-import styles from "./Style.module.css";
+import styles from "./UserList.module.css";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import { useRouter } from "next/router";
 
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
@@ -12,6 +13,7 @@ const UserLists = ({ list, content }) => {
     const [liHover, setLiHover] = useState(null);
     const [showTooltip, setShowTooltip] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
+    const [showRightMenu, setShowRightMenu] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -33,31 +35,203 @@ const UserLists = ({ list, content }) => {
     }, [error]);
 
     const searchBar = useRef(null);
-    const { auth } = useUserData();
+    const router = useRouter();
+    const axiosPrivate = useAxiosPrivate();
+    const {
+        auth,
+        friends,
+        setFriends,
+        blockedUsers,
+        setBlockedUsers,
+    } = useUserData();
 
-    const moreMenuItems = [
+    const rightMenuItems = [
+        {
+            name: "Profile", func: () => {
+                console.log("Profile");
+            },
+        },
+        {
+            name: "Message", func: () => {
+                startConversation(list[showMenu]._id);
+            },
+        },
+        {
+            name: "Call", func: () => {
+                console.log("Call");
+            },
+        },
+        {
+            name: "Add Note", func: () => {
+                console.log("Add Note");
+            },
+        },
+        {
+            name: "Add Friend Nickname", func: () => {
+                console.log("Add Friend Nickname");
+            },
+        },
+        { name: "Divider" },
+        {
+            name: "Invite to Server", func: () => {
+                console.log("Invite to Server");
+            },
+        },
         {
             name: "Remove Friend", func: () => {
-                userActions("remove", list[showMenu]._id, setError);
+                removeFriend(list[showMenu]._id);
             }, danger: true
         },
         {
             name: "Block", func: () => {
-                userActions("block", list[showMenu]._id, setError);
+                blockUser(list[showMenu]._id);
             }, danger: true
-        },
-        {
-            name: "Message", func: () => {
-                userActions("start", list[showMenu]._id, setError);
-            }
         },
         { name: "Divider" },
         {
             name: "Copy ID", icon: "id", func: () => {
-                navigator.clipboard.writeText(list[showMenu]._id)
+                navigator.clipboard.writeText(list[showRightMenu.index]._id)
             }
         },
     ];
+
+    const moreMenuItems = [
+        {
+            name: "Start Video Call", func: () => {
+                console.log("Start Video Call");
+            },
+        },
+        {
+            name: "Start Voice Call", func: () => {
+                console.log("Start Voice Call");
+            },
+        },
+        {
+            name: "Remove Friend", func: () => {
+                removeFriend(list[showMenu]._id);
+            }, danger: true
+        },
+    ];
+
+    const removeFriend = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/remove`,
+                { userID }
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriends(friends.filter((friend) => friend._id.toString() !== userID));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const blockUser = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/block`,
+                { userID }
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriends(friends.filter((friend) => friend._id.toString() !== userID));
+                setBlockedUsers((prev) => [...prev, data.data.user]);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const startConversation = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/create`,
+                { userID }
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                router.push(`/channels/@me/${data.data.channelID}`);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const cancelRequest = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user?._id}/friends/cancel`,
+                { userID },
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriendRequests(
+                    friendRequests.filter((request) => request._id.toString() !== userID)
+                );
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const acceptRequest = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user?._id}/friends/accept`,
+                { userID },
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriendRequests(
+                    friendRequests.filter((request) => request._id.toString() !== userID)
+                ); userID
+                setFriends([...friends, data.data.user]);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const ignoreRequest = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/ignore`,
+                { userID },
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setFriendRequests(
+                    friendRequests.filter((request) => request._id.toString() !== userIDD)
+                );
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const unblockUser = async (userID) => {
+        try {
+            const data = await axiosPrivate.post(
+                `/users/${auth?.user._id}/friends/unblock`,
+                { userID }
+            );
+            if (data.data.error) {
+                setError(data.data.error);
+            } else {
+                setBlockedUsers(blockedUsers.filter((user) => user._id.toString() !== userID));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     if (!list.length) {
         return (
@@ -167,7 +341,11 @@ const UserLists = ({ list, content }) => {
                         }
                         onClick={() => {
                             if (!(content === "online" || content === "all")) return;
-                            userActions("start", user._id, setError);
+                            startConversation(user._id);
+                        }}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setShowRightMenu({ index, x: e.clientX, y: e.clientY });
                         }}
                         onMouseEnter={() => {
                             setLiHover(index);
@@ -183,6 +361,17 @@ const UserLists = ({ list, content }) => {
                             borderColor: liHover === index - 1 && "transparent",
                         }}
                     >
+                        {showRightMenu?.index === index && (
+                            <Menu
+                                items={rightMenuItems}
+                                position="mouse"
+                                mousePos={{ x: showRightMenu.x, y: showRightMenu.y }}
+                                setMenu={{
+                                    func: () => setShowRightMenu(null),
+                                }}
+                            />
+                        )}
+
                         <div className={styles.li}>
                             <div className={styles.userInfo}>
                                 <div className={styles.avatarWrapper}>
@@ -280,7 +469,7 @@ const UserLists = ({ list, content }) => {
 
                                 {content === "blocked" && (
                                     <button
-                                        onClick={() => userActions("unblock", user._id, setError)}
+                                        onClick={() => unblockUser(user._id)}
                                         onMouseEnter={() => setShowTooltip(index)}
                                         onMouseLeave={() => setShowTooltip(null)}
                                     >
@@ -302,7 +491,7 @@ const UserLists = ({ list, content }) => {
                                     <>
                                         {user.type === "received" && (
                                             <button
-                                                onClick={() => userActions("accept", user._id, setError)}
+                                                onClick={() => acceptRequest(user._id)}
                                                 onMouseEnter={() => setShowTooltip(index)}
                                                 onMouseLeave={() => setShowTooltip(null)}
                                             >
@@ -321,8 +510,8 @@ const UserLists = ({ list, content }) => {
                                         )}
                                         <button
                                             onClick={() => {
-                                                if (user.type === "sent") userActions("cancel", user._id, setError);
-                                                else userActions("ignore", user._id, setError);;
+                                                if (user.type === "sent") cancelRequest(user._id);
+                                                else ignoreRequest(user._id);
                                             }}
                                             onMouseEnter={() => setShowTooltip(index + 1)}
                                             onMouseLeave={() => setShowTooltip(null)}

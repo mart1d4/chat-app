@@ -41,7 +41,15 @@ const AppHeader = ({ content, setContent, active }) => {
                                 <li
                                     key={index}
                                     onClick={() => setContent(tab.func)}
-                                    className={active === tab.func ? styles.itemActive : styles.item}
+                                    className={
+                                        tab.name === "Add Friend"
+                                            ? active === tab.func
+                                                ? styles.itemAddActive
+                                                : styles.itemAdd
+                                            : active === tab.func
+                                                ? styles.itemActive
+                                                : styles.item
+                                    }
                                 >
                                     {tab.name}
                                     {tab.name === "Pending" && requestReceived > 0 && (

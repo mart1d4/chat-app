@@ -56,7 +56,9 @@
 }
 
 .item,
-.itemActive {
+.itemActive,
+.itemAdd,
+.itemAddActive {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -69,6 +71,16 @@
     cursor: pointer;
     font-weight: 500;
     color: var(--foreground-3);
+}
+
+.itemAdd {
+    color: var(--foreground-1);
+    background-color: var(--valid-2);
+}
+
+.itemAddActive {
+    color: var(--valid-1);
+    cursor: default;
 }
 
 .itemActive {
