@@ -26,7 +26,7 @@ const requestFriend = async (userIDUnclean, friendIDUnclean) => {
 
     if (
         requestSent.map((request) => request.user.toString()).includes(friendID.toString())
-    ) return { error: "You have already sent a friend request to this user" };
+    ) return { error: "You're already friends with that user!" };
 
     if (
         requestReceived.map((request) => request.user.toString()).includes(friendID.toString())

@@ -18,7 +18,7 @@
 
 .nav {
     position: relative;
-    flex-direction: 1 1 auto;
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     min-width: 0;
@@ -71,11 +71,13 @@
     cursor: pointer;
     font-weight: 500;
     color: var(--foreground-3);
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 .itemAdd {
     color: var(--foreground-1);
-    background-color: var(--valid-2);
+    background-color: var(--valid-3);
 }
 
 .itemAddActive {
@@ -103,13 +105,6 @@
     justify-content: center;
 }
 
-.toolbar {
-    display: flex;
-    align-items: center;
-    flex: 0 0 auto;
-    min-width: 0;
-}
-
 .badge {
     background-color: var(--error-1);
     width: 16px;
@@ -128,4 +123,26 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02rem;
+}
+
+.toolbar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 0;
+    background-color: var(--background-4);
+    /* big shadow on the left so the hidden elements fade out  */
+    box-shadow: -10px 0px 5px -4px var(--background-4),
+        20px 0px 5px -4px var(--background-4);
+    z-index: 2;
+}
+
+.toolbar > div {
+    position: relative;
+    height: 24px;
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0 8px;
+    cursor: pointer;
 }

@@ -7,7 +7,7 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
     const [containerRect, setContainerRect] = useState({});
     const [tooltipPos, setTooltipPos] = useState({});
 
-    const distance = dist ?? 6;
+    const distance = dist ? dist + 5 : 5;
     const position = pos ?? 'top';
     const showArrow = arrow ?? true;
 
@@ -24,70 +24,55 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
         switch (position) {
             case 'top':
                 setTooltipPos({
-                    top: parentRect.top - containerRect.height * 2 - distance,
+                    top: parentRect.top - 32 - distance,
                     left: parentRect.left - containerRect.width + parentRect.width / 2,
                 });
                 break;
             case 'bottom':
                 setTooltipPos({
-                    bottom: parentRect.bottom - containerRect.height * 2 - distance,
+                    top: parentRect.top + parentRect.height + distance,
                     left: parentRect.left - containerRect.width + parentRect.width / 2,
                 });
                 break;
             case 'left':
                 setTooltipPos({
-                    top: parentRect.top - containerRect.height + parentRect.height / 2,
-                    left: parentRect.left - containerRect.width * 2 - distance,
+                    top: 100,
+                    left: 100,
                 });
                 break;
             case 'right':
                 setTooltipPos({
                     top: parentRect.top - containerRect.height + parentRect.height / 2,
-                    right: parentRect.right - containerRect.width * 2 - distance,
-                });
-                break;
-            default:
-                setTooltipPos({
-                    top: parentRect.top - containerRect.height * 2 - distance,
-                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                    left: parentRect.left + parentRect.width + distance,
                 });
                 break;
         }
-
     }, [containerRect]);
 
     const arrowPosition = {
-        top: {
-            borderTop: '4px solid var(--background-dark)',
-            bottom: '-4px',
+        "top": {
+            top: '100%',
             left: '50%',
-            transform: 'translateX(-50%)',
-            borderLeft: '4px solid transparent',
-            borderRight: '4px solid transparent',
+            borderTopColor: 'var(--background-dark)',
+            marginLeft: '-5px',
         },
-        bottom: {
-            borderBottom: '4px solid var(--background-dark)',
-            top: '-4px',
+        "bottom": {
+            bottom: '100%',
             left: '50%',
-            transform: 'translateX(-50%)',
-            borderLeft: '4px solid transparent',
-            borderRight: '4px solid transparent',
+            borderBottomColor: 'var(--background-dark)',
+            marginLeft: '-5px',
         },
-        left: {
-            borderLeft: '4px solid var(--background-dark)',
-            right: '-4px',
+        "left": {
+            left: '100%',
             top: '50%',
-            transform: 'translateY(-50%)',
-            borderTop: '4px solid transparent',
-            borderBottom: '4px solid transparent',
+            borderLeftColor: 'var(--background-dark)',
+            marginTop: '-5px',
         },
-        right: {
-            borderRight: '4px solid var(--background-dark)',
-            left: '-4px',
+        "right": {
+            right: '100%',
             top: '50%',
-            transform: 'translateY(-50%)',
-            borderTop: '4px solid transparent',
-            borderBottom: '4px solid transparent',
+            borderRightColor: 'var(--background-dark)',
+            marginTop: '-5px',
         },
     };
 
@@ -97,31 +82,26 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                 <motion.div
                     ref={containerRef}
                     className={styles.container}
-                    style={{
-                        top: position !== "bottom" && `${tooltipPos.top}px`,
-                        left: position !== "right" && `${tooltipPos.left}px`,
-                        bottom: position === "bottom" && `${tooltipPos.bottom}px`,
-                        right: position === "right" && `${tooltipPos.right}px`,
-                    }}
+                    style={tooltipPos}
                     initial={{
                         opacity: 0,
-                        transform: `scale(0.5)`
+                        scale: 0.5,
                     }}
                     animate={{
                         opacity: 1,
-                        transform: `scale(1)`
+                        scale: 1,
                     }}
                     exit={{
                         opacity: 0,
-                        transform: `scale(0.5)`,
+                        scale: 0.5,
                         transition: {
-                            duration: 0.05,
+                            duration: 0.1,
                             ease: 'easeInOut',
                             delay: 0,
                         },
                     }}
                     transition={{
-                        duration: 0.05,
+                        duration: 0.1,
                         ease: 'easeInOut',
                         delay: delay ?? 0
                     }}

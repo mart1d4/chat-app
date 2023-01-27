@@ -6,12 +6,14 @@ import { AnimatePresence } from "framer-motion";
 import styles from "./UserList.module.css";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRouter } from "next/router";
+import { v4 as uuidv4 } from 'uuid';
 
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [filteredList, setFilteredList] = useState(list);
     const [liHover, setLiHover] = useState(null);
     const [showTooltip, setShowTooltip] = useState(null);
+    const [showTooltip2, setShowTooltip2] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
     const [showRightMenu, setShowRightMenu] = useState(null);
     const [error, setError] = useState(null);
@@ -43,7 +45,63 @@ const UserLists = ({ list, content }) => {
         setFriends,
         blockedUsers,
         setBlockedUsers,
+        friendRequests,
+        setFriendRequests,
     } = useUserData();
+
+    const buttons = {
+        all: {
+            first: {
+                name: "Message",
+                icon: "message",
+                func: (id) => startConversation(id)
+            },
+            second: {
+                name: "More",
+                icon: "more",
+                func: (index) => setShowMenu(index)
+            }
+        },
+        online: {
+            first: {
+                name: "Message",
+                icon: "message",
+                func: (id) => startConversation(id)
+            },
+            second: {
+                name: "More",
+                icon: "more",
+                func: (index) => setShowMenu(index)
+            }
+        },
+        pending: {
+            first: {
+                name: "Accept",
+                icon: "accept",
+                fill: "var(--valid-1)",
+                func: (index) => setShowMenu(index)
+            },
+            second: {
+                name: "Ignore",
+                icon: "cancel",
+                fill: "var(--error-1)",
+                func: (id) => cancelRequest(id)
+            },
+            third: {
+                name: "Cancel",
+                icon: "cancel",
+                func: (index) => setShowMenu(index)
+            }
+        },
+        blocked: {
+            first: {
+                name: "Unblock",
+                icon: "userDelete",
+                fill: "var(--error-1)",
+                func: (id) => unblockUser(id)
+            },
+        }
+    }
 
     const rightMenuItems = [
         {
@@ -53,7 +111,7 @@ const UserLists = ({ list, content }) => {
         },
         {
             name: "Message", func: () => {
-                startConversation(list[showMenu]._id);
+                startConversation(list[showRightMenu.index]._id);
             },
         },
         {
@@ -79,12 +137,12 @@ const UserLists = ({ list, content }) => {
         },
         {
             name: "Remove Friend", func: () => {
-                removeFriend(list[showMenu]._id);
+                removeFriend(list[showRightMenu.index]._id);
             }, danger: true
         },
         {
             name: "Block", func: () => {
-                blockUser(list[showMenu]._id);
+                blockUser(list[showRightMenu.index]._id);
             }, danger: true
         },
         { name: "Divider" },
@@ -333,12 +391,8 @@ const UserLists = ({ list, content }) => {
             <ul className={styles.listContainer}>
                 {filteredList?.map((user, index) => (
                     <li
-                        key={user._id}
-                        className={
-                            liHover === index
-                                ? styles.liContainerHover
-                                : styles.liContainer
-                        }
+                        key={uuidv4()}
+                        className={styles.liContainer}
                         onClick={() => {
                             if (!(content === "online" || content === "all")) return;
                             startConversation(user._id);
@@ -391,144 +445,86 @@ const UserLists = ({ list, content }) => {
                                         )}
                                 </div>
                                 <div className={styles.text}>
-                                    <p className={styles.textUsername}>{user.username}</p>
-                                    {content === "pending" && (
-                                        <p className={styles.textStatus}>
-                                            <span title="Custom Status">
-                                                {user.type === "sent"
+                                    <p className={styles.textUsername}>
+                                        {user.username}
+                                    </p>
+
+                                    <p className={styles.textStatus}>
+                                        <span title="Custom Status">
+                                            {(content === "all" || content === "online") ? (
+                                                user.customStatus === ""
+                                                    ? user.status
+                                                    : user.customStatus
+                                            ) : content === "pending" ? (
+                                                user.type === "sent"
                                                     ? "Outgoing request"
-                                                    : "Incoming request"}
-                                            </span>
-                                        </p>
-                                    )}
-
-                                    {content === "blocked" && (
-                                        <p className={styles.textStatus}>
-                                            <span title="Custom Status">Blocked</span>
-                                        </p>
-                                    )}
-
-                                    {(content === "all" || content === "online") && (
-                                        <p className={styles.textStatus}>
-                                            {user.customStatus === ""
-                                                ? user.status
-                                                : <span title="Custom Status">{user.customStatus}</span>}
-                                        </p>
-                                    )}
+                                                    : "Incoming request"
+                                            ) : "Blocked"}
+                                        </span>
+                                    </p>
                                 </div>
                             </div>
                             <div className={styles.actions}>
-                                {(content === "all" || content === "online") && (
-                                    <>
-                                        <button
-                                            onMouseEnter={() => setShowTooltip(user._id)}
-                                            onMouseLeave={() => setShowTooltip(null)}
-                                        >
-                                            <Icon name="message" size={20} />
-                                            <Tooltip
-                                                show={showTooltip === user._id}
-                                            >
-                                                Message
-                                            </Tooltip>
-                                        </button>
-                                        <button
-                                            onMouseEnter={() => setShowTooltip(user._id + 1)}
-                                            onMouseLeave={() => setShowTooltip(null)}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowMenu(showMenu === index ? null : index);
-                                                setShowTooltip(null);
-                                            }}
-                                        >
-                                            <Icon name="more" size={20} />
-                                            <Tooltip
-                                                show={showTooltip === user._id + 1 && showMenu !== index}
-                                            >
-                                                More
-                                            </Tooltip>
 
-                                            {showMenu === index && (
-                                                <Menu
-                                                    items={moreMenuItems}
-                                                    position={{
-                                                        top: "calc(100% + 5px)",
-                                                        right: "0",
-                                                    }}
-                                                    setMenu={{
-                                                        func: () => {
-                                                            setShowMenu(null);
-                                                            setShowTooltip(null);
-                                                            setLiHover(null);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        </button>
-                                    </>
-                                )}
+                                <button
+                                    onMouseEnter={() => setShowTooltip(index)}
+                                    onMouseLeave={() => setShowTooltip(null)}
+                                >
+                                    <Icon
+                                        name={buttons[content]?.first.icon}
+                                        size={20}
+                                        fill={
+                                            (content === "pending" || content === "blocked")
+                                            && (
+                                                showTooltip === index
+                                                && buttons[content]?.first.fill
+                                            )
+                                        }
+                                    />
 
-                                {content === "blocked" && (
+                                    <Tooltip show={showTooltip === index}>
+                                        {buttons[content]?.first.name}
+                                    </Tooltip>
+                                </button>
+
+                                {buttons[content]?.second && (
                                     <button
-                                        onClick={() => unblockUser(user._id)}
-                                        onMouseEnter={() => setShowTooltip(index)}
-                                        onMouseLeave={() => setShowTooltip(null)}
+                                        onMouseEnter={() => setShowTooltip2(index)}
+                                        onMouseLeave={() => setShowTooltip2(null)}
                                     >
                                         <Icon
-                                            name="userDelete"
+                                            name={buttons[content]?.second.icon}
                                             size={20}
                                             fill={
-                                                showTooltip === index
-                                                && "var(--error-1)"
+                                                (content === "pending" || content === "blocked")
+                                                && (
+                                                    showTooltip2 === index
+                                                    && buttons[content]?.second.fill
+                                                )
                                             }
                                         />
-                                        <Tooltip show={showTooltip === index}>
-                                            Unblock
-                                        </Tooltip>
-                                    </button>
-                                )}
 
-                                {content === "pending" && (
-                                    <>
-                                        {user.type === "received" && (
-                                            <button
-                                                onClick={() => acceptRequest(user._id)}
-                                                onMouseEnter={() => setShowTooltip(index)}
-                                                onMouseLeave={() => setShowTooltip(null)}
-                                            >
-                                                <Icon
-                                                    name="accept"
-                                                    size={20}
-                                                    fill={
-                                                        showTooltip === index
-                                                        && "var(--valid-1)"
+                                        <Tooltip show={showTooltip2 === index}>
+                                            {buttons[content]?.second.name}
+                                        </Tooltip>
+
+                                        {showMenu === index && (
+                                            <Menu
+                                                items={moreMenuItems}
+                                                position={{
+                                                    top: "calc(100% + 5px)",
+                                                    right: "0",
+                                                }}
+                                                setMenu={{
+                                                    func: () => {
+                                                        setShowMenu(null);
+                                                        setShowTooltip(null);
+                                                        setLiHover(null);
                                                     }
-                                                />
-                                                <Tooltip show={showTooltip === index}>
-                                                    Accept
-                                                </Tooltip>
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => {
-                                                if (user.type === "sent") cancelRequest(user._id);
-                                                else ignoreRequest(user._id);
-                                            }}
-                                            onMouseEnter={() => setShowTooltip(index + 1)}
-                                            onMouseLeave={() => setShowTooltip(null)}
-                                        >
-                                            <Icon
-                                                name="cancel"
-                                                size={20}
-                                                fill={
-                                                    showTooltip === index + 1
-                                                    && "var(--error-1)"
-                                                }
+                                                }}
                                             />
-                                            <Tooltip show={showTooltip === index + 1}>
-                                                {user.type === "sent" ? "Cancel" : "Ignore"}
-                                            </Tooltip>
-                                        </button>
-                                    </>
+                                        )}
+                                    </button>
                                 )}
                             </div>
                         </div>

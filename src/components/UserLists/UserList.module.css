@@ -25,7 +25,6 @@
 }
 
 .searchBarInner input {
-    font-size: 1rem;
     line-height: 32px;
     height: 30px;
     padding: 0 8px;
@@ -33,9 +32,9 @@
     border: none;
     resize: none;
     flex: 1;
+    min-width: 48px;
     margin: 1px;
     outline: none;
-    font-weight: 400;
 }
 
 .searchBarInner input::placeholder {
@@ -79,8 +78,7 @@
     min-height: 0;
 }
 
-.liContainer,
-.liContainerHover {
+.liContainer {
     height: 62px;
     opacity: 1;
     display: flex;
@@ -89,9 +87,10 @@
     font-size: 1rem;
     line-height: 20px;
     border-top: 1px solid var(--border-light);
+    box-sizing: border-box;
 }
 
-.liContainerHover {
+.liContainer:hover {
     border-radius: 8px;
     margin: 0 10px 0 20px;
     padding: 16px 10px;
@@ -100,7 +99,7 @@
     cursor: pointer;
 }
 
-.liContainerHover .actions > button {
+.liContainer:hover .actions > button {
     background-color: var(--background-1);
 }
 

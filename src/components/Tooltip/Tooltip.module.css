@@ -11,10 +11,10 @@
     justify-content: center;
     position: relative;
     font-size: 14px;
-    line-height: 20px;
-    font-weight: 600;
-    border-radius: 4px;
-    padding: 6px 12px;
+    line-height: 16px;
+    font-weight: 500;
+    border-radius: 5px;
+    padding: 8px 12px;
     word-wrap: break-word;
     white-space: nowrap;
     color: var(--foreground-2);
@@ -25,6 +25,7 @@
 .arrow {
     position: absolute;
     overflow: hidden;
+    border: 5px solid transparent;
     width: 0;
     height: 0;
 }

@@ -173,9 +173,10 @@
         --foreground-light: hsl(218, 5%, 47%);
         --accent-1: hsl(235, 86%, 65%);
         --valid-1: hsl(139, 86%, 65%);
-        --valid-2: hsl(139, 47%, 33%);
+        --valid-2: hsl(139, 52%, 52%);
+        --valid-3: hsl(139, 47%, 33%);
         --error-1: hsl(359, 83%, 59%);
-        --error-2: hsla(0, 100%, 50%, 0.102);
+        --error-2: hsl(359, 82%, 74%);
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
         --offline: hsl(214, 10%, 50%);
@@ -210,7 +211,7 @@
         --valid-1: hsl(139, 86%, 65%);
         --valid-2: hsl(139, 47%, 33%);
         --error-1: hsl(359, 83%, 59%);
-        --error-2: hsla(0, 100%, 50%, 0.102);
+        --error-2: hsl(359, 82%, 74%);
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
         --offline: hsl(214, 10%, 50%);

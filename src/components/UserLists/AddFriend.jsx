@@ -6,6 +6,7 @@ import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 const AddFriend = () => {
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
+    const [valid, setValid] = useState("");
 
     const {
         auth,
@@ -34,9 +35,11 @@ const AddFriend = () => {
                     (request) => request._id.toString() !== input
                 ));
                 setFriends([...friends, data.data.user]);
+                setValid(`You are now friends with ${data.data.user.username}`);
                 setInput("");
             } else {
                 setFriendRequests([...friendRequests, data.data.request]);
+                setValid(`Success! Your friend request to ${data.data.request.username} was sent.`);
                 setInput("");
             }
         } catch (err) {
@@ -54,7 +57,13 @@ const AddFriend = () => {
                         You can add a friend by entering their username or user ID. They are case sensitive.
                     </div>
 
-                    <div className={styles.inputWrapper}>
+                    <div
+                        className={styles.inputWrapper}
+                        style={{
+                            outline: error.length > 0 ? "1px solid var(--error-1)"
+                                : valid.length > 0 && "1px solid var(--valid-1)",
+                        }}
+                    >
                         <div>
                             <input
                                 ref={inputRef}
@@ -64,7 +73,11 @@ const AddFriend = () => {
                                 aria-label="Enter username or user ID"
                                 maxLength={32}
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    setError("");
+                                    setValid("");
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         requestFriend();
@@ -86,6 +99,14 @@ const AddFriend = () => {
                             Send Friend Request
                         </button>
                     </div>
+
+                    {error.length > 0 && (
+                        <div className={styles.error}>{error}</div>
+                    )}
+
+                    {valid.length > 0 && (
+                        <div className={styles.valid}>{valid}</div>
+                    )}
                 </form>
             </header>
         </div>

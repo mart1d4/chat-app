@@ -1,10 +1,17 @@
-import Link from "next/link";
 import styles from "./AppNav.module.css";
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { motion } from "framer-motion";
+import { Tooltip } from "../";
 
 const AppNav = () => {
-    const [showMenu, setShowMenu] = useState(false);
+    const [showMenu, setShowMenu] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [active, setActive] = useState(null);
+    const [markHeight, setMarkHeight] = useState(0);
     const menuRef = useRef(null);
+
+    const router = useRouter();
 
     useEffect(() => {
         document.addEventListener("click", (event) => {
@@ -18,24 +25,83 @@ const AppNav = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (router.pathname.includes("/channels/@me")) {
+            setActive(true);
+            setMarkHeight("40px");
+        } else {
+            setActive(false);
+            setMarkHeight(0);
+        }
+    }, [router.pathname]);
+
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
-                <div className={styles.channelList}>
-                    <div className={styles.listItem}>
-                        <Link
-                            href="/friends"
-                            className={styles.link}
+                <div className={styles.friends}>
+                    <motion.div className={styles.listItem}>
+                        <Tooltip
+                            show={showTooltip}
+                            pos="right"
+                        >
+                            Direct Messages
+                        </Tooltip>
+
+                        <div className={styles.marker}>
+                            {(showTooltip || active) && (
+                                <motion.span
+                                    style={{
+                                        height: markHeight,
+                                    }}
+                                    initial={{
+                                        opacity: 0,
+                                        scale: 0,
+                                    }}
+                                    animate={{
+                                        opacity: 1,
+                                        scale: 1,
+                                    }}
+                                    transition={{
+                                        duration: 0.15,
+                                        ease: "easeInOut",
+                                    }}
+                                />
+                            )}
+                        </div>
+
+                        <div
+                            className={
+                                active ? styles.listItemWrapperActive
+                                    : styles.listItemWrapper
+                            }
+                            onMouseEnter={() => {
+                                setShowTooltip(true);
+                                if (active) return;
+                                setMarkHeight("20px");
+                            }}
+                            onMouseLeave={() => {
+                                setShowTooltip(false);
+                                if (active) return;
+                                setMarkHeight(0);
+                            }}
+                            onClick={() => {
+                                setShowTooltip(null);
+                                setActive(true);
+                                router.push("/channels/@me");
+                            }}
                         >
                             <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="40"
-                                height="40"
+                                width="28"
+                                height="20"
+                                viewBox="0 0 28 20"
                             >
-                                <path d="M1.625 33.333v-4.166q0-1.459.729-2.646.729-1.188 2.021-1.771 2.917-1.333 5.417-1.938 2.5-.604 5.166-.604 2.625 0 5.125.604 2.5.605 5.375 1.938 1.292.583 2.063 1.771.771 1.187.771 2.646v4.166Zm29.417 0v-4.291q0-2.334-1.23-4.021-1.229-1.688-3.27-2.813 2.625.334 4.937.959 2.313.625 3.896 1.458 1.417.833 2.208 1.937.792 1.105.792 2.48v4.291ZM14.958 19.958q-2.75 0-4.583-1.812-1.833-1.813-1.833-4.563t1.833-4.562q1.833-1.813 4.583-1.813t4.563 1.813q1.812 1.812 1.812 4.562t-1.812 4.563q-1.813 1.812-4.563 1.812ZM30.5 13.583q0 2.75-1.812 4.563-1.813 1.812-4.563 1.812-.458 0-1.083-.062-.625-.063-1.084-.229 1.042-1.125 1.604-2.688.563-1.562.563-3.396 0-1.833-.563-3.333Q23 8.75 21.958 7.5q.5-.167 1.084-.229.583-.063 1.083-.063 2.75 0 4.563 1.813 1.812 1.812 1.812 4.562Z" />
+                                <path
+                                    fill="currentColor"
+                                    d="M23.0212 1.67671C21.3107 0.879656 19.5079 0.318797 17.6584 0C17.4062 0.461742 17.1749 0.934541 16.9708 1.4184C15.003 1.12145 12.9974 1.12145 11.0283 1.4184C10.819 0.934541 10.589 0.461744 10.3368 0.00546311C8.48074 0.324393 6.67795 0.885118 4.96746 1.68231C1.56727 6.77853 0.649666 11.7538 1.11108 16.652C3.10102 18.1418 5.3262 19.2743 7.69177 20C8.22338 19.2743 8.69519 18.4993 9.09812 17.691C8.32996 17.3997 7.58522 17.0424 6.87684 16.6135C7.06531 16.4762 7.24726 16.3387 7.42403 16.1847C11.5911 18.1749 16.408 18.1749 20.5763 16.1847C20.7531 16.3332 20.9351 16.4762 21.1171 16.6135C20.41 17.0369 19.6639 17.3997 18.897 17.691C19.3052 18.4993 19.7718 19.2689 20.3021 19.9945C22.6677 19.2689 24.8929 18.1364 26.8828 16.6466H26.8893C27.43 10.9731 25.9665 6.04728 23.0212 1.67671ZM9.68041 13.6383C8.39754 13.6383 7.34085 12.4453 7.34085 10.994C7.34085 9.54272 8.37155 8.34973 9.68041 8.34973C10.9893 8.34973 12.0395 9.54272 12.0187 10.994C12.0187 12.4453 10.9828 13.6383 9.68041 13.6383ZM18.3161 13.6383C17.0332 13.6383 15.9765 12.4453 15.9765 10.994C15.9765 9.54272 17.0124 8.34973 18.3161 8.34973C19.6184 8.34973 20.6751 9.54272 20.6543 10.994C20.6543 12.4453 19.6184 13.6383 18.3161 13.6383Z"
+                                />
                             </svg>
-                        </Link>
-                    </div>
+                        </div>
+                    </motion.div>
                 </div>
             </ul>
         </nav>

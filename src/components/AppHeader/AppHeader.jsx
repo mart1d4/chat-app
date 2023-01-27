@@ -66,8 +66,8 @@ const AppHeader = ({ content, setContent, active }) => {
                         <h1 className={styles.titleFriend}>{friend?.username || "username"}</h1>
                         <div
                             className={styles.status}
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            onMouseEnter={() => setShowTooltip("status")}
+                            onMouseLeave={() => setShowTooltip(null)}
                         >
                             <AvatarStatus
                                 status={friend?.status}
@@ -82,6 +82,27 @@ const AppHeader = ({ content, setContent, active }) => {
             </div>
 
             <div className={styles.toolbar}>
+                <div
+                    onMouseEnter={() => setShowTooltip("inbox")}
+                    onMouseLeave={() => setShowTooltip(null)}
+                >
+                    <Icon name="inbox" />
+
+                    <Tooltip show={showTooltip === "inbox"} pos="bottom">
+                        Inbox
+                    </Tooltip>
+                </div>
+
+                <div
+                    onMouseEnter={() => setShowTooltip("search")}
+                    onMouseLeave={() => setShowTooltip(null)}
+                >
+                    <Icon name="pin" />
+
+                    <Tooltip show={showTooltip === "search"} pos="bottom">
+                        Pin
+                    </Tooltip>
+                </div>
             </div>
         </div>
     );

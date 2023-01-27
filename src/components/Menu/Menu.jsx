@@ -38,6 +38,7 @@ const Menu = ({ items, position, setMenu, mousePos }) => {
                 left: "1000px",
             }}
             onClick={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => e.stopPropagation()}
         >
             <div>
                 {items?.map((item) => (

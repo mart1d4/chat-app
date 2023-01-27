@@ -17,6 +17,7 @@
     text-transform: uppercase;
     font-weight: 600;
     color: var(--foreground-1);
+    user-select: none;
 }
 
 .description {
@@ -24,6 +25,7 @@
     font-size: 14px;
     line-height: 20px;
     font-weight: 400;
+    user-select: none;
 }
 
 .inputWrapper {
@@ -76,4 +78,16 @@
     padding: 2px 16px;
     user-select: none;
     cursor: pointer;
+}
+
+.error {
+    margin-top: 8px;
+    color: var(--error-2);
+    font-size: 14px;
+}
+
+.valid {
+    margin-top: 8px;
+    color: var(--valid-2);
+    font-size: 14px;
 }

@@ -116,4 +116,6 @@
 
 .messageTimestamp > span {
     position: relative;
+    line-height: 1.375rem;
+    height: 100%;
 }

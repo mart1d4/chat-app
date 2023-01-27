@@ -25,7 +25,7 @@
     border-radius: 100vw;
 }
 
-.channelList {
+.friends {
     position: relative;
 }
 
@@ -37,40 +37,47 @@
     width: 72px;
 }
 
-.account {
+.listItemWrapper,
+.listItemWrapperActive {
     position: relative;
     display: flex;
-}
-
-.menu {
-    position: absolute;
-    bottom: 0;
-    left: calc(100% + 0.5rem);
-    width: 200px;
-    background: var(--background-4);
-    border-radius: 5px;
-    padding: 0.5rem;
-    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
-}
-
-.menuList {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    list-style: none;
-}
-
-.menuList li {
-    padding: 0.5rem;
-    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     cursor: pointer;
+    background-color: var(--background-4);
+    transition: all 0.2s ease-in-out;
 }
 
-.menuLink {
-    color: var(--foreground-1);
-    text-decoration: none;
+.listItemWrapperActive,
+.listItemWrapper:hover {
+    border-radius: 35%;
+    background-color: var(--accent-1);
 }
 
-.menuList li:hover {
-    background: var(--background-1);
+.listItemWrapper path {
+    fill: var(--foreground-2);
+}
+
+.marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    width: 8px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.marker > span {
+    position: absolute;
+    display: block;
+    width: 8px;
+    border-radius: 0 4px 4px 0;
+    margin-left: -4px;
+    background-color: var(--foreground-1);
 }
