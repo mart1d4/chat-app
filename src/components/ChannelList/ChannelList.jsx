@@ -93,7 +93,10 @@ const ConversationList = () => {
 
                         <h2 className={styles.title}>
                             <span>Direct Messages</span>
-                            <div>
+                            <div
+                                onMouseEnter={() => setHover("create")}
+                                onMouseLeave={() => setHover(null)}
+                            >
                                 <Icon
                                     name="add"
                                     size={16}
@@ -156,18 +159,13 @@ const ConversationList = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    {hover === conv?.members[0]._id && (
-                                        <div className={styles.closeButton}>
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                width="16"
-                                                height="16"
-                                                stroke="var(--foreground-2)"
-                                            >
-                                                <path fill="currentColor" d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z" />
-                                            </svg>
-                                        </div>)}
+
+                                    <div className={styles.closeButton}>
+                                        <Icon
+                                            name="close"
+                                            size={16}
+                                        />
+                                    </div>
                                 </div>
                             </li>
                         ))}

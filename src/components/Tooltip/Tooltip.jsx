@@ -24,20 +24,20 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
         switch (position) {
             case 'top':
                 setTooltipPos({
-                    top: parentRect.top - 32 - distance,
+                    top: parentRect.top - containerRect.height * 2 - distance,
                     left: parentRect.left - containerRect.width + parentRect.width / 2,
                 });
                 break;
             case 'bottom':
                 setTooltipPos({
-                    top: parentRect.top + parentRect.height + distance,
+                    top: parentRect.bottom + distance,
                     left: parentRect.left - containerRect.width + parentRect.width / 2,
                 });
                 break;
             case 'left':
                 setTooltipPos({
-                    top: 100,
-                    left: 100,
+                    top: parentRect.top - containerRect.height + parentRect.height / 2,
+                    left: parentRect.left - containerRect.width - distance,
                 });
                 break;
             case 'right':

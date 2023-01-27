@@ -10,6 +10,13 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
 
     return (
         <div className={!onlyStatus ? styles.container : ""}>
+            <Tooltip
+                show={tooltip && showTooltip}
+                pos={tooltipPosition}
+            >
+                {status}
+            </Tooltip>
+
             <div
                 className={styles.firstLayer}
                 onMouseEnter={() => setShowTooltip(true)}
@@ -39,13 +46,6 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
                             style={{ backgroundColor: background }}
                         />
                     )}
-
-                    <Tooltip
-                        show={tooltip && showTooltip}
-                        pos={tooltipPosition}
-                    >
-                        {status}
-                    </Tooltip>
                 </div>
             </div>
         </div>

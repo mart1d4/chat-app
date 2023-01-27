@@ -383,11 +383,13 @@ const UserLists = ({ list, content }) => {
                     </div>
                 </div>
             </div>
+
             <h2 className={styles.title}>
                 {content === "all" ? "All Friends " : content === "online"
                     ? "Online " : content === "pending" ? "Pending " : "Blocked "}
                 — {filteredList.length}
             </h2>
+
             <ul className={styles.listContainer}>
                 {filteredList?.map((user, index) => (
                     <li
@@ -482,7 +484,10 @@ const UserLists = ({ list, content }) => {
                                         }
                                     />
 
-                                    <Tooltip show={showTooltip === index}>
+                                    <Tooltip
+                                        show={showTooltip === index}
+                                        dist={4}
+                                    >
                                         {buttons[content]?.first.name}
                                     </Tooltip>
                                 </button>
@@ -504,7 +509,10 @@ const UserLists = ({ list, content }) => {
                                             }
                                         />
 
-                                        <Tooltip show={showTooltip2 === index}>
+                                        <Tooltip
+                                            show={showTooltip2 === index}
+                                            dist={4}
+                                        >
                                             {buttons[content]?.second.name}
                                         </Tooltip>
 

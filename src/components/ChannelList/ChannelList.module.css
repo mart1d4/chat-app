@@ -142,6 +142,11 @@
     color: var(--foreground-4);
 }
 
+.liContainer:hover .closeButton,
+.liContainerActive:hover .closeButton {
+    display: block;
+}
+
 .liContainerActive {
     color: var(--foreground-1);
     background-color: var(--background-active);
@@ -151,14 +156,7 @@
 .liContainerActive:hover {
     color: var(--foreground-1);
     background-color: var(--background-hover-2);
-}
-
-.liContainerActive svg path:first-child {
-    fill: var(--foreground-1);
-}
-
-.liContainer:hover svg path:first-child {
-    fill: var(--foreground-1);
+    cursor: pointer;
 }
 
 .liWrapper {
@@ -247,17 +245,24 @@
 }
 
 .closeButton {
-    display: block;
+    display: none;
+    box-sizing: content-box;
     width: 16px;
     height: 16px;
-    opacity: 0.7;
     margin: 2px;
     padding-right: 8px;
 }
 
+.closeButton path {
+    fill: var(--foreground-4);
+}
+
 .closeButton:hover {
-    opacity: 1;
     cursor: pointer;
+}
+
+.closeButton:hover path {
+    fill: var(--foreground-2);
 }
 
 .userSectionContainer {

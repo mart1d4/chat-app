@@ -140,6 +140,7 @@ const Message = ({ message, start, setError, setMessages }) => {
                                     {format(new Date(message.createdAt), "p")}
                                     <Tooltip
                                         show={showTooltip === 2}
+                                        dist={3}
                                         delay={1}
                                     >
                                         {format(new Date(message.createdAt), "PPPP p")}
