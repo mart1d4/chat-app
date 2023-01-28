@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
     const [channelList, setChannelList] = useState([]);
     const [erros, setErros] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [showSettings, setShowSettings] = useState(false);
 
     const value = {
         auth,
@@ -26,6 +27,8 @@ export function AuthProvider({ children }) {
         setErros,
         isLoading,
         setIsLoading,
+        showSettings,
+        setShowSettings,
     };
 
     return (

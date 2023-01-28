@@ -84,10 +84,12 @@
     margin-top: 8px;
     color: var(--error-2);
     font-size: 14px;
+    user-select: none;
 }
 
 .valid {
     margin-top: 8px;
     color: var(--valid-2);
     font-size: 14px;
+    user-select: none;
 }

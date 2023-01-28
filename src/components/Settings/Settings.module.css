@@ -1,0 +1,114 @@
+.container {
+    position: fixed;
+    z-index: 100;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+.sidebar {
+    display: flex;
+    justify-content: flex-end;
+    flex: 1 0 220px;
+}
+
+.content {
+    position: relative;
+    display: flex;
+    flex: 1 1 800px;
+}
+
+.sidebarWrapper {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    flex: 1 0 auto;
+    align-items: flex-start;
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    min-height: 0;
+    background-color: var(--background-3);
+}
+
+.sidebarWrapper nav {
+    width: 220px;
+    padding: 60px 6px 60px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    padding: 0 10px 6px 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: var(--foreground-5);
+    user-select: none;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.separator {
+    margin: 8px 10px;
+    height: 1px;
+    background-color: var(--background-hover-1);
+}
+
+.tab,
+.tabActive {
+    padding: 6px 10px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: var(--foreground-3);
+    user-select: none;
+}
+
+.tab:hover,
+.tabActive {
+    background-color: var(--background-5);
+    color: var(--foreground-1);
+}
+
+.tabActive:hover {
+    cursor: default;
+}
+
+.sidebarWrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebarWrapper::-webkit-scrollbar-track {
+    background-color: transparent;
+    border: none;
+}
+
+/* .sidebarWrapper:hover::-webkit-scrollbar-track {
+    background-color: var(--background-1);
+    border: none;
+} */
+
+.contentWrapper {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    flex: 1 0 auto;
+    align-items: flex-start;
+    display: flex;
+    justify-content: flex-start;
+    min-height: 100%;
+    background-color: var(--background-4);
+}
+
+.contentWrapper::-webkit-scrollbar {
+    width: 14px;
+}

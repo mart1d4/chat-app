@@ -1,4 +1,4 @@
-import { AppNav, Loader } from "../";
+import { AppNav, Loader, Settings } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
@@ -17,6 +17,7 @@ const Layout = ({ children }) => {
         setFriendRequests,
         setBlockedUsers,
         setChannelList,
+        showSettings,
     } = useUserData();
 
     useEffect(() => {
@@ -75,6 +76,8 @@ const Layout = ({ children }) => {
             isMounted = false;
         };
     }, [isLoading]);
+
+    if (showSettings) return <Settings />;
 
     return (
         isLoading || isFetching ? (

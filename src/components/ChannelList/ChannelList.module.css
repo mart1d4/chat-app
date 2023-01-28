@@ -152,6 +152,10 @@
     background-color: var(--background-active);
 }
 
+.liContainerActive polygon {
+    fill: var(--foreground-1);
+}
+
 .liContainer:hover,
 .liContainerActive:hover {
     color: var(--foreground-1);

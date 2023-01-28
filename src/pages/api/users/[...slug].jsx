@@ -14,6 +14,8 @@ import {
     removeFriend,
     blockUser,
     unblockUser,
+    updateProfile,
+    updateAvatar,
 } from "../../../utils/api/posters";
 
 connectDB();
@@ -24,6 +26,11 @@ export default async (req, res) => {
     const userID = slug[0];
 
     if (req.method === "POST") {
+        if (slug[1] === "avatar") {
+            const data = await updateAvatar(userID, req.body);
+            return res.status(200).json(data);
+        }
+
         if (slug[1] === "friends") {
             if (slug[2] === "request") {
                 const data = await requestFriend(userID, friendID);
@@ -52,6 +59,13 @@ export default async (req, res) => {
             } else {
                 return res.status(400).json({ error: "Invalid request" });
             }
+        }
+    }
+
+    if (req.method === "PATCH") {
+        if (!slug[1]) {
+            const data = await updateProfile(userID, req.body);
+            return res.status(200).json(data);
         }
     }
 

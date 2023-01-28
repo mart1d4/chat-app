@@ -17,6 +17,7 @@ import TextArea from './TextArea/TextArea';
 import Icon from './Icon/Icon';
 import AvatarStatus from './AvatarStatus/AvatarStatus';
 import Menu from './Menu/Menu';
+import Settings from './Settings/Settings';
 
 export {
     AppHeader,
@@ -38,4 +39,5 @@ export {
     Icon,
     AvatarStatus,
     Menu,
+    Settings,
 };

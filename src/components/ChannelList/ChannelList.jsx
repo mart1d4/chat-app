@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Tooltip, Icon, AvatarStatus, Menu } from "..";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const ConversationList = () => {
@@ -18,7 +18,7 @@ const ConversationList = () => {
     const router = useRouter();
     const currentPath = router.asPath;
 
-    const { auth, friends, friendRequests, channelList } = useUserData();
+    const { auth, friends, friendRequests, channelList, setShowSettings } = useUserData();
     const { logout } = useLogout();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
@@ -71,7 +71,14 @@ const ConversationList = () => {
                                 <div className={styles.linkFriends}>
                                     <div className={styles.layoutFriends}>
                                         <div className={styles.layoutAvatar}>
-                                            <Icon name="friends" />
+                                            <Icon
+                                                name="friends"
+                                                fill={
+                                                    currentPath === "/channels/@me"
+                                                        ? "var(--foreground-1)"
+                                                        : "var(--foreground-3)"
+                                                }
+                                            />
                                         </div>
                                         <div className={styles.layoutContent}>
                                             <div className={styles.contentName}>
@@ -248,6 +255,7 @@ const ConversationList = () => {
                         <button
                             onMouseEnter={() => setShowTooltip(3)}
                             onMouseLeave={() => setShowTooltip(null)}
+                            onClick={() => setShowSettings(true)}
                         >
                             <Tooltip show={showTooltip === 3}>
                                 User Settings

@@ -10,6 +10,8 @@ import requestFriend from './requestFriend';
 import sendPrivateMessage from './sendPrivateMessage';
 import unblockUser from './unblockUser';
 import deletePrivateMessage from './deletePrivateMessage';
+import updateProfile from './updateProfile';
+import updateAvatar from './updateAvatar';
 
 export {
     acceptFriendRequest,
@@ -24,4 +26,6 @@ export {
     sendPrivateMessage,
     unblockUser,
     deletePrivateMessage,
+    updateProfile,
+    updateAvatar,
 };

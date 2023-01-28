@@ -11,11 +11,15 @@ import { v4 as uuidv4 } from 'uuid';
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [filteredList, setFilteredList] = useState(list);
-    const [liHover, setLiHover] = useState(null);
-    const [showTooltip, setShowTooltip] = useState(null);
-    const [showTooltip2, setShowTooltip2] = useState(null);
-    const [showMenu, setShowMenu] = useState(null);
-    const [showRightMenu, setShowRightMenu] = useState(null);
+    const [hoverLi, setHoverLi] = useState(null);
+    const [hover, setHover] = useState({
+        tooltip1: null,
+        tooltip2: null,
+    });
+    const [showMenu, setShowMenu] = useState({
+        small: null,
+        large: null,
+    });
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -295,7 +299,7 @@ const UserLists = ({ list, content }) => {
         return (
             <div className={styles.content}>
                 <div className={styles.noData}>
-                    <img
+                    <Image
                         src={content === "all"
                             ? "/images/no-friends.svg"
                             : content === "online"
@@ -303,7 +307,25 @@ const UserLists = ({ list, content }) => {
                                 : content === "pending"
                                     ? "/images/no-pending.svg"
                                     : "/images/no-blocked.svg"}
-                        alt="no-data"
+                        alt="No Data"
+                        width={
+                            content === "all"
+                                ? 376
+                                : content === "online"
+                                    ? 421
+                                    : content === "pending"
+                                        ? 415
+                                        : 433
+                        }
+                        height={
+                            content === "all"
+                                ? 162
+                                : content === "online"
+                                    ? 218
+                                    : content === "pending"
+                                        ? 200
+                                        : 232
+                        }
                     />
 
                     <div>
@@ -401,29 +423,31 @@ const UserLists = ({ list, content }) => {
                         }}
                         onContextMenu={(e) => {
                             e.preventDefault();
-                            setShowRightMenu({ index, x: e.clientX, y: e.clientY });
+                            setShowMenu({
+                                small: null,
+                                large: { index, x: e.clientX, y: e.clientY },
+                            });
                         }}
                         onMouseEnter={() => {
-                            setLiHover(index);
-                            if (showMenu !== null && showMenu !== index) {
-                                setShowMenu(null);
-                            }
+                            setHoverLi(index);
                         }}
                         onMouseLeave={() => {
-                            if (showMenu === index) return;
-                            setLiHover(null);
+                            setHoverLi(null);
                         }}
                         style={{
-                            borderColor: liHover === index - 1 && "transparent",
+                            borderColor: hoverLi === index - 1 && "transparent",
                         }}
                     >
-                        {showRightMenu?.index === index && (
+                        {showMenu?.large?.index === index && (
                             <Menu
                                 items={rightMenuItems}
                                 position="mouse"
-                                mousePos={{ x: showRightMenu.x, y: showRightMenu.y }}
+                                mousePos={{ x: showMenu.large.x, y: showMenu.large.y }}
                                 setMenu={{
-                                    func: () => setShowRightMenu(null),
+                                    func: () => setShowMenu({
+                                        small: null,
+                                        large: null,
+                                    }),
                                 }}
                             />
                         )}
@@ -442,7 +466,7 @@ const UserLists = ({ list, content }) => {
                                     )) && (
                                             <AvatarStatus
                                                 status={user.status}
-                                                background={liHover === index ? "var(--background-hover-1)" : "var(--background-4)"}
+                                                background={hoverLi === index ? "var(--background-hover-1)" : "var(--background-4)"}
                                             />
                                         )}
                                 </div>
@@ -469,8 +493,20 @@ const UserLists = ({ list, content }) => {
                             <div className={styles.actions}>
 
                                 <button
-                                    onMouseEnter={() => setShowTooltip(index)}
-                                    onMouseLeave={() => setShowTooltip(null)}
+                                    onMouseEnter={() => {
+                                        if (hover.tooltip1 === index) return;
+                                        setHover({
+                                            tooltip1: index,
+                                            tooltip2: null,
+                                        })
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (hover.tooltip1 !== index) return;
+                                        setHover({
+                                            tooltip1: null,
+                                            tooltip2: null,
+                                        })
+                                    }}
                                 >
                                     <Icon
                                         name={buttons[content]?.first.icon}
@@ -478,14 +514,14 @@ const UserLists = ({ list, content }) => {
                                         fill={
                                             (content === "pending" || content === "blocked")
                                             && (
-                                                showTooltip === index
+                                                hover.tooltip1 === index
                                                 && buttons[content]?.first.fill
                                             )
                                         }
                                     />
 
                                     <Tooltip
-                                        show={showTooltip === index}
+                                        show={hover.tooltip1 === index}
                                         dist={4}
                                     >
                                         {buttons[content]?.first.name}
@@ -494,8 +530,29 @@ const UserLists = ({ list, content }) => {
 
                                 {buttons[content]?.second && (
                                     <button
-                                        onMouseEnter={() => setShowTooltip2(index)}
-                                        onMouseLeave={() => setShowTooltip2(null)}
+                                        onMouseEnter={() => {
+                                            if (hover.tooltip2 === index) return;
+                                            setHover({
+                                                tooltip1: null,
+                                                tooltip2: index,
+                                            })
+                                        }}
+                                        onMouseLeave={() => {
+                                            if (hover.tooltip2 !== index) return;
+                                            setHover({
+                                                tooltip1: null,
+                                                tooltip2: null,
+                                            })
+                                        }}
+                                        onClick={() => {
+                                            if (showMenu.small === index) return;
+                                            if (content === "all" || content === "online") {
+                                                setShowMenu({
+                                                    small: index,
+                                                    large: null,
+                                                });
+                                            }
+                                        }}
                                     >
                                         <Icon
                                             name={buttons[content]?.second.icon}
@@ -503,20 +560,20 @@ const UserLists = ({ list, content }) => {
                                             fill={
                                                 (content === "pending" || content === "blocked")
                                                 && (
-                                                    showTooltip2 === index
+                                                    hover.tooltip2 === index
                                                     && buttons[content]?.second.fill
                                                 )
                                             }
                                         />
 
                                         <Tooltip
-                                            show={showTooltip2 === index}
+                                            show={hover.tooltip2 === index}
                                             dist={4}
                                         >
                                             {buttons[content]?.second.name}
                                         </Tooltip>
 
-                                        {showMenu === index && (
+                                        {showMenu.small === index && (
                                             <Menu
                                                 items={moreMenuItems}
                                                 position={{
@@ -525,9 +582,15 @@ const UserLists = ({ list, content }) => {
                                                 }}
                                                 setMenu={{
                                                     func: () => {
-                                                        setShowMenu(null);
-                                                        setShowTooltip(null);
-                                                        setLiHover(null);
+                                                        setShowMenu({
+                                                            small: null,
+                                                            large: null,
+                                                        });
+                                                        setHover({
+                                                            tooltip1: null,
+                                                            tooltip2: null,
+                                                        });
+                                                        setHoverLi(null);
                                                     }
                                                 }}
                                             />
