@@ -11,24 +11,21 @@ const Login = () => {
     const { auth, setAuth } = useUserData();
     const router = useRouter();
 
-    const usernameRef = useRef();
-    const errorRef = useRef();
+    const uidInputRef = useRef();
+    const passwordInputRef = useRef();
 
-    const [usernameFocus, setUsernameFocus] = useState(false);
-    const [passwordFocus, setPasswordFocus] = useState(false);
-
-    const [username, setUsername] = useState("");
+    const [uid, setUID] = useState("");
     const [password, setPassword] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (auth?.accessToken) router.push("/channels/@me");
-        usernameRef.current.focus();
-    }, []);
+        uidInputRef.current.focus();
+    }, [auth]);
 
     useEffect(() => {
-        setErrorMessage("");
-    }, [username, password]);
+        setError("");
+    }, [uid, password]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -36,7 +33,7 @@ const Login = () => {
         try {
             const response = await axios.post(
                 "/auth/login",
-                JSON.stringify({ username, password }),
+                JSON.stringify({ uid, password }),
                 {
                     headers: { "Content-Type": "application/json" },
                     withCredentials: true,
@@ -50,13 +47,9 @@ const Login = () => {
             setPassword("");
             router.push("/channels/@me");
         } catch (err) {
-            if (!err?.response) {
-                setErrorMessage("No Server Response");
-                console.log(err);
-            } else {
-                setErrorMessage(err.response.data.message);
-            }
-            errorRef?.current?.focus();
+            if (!err?.response) setError("No Server Response");
+            else setError(err.response.data.error);
+            console.log(err.response.data.message);
         }
     };
 
@@ -65,7 +58,110 @@ const Login = () => {
             <Head>
                 <title>Discord | Login</title>
             </Head>
-            <motion.main
+
+            <div className={styles.wrapper}>
+                <motion.form
+                    onSubmit={handleSubmit}
+                >
+                    <div className={styles.loginContainer}>
+                        <div className={styles.header}>
+                            <h1>Welcome back!</h1>
+                            <div>We're so excited to see you again!</div>
+                        </div>
+                        <div className={styles.loginBlock}>
+                            <div>
+                                <label
+                                    htmlFor="uid"
+                                    style={{
+                                        color: error.length
+                                            ? "var(--error-2)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Username
+                                    {error.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {error}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        ref={uidInputRef}
+                                        id="uid"
+                                        type="text"
+                                        name="username"
+                                        aria-label="Username"
+                                        required
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        maxLength={32}
+                                        minLength={4}
+                                        spellCheck="false"
+                                        aria-labelledby="uid"
+                                        aria-describedby="uid"
+                                        value={uid}
+                                        onChange={(e) => setUID(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="password"
+                                    style={{
+                                        color: error.length
+                                            ? "var(--error-2)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Password
+                                    {error.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {error}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        ref={passwordInputRef}
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        aria-label="Password"
+                                        required
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        maxLength={256}
+                                        minLength={8}
+                                        spellCheck="false"
+                                        aria-labelledby="password"
+                                        aria-describedby="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <button>Forgot your password?</button>
+                            <button type="submit">
+                                <div>Log In</div>
+                            </button>
+
+                            <div>
+                                <span>Need an account?</span>
+                                <button>Register</button>
+                            </div>
+                        </div>
+                    </div>
+                </motion.form>
+            </div>
+            {/* <motion.main
                 className={styles.main}
                 initial={{
                     opacity: 0,
@@ -84,41 +180,6 @@ const Login = () => {
                     ease: "backInOut",
                 }}
             >
-                <AnimatePresence>
-                    {errorMessage && (
-                        <motion.div
-                            ref={errorRef}
-                            className={styles.error}
-                            initial={{
-                                opacity: 0,
-                                transform: "translateX(-50%) scale(0.5)",
-                            }}
-                            animate={{
-                                opacity: 1,
-                                transform: "translateX(-50%) scale(1)",
-                            }}
-                            exit={{
-                                opacity: 0,
-                                transform: "translateX(-50%) scale(0.5)",
-                            }}
-                            transition={{
-                                duration: 0.2,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle cx="12" cy="12" r="9" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                            <p aria-live="assertive">{errorMessage}</p>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <h2 className={styles.formTitle}>Login</h2>
 
@@ -166,6 +227,11 @@ const Login = () => {
                                 className={styles.input}
                                 placeholder={usernameFocus ? "Username" : ""}
                             />
+                            {errorMessage && (
+                                <div className={styles.error}>
+                                    {errorMessage}
+                                </div>
+                            )}
                         </div>
 
                         <div className={styles.inputContainer}>
@@ -224,7 +290,7 @@ const Login = () => {
                         </Link>
                     </div>
                 </form>
-            </motion.main>
+            </motion.main> */}
         </>
     );
 };

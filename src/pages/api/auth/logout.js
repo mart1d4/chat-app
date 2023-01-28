@@ -7,8 +7,9 @@ connectDB();
 export default async (req, res) => {
     const { cookies } = req;
     if (!cookies?.jwt) {
-        res.status(204);
-        return res.redirect("/login");
+        return res.status(204).send({
+            message: "No cookie found",
+        });
     }
     const refreshToken = cookies.jwt;
 
@@ -20,8 +21,9 @@ export default async (req, res) => {
                 path: "/",
             }),
         ]);
-        res.status(204);
-        return res.redirect("/login");
+        return res.status(204).send({
+            message: "No user found",
+        });
     }
 
     user.refreshToken = "";
@@ -33,6 +35,7 @@ export default async (req, res) => {
             path: "/",
         }),
     ]);
-    res.status(204);
-    return res.redirect("/login");
+    return res.status(204).send({
+        message: "Logged out",
+    });
 };

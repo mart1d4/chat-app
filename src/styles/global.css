@@ -172,6 +172,9 @@
         --foreground-5: hsl(213, 4%, 57%);
         --foreground-light: hsl(218, 5%, 47%);
         --accent-1: hsl(235, 86%, 65%);
+        --accent-2: hsl(235, 51%, 52%);
+        --accent-3: hsl(235, 47%, 44%);
+        --accent-light: hsl(197, 100%, 48%);
         --valid-1: hsl(139, 86%, 65%);
         --valid-2: hsl(139, 52%, 52%);
         --valid-3: hsl(139, 47%, 33%);
@@ -207,7 +210,9 @@
         --foreground-4: hsl(214, 4%, 65%);
         --foreground-5: hsl(213, 4%, 57%);
         --foreground-light: hsl(218, 5%, 47%);
-        --accent-1: hsl(235, 86%, 65%);
+        --accent-1: hsl(235, 87%, 65%);
+        --accent-2: hsl(235, 51%, 52%);
+        --accent-light: hsl(197, 100%, 48%);
         --valid-1: hsl(139, 86%, 65%);
         --valid-2: hsl(139, 47%, 33%);
         --error-1: hsl(359, 83%, 59%);
@@ -282,6 +287,19 @@ body,
     display: flex;
 }
 
-svg {
-    fill: var(--foreground-2);
+button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: none;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16px;
+    padding: 2px 16px;
+    user-select: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }

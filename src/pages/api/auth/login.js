@@ -3,18 +3,30 @@ import connectDB from "../../../utils/connectDB";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { serialize } from "cookie";
+import mongoose from "mongoose";
 
 connectDB();
 
 export default async (req, res) => {
-    const { username, password } = req.body;
+    const { uid, password } = req.body;
+
+    if (!uid || !password) {
+        return res.status(400).send({
+            error: "Login or password is invalid",
+            message: "Please provide a valid username and password",
+        });
+    }
 
     try {
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username: uid });
+
         if (!user)
             return res
                 .status(404)
-                .send({ message: "User with that username does not exist" });
+                .send({
+                    error: "Login or password is invalid",
+                    message: "User with that username does not exist",
+                });
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
         if (passwordsMatch) {
@@ -56,10 +68,14 @@ export default async (req, res) => {
                 },
             });
         } else {
-            res.status(401).send({ message: "Incorrect password" });
+            res.status(401).send({
+                error: "Login or password is invalid",
+                message: "Incorrect password",
+            });
         }
     } catch (error) {
-        console.error("error:" + error);
-        res.status(500).send({ message: "Internal server error" });
+        res.status(500).send({
+            error: "Something went wrong",
+        });
     }
 };

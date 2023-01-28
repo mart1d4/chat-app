@@ -1,4 +1,4 @@
-.main {
+/* .main {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -40,23 +40,10 @@
 }
 
 .error {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    top: 20px;
-    left: 50%;
-    font-size: 0.9rem;
-    color: var(--error-1);
-    text-align: center;
-    padding: 12px 16px;
-    z-index: 1000;
-    background-color: var(--error-2);
-    border-radius: 5px;
-}
-
-.error svg {
-    stroke: var(--error-1);
+    margin-top: 8px;
+    color: var(--error-2);
+    font-size: 14px;
+    user-select: none;
 }
 
 .label {
@@ -120,4 +107,167 @@
 
 .link:hover {
     text-decoration: underline;
+} */
+
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent-1);
+}
+
+.wrapper form {
+    display: flex;
+    width: 550px;
+    padding: 32px;
+    font-size: 18px;
+    border-radius: 5px;
+    box-shadow: var(--elevation-high);
+    color: var(--foreground-4);
+    background-color: var(--background-4);
+}
+
+.loginContainer {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: flex-start;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    user-select: none;
+}
+
+.header h1 {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 24px;
+    line-height: 30px;
+    color: var(--foreground-1);
+}
+
+.header div {
+    font-size: 1rem;
+    line-height: 20px;
+    color: var(--foreground-4);
+}
+
+.loginBlock {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.loginBlock > div:first-child {
+    margin-bottom: 20px;
+}
+
+.loginBlock label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    user-select: none;
+}
+
+.loginBlock label > span {
+    color: var(--error-2);
+    padding-left: 4px;
+}
+
+.errorLabel {
+    font-size: 12px;
+    font-weight: 500;
+    font-style: italic;
+    text-transform: none;
+}
+
+.errorLabel > span {
+    padding: 0 4px;
+}
+
+.inputContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    border-radius: 3px;
+    background-color: var(--background-1);
+    border: none;
+}
+
+.inputContainer > input {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    padding: 10px;
+    height: 40px;
+    outline: none;
+    color: var(--foreground-3);
+}
+
+.loginBlock > button:nth-child(3) {
+    display: block;
+    margin: 4px 0 20px 0;
+    width: auto;
+    height: auto;
+    padding: 2px 0;
+    color: var(--accent-light);
+}
+
+.loginBlock > button:nth-child(3):hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.loginBlock > button:nth-child(4) {
+    color: var(--foreground-1);
+    background-color: var(--accent-1);
+    font-size: 1rem;
+    line-height: 24px;
+    margin-bottom: 8px;
+    width: 100%;
+    height: 44px;
+    min-width: 130px;
+    cursor: pointer;
+}
+
+.loginBlock > button:nth-child(4):hover {
+    background-color: var(--accent-2);
+}
+
+.loginBlock > button:nth-child(4):active {
+    background-color: var(--accent-3);
+}
+
+.loginBlock > div:last-child {
+    margin-top: 4px;
+}
+
+.loginBlock > div:last-child > span {
+    font-size: 14px;
+    line-height: 16px;
+    user-select: none;
+}
+
+.loginBlock > div:last-child > button {
+    color: var(--accent-light);
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0;
+    width: auto;
+    height: auto;
+}
+
+.loginBlock > div:last-child > button:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }

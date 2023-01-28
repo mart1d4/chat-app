@@ -11,7 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [filteredList, setFilteredList] = useState(list);
-    const [hoverLi, setHoverLi] = useState(null);
     const [hover, setHover] = useState({
         tooltip1: null,
         tooltip2: null,
@@ -375,7 +374,15 @@ const UserLists = ({ list, content }) => {
     }
 
     return (
-        <div className={styles.content}>
+        <div
+            className={styles.content}
+            onMouseLeave={() => {
+                setHover({
+                    tooltip1: null,
+                    tooltip2: null,
+                })
+            }}
+        >
 
             <AnimatePresence>
                 {error && <Alerts type="error" message={error} />}
@@ -428,15 +435,6 @@ const UserLists = ({ list, content }) => {
                                 large: { index, x: e.clientX, y: e.clientY },
                             });
                         }}
-                        onMouseEnter={() => {
-                            setHoverLi(index);
-                        }}
-                        onMouseLeave={() => {
-                            setHoverLi(null);
-                        }}
-                        style={{
-                            borderColor: hoverLi === index - 1 && "transparent",
-                        }}
                     >
                         {showMenu?.large?.index === index && (
                             <Menu
@@ -466,7 +464,7 @@ const UserLists = ({ list, content }) => {
                                     )) && (
                                             <AvatarStatus
                                                 status={user.status}
-                                                background={hoverLi === index ? "var(--background-hover-1)" : "var(--background-4)"}
+                                                background="var(--background-4)"
                                             />
                                         )}
                                 </div>
@@ -531,7 +529,10 @@ const UserLists = ({ list, content }) => {
                                 {buttons[content]?.second && (
                                     <button
                                         onMouseEnter={() => {
-                                            if (hover.tooltip2 === index) return;
+                                            if (
+                                                hover.tooltip2 === index
+                                                || showMenu.small === index
+                                            ) return;
                                             setHover({
                                                 tooltip1: null,
                                                 tooltip2: index,
@@ -544,13 +545,17 @@ const UserLists = ({ list, content }) => {
                                                 tooltip2: null,
                                             })
                                         }}
-                                        onClick={() => {
-                                            if (showMenu.small === index) return;
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             if (content === "all" || content === "online") {
                                                 setShowMenu({
-                                                    small: index,
+                                                    small: showMenu.small === index ? null : index,
                                                     large: null,
                                                 });
+                                                setHover({
+                                                    tooltip1: null,
+                                                    tooltip2: null,
+                                                })
                                             }
                                         }}
                                     >
