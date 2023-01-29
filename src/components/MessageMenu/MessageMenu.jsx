@@ -51,8 +51,12 @@ const MessageMenu = ({ message, start, functions }) => {
                 <Menu
                     items={menuType === 'sender' ? senderItems : receiverItems}
                     position={{
-                        top: start ? '-16px' : '-25px',
-                        right: '60px',
+                        top: showMenu.event.clientY,
+                        left: showMenu.event.clientX,
+                    }}
+                    event={showMenu.event}
+                    setMenu={{
+                        func: setShowMenu,
                     }}
                 />
             )}
@@ -109,7 +113,9 @@ const MessageMenu = ({ message, start, functions }) => {
                         role="button"
                         onMouseEnter={() => setShowTooltip(3)}
                         onMouseLeave={() => setShowTooltip(null)}
-                        onClick={() => setShowMenu(!showMenu)}
+                        onClick={(e) => {
+                            setShowMenu({ event: e });
+                        }}
                     >
                         <Tooltip
                             show={showTooltip === 3}

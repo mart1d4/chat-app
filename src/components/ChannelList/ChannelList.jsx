@@ -8,7 +8,7 @@ import Image from "next/image";
 
 const ConversationList = () => {
     const [hover, setHover] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
+    const [showMenu, setShowMenu] = useState(null);
     const [showTooltip, setShowTooltip] = useState(false);
 
     useEffect(() => {
@@ -222,7 +222,7 @@ const ConversationList = () => {
                                     bottom: "calc(100% + 12px)",
                                     left: "0px",
                                 }}
-                                setMenu={{ func: () => setShowMenu(false) }}
+                                setMenu={{ func: () => setShowMenu(null) }}
                             />
                         }
                     </div>
