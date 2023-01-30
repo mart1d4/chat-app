@@ -80,7 +80,7 @@ const Layout = ({ children }) => {
     if (showSettings) return <Settings />;
 
     return (
-        isLoading || isFetching ? (
+        isLoading && isFetching ? (
             <Loader />
         ) : (
             <div className={styles.container}>

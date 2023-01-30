@@ -44,19 +44,19 @@ const Menu = ({ items, position, event, setMenu }) => {
         }
     }, [position]);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setMenu.func(false);
-            }
-        };
+    // useEffect(() => {
+    //     const handleClickOutside = (event) => {
+    //         if (menuRef.current && !menuRef.current.contains(event.target)) {
+    //             setMenu.func(false);
+    //         }
+    //     };
 
-        document.addEventListener("click", handleClickOutside);
+    //     document.addEventListener("click", handleClickOutside);
 
-        return () => {
-            document.removeEventListener("click", handleClickOutside);
-        };
-    }, [position]);
+    //     return () => {
+    //         document.removeEventListener("click", handleClickOutside);
+    //     };
+    // }, [position]);
 
     return (
         <div
