@@ -3,9 +3,9 @@ import styles from "./Loader.module.css";
 const Loader = () => {
     return (
         <div className={styles.container}>
-            <video>
+            <video autoPlay loop>
                 <source
-                    src="../../../public/images/spinner.webm"
+                    src="../../assets/spinner.webm"
                     type="video/webm"
                 />
             </video>

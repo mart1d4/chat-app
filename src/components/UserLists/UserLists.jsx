@@ -23,12 +23,12 @@ const UserLists = ({ list, content }) => {
                 <div className={styles.noData}>
                     <Image
                         src={content === "all"
-                            ? "/images/no-friends.svg"
+                            ? "/assets/no-friends.svg"
                             : content === "online"
-                                ? "/images/no-online.svg"
+                                ? "/assets/no-online.svg"
                                 : content === "pending"
-                                    ? "/images/no-pending.svg"
-                                    : "/images/no-blocked.svg"}
+                                    ? "/assets/no-pending.svg"
+                                    : "/assets/no-blocked.svg"}
                         alt="No Data"
                         width={
                             content === "all"
@@ -48,6 +48,7 @@ const UserLists = ({ list, content }) => {
                                         ? 200
                                         : 232
                         }
+                        priority
                     />
 
                     <div>

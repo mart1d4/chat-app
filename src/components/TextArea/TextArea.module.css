@@ -202,7 +202,7 @@
 }
 
 .emojiButton {
-    background-image: url('../../../public/images/emoji-picker.png');
+    background-image: url('../../../public/assets/emoji-picker.png');
     background-repeat: no-repeat;
     background-size: 242px 110px;
     width: 22px;

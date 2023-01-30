@@ -7,25 +7,7 @@
     background-color: var(--background-1);
 }
 
-.loader {
-    border: 3px solid transparent;
-    border-radius: 50%;
-    border-top: 3px solid #3498db;
-    border-bottom: 3px solid #3498db;
-    border-left: 3px solid #3498db;
-    width: 60px;
-    height: 60px;
-    -webkit-animation: spin 1s linear infinite;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
+.container video {
+    width: 200px;
+    height: 200px;
 }
