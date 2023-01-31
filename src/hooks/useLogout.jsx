@@ -14,7 +14,6 @@ export default function useLogout() {
             const response = await axios('/auth/logout', {
                 withCredentials: true
             });
-            console.log(response);
             router.push('/login');
         } catch (err) {
             console.error(err);

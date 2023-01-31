@@ -27,10 +27,10 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
                     style={{
                         backgroundColor: isFriend ?
                             (
-                                status === 'Online' ? "var(--valid-1)"
+                                status === 'Online' ? "var(--success-light)"
                                     : status === 'Away' ? "var(--warning-1)"
                                         : status === 'Busy' ? "var(--error-1)"
-                                            : "var(--offline)"
+                                            : "var(--default-light)"
                             ) : "var(--offline)",
                     }}
                 >

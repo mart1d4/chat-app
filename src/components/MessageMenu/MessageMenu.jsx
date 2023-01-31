@@ -46,21 +46,6 @@ const MessageMenu = ({ message, start, functions }) => {
         <div
             className={styles.buttonContainer}
         >
-
-            {showMenu && (
-                <Menu
-                    items={menuType === 'sender' ? senderItems : receiverItems}
-                    position={{
-                        top: showMenu.event.clientY,
-                        left: showMenu.event.clientX,
-                    }}
-                    event={showMenu.event}
-                    setMenu={{
-                        func: setShowMenu,
-                    }}
-                />
-            )}
-
             <div
                 className={styles.buttonWrapper}
                 style={{
@@ -117,6 +102,17 @@ const MessageMenu = ({ message, start, functions }) => {
                             setShowMenu({ event: e });
                         }}
                     >
+                        {showMenu && (
+                            <Menu
+                                items={menuType === 'sender' ? senderItems : receiverItems}
+                                position={{
+                                    right: "120%",
+                                    top: 0,
+                                }}
+                                setMenu={{ func: () => setShowMenu(false) }}
+                            />
+                        )}
+
                         <Tooltip
                             show={showTooltip === 3}
                         >

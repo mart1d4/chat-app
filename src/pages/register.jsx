@@ -1,95 +1,89 @@
 import { useRef, useState, useEffect } from "react";
 import axios from "../api/axios";
 import useUserData from "../hooks/useUserData";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "../components";
 import Head from "next/head";
 
-const USER_REGEX = /^.{1,32}$/;
+const USER_REGEX = /^.{4,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
 
 const Register = () => {
     const { auth } = useUserData();
     const router = useRouter();
 
-    const usernameRef = useRef();
-    const errorRef = useRef();
-
     const [username, setUsername] = useState("");
-    const [validUsername, setValidUsername] = useState(false);
-    const [usernameFocus, setUsernameFocus] = useState(false);
-
     const [password, setPassword] = useState("");
-    const [validPassword, setValidPassword] = useState(false);
-    const [passwordFocus, setPasswordFocus] = useState(false);
+    const [passwordMatch, setPasswordMatch] = useState("");
 
-    const [matchPassword, setMatchPassword] = useState("");
-    const [validMatch, setValidMatch] = useState(false);
-    const [matchFocus, setMatchFocus] = useState(false);
+    const [usernameError, setUsernameError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
 
-    const [errorMessage, setErrorMessage] = useState("");
-    const [success, setSuccess] = useState(false);
+    const uidInputRef = useRef();
 
     useEffect(() => {
         if (auth?.accessToken) router.push("/channels/@me");
-        usernameRef?.current?.focus();
+    }, [auth]);
+
+    useEffect(() => {
+        uidInputRef.current.focus();
     }, []);
 
     useEffect(() => {
-        setValidUsername(USER_REGEX.test(username));
+        setUsernameError("");
     }, [username]);
 
     useEffect(() => {
-        setValidPassword(PWD_REGEX.test(password));
-        setValidMatch(password === matchPassword);
-    }, [password, matchPassword]);
+        setPasswordError("");
+    }, [password, passwordMatch]);
 
     useEffect(() => {
-        setErrorMessage("");
-    }, [username, password, matchPassword]);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setErrorMessage("");
-        }, 15000);
-    }, [errorMessage]);
+        uidInputRef.current.focus();
+    }, [usernameError]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         const v1 = USER_REGEX.test(username);
         const v2 = PWD_REGEX.test(password);
-        if (!v1 || !v2) {
-            setErrorMessage("Invalid Entry");
+
+        (!v1) && setUsernameError("Invalid Username");
+        (!v2) && setPasswordError("Invalid Password");
+        if (!v1 || !v2) return;
+
+        if (password !== passwordMatch) {
+            setPasswordError("Passwords do not match");
             return;
         }
+
         try {
             await axios.post(
                 "/auth/register",
-                JSON.stringify({ username: username, password: password }),
+                { username: username, password: password },
                 {
                     headers: { "Content-Type": "application/json" },
                     withCredentials: true,
                 }
             );
-            setSuccess(true);
             setUsername("");
             setPassword("");
-            setMatchPassword("");
+            setPasswordMatch("");
             router.push("/login");
         } catch (err) {
             if (!err?.response) {
-                setErrorMessage("No Server Response");
+                setUsernameError("No Server Response");
+                setPasswordError("No Server Response");
             } else if (err.response?.status === 422) {
-                setErrorMessage("Username Taken");
+                setUsernameError("Username Taken");
             } else if (err.response?.status === 500) {
-                setErrorMessage("Server Error");
+                setUsernameError("Server Error");
+                setPasswordError("Server Error");
             } else {
-                setErrorMessage("Registration Failed");
+                setUsernameError("Unknown Error");
+                setPasswordError("Unknown Error");
             }
-            errorRef?.current?.focus();
         }
     };
 
@@ -98,267 +92,180 @@ const Register = () => {
             <Head>
                 <title>Discord | Register</title>
             </Head>
-            <motion.main
-                className={styles.main}
-                initial={{
-                    opacity: 0,
-                    scale: 0.5,
-                }}
-                animate={{
-                    opacity: 1,
-                    scale: 1,
-                }}
-                exit={{
-                    opacity: 0,
-                    scale: 0.5,
-                }}
-                transition={{
-                    duration: 0.5,
-                    ease: "backInOut",
-                }}
-            >
+
+            <div className={styles.wrapper}>
+                <div
+                    style={{
+                        position: "fixed",
+                        top: "0",
+                        left: "0",
+                        width: "100%",
+                        textAlign: "center",
+                        padding: "1rem",
+                        fontSize: "1.2rem",
+                        background: "red",
+                        zIndex: "1000",
+                    }}
+                >
+                    This app is not secured.
+                    Think twice before registering. Use it at your own risk
+                </div>
+
                 <AnimatePresence>
-                    {errorMessage && (
-                        <motion.div
-                            ref={errorRef}
-                            className={styles.error}
-                            initial={{
-                                opacity: 0,
-                                transform: "translateX(-50%) scale(0.5)",
-                            }}
-                            animate={{
-                                opacity: 1,
-                                transform: "translateX(-50%) scale(1)",
-                            }}
-                            exit={{
-                                opacity: 0,
-                                transform: "translateX(-50%) scale(0.5)",
-                            }}
-                            transition={{
-                                duration: 0.2,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle cx="12" cy="12" r="9" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                            <p aria-live="assertive">{errorMessage}</p>
-                        </motion.div>
-                    )}
+                    <motion.form
+                        onSubmit={handleSubmit}
+                        initial={{
+                            scale: 1.2,
+                        }}
+                        animate={{
+                            scale: 1,
+                        }}
+                        exit={{
+                            scale: 1.2,
+                        }}
+                        transition={{
+                            duration: 0.3,
+                            ease: "easeInOut",
+                        }}
+                    >
+                        <div className={styles.loginContainer}>
+                            <div className={styles.header}>
+                                <h1>Create an account</h1>
+                            </div>
+                            <div className={styles.loginBlock}>
+                                <div>
+                                    <label
+                                        htmlFor="uid"
+                                        style={{
+                                            color: usernameError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
+                                        }}
+                                    >
+                                        Username
+                                        {usernameError.length ? (
+                                            <span className={styles.errorLabel}>
+                                                - {usernameError}
+                                            </span>
+                                        ) : (
+                                            <span>*</span>
+                                        )}
+                                    </label>
+                                    <div className={styles.inputContainer}>
+                                        <input
+                                            ref={uidInputRef}
+                                            id="uid"
+                                            type="text"
+                                            name="username"
+                                            aria-label="Username"
+                                            required
+                                            autoCapitalize="off"
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            maxLength={32}
+                                            spellCheck="false"
+                                            aria-labelledby="uid"
+                                            aria-describedby="uid"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="password"
+                                        style={{
+                                            color: passwordError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
+                                        }}
+                                    >
+                                        Password
+                                        {passwordError.length ? (
+                                            <span className={styles.errorLabel}>
+                                                - {passwordError}
+                                            </span>
+                                        ) : (
+                                            <span>*</span>
+                                        )}
+                                    </label>
+                                    <div className={styles.inputContainer}>
+                                        <input
+                                            id="password"
+                                            type="password"
+                                            name="password"
+                                            aria-label="Password"
+                                            required
+                                            autoCapitalize="off"
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            maxLength={256}
+                                            spellCheck="false"
+                                            aria-labelledby="password"
+                                            aria-describedby="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="password-match"
+                                        style={{
+                                            color: passwordError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
+                                        }}
+                                    >
+                                        Password Match
+                                        {passwordError.length ? (
+                                            <span className={styles.errorLabel}>
+                                                - {passwordError}
+                                            </span>
+                                        ) : (
+                                            <span>*</span>
+                                        )}
+                                    </label>
+                                    <div className={styles.inputContainer}>
+                                        <input
+                                            id="password-match"
+                                            type="password"
+                                            name="password-match"
+                                            aria-label="Password Match"
+                                            required
+                                            autoCapitalize="off"
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            maxLength={256}
+                                            spellCheck="false"
+                                            aria-labelledby="password-match"
+                                            aria-describedby="password-match"
+                                            value={passwordMatch}
+                                            onChange={(e) => setPasswordMatch(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <button type="submit" className={styles.buttonSubmit}>
+                                    <div>Register</div>
+                                </button>
+
+                                <div>
+                                    <button
+                                        onClick={() => {
+                                            router.push("/login");
+                                        }}
+                                    >
+                                        Already have an account?
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.form>
                 </AnimatePresence>
-
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <h2 className={styles.formTitle}>Register</h2>
-
-                    <div className={styles.inputsContainer}>
-                        <div className={styles.inputContainer}>
-                            <AnimatePresence>
-                                <motion.label
-                                    htmlFor="username"
-                                    className={styles.label}
-                                    animate={{
-                                        opacity:
-                                            usernameFocus || username
-                                                ? 1
-                                                : 0.5,
-                                        top:
-                                            usernameFocus || username
-                                                ? "-40%"
-                                                : "50%",
-                                        left:
-                                            usernameFocus || username
-                                                ? "5px"
-                                                : "15px",
-                                        transform:
-                                            usernameFocus || username
-                                                ? "translateY(0%)"
-                                                : "translateY(-50%)",
-                                    }}
-                                    transition={{
-                                        duration: 0.2,
-                                        ease: "easeInOut",
-                                    }}
-                                >
-                                    Username
-                                </motion.label>
-                            </AnimatePresence>
-                            <input
-                                type="text"
-                                id="username"
-                                ref={usernameRef}
-                                autoComplete="off"
-                                onChange={(e) =>
-                                    setUsername(e.target.value)
-                                }
-                                value={username}
-                                required
-                                aria-invalid={
-                                    validUsername ? "false" : "true"
-                                }
-                                aria-describedby="uidnote"
-                                onFocus={() => setUsernameFocus(true)}
-                                onBlur={() => setUsernameFocus(false)}
-                                className={styles.input}
-                                placeholder={
-                                    usernameFocus ? "Username" : ""
-                                }
-                            />
-                            <Tooltip
-                                show={
-                                    usernameFocus && username && !validUsername
-                                }
-                                pos="left"
-                            >
-                                <div>
-                                    Must be less than 32 characters
-                                </div>
-                            </Tooltip>
-                        </div>
-
-                        <div className={styles.inputContainer}>
-                            <AnimatePresence>
-                                <motion.label
-                                    htmlFor="password"
-                                    className={styles.label}
-                                    animate={{
-                                        opacity:
-                                            passwordFocus || password
-                                                ? 1
-                                                : 0.5,
-                                        top:
-                                            passwordFocus || password
-                                                ? "-40%"
-                                                : "50%",
-                                        left:
-                                            passwordFocus || password
-                                                ? "5px"
-                                                : "15px",
-                                        transform:
-                                            passwordFocus || password
-                                                ? "translateY(0%)"
-                                                : "translateY(-50%)",
-                                    }}
-                                    transition={{
-                                        duration: 0.2,
-                                        ease: "easeInOut",
-                                    }}
-                                >
-                                    Password
-                                </motion.label>
-                            </AnimatePresence>
-                            <input
-                                type="password"
-                                id="password"
-                                onChange={(e) =>
-                                    setPassword(e.target.value)
-                                }
-                                value={password}
-                                required
-                                aria-invalid={
-                                    validPassword ? "false" : "true"
-                                }
-                                aria-describedby="passwordnote"
-                                onFocus={() => setPasswordFocus(true)}
-                                onBlur={() => setPasswordFocus(false)}
-                                className={styles.input}
-                                placeholder={
-                                    passwordFocus ? "Password" : ""
-                                }
-                            />
-                            <Tooltip
-                                show={passwordFocus && !validPassword}
-                                pos="left"
-                            >
-                                <div>
-                                    Must have at least 8 caracters
-                                </div>
-                            </Tooltip>
-                        </div>
-
-                        <div className={styles.inputContainer}>
-                            <AnimatePresence>
-                                <motion.label
-                                    htmlFor="password"
-                                    className={styles.label}
-                                    animate={{
-                                        opacity:
-                                            matchFocus || matchPassword
-                                                ? 1
-                                                : 0.5,
-                                        top:
-                                            matchFocus || matchPassword
-                                                ? "-40%"
-                                                : "50%",
-                                        left:
-                                            matchFocus || matchPassword
-                                                ? "5px"
-                                                : "15px",
-                                        transform:
-                                            matchFocus || matchPassword
-                                                ? "translateY(0%)"
-                                                : "translateY(-50%)",
-                                    }}
-                                    transition={{
-                                        duration: 0.2,
-                                        ease: "easeInOut",
-                                    }}
-                                >
-                                    Confirm Password
-                                </motion.label>
-                            </AnimatePresence>
-                            <input
-                                type="password"
-                                id="passwordConfirm"
-                                onChange={(e) =>
-                                    setMatchPassword(e.target.value)
-                                }
-                                value={matchPassword}
-                                required
-                                aria-invalid={validMatch ? "false" : "true"}
-                                aria-describedby="confirmnote"
-                                onFocus={() => setMatchFocus(true)}
-                                onBlur={() => setMatchFocus(false)}
-                                className={styles.input}
-                                placeholder={
-                                    matchFocus ? "Confirm Password" : ""
-                                }
-                            />
-                            <Tooltip
-                                show={matchFocus && !validMatch}
-                                pos="left"
-                            >
-                                Must match the first password input field.
-                            </Tooltip>
-                        </div>
-
-                        <button
-                            disabled={
-                                !validUsername || !validPassword || !validMatch
-                                    ? true
-                                    : false
-                            }
-                            className={styles.button}
-                        >
-                            Register
-                        </button>
-                    </div>
-
-                    <div className={styles.bottomLinks}>
-                        <Link href="/login" className={styles.link}>
-                            Already have an account?
-                        </Link>
-
-                        <Link href="/" className={styles.link}>
-                            Go back home
-                        </Link>
-                    </div>
-                </form>
-            </motion.main>
+            </div>
         </>
     );
 };

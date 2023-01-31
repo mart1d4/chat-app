@@ -18,7 +18,9 @@
 }
 
 .menuItem,
-.menuItemDanger {
+.menuItemDanger,
+.menuItemActive,
+.menuItemDangerActive {
     color: var(--foreground-3);
     display: flex;
     align-items: center;
@@ -34,31 +36,46 @@
     user-select: none;
 }
 
-.menuItemDanger {
+.menuItemDanger,
+.menuItemActive {
     color: var(--error-1);
 }
 
-.menuItemDanger:hover {
+.menuItemActive {
+    background-color: var(--accent-1);
+    color: var(--foregroun-1);
+}
+
+.menuItem:active {
+    background-color: var(--accent-2);
+    color: var(--foregroun-1);
+}
+
+.menuItemDangerActive {
     background-color: var(--error-1);
     color: var(--foreground-1);
+}
+
+.menuItemDanger:active {
+    background-color: var(--error-2);
+    color: var(--foregroun-1);
 }
 
 .menuItemDanger path {
     fill: var(--error-1);
 }
 
-.menuItem:hover path,
-.menuItemDanger:hover path {
+.menuItemActive path,
+.menuItemDangerActive path,
+.menuItem:active path,
+.menuItemDanger:active path {
     fill: var(--foreground-1);
 }
 
-.menuItem:hover {
-    background-color: var(--accent-1);
-    color: var(--foregroun-1);
-}
-
 .menuItem > .label,
-.menuItemDanger > .label {
+.menuItemDanger > .label,
+.menuItemActive > .label,
+.menuItemDangerActive > .label {
     flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -67,7 +84,9 @@
 }
 
 .menuItem > .icon,
-.menuItemDanger > .icon {
+.menuItemDanger > .icon,
+.menuItemActive > .icon,
+.menuItemDangerActive > .icon {
     flex: 0 0 auto;
     height: 18px;
     width: 18px;

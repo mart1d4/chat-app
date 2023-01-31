@@ -61,7 +61,7 @@ const AddFriend = () => {
                         className={styles.inputWrapper}
                         style={{
                             outline: error.length > 0 ? "1px solid var(--error-1)"
-                                : valid.length > 0 && "1px solid var(--valid-1)",
+                                : valid.length > 0 && "1px solid var(--success-1)",
                         }}
                     >
                         <div>
@@ -93,6 +93,10 @@ const AddFriend = () => {
                             }}
                             onClick={(e) => {
                                 e.preventDefault();
+                                if (!input.length) {
+                                    inputRef.current.focus();
+                                    return;
+                                }
                                 requestFriend();
                             }}
                         >

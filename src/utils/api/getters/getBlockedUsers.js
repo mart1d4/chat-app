@@ -1,7 +1,12 @@
 import User from "../../models/User";
+import mongoose from "mongoose";
 
-const getBlockedUsers = async (userID) => {
-    if (!userID) return { error: "No user ID provided" };
+const getBlockedUsers = async (userIDUnclean) => {
+    if (!userIDUnclean) return { error: "No user ID provided" };
+
+    if (!mongoose.Types.ObjectId.isValid(userIDUnclean)) return { error: "Invalid user ID" };
+
+    const userID = mongoose.Types.ObjectId(userIDUnclean);
 
     const user = await User.findById(userID).populate("blockedUsers");
     if (!user) return { error: "No user found" };

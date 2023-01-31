@@ -82,14 +82,14 @@
 
 .error {
     margin-top: 8px;
-    color: var(--error-2);
+    color: var(--error-light);
     font-size: 14px;
     user-select: none;
 }
 
 .valid {
     margin-top: 8px;
-    color: var(--valid-2);
+    color: var(--success-light);
     font-size: 14px;
     user-select: none;
 }

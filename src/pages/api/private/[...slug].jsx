@@ -17,6 +17,8 @@ export default async (req, res) => {
     const channelID = slug[0];
     const messageID = slug[2];
 
+    console.log(body);
+
     if (req.method === "POST") {
         if (slug[1] === "send") {
             const data = await sendPrivateMessage(channelID, body.message);

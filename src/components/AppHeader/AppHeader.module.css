@@ -77,11 +77,11 @@
 
 .itemAdd {
     color: var(--foreground-1);
-    background-color: var(--valid-3);
+    background-color: var(--success-1);
 }
 
 .itemAddActive {
-    color: var(--valid-1);
+    color: var(--success-light);
     cursor: default;
 }
 

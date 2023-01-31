@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Tooltip, Icon, AvatarStatus, Menu } from "..";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -18,8 +19,16 @@ const ConversationList = () => {
     const router = useRouter();
     const currentPath = router.asPath;
 
-    const { auth, friends, friendRequests, channelList, setShowSettings } = useUserData();
+    const {
+        auth,
+        friends,
+        friendRequests,
+        channelList,
+        setChannelList,
+        setShowSettings,
+    } = useUserData();
     const { logout } = useLogout();
+    const axiosPrivate = useAxiosPrivate();
     const requestReceived = friendRequests.filter((request) => request.type === "received").length;
 
     const isFriend = (id) => {
@@ -39,15 +48,23 @@ const ConversationList = () => {
         },
     ]
 
+    const removeChannel = async (channelID) => {
+        const response = await axiosPrivate.delete(
+            `/private/${channelID}/remove`,
+            { userID: auth?.user?._id }
+        );
+        if (response.data.error) {
+            console.error(response.data.error);
+        } else {
+            setChannelList(channelList.filter((channel) => channel._id.toString() !== channelID));
+        }
+    }
+
     return (
         <div className={styles.nav}>
-            <div
-                className={styles.privateChannels}
-            >
+            <div className={styles.privateChannels}>
                 <div className={styles.searchContainer}>
-                    <button
-                        className={styles.searchButton}
-                    >
+                    <button className={styles.searchButton}>
                         Find or start a conversation
                     </button>
                 </div>
@@ -167,7 +184,13 @@ const ConversationList = () => {
                                         </div>
                                     </div>
 
-                                    <div className={styles.closeButton}>
+                                    <div
+                                        className={styles.closeButton}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeChannel(conv?._id);
+                                        }}
+                                    >
                                         <Icon
                                             name="close"
                                             size={16}

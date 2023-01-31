@@ -5,7 +5,9 @@ import styles from "./UserList.module.css";
 
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
-    const [filteredList, setFilteredList] = useState(list);
+    const [filteredList, setFilteredList] = useState(
+        list.sort((a, b) => a.username.localeCompare(b.username))
+    );
 
     useEffect(() => {
         if (search) {
@@ -13,7 +15,11 @@ const UserLists = ({ list, content }) => {
                 user.username.toLowerCase().includes(search.toLowerCase()))
             );
         } else setFilteredList(list);
-    }, [list, content, search]);
+    }, [search]);
+
+    useEffect(() => {
+        setFilteredList(list.sort((a, b) => a.username.localeCompare(b.username)));
+    }, [list]);
 
     const searchBar = useRef(null);
 
