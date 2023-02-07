@@ -14,9 +14,9 @@ const Layout = ({ children }) => {
         auth,
         isLoading,
         setFriends,
-        setFriendRequests,
-        setBlockedUsers,
-        setChannelList,
+        setRequests,
+        setBlocked,
+        setChannels,
         showSettings,
     } = useUserData();
 
@@ -29,47 +29,46 @@ const Layout = ({ children }) => {
 
         const getFriends = async () => {
             const res = await axiosPrivate.get(
-                `/users/${auth?.user?._id}/friends`,
+                `/users/@me/friends`,
                 { signal: controller.signal }
             );
-            isMounted && setFriends(res.data);
+            isMounted && setFriends(res.data.friends);
         };
 
-        const getFriendRequests = async () => {
+        const getRequests = async () => {
             const res = await axiosPrivate.get(
-                `/users/${auth?.user?._id}/friendRequests`,
+                `/users/@me/requests`,
                 { signal: controller.signal }
             );
-            isMounted && setFriendRequests(res.data);
+            isMounted && setRequests(res.data.requests);
         };
 
-        const getBlockedUsers = async () => {
+        const getBlocked = async () => {
             const res = await axiosPrivate.get(
-                `/users/${auth?.user?._id}//blocked`,
+                `/users/@me/blocked`,
                 { signal: controller.signal }
             );
-            isMounted && setBlockedUsers(res.data);
+            isMounted && setBlocked(res.data.blocked);
         };
 
-        const getChannelList = async () => {
+        const getChannels = async () => {
             const res = await axiosPrivate.get(
-                `/users/${auth?.user?._id}/private/channels`,
+                `/users/@me/channels`,
                 { signal: controller.signal }
             );
-            isMounted && setChannelList(res.data);
+            isMounted && setChannels(res.data.channels);
+            isMounted && setIsFetching(false);
         };
 
         getFriends();
-        getFriendRequests();
-        getBlockedUsers();
-        getChannelList();
+        getRequests();
+        getBlocked();
+        getChannels();
         console.log(
             '%c[AuthProvider]',
             'color: hsl(38, 96%, 54%)',
             ': Fetching data...'
         );
-
-        setIsFetching(false);
 
         return () => {
             controller.abort();
@@ -80,7 +79,7 @@ const Layout = ({ children }) => {
     if (showSettings) return <Settings />;
 
     return (
-        isLoading && isFetching ? (
+        isLoading || isFetching ? (
             <Loader />
         ) : (
             <div className={styles.container}>

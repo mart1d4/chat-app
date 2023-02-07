@@ -61,14 +61,14 @@
     color: var(--foregroun-1);
 }
 
-.menuItemDanger path {
+.menuItemDanger svg *:not(g) {
     fill: var(--error-1);
 }
 
-.menuItemActive path,
-.menuItemDangerActive path,
-.menuItem:active path,
-.menuItemDanger:active path {
+.menuItemActive svg *:not(g),
+.menuItemDangerActive svg *:not(g),
+.menuItem:active svg *:not(g),
+.menuItemDanger:active svg *:not(g) {
     fill: var(--foreground-1);
 }
 

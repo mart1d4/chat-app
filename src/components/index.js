@@ -18,7 +18,8 @@ import Icon from './Icon/Icon';
 import AvatarStatus from './AvatarStatus/AvatarStatus';
 import Menu from './Menu/Menu';
 import Settings from './Settings/Settings';
-import ListItem from './UserLists/ListItem';
+import UserListItem from './UserLists/UserListItem';
+import ChannelListItem from './ChannelList/ChannelListItem';
 
 export {
     AppHeader,
@@ -41,5 +42,6 @@ export {
     AvatarStatus,
     Menu,
     Settings,
-    ListItem
+    UserListItem,
+    ChannelListItem,
 };

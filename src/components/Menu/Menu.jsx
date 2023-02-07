@@ -122,10 +122,14 @@ const Menu = ({ items, position, event, setMenu }) => {
             <div
                 ref={containerRef}
                 className={styles.menuContainer}
-                style={{
-                    ...positions,
-                    position: fixed ? "fixed" : "absolute",
-                }}
+                style={
+                    parent ? {
+                        ...positions,
+                        position: fixed ? "fixed" : "absolute",
+                    } : {
+                        display: "none",
+                    }
+                }
                 onClick={(e) => e.stopPropagation()}
                 onMouseEnter={(e) => {
                     e.stopPropagation();

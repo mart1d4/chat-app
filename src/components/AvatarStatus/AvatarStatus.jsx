@@ -31,7 +31,7 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
                                     : status === 'Away' ? "var(--warning-1)"
                                         : status === 'Busy' ? "var(--error-1)"
                                             : "var(--default-light)"
-                            ) : "var(--offline)",
+                            ) : "var(--default-light)",
                     }}
                 >
                     {status !== 'Online' && (

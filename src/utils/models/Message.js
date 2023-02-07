@@ -3,13 +3,72 @@ const Schema = mongoose.Schema;
 
 const messageSchema = new Schema(
     {
-        content: {
-            type: String,
-            default: "",
+        type: {
+            type: Number,
+            required: true,
+            default: 0,
+            min: 0,
+            max: 8,
         },
-        sender: {
+        channel: {
+            type: Schema.Types.ObjectId,
+            ref: "Channel",
+            required: true,
+        },
+        author: {
             type: Schema.Types.ObjectId,
             ref: "User",
+            required: true,
+        },
+        content: {
+            type: String,
+            required: true,
+            maxlength: 4000,
+            trim: true,
+        },
+        attachments: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Attachment",
+            },
+        ],
+        embeds: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Embed",
+            },
+        ],
+        reactions: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Reaction",
+            },
+        ],
+        mentions: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        mentionRoles: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Role",
+            },
+        ],
+        mentionChannels: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Channel",
+            },
+        ],
+        mentionEveryone: {
+            type: Boolean,
+            default: false,
+        },
+        pinned: {
+            type: Boolean,
+            default: false,
         },
         edited: {
             type: Boolean,

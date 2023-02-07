@@ -13,6 +13,8 @@ const Login = () => {
 
     const uidInputRef = useRef();
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [uid, setUID] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -32,24 +34,31 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            const response = await axios.post(
-                "/auth/login",
-                JSON.stringify({ uid, password }),
-                {
-                    headers: { "Content-Type": "application/json" },
-                    withCredentials: true,
-                }
-            );
+        setIsLoading(true);
+
+        const response = await axios.post(
+            "/auth/login",
+            { uid, password },
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        if (response.data.error) {
+            setError(response.data.error || "An error occurred");
+            setIsLoading(false);
+        } else {
             setAuth({
                 accessToken: response.data.accessToken,
                 user: response.data.user,
             });
-            setUsername("");
+
+            setUID("");
             setPassword("");
+            setIsLoading(false);
+
             router.push("/channels/@me");
-        } catch (err) {
-            setError(err.response.data.error || "An error occurred");
         }
     };
 
@@ -166,7 +175,9 @@ const Login = () => {
                                     Forgot your password?
                                 </button>
                                 <button type="submit" className={styles.buttonSubmit}>
-                                    <div>Log In</div>
+                                    <div className={isLoading && styles.loading}>
+                                        {!isLoading && "Login"}
+                                    </div>
                                 </button>
 
                                 <div>

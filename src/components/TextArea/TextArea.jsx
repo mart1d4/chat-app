@@ -138,7 +138,7 @@ const TextArea = ({ friend, sendMessage }) => {
                             <div>
                                 {message.length === 0 && (
                                     <div className={styles.textContainerPlaceholder}>
-                                        Message @{friend?.username || "username"}
+                                        Message {("@" + friend?.username) || "Loading"}
                                     </div>
                                 )}
 

@@ -145,4 +145,5 @@
     flex: 0 0 auto;
     margin: 0 8px;
     cursor: pointer;
+    border-radius: 4px;
 }

@@ -9,13 +9,13 @@ const AppHeader = ({ content, setContent, active }) => {
     const [friend, setFriend] = useState(null);
 
     const router = useRouter();
-    const { friendRequests, channelList } = useUserData();
-    const requestReceived = friendRequests.filter((request) => request.type === "received").length;
+    const { requests, channels } = useUserData();
+    const requestReceived = requests?.filter((request) => request.type === 1).length;
 
     useEffect(() => {
-        setFriend(channelList?.filter(
+        setFriend(channels?.filter(
             (channel) => channel._id.toString() === router.query.channelID
-        )[0]?.members[0]);
+        )[0]?.recipients[0]);
     }, []);
 
     const tabs = [
@@ -50,6 +50,7 @@ const AppHeader = ({ content, setContent, active }) => {
                                                 ? styles.itemActive
                                                 : styles.item
                                     }
+                                    tabIndex={0}
                                 >
                                     {tab.name}
                                     {tab.name === "Pending" && requestReceived > 0 && (
@@ -63,7 +64,7 @@ const AppHeader = ({ content, setContent, active }) => {
                         <div className={styles.icon}>
                             <Icon name="at" />
                         </div>
-                        <h1 className={styles.titleFriend}>{friend?.username || "username"}</h1>
+                        <h1 className={styles.titleFriend}>{friend?.username || "Loading"}</h1>
                         <div
                             className={styles.status}
                             onMouseEnter={() => setShowTooltip("status")}
@@ -83,8 +84,11 @@ const AppHeader = ({ content, setContent, active }) => {
 
             <div className={styles.toolbar}>
                 <div
+                    onFocus={() => setShowTooltip("inbox")}
+                    onBlur={() => setShowTooltip(null)}
                     onMouseEnter={() => setShowTooltip("inbox")}
                     onMouseLeave={() => setShowTooltip(null)}
+                    tabIndex={0}
                 >
                     <Icon name="inbox" />
 
@@ -94,8 +98,11 @@ const AppHeader = ({ content, setContent, active }) => {
                 </div>
 
                 <div
+                    onFocus={() => setShowTooltip("search")}
+                    onBlur={() => setShowTooltip(null)}
                     onMouseEnter={() => setShowTooltip("search")}
                     onMouseLeave={() => setShowTooltip(null)}
+                    tabIndex={0}
                 >
                     <Icon name="pin" />
 

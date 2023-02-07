@@ -181,14 +181,14 @@
         --success-light: hsl(139, 52%, 52%);
         --error-1: hsl(359, 67%, 54%);
         --error-2: hsl(359, 56%, 40%);
-        --error-2: hsl(359, 56%, 35%);
+        --error-3: hsl(359, 56%, 35%);
         --error-light: hsl(359, 82%, 74%);
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
         --default-1: hsl(217, 8%, 34%);
         --default-2: hsl(213, 5%, 43%);
         --default-3: hsl(218, 5%, 47%);
-        --default-light: hsl(214, 10%, 50%);
+        --default-light: #737e8c;
         --elevation-low: 0 0 0 1px hsla(0, 0%, 0%, 0.15);
         --elevation-medium: 0 4px 4px hsla(0, 0%, 0%, 0.15);
         --elevation-high: 0 8px 16px hsla(0, 0%, 0%, 0.24);
@@ -273,6 +273,10 @@
     vertical-align: baseline;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+}
+
+*:focus-visible {
+    outline: 4px solid var(--accent-light);
 }
 
 html,

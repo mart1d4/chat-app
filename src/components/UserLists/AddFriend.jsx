@@ -9,11 +9,11 @@ const AddFriend = () => {
     const [valid, setValid] = useState("");
 
     const {
-        auth,
-        friendRequests,
-        setFriendRequests,
+        requests,
+        setRequests,
         friends,
-        setFriends
+        setFriends,
+        setChannels,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const inputRef = useRef();
@@ -22,28 +22,48 @@ const AddFriend = () => {
         inputRef.current.focus();
     }, []);
 
+    useEffect(() => {
+        if (error.length > 0) {
+            setValid("");
+        } else if (valid.length > 0) {
+            setError("");
+        }
+    }, [error, valid]);
+
     const requestFriend = async () => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/request`,
-                { userID: input },
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else if (data.data.success === "Friend request accepted") {
-                setFriendRequests(friendRequests.filter(
-                    (request) => request._id.toString() !== input
+        const response = await axiosPrivate.post(
+            `/users/@me/friends/${input}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setInput("");
+            setValid(response.data.message);
+            if (response.data.message === "Friend request sent") {
+                setRequests([
+                    ...requests,
+                    response.data.request,
+                ]);
+            } else if (response.data.message === "Friend request accepted") {
+                setFriends([
+                    ...friends,
+                    response.data.friend,
+                ]);
+
+                setRequests(requests.filter(
+                    (request) => request.user._id !== response.data.friend._id
                 ));
-                setFriends([...friends, data.data.user]);
-                setValid(`You are now friends with ${data.data.user.username}`);
-                setInput("");
-            } else {
-                setFriendRequests([...friendRequests, data.data.request]);
-                setValid(`Success! Your friend request to ${data.data.request.username} was sent.`);
-                setInput("");
+
+                if (response.data.channel) {
+                    setChannels((prev) => [
+                        ...prev,
+                        response.data.channel,
+                    ]);
+                }
             }
-        } catch (err) {
-            console.error(err);
+        } else {
+            setError("An error occurred.");
         }
     };
 

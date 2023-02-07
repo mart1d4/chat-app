@@ -17,12 +17,71 @@ import { parseISO, format } from "date-fns";
 
 const Channels = () => {
     const [friend, setFriend] = useState(null);
+    const [friendStatus, setFriendStatus] = useState({
+        1: null,
+        2: null,
+        3: null,
+    });
     const [messages, setMessages] = useState([]);
     const [error, setError] = useState(null);
 
-    const { auth, channelList, setChannelList } = useUserData();
+    const {
+        auth,
+        friends,
+        setFriends,
+        requests,
+        setRequests,
+        blocked,
+        setBlocked,
+        channels,
+    } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+
+    const buttons = {
+        add: {
+            text: "Add Friend",
+            func: () => addFriend(),
+            disabled: false,
+            class: styles.blue,
+        },
+        remove: {
+            text: "Remove Friend",
+            func: () => deleteFriend(),
+            disabled: false,
+            class: styles.grey,
+        },
+        sent: {
+            text: "Friend Request Sent",
+            func: () => { },
+            disabled: true,
+            class: styles.blue,
+        },
+        received: {
+            text: "Accept",
+            func: () => addFriend(),
+            disabled: false,
+            class: styles.green,
+        },
+        ignore: {
+            text: "Ignore",
+            func: () => deleteFriend(),
+            disabled: false,
+            class: styles.grey,
+        },
+        block: {
+            text: "Block",
+            func: () => blockUser(),
+            disabled: false,
+            class: styles.grey,
+        },
+        unblock: {
+            text: "Unblock",
+            func: () => unblockUser(),
+            disabled: false,
+            class: styles.grey,
+        },
+    }
 
     const scrollableContainer = useCallback(node => {
         if (node !== null) {
@@ -31,37 +90,154 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
+        if (!channels.find((channel) => channel._id === router.query.channelID)) {
+            router.push("/channels/@me");
+            return;
+        }
+
         let isMounted = true;
         const controller = new AbortController();
 
-        const getMessages = async () => {
-            const data = await axiosPrivate.get(
-                `/private/${router.query.channelID}/messages`,
-                { signal: controller.signal }
-            );
-            if (data.data.error) {
-                isMounted && setError(data.data.error);
-            } else {
-                isMounted && setMessages(data.data.messages);
-            }
-        }
+        const friendID = channels.find(
+            (channel) => channel._id === router.query.channelID
+        )?.recipients?.find(
+            (recipient) => recipient._id !== auth.user._id
+        )._id;
 
-        setFriend(channelList?.filter(
-            (channel) => channel._id.toString() === router.query.channelID
-        )[0]?.members[0]);
+        if (!friendID) return;
 
-        getMessages();
-        console.log(
-            '%c[channelID]',
-            'color: hsl(38, 96%, 54%)',
-            ': Fetching data...'
+        const response = axiosPrivate.get(
+            `/users/${friendID}`,
+            { signal: controller.signal }
         );
+
+        response.then((data) => {
+            isMounted && setFriend(data.data.user);
+        });
 
         return () => {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [router.query.channelID, friends, requests, blocked, channels]);
+
+    useEffect(() => {
+        if (!friend) return;
+
+        if (friends?.find((user) => user?._id === friend?._id)) {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                1: "remove",
+                2: null,
+            }));
+        } else if (requests?.find((request) => request?.user?._id === friend?._id && request?.type === 0)) {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                1: "sent",
+                2: null,
+            }));
+        } else if (requests.find((request) => request?.user?._id === friend?._id && request?.type === 1)) {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                1: "received",
+                2: "ignore",
+            }));
+        } else {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                1: "add",
+                2: null,
+            }));
+        }
+
+        if (blocked?.find((blocked) => blocked?._id === friend?._id)) {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                3: "unblock",
+            }));
+        } else {
+            setFriendStatus((friendStatus) => ({
+                ...friendStatus,
+                3: "block",
+            }));
+        }
+    }, [friend]);
+
+    const addFriend = async () => {
+        const response = await axiosPrivate.post(
+            `/users/@me/friends/${friend._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Friend request sent") {
+                setRequests([
+                    ...requests,
+                    response.data.request,
+                ]);
+            } else if (response.data.message === "Friend request accepted") {
+                setFriends([
+                    ...friends,
+                    response.data.friend,
+                ]);
+
+                setRequests(requests.filter(
+                    (request) => request.user._id !== response.data.friend._id
+                ));
+            }
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const deleteFriend = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/@me/friends/${friend._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Friend removed") {
+                setFriends(friends.filter((friend) => friend._id.toString() !== friend._id));
+            } else if (response.data.message === "Request cancelled") {
+                setRequests(requests.filter((request) => request.user._id.toString() !== friend._id));
+            }
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const blockUser = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/${friend._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked((prev) => [...prev, response.data.blocked]);
+            setFriends(friends.filter((friend) => friend._id.toString() !== friend._id));
+            setRequests(requests.filter((request) => request.user._id.toString() !== friend._id));
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const unblockUser = async () => {
+        const response = await axiosPrivate.post(
+            `/users/${friend._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked(blocked.filter((blocked) => blocked._id.toString() !== friend._id));
+        } else {
+            setError("An error occurred.");
+        }
+    };
 
     const isMoreThan5Minutes = (date1, date2) => {
         if (typeof date1 === "string") date1 = parseISO(date1);
@@ -136,7 +312,7 @@ const Channels = () => {
     return (
         <>
             <Head>
-                <title>Discord | @{friend?.username}</title>
+                <title>Discord | {("@" + friend?.username) || "Loading"}</title>
             </Head>
 
             <div className={styles.container}>
@@ -170,19 +346,30 @@ const Channels = () => {
                                             <div className={styles.descriptionContainer}>
                                                 This is the beginning of your direct message history with <strong>@{friend?.username}</strong>.
                                                 <div className={styles.descriptionActions}>
+                                                    {friendStatus[3] === "block" && (
+                                                        <button
+                                                            className={buttons[friendStatus[1]]?.class}
+                                                            disabled={buttons[friendStatus[1]]?.disabled}
+                                                            onClick={() => buttons[friendStatus[1]]?.func()}
+                                                        >
+                                                            {buttons[friendStatus[1]]?.text}
+                                                        </button>
+                                                    )}
+
+                                                    {friendStatus[2] && (
+                                                        <button
+                                                            className={buttons[friendStatus[2]].class}
+                                                            onClick={() => buttons[friendStatus[2]].func()}
+                                                        >
+                                                            {buttons[friendStatus[2]].text}
+                                                        </button>
+                                                    )}
+
                                                     <button
-                                                        style={{
-                                                            backgroundColor: "var(--accent-1)",
-                                                        }}
+                                                        className={buttons[friendStatus[3]]?.class}
+                                                        onClick={() => buttons[friendStatus[3]]?.func()}
                                                     >
-                                                        Add Friend
-                                                    </button>
-                                                    <button
-                                                        style={{
-                                                            backgroundColor: "var(--background-light)",
-                                                        }}
-                                                    >
-                                                        Block
+                                                        {buttons[friendStatus[3]]?.text}
                                                     </button>
                                                 </div>
                                             </div>

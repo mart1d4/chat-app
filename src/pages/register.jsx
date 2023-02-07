@@ -14,6 +14,8 @@ const Register = () => {
     const { auth } = useUserData();
     const router = useRouter();
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [passwordMatch, setPasswordMatch] = useState("");
@@ -46,6 +48,8 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        setIsLoading(true);
+
         const v1 = USER_REGEX.test(username);
         const v2 = PWD_REGEX.test(password);
 
@@ -70,6 +74,7 @@ const Register = () => {
             setUsername("");
             setPassword("");
             setPasswordMatch("");
+            setIsLoading(false);
             router.push("/login");
         } catch (err) {
             if (!err?.response) {
@@ -84,6 +89,7 @@ const Register = () => {
                 setUsernameError("Unknown Error");
                 setPasswordError("Unknown Error");
             }
+            setIsLoading(false);
         }
     };
 
@@ -249,7 +255,9 @@ const Register = () => {
                                 </div>
 
                                 <button type="submit" className={styles.buttonSubmit}>
-                                    <div>Register</div>
+                                    <div className={isLoading && styles.loading}>
+                                        {!isLoading && "Register"}
+                                    </div>
                                 </button>
 
                                 <div>

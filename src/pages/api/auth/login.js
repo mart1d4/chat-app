@@ -1,9 +1,9 @@
 import User from "../../../utils/models/User";
 import connectDB from "../../../utils/connectDB";
+import cleanUser from "../../../utils/cleanUser";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 import { serialize } from "cookie";
-import mongoose from "mongoose";
 
 connectDB();
 
@@ -11,7 +11,7 @@ export default async (req, res) => {
     const { uid, password } = req.body;
 
     if (!uid || !password) {
-        return res.status(400).send({
+        return res.send({
             error: "Login or password is invalid",
             message: "Please provide a valid username and password",
         });
@@ -21,25 +21,28 @@ export default async (req, res) => {
         const user = await User.findOne({ username: uid });
 
         if (!user)
-            return res
-                .status(404)
-                .send({
-                    error: "Login or password is invalid",
-                    message: "User with that username does not exist",
-                });
+            return res.send({
+                error: "Login or password is invalid",
+                message: "User with that username does not exist",
+            });
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
         if (passwordsMatch) {
-            const accessToken = jwt.sign(
-                { username: user.username },
-                process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: "1h" }
-            );
-            const refreshToken = jwt.sign(
-                { username: user.username },
-                process.env.REFRESH_TOKEN_SECRET,
-                { expiresIn: "10d" }
-            );
+            const accessToken = await new SignJWT(
+                cleanUser(user)
+            )
+                .setProtectedHeader({ alg: "HS256" })
+                .setIssuedAt()
+                .setExpirationTime("1h")
+                .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
+
+            const refreshToken = await new SignJWT(
+                cleanUser(user)
+            )
+                .setProtectedHeader({ alg: "HS256" })
+                .setIssuedAt()
+                .setExpirationTime("1d")
+                .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
 
             user.refreshToken = refreshToken;
             await user.save();
@@ -57,24 +60,16 @@ export default async (req, res) => {
 
             res.json({
                 accessToken,
-                user: {
-                    _id: user._id,
-                    username: user.username,
-                    avatar: user.avatar,
-                    description: user.description,
-                    customStatus: user.customStatus,
-                    status: user.status,
-                    createdAt: user.createdAt,
-                },
+                user: cleanUser(user),
             });
         } else {
-            res.status(401).send({
+            res.send({
                 error: "Login or password is invalid",
                 message: "Incorrect password",
             });
         }
     } catch (error) {
-        res.status(500).send({
+        res.send({
             error: "Something went wrong",
         });
     }

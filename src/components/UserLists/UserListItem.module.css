@@ -12,7 +12,9 @@
     cursor: pointer;
 }
 
-.liContainer:hover {
+.liContainer:hover,
+.liContainer:focus-visible,
+.liContainer:focus-within {
     border-radius: 8px;
     margin: 0 10px 0 20px;
     padding: 16px 10px;
@@ -20,11 +22,15 @@
     border-color: transparent;
 }
 
-.liContainer:hover + .liContainer {
+.liContainer:hover + .liContainer,
+.liContainer:focus-visible + .liContainer,
+.liContainer:focus-within + .liContainer {
     border-color: transparent;
 }
 
-.liContainer:hover .actions > button {
+.liContainer:hover .actions > button,
+.liContainer:focus-visible .actions > button,
+.liContainer:focus-within .actions > button {
     background-color: var(--background-1);
 }
 

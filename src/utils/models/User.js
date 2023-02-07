@@ -1,18 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { get } from "mongoose";
 const Schema = mongoose.Schema;
-
-// async function getRandomAvatar() {
-//     const response = await fetch(
-//         `https://api.giphy.com/v1/gifs/random?api_key=${process.env.GIPHY_API_KEY}&tag=&rating=g`
-//     );
-//     const json = await response.json();
-//     const avatarUrl = json.data.images.downsized.url;
-//     return avatarUrl;
-// }
-
-// function getAvatarurl() {
-//     return getRandomAvatar();
-// }
 
 const defaultAvatars = [
     "/assets/default-avatars/blue.png",
@@ -34,29 +21,46 @@ const userSchema = new Schema(
         },
         avatar: {
             type: String,
-            default: "",
+            required: true,
+            default: defaultAvatars[
+                Math.floor(Math.random() * defaultAvatars.length)
+            ],
+        },
+        banner: {
+            type: String,
         },
         description: {
             type: String,
-            default: "",
         },
         customStatus: {
             type: String,
-            default: "",
         },
         status: {
             type: String,
-            enum: ["Online", "Offline", "Away", "Busy"],
+            enum: ["Online", "Offline", "Idle", "Do Not Disturb"],
             default: "Offline",
         },
-        friendRequests: [
+        accentColor: {
+            type: String,
+            default: "#737e8c",
+        },
+        system: {
+            type: Boolean,
+            default: false,
+        },
+        verified: {
+            type: Boolean,
+            default: false,
+        },
+        requests: [
             {
                 user: {
                     type: Schema.Types.ObjectId,
                     ref: "User",
                 },
                 type: {
-                    type: String,
+                    type: Number,
+                    enum: [0, 1],
                 }
             },
         ],
@@ -66,36 +70,26 @@ const userSchema = new Schema(
                 ref: "User",
             },
         ],
-        blockedUsers: [
+        blocked: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "User",
             },
         ],
-        privateChannels: [
+        channels: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "Channel",
             },
         ],
-        notifications: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Notification",
-            },
-        ],
-        refreshToken: String,
+        refreshToken: {
+            type: String,
+        },
     },
     {
         timestamps: true,
     }
 );
-
-userSchema.pre("save", async function () {
-    if (this.avatar === "") {
-        this.avatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
-    }
-});
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

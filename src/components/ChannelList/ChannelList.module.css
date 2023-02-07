@@ -120,6 +120,7 @@
     margin-right: 2px;
     position: relative;
     cursor: pointer;
+    border-radius: 4px;
 }
 
 .title svg {
@@ -130,142 +131,6 @@
 }
 
 .title svg:hover polygon {
-    fill: var(--foreground-2);
-}
-
-.liContainer,
-.liContainerActive {
-    position: relative;
-    max-width: 224px;
-    margin: 0 0 2px 8px;
-    border-radius: 4px;
-    color: var(--foreground-4);
-}
-
-.liContainer:hover .closeButton,
-.liContainerActive:hover .closeButton {
-    display: block;
-}
-
-.liContainerActive {
-    color: var(--foreground-1);
-    background-color: var(--background-active);
-}
-
-.liContainerActive polygon {
-    fill: var(--foreground-1);
-}
-
-.liContainer:hover,
-.liContainerActive:hover {
-    color: var(--foreground-1);
-    background-color: var(--background-hover-2);
-    cursor: pointer;
-}
-
-.liWrapper {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    border-radius: 4px;
-}
-
-.link,
-.linkFriends {
-    display: flex;
-    min-width: 0;
-    flex: 1 1 auto;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    align-items: center;
-    cursor: pointer;
-}
-
-.linkFriends {
-    padding-right: 8px;
-}
-
-.layout,
-.layoutFriends {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    height: 42px;
-    padding: 0 8px;
-    border-radius: 4px;
-}
-
-.layoutFriends {
-    flex-grow: 1;
-}
-
-.layoutAvatar {
-    display: flex;
-    justify-content: center;
-    flex: 0 0 auto;
-    width: 32px;
-    height: 32px;
-    margin-right: 12px;
-    align-items: center;
-    position: relative;
-}
-
-.layoutAvatar img {
-    border-radius: 50%;
-}
-
-.layoutContent {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    flex: 1 1 auto;
-}
-
-.contentName {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-.nameWrapper {
-    font-size: 16px;
-    line-height: 20px;
-    font-weight: 500;
-    flex: 0 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.contentStatus {
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 500;
-}
-
-.closeButton {
-    display: none;
-    box-sizing: content-box;
-    width: 16px;
-    height: 16px;
-    margin: 2px;
-    padding-right: 8px;
-}
-
-.closeButton path {
-    fill: var(--foreground-4);
-}
-
-.closeButton:hover {
-    cursor: pointer;
-}
-
-.closeButton:hover path {
     fill: var(--foreground-2);
 }
 
@@ -394,25 +259,4 @@
 
 .toolbar > button:hover path {
     fill: var(--foreground-1);
-}
-
-.friendsPending {
-    background-color: var(--error-1);
-    width: 16px;
-    height: 16px;
-    padding-right: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    min-height: 16px;
-    min-width: 16px;
-    color: var(--foreground-1);
-    text-align: center;
-    flex: 0 0 auto;
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02rem;
 }

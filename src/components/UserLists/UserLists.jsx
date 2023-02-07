@@ -1,106 +1,115 @@
-import { Icon, ListItem } from "..";
+import { Icon, UserListItem } from "..";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./UserList.module.css";
+import { v4 as uuidv4 } from "uuid";
+
+const contentData = {
+    all: {
+        src: "/assets/no-friends.svg",
+        width: 376,
+        height: 162,
+        description: "Wumpus is waiting on friends. You don't have to though!",
+        match: "friends",
+        title: "All Friends",
+    },
+    online: {
+        src: "/assets/no-online.svg",
+        width: 421,
+        height: 218,
+        description: "No one's around to play with Wumpus.",
+        match: "online friends",
+        title: "Online",
+    },
+    pending: {
+        src: "/assets/no-pending.svg",
+        width: 415,
+        height: 200,
+        description: "There are no pending requests. Here's Wumpus for now.",
+        match: "pending requests",
+        title: "Pending",
+    },
+    blocked: {
+        src: "/assets/no-blocked.svg",
+        width: 433,
+        height: 232,
+        description: "You can't unblock the Wumpus.",
+        match: "blocked users",
+        title: "Blocked",
+    },
+};
 
 const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
-    const [filteredList, setFilteredList] = useState(
-        list.sort((a, b) => a.username.localeCompare(b.username))
-    );
+    const [filteredList, setFilteredList] = useState([]);
 
     useEffect(() => {
         if (search) {
-            setFilteredList(list.filter((user) =>
-                user.username.toLowerCase().includes(search.toLowerCase()))
+            setFilteredList(list?.filter((user) =>
+                user?.username?.toLowerCase().includes(search.toLowerCase()))
             );
-        } else setFilteredList(list);
+        }
     }, [search]);
 
     useEffect(() => {
-        setFilteredList(list.sort((a, b) => a.username.localeCompare(b.username)));
+        setFilteredList(list?.sort(
+            (a, b) => a?.username?.localeCompare(b.username)
+        ));
     }, [list]);
 
-    const searchBar = useRef(null);
+    const searchBar = useRef();
 
-    if (!list.length) {
+    if (!list?.length) {
         return (
             <div className={styles.content}>
                 <div className={styles.noData}>
                     <Image
-                        src={content === "all"
-                            ? "/assets/no-friends.svg"
-                            : content === "online"
-                                ? "/assets/no-online.svg"
-                                : content === "pending"
-                                    ? "/assets/no-pending.svg"
-                                    : "/assets/no-blocked.svg"}
+                        src={contentData[content].src}
                         alt="No Data"
-                        width={
-                            content === "all"
-                                ? 376
-                                : content === "online"
-                                    ? 421
-                                    : content === "pending"
-                                        ? 415
-                                        : 433
-                        }
-                        height={
-                            content === "all"
-                                ? 162
-                                : content === "online"
-                                    ? 218
-                                    : content === "pending"
-                                        ? 200
-                                        : 232
-                        }
+                        width={contentData[content].width}
+                        height={contentData[content].height}
                         priority
                     />
 
                     <div>
-                        {content === "all"
-                            ? "Wumpus is waiting on friends. You don't have to though!"
-                            : content === "online"
-                                ? "No one's around to play with Wumpus."
-                                : content === "pending"
-                                    ? "There are no pending requests. Here's Wumpus for now."
-                                    : "You can't unblock the Wumpus."}
-
+                        {contentData[content].description}
                     </div>
                 </div>
             </div>
-        )
-    } else if (!filteredList.length && search.length) {
-        <div className={styles.content}>
-            <div className={styles.searchBarContainer}>
-                <div className={styles.searchBarInner}>
-                    <input
-                        ref={searchBar}
-                        placeholder="Search"
-                        aria-label="Search"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                    <div
-                        className={styles.inputButton}
-                        role="button"
-                        style={{
-                            cursor: search.length ? "pointer" : "text",
-                        }}
-                        onClick={() => {
-                            if (search.length) setSearch("");
-                            searchBar.current.focus();
-                        }}
-                    >
-                        <Icon name={search.length ? "cross" : "search"} size={20} />
+        );
+    } else if (!filteredList?.length && search?.length) {
+        return (
+            <div className={styles.content}>
+                <div className={styles.searchBarContainer}>
+                    <div className={styles.searchBarInner}>
+                        <input
+                            ref={searchBar}
+                            placeholder="Search"
+                            aria-label="Search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+
+                        <div
+                            className={styles.inputButton}
+                            role="button"
+                            style={{ cursor: search.length ? "pointer" : "text" }}
+                            onClick={() => {
+                                if (search.length) setSearch("");
+                                searchBar.current.focus();
+                            }}
+                            tabIndex={0}
+                        >
+                            <Icon name={search.length ? "cross" : "search"} size={20} />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <h2 className={styles.title}>
-                Your search for "{search}" did not match any {content === "all" ? "Friends" : content === "online" ? "Online" : content === "pending" ? "Pending" : "Blocked"}.
-            </h2>
-        </div>
+                <h2 className={styles.title}>
+                    Your search for "{search}" did not match any {contentData[content].match}.
+                </h2>
+            </div>
+        );
     }
 
     return (
@@ -114,12 +123,11 @@ const UserLists = ({ list, content }) => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+
                     <div
                         className={styles.inputButton}
                         role="button"
-                        style={{
-                            cursor: search.length ? "pointer" : "text",
-                        }}
+                        style={{ cursor: search.length ? "pointer" : "text" }}
                         onClick={() => {
                             if (search.length) setSearch("");
                             searchBar.current.focus();
@@ -131,15 +139,13 @@ const UserLists = ({ list, content }) => {
             </div>
 
             <h2 className={styles.title}>
-                {content === "all" ? "All Friends " : content === "online"
-                    ? "Online " : content === "pending" ? "Pending " : "Blocked "}
-                — {filteredList.length}
+                {contentData[content].title} — {filteredList.length}
             </h2>
 
             <ul className={styles.listContainer}>
                 {filteredList?.map((user, index) => (
-                    <ListItem
-                        key={index}
+                    <UserListItem
+                        key={uuidv4()}
                         index={index}
                         user={user}
                         content={content}

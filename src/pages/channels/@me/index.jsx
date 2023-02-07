@@ -20,17 +20,15 @@ const Friends = () => {
         localStorage.setItem("friends-tab", content);
     };
 
-    const { friends, friendRequests, blockedUsers } = useUserData();
+    const { friends, requests, blocked } = useUserData();
 
     const lists = {
-        online: friends.filter((friend) =>
-            friend.status === "Online"
-            || friend.status === "Away"
-            || friend.status === "Busy"
-        ),
+        online: friends?.filter((friend) => {
+            return ["Online", "Away", "Do Not Disturb"].includes(friend?.status)
+        }),
         all: friends,
-        pending: friendRequests,
-        blocked: blockedUsers,
+        pending: requests,
+        blocked: blocked,
     };
 
     return (
@@ -38,12 +36,14 @@ const Friends = () => {
             <Head>
                 <title>Discord | Friends</title>
             </Head>
+
             <div className={styles.main}>
                 <AppHeader
                     content="friends"
                     setContent={handleContent}
                     active={content}
                 />
+
                 <div className={styles.content}>
                     {content === "add"
                         ? <AddFriend />

@@ -20,7 +20,7 @@ export default function PersistLogin({ children }) {
             : setIsLoading(false);
 
         return () => isMounted = false;
-    }, [auth]);
+    }, []);
 
     return children;
 }

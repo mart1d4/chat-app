@@ -121,19 +121,61 @@
     height: 24px;
     min-width: 52px;
     min-height: 24px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: none;
-    border: none;
-    border-radius: 3px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 16px;
-    padding: 2px 16px;
-    user-select: none;
-    pointer-events: auto;
+    pointer-events: all;
+}
+
+.blue {
+    background-color: var(--accent-1);
+}
+
+.blue:hover:not(:disabled) {
+    background-color: var(--accent-2);
+}
+
+.blue:active:not(:disabled) {
+    background-color: var(--accent-3);
+}
+
+.blue:disabled {
+    color: var(--foreground-1);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.grey {
+    background-color: var(--default-1);
+}
+
+.grey:hover {
+    background-color: var(--default-2);
+}
+
+.grey:active {
+    background-color: var(--default-3);
+}
+
+.green {
+    background-color: var(--success-1);
+}
+
+.green:hover {
+    background-color: var(--success-2);
+}
+
+.green:active {
+    background-color: var(--success-3);
+}
+
+.red {
+    background-color: var(--error-1);
+}
+
+.red:hover {
+    background-color: var(--error-2);
+}
+
+.red:active {
+    background-color: var(--error-3);
 }
 
 .scrollerSpacer {

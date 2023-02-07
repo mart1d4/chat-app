@@ -5,7 +5,7 @@ import { serialize } from "cookie";
 connectDB();
 
 export default async (req, res) => {
-    const { cookies } = req;
+    const cookies = req.cookies;
     if (!cookies?.jwt) {
         return res.status(204).send({
             message: "No cookie found",

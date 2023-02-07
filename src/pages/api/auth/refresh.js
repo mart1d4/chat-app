@@ -1,12 +1,13 @@
 import User from "../../../utils/models/User";
 import connectDB from "../../../utils/connectDB";
-import jwt from "jsonwebtoken";
+import cleanUser from "../../../utils/cleanUser";
+import { SignJWT } from "jose";
 
 connectDB();
 
 export default async (req, res) => {
-    const { cookies } = req;
-    if (!cookies?.jwt) {
+    const cookies = req.cookies;
+    if (!cookies.jwt) {
         return res.json({ error: "Unauthorized" });
     }
     const refreshToken = cookies.jwt;
@@ -16,31 +17,20 @@ export default async (req, res) => {
         return res.json({ error: "Forbidden" });
     }
 
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-        if (err || user.username !== decoded.username) {
-            return res.json({ error: "Forbidden" });
-        }
-        const accessToken = jwt.sign(
-            {
-                UserInfo: {
-                    username: decoded.username,
-                },
-            },
-            process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: "1d" }
-        );
+    const accessToken = await new SignJWT(
+        cleanUser(user)
+    )
+        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+        .setIssuedAt()
+        .setExpirationTime("1h")
+        .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
-        return res.json({
-            accessToken,
-            user: {
-                _id: user._id,
-                username: user.username,
-                avatar: user.avatar,
-                description: user.description,
-                customStatus: user.customStatus,
-                status: user.status,
-                createdAt: user.createdAt,
-            },
-        });
+    if (!accessToken) {
+        return res.json({ error: "Forbidden" });
+    }
+
+    return res.json({
+        accessToken,
+        user: cleanUser(user),
     });
 };

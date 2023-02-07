@@ -2,16 +2,22 @@ import { useState, useEffect } from "react";
 import { Menu, AvatarStatus, Icon, Tooltip } from "..";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useUserData from "../../hooks/useUserData";
-import styles from "./ListItem.module.css";
+import styles from "./UserListItem.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { AnimatePresence, motion } from "framer-motion";
 
-const ListItem = ({ content, user, index }) => {
+const UserListItem = ({ content, user }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
     const [liHover, setLiHover] = useState(false);
     const [error, setError] = useState(null);
+
+    let type;
+    if (content === "pending") {
+        type = user.type
+        user = user.user;
+    }
 
     useEffect(() => {
         if (!error || error === "") return;
@@ -27,10 +33,12 @@ const ListItem = ({ content, user, index }) => {
         auth,
         friends,
         setFriends,
-        blockedUsers,
-        setBlockedUsers,
-        friendRequests,
-        setFriendRequests,
+        blocked,
+        setBlocked,
+        requests,
+        setRequests,
+        channels,
+        setChannels,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -41,7 +49,7 @@ const ListItem = ({ content, user, index }) => {
                 name: "Message",
                 icon: "message",
                 fill: "var(--foreground-2)",
-                func: (id) => startConversation(id)
+                func: () => createChannel()
             },
             second: {
                 name: "More",
@@ -61,19 +69,19 @@ const ListItem = ({ content, user, index }) => {
                 name: "Accept",
                 icon: "accept",
                 fill: "var(--success-light)",
-                func: (id) => acceptRequest(id)
+                func: () => addFriend()
             },
             second: {
                 name: "Ignore",
                 icon: "cancel",
                 fill: "var(--error-1)",
-                func: (id) => ignoreRequest(id)
+                func: () => deleteFriend()
             },
             third: {
                 name: "Cancel",
                 icon: "cancel",
                 fill: "var(--error-1)",
-                func: (id) => cancelRequest(id)
+                func: () => deleteFriend()
             }
         },
         blocked: {
@@ -81,7 +89,7 @@ const ListItem = ({ content, user, index }) => {
                 name: "Unblock",
                 icon: "userDelete",
                 fill: "var(--error-1)",
-                func: (id) => unblockUser(id)
+                func: () => unblockUser()
             },
         }
     }
@@ -90,199 +98,162 @@ const ListItem = ({ content, user, index }) => {
 
     const largeMenuItems = [
         {
-            name: "Profile", func: () => {
-                console.log("Profile");
-            },
+            name: "Profile",
+            func: () => console.log("Profile"),
         },
         {
-            name: "Message", func: (id) => {
-                startConversation(id);
-            },
+            name: "Message",
+            func: () => createChannel(),
         },
         {
-            name: "Call", func: () => {
-                console.log("Call");
-            },
+            name: "Call",
+            func: () => console.log("Call"),
         },
         {
-            name: "Add Note", func: () => {
-                console.log("Add Note");
-            },
+            name: "Add Note",
+            func: () => console.log("Add Note"),
         },
         {
-            name: "Add Friend Nickname", func: () => {
-                console.log("Add Friend Nickname");
-            },
+            name: "Add Friend Nickname",
+            func: () => console.log("Add Friend Nickname"),
         },
         { name: "Divider" },
         {
-            name: "Invite to Server", func: () => {
-                console.log("Invite to Server");
-            }, icon: "arrow", iconSize: 10
+            name: "Invite to Server",
+            func: () => console.log("Invite to Server"),
+            icon: "arrow",
+            iconSize: 10,
         },
         {
-            name: "Remove Friend", func: (id) => {
-                removeFriend(id);
-            }, danger: true
+            name: "Remove Friend",
+            func: () => deleteFriend(),
+            danger: true,
         },
         {
-            name: "Block", func: (id) => {
-                blockUser(id);
-            }, danger: true
+            name: "Block",
+            func: () => blockUser(),
+            danger: true,
         },
         { name: "Divider" },
         {
-            name: "Copy ID", icon: "id", func: (id) => {
-                navigator.clipboard.writeText(id)
-            }
+            name: "Copy ID",
+            func: () => navigator.clipboard.writeText(user._id),
+            icon: "id",
         },
     ];
 
     const smallMenuItems = [
         {
-            name: "Start Video Call", func: () => {
-                console.log("Start Video Call");
-            },
+            name: "Start Video Call",
+            func: () => console.log("Start Video Call"),
         },
         {
-            name: "Start Voice Call", func: () => {
-                console.log("Start Voice Call");
-            },
+            name: "Start Voice Call",
+            func: () => console.log("Start Voice Call"),
         },
         {
-            name: "Remove Friend", func: (id) => {
-                removeFriend(id);
-            }, danger: true
+            name: "Remove Friend",
+            func: () => deleteFriend(),
+            danger: true,
         },
     ];
 
-    const removeFriend = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/remove`,
-                { userID }
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setFriends(friends.filter((friend) => friend._id.toString() !== userID));
+    const addFriend = async () => {
+        const response = await axiosPrivate.post(
+            `/users/@me/friends/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setFriends((prev) => [...prev, response.data.friend]);
+            setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+
+            if (response.data.channel) {
+                setChannels((prev) => [...prev, response.data.channel]);
             }
-        } catch (err) {
-            console.error(err);
+        } else {
+            setError("An error occurred.");
         }
     };
 
-    const blockUser = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/block`,
-                { userID }
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setFriends(friends.filter((friend) => friend._id.toString() !== userID));
-                setBlockedUsers((prev) => [...prev, data.data.user]);
+    const deleteFriend = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/@me/friends/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Friend removed") {
+                setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
+            } else if (response.data.message === "Request cancelled") {
+                setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
             }
-        } catch (err) {
-            console.error(err);
+        } else {
+            setError("An error occurred.");
         }
     };
 
-    const startConversation = async (userID) => {
-        try {
-            const response = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/create`,
-                { userID }
-            );
-            if (response.data.error) {
-                setError(response.data.error);
-            } else {
-                router.push(`/channels/@me/${response.data.channelID}`);
+    const createChannel = async () => {
+        const response = await axiosPrivate.post(
+            `/users/@me/channels`,
+            { recipients: [user._id] },
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Channel created") {
+                const newChannels = channels.unshift(response.data.channel);
+                setChannels(newChannels);
             }
-        } catch (err) {
-            console.error(err);
+            router.push(`/channels/@me/${response.data.channel._id}`);
+        } else {
+            setError("An error occurred.");
         }
     };
 
-    const cancelRequest = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user?._id}/friends/cancel`,
-                { userID },
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setFriendRequests(
-                    friendRequests.filter((request) => request._id.toString() !== userID)
-                );
-            }
-        } catch (err) {
-            console.error(err);
+    const blockUser = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked((prev) => [...prev, response.data.blocked]);
+            setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
+            setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+        } else {
+            setError("An error occurred.");
         }
     };
 
-    const acceptRequest = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user?._id}/friends/accept`,
-                { userID },
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setFriendRequests(
-                    friendRequests.filter((request) => request._id.toString() !== userID)
-                ); userID
-                setFriends([...friends, data.data.user]);
-            }
-        } catch (err) {
-            console.error(err);
+    const unblockUser = async () => {
+        const response = await axiosPrivate.post(
+            `/users/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked(blocked.filter((blocked) => blocked._id.toString() !== user._id));
+        } else {
+            setError("An error occurred.");
         }
     };
 
-    const ignoreRequest = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/ignore`,
-                { userID },
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setFriendRequests(
-                    friendRequests.filter((request) => request._id.toString() !== userIDD)
-                );
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const unblockUser = async (userID) => {
-        try {
-            const data = await axiosPrivate.post(
-                `/users/${auth?.user._id}/friends/unblock`,
-                { userID }
-            );
-            if (data.data.error) {
-                setError(data.data.error);
-            } else {
-                setBlockedUsers(blockedUsers.filter((user) => user._id.toString() !== userID));
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    if (!user) return null;
 
     return (
         <AnimatePresence>
             <motion.li
+                tabIndex={0}
                 className={styles.liContainer}
                 onClick={() => {
                     if ((content !== "online" && content !== "all")) return;
-                    startConversation(user._id);
+                    createChannel(user._id);
                 }}
                 onContextMenu={(event) => {
                     event.preventDefault();
@@ -291,6 +262,8 @@ const ListItem = ({ content, user, index }) => {
                         event: event,
                     });
                 }}
+                onFocus={() => setLiHover(true)}
+                onBlur={() => setLiHover(false)}
                 onMouseEnter={() => setLiHover(true)}
                 onMouseLeave={() => {
                     setLiHover(false);
@@ -315,9 +288,7 @@ const ListItem = ({ content, user, index }) => {
                     <Menu
                         items={largeMenuItems}
                         event={showMenu.event}
-                        setMenu={{
-                            func: () => setShowMenu(null)
-                        }}
+                        setMenu={{ func: () => setShowMenu(null) }}
                     />
                 )}
 
@@ -335,9 +306,9 @@ const ListItem = ({ content, user, index }) => {
                             )) && (
                                     <AvatarStatus
                                         status={user.status}
-                                        background={
-                                            liHover ? "var(--background-hover-1)"
-                                                : "var(--background-4)"
+                                        background={liHover
+                                            ? "var(--background-hover-1)"
+                                            : "var(--background-4)"
                                         }
                                     />
                                 )}
@@ -350,11 +321,11 @@ const ListItem = ({ content, user, index }) => {
                             <p className={styles.textStatus}>
                                 <span title="Custom Status">
                                     {(content === "all" || content === "online") ? (
-                                        user.customStatus === ""
+                                        !user.customStatus
                                             ? user.status
                                             : user.customStatus
                                     ) : content === "pending" ? (
-                                        user.type === "sent"
+                                        type === 0
                                             ? "Outgoing request"
                                             : "Incoming request"
                                     ) : "Blocked"}
@@ -366,16 +337,16 @@ const ListItem = ({ content, user, index }) => {
 
                         {(
                             content !== "blocked"
-                            && user?.type !== "sent"
+                            && type !== 0
                         ) && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         buttons[buttonContent]?.first.func(user._id);
                                     }}
-                                    onMouseEnter={() => {
-                                        setShowTooltip(1);
-                                    }}
+                                    onFocus={() => setShowTooltip(1)}
+                                    onBlur={() => setShowTooltip(null)}
+                                    onMouseEnter={() => setShowTooltip(1)}
                                     onMouseLeave={() => setShowTooltip(null)}
                                     style={{
                                         backgroundColor: (showMenu?.type) && "var(--background-1)",
@@ -403,7 +374,7 @@ const ListItem = ({ content, user, index }) => {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (user?.type === "sent") {
+                                    if (type === 0) {
                                         buttons[buttonContent]?.third?.func(user._id);
                                     } else {
                                         buttons[buttonContent]?.second?.func(
@@ -413,6 +384,11 @@ const ListItem = ({ content, user, index }) => {
                                         );
                                     }
                                 }}
+                                onFocus={() => {
+                                    if (showMenu?.type === "small") return;
+                                    setShowTooltip(2);
+                                }}
+                                onBlur={() => setShowTooltip(null)}
                                 onMouseEnter={() => {
                                     if (showMenu?.type === "small") return;
                                     setShowTooltip(2);
@@ -435,11 +411,9 @@ const ListItem = ({ content, user, index }) => {
                                     show={showTooltip === 2}
                                     dist={4}
                                 >
-                                    {
-                                        user?.type === "sent"
-                                            ? "Cancel"
-                                            : buttons[buttonContent]?.second?.name
-                                    }
+                                    {type === 0
+                                        ? "Cancel"
+                                        : buttons[buttonContent]?.second?.name}
                                 </Tooltip>
 
                                 {showMenu?.type === "small" && (
@@ -460,4 +434,4 @@ const ListItem = ({ content, user, index }) => {
     );
 }
 
-export default ListItem;
+export default UserListItem;

@@ -1,39 +1,22 @@
 import styles from "./ChannelList.module.css";
-import { useRouter } from "next/router";
-import { Tooltip, Icon, AvatarStatus, Menu } from "..";
+import { Tooltip, Icon, AvatarStatus, Menu, ChannelListItem } from "..";
 import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
-import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 const ConversationList = () => {
     const [hover, setHover] = useState(false);
     const [showMenu, setShowMenu] = useState(null);
     const [showTooltip, setShowTooltip] = useState(false);
 
-    useEffect(() => {
-        console.log("Show menu:", showMenu);
-    }, [showMenu]);
-
-    const router = useRouter();
-    const currentPath = router.asPath;
-
     const {
         auth,
-        friends,
-        friendRequests,
-        channelList,
-        setChannelList,
+        channels,
         setShowSettings,
     } = useUserData();
     const { logout } = useLogout();
-    const axiosPrivate = useAxiosPrivate();
-    const requestReceived = friendRequests.filter((request) => request.type === "received").length;
-
-    const isFriend = (id) => {
-        return friends.some((friend) => friend._id.toString() === id);
-    };
 
     const menuItems = [
         { name: "Profile", func: () => { } },
@@ -48,23 +31,11 @@ const ConversationList = () => {
         },
     ]
 
-    const removeChannel = async (channelID) => {
-        const response = await axiosPrivate.delete(
-            `/private/${channelID}/remove`,
-            { userID: auth?.user?._id }
-        );
-        if (response.data.error) {
-            console.error(response.data.error);
-        } else {
-            setChannelList(channelList.filter((channel) => channel._id.toString() !== channelID));
-        }
-    }
-
     return (
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
                 <div className={styles.searchContainer}>
-                    <button className={styles.searchButton}>
+                    <button className={styles.searchButton} tabIndex={0}>
                         Find or start a conversation
                     </button>
                 </div>
@@ -72,54 +43,17 @@ const ConversationList = () => {
                 <div className={styles.scroller}>
                     <ul className={styles.channelList}>
                         <div></div>
-                        <div
-                            className={currentPath === "/channels/@me"
-                                ? styles.liContainerActive
-                                : styles.liContainer}
-                            onClick={() => {
-                                localStorage.setItem(
-                                    "private-channel-url",
-                                    `/channels/@me`
-                                );
-                                router.push("/channels/@me")
-                            }}
-                        >
-                            <div className={styles.liWrapper}>
-                                <div className={styles.linkFriends}>
-                                    <div className={styles.layoutFriends}>
-                                        <div className={styles.layoutAvatar}>
-                                            <Icon
-                                                name="friends"
-                                                fill={
-                                                    currentPath === "/channels/@me"
-                                                        ? "var(--foreground-1)"
-                                                        : "var(--foreground-3)"
-                                                }
-                                            />
-                                        </div>
-                                        <div className={styles.layoutContent}>
-                                            <div className={styles.contentName}>
-                                                <div className={styles.nameWrapper}>
-                                                    Friends
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {requestReceived > 0 && (
-                                        <div className={styles.friendsPending}>
-                                            {requestReceived}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <ChannelListItem special />
 
                         <h2 className={styles.title}>
                             <span>Direct Messages</span>
                             <div
+                                onFocus={() => setHover("create")}
+                                onBlur={() => setHover(null)}
                                 onMouseEnter={() => setHover("create")}
                                 onMouseLeave={() => setHover(null)}
+                                tabIndex={0}
                             >
                                 <Icon
                                     name="add"
@@ -131,74 +65,22 @@ const ConversationList = () => {
                                 </Tooltip>
                             </div>
                         </h2>
-                        {channelList?.map((conv) => (
-                            <li
-                                key={conv?.members[0]._id}
-                                className={currentPath === `/channels/@me/${conv?._id}`
-                                    ? styles.liContainerActive
-                                    : styles.liContainer}
-                                onMouseEnter={() => setHover(conv?.members[0]._id)}
-                                onMouseLeave={() => setHover(null)}
-                                onClick={() => {
-                                    localStorage.setItem(
-                                        "private-channel-url",
-                                        `/channels/@me/${conv?._id}`
-                                    );
-                                    router.push(`/channels/@me/${conv?._id}`);
-                                }}
-                            >
-                                <div className={styles.liWrapper}>
-                                    <div className={styles.link}>
-                                        <div className={styles.layout}>
-                                            <div className={styles.layoutAvatar}>
-                                                <Image
-                                                    src={conv?.members[0].avatar}
-                                                    width={32}
-                                                    height={32}
-                                                    alt="Avatar"
-                                                />
-                                                <AvatarStatus
-                                                    status={conv?.members[0].status}
-                                                    background={
-                                                        hover === conv?.members[0]._id
-                                                            ? "var(--background-hover-2)"
-                                                            : currentPath === `/channels/@me/${conv?._id}`
-                                                                ? "var(--background-active)"
-                                                                : "var(--background-3)"
-                                                    }
-                                                    tooltip={true}
-                                                    friend={isFriend(conv?.members[0]._id)}
-                                                />
-                                            </div>
-                                            <div className={styles.layoutContent}>
-                                                <div className={styles.contentName}>
-                                                    <div className={styles.nameWrapper}>
-                                                        {conv?.members[0].username}
-                                                    </div>
-                                                </div>
-                                                {(conv?.members[0].customStatus !== "" && isFriend(conv?.members[0]._id))
-                                                    && (<div className={styles.contentStatus}>
-                                                        {conv?.members[0].customStatus}
-                                                    </div>)}
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div
-                                        className={styles.closeButton}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeChannel(conv?._id);
-                                        }}
-                                    >
-                                        <Icon
-                                            name="close"
-                                            size={16}
-                                        />
-                                    </div>
-                                </div>
-                            </li>
-                        ))}
+                        {channels?.length ? channels?.map((channel) => (
+                            <ChannelListItem
+                                key={uuidv4()}
+                                channel={channel}
+                            />
+                        )) : (
+                            <Image
+                                style={{ padding: "16px" }}
+                                src="/assets/no-channels.svg"
+                                alt="No Channels"
+                                width={184}
+                                height={428}
+                                priority
+                            />
+                        )}
                     </ul>
                 </div>
             </div>
@@ -208,8 +90,11 @@ const ConversationList = () => {
                         className={styles.avatarWrapper}
                         onClick={() => setShowMenu(!showMenu)}
                         style={{ backgroundColor: showMenu && "var(--background-hover-1)" }}
+                        onFocus={() => setHover("user")}
+                        onBlur={() => setHover(false)}
                         onMouseEnter={() => setHover("user")}
                         onMouseLeave={() => setHover(false)}
+                        tabIndex={0}
                     >
                         <div>
                             {auth?.user?.avatar && (
@@ -231,7 +116,7 @@ const ConversationList = () => {
                                 {auth?.user?.username}
                             </div>
                             <div>
-                                {auth?.user?.customStatus === ""
+                                {auth?.user?.customStatus === null
                                     ? "#0001"
                                     : auth?.user?.customStatus}
                             </div>
@@ -252,6 +137,8 @@ const ConversationList = () => {
 
                     <div className={styles.toolbar}>
                         <button
+                            onFocus={() => setShowTooltip(1)}
+                            onBlur={() => setShowTooltip(null)}
                             onMouseEnter={() => setShowTooltip(1)}
                             onMouseLeave={() => setShowTooltip(null)}
                         >
@@ -264,6 +151,8 @@ const ConversationList = () => {
                         </button>
 
                         <button
+                            onFocus={() => setShowTooltip(2)}
+                            onBlur={() => setShowTooltip(null)}
                             onMouseEnter={() => setShowTooltip(2)}
                             onMouseLeave={() => setShowTooltip(null)}
                         >
@@ -276,6 +165,8 @@ const ConversationList = () => {
                         </button>
 
                         <button
+                            onFocus={() => setShowTooltip(3)}
+                            onBlur={() => setShowTooltip(null)}
                             onMouseEnter={() => setShowTooltip(3)}
                             onMouseLeave={() => setShowTooltip(null)}
                             onClick={() => setShowSettings(true)}
