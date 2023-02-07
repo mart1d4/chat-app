@@ -1,22 +1,13 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon, AvatarStatus } from "../";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useUserData from "../../hooks/useUserData";
-import { useRouter } from "next/router";
 
-const AppHeader = ({ content, setContent, active }) => {
+const AppHeader = ({ content, setContent, active, friend }) => {
     const [showTooltip, setShowTooltip] = useState(false);
-    const [friend, setFriend] = useState(null);
 
-    const router = useRouter();
-    const { requests, channels } = useUserData();
+    const { requests } = useUserData();
     const requestReceived = requests?.filter((request) => request.type === 1).length;
-
-    useEffect(() => {
-        setFriend(channels?.filter(
-            (channel) => channel._id.toString() === router.query.channelID
-        )[0]?.recipients[0]);
-    }, []);
 
     const tabs = [
         { name: "Online", func: "online" },

@@ -1,35 +1,13 @@
 import styles from "./ChannelList.module.css";
-import { Tooltip, Icon, AvatarStatus, Menu, ChannelListItem } from "..";
+import { Tooltip, Icon, ChannelListItem, UserSection } from "..";
 import useUserData from "../../hooks/useUserData";
-import useLogout from "../../hooks/useLogout";
 import { useState } from "react";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 
 const ConversationList = () => {
     const [hover, setHover] = useState(false);
-    const [showMenu, setShowMenu] = useState(null);
-    const [showTooltip, setShowTooltip] = useState(false);
-
-    const {
-        auth,
-        channels,
-        setShowSettings,
-    } = useUserData();
-    const { logout } = useLogout();
-
-    const menuItems = [
-        { name: "Profile", func: () => { } },
-        { name: "Set Status", func: () => { } },
-        { name: "Divider" },
-        { name: "Logout", icon: "logout", func: () => logout() },
-        { name: "Divider" },
-        {
-            name: "Copy ID", icon: "id", func: () => {
-                navigator.clipboard.writeText(auth?.user?._id);
-            }
-        },
-    ]
+    const { channels } = useUserData();
 
     return (
         <div className={styles.nav}>
@@ -72,115 +50,45 @@ const ConversationList = () => {
                                 channel={channel}
                             />
                         )) : (
-                            <Image
-                                style={{ padding: "16px" }}
-                                src="/assets/no-channels.svg"
-                                alt="No Channels"
-                                width={184}
-                                height={428}
-                                priority
-                            />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 184 428"
+                                width="184"
+                                height="428"
+                                style={{
+                                    padding: "16px",
+                                    fill: "var(--background-4)",
+                                    boxSizing: "content-box",
+                                }}
+                            >
+                                <rect x="40" y="6" width="144" height="20" rx="10" />
+                                <circle cx="16" cy="16" r="16" />
+                                <rect x="40" y="50" width="144" height="20" rx="10" opacity="0.9" />
+                                <circle cx="16" cy="60" r="16" opacity="0.9" />
+                                <rect x="40" y="94" width="144" height="20" rx="10" opacity="0.8" />
+                                <circle cx="16" cy="104" r="16" opacity="0.8" />
+                                <rect x="40" y="138" width="144" height="20" rx="10" opacity="0.7" />
+                                <circle cx="16" cy="148" r="16" opacity="0.7" />
+                                <rect x="40" y="182" width="144" height="20" rx="10" opacity="0.6" />
+                                <circle cx="16" cy="192" r="16" opacity="0.6" />
+                                <rect x="40" y="226" width="144" height="20" rx="10" opacity="0.5" />
+                                <circle cx="16" cy="236" r="16" opacity="0.5" />
+                                <rect x="40" y="270" width="144" height="20" rx="10" opacity="0.4" />
+                                <circle cx="16" cy="280" r="16" opacity="0.4" />
+                                <rect x="40" y="314" width="144" height="20" rx="10" opacity="0.3" />
+                                <circle cx="16" cy="324" r="16" opacity="0.3" />
+                                <rect x="40" y="358" width="144" height="20" rx="10" opacity="0.2" />
+                                <circle cx="16" cy="368" r="16" opacity="0.2" />
+                                <rect x="40" y="402" width="144" height="20" rx="10" opacity="0.1" />
+                                <circle cx="16" cy="412" r="16" opacity="0.1" />
+                            </svg>
+
                         )}
                     </ul>
                 </div>
             </div>
-            <div className={styles.userSectionContainer}>
-                <div className={styles.userSection}>
-                    <div
-                        className={styles.avatarWrapper}
-                        onClick={() => setShowMenu(!showMenu)}
-                        style={{ backgroundColor: showMenu && "var(--background-hover-1)" }}
-                        onFocus={() => setHover("user")}
-                        onBlur={() => setHover(false)}
-                        onMouseEnter={() => setHover("user")}
-                        onMouseLeave={() => setHover(false)}
-                        tabIndex={0}
-                    >
-                        <div>
-                            {auth?.user?.avatar && (
-                                <Image
-                                    src={auth?.user?.avatar}
-                                    width={32}
-                                    height={32}
-                                    alt="Avatar"
-                                />
-                            )}
-                            <AvatarStatus
-                                status={auth?.user?.status}
-                                background={hover === "user" || showMenu
-                                    ? "var(--background-hover-1)" : "var(--background-2)"}
-                            />
-                        </div>
-                        <div className={styles.contentWrapper}>
-                            <div>
-                                {auth?.user?.username}
-                            </div>
-                            <div>
-                                {auth?.user?.customStatus === null
-                                    ? "#0001"
-                                    : auth?.user?.customStatus}
-                            </div>
-                        </div>
 
-                        {
-                            showMenu &&
-                            <Menu
-                                items={menuItems}
-                                position={{
-                                    bottom: "calc(100% + 12px)",
-                                    left: "0px",
-                                }}
-                                setMenu={{ func: () => setShowMenu(null) }}
-                            />
-                        }
-                    </div>
-
-                    <div className={styles.toolbar}>
-                        <button
-                            onFocus={() => setShowTooltip(1)}
-                            onBlur={() => setShowTooltip(null)}
-                            onMouseEnter={() => setShowTooltip(1)}
-                            onMouseLeave={() => setShowTooltip(null)}
-                        >
-                            <Tooltip show={showTooltip === 1}>
-                                Mute
-                            </Tooltip>
-                            <div className={styles.toolbar}>
-                                <Icon name="mic" size="20" />
-                            </div>
-                        </button>
-
-                        <button
-                            onFocus={() => setShowTooltip(2)}
-                            onBlur={() => setShowTooltip(null)}
-                            onMouseEnter={() => setShowTooltip(2)}
-                            onMouseLeave={() => setShowTooltip(null)}
-                        >
-                            <Tooltip show={showTooltip === 2}>
-                                Deafen
-                            </Tooltip>
-                            <div className={styles.toolbar}>
-                                <Icon name="headset" size="20" />
-                            </div>
-                        </button>
-
-                        <button
-                            onFocus={() => setShowTooltip(3)}
-                            onBlur={() => setShowTooltip(null)}
-                            onMouseEnter={() => setShowTooltip(3)}
-                            onMouseLeave={() => setShowTooltip(null)}
-                            onClick={() => setShowSettings(true)}
-                        >
-                            <Tooltip show={showTooltip === 3}>
-                                User Settings
-                            </Tooltip>
-                            <div className={styles.toolbar}>
-                                <Icon name="settings" size="20" />
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <UserSection />
         </div>
     );
 };

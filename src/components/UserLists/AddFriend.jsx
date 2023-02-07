@@ -2,6 +2,7 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./AddFriend.module.css";
 import { useEffect, useState, useRef } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import Image from "next/image";
 
 const AddFriend = () => {
     const [input, setInput] = useState("");
@@ -37,6 +38,7 @@ const AddFriend = () => {
 
         if (!response.data.success) {
             setError(response.data.message);
+            inputRef.current.focus();
         } else if (response.data.success) {
             setInput("");
             setValid(response.data.message);
@@ -64,6 +66,7 @@ const AddFriend = () => {
             }
         } else {
             setError("An error occurred.");
+            inputRef.current.focus();
         }
     };
 
@@ -74,7 +77,7 @@ const AddFriend = () => {
 
                 <form autoComplete="off">
                     <div className={styles.description}>
-                        You can add a friend by entering their username or user ID. They are case sensitive.
+                        You can add a friend with their username or ID. They are case sensitive.
                     </div>
 
                     <div
@@ -133,6 +136,22 @@ const AddFriend = () => {
                     )}
                 </form>
             </header>
+
+            <div className={styles.content}>
+                <div className={styles.noData}>
+                    <Image
+                        src="/assets/add-friend.svg"
+                        alt="Add Friend"
+                        width={376}
+                        height={162}
+                        priority
+                    />
+
+                    <div>
+                        Wumpus is waiting on friends. You don't have to though!
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

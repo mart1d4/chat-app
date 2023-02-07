@@ -124,12 +124,14 @@ const ChannelListItem = ({ channel, special }) => {
                 <div className={styles.link}>
                     <div className={styles.layout}>
                         <div className={styles.layoutAvatar}>
-                            <Image
-                                src={user?.avatar}
-                                width={32}
-                                height={32}
-                                alt="Avatar"
-                            />
+                            {user?.avatar && (
+                                <Image
+                                    src={user.avatar}
+                                    width={32}
+                                    height={32}
+                                    alt="Avatar"
+                                />
+                            )}
                             <AvatarStatus
                                 status={user?.status}
                                 background={

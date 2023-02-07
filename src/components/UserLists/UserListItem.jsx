@@ -5,7 +5,6 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./UserListItem.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { AnimatePresence, motion } from "framer-motion";
 
 const UserListItem = ({ content, user }) => {
     const [showTooltip, setShowTooltip] = useState(null);
@@ -170,6 +169,7 @@ const UserListItem = ({ content, user }) => {
             setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
 
             if (response.data.channel) {
+                console.log(response.data.channel);
                 setChannels((prev) => [...prev, response.data.channel]);
             }
         } else {
@@ -247,190 +247,184 @@ const UserListItem = ({ content, user }) => {
     if (!user) return null;
 
     return (
-        <AnimatePresence>
-            <motion.li
-                tabIndex={0}
-                className={styles.liContainer}
-                onClick={() => {
-                    if ((content !== "online" && content !== "all")) return;
-                    createChannel(user._id);
-                }}
-                onContextMenu={(event) => {
-                    event.preventDefault();
-                    setShowMenu({
-                        type: "large",
-                        event: event,
-                    });
-                }}
-                onFocus={() => setLiHover(true)}
-                onBlur={() => setLiHover(false)}
-                onMouseEnter={() => setLiHover(true)}
-                onMouseLeave={() => {
-                    setLiHover(false);
-                    setShowMenu(null);
-                }}
-                style={
-                    (showMenu?.type) &&
-                    {
-                        backgroundColor: "var(--background-hover-1)",
-                        borderRadius: "8px",
-                        margin: "0 10px 0 20px",
-                        padding: "16px 10px",
-                        borderColor: "transparent",
-                    }
+        <li
+            tabIndex={0}
+            className={styles.liContainer}
+            onClick={() => {
+                if ((content !== "online" && content !== "all")) return;
+                createChannel(user._id);
+            }}
+            onContextMenu={(event) => {
+                event.preventDefault();
+                setShowMenu({
+                    type: "large",
+                    event: event,
+                });
+            }}
+            onFocus={() => setLiHover(true)}
+            onBlur={() => setLiHover(false)}
+            onMouseEnter={() => setLiHover(true)}
+            onMouseLeave={() => {
+                setLiHover(false);
+                setShowMenu(null);
+            }}
+            style={
+                (showMenu?.type) &&
+                {
+                    backgroundColor: "var(--background-hover-1)",
+                    borderRadius: "8px",
+                    margin: "0 10px 0 20px",
+                    padding: "16px 10px",
+                    borderColor: "transparent",
                 }
-                initial={{ height: 0 }}
-                animate={{ height: "62px" }}
-                exit={{ height: 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
-                {showMenu?.type === "large" && (
-                    <Menu
-                        items={largeMenuItems}
-                        event={showMenu.event}
-                        setMenu={{ func: () => setShowMenu(null) }}
-                    />
-                )}
+            }
+        >
+            {showMenu?.type === "large" && (
+                <Menu
+                    items={largeMenuItems}
+                    event={showMenu.event}
+                    setMenu={{ func: () => setShowMenu(null) }}
+                />
+            )}
 
-                <div className={styles.li}>
-                    <div className={styles.userInfo}>
-                        <div className={styles.avatarWrapper}>
-                            <Image
-                                src={user.avatar}
-                                width={32}
-                                height={32}
-                                alt="Avatar"
-                            />
-                            {(content === "online" || content === "all" || (
-                                content === "pending" && user.sender !== auth?.user?._id
-                            )) && (
-                                    <AvatarStatus
-                                        status={user.status}
-                                        background={liHover
-                                            ? "var(--background-hover-1)"
-                                            : "var(--background-4)"
-                                        }
-                                    />
-                                )}
-                        </div>
-                        <div className={styles.text}>
-                            <p className={styles.textUsername}>
-                                {user.username}
-                            </p>
-
-                            <p className={styles.textStatus}>
-                                <span title="Custom Status">
-                                    {(content === "all" || content === "online") ? (
-                                        !user.customStatus
-                                            ? user.status
-                                            : user.customStatus
-                                    ) : content === "pending" ? (
-                                        type === 0
-                                            ? "Outgoing request"
-                                            : "Incoming request"
-                                    ) : "Blocked"}
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.actions}>
-
-                        {(
-                            content !== "blocked"
-                            && type !== 0
-                        ) && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        buttons[buttonContent]?.first.func(user._id);
-                                    }}
-                                    onFocus={() => setShowTooltip(1)}
-                                    onBlur={() => setShowTooltip(null)}
-                                    onMouseEnter={() => setShowTooltip(1)}
-                                    onMouseLeave={() => setShowTooltip(null)}
-                                    style={{
-                                        backgroundColor: (showMenu?.type) && "var(--background-1)",
-                                    }}
-                                >
-                                    <Icon
-                                        name={buttons[buttonContent]?.first?.icon}
-                                        size={20}
-                                        fill={
-                                            showTooltip === 1
-                                            && buttons[buttonContent]?.first?.fill
-                                        }
-                                    />
-
-                                    <Tooltip
-                                        show={showTooltip === 1}
-                                        dist={4}
-                                    >
-                                        {buttons[buttonContent]?.first?.name}
-                                    </Tooltip>
-                                </button>
+            <div className={styles.li}>
+                <div className={styles.userInfo}>
+                    <div className={styles.avatarWrapper}>
+                        <Image
+                            src={user.avatar}
+                            width={32}
+                            height={32}
+                            alt="Avatar"
+                        />
+                        {(content === "online" || content === "all" || (
+                            content === "pending" && user.sender !== auth?.user?._id
+                        )) && (
+                                <AvatarStatus
+                                    status={user.status}
+                                    background={liHover
+                                        ? "var(--background-hover-1)"
+                                        : "var(--background-4)"
+                                    }
+                                />
                             )}
+                    </div>
+                    <div className={styles.text}>
+                        <p className={styles.textUsername}>
+                            {user.username}
+                        </p>
 
-                        {buttons[buttonContent]?.second && (
+                        <p className={styles.textStatus}>
+                            <span title="Custom Status">
+                                {(content === "all" || content === "online") ? (
+                                    !user.customStatus
+                                        ? user.status
+                                        : user.customStatus
+                                ) : content === "pending" ? (
+                                    type === 0
+                                        ? "Outgoing request"
+                                        : "Incoming request"
+                                ) : "Blocked"}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div className={styles.actions}>
+
+                    {(
+                        content !== "blocked"
+                        && type !== 0
+                    ) && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (type === 0) {
-                                        buttons[buttonContent]?.third?.func(user._id);
-                                    } else {
-                                        buttons[buttonContent]?.second?.func(
-                                            (content === "online" || content === "all"
-                                                ? e
-                                                : user._id), e
-                                        );
-                                    }
+                                    buttons[buttonContent]?.first.func(user._id);
                                 }}
-                                onFocus={() => {
-                                    if (showMenu?.type === "small") return;
-                                    setShowTooltip(2);
-                                }}
+                                onFocus={() => setShowTooltip(1)}
                                 onBlur={() => setShowTooltip(null)}
-                                onMouseEnter={() => {
-                                    if (showMenu?.type === "small") return;
-                                    setShowTooltip(2);
-                                }}
+                                onMouseEnter={() => setShowTooltip(1)}
                                 onMouseLeave={() => setShowTooltip(null)}
                                 style={{
                                     backgroundColor: (showMenu?.type) && "var(--background-1)",
                                 }}
                             >
                                 <Icon
-                                    name={buttons[buttonContent]?.second?.icon}
+                                    name={buttons[buttonContent]?.first?.icon}
                                     size={20}
                                     fill={
-                                        showTooltip === 2
-                                        && buttons[buttonContent]?.second?.fill
+                                        showTooltip === 1
+                                        && buttons[buttonContent]?.first?.fill
                                     }
                                 />
 
                                 <Tooltip
-                                    show={showTooltip === 2}
+                                    show={showTooltip === 1}
                                     dist={4}
                                 >
-                                    {type === 0
-                                        ? "Cancel"
-                                        : buttons[buttonContent]?.second?.name}
+                                    {buttons[buttonContent]?.first?.name}
                                 </Tooltip>
-
-                                {showMenu?.type === "small" && (
-                                    <Menu
-                                        items={smallMenuItems}
-                                        event={showMenu.event}
-                                        setMenu={{
-                                            func: () => setShowMenu(null)
-                                        }}
-                                    />
-                                )}
                             </button>
                         )}
-                    </div>
+
+                    {buttons[buttonContent]?.second && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (type === 0) {
+                                    buttons[buttonContent]?.third?.func(user._id);
+                                } else {
+                                    buttons[buttonContent]?.second?.func(
+                                        (content === "online" || content === "all"
+                                            ? e
+                                            : user._id), e
+                                    );
+                                }
+                            }}
+                            onFocus={() => {
+                                if (showMenu?.type === "small") return;
+                                setShowTooltip(2);
+                            }}
+                            onBlur={() => setShowTooltip(null)}
+                            onMouseEnter={() => {
+                                if (showMenu?.type === "small") return;
+                                setShowTooltip(2);
+                            }}
+                            onMouseLeave={() => setShowTooltip(null)}
+                            style={{
+                                backgroundColor: (showMenu?.type) && "var(--background-1)",
+                            }}
+                        >
+                            <Icon
+                                name={buttons[buttonContent]?.second?.icon}
+                                size={20}
+                                fill={
+                                    showTooltip === 2
+                                    && buttons[buttonContent]?.second?.fill
+                                }
+                            />
+
+                            <Tooltip
+                                show={showTooltip === 2}
+                                dist={4}
+                            >
+                                {type === 0
+                                    ? "Cancel"
+                                    : buttons[buttonContent]?.second?.name}
+                            </Tooltip>
+
+                            {showMenu?.type === "small" && (
+                                <Menu
+                                    items={smallMenuItems}
+                                    event={showMenu.event}
+                                    setMenu={{
+                                        func: () => setShowMenu(null)
+                                    }}
+                                />
+                            )}
+                        </button>
+                    )}
                 </div>
-            </motion.li>
-        </AnimatePresence >
+            </div>
+        </li>
     );
 }
 

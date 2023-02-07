@@ -90,7 +90,13 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
-        if (!channels.find((channel) => channel._id === router.query.channelID)) {
+        console.log("Channels : " + channels);
+        if (
+            !router.query.channelID ||
+            !channels ||
+            !typeof (channels) === Array ||
+            !channels.find((channel) => channel._id === router.query.channelID)
+        ) {
             router.push("/channels/@me");
             return;
         }
@@ -333,7 +339,7 @@ const Channels = () => {
                                             <div className={styles.imageWrapper}>
                                                 {friend?.avatar && (
                                                     <Image
-                                                        src={friend?.avatar}
+                                                        src={friend.avatar}
                                                         alt="Avatar"
                                                         width={80}
                                                         height={80}

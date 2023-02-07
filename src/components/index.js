@@ -20,6 +20,7 @@ import Menu from './Menu/Menu';
 import Settings from './Settings/Settings';
 import UserListItem from './UserLists/UserListItem';
 import ChannelListItem from './ChannelList/ChannelListItem';
+import UserSection from './ChannelList/UserSection';
 
 export {
     AppHeader,
@@ -44,4 +45,5 @@ export {
     Settings,
     UserListItem,
     ChannelListItem,
+    UserSection,
 };

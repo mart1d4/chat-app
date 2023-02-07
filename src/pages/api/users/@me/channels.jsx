@@ -70,26 +70,24 @@ export default async (req, res) => {
             recipientsObjects.push(recipientUser);
         }
 
-        const dmChannels = user.channels.filter((channel) => [0, 1].includes(channel.type));
-
-        const sameChannel = dmChannels.find((channel) => {
-            const channelRecipients = channel.recipients.map(
-                (recipient) => recipient._id.toString()
-            );
-            const recipientsString = [...recipients, user._id.toString()];
-
-            return (channelRecipients.every(
-                (recipient) => recipientsString.includes(recipient)
-            ) && recipientsString.every(
-                (recipient) => channelRecipients.includes(recipient))
-            );
-        });
+        const sameChannel = await Channel.findOne({
+            type: recipients.length === 1 ? 0 : 1,
+            recipients: { $all: [...recipients, user._id] },
+        }).populate("recipients");
 
         if (sameChannel) {
+            const userHasChannel = user.channels.find((chan) => {
+                return chan.toString() === sameChannel._id.toString();
+            });
+
+            if (!userHasChannel) {
+                user.channels.unshift(sameChannel._id);
+                await user.save();
+            }
+
             return res.json({
                 success: true,
                 channel: sameChannel,
-                recipients: recipientsObjects,
                 message: "Channel already exists",
             });
         } else {

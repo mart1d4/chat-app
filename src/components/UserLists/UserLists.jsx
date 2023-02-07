@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const contentData = {
     all: {
-        src: "/assets/no-friends.svg",
+        src: "/assets/add-friend.svg",
         width: 376,
         height: 162,
         description: "Wumpus is waiting on friends. You don't have to though!",

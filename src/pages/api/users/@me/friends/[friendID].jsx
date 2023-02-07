@@ -2,6 +2,7 @@ import User from "../../../../../utils/models/User";
 import mongoose from "mongoose";
 import connectDB from "../../../../../utils/connectDB";
 import cleanUser from "../../../../../utils/cleanUser";
+import axios from "../../../../../../src/api/axios";
 
 connectDB();
 
@@ -74,21 +75,19 @@ export default async (req, res) => {
             await user.save();
             await friend.save();
 
-            const response = await fetch(
-                `http://localhost:3000/api/users/@me/channels`,
+            const response = await axios.post(
+                `/users/@me/channels`,
                 {
-                    method: "POST",
+                    recipients: [friendID],
+                },
+                {
                     headers: {
-                        "Content-Type": "application/json",
                         authorization: req.headers.authorization,
                     },
-                    body: JSON.stringify({
-                        recipients: [friendID],
-                    }),
                 }
             );
 
-            const data = await response.json();
+            const { data } = response;
             let channel;
 
             if (!data.success) {
