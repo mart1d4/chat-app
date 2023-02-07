@@ -1,7 +1,7 @@
 import connectDB from "../../../../utils/connectDB";
 import mongoose from "mongoose";
 import Channel from "../../../../utils/models/Channel";
-import User from "../../../../utils/models/user";
+import User from "../../../../utils/models/User";
 
 connectDB();
 
