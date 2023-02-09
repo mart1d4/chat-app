@@ -189,10 +189,6 @@
     user-select: none;
 }
 
-.toolsContainer > button:last-child {
-    max-height: 50px;
-}
-
 .toolsContainer > button > .button {
     display: flex;
     align-items: center;
@@ -201,12 +197,136 @@
     margin: 0 4px;
 }
 
-.emojiButton {
-    background-image: url('../../../public/assets/emoji-picker.png');
-    background-repeat: no-repeat;
-    background-size: 242px 110px;
-    width: 22px;
-    height: 22px;
-    background-position: -176px -66px;
-    background-size: 242px 110px;
+.toolsContainer > button:not(:last-child):hover path {
+    fill: var(--foreground-2);
+}
+
+.filesList {
+    display: flex;
+    gap: 24px;
+    margin: 0 0 2px 6px;
+    padding: 20px 10px 10px;
+    overflow: auto hidden;
+    list-style: none;
+}
+
+.filesList::-webkit-scrollbar-track {
+    border-color: var(--background-5);
+}
+
+.fileItem {
+    display: inline-flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 4px;
+    padding: 8px;
+    width: 200px;
+    height: 200px;
+    aspect-ratio: 1;
+    background-color: var(--background-2);
+}
+
+.fileMenu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(15%, -15%);
+}
+
+.fileMenu > div {
+    display: grid;
+    grid-auto-flow: column;
+    height: 32px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--elevation-low);
+    background-color: var(--background-3);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.fileMenu > div:hover {
+    box-shadow: var(--elevation-medium);
+}
+
+.fileMenu > div > div {
+    position: relative;
+}
+
+.fileMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    padding: 4px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    position: relative;
+}
+
+.fileMenuButton:hover {
+    background-color: var(--background-4);
+}
+
+.fileMenuButton:not(:last-child):hover path {
+    fill: var(--foreground-2);
+}
+
+.fileMenuButton:active {
+    background-color: var(--background-5);
+}
+
+.fileItemContainer {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    position: relative;
+}
+
+.fileItemContainer > .image {
+    margin-top: auto;
+    position: relative;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.fileItemContainer > .image > img {
+    border-radius: 3px;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.fileItemContainer > .fileName {
+    margin-top: auto;
+}
+
+.fileItemContainer > .fileName > div {
+    margin-top: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
+.formDivider {
+    height: 0;
+    border-top: thin solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex: 0 0 auto;
+    pointer-events: none;
 }

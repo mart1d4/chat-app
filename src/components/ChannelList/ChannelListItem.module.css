@@ -12,6 +12,10 @@
     display: block;
 }
 
+.liContainer:hover path:first-child {
+    fill: var(--foreground-2);
+}
+
 .liContainerActive {
     color: var(--foreground-1);
     background-color: var(--background-active);

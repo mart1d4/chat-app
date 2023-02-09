@@ -1,0 +1,39 @@
+.buttonContainer {
+    cursor: pointer;
+    width: auto;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.buttonContainer:hover .emoji {
+    filter: grayscale(0%);
+}
+
+.button {
+    max-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin: 0 4px;
+}
+
+.emoji {
+    background-image: url('../../../public/assets/emoji-picker.png');
+    background-repeat: no-repeat;
+    background-size: 242px 110px;
+    width: 22px;
+    height: 22px;
+    background-position: -176px -66px;
+    background-size: 242px 110px;
+    filter: grayscale(100%);
+    transition: filter 0.15s ease;
+}

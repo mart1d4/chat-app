@@ -10,7 +10,6 @@ const Menu = ({ items, position, event, setMenu }) => {
     const [active, setActive] = useState(null);
 
     const menuItems = items.filter((item) => item.name !== "Divider");
-
     const fixed = position ? false : true;
 
     const containerRef = useCallback(node => {
@@ -22,7 +21,7 @@ const Menu = ({ items, position, event, setMenu }) => {
                 rect: node.getBoundingClientRect(),
             });
         }
-    }, []);
+    }, [event]);
 
     useEffect(() => {
         if (!parent || !container) return;
@@ -64,7 +63,7 @@ const Menu = ({ items, position, event, setMenu }) => {
                 setPositions(position);
             }
         }
-    }, [parent, event]);
+    }, [parent, container, container?.width]);
 
     useEffect(() => {
         if (!parent) return;
@@ -79,31 +78,30 @@ const Menu = ({ items, position, event, setMenu }) => {
                 setMenu.func();
             } else if (e.key === "ArrowDown") {
                 if (active === null) {
-                    console.log('eee');
-                    setActive(menuItems[0]);
+                    setActive(menuItems[0].name);
                 } else {
-                    const index = menuItems.indexOf(active);
+                    const index = menuItems.findIndex((item) => item.name === active);
                     if (index < menuItems.length - 1) {
-                        setActive(menuItems[index + 1]);
+                        setActive(menuItems[index + 1].name);
                     } else {
-                        setActive(menuItems[0]);
+                        setActive(menuItems[0].name);
                     }
                 }
             } else if (e.key === "ArrowUp") {
                 if (active === null) {
-                    setActive(menuItems[menuItems.length - 1]);
+                    setActive(menuItems[menuItems.length - 1].name);
                 } else {
-                    const index = menuItems.indexOf(active);
+                    const index = menuItems.findIndex((item) => item.name === active);
                     if (index > 0) {
-                        setActive(menuItems[index - 1]);
+                        setActive(menuItems[index - 1].name);
                     } else {
-                        setActive(menuItems[menuItems.length - 1]);
+                        setActive(menuItems[menuItems.length - 1].name);
                     }
                 }
             } else if (e.key === "Enter") {
                 if (active) {
                     setMenu.func();
-                    active.func();
+                    menuItems.find((item) => item.name === active).func();
                 }
             }
         };
@@ -115,64 +113,67 @@ const Menu = ({ items, position, event, setMenu }) => {
             document.removeEventListener("click", handleClickOutside);
             document.removeEventListener("keydown", handlekeyDown);
         };
-    }, [parent]);
+    }, [parent, active]);
 
     return (
-        positions !== {} && (
-            <div
-                ref={containerRef}
-                className={styles.menuContainer}
-                style={
-                    parent ? {
-                        ...positions,
-                        position: fixed ? "fixed" : "absolute",
-                    } : {
-                        display: "none",
-                    }
-                }
-                onClick={(e) => e.stopPropagation()}
-                onMouseEnter={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }}
-                onMouseLeave={() => setActive(null)}
-            >
-                <div>
-                    {items?.map((item) => (
-                        item.name === "Divider" ? (
-                            <div key={uuidv4()} className={styles.divider}></div>
-                        ) : (
-                            <div
-                                key={uuidv4()}
-                                className={item.danger ? (
-                                    active === item ? styles.menuItemDangerActive : styles.menuItemDanger
-                                ) : (
-                                    active === item ? styles.menuItemActive : styles.menuItem
-                                )}
-                                onClick={() => {
-                                    setMenu.func();
-                                    item.func();
-                                }}
-                                onMouseEnter={() => setActive(item)}
-                            >
-                                <div className={styles.label}>
-                                    {item.name}
-                                </div>
-
-                                {item.icon && (
-                                    <div className={styles.icon}>
-                                        <Icon
-                                            name={item.icon}
-                                            size={item.iconSize ?? 16}
-                                        />
-                                    </div>
-                                )}
+        <div
+            ref={containerRef}
+            className={styles.menuContainer}
+            style={{
+                ...positions,
+                position: fixed ? "fixed" : "absolute",
+                opacity: (container && positions.top) ? 1 : 0,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+            onMouseLeave={() => setActive(null)}
+        >
+            <div>
+                {items?.map((item) => (
+                    item.name === "Divider" ? (
+                        <div key={uuidv4()} className={styles.divider}></div>
+                    ) : (
+                        <div
+                            key={uuidv4()}
+                            className={item.danger
+                                ? styles.menuItemDanger
+                                : styles.menuItem
+                            }
+                            onClick={() => {
+                                setMenu.func();
+                                item.func();
+                            }}
+                            onMouseEnter={() => setActive(item.name)}
+                            style={{
+                                color: active === item.name
+                                    ? "var(--foreground-1)"
+                                    : item.danger ? "var(--error-1)" : "var(--foreground-3)",
+                                backgroundColor: active === item.name
+                                    ? item.danger ? "var(--error-1)" : "var(--accent-1)"
+                                    : "transparent",
+                            }}
+                        >
+                            <div className={styles.label}>
+                                {item.name}
                             </div>
-                        )
-                    ))}
-                </div>
+
+                            {item.icon && (
+                                <div className={styles.icon}>
+                                    <Icon
+                                        name={item.icon}
+                                        size={item.iconSize ?? 16}
+                                        fill={active === item.name ? "var(--foreground-1)" : ""}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )
+                ))}
             </div>
-        )
+        </div>
     );
 }
 

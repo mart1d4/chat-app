@@ -21,6 +21,10 @@ export default function useUserData() {
         setPersist,
         loading,
         setLoading,
+        showSettings,
+        setShowSettings,
+        userProfile,
+        setUserProfile,
     } = useContext(AuthContext);
     return useContext(AuthContext);
 }

@@ -43,14 +43,10 @@ const MessageMenu = ({ message, start, functions }) => {
     }, [message, auth]);
 
     return (
-        <div
-            className={styles.buttonContainer}
-        >
+        <div className={styles.buttonContainer}>
             <div
                 className={styles.buttonWrapper}
-                style={{
-                    top: start ? '-16px' : '-25px',
-                }}
+                style={{ top: start ? '-16px' : '-25px' }}
             >
                 <div className={styles.buttons}>
                     <div

@@ -45,9 +45,14 @@ const UserLists = ({ list, content }) => {
 
     useEffect(() => {
         if (search) {
-            setFilteredList(list?.filter((user) =>
-                user?.username?.toLowerCase().includes(search.toLowerCase()))
-            );
+            setFilteredList(list?.filter((user) => {
+                if (content === "pending") {
+                    user = user?.user;
+                }
+                return user?.username?.toLowerCase().includes(search.toLowerCase());
+            }));
+        } else {
+            setFilteredList(list);
         }
     }, [search]);
 

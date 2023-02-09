@@ -1,29 +1,15 @@
 import styles from "./AppNav.module.css";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { Tooltip } from "../";
 
 const AppNav = () => {
-    const [showMenu, setShowMenu] = useState(null);
     const [showTooltip, setShowTooltip] = useState(null);
     const [active, setActive] = useState(null);
     const [markHeight, setMarkHeight] = useState(0);
-    const menuRef = useRef(null);
 
     const router = useRouter();
-
-    useEffect(() => {
-        document.addEventListener("click", (event) => {
-            if (showMenu && !menuRef.current.contains(event.target)) {
-                setShowMenu(null);
-            }
-        });
-
-        return () => {
-            document.removeEventListener("click", () => setShowMenu(null));
-        };
-    }, []);
 
     useEffect(() => {
         if (router.pathname.includes("/channels/@me")) {
@@ -33,7 +19,6 @@ const AppNav = () => {
                 friends: "40px",
             });
         } else if (router.pathname.includes("/servers")) {
-            console.log("servers");
             setActive("servers");
             setMarkHeight({
                 ...markHeight,

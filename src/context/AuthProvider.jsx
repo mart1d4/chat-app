@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
     const [erros, setErros] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showSettings, setShowSettings] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
 
     const value = {
         auth,
@@ -29,6 +30,8 @@ export function AuthProvider({ children }) {
         setIsLoading,
         showSettings,
         setShowSettings,
+        userProfile,
+        setUserProfile,
     };
 
     return (

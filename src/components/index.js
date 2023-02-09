@@ -21,6 +21,9 @@ import Settings from './Settings/Settings';
 import UserListItem from './UserLists/UserListItem';
 import ChannelListItem from './ChannelList/ChannelListItem';
 import UserSection from './ChannelList/UserSection';
+import EmojiPicker from './TextArea/EmojiPicker';
+import TextContainer from './TextArea/TextContainer';
+import UserProfile from './UserProfile/UserProfile';
 
 export {
     AppHeader,
@@ -46,4 +49,7 @@ export {
     UserListItem,
     ChannelListItem,
     UserSection,
+    EmojiPicker,
+    TextContainer,
+    UserProfile,
 };

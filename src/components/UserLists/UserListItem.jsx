@@ -27,6 +27,7 @@ const UserListItem = ({ content, user }) => {
         requests,
         setRequests,
         setChannels,
+        setUserProfile,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -87,7 +88,7 @@ const UserListItem = ({ content, user }) => {
     const largeMenuItems = [
         {
             name: "Profile",
-            func: () => console.log("Profile"),
+            func: () => setUserProfile(user),
         },
         {
             name: "Message",
@@ -231,11 +232,10 @@ const UserListItem = ({ content, user }) => {
         }
     };
 
-    if (!user) return null;
+    if (!user || !user.avatar) return null;
 
     return (
         <li
-            tabIndex={0}
             className={styles.liContainer}
             onClick={() => {
                 if ((content !== "online" && content !== "all")) return;
@@ -248,8 +248,6 @@ const UserListItem = ({ content, user }) => {
                     event: event,
                 });
             }}
-            onFocus={() => setLiHover(true)}
-            onBlur={() => setLiHover(false)}
             onMouseEnter={() => setLiHover(true)}
             onMouseLeave={() => {
                 setLiHover(false);
@@ -326,8 +324,6 @@ const UserListItem = ({ content, user }) => {
                                     e.stopPropagation();
                                     buttons[buttonContent]?.first.func(user._id);
                                 }}
-                                onFocus={() => setShowTooltip(1)}
-                                onBlur={() => setShowTooltip(null)}
                                 onMouseEnter={() => setShowTooltip(1)}
                                 onMouseLeave={() => setShowTooltip(null)}
                                 style={{
@@ -366,11 +362,6 @@ const UserListItem = ({ content, user }) => {
                                     );
                                 }
                             }}
-                            onFocus={() => {
-                                if (showMenu?.type === "small") return;
-                                setShowTooltip(2);
-                            }}
-                            onBlur={() => setShowTooltip(null)}
                             onMouseEnter={() => {
                                 if (showMenu?.type === "small") return;
                                 setShowTooltip(2);

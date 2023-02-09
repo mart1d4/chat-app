@@ -1,87 +1,22 @@
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import styles from "./TextArea.module.css";
-import { Icon } from "../../components";
-
-const emojisPos = [
-    { x: 0, y: 0 }, { x: 0, y: -22 }, { x: 0, y: -44 }, { x: 0, y: -66 }, { x: 0, y: -88 },
-    { x: -22, y: 0 }, { x: -22, y: -22 }, { x: -22, y: -44 }, { x: -22, y: -66 }, { x: -22, y: -88 },
-    { x: -44, y: 0 }, { x: -44, y: -22 }, { x: -44, y: -44 }, { x: -44, y: -66 }, { x: -44, y: -88 },
-    { x: -66, y: 0 }, { x: -66, y: -22 }, { x: -66, y: -44 }, { x: -66, y: -66 }, { x: -66, y: -88 },
-    { x: -88, y: 0 }, { x: -88, y: -22 }, { x: -88, y: -44 }, { x: -88, y: -66 }, { x: -88, y: -88 },
-    { x: -110, y: 0 }, { x: -110, y: -22 }, { x: -110, y: -44 }, { x: -110, y: -66 }, { x: -110, y: -88 },
-    { x: -132, y: 0 }, { x: -132, y: -22 }, { x: -132, y: -44 }, { x: -132, y: -66 },
-    { x: -154, y: 0 }, { x: -154, y: -22 }, { x: -154, y: -44 }, { x: -154, y: -66 },
-    { x: -176, y: 0 }, { x: -176, y: -22 }, { x: -176, y: -44 }, { x: -176, y: -66 },
-    { x: -198, y: 0 }, { x: -198, y: -22 }, { x: -198, y: -44 }, { x: -198, y: -66 },
-    { x: -220, y: 0 }, { x: -220, y: -22 }, { x: -220, y: -44 }, { x: -220, y: -66 },
-];
-
-const scale = {
-    hover: {
-        scale: 1.15,
-        transition: {
-            duration: 0.1,
-            ease: "circInOut",
-        }
-    }
-};
+import { EmojiPicker, Icon, TextContainer, Tooltip } from "../";
+import { v4 as uuidv4 } from "uuid";
 
 const TextArea = ({ friend, sendMessage }) => {
-    const [message, setMessage] = useState("");
-    const [hover, setHover] = useState(null);
     const [friendTyping, setFriendTyping] = useState(false);
-    const [emojisPosIndex, setEmojisPosIndex] = useState(0);
+    const [showTooltip, setShowTooltip] = useState(null);
+    const [files, setFiles] = useState([]);
+    const [error, setError] = useState(null);
 
-    // useEffect(() => {
-    //     const handleTyping = (e) => {
-    //         if (document.activeElement === textAreaRef.current) return;
-    //         if (typeof e.key === "string") {
-    //             textAreaRef.current.innerText += e.key;
-    //             setMessage(textAreaRef.current.innerText);
-    //             moveCursorToEnd();
-    //         } else if (e.key === "Backspace") {
-    //             textAreaRef.current.innerText = textAreaRef.current.innerText.slice(
-    //                 0,
-    //                 -1
-    //             );
-    //             setMessage(textAreaRef.current.innerText);
-    //             moveCursorToEnd();
-    //         } else if (e.key === "Enter") {
-    //             textAreaRef.current.innerText += "\n";
-    //             setMessage(textAreaRef.current.innerText);
-    //             moveCursorToEnd();
-    //         }
-    //     };
+    useEffect(() => {
+        console.log("Error: ", error);
+    }, [error]);
 
-    //     window.addEventListener("keydown", handleTyping);
-
-    //     return () => {
-    //         window.removeEventListener("keydown", handleTyping);
-    //     };
-    // }, []);
-
-    const textAreaRef = useRef(null);
-
-    const moveCursorToEnd = () => {
-        textAreaRef.current.focus();
-        if (
-            typeof window.getSelection != "undefined" &&
-            typeof document.createRange != "undefined"
-        ) {
-            const range = document.createRange();
-            range.selectNodeContents(textAreaRef.current);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        } else if (typeof document.body.createTextRange != "undefined") {
-            const textRange = document.body.createTextRange();
-            textRange.moveToElementText(textAreaRef.current);
-            textRange.collapse(false);
-            textRange.select();
-        }
-    };
+    useEffect(() => {
+        if (!files.length) return
+        console.log(files);
+    }, [files]);
 
     return (
         <form className={styles.form}>
@@ -105,7 +40,7 @@ const TextArea = ({ friend, sendMessage }) => {
                     )}
                 </div>
 
-                <div className={styles.counterContainer}>
+                {/* <div className={styles.counterContainer}>
                     <span
                         style={{
                             color: message.length > 4000
@@ -115,110 +50,143 @@ const TextArea = ({ friend, sendMessage }) => {
                     >
                         {message.length}
                     </span>/4000
-                </div>
+                </div> */}
             </div>
 
             <div className={styles.textArea}>
                 <div className={styles.scrollableContainer}>
+                    {files.length > 0 && (
+                        <>
+                            <ul className={styles.filesList}>
+                                {files.map((file) => (
+                                    <li
+                                        key={uuidv4()}
+                                        className={styles.fileItem}
+                                    >
+                                        <div className={styles.fileItemContainer}>
+                                            <div className={styles.image}>
+                                                <img
+                                                    src={URL.createObjectURL(file)}
+                                                    alt="file"
+                                                />
+                                            </div>
+
+                                            <div className={styles.fileName}>
+                                                <div>
+                                                    {file.name}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.fileMenu}>
+                                            <div>
+                                                <div>
+                                                    <div
+                                                        className={styles.fileMenuButton}
+                                                        onMouseEnter={() => setShowTooltip(1)}
+                                                        onMouseLeave={() => setShowTooltip(null)}
+                                                    >
+                                                        <Icon name="eye" size={20} />
+                                                    </div>
+                                                    <Tooltip show={showTooltip === 1}>
+                                                        Spoiler Attachment
+                                                    </Tooltip>
+                                                </div>
+
+                                                <div>
+                                                    <div
+                                                        className={styles.fileMenuButton}
+                                                        onMouseEnter={() => setShowTooltip(2)}
+                                                        onMouseLeave={() => setShowTooltip(null)}
+                                                    >
+                                                        <Icon name="edit" size={20} />
+                                                    </div>
+                                                    <Tooltip show={showTooltip === 2}>
+                                                        Modify Attachment
+                                                    </Tooltip>
+                                                </div>
+
+                                                <div>
+                                                    <div
+                                                        className={styles.fileMenuButton}
+                                                        onMouseEnter={() => setShowTooltip(3)}
+                                                        onMouseLeave={() => setShowTooltip(null)}
+                                                        onClick={() => {
+                                                            setFiles(files.filter((f) => f !== file));
+                                                        }}
+                                                    >
+                                                        <Icon
+                                                            name="delete"
+                                                            size={20}
+                                                            fill="var(--error-1)"
+                                                        />
+                                                    </div>
+                                                    <Tooltip show={showTooltip === 3}>
+                                                        Remove Attachment
+                                                    </Tooltip>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className={styles.formDivider} />
+                        </>
+                    )}
+
                     <div className={styles.input}>
                         <div className={styles.attachWrapper}>
-                            <button>
+                            <input
+                                type="file"
+                                id="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => {
+                                    const newFiles = Array.from(e.target.files);
+                                    if (files.length + newFiles.length > 10) {
+                                        setError("You can only attach up to 10 files");
+                                        return;
+                                    }
+                                    setFiles(files.concat(newFiles).slice(0, 10));
+                                }}
+                                style={{ display: "none" }}
+                            />
+
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById("file").click();
+                                }}
+                            >
                                 <div>
                                     <Icon name="attach" />
                                 </div>
                             </button>
                         </div>
 
-                        <div
-                            className={styles.textContainer}
-                            style={{
-                                height: textAreaRef?.current?.scrollHeight || 44,
-                            }}
-                        >
-                            <div>
-                                {message.length === 0 && (
-                                    <div className={styles.textContainerPlaceholder}>
-                                        Message {("@" + friend?.username) || "Loading"}
-                                    </div>
-                                )}
-
-                                <div
-                                    ref={textAreaRef}
-                                    className={styles.textContainerInner}
-                                    role="textarea"
-                                    spellCheck="true"
-                                    autoCorrect="off"
-                                    aria-multiline="true"
-                                    aria-label={`Message @${friend?.username || "username"}`}
-                                    aria-autocomplete="list"
-                                    contentEditable="true"
-                                    onInput={(e) => {
-                                        const text = e.target.innerText.toString();
-                                        e.target.innerText = text;
-                                        setMessage(text);
-                                        moveCursorToEnd();
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" && e.shiftKey) {
-                                            e.preventDefault();
-                                            e.target.innerText += "\n";
-                                            setMessage(e.target.innerText);
-                                            moveCursorToEnd();
-                                        } else if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            sendMessage(message);
-                                            setMessage("");
-                                            e.target.innerText = "";
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
+                        <TextContainer
+                            username={friend?.username}
+                            sendMessage={sendMessage}
+                        />
 
                         <div className={styles.toolsContainer}>
-                            <button
-                                onMouseEnter={() => setHover(1)}
-                                onMouseLeave={() => setHover(null)}
-                            >
+                            <button>
                                 <div className={styles.button}>
                                     <Icon
                                         name="keyboard"
                                         size={30}
-                                        fill={hover === 1 && "var(--foreground-2)"}
                                     />
                                 </div>
                             </button>
-                            <button
-                                onMouseEnter={() => setHover(2)}
-                                onMouseLeave={() => setHover(null)}
-                            >
+                            <button>
                                 <div className={styles.button}>
                                     <Icon
                                         name="gif"
-                                        fill={hover === 2 && "var(--foreground-2)"}
                                     />
                                 </div>
                             </button>
-                            <motion.button
-                                onMouseEnter={() => {
-                                    setHover(3)
-                                    setEmojisPosIndex(Math.floor(Math.random() * emojisPos.length))
-                                }}
-                                onMouseLeave={() => setHover(null)}
-                                whileHover="hover"
-                            >
-                                <div className={styles.button}>
-                                    <motion.div
-                                        className={styles.emojiButton}
-                                        style={{
-                                            filter: hover === 3 ? "grayscale(0%)" : "grayscale(100%)",
-                                            backgroundPosition: `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`
-                                        }}
-                                        variants={scale}
-                                    >
-                                    </motion.div>
-                                </div>
-                            </motion.button>
+                            <EmojiPicker />
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,4 @@
-import { AppNav, Loader, Settings } from "../";
+import { AppNav, Loader, Settings, UserProfile } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
@@ -19,6 +19,7 @@ const Layout = ({ children }) => {
         setBlocked,
         setChannels,
         showSettings,
+        userProfile,
     } = useUserData();
 
     useEffect(() => {
@@ -81,9 +82,16 @@ const Layout = ({ children }) => {
         isLoading || isFetching ? (
             <Loader />
         ) : (
-            <div className={styles.container}>
+            <div
+                className={styles.container}
+                onDragStart={(e) => e.preventDefault()}
+            >
                 <AnimatePresence>
                     {showSettings && <Settings />}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {userProfile && <UserProfile />}
                 </AnimatePresence>
 
                 <AppNav />

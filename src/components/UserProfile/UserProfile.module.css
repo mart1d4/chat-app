@@ -1,0 +1,41 @@
+.wrapper {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+.cardContainer {
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
+    background-color: var(--background-3);
+    display: flex;
+    flex-direction: column;
+}
+
+.topSection {
+    margin-bottom: 60px;
+    min-width: 600px;
+    min-height: 106px;
+    position: relative;
+}
+
+.topSection > img {
+    position: absolute;
+    top: 39px;
+    left: 12px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 10px solid var(--background-3);
+    box-sizing: content-box;
+    user-select: none;
+}
