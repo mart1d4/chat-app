@@ -77,17 +77,33 @@ export default async (req, res) => {
 
         if (sameChannel) {
             const userHasChannel = user.channels.find((chan) => {
-                return chan.toString() === sameChannel._id.toString();
+                return chan._id.toString() === sameChannel._id.toString();
             });
+
+            recipientsObjects = recipientsObjects.map((recipient) => cleanUser(recipient));
 
             if (!userHasChannel) {
                 user.channels.unshift(sameChannel._id);
                 await user.save();
+
+                return res.json({
+                    success: true,
+                    channel: {
+                        _id: sameChannel._id,
+                        recipients: [...recipientsObjects, cleanUser(user)],
+                        type: sameChannel.type,
+                    },
+                    message: "Channel created",
+                });
             }
 
             return res.json({
                 success: true,
-                channel: sameChannel,
+                channel: {
+                    _id: sameChannel._id,
+                    recipients: [...recipientsObjects, cleanUser(user)],
+                    type: sameChannel.type,
+                },
                 message: "Channel already exists",
             });
         } else {
@@ -110,11 +126,14 @@ export default async (req, res) => {
                 }
             }
 
+            recipientsObjects = recipientsObjects.map((recipient) => cleanUser(recipient));
+
             return res.json({
                 success: true,
                 channel: {
-                    ...channel,
+                    _id: channel._id,
                     recipients: recipientsObjects,
+                    type: channel.type,
                 },
                 message: "Channel created",
             });

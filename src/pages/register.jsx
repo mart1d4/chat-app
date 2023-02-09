@@ -48,17 +48,25 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (isLoading) return;
         setIsLoading(true);
 
         const v1 = USER_REGEX.test(username);
         const v2 = PWD_REGEX.test(password);
 
-        (!v1) && setUsernameError("Invalid Username");
-        (!v2) && setPasswordError("Invalid Password");
+        if (!v1) {
+            setUsernameError("Invalid Username");
+            setIsLoading(false);
+        }
+        if (!v2) {
+            setPasswordError("Invalid Password");
+            setIsLoading(false);
+        }
         if (!v1 || !v2) return;
 
         if (password !== passwordMatch) {
             setPasswordError("Passwords do not match");
+            setIsLoading(false);
             return;
         }
 
@@ -100,23 +108,6 @@ const Register = () => {
             </Head>
 
             <div className={styles.wrapper}>
-                <div
-                    style={{
-                        position: "fixed",
-                        top: "0",
-                        left: "0",
-                        width: "100%",
-                        textAlign: "center",
-                        padding: "1rem",
-                        fontSize: "1.2rem",
-                        background: "red",
-                        zIndex: "1000",
-                    }}
-                >
-                    This app is not secured.
-                    Think twice before registering. Use it at your own risk
-                </div>
-
                 <AnimatePresence>
                     <motion.form
                         onSubmit={handleSubmit}
@@ -255,7 +246,7 @@ const Register = () => {
                                 </div>
 
                                 <button type="submit" className={styles.buttonSubmit}>
-                                    <div className={isLoading && styles.loading}>
+                                    <div className={isLoading ? styles.loading : ""}>
                                         {!isLoading && "Register"}
                                     </div>
                                 </button>

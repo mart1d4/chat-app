@@ -4,6 +4,7 @@ import Head from 'next/head';
 import useUserData from '../../hooks/useUserData';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
 import { v4 as uuidv4 } from 'uuid';
+import { motion } from 'framer-motion';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('My Account');
@@ -148,8 +149,24 @@ const Settings = () => {
     ];
 
     return (
-        <div
+        <motion.div
             className={styles.container}
+            initial={{
+                opacity: 0,
+                scale: 1.5,
+            }}
+            animate={{
+                opacity: 1,
+                scale: 1,
+            }}
+            exit={{
+                opacity: 0,
+                scale: 1.5,
+            }}
+            transition={{
+                duration: 0.2,
+                ease: 'easeInOut',
+            }}
         >
             <Head>
                 <title>Discord | {activeTab} | User Settings</title>
@@ -268,7 +285,7 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 

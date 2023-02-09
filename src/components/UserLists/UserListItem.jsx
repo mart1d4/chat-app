@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu, AvatarStatus, Icon, Tooltip } from "..";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useUserData from "../../hooks/useUserData";
@@ -18,16 +18,6 @@ const UserListItem = ({ content, user }) => {
         user = user.user;
     }
 
-    useEffect(() => {
-        if (!error || error === "") return;
-
-        const timout = setTimeout(() => {
-            setError(null);
-        }, 10000);
-
-        return () => clearTimeout(timout);
-    }, [error]);
-
     const {
         auth,
         friends,
@@ -36,7 +26,6 @@ const UserListItem = ({ content, user }) => {
         setBlocked,
         requests,
         setRequests,
-        channels,
         setChannels,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
@@ -169,8 +158,7 @@ const UserListItem = ({ content, user }) => {
             setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
 
             if (response.data.channel) {
-                console.log(response.data.channel);
-                setChannels((prev) => [...prev, response.data.channel]);
+                setChannels((prev) => [response.data.channel, ...prev]);
             }
         } else {
             setError("An error occurred.");
@@ -205,8 +193,7 @@ const UserListItem = ({ content, user }) => {
             setError(response.data.message);
         } else if (response.data.success) {
             if (response.data.message === "Channel created") {
-                const newChannels = channels.unshift(response.data.channel);
-                setChannels(newChannels);
+                setChannels((prev) => [response.data.channel, ...prev]);
             }
             router.push(`/channels/@me/${response.data.channel._id}`);
         } else {

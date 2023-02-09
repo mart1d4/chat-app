@@ -13,8 +13,6 @@ export const config = {
 }
 
 export async function middleware(req) {
-    console.log('Running Middleware');
-
     const url = req.nextUrl.pathname;
     if (nonProtectedRoutes.includes(url)) {
         return NextResponse.next();
@@ -31,7 +29,6 @@ export async function middleware(req) {
             }
         });
     } else {
-        console.log('Redirecting to login');
         return NextResponse.redirect('http://localhost:3000/login');
     }
 }

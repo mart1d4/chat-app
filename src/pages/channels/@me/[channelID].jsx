@@ -90,11 +90,10 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
-        console.log("Channels : " + channels);
         if (
             !router.query.channelID ||
             !channels ||
-            !typeof (channels) === Array ||
+            !channels.length ||
             !channels.find((channel) => channel._id === router.query.channelID)
         ) {
             router.push("/channels/@me");

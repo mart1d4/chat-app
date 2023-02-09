@@ -78,7 +78,7 @@ export default async (req, res) => {
             const response = await axios.post(
                 `/users/@me/channels`,
                 {
-                    recipients: [friendID],
+                    recipients: [friend._id],
                 },
                 {
                     headers: {

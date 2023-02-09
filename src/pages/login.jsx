@@ -34,6 +34,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (isLoading) return;
         setIsLoading(true);
 
         const response = await axios.post(
@@ -57,7 +58,6 @@ const Login = () => {
             setUID("");
             setPassword("");
             setIsLoading(false);
-
             router.push("/channels/@me");
         }
     };
@@ -175,7 +175,7 @@ const Login = () => {
                                     Forgot your password?
                                 </button>
                                 <button type="submit" className={styles.buttonSubmit}>
-                                    <div className={isLoading && styles.loading}>
+                                    <div className={isLoading ? styles.loading : ""}>
                                         {!isLoading && "Login"}
                                     </div>
                                 </button>

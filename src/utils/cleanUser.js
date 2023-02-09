@@ -8,7 +8,11 @@ export default function cleanUser(user) {
         customStatus: user.customStatus || null,
         status: user.status,
         accentColor: user.accentColor,
+        createdAt: user.createdAt,
         system: user.system,
         verified: user.verified,
+        friends: user.friends,
+        channels: user.channels,
+        guilds: user.guilds,
     }
 }

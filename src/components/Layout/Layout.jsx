@@ -4,6 +4,7 @@ import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRouter } from "next/router";
+import { AnimatePresence } from "framer-motion";
 
 const Layout = ({ children }) => {
     const [isFetching, setIsFetching] = useState(true);
@@ -76,14 +77,17 @@ const Layout = ({ children }) => {
         };
     }, [isLoading]);
 
-    if (showSettings) return <Settings />;
-
     return (
         isLoading || isFetching ? (
             <Loader />
         ) : (
             <div className={styles.container}>
+                <AnimatePresence>
+                    {showSettings && <Settings />}
+                </AnimatePresence>
+
                 <AppNav />
+
                 <div className={styles.wrapper}>
                     {children}
                 </div>

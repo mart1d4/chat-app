@@ -1,4 +1,4 @@
-import mongoose, { get } from "mongoose";
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const defaultAvatars = [
@@ -80,6 +80,12 @@ const userSchema = new Schema(
             {
                 type: Schema.Types.ObjectId,
                 ref: "Channel",
+            },
+        ],
+        guilds: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Guild",
             },
         ],
         refreshToken: {

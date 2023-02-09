@@ -2,7 +2,6 @@ import styles from "./ChannelList.module.css";
 import { Tooltip, Icon, ChannelListItem, UserSection } from "..";
 import useUserData from "../../hooks/useUserData";
 import { useState } from "react";
-import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 
 const ConversationList = () => {
