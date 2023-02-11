@@ -1,4 +1,4 @@
-import { AppNav, Loader, Settings, UserProfile } from "../";
+import { AppNav, Loader, Settings, UserProfile, Menu } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
@@ -67,9 +67,9 @@ const Layout = ({ children }) => {
         getBlocked();
         getChannels();
         console.log(
-            '%c[AuthProvider]',
+            '%c[Layout]',
             'color: hsl(38, 96%, 54%)',
-            ': Fetching data...'
+            'Fetching data...'
         );
 
         return () => {
@@ -82,24 +82,29 @@ const Layout = ({ children }) => {
         isLoading || isFetching ? (
             <Loader />
         ) : (
-            <div
-                className={styles.container}
-                onDragStart={(e) => e.preventDefault()}
-            >
-                <AnimatePresence>
-                    {showSettings && <Settings />}
-                </AnimatePresence>
+            <>
+                <div
+                    className={styles.container}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <AnimatePresence>
+                        {showSettings && <Settings />}
+                    </AnimatePresence>
 
-                <AnimatePresence>
-                    {userProfile && <UserProfile />}
-                </AnimatePresence>
+                    <AnimatePresence>
+                        {userProfile && <UserProfile />}
+                    </AnimatePresence>
 
-                <AppNav />
+                    <AppNav />
 
-                <div className={styles.wrapper}>
-                    {children}
+                    <div className={styles.wrapper}>
+                        {children}
+                    </div>
                 </div>
-            </div>
+
+                <Menu />
+            </>
         )
     );
 };

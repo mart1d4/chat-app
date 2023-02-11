@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
     const [isLoading, setIsLoading] = useState(true);
     const [showSettings, setShowSettings] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
+    const [menu, setMenu] = useState(null);
 
     const value = {
         auth,
@@ -32,6 +33,8 @@ export function AuthProvider({ children }) {
         setShowSettings,
         userProfile,
         setUserProfile,
+        menu,
+        setMenu,
     };
 
     return (

@@ -317,7 +317,7 @@ const Channels = () => {
     return (
         <>
             <Head>
-                <title>Discord | {("@" + friend?.username) || "Loading"}</title>
+                <title>Unthrust | {("@" + friend?.username) || "Loading"}</title>
             </Head>
 
             <div className={styles.container}>

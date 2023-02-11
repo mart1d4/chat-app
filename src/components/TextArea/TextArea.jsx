@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./TextArea.module.css";
-import { EmojiPicker, Icon, TextContainer, Tooltip } from "../";
+import { EmojiPicker, Icon, TextContainer, FilePreview } from "../";
 import { v4 as uuidv4 } from "uuid";
 
 const TextArea = ({ friend, sendMessage }) => {
     const [friendTyping, setFriendTyping] = useState(false);
-    const [showTooltip, setShowTooltip] = useState(null);
     const [files, setFiles] = useState([]);
     const [error, setError] = useState(null);
+
+    const changeFiles = useCallback((file) => {
+        setFiles((files) => {
+            return files.filter((f) => f !== file);
+        });
+    }, []);
 
     useEffect(() => {
         console.log("Error: ", error);
@@ -59,75 +64,11 @@ const TextArea = ({ friend, sendMessage }) => {
                         <>
                             <ul className={styles.filesList}>
                                 {files.map((file) => (
-                                    <li
+                                    <FilePreview
                                         key={uuidv4()}
-                                        className={styles.fileItem}
-                                    >
-                                        <div className={styles.fileItemContainer}>
-                                            <div className={styles.image}>
-                                                <img
-                                                    src={URL.createObjectURL(file)}
-                                                    alt="file"
-                                                />
-                                            </div>
-
-                                            <div className={styles.fileName}>
-                                                <div>
-                                                    {file.name}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.fileMenu}>
-                                            <div>
-                                                <div>
-                                                    <div
-                                                        className={styles.fileMenuButton}
-                                                        onMouseEnter={() => setShowTooltip(1)}
-                                                        onMouseLeave={() => setShowTooltip(null)}
-                                                    >
-                                                        <Icon name="eye" size={20} />
-                                                    </div>
-                                                    <Tooltip show={showTooltip === 1}>
-                                                        Spoiler Attachment
-                                                    </Tooltip>
-                                                </div>
-
-                                                <div>
-                                                    <div
-                                                        className={styles.fileMenuButton}
-                                                        onMouseEnter={() => setShowTooltip(2)}
-                                                        onMouseLeave={() => setShowTooltip(null)}
-                                                    >
-                                                        <Icon name="edit" size={20} />
-                                                    </div>
-                                                    <Tooltip show={showTooltip === 2}>
-                                                        Modify Attachment
-                                                    </Tooltip>
-                                                </div>
-
-                                                <div>
-                                                    <div
-                                                        className={styles.fileMenuButton}
-                                                        onMouseEnter={() => setShowTooltip(3)}
-                                                        onMouseLeave={() => setShowTooltip(null)}
-                                                        onClick={() => {
-                                                            setFiles(files.filter((f) => f !== file));
-                                                        }}
-                                                    >
-                                                        <Icon
-                                                            name="delete"
-                                                            size={20}
-                                                            fill="var(--error-1)"
-                                                        />
-                                                    </div>
-                                                    <Tooltip show={showTooltip === 3}>
-                                                        Remove Attachment
-                                                    </Tooltip>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
+                                        file={file}
+                                        setFiles={changeFiles}
+                                    />
                                 ))}
                             </ul>
 

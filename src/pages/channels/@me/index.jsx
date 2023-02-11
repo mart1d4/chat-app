@@ -34,7 +34,7 @@ const Friends = () => {
     return (
         <>
             <Head>
-                <title>Discord | Friends</title>
+                <title>Unthrust | Friends</title>
             </Head>
 
             <div className={styles.main}>

@@ -15,6 +15,9 @@
     border-radius: 8px;
     overflow: hidden;
     position: relative;
+    width: 600px;
+    height: fit-content;
+    max-height: calc(100% - 32px);
     min-height: 200px;
     background-color: var(--background-3);
     display: flex;
@@ -24,13 +27,13 @@
 .topSection {
     margin-bottom: 60px;
     min-width: 600px;
-    min-height: 106px;
+    min-height: 105px;
     position: relative;
 }
 
-.topSection > img {
+.topSection > div:first-child {
     position: absolute;
-    top: 39px;
+    top: 25px;
     left: 12px;
     width: 120px;
     height: 120px;
@@ -38,4 +41,251 @@
     border: 10px solid var(--background-3);
     box-sizing: content-box;
     user-select: none;
+}
+
+.topSection > div:first-child > img {
+    width: 102%;
+    height: 102%;
+    transform: translate(-1%, -1%);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.contentSection {
+    margin: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    background-color: var(--background-1);
+    overflow: hidden;
+    height: 385px;
+}
+
+.contentHeader {
+    padding: 12px 12px 0;
+}
+
+.username {
+    user-select: text;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 24px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.customStatus {
+    line-height: 18px;
+    margin-top: 12px;
+    user-select: text;
+    color: var(--foreground-3);
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.contentNav {
+    margin: 20px 12px 0;
+}
+
+.contentNav > div {
+    display: flex;
+    gap: 40px;
+    align-items: stretch;
+    border-bottom: thin solid var(--border-light);
+}
+
+.contentNavItem {
+    border-bottom: 2px solid transparent;
+    display: inline;
+    height: 40px;
+    font-size: 14px;
+    position: relative;
+    line-height: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.contentNavItem:hover {
+    color: var(--foreground-1) !important;
+    border-color: var(--foreground-1) !important;
+}
+
+.contentUser {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: hidden auto;
+    padding: 0 12px;
+    height: 100%;
+}
+
+.contentUser h1 {
+    user-select: none;
+}
+
+.contentUser::-webkit-scrollbar-track {
+    border: 7px var(--background-1) solid;
+    background-color: var(--background-1);
+}
+
+.contentUser::-webkit-scrollbar-thumb {
+    border: 7px var(--background-1) solid;
+    border-color: transparent;
+    background-color: var(--background-3);
+}
+
+.contentUser > div {
+    padding: 16px 0;
+}
+
+.contentUser > div > h1 {
+    font-weight: 700;
+    color: var(--foreground-1);
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.contentUserDescription {
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 18px;
+    white-space: break-spaces;
+    word-wrap: break-word;
+    user-select: text;
+    color: var(--foreground-3);
+}
+
+.contentUserDate {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+}
+
+.contentUserDate > div {
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-3);
+}
+
+.contentNote {
+    margin: -4px;
+}
+
+.contentNote > textarea {
+    border-radius: 3px;
+    padding: 4px;
+    font-size: 14px;
+    line-height: 22px;
+    background-color: var(--background-dark);
+    /* border: 1px solid var(--border-light); */
+    color: var(--foreground-3);
+    min-height: 44px;
+    max-height: 88px;
+    resize: none;
+    width: 100%;
+    overflow: hidden;
+}
+
+.contentNote > textarea:focus {
+    outline: none;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100%;
+    padding: 20px 0;
+}
+
+.empty > div:first-child {
+    background-image: url('/assets/no-servers.svg');
+    width: 240px;
+    height: 130px;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.empty.noFriends > div:first-child {
+    background-image: url('/assets/no-friends.svg');
+}
+
+.empty > div:last-child {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    margin-top: 12px;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+    user-select: none;
+}
+
+.topSectionToolbar {
+    position: absolute;
+    top: 121px;
+    right: 16px;
+    left: 160px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.topSectionToolbar > div:first-child {
+    padding: 2px 4px;
+    border-radius: 8px;
+    margin-right: 16px;
+    justify-content: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    min-height: 22px;
+}
+
+.topSectionToolbar > div:last-child {
+    display: flex;
+    align-items: center;
+}
+
+.topSectionToolbar > div:last-child > button {
+    height: 32px;
+    background-color: var(--success-1);
+    cursor: pointer;
+}
+
+.topSectionToolbar > div:last-child > button:hover {
+    background-color: var(--success-2);
+}
+
+.topSectionToolbar > div:last-child > button:active {
+    background-color: var(--success-3);
+}
+
+.topSectionToolbar > div:last-child > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.topSectionToolbar svg:hover path:last-child {
+    fill: var(--foreground-2);
+}
+
+.topSectionToolbar svg:active path:last-child {
+    fill: var(--foreground-1);
 }

@@ -65,7 +65,7 @@ const Login = () => {
     return (
         <>
             <Head>
-                <title>Discord | Login</title>
+                <title>Unthrust | Login</title>
             </Head>
 
             <div className={styles.wrapper}>

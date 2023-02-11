@@ -2,15 +2,20 @@ import { Icon } from "../";
 import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
+import useUserData from "../../hooks/useUserData";
 
-const Menu = ({ items, position, event, setMenu }) => {
+const Menu = () => {
+    const { menu, setMenu } = useUserData();
+    if (!menu) return null;
+
+    const { event, items } = menu;
+
     const [positions, setPositions] = useState({});
     const [parent, setParent] = useState(null);
     const [container, setContainer] = useState(null);
     const [active, setActive] = useState(null);
 
     const menuItems = items.filter((item) => item.name !== "Divider");
-    const fixed = position ? false : true;
 
     const containerRef = useCallback(node => {
         if (node !== null) {
@@ -26,56 +31,44 @@ const Menu = ({ items, position, event, setMenu }) => {
     useEffect(() => {
         if (!parent || !container) return;
 
-        if (fixed) {
-            let pos = {}
+        let pos = {}
 
-            // If there's not enough space to the right, open to the left
-            if (window.innerWidth - 10 - event.clientX < container.width) {
-                pos = {
-                    top: event.clientY,
-                    left: event.clientX - container.width,
-                };
-            } else {
-                pos = {
-                    top: event.clientY,
-                    left: event.clientX,
-                };
-            }
-
-            // If there's not enough space to the bottom, open to the top
-            if (window.innerHeight - 10 - event.clientY < container.height) {
-                pos = {
-                    ...pos,
-                    bottom: 10,
-                    top: "unset",
-                };
-            }
-
-            setPositions(pos);
+        // If there's not enough space to the right, open to the left
+        if (window.innerWidth - 10 - event.clientX < container.width) {
+            pos = {
+                top: event.clientY,
+                left: event.clientX - container.width,
+            };
         } else {
-            // If there's not enough space to the bottom, open to the top
-            if (window.innerHeight - 10 - position.y < container.height) {
-                setPositions({
-                    ...position,
-                    top: position.top - container.height - 10,
-                });
-            } else {
-                setPositions(position);
-            }
+            pos = {
+                top: event.clientY,
+                left: event.clientX,
+            };
         }
+
+        // If there's not enough space to the bottom, open to the top
+        if (window.innerHeight - 10 - event.clientY < container.height) {
+            pos = {
+                ...pos,
+                bottom: 10,
+                top: "unset",
+            };
+        }
+
+        setPositions(pos);
     }, [parent, container, container?.width]);
 
     useEffect(() => {
-        if (!parent) return;
+        if (!parent || !container) return;
 
         const handleClickOutside = (e) => {
-            if (parent.contains(e.target)) return;
-            setMenu.func();
+            if (e.clientX === event.clientX) return;
+            setMenu(null);
         };
 
         const handlekeyDown = (e) => {
             if (e.key === "Escape") {
-                setMenu.func();
+                setMenu(null);
             } else if (e.key === "ArrowDown") {
                 if (active === null) {
                     setActive(menuItems[0].name);
@@ -100,7 +93,7 @@ const Menu = ({ items, position, event, setMenu }) => {
                 }
             } else if (e.key === "Enter") {
                 if (active) {
-                    setMenu.func();
+                    setMenu(null);
                     menuItems.find((item) => item.name === active).func();
                 }
             }
@@ -121,10 +114,16 @@ const Menu = ({ items, position, event, setMenu }) => {
             className={styles.menuContainer}
             style={{
                 ...positions,
-                position: fixed ? "fixed" : "absolute",
                 opacity: (container && positions.top) ? 1 : 0,
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+            onContextMenu={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
             onMouseEnter={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -143,7 +142,7 @@ const Menu = ({ items, position, event, setMenu }) => {
                                 : styles.menuItem
                             }
                             onClick={() => {
-                                setMenu.func();
+                                setMenu(null);
                                 item.func();
                             }}
                             onMouseEnter={() => setActive(item.name)}

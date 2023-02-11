@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Icon, AvatarStatus } from "..";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 
 const ChannelListItem = ({ channel, special }) => {
@@ -24,6 +24,10 @@ const ChannelListItem = ({ channel, special }) => {
         }
     }, [channel]);
 
+    useEffect(() => {
+        console.log("ChannelRender");
+    }, []);
+
     const router = useRouter();
     const currentPath = router.asPath;
 
@@ -33,6 +37,11 @@ const ChannelListItem = ({ channel, special }) => {
         requests,
         channels,
         setChannels,
+        setMenu,
+        setUserProfile,
+        setFriends,
+        setRequests,
+        setBlocked,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
 
@@ -52,15 +61,105 @@ const ChannelListItem = ({ channel, special }) => {
         }
     }
 
+    const deleteFriend = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/@me/friends/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Friend removed") {
+                setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
+            } else if (response.data.message === "Request cancelled") {
+                setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+            }
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const blockUser = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked((prev) => [...prev, response.data.blocked]);
+            setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
+            setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
     const isFriend = () => {
         return friends?.some((friend) => friend?._id.toString() === user?._id);
     };
 
     const requestReceived = requests?.filter((request) => request.type === 1).length;
 
+    const menuItems = [
+        {
+            name: "Mark As Read",
+            func: () => console.log("Mark As Read"),
+        },
+        { name: "Divider" },
+        {
+            name: "Profile",
+            func: () => setUserProfile({ user }),
+        },
+        {
+            name: "Call",
+            func: () => console.log("Call"),
+        },
+        {
+            name: "Add Note",
+            func: () => setUserProfile({ user, focusNote: true }),
+        },
+        {
+            name: "Add Friend Nickname",
+            func: () => console.log("Add Friend Nickname"),
+        },
+        {
+            name: "Close DM",
+            func: () => removeChannel(),
+        },
+        { name: "Divider" },
+        {
+            name: "Invite To Server",
+            func: () => console.log("Invite To Server"),
+            icon: "arrow",
+            iconSize: 10,
+        },
+        {
+            name: "Remove Friend",
+            func: () => deleteFriend(),
+        },
+        {
+            name: "Block",
+            func: () => blockUser(),
+        },
+        { name: "Divider" },
+        {
+            name: `Mute @${user?.username}`,
+            func: () => console.log(`Mute @${user?.username}`),
+            icon: "arrow",
+            iconSize: 10,
+        },
+        { name: "Divider" },
+        {
+            name: "Copy ID",
+            func: () => navigator.clipboard.writeText(user?._id),
+            icon: "id",
+        },
+    ];
+
     if (special) {
         return (
-            <div
+            <li
                 className={currentPath === "/channels/@me"
                     ? styles.liContainerActive
                     : styles.liContainer}
@@ -101,11 +200,11 @@ const ChannelListItem = ({ channel, special }) => {
                         )}
                     </div>
                 </div>
-            </div>
+            </li>
         );
     }
 
-    return (
+    return useMemo(() => (
         <li
             className={currentPath === `/channels/@me/${channel?._id}`
                 ? styles.liContainerActive
@@ -118,6 +217,13 @@ const ChannelListItem = ({ channel, special }) => {
                     `/channels/@me/${channel?._id}`
                 );
                 router.push(`/channels/@me/${channel?._id}`);
+            }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({
+                    items: menuItems,
+                    event: e,
+                });
             }}
         >
             <div className={styles.liWrapper}>
@@ -173,7 +279,7 @@ const ChannelListItem = ({ channel, special }) => {
                 </div>
             </div>
         </li>
-    );
+    ), [user, recipients, hover]);
 };
 
 export default ChannelListItem;

@@ -13,7 +13,7 @@ const App = ({ Component, pageProps }) => {
         <AuthProvider>
             <PersistLogin>
                 <Head>
-                    <title>Discord</title>
+                    <title>Unthrust</title>
                     <link rel='icon' href='/assets/favicon.ico' />
                 </Head>
                 {getLayout(<Component {...pageProps} key={router.asPath} />)}

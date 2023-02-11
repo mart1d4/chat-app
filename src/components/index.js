@@ -24,6 +24,7 @@ import UserSection from './ChannelList/UserSection';
 import EmojiPicker from './TextArea/EmojiPicker';
 import TextContainer from './TextArea/TextContainer';
 import UserProfile from './UserProfile/UserProfile';
+import FilePreview from './TextArea/FilePreview';
 
 export {
     AppHeader,
@@ -52,4 +53,5 @@ export {
     EmojiPicker,
     TextContainer,
     UserProfile,
+    FilePreview,
 };

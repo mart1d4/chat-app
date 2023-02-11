@@ -104,7 +104,7 @@ const Register = () => {
     return (
         <>
             <Head>
-                <title>Discord | Register</title>
+                <title>Unthrust | Register</title>
             </Head>
 
             <div className={styles.wrapper}>

@@ -5,7 +5,7 @@ const Index = () => {
     return (
         <>
             <Head>
-                <title>Discord | Your Place to Talk and to Hang Out</title>
+                <title>Unthrust | Your Place to Talk and to Hang Out</title>
             </Head>
             <Header />
             <Main />

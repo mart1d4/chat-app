@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Menu, AvatarStatus, Icon, Tooltip } from "..";
+import { useState, useMemo } from "react";
+import { AvatarStatus, Icon, Tooltip } from "..";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useUserData from "../../hooks/useUserData";
 import styles from "./UserListItem.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "framer-motion";
 
 const UserListItem = ({ content, user }) => {
     const [showTooltip, setShowTooltip] = useState(null);
-    const [showMenu, setShowMenu] = useState(null);
     const [liHover, setLiHover] = useState(false);
     const [error, setError] = useState(null);
 
@@ -28,6 +28,7 @@ const UserListItem = ({ content, user }) => {
         setRequests,
         setChannels,
         setUserProfile,
+        setMenu,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -45,11 +46,10 @@ const UserListItem = ({ content, user }) => {
                 icon: "more",
                 fill: "var(--foreground-2)",
                 func: (event) => {
-                    setShowMenu({
-                        type: "small",
+                    setMenu({
+                        items: smallMenuItems,
                         event: event,
                     });
-                    setShowTooltip(null);
                 }
             }
         },
@@ -88,7 +88,7 @@ const UserListItem = ({ content, user }) => {
     const largeMenuItems = [
         {
             name: "Profile",
-            func: () => setUserProfile(user),
+            func: () => setUserProfile({ user }),
         },
         {
             name: "Message",
@@ -100,7 +100,7 @@ const UserListItem = ({ content, user }) => {
         },
         {
             name: "Add Note",
-            func: () => console.log("Add Note"),
+            func: () => setUserProfile({ user, focusNote: true }),
         },
         {
             name: "Add Friend Nickname",
@@ -234,176 +234,151 @@ const UserListItem = ({ content, user }) => {
 
     if (!user || !user.avatar) return null;
 
-    return (
-        <li
-            className={styles.liContainer}
-            onClick={() => {
-                if ((content !== "online" && content !== "all")) return;
-                createChannel(user._id);
-            }}
-            onContextMenu={(event) => {
-                event.preventDefault();
-                setShowMenu({
-                    type: "large",
-                    event: event,
-                });
-            }}
-            onMouseEnter={() => setLiHover(true)}
-            onMouseLeave={() => {
-                setLiHover(false);
-                setShowMenu(null);
-            }}
-            style={
-                (showMenu?.type) &&
-                {
-                    backgroundColor: "var(--background-hover-1)",
-                    borderRadius: "8px",
-                    margin: "0 10px 0 20px",
-                    padding: "16px 10px",
-                    borderColor: "transparent",
-                }
-            }
-        >
-            {showMenu?.type === "large" && (
-                <Menu
-                    items={largeMenuItems}
-                    event={showMenu.event}
-                    setMenu={{ func: () => setShowMenu(null) }}
-                />
-            )}
+    return useMemo(() => (
+        <AnimatePresence>
+            <motion.li
+                className={styles.liContainer}
+                onClick={() => {
+                    if ((content !== "online" && content !== "all")) return;
+                    createChannel(user._id);
+                }}
+                onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenu({
+                        items: largeMenuItems,
+                        event: event,
+                    });
+                }}
+                onMouseEnter={() => setLiHover(true)}
+                onMouseLeave={() => setLiHover(false)}
+                initial={{
+                    height: 0,
+                }}
+                animate={{
+                    height: "62px",
+                }}
+                exit={{
+                    height: 0,
+                }}
+                transition={{
+                    duration: 0.3,
+                    ease: "easeInOut",
+                }}
+            >
+                <div className={styles.li}>
+                    <div className={styles.userInfo}>
+                        <div className={styles.avatarWrapper}>
+                            <Image
+                                src={user.avatar}
+                                width={32}
+                                height={32}
+                                alt="Avatar"
+                            />
+                            {(content === "online" || content === "all" || (
+                                content === "pending" && user.sender !== auth?.user?._id
+                            )) && (
+                                    <AvatarStatus
+                                        status={user.status}
+                                        background={liHover
+                                            ? "var(--background-hover-1)"
+                                            : "var(--background-4)"
+                                        }
+                                    />
+                                )}
+                        </div>
+                        <div className={styles.text}>
+                            <p className={styles.textUsername}>
+                                {user.username}
+                            </p>
 
-            <div className={styles.li}>
-                <div className={styles.userInfo}>
-                    <div className={styles.avatarWrapper}>
-                        <Image
-                            src={user.avatar}
-                            width={32}
-                            height={32}
-                            alt="Avatar"
-                        />
-                        {(content === "online" || content === "all" || (
-                            content === "pending" && user.sender !== auth?.user?._id
-                        )) && (
-                                <AvatarStatus
-                                    status={user.status}
-                                    background={liHover
-                                        ? "var(--background-hover-1)"
-                                        : "var(--background-4)"
-                                    }
-                                />
+                            <p className={styles.textStatus}>
+                                <span>
+                                    {(content === "all" || content === "online") ? (
+                                        !user.customStatus
+                                            ? user.status
+                                            : user.customStatus
+                                    ) : content === "pending" ? (
+                                        type === 0
+                                            ? "Outgoing request"
+                                            : "Incoming request"
+                                    ) : "Blocked"}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div className={styles.actions}>
+
+                        {(
+                            content !== "blocked"
+                            && type !== 0
+                        ) && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        buttons[buttonContent]?.first.func(user._id);
+                                    }}
+                                    onMouseEnter={() => setShowTooltip(1)}
+                                    onMouseLeave={() => setShowTooltip(null)}
+                                >
+                                    <Icon
+                                        name={buttons[buttonContent]?.first?.icon}
+                                        size={20}
+                                        fill={
+                                            showTooltip === 1
+                                            && buttons[buttonContent]?.first?.fill
+                                        }
+                                    />
+
+                                    <Tooltip
+                                        show={showTooltip === 1}
+                                        dist={4}
+                                    >
+                                        {buttons[buttonContent]?.first?.name}
+                                    </Tooltip>
+                                </button>
                             )}
-                    </div>
-                    <div className={styles.text}>
-                        <p className={styles.textUsername}>
-                            {user.username}
-                        </p>
 
-                        <p className={styles.textStatus}>
-                            <span title="Custom Status">
-                                {(content === "all" || content === "online") ? (
-                                    !user.customStatus
-                                        ? user.status
-                                        : user.customStatus
-                                ) : content === "pending" ? (
-                                    type === 0
-                                        ? "Outgoing request"
-                                        : "Incoming request"
-                                ) : "Blocked"}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-                <div className={styles.actions}>
-
-                    {(
-                        content !== "blocked"
-                        && type !== 0
-                    ) && (
+                        {buttons[buttonContent]?.second && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    buttons[buttonContent]?.first.func(user._id);
+                                    if (type === 0) {
+                                        buttons[buttonContent]?.third?.func(user._id);
+                                    } else {
+                                        buttons[buttonContent]?.second?.func(
+                                            (content === "online" || content === "all"
+                                                ? e
+                                                : user._id), e
+                                        );
+                                    }
                                 }}
-                                onMouseEnter={() => setShowTooltip(1)}
+                                onMouseEnter={() => setShowTooltip(2)}
                                 onMouseLeave={() => setShowTooltip(null)}
-                                style={{
-                                    backgroundColor: (showMenu?.type) && "var(--background-1)",
-                                }}
                             >
                                 <Icon
-                                    name={buttons[buttonContent]?.first?.icon}
+                                    name={buttons[buttonContent]?.second?.icon}
                                     size={20}
                                     fill={
-                                        showTooltip === 1
-                                        && buttons[buttonContent]?.first?.fill
+                                        showTooltip === 2
+                                        && buttons[buttonContent]?.second?.fill
                                     }
                                 />
 
                                 <Tooltip
-                                    show={showTooltip === 1}
+                                    show={showTooltip === 2}
                                     dist={4}
                                 >
-                                    {buttons[buttonContent]?.first?.name}
+                                    {type === 0
+                                        ? "Cancel"
+                                        : buttons[buttonContent]?.second?.name}
                                 </Tooltip>
                             </button>
                         )}
-
-                    {buttons[buttonContent]?.second && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (type === 0) {
-                                    buttons[buttonContent]?.third?.func(user._id);
-                                } else {
-                                    buttons[buttonContent]?.second?.func(
-                                        (content === "online" || content === "all"
-                                            ? e
-                                            : user._id), e
-                                    );
-                                }
-                            }}
-                            onMouseEnter={() => {
-                                if (showMenu?.type === "small") return;
-                                setShowTooltip(2);
-                            }}
-                            onMouseLeave={() => setShowTooltip(null)}
-                            style={{
-                                backgroundColor: (showMenu?.type) && "var(--background-1)",
-                            }}
-                        >
-                            <Icon
-                                name={buttons[buttonContent]?.second?.icon}
-                                size={20}
-                                fill={
-                                    showTooltip === 2
-                                    && buttons[buttonContent]?.second?.fill
-                                }
-                            />
-
-                            <Tooltip
-                                show={showTooltip === 2}
-                                dist={4}
-                            >
-                                {type === 0
-                                    ? "Cancel"
-                                    : buttons[buttonContent]?.second?.name}
-                            </Tooltip>
-
-                            {showMenu?.type === "small" && (
-                                <Menu
-                                    items={smallMenuItems}
-                                    event={showMenu.event}
-                                    setMenu={{
-                                        func: () => setShowMenu(null)
-                                    }}
-                                />
-                            )}
-                        </button>
-                    )}
+                    </div>
                 </div>
-            </div>
-        </li>
-    );
+            </motion.li>
+        </AnimatePresence>
+    ), [showTooltip, liHover]);
 }
 
 export default UserListItem;

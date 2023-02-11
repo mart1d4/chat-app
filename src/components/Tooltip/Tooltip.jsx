@@ -82,9 +82,7 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                 <motion.div
                     ref={containerRef}
                     className={styles.container}
-                    style={
-                        tooltipPos.top ? tooltipPos : {}
-                    }
+                    style={tooltipPos.top ? tooltipPos : {}}
                     initial={{
                         opacity: 0,
                         scale: 0.5,

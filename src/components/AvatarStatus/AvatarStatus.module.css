@@ -1,8 +1,19 @@
-.container {
+.container,
+.containerBig {
     position: absolute;
     bottom: -3px;
     right: -3px;
     overflow: hidden;
+}
+
+.containerBig {
+    bottom: -2px;
+    right: -2px;
+}
+
+.containerBig .firstLayer {
+    width: 32px;
+    height: 32px;
 }
 
 .firstLayer {
@@ -13,6 +24,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.containerBig .firstLayer > div {
+    width: 20px;
+    height: 20px;
 }
 
 .firstLayer > div {
@@ -30,10 +46,20 @@
     border-radius: 50%;
 }
 
+.containerBig .offline {
+    width: 10px;
+    height: 10px;
+}
+
 .busy {
     width: 7px;
     height: 2px;
     border-radius: 100vw;
+}
+
+.containerBig .busy {
+    width: 14px;
+    height: 4px;
 }
 
 .away {
@@ -44,4 +70,9 @@
     width: 8px;
     height: 8px;
     border-radius: 100vw;
+}
+
+.containerBig .away {
+    width: 16px;
+    height: 16px;
 }
