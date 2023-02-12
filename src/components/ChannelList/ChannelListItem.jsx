@@ -2,6 +2,8 @@ import styles from "./ChannelListItem.module.css";
 import { useRouter } from "next/router";
 import { Icon, AvatarStatus } from "..";
 import useUserData from "../../hooks/useUserData";
+import useAuth from "../../hooks/useAuth";
+import useComponents from "../../hooks/useComponents";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
@@ -31,14 +33,16 @@ const ChannelListItem = ({ channel, special }) => {
     const router = useRouter();
     const currentPath = router.asPath;
 
+    const { auth } = useAuth();
     const {
-        auth,
+        setMenu,
+        setUserProfile,
+    } = useComponents();
+    const {
         friends,
         requests,
         channels,
         setChannels,
-        setMenu,
-        setUserProfile,
         setFriends,
         setRequests,
         setBlocked,
@@ -97,6 +101,12 @@ const ChannelListItem = ({ channel, special }) => {
 
     const isFriend = () => {
         return friends?.some((friend) => friend?._id.toString() === user?._id);
+    };
+
+    const receivedRequest = () => {
+        return requests?.some((request) => {
+            return request?.user?._id.toString() === user?._id && request?.type === 1;
+        });
     };
 
     const requestReceived = requests?.filter((request) => request.type === 1).length;
@@ -239,7 +249,8 @@ const ChannelListItem = ({ channel, special }) => {
                                 />
                             )}
                             <AvatarStatus
-                                status={user?.status}
+                                status={(isFriend() || receivedRequest())
+                                    ? user?.status : "Offline"}
                                 background={
                                     hover
                                         ? "var(--background-hover-2)"
@@ -248,7 +259,6 @@ const ChannelListItem = ({ channel, special }) => {
                                             : "var(--background-3)"
                                 }
                                 tooltip={true}
-                                friend={isFriend()}
                             />
                         </div>
                         <div className={styles.layoutContent}>

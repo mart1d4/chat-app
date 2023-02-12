@@ -95,7 +95,8 @@ const TextArea = ({ friend, sendMessage }) => {
                             />
 
                             <button
-                                onClick={(e) => {
+                                onClick={(e) => e.preventDefault()}
+                                onDoubleClick={(e) => {
                                     e.preventDefault();
                                     document.getElementById("file").click();
                                 }}

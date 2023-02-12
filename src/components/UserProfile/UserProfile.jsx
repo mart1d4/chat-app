@@ -1,4 +1,3 @@
-import useUserData from "../../hooks/useUserData";
 import styles from "./UserProfile.module.css";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -6,27 +5,71 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { AvatarStatus, Icon } from "../";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import useAuth from "../../hooks/useAuth";
+import useComponents from "../../hooks/useComponents";
+import useUserData from "../../hooks/useUserData";
+import { useRouter } from "next/router";
 
 const UserProfile = () => {
     const [activeNavItem, setActiveNavItem] = useState(0);
+    const [userSatus, setUserStatus] = useState("");
+    const [reload, setReload] = useState(false);
     const [note, setNote] = useState("");
+    const [error, setError] = useState("");
 
-    const { userProfile, setUserProfile, auth, setMenu } = useUserData();
+    useEffect(() => {
+        console.log(error);
+    }, [error]);
+
+    const { auth } = useAuth();
+    const {
+        userProfile,
+        setUserProfile,
+        setMenu
+    } = useComponents();
+    const {
+        friends,
+        setFriends,
+        requests,
+        setRequests,
+        blocked,
+        setBlocked,
+        setChannels
+    } = useUserData();
     const cardRef = useRef(null);
     const noteRef = useRef(null);
 
     const user = userProfile?.user;
+    const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
-
-    const isFriend = () => {
-        return auth?.user?.friends?.includes(user?._id);
-    };
 
     useEffect(() => {
         if (!userProfile) return;
 
         if (userProfile.focusNote && noteRef) noteRef.current.focus();
-    }, []);
+
+        const isFriend = () => {
+            return auth?.user?.friends?.includes(user?._id);
+        };
+
+        const isBlocked = () => {
+            return blocked?.map((blocked) => blocked._id).includes(user?._id);
+        };
+
+        const requestSent = () => {
+            return requests?.map((request) => {
+                if (request.type === 0) return request.user._id;
+            }).includes(user?._id);
+        };
+
+        if (isFriend()) {
+            setUserStatus("Friends");
+        } else if (isBlocked()) {
+            setUserStatus("Blocked");
+        } else if (requestSent()) {
+            setUserStatus("Request Sent");
+        }
+    }, [reload]);
 
     const sectionNavItems = [
         "User Info",
@@ -34,10 +77,10 @@ const UserProfile = () => {
         "Mutual Friends",
     ];
 
-    const menuItems = isFriend() ? [
+    const menuItems = userSatus === "Friends" ? [
         { name: "Remove Friend", func: () => deleteFriend(), danger: true },
         { name: "Block", func: () => blockUser(), danger: true },
-        { name: "Message", func: () => deleteFriend() },
+        { name: "Message", func: () => createChannel() },
         { name: "Divider" },
         {
             name: "Copy ID", func: () => {
@@ -45,8 +88,12 @@ const UserProfile = () => {
             }, icon: "id"
         }
     ] : [
-        { name: "Block", func: () => blockUser(), danger: true },
-        { name: "Message", func: () => deleteFriend() },
+        {
+            name: userSatus === "Blocked" ? "Unblock" : "Block",
+            func: () => userSatus === "Blocked" ? unblockUser() : blockUser(),
+            danger: userSatus !== "Blocked"
+        },
+        { name: "Message", func: () => createChannel() },
         { name: "Divider" },
         {
             name: "Copy ID", func: () => {
@@ -55,15 +102,107 @@ const UserProfile = () => {
         }
     ];
 
+    const addFriend = async () => {
+        const response = await axiosPrivate.post(
+            `/users/@me/friends/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setFriends((prev) => [...prev, response.data.friend]);
+            setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+            setUserStatus("Request Sent");
+            if (response.data.channel) {
+                setChannels((prev) => [response.data.channel, ...prev]);
+                setUserStatus("Friends");
+            }
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const deleteFriend = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/@me/friends/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Friend removed") {
+                setFriends(friends.filter((friend) => friend?._id?.toString() !== user._id));
+            } else if (response.data.message === "Request cancelled") {
+                setRequests(requests.filter((request) => request?.user?._id?.toString() !== user._id));
+            }
+            setUserStatus("");
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const createChannel = async () => {
+        const response = await axiosPrivate.post(
+            `/users/@me/channels`,
+            { recipients: [user._id] },
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            if (response.data.message === "Channel created") {
+                setChannels((prev) => [response.data.channel, ...prev]);
+            }
+            router.push(`/channels/@me/${response.data.channel._id}`);
+            setUserProfile(null);
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const blockUser = async () => {
+        const response = await axiosPrivate.delete(
+            `/users/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked((prev) => [...prev, response.data.blocked]);
+            setFriends(friends.filter((friend) => friend?._id?.toString() !== user._id));
+            setRequests(requests.filter((request) => request?.user?._id?.toString() !== user._id));
+            setUserStatus("Blocked");
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const unblockUser = async () => {
+        const response = await axiosPrivate.post(
+            `/users/${user._id}`,
+        );
+
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked(blocked.filter((blocked) => blocked?._id?.toString() !== user._id));
+            setUserStatus("");
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
     if (user) return (
         <motion.div
             className={styles.wrapper}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={(e) => {
+            onMouseDown={(e) => {
+                if (e.button === 2) return;
                 if (!cardRef.current.contains(e.target)) {
                     setUserProfile(null);
+                    setMenu(null);
                 }
             }}
         >
@@ -96,7 +235,9 @@ const UserProfile = () => {
                             height={120}
                         />
                         <AvatarStatus
-                            status={user.status}
+                            status={userSatus === "Friends"
+                                ? user.status
+                                : "Offline"}
                             background="var(--background-3)"
                             size={20}
                             tooltip={true}
@@ -110,14 +251,28 @@ const UserProfile = () => {
                         <div>
                             {auth?.user?._id !== user._id && (
                                 <>
-                                    {isFriend() ? (
-                                        <button>
-                                            Send Message
-                                        </button>
-                                    ) : (
-                                        <button>
-                                            Send Friend Request
-                                        </button>
+                                    {userSatus !== "Blocked" && (
+                                        <>
+                                            {userSatus === "Friends" ? (
+                                                <button
+                                                    onClick={() => createChannel()}
+                                                >
+                                                    Send Message
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className={userSatus === "Request Sent"
+                                                        && styles.disabled}
+                                                    onClick={() => {
+                                                        if (userSatus !== "Request Sent") {
+                                                            addFriend();
+                                                        }
+                                                    }}
+                                                >
+                                                    Send Friend Request
+                                                </button>
+                                            )}
+                                        </>
                                     )}
 
                                     <div
@@ -142,7 +297,7 @@ const UserProfile = () => {
                         <div className={styles.username}>
                             {user.username}
                         </div>
-                        {user.customStatus && (
+                        {(user.customStatus && userSatus === "Friends") && (
                             <div className={styles.customStatus}>
                                 {user.customStatus}
                             </div>
@@ -174,7 +329,7 @@ const UserProfile = () => {
                     <div className={styles.contentUser}>
                         {activeNavItem === 0 && (
                             <div>
-                                {user.description && (
+                                {(user.description && userSatus === "Friends") && (
                                     <>
                                         <h1>
                                             About Me

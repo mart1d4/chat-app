@@ -1,11 +1,9 @@
 import styles from "./ChannelList.module.css";
-import { Tooltip, Icon, ChannelListItem, UserSection } from "..";
+import { ChannelListItem, UserSection, Title } from "..";
 import useUserData from "../../hooks/useUserData";
-import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 const ConversationList = () => {
-    const [hover, setHover] = useState(false);
     const { channels } = useUserData();
 
     return (
@@ -23,25 +21,7 @@ const ConversationList = () => {
 
                         <ChannelListItem special />
 
-                        <h2 className={styles.title}>
-                            <span>Direct Messages</span>
-                            <div
-                                onFocus={() => setHover("create")}
-                                onBlur={() => setHover(null)}
-                                onMouseEnter={() => setHover("create")}
-                                onMouseLeave={() => setHover(null)}
-                                tabIndex={0}
-                            >
-                                <Icon
-                                    name="add"
-                                    size={16}
-                                    viewbox="0 0 18 18"
-                                />
-                                <Tooltip show={hover === "create"}>
-                                    Create DM
-                                </Tooltip>
-                            </div>
-                        </h2>
+                        <Title />
 
                         {channels?.length ? channels?.map((channel) => (
                             <ChannelListItem

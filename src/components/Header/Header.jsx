@@ -2,7 +2,7 @@ import styles from "./Header.module.css";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import useUserData from "../../hooks/useUserData";
+import useAuth from "../../hooks/useAuth";
 
 const navLinks = [
     {
@@ -25,7 +25,7 @@ const navLinks = [
 
 const Header = () => {
     const [isHovered, setIsHovered] = useState(null);
-    const { auth } = useUserData();
+    const { auth } = useAuth();
 
     return (
         <div className={styles.wrapper}>

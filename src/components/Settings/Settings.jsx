@@ -1,10 +1,11 @@
 import styles from './Settings.module.css';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import useUserData from '../../hooks/useUserData';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+import useComponents from '../../hooks/useComponents';
+import useAuth from '../../hooks/useAuth';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('My Account');
@@ -22,7 +23,8 @@ const Settings = () => {
         console.log(success);
     }, [success]);
 
-    const { auth, setAuth, setShowSettings } = useUserData();
+    const { setShowSettings } = useComponents();
+    const { auth, setAuth } = useAuth();
     const axiosPrivate = useAxiosPrivate();
 
     const saveChanges = async () => {

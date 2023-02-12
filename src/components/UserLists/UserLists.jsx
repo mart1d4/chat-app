@@ -1,5 +1,5 @@
 import { Icon, UserListItem } from "..";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./UserList.module.css";
 import { v4 as uuidv4 } from "uuid";

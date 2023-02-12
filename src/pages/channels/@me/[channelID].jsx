@@ -12,6 +12,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
+import useAuth from "../../../hooks/useAuth";
 import Image from "next/image";
 import { parseISO, format } from "date-fns";
 
@@ -25,8 +26,8 @@ const Channels = () => {
     const [messages, setMessages] = useState([]);
     const [error, setError] = useState(null);
 
+    const { auth } = useAuth();
     const {
-        auth,
         friends,
         setFriends,
         requests,

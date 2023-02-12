@@ -1,30 +1,16 @@
 import { useContext } from "react";
-import { AuthContext } from "../context/AuthProvider";
+import { UserDataContext } from "../context/UserDataProvider";
 
 export default function useUserData() {
     const {
-        auth,
-        setAuth,
         friends,
         setFriends,
-        getFriends,
-        friendRequests,
-        setFriendRequests,
-        getFriendRequests,
-        blockedUsers,
-        setBlockedUsers,
-        getBlockedUsers,
-        channelList,
-        setChannelList,
-        getChannelList,
-        persist,
-        setPersist,
-        loading,
-        setLoading,
-        showSettings,
-        setShowSettings,
-        userProfile,
-        setUserProfile,
-    } = useContext(AuthContext);
-    return useContext(AuthContext);
+        requests,
+        setRequests,
+        blocked,
+        setBlocked,
+        channels,
+        setChannels,
+    } = useContext(UserDataContext);
+    return useContext(UserDataContext);
 }

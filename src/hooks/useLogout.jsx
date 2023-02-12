@@ -1,9 +1,9 @@
 import axios from "../api/axios";
-import useUserData from "./useUserData";
 import { useRouter } from "next/router";
+import useAuth from "./useAuth";
 
 export default function useLogout() {
-    const { setAuth } = useUserData();
+    const { setAuth } = useAuth();
     const router = useRouter();
 
     const logout = async () => {

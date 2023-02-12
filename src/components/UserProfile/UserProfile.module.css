@@ -185,8 +185,8 @@
     padding: 4px;
     font-size: 14px;
     line-height: 22px;
-    background-color: var(--background-dark);
-    /* border: 1px solid var(--border-light); */
+    background-color: transparent;
+    border: 1px solid var(--border-light);
     color: var(--foreground-3);
     min-height: 44px;
     max-height: 88px;
@@ -263,6 +263,24 @@
     height: 32px;
     background-color: var(--success-1);
     cursor: pointer;
+}
+
+.topSectionToolbar > div:last-child > .disabled {
+    background-color: var(--success-1);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.topSectionToolbar > div:last-child > .disabled:hover {
+    background-color: var(--success-1);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.topSectionToolbar > div:last-child > .disabled:active {
+    background-color: var(--success-1);
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .topSectionToolbar > div:last-child > button:hover {

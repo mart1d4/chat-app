@@ -1,17 +1,16 @@
 import { useRef, useState, useEffect } from "react";
 import axios from "../api/axios";
-import useUserData from "../hooks/useUserData";
+import useAuth from "../hooks/useAuth";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { Tooltip } from "../components";
 import Head from "next/head";
 
 const USER_REGEX = /^.{4,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
 
 const Register = () => {
-    const { auth } = useUserData();
+    const { auth } = useAuth();
     const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);

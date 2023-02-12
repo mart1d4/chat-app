@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import useUserData from "../../../hooks/useUserData";
 import Head from "next/head";
 import styles from "./Friends.module.css";
+import Aside from "./Aside";
 
 const Friends = () => {
     const [content, setContent] = useState("online");
@@ -14,7 +15,6 @@ const Friends = () => {
         );
     }, [])
 
-
     const handleContent = (content) => {
         setContent(content);
         localStorage.setItem("friends-tab", content);
@@ -24,7 +24,7 @@ const Friends = () => {
 
     const lists = {
         online: friends?.filter((friend) => {
-            return ["Online", "Away", "Do Not Disturb"].includes(friend?.status)
+            return ["Online", "Idle", "Do Not Disturb"].includes(friend?.status)
         }),
         all: friends,
         pending: requests,
@@ -48,6 +48,8 @@ const Friends = () => {
                     {content === "add"
                         ? <AddFriend />
                         : <UserLists list={lists[content]} content={content} />}
+
+                    <Aside />
                 </div>
             </div>
         </>
@@ -57,7 +59,9 @@ const Friends = () => {
 Friends.getLayout = function getLayout(page) {
     return (
         <Layout>
-            <NestedLayout>{page}</NestedLayout>
+            <NestedLayout>
+                {page}
+            </NestedLayout>
         </Layout>
     );
 };

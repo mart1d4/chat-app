@@ -1,8 +1,8 @@
 import styles from './MessageMenu.module.css';
 import { Tooltip, Icon, Menu } from '../';
 import { useEffect, useState } from 'react';
-import useUserData from '../../hooks/useUserData';
 import React from 'react';
+import useAuth from '../../hooks/useAuth';
 
 const MessageMenu = ({ message, start, functions }) => {
     const [showTooltip, setShowTooltip] = useState(null);
@@ -29,7 +29,7 @@ const MessageMenu = ({ message, start, functions }) => {
         { name: 'Copy Message ID', icon: "id", func: functions.copyMessageID, },
     ];
 
-    const { auth } = useUserData();
+    const { auth } = useAuth();
 
     useEffect(() => {
         if (

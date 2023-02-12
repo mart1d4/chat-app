@@ -25,6 +25,7 @@ import EmojiPicker from './TextArea/EmojiPicker';
 import TextContainer from './TextArea/TextContainer';
 import UserProfile from './UserProfile/UserProfile';
 import FilePreview from './TextArea/FilePreview';
+import Title from './ChannelList/Title';
 
 export {
     AppHeader,
@@ -54,4 +55,5 @@ export {
     TextContainer,
     UserProfile,
     FilePreview,
+    Title,
 };

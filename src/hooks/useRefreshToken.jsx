@@ -1,8 +1,8 @@
 import axios from '../api/axios';
-import useUserData from './useUserData';
+import useAuth from './useAuth';
 
 export default function useRefreshToken() {
-    const { setAuth } = useUserData();
+    const { setAuth } = useAuth();
 
     const refresh = async () => {
         const response = await axios.get('/auth/refresh', {

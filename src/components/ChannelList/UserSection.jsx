@@ -1,20 +1,21 @@
 import styles from "./UserSection.module.css";
 import { Tooltip, Icon, AvatarStatus } from "..";
-import useUserData from "../../hooks/useUserData";
 import useLogout from "../../hooks/useLogout";
 import { useState } from "react";
 import Image from "next/image";
+import useAuth from "../../hooks/useAuth";
+import useComponents from "../../hooks/useComponents";
 
 const UserSection = () => {
     const [hover, setHover] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
+    const { auth } = useAuth();
     const {
-        auth,
         setShowSettings,
         setUserProfile,
         setMenu,
-    } = useUserData();
+    } = useComponents();
     const { logout } = useLogout();
 
     const menuItems = [

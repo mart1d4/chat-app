@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import useRefreshToken from "./useRefreshToken";
-import useUserData from "./useUserData";
+import useAuth from "./useAuth";
 
 export default function PersistLogin({ children }) {
     const refresh = useRefreshToken();
-    const { auth, setIsLoading } = useUserData();
+    const { auth, setIsLoading } = useAuth();
 
     useEffect(() => {
         let isMounted = true;

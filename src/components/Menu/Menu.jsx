@@ -2,10 +2,10 @@ import { Icon } from "../";
 import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
-import useUserData from "../../hooks/useUserData";
+import useComponents from "../../hooks/useComponents";
 
 const Menu = () => {
-    const { menu, setMenu } = useUserData();
+    const { menu, setMenu } = useComponents();
     if (!menu) return null;
 
     const { event, items } = menu;
@@ -99,11 +99,11 @@ const Menu = () => {
             }
         };
 
-        document.addEventListener("click", handleClickOutside);
+        // document.addEventListener("click", handleClickOutside);
         document.addEventListener("keydown", handlekeyDown);
 
         return () => {
-            document.removeEventListener("click", handleClickOutside);
+            // document.removeEventListener("click", handleClickOutside);
             document.removeEventListener("keydown", handlekeyDown);
         };
     }, [parent, active]);

@@ -6,6 +6,8 @@ import styles from "./UserListItem.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { AnimatePresence, motion } from "framer-motion";
+import useAuth from "../../hooks/useAuth";
+import useComponents from "../../hooks/useComponents";
 
 const UserListItem = ({ content, user }) => {
     const [showTooltip, setShowTooltip] = useState(null);
@@ -18,17 +20,17 @@ const UserListItem = ({ content, user }) => {
         user = user.user;
     }
 
+    const { auth } = useAuth();
+    const { setUserProfile, menu, setMenu } = useComponents();
     const {
-        auth,
         friends,
         setFriends,
         blocked,
         setBlocked,
         requests,
         setRequests,
+        channels,
         setChannels,
-        setUserProfile,
-        setMenu,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -49,6 +51,10 @@ const UserListItem = ({ content, user }) => {
                     setMenu({
                         items: smallMenuItems,
                         event: event,
+                        parent: {
+                            type: "userListItem",
+                            id: user._id,
+                        }
                     });
                 }
             }
@@ -159,7 +165,9 @@ const UserListItem = ({ content, user }) => {
             setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
 
             if (response.data.channel) {
-                setChannels((prev) => [response.data.channel, ...prev]);
+                if (channels.every((channel) => channel._id.toString() !== response.data.channel._id)) {
+                    setChannels((prev) => [response.data.channel, ...prev]);
+                }
             }
         } else {
             setError("An error occurred.");
@@ -237,7 +245,9 @@ const UserListItem = ({ content, user }) => {
     return useMemo(() => (
         <AnimatePresence>
             <motion.li
-                className={styles.liContainer}
+                className={(menu?.parent?.type === "userListItem" &&
+                    menu?.parent?.id === user._id)
+                    ? styles.liContainerActive : styles.liContainer}
                 onClick={() => {
                     if ((content !== "online" && content !== "all")) return;
                     createChannel(user._id);
@@ -247,9 +257,18 @@ const UserListItem = ({ content, user }) => {
                     setMenu({
                         items: largeMenuItems,
                         event: event,
+                        parent: {
+                            type: "userListItem",
+                            id: user._id,
+                        },
                     });
                 }}
-                onMouseEnter={() => setLiHover(true)}
+                onMouseEnter={() => {
+                    setLiHover(true);
+                    if (menu?.parent?.type !== "userListItem" ||
+                        menu?.parent?.id === user._id) return;
+                    setMenu(null);
+                }}
                 onMouseLeave={() => setLiHover(false)}
                 initial={{
                     height: 0,
@@ -274,17 +293,16 @@ const UserListItem = ({ content, user }) => {
                                 height={32}
                                 alt="Avatar"
                             />
-                            {(content === "online" || content === "all" || (
-                                content === "pending" && user.sender !== auth?.user?._id
-                            )) && (
-                                    <AvatarStatus
-                                        status={user.status}
-                                        background={liHover
-                                            ? "var(--background-hover-1)"
-                                            : "var(--background-4)"
-                                        }
-                                    />
-                                )}
+                            {((content !== "pending" && content !== "blocked") || type === 1) && (
+                                <AvatarStatus
+                                    status={user.status}
+                                    background={(liHover || (menu?.parent?.type === "userListItem" &&
+                                        menu?.parent?.id === user._id))
+                                        ? "var(--background-hover-1)"
+                                        : "var(--background-4)"
+                                    }
+                                />
+                            )}
                         </div>
                         <div className={styles.text}>
                             <p className={styles.textUsername}>
@@ -377,8 +395,8 @@ const UserListItem = ({ content, user }) => {
                     </div>
                 </div>
             </motion.li>
-        </AnimatePresence>
-    ), [showTooltip, liHover]);
+        </AnimatePresence >
+    ), [showTooltip, liHover, menu]);
 }
 
 export default UserListItem;
