@@ -1,4 +1,4 @@
-import { AppNav, Loader, Settings, UserProfile, Menu } from "../";
+import { AppNav, Loader, Settings, UserProfile, Menu, Modal } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
@@ -17,6 +17,7 @@ const Layout = ({ children }) => {
     const {
         showSettings,
         userProfile,
+        modal,
     } = useComponents();
     const {
         setFriends,
@@ -97,6 +98,10 @@ const Layout = ({ children }) => {
 
                     <AnimatePresence>
                         {userProfile && <UserProfile />}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {modal && <Modal />}
                     </AnimatePresence>
 
                     <AppNav />

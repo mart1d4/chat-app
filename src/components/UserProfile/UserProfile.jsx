@@ -17,10 +17,6 @@ const UserProfile = () => {
     const [note, setNote] = useState("");
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        console.log(error);
-    }, [error]);
-
     const { auth } = useAuth();
     const {
         userProfile,
@@ -262,7 +258,7 @@ const UserProfile = () => {
                                             ) : (
                                                 <button
                                                     className={userSatus === "Request Sent"
-                                                        && styles.disabled}
+                                                        ? styles.disabled : ""}
                                                     onClick={() => {
                                                         if (userSatus !== "Request Sent") {
                                                             addFriend();

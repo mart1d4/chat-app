@@ -26,6 +26,7 @@ import TextContainer from './TextArea/TextContainer';
 import UserProfile from './UserProfile/UserProfile';
 import FilePreview from './TextArea/FilePreview';
 import Title from './ChannelList/Title';
+import Modal from './Modal/Modal';
 
 export {
     AppHeader,
@@ -56,4 +57,5 @@ export {
     UserProfile,
     FilePreview,
     Title,
+    Modal,
 };

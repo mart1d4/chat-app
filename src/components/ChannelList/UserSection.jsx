@@ -36,10 +36,13 @@ const UserSection = () => {
             <div className={styles.userSection}>
                 <div
                     className={styles.avatarWrapper}
-                    onClick={(e) => setMenu({
-                        items: menuItems,
-                        event: e,
-                    })}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setMenu({
+                            items: menuItems,
+                            event: e,
+                        })
+                    }}
                     onMouseEnter={() => setHover("user")}
                     onMouseLeave={() => setHover(false)}
                 >

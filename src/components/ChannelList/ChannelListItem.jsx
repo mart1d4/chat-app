@@ -27,7 +27,11 @@ const ChannelListItem = ({ channel, special }) => {
     }, [channel]);
 
     useEffect(() => {
-        console.log("ChannelRender");
+        console.log(
+            '%c[ChannelListItem]',
+            'color: hsl(38, 96%, 54%)',
+            'Rendered'
+        );
     }, []);
 
     const router = useRouter();

@@ -5,19 +5,27 @@ import styles from './Menu.module.css';
 import useComponents from "../../hooks/useComponents";
 
 const Menu = () => {
-    const { menu, setMenu } = useComponents();
-    if (!menu) return null;
-
-    const { event, items } = menu;
-
     const [positions, setPositions] = useState({});
     const [parent, setParent] = useState(null);
     const [container, setContainer] = useState(null);
     const [active, setActive] = useState(null);
 
-    const menuItems = items.filter((item) => item.name !== "Divider");
+    const { menu, setMenu } = useComponents();
+    const event = menu?.event;
+    const items = menu?.items;
+
+    useEffect(() => {
+        if (!menu) {
+            setPositions({});
+            setParent(null);
+            setContainer(null);
+            setActive(null);
+        }
+    }, [menu]);
 
     const containerRef = useCallback(node => {
+        if (!event) return;
+
         if (node !== null) {
             setParent(node.parentElement);
             setContainer({
@@ -28,8 +36,10 @@ const Menu = () => {
         }
     }, [event]);
 
+    const menuItems = items?.filter((item) => item.name !== "Divider");
+
     useEffect(() => {
-        if (!parent || !container) return;
+        if (!parent || !container || !event) return;
 
         let pos = {}
 
@@ -59,7 +69,7 @@ const Menu = () => {
     }, [parent, container, container?.width]);
 
     useEffect(() => {
-        if (!parent || !container) return;
+        if (!parent || !container || !event) return;
 
         const handleClickOutside = (e) => {
             if (e.clientX === event.clientX) return;
@@ -99,14 +109,16 @@ const Menu = () => {
             }
         };
 
-        // document.addEventListener("click", handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
         document.addEventListener("keydown", handlekeyDown);
 
         return () => {
-            // document.removeEventListener("click", handleClickOutside);
+            document.removeEventListener("click", handleClickOutside);
             document.removeEventListener("keydown", handlekeyDown);
         };
     }, [parent, active]);
+
+    if (!menu) return null;
 
     return (
         <div

@@ -6,6 +6,7 @@ export function ComponentsProvider({ children }) {
     const [showSettings, setShowSettings] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
     const [menu, setMenu] = useState(null);
+    const [modal, setModal] = useState(null);
 
     const value = {
         showSettings,
@@ -14,6 +15,8 @@ export function ComponentsProvider({ children }) {
         setUserProfile,
         menu,
         setMenu,
+        modal,
+        setModal,
     };
 
     return (

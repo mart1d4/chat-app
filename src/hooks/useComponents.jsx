@@ -9,6 +9,8 @@ export default function useComponents() {
         setUserProfile,
         menu,
         setMenu,
+        modal,
+        setModal,
     } = useContext(ComponentsContext);
     return useContext(ComponentsContext);
 }

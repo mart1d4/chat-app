@@ -15,10 +15,6 @@ const TextArea = ({ friend, sendMessage }) => {
     }, []);
 
     useEffect(() => {
-        console.log("Error: ", error);
-    }, [error]);
-
-    useEffect(() => {
         if (!files.length) return
         console.log(files);
     }, [files]);
