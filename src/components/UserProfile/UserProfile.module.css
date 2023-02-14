@@ -44,11 +44,15 @@
 }
 
 .topSection > div:first-child > img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 102%;
     height: 102%;
     transform: translate(-1%, -1%);
     border-radius: 50%;
     object-fit: cover;
+    background-color: var(--background-3);
 }
 
 .contentSection {

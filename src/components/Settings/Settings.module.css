@@ -12,12 +12,6 @@
     flex: 1 0 220px;
 }
 
-.content {
-    position: relative;
-    display: flex;
-    flex: 1 1 800px;
-}
-
 .sidebarWrapper {
     overflow: hidden scroll;
     padding-right: 0px;
@@ -60,6 +54,9 @@
 
 .tab,
 .tabActive {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 6px 10px;
     margin-bottom: 2px;
     border-radius: 4px;
@@ -74,10 +71,31 @@
     user-select: none;
 }
 
+.tab path,
+.tabActive path {
+    fill: var(--foreground-3);
+}
+
 .tab:hover,
 .tabActive {
     background-color: var(--background-5);
+    color: var(--foreground-2);
+}
+
+.tab:hover path,
+.tabActive path {
+    fill: var(--foreground-2);
+}
+
+.tab:hover:active,
+.tabActive:active {
+    background-color: var(--background-hover-2);
     color: var(--foreground-1);
+}
+
+.tab:hover:active path,
+.tabActive:active path {
+    fill: var(--foreground-1);
 }
 
 .tabActive:hover {
@@ -93,22 +111,98 @@
     border: none;
 }
 
-/* .sidebarWrapper:hover::-webkit-scrollbar-track {
-    background-color: var(--background-1);
-    border: none;
-} */
+.contentContainer {
+    position: relative;
+    display: flex;
+    flex: 1 1 800px;
+    align-items: flex-start;
+}
 
 .contentWrapper {
     overflow: hidden scroll;
     padding-right: 0px;
-    flex: 1 0 auto;
-    align-items: flex-start;
-    display: flex;
     justify-content: flex-start;
-    min-height: 100%;
+    height: 100%;
+    flex: 1 0 auto;
+    display: flex;
+    align-items: flex-start;
     background-color: var(--background-4);
 }
 
 .contentWrapper::-webkit-scrollbar {
-    width: 14px;
+    width: 16px;
+}
+
+.content {
+    position: relative;
+    padding: 60px 40px 80px;
+    flex: 1 1 auto;
+    max-width: 740px;
+    min-width: 460px;
+    min-height: 100%;
+}
+
+.closeButton {
+    margin-right: 21px;
+    position: relative;
+    flex: 0 0 36px;
+    width: 60px;
+    padding-top: 60px;
+}
+
+.closeButton > div {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.closeButton > div > div:first-child {
+    color: var(--foreground-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    border: 2px solid var(--foreground-3);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+}
+
+.closeButton > div > div:first-child:hover {
+    background-color: var(--background-hover-1);
+    border-color: var(--foreground-2);
+}
+
+.closeButton > div > div:first-child:hover path {
+    fill: var(--foreground-2);
+}
+
+.closeButton > div > div:first-child:hover + div {
+    color: var(--foreground-2);
+}
+
+.closeButton > div > div:first-child:active {
+    background-color: var(--background-hover-1);
+    border-color: var(--foreground-1);
+    transform: translateY(1px);
+}
+
+.closeButton > div > div:first-child:active path {
+    fill: var(--foreground-1);
+}
+
+.closeButton > div > div:first-child:active + div {
+    color: var(--foreground-1);
+}
+
+.closeButton > div > div:last-child {
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    color: var(--foreground-3);
+    cursor: default;
+    user-select: none;
 }

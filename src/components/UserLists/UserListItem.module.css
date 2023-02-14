@@ -116,3 +116,7 @@
     background-color: var(--background-3);
     transition: none;
 }
+
+.actions > button:active {
+    background-color: var(--background-dark) !important;
+}

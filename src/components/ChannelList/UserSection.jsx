@@ -5,6 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 import useComponents from "../../hooks/useComponents";
+import useUserSettings from "../../hooks/useUserSettings";
 
 const UserSection = () => {
     const [hover, setHover] = useState(false);
@@ -16,6 +17,7 @@ const UserSection = () => {
         setUserProfile,
         setMenu,
     } = useComponents();
+    const { userSettings, setUserSettings } = useUserSettings();
     const { logout } = useLogout();
 
     const menuItems = [
@@ -77,24 +79,75 @@ const UserSection = () => {
                     <button
                         onMouseEnter={() => setShowTooltip(1)}
                         onMouseLeave={() => setShowTooltip(null)}
+                        onClick={() => {
+                            if (!userSettings?.microphone
+                                && !userSettings?.sound) {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: true,
+                                    sound: true,
+                                })
+                                const audio = new Audio("/assets/sounds/undeafen.mp3");
+                                audio.play();
+                            } else {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: !userSettings?.microphone,
+                                })
+                                const audio = new Audio(`
+                                    /assets/sounds/${userSettings?.microphone
+                                        ? "mute" : "unmute"}.mp3
+                                `);
+                                audio.play();
+                            }
+                        }}
+                        className={userSettings?.microphone ? "" : styles.cut}
                     >
                         <Tooltip show={showTooltip === 1}>
-                            Mute
+                            {userSettings?.microphone ? "Mute" : "Unmute"}
                         </Tooltip>
                         <div className={styles.toolbar}>
-                            <Icon name="mic" size="20" />
+                            <Icon
+                                name={userSettings?.microphone ? "mic" : "micCut"}
+                                size="20"
+                            />
                         </div>
                     </button>
 
                     <button
                         onMouseEnter={() => setShowTooltip(2)}
                         onMouseLeave={() => setShowTooltip(null)}
+                        onClick={() => {
+                            if (userSettings?.microphone
+                                && userSettings?.sound) {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: false,
+                                    sound: false,
+                                })
+                            } else {
+                                setUserSettings({
+                                    ...userSettings,
+                                    sound: !userSettings?.sound,
+                                })
+                            }
+
+                            const audio = new Audio(`
+                                    /assets/sounds/${userSettings?.sound
+                                    ? "deafen" : "undeafen"}.mp3
+                                `);
+                            audio.play();
+                        }}
+                        className={userSettings?.sound ? "" : styles.cut}
                     >
                         <Tooltip show={showTooltip === 2}>
-                            Deafen
+                            {userSettings?.sound ? "Deafen" : "Undeafen"}
                         </Tooltip>
                         <div className={styles.toolbar}>
-                            <Icon name="headset" size="20" />
+                            <Icon
+                                name={userSettings?.sound ? "headset" : "headsetCut"}
+                                size="20"
+                            />
                         </div>
                     </button>
 

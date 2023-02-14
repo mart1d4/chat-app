@@ -51,10 +51,6 @@
     position: relative;
 }
 
-.fileMenuButton svg {
-    transition: all 0.15s ease-in-out;
-}
-
 .fileMenuButton:active svg {
     transform: translateY(1px);
 }

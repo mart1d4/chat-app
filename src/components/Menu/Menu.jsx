@@ -150,22 +150,14 @@ const Menu = () => {
                         <div
                             key={uuidv4()}
                             className={item.danger
-                                ? styles.menuItemDanger
-                                : styles.menuItem
+                                ? active === item.name ? styles.menuItemDangerActive : styles.menuItemDanger
+                                : active === item.name ? styles.menuItemActive : styles.menuItem
                             }
                             onClick={() => {
                                 setMenu(null);
                                 item.func();
                             }}
                             onMouseEnter={() => setActive(item.name)}
-                            style={{
-                                color: active === item.name
-                                    ? "var(--foreground-1)"
-                                    : item.danger ? "var(--error-1)" : "var(--foreground-3)",
-                                backgroundColor: active === item.name
-                                    ? item.danger ? "var(--error-1)" : "var(--accent-1)"
-                                    : "transparent",
-                            }}
                         >
                             <div className={styles.label}>
                                 {item.name}

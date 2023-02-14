@@ -96,9 +96,7 @@ const Layout = ({ children }) => {
                         {showSettings && <Settings />}
                     </AnimatePresence>
 
-                    <AnimatePresence>
-                        {userProfile && <UserProfile />}
-                    </AnimatePresence>
+                    <UserProfile />
 
                     <AnimatePresence>
                         {modal && <Modal />}

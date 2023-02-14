@@ -12,11 +12,12 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
     const showArrow = arrow ?? true;
 
     const containerRef = useCallback(node => {
+        console.log("REEEEEEEEEEEEEEEEEEEEEEEEEE");
         if (node !== null) {
             setParentRect(node.parentElement.getBoundingClientRect());
             setContainerRect(node.getBoundingClientRect());
         }
-    }, []);
+    }, [children]);
 
     useEffect(() => {
         if (!parent) return;
@@ -24,14 +25,14 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
         switch (position) {
             case 'top':
                 setTooltipPos({
-                    top: parentRect.top - containerRect.height * 2 - distance,
-                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                    top: parentRect.top - containerRect.height - distance,
+                    left: parentRect.left - containerRect.width / 2 + parentRect.width / 2,
                 });
                 break;
             case 'bottom':
                 setTooltipPos({
                     top: parentRect.bottom + distance,
-                    left: parentRect.left - containerRect.width + parentRect.width / 2,
+                    left: parentRect.left - containerRect.width / 2 + parentRect.width / 2,
                 });
                 break;
             case 'left':
@@ -83,31 +84,33 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                     ref={containerRef}
                     className={styles.container}
                     style={tooltipPos.top ? tooltipPos : {}}
-                    initial={{
-                        opacity: 0,
-                        scale: 0.5,
-                    }}
-                    animate={{
-                        opacity: 1,
-                        scale: 1,
-                    }}
-                    exit={{
-                        opacity: 0,
-                        scale: 0.5,
-                        transition: {
-                            duration: 0.1,
-                            ease: 'easeInOut',
-                            delay: 0,
-                        },
-                    }}
-                    transition={{
-                        duration: 0.1,
-                        ease: 'easeInOut',
-                        delay: delay ?? 0
-                    }}
                     onClick={(e) => e.preventDefault()}
                 >
-                    <span className={styles.tooltip}>
+                    <motion.span
+                        className={styles.tooltip}
+                        initial={{
+                            opacity: 0,
+                            scale: 0.95,
+                        }}
+                        animate={{
+                            opacity: 1,
+                            scale: 1,
+                        }}
+                        exit={{
+                            opacity: 0,
+                            scale: 0.95,
+                            transition: {
+                                duration: 0.1,
+                                ease: 'easeInOut',
+                                delay: 0,
+                            },
+                        }}
+                        transition={{
+                            duration: 0.1,
+                            ease: 'easeInOut',
+                            delay: delay ?? 0
+                        }}
+                    >
                         {children}
 
                         {showArrow && (
@@ -116,7 +119,7 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                                 style={arrowPosition[position]}
                             />
                         )}
-                    </span>
+                    </motion.span>
                 </motion.div>)
             }
         </AnimatePresence >

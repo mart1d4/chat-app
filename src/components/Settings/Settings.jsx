@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import useComponents from '../../hooks/useComponents';
 import useAuth from '../../hooks/useAuth';
+import { Icon } from "../";
+import { MyAccount, Profiles, PrivacySafety } from './UserSettings';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('My Account');
@@ -15,17 +17,23 @@ const Settings = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
-    useEffect(() => {
-        console.log(error);
-    }, [error]);
-
-    useEffect(() => {
-        console.log(success);
-    }, [success]);
-
     const { setShowSettings } = useComponents();
     const { auth, setAuth } = useAuth();
     const axiosPrivate = useAxiosPrivate();
+
+    useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                setShowSettings(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleEsc);
+
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, []);
 
     const saveChanges = async () => {
         if (newUsername.length) {
@@ -87,12 +95,15 @@ const Settings = () => {
         },
         {
             name: 'My Account',
+            component: <MyAccount />,
         },
         {
             name: 'Profiles',
+            component: <Profiles />,
         },
         {
             name: 'Privacy & Safety',
+            component: <PrivacySafety />,
         },
         {
             name: 'Authorized Apps',
@@ -147,6 +158,7 @@ const Settings = () => {
         },
         {
             name: 'Log Out',
+            icon: 'logout',
         },
     ];
 
@@ -154,8 +166,7 @@ const Settings = () => {
         <motion.div
             className={styles.container}
             initial={{
-                opacity: 0,
-                scale: 1.5,
+                scale: 1.2,
             }}
             animate={{
                 opacity: 1,
@@ -163,11 +174,13 @@ const Settings = () => {
             }}
             exit={{
                 opacity: 0,
-                scale: 1.5,
+                scale: 1.2,
             }}
             transition={{
-                duration: 0.2,
-                ease: 'easeInOut',
+                duration: 0.3,
+                type: 'spring',
+                stiffness: 200,
+                damping: 20,
             }}
         >
             <Head>
@@ -188,7 +201,8 @@ const Settings = () => {
                                                 ? styles.tabActive
                                                 : styles.tab
                                 }
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     if (
                                         tab.name === 'separator'
                                         || tab.type === 'title'
@@ -197,93 +211,30 @@ const Settings = () => {
                                 }}
                             >
                                 {tab.name !== 'separator' && tab.name}
+
+                                {tab?.icon && (
+                                    <Icon name={tab.icon} size={16} />
+                                )}
                             </div>
                         ))}
                     </nav>
                 </div>
             </div>
 
-            <div className={styles.content}>
+            <div className={styles.contentContainer}>
                 <div className={styles.contentWrapper}>
-                    <div>
-                        <h1>{activeTab}</h1>
-                        <button
-                            className={styles.closeButton}
-                            onClick={() => setShowSettings(false)}
-                        >
-                            <span>Close</span>
-                        </button>
+                    <div className={styles.content}>
+                        {tabs.find((tab) => tab.name === activeTab)?.component}
+                    </div>
 
-                        {activeTab === 'My Account' && (
-                            <div>
-                                <form>
-                                    <div className={styles.formGroup}>
-                                        <label htmlFor="username">
-                                            Username
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="username"
-                                            id="username"
-                                            placeholder="Username"
-                                            value={newUsername}
-                                            onChange={(e) => setNewUsername(e.target.value)}
-                                        />
-
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label htmlFor="avatar">
-                                            Profile Picture
-                                        </label>
-                                        <input
-                                            type="file"
-                                            name="avatar"
-                                            id="avatar"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                if (e.target.files[0]) {
-                                                    if (fileBiggerThan500MB(e.target.files[0])) {
-                                                        setError('File size must be less than 100MB');
-                                                        return;
-                                                    }
-                                                    setNewAvatar(e.target.files[0]);
-                                                    setAvatarPreview(URL.createObjectURL(e.target.files[0]));
-                                                }
-                                            }}
-                                            style={{ display: 'none' }}
-                                        />
-                                        <div
-                                            style={{
-                                                borderRadius: '50%',
-                                                backgroundImage: `url(${avatarPreview ||
-                                                    auth?.user?.avatar
-                                                    })`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                backgroundRepeat: 'no-repeat',
-                                                width: '100px',
-                                                height: '100px',
-                                                cursor: 'pointer',
-                                            }}
-                                            onClick={() => {
-                                                document.getElementById('avatar').click();
-                                            }}
-                                        >
-                                        </div>
-                                    </div>
-                                </form>
-
-                                <button
-                                    className={styles.saveButton}
-                                    onClick={() => {
-                                        saveChanges();
-                                    }}
-                                >
-                                    Save Changes
-                                </button>
+                    <div className={styles.closeButton}>
+                        <div>
+                            <div onClick={() => setShowSettings(false)}>
+                                <Icon name="close" size={18} />
                             </div>
-                        )}
+
+                            <div>ESC</div>
+                        </div>
                     </div>
                 </div>
             </div>
