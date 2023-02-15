@@ -3,6 +3,7 @@
     z-index: 100000;
     pointer-events: none;
     user-select: none;
+    opacity: 1 !important;
 }
 
 .tooltip {
@@ -16,8 +17,6 @@
     text-transform: none;
     border-radius: 5px;
     padding: 8px 12px;
-    word-wrap: break-word;
-    white-space: nowrap;
     color: var(--foreground-2);
     background-color: var(--background-dark);
     box-shadow: var(--elevation-high);

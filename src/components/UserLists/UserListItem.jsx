@@ -91,7 +91,7 @@ const UserListItem = ({ content, user }) => {
 
     const buttonContent = content === "online" ? "all" : content;
 
-    const largeMenuItems = [
+    const largeMenuItems = content === "blocked" ? [
         {
             name: "Profile",
             func: () => setUserProfile({ user }),
@@ -101,7 +101,31 @@ const UserListItem = ({ content, user }) => {
             func: () => createChannel(),
         },
         {
-            name: "Call",
+            name: "Add Note",
+            func: () => setUserProfile({ user, focusNote: true }),
+        },
+        { name: "Divider" },
+        {
+            name: "Unblock",
+            func: () => unblockUser(),
+        },
+        { name: "Divider" },
+        {
+            name: "Copy ID",
+            func: () => navigator.clipboard.writeText(user._id),
+            icon: "id",
+        },
+    ] : [
+        {
+            name: "Profile",
+            func: () => setUserProfile({ user }),
+        },
+        {
+            name: "Message",
+            func: () => createChannel(),
+        },
+        {
+            name: content === "pending" ? "None" : "Call",
             func: () => console.log("Call"),
         },
         {
@@ -109,7 +133,7 @@ const UserListItem = ({ content, user }) => {
             func: () => setUserProfile({ user, focusNote: true }),
         },
         {
-            name: "Add Friend Nickname",
+            name: content === "pending" ? "None" : "Add Friend Nickname",
             func: () => console.log("Add Friend Nickname"),
         },
         { name: "Divider" },
@@ -120,9 +144,21 @@ const UserListItem = ({ content, user }) => {
             iconSize: 10,
         },
         {
-            name: "Remove Friend",
-            func: () => deleteFriend(),
-            danger: true,
+            name: content === "pending"
+                ? (type === 0 ? "Cancel Request" : "Accept Request")
+                : "Remove Friend",
+            func: () => {
+                if (content === "pending") {
+                    if (type === 0) {
+                        deleteFriend();
+                    } else {
+                        addFriend();
+                    }
+                } else {
+                    deleteFriend();
+                }
+            },
+            danger: content !== "pending",
         },
         {
             name: "Block",
@@ -270,19 +306,6 @@ const UserListItem = ({ content, user }) => {
                     setMenu(null);
                 }}
                 onMouseLeave={() => setLiHover(false)}
-                initial={{
-                    height: 0,
-                }}
-                animate={{
-                    height: "62px",
-                }}
-                exit={{
-                    height: 0,
-                }}
-                transition={{
-                    duration: 0.3,
-                    ease: "easeInOut",
-                }}
             >
                 <div className={styles.li}>
                     <div className={styles.userInfo}>

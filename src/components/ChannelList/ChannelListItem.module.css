@@ -108,7 +108,6 @@
 }
 
 .contentStatus {
-    margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -77,7 +77,7 @@ const AddFriend = () => {
 
                 <form autoComplete="off">
                     <div className={styles.description}>
-                        You can add a friend with their username or ID. They are case sensitive.
+                        You can add a friend with their user ID. It's case sensitive.
                     </div>
 
                     <div

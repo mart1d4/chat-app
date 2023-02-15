@@ -68,6 +68,11 @@ const Login = () => {
             </Head>
 
             <div className={styles.wrapper}>
+                <img
+                    src="/assets/auth-background.svg"
+                    alt=""
+                />
+
                 <AnimatePresence>
                     <motion.form
                         onSubmit={handleSubmit}
@@ -81,8 +86,8 @@ const Login = () => {
                             scale: 1.2,
                         }}
                         transition={{
-                            duration: 0.3,
-                            ease: "easeInOut",
+                            duration: 0.6,
+                            type: "spring",
                         }}
                     >
                         <div className={styles.loginContainer}>
@@ -121,7 +126,6 @@ const Login = () => {
                                             autoComplete="off"
                                             autoCorrect="off"
                                             maxLength={32}
-                                            minLength={4}
                                             spellCheck="false"
                                             aria-labelledby="uid"
                                             aria-describedby="uid"

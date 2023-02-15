@@ -26,14 +26,6 @@ const ChannelListItem = ({ channel, special }) => {
         }
     }, [channel]);
 
-    useEffect(() => {
-        console.log(
-            '%c[ChannelListItem]',
-            'color: hsl(38, 96%, 54%)',
-            'Rendered'
-        );
-    }, []);
-
     const router = useRouter();
     const currentPath = router.asPath;
 
@@ -293,7 +285,7 @@ const ChannelListItem = ({ channel, special }) => {
                 </div>
             </div>
         </li>
-    ), [user, recipients, hover]);
+    ), [user, recipients, hover, router.query, friends]);
 };
 
 export default ChannelListItem;

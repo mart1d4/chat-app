@@ -107,6 +107,11 @@ const Register = () => {
             </Head>
 
             <div className={styles.wrapper}>
+                <img
+                    src="/assets/auth-background.svg"
+                    alt=""
+                />
+
                 <AnimatePresence>
                     <motion.form
                         onSubmit={handleSubmit}
@@ -120,8 +125,9 @@ const Register = () => {
                             scale: 1.2,
                         }}
                         transition={{
-                            duration: 0.3,
-                            ease: "easeInOut",
+                            duration: 0.6,
+                            type: "spring",
+
                         }}
                     >
                         <div className={styles.loginContainer}>
@@ -158,6 +164,7 @@ const Register = () => {
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"
+                                            minLength={2}
                                             maxLength={32}
                                             spellCheck="false"
                                             aria-labelledby="uid"

@@ -1,12 +1,43 @@
 import styles from "./ChannelList.module.css";
+import stylesItem from "./ChannelListItem.module.css";
 import { ChannelListItem, UserSection, Title } from "..";
 import useUserData from "../../hooks/useUserData";
 import { v4 as uuidv4 } from "uuid";
+import { useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/router";
 
 const ConversationList = () => {
     const { channels } = useUserData();
+    const router = useRouter();
 
-    return (
+    const channelListRef = useRef(null);
+
+    useEffect(() => {
+        if (!channelListRef) return;
+
+        const selectedChannel = document.querySelector(`.${stylesItem.liContainerActive}`);
+
+        if (selectedChannel) {
+            const selectedChannelRect = selectedChannel.getBoundingClientRect();
+            const channelListRect = channelListRef.current.getBoundingClientRect();
+
+            console.log(selectedChannelRect, channelListRect);
+
+            if (selectedChannelRect.top < channelListRect.top) {
+                channelListRef.current.scrollTo({
+                    top: selectedChannel.offsetTop,
+                    behavior: "smooth",
+                });
+            } else if (selectedChannelRect.bottom > channelListRect.bottom) {
+                channelListRef.current.scrollTo({
+                    top: selectedChannel.offsetTop - channelListRect.height + selectedChannelRect.height,
+                    behavior: "smooth",
+                });
+            }
+        }
+    }, [router.query, channelListRef?.current]);
+
+    return useMemo(() => (
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
                 <div className={styles.searchContainer}>
@@ -16,7 +47,10 @@ const ConversationList = () => {
                 </div>
 
                 <div className={styles.scroller}>
-                    <ul className={styles.channelList}>
+                    <ul
+                        ref={channelListRef}
+                        className={styles.channelList}
+                    >
                         <div></div>
 
                         <ChannelListItem special />
@@ -69,7 +103,7 @@ const ConversationList = () => {
 
             <UserSection />
         </div>
-    );
+    ), [channels]);
 };
 
 export default ConversationList;

@@ -144,36 +144,37 @@ const Menu = () => {
         >
             <div>
                 {items?.map((item) => (
-                    item.name === "Divider" ? (
-                        <div key={uuidv4()} className={styles.divider}></div>
-                    ) : (
-                        <div
-                            key={uuidv4()}
-                            className={item.danger
-                                ? active === item.name ? styles.menuItemDangerActive : styles.menuItemDanger
-                                : active === item.name ? styles.menuItemActive : styles.menuItem
-                            }
-                            onClick={() => {
-                                setMenu(null);
-                                item.func();
-                            }}
-                            onMouseEnter={() => setActive(item.name)}
-                        >
-                            <div className={styles.label}>
-                                {item.name}
-                            </div>
-
-                            {item.icon && (
-                                <div className={styles.icon}>
-                                    <Icon
-                                        name={item.icon}
-                                        size={item.iconSize ?? 16}
-                                        fill={active === item.name ? "var(--foreground-1)" : ""}
-                                    />
+                    item.name === "None" ? null :
+                        item.name === "Divider" ? (
+                            <div key={uuidv4()} className={styles.divider}></div>
+                        ) : (
+                            <div
+                                key={uuidv4()}
+                                className={item.danger
+                                    ? active === item.name ? styles.menuItemDangerActive : styles.menuItemDanger
+                                    : active === item.name ? styles.menuItemActive : styles.menuItem
+                                }
+                                onClick={() => {
+                                    setMenu(null);
+                                    item.func();
+                                }}
+                                onMouseEnter={() => setActive(item.name)}
+                            >
+                                <div className={styles.label}>
+                                    {item.name}
                                 </div>
-                            )}
-                        </div>
-                    )
+
+                                {item.icon && (
+                                    <div className={styles.icon}>
+                                        <Icon
+                                            name={item.icon}
+                                            size={item.iconSize ?? 16}
+                                            fill={active === item.name ? "var(--foreground-1)" : ""}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )
                 ))}
             </div>
         </div>

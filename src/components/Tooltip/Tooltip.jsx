@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useCallback, useState } from 'react';
 import styles from './Tooltip.module.css';
 
-const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
+const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
     const [parentRect, setParentRect] = useState({});
     const [containerRect, setContainerRect] = useState({});
     const [tooltipPos, setTooltipPos] = useState({});
@@ -109,6 +109,9 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow }) => {
                             duration: 0.1,
                             ease: 'easeInOut',
                             delay: delay ?? 0
+                        }}
+                        style={{
+                            maxWidth: big ? '190px' : '',
                         }}
                     >
                         {children}

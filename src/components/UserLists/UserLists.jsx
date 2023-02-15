@@ -1,5 +1,5 @@
 import { Icon, UserListItem } from "..";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./UserList.module.css";
 import { v4 as uuidv4 } from "uuid";
@@ -113,46 +113,48 @@ const UserLists = ({ list, content }) => {
                 </h2>
             </div>
         ) : (
-            <div className={styles.content}>
-                <div className={styles.searchBarContainer}>
-                    <div className={styles.searchBarInner}>
-                        <input
-                            ref={searchBar}
-                            placeholder="Search"
-                            aria-label="Search"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+            useMemo(() => (
+                <div className={styles.content}>
+                    <div className={styles.searchBarContainer}>
+                        <div className={styles.searchBarInner}>
+                            <input
+                                ref={searchBar}
+                                placeholder="Search"
+                                aria-label="Search"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
 
-                        <div
-                            className={styles.inputButton}
-                            role="button"
-                            style={{ cursor: search.length ? "pointer" : "text" }}
-                            onClick={() => {
-                                if (search.length) setSearch("");
-                                searchBar.current.focus();
-                            }}
-                        >
-                            <Icon name={search.length ? "cross" : "search"} size={20} />
+                            <div
+                                className={styles.inputButton}
+                                role="button"
+                                style={{ cursor: search.length ? "pointer" : "text" }}
+                                onClick={() => {
+                                    if (search.length) setSearch("");
+                                    searchBar.current.focus();
+                                }}
+                            >
+                                <Icon name={search.length ? "cross" : "search"} size={20} />
+                            </div>
                         </div>
                     </div>
+
+                    <h2 className={styles.title}>
+                        {contentData[content].title} — {filteredList.length}
+                    </h2>
+
+                    <ul className={styles.listContainer}>
+                        {filteredList?.map((user, index) => (
+                            <UserListItem
+                                key={uuidv4()}
+                                index={index}
+                                user={user}
+                                content={content}
+                            />
+                        ))}
+                    </ul>
                 </div>
-
-                <h2 className={styles.title}>
-                    {contentData[content].title} — {filteredList.length}
-                </h2>
-
-                <ul className={styles.listContainer}>
-                    {filteredList?.map((user, index) => (
-                        <UserListItem
-                            key={uuidv4()}
-                            index={index}
-                            user={user}
-                            content={content}
-                        />
-                    ))}
-                </ul>
-            </div>
+            ), [filteredList, search])
         )
     );
 };

@@ -1,13 +1,30 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const defaultAvatars = [
-    "/assets/default-avatars/blue.png",
-    "/assets/default-avatars/green.png",
-    "/assets/default-avatars/grey.png",
-    "/assets/default-avatars/red.png",
-    "/assets/default-avatars/yellow.png",
-]
+const defaults = [
+    {
+        avatar: "/assets/default-avatars/blue.png",
+        color: "#5865f2",
+    },
+    {
+        avatar: "/assets/default-avatars/green.png",
+        color: "#43b581",
+    },
+    {
+        avatar: "/assets/default-avatars/grey.png",
+        color: "#99aab5",
+    },
+    {
+        avatar: "/assets/default-avatars/red.png",
+        color: "#de2761",
+    },
+    {
+        avatar: "/assets/default-avatars/yellow.png",
+        color: "#faa519",
+    },
+];
+
+const index = Math.floor(Math.random() * defaults.length);
 
 const userSchema = new Schema(
     {
@@ -22,9 +39,7 @@ const userSchema = new Schema(
         avatar: {
             type: String,
             required: true,
-            default: defaultAvatars[
-                Math.floor(Math.random() * defaultAvatars.length)
-            ],
+            default: defaults[index].avatar,
         },
         banner: {
             type: String,
@@ -42,7 +57,7 @@ const userSchema = new Schema(
         },
         accentColor: {
             type: String,
-            default: "#737e8c",
+            default: defaults[index].color,
         },
         system: {
             type: Boolean,

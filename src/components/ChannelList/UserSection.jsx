@@ -88,6 +88,7 @@ const UserSection = () => {
                                     sound: true,
                                 })
                                 const audio = new Audio("/assets/sounds/undeafen.mp3");
+                                audio.volume = 0.5;
                                 audio.play();
                             } else {
                                 setUserSettings({
@@ -98,6 +99,7 @@ const UserSection = () => {
                                     /assets/sounds/${userSettings?.microphone
                                         ? "mute" : "unmute"}.mp3
                                 `);
+                                audio.volume = 0.5;
                                 audio.play();
                             }
                         }}
@@ -136,6 +138,7 @@ const UserSection = () => {
                                     /assets/sounds/${userSettings?.sound
                                     ? "deafen" : "undeafen"}.mp3
                                 `);
+                            audio.volume = 0.5;
                             audio.play();
                         }}
                         className={userSettings?.sound ? "" : styles.cut}

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
-import { AvatarStatus, Icon } from "../";
+import { AvatarStatus, Icon, Tooltip } from "../";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useAuth from "../../hooks/useAuth";
 import useComponents from "../../hooks/useComponents";
@@ -13,9 +13,9 @@ import { useRouter } from "next/router";
 const UserProfile = () => {
     const [activeNavItem, setActiveNavItem] = useState(0);
     const [userSatus, setUserStatus] = useState("");
-    const [reload, setReload] = useState(false);
     const [note, setNote] = useState("");
     const [error, setError] = useState("");
+    const [showTooltip, setShowTooltip] = useState(false);
 
     const { auth } = useAuth();
     const {
@@ -30,6 +30,7 @@ const UserProfile = () => {
         setRequests,
         blocked,
         setBlocked,
+        channels,
         setChannels
     } = useUserData();
     const cardRef = useRef(null);
@@ -49,11 +50,11 @@ const UserProfile = () => {
         if (userProfile.focusNote && noteRef) noteRef.current.focus();
 
         const isFriend = () => {
-            return auth?.user?.friends?.includes(user?._id);
+            return friends?.map((friend) => friend._id.toString()).includes(user?._id);
         };
 
         const isBlocked = () => {
-            return blocked?.map((blocked) => blocked._id).includes(user?._id);
+            return blocked?.map((blocked) => blocked._id.toString()).includes(user?._id);
         };
 
         const requestSent = () => {
@@ -62,14 +63,27 @@ const UserProfile = () => {
             }).includes(user?._id);
         };
 
+        const requestReceived = () => {
+            return requests?.map((request) => {
+                if (request.type === 1) return request.user._id;
+            }).includes(user?._id);
+        };
+
+        isSameUser() && setActiveNavItem(0);
+        setNote("");
+
         if (isFriend()) {
             setUserStatus("Friends");
         } else if (isBlocked()) {
             setUserStatus("Blocked");
         } else if (requestSent()) {
             setUserStatus("Request Sent");
+        } else if (requestReceived()) {
+            setUserStatus("Request Received");
+        } else {
+            setUserStatus("");
         }
-    }, [reload]);
+    }, [userProfile, friends, blocked, requests]);
 
     const sectionNavItems = isSameUser() ? [
         "User Info",
@@ -112,12 +126,15 @@ const UserProfile = () => {
         if (!response.data.success) {
             setError(response.data.message);
         } else if (response.data.success) {
-            setFriends((prev) => [...prev, response.data.friend]);
-            setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
-            setUserStatus("Request Sent");
-            if (response.data.channel) {
-                setChannels((prev) => [response.data.channel, ...prev]);
-                setUserStatus("Friends");
+            if (response.data.message === "Friend request sent") {
+                setRequests((prev) => [...prev, response.data.request]);
+            } else if (response.data.message === "Friend request accepted") {
+                setFriends((prev) => [...prev, response.data.friend]);
+                setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
+                if (response.data.channel) {
+                    if (channels?.map((channel) => channel._id).includes(response.data.channel._id)) return;
+                    setChannels((prev) => [response.data.channel, ...prev]);
+                }
             }
         } else {
             setError("An error occurred.");
@@ -137,7 +154,6 @@ const UserProfile = () => {
             } else if (response.data.message === "Request cancelled") {
                 setRequests(requests.filter((request) => request?.user?._id?.toString() !== user._id));
             }
-            setUserStatus("");
         } else {
             setError("An error occurred.");
         }
@@ -173,7 +189,6 @@ const UserProfile = () => {
             setBlocked((prev) => [...prev, response.data.blocked]);
             setFriends(friends.filter((friend) => friend?._id?.toString() !== user._id));
             setRequests(requests.filter((request) => request?.user?._id?.toString() !== user._id));
-            setUserStatus("Blocked");
         } else {
             setError("An error occurred.");
         }
@@ -188,7 +203,6 @@ const UserProfile = () => {
             setError(response.data.message);
         } else if (response.data.success) {
             setBlocked(blocked.filter((blocked) => blocked?._id?.toString() !== user._id));
-            setUserStatus("");
         } else {
             setError("An error occurred.");
         }
@@ -259,26 +273,55 @@ const UserProfile = () => {
                                 <div>
                                     {!isSameUser() && (
                                         <>
-                                            {userSatus !== "Blocked" && (
+                                            {(userSatus !== "Blocked") && (
                                                 <>
-                                                    {userSatus === "Friends" ? (
+                                                    {userSatus === "Request Received" ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => addFriend()}
+                                                            >
+                                                                Accept
+                                                            </button>
+                                                            <button
+                                                                className={styles.secondButton}
+                                                                onClick={() => deleteFriend()}
+                                                            >
+                                                                Ignore
+                                                            </button>
+                                                        </>
+                                                    ) : userSatus === "Friends" ? (
                                                         <button
                                                             onClick={() => createChannel()}
                                                         >
                                                             Send Message
                                                         </button>
                                                     ) : (
-                                                        <button
-                                                            className={userSatus === "Request Sent"
-                                                                ? styles.disabled : ""}
-                                                            onClick={() => {
-                                                                if (userSatus !== "Request Sent") {
-                                                                    addFriend();
-                                                                }
-                                                            }}
-                                                        >
-                                                            Send Friend Request
-                                                        </button>
+                                                        <div>
+                                                            <button
+                                                                className={userSatus === "Request Sent"
+                                                                    ? styles.disabled : ""}
+                                                                onClick={() => {
+                                                                    if (userSatus !== "Request Sent") {
+                                                                        addFriend();
+                                                                    }
+                                                                }}
+                                                                onMouseEnter={() => setShowTooltip(true)}
+                                                                onMouseLeave={() => setShowTooltip(false)}
+                                                            >
+                                                                Send Friend Request
+                                                            </button>
+
+                                                            {userSatus === "Request Sent" && (
+                                                                <Tooltip
+                                                                    show={showTooltip}
+                                                                    position="top"
+                                                                    dist={5}
+                                                                    big
+                                                                >
+                                                                    You sent a friend request to this user.
+                                                                </Tooltip>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </>
                                             )}
@@ -306,7 +349,7 @@ const UserProfile = () => {
                                     {user.username}
                                 </div>
                                 {((user.customStatus && userSatus === "Friends")
-                                    || isSameUser()) && (
+                                    || (user.customStatus && isSameUser())) && (
                                         <div className={styles.customStatus}>
                                             {user.customStatus}
                                         </div>
@@ -339,7 +382,7 @@ const UserProfile = () => {
                                 {activeNavItem === 0 && (
                                     <div>
                                         {((user.description && userSatus === "Friends")
-                                            || isSameUser()) && (
+                                            || (user.description && isSameUser())) && (
                                                 <>
                                                     <h1>
                                                         About Me
