@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { Tooltip } from "../";
+import useUserData from "../../hooks/useUserData";
 
 const AppNav = () => {
     const [showTooltip, setShowTooltip] = useState(null);
@@ -10,6 +11,7 @@ const AppNav = () => {
     const [markHeight, setMarkHeight] = useState(0);
 
     const router = useRouter();
+    const { requests } = useUserData();
 
     useEffect(() => {
         if (router.pathname.includes("/channels/@me")) {
@@ -33,6 +35,8 @@ const AppNav = () => {
         }
     }, [router.pathname]);
 
+    const requestReceived = requests?.filter((request) => request.type === 1).length;
+
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
@@ -41,6 +45,8 @@ const AppNav = () => {
                         <Tooltip
                             show={showTooltip === "friends"}
                             pos="right"
+                            dist={5}
+                            sizeBig
                         >
                             Direct Messages
                         </Tooltip>
@@ -89,7 +95,12 @@ const AppNav = () => {
                             onClick={() => {
                                 setShowTooltip(null);
                                 setActive("friends");
-                                router.push("/channels/@me");
+                                const channelUrl = localStorage.getItem("channel-url");
+                                if (channelUrl) {
+                                    router.push(channelUrl);
+                                } else {
+                                    router.push("/channels/@me");
+                                }
                             }}
                             transition={{
                                 duration: 0,
@@ -100,6 +111,14 @@ const AppNav = () => {
                                 transform: "translateY(1px)",
                             }}
                         >
+                            {requestReceived > 0 && (
+                                <div className={styles.badgeContainer}>
+                                    <div>
+                                        {requestReceived}
+                                    </div>
+                                </div>
+                            )}
+
                             <svg
                                 width="28"
                                 height="20"
@@ -119,8 +138,10 @@ const AppNav = () => {
                         <Tooltip
                             show={showTooltip === "servers"}
                             pos="right"
+                            dist={5}
+                            sizeBig
                         >
-                            Server
+                            Servers
                         </Tooltip>
 
                         <div className={styles.marker}>

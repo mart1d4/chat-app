@@ -6,7 +6,8 @@
     opacity: 1 !important;
 }
 
-.tooltip {
+.tooltip,
+.tooltipBig {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,6 +21,12 @@
     color: var(--foreground-2);
     background-color: var(--background-dark);
     box-shadow: var(--elevation-high);
+}
+
+.tooltipBig {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
 }
 
 .arrow {

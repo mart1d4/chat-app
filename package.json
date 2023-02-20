@@ -1,5 +1,5 @@
 {
-    "author": "Martin Danton <mart1danton@gmail.com> (https://mart1d4.com)",
+    "author": "Martin Danton <mart1danton@gmail.com> (https://www.mart1d4.com)",
     "description": "A simple chat app",
     "scripts": {
         "dev": "next dev",
@@ -31,13 +31,23 @@
         "uuid": "^9.0.0"
     },
     "name": "unthrust",
-    "version": "1.0.0",
+    "version": "0.4.0",
     "main": "index.js",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/mart1d4/unthrust.git"
     },
-    "keywords": [],
+    "keywords": [
+        "chat",
+        "app",
+        "next",
+        "react",
+        "socket",
+        "io",
+        "mongodb",
+        "mongoose",
+        "aws"
+    ],
     "license": "ISC",
     "bugs": {
         "url": "https://github.com/mart1d4/unthrust/issues"

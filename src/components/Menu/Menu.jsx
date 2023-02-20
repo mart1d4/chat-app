@@ -56,7 +56,7 @@ const Menu = () => {
             };
         }
 
-        // If there's not enough space to the bottom, open to the top
+        // If there's not enough space to the bottom, move the menu up
         if (window.innerHeight - 10 - event.clientY < container.height) {
             pos = {
                 ...pos,

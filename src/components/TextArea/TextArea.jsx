@@ -1,25 +1,127 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useRef, useMemo } from "react";
 import styles from "./TextArea.module.css";
-import { EmojiPicker, Icon, TextContainer, FilePreview } from "../";
+import { EmojiPicker, Icon, FilePreview } from "../";
 import { v4 as uuidv4 } from "uuid";
+import useUserData from "../../hooks/useUserData";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
-const TextArea = ({ friend, sendMessage }) => {
-    const [friendTyping, setFriendTyping] = useState(false);
+const TextArea = ({ friend, sendMessage, userBlocked }) => {
+    const [message, setMessage] = useState("");
     const [files, setFiles] = useState([]);
+    const [friendTyping, setFriendTyping] = useState(false);
     const [error, setError] = useState(null);
 
-    const changeFiles = useCallback((file) => {
-        setFiles((files) => {
-            return files.filter((f) => f !== file);
-        });
-    }, []);
+    const textAreaRef = useRef(null);
+    const { blocked, setBlocked } = useUserData();
+    const axiosPrivate = useAxiosPrivate();
 
-    useEffect(() => {
-        if (!files.length) return
-        console.log(files);
-    }, [files]);
+    const unblockUser = async () => {
+        const response = await axiosPrivate.post(
+            `/users/${friend._id}`,
+        );
 
-    return (
+        if (!response.data.success) {
+            setError(response.data.message);
+        } else if (response.data.success) {
+            setBlocked(blocked.filter((blocked) => blocked._id.toString() !== friend._id));
+        } else {
+            setError("An error occurred.");
+        }
+    };
+
+    const moveCursorToEnd = () => {
+        textAreaRef.current.focus();
+        if (
+            typeof window.getSelection != "undefined" &&
+            typeof document.createRange != "undefined"
+        ) {
+            const range = document.createRange();
+            range.selectNodeContents(textAreaRef.current);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if (typeof document.body.createTextRange != "undefined") {
+            const textRange = document.body.createTextRange();
+            textRange.moveToElementText(textAreaRef.current);
+            textRange.collapse(false);
+            textRange.select();
+        }
+    };
+
+    const textContainer = useMemo(() => (
+        <div
+            className={styles.textContainer}
+            style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
+        >
+            <div>
+                {message.length === 0 && (
+                    <div className={styles.textContainerPlaceholder}>
+                        Message @{friend?.username || ""}
+                    </div>
+                )}
+
+                <div
+                    ref={textAreaRef}
+                    className={styles.textContainerInner}
+                    role="textarea"
+                    spellCheck="true"
+                    autoCorrect="off"
+                    aria-multiline="true"
+                    aria-label={`Message @${friend?.username || "username"}`}
+                    aria-autocomplete="list"
+                    contentEditable="true"
+                    onInput={(e) => {
+                        const text = e.target.innerText.toString();
+                        e.target.innerText = text;
+                        setMessage(text);
+                        moveCursorToEnd();
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && e.shiftKey) {
+                            e.preventDefault();
+                            e.target.innerText += "\n";
+                            setMessage(e.target.innerText);
+                            moveCursorToEnd();
+                        } else if (e.key === "Enter") {
+                            e.preventDefault();
+                            sendMessage(message);
+                            setMessage("");
+                            e.target.innerText = "";
+                        }
+                    }}
+                />
+            </div>
+        </div>
+    ), [message, friend]);
+
+    const imageList = useMemo(() => (
+        <ul className={styles.filesList}>
+            {files?.map((file) => (
+                <FilePreview
+                    key={uuidv4()}
+                    file={file}
+                    setFiles={setFiles}
+                />
+            ))}
+        </ul>
+    ), [files]);
+
+    const caracterCounter = useMemo(() => (
+        <div className={styles.counterContainer}>
+            <span
+                style={{
+                    color: message.length > 4000
+                        ? "var(--error-1)"
+                        : "var(--foreground-3)"
+                }}
+            >
+                {message.length}
+            </span>/4000
+        </div>
+    ), [message]);
+
+    if (!userBlocked) return (
         <form className={styles.form}>
             <div className={styles.bottomForm}>
                 <div className={styles.typingContainer}>
@@ -41,33 +143,14 @@ const TextArea = ({ friend, sendMessage }) => {
                     )}
                 </div>
 
-                {/* <div className={styles.counterContainer}>
-                    <span
-                        style={{
-                            color: message.length > 4000
-                                ? "var(--error-1)"
-                                : "var(--foreground-3)",
-                        }}
-                    >
-                        {message.length}
-                    </span>/4000
-                </div> */}
+                {caracterCounter}
             </div>
 
             <div className={styles.textArea}>
                 <div className={styles.scrollableContainer}>
                     {files.length > 0 && (
                         <>
-                            <ul className={styles.filesList}>
-                                {files.map((file) => (
-                                    <FilePreview
-                                        key={uuidv4()}
-                                        file={file}
-                                        setFiles={changeFiles}
-                                    />
-                                ))}
-                            </ul>
-
+                            {imageList}
                             <div className={styles.formDivider} />
                         </>
                     )}
@@ -103,31 +186,44 @@ const TextArea = ({ friend, sendMessage }) => {
                             </button>
                         </div>
 
-                        <TextContainer
-                            username={friend?.username}
-                            sendMessage={sendMessage}
-                        />
+                        {textContainer}
 
                         <div className={styles.toolsContainer}>
                             <button>
-                                <div className={styles.button}>
-                                    <Icon
-                                        name="keyboard"
-                                        size={30}
-                                    />
-                                </div>
+                                <Icon
+                                    name="keyboard"
+                                    size={30}
+                                />
                             </button>
                             <button>
-                                <div className={styles.button}>
-                                    <Icon
-                                        name="gif"
-                                    />
-                                </div>
+                                <Icon
+                                    name="gif"
+                                />
                             </button>
                             <EmojiPicker />
                         </div>
                     </div>
                 </div>
+            </div>
+        </form>
+    );
+
+    else return (
+        <form className={styles.form}>
+            <div className={styles.wrapperBlocked}>
+                <div>
+                    You cannot send messages to a user you have blocked.
+                </div>
+
+                <button
+                    className="grey"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        unblockUser();
+                    }}
+                >
+                    Unblock
+                </button>
             </div>
         </form>
     );

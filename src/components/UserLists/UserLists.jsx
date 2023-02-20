@@ -64,6 +64,49 @@ const UserLists = ({ list, content }) => {
 
     const searchBar = useRef();
 
+    const contentComponent = useMemo(() => (
+        <div className={styles.content}>
+            <div className={styles.searchBarContainer}>
+                <div className={styles.searchBarInner}>
+                    <input
+                        ref={searchBar}
+                        placeholder="Search"
+                        aria-label="Search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+
+                    <div
+                        className={styles.inputButton}
+                        role="button"
+                        style={{ cursor: search.length ? "pointer" : "text" }}
+                        onClick={() => {
+                            if (search.length) setSearch("");
+                            searchBar.current.focus();
+                        }}
+                    >
+                        <Icon name={search.length ? "cross" : "search"} size={20} />
+                    </div>
+                </div>
+            </div>
+
+            <h2 className={styles.title}>
+                {contentData[content].title} — {filteredList.length}
+            </h2>
+
+            <ul className={styles.listContainer}>
+                {filteredList?.map((user, index) => (
+                    <UserListItem
+                        key={uuidv4()}
+                        index={index}
+                        user={user}
+                        content={content}
+                    />
+                ))}
+            </ul>
+        </div>
+    ), [filteredList, search])
+
     return (
         !list?.length ? (
             <div className={styles.content}>
@@ -112,50 +155,7 @@ const UserLists = ({ list, content }) => {
                     Your search for "{search}" did not match any {contentData[content].match}.
                 </h2>
             </div>
-        ) : (
-            useMemo(() => (
-                <div className={styles.content}>
-                    <div className={styles.searchBarContainer}>
-                        <div className={styles.searchBarInner}>
-                            <input
-                                ref={searchBar}
-                                placeholder="Search"
-                                aria-label="Search"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-
-                            <div
-                                className={styles.inputButton}
-                                role="button"
-                                style={{ cursor: search.length ? "pointer" : "text" }}
-                                onClick={() => {
-                                    if (search.length) setSearch("");
-                                    searchBar.current.focus();
-                                }}
-                            >
-                                <Icon name={search.length ? "cross" : "search"} size={20} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <h2 className={styles.title}>
-                        {contentData[content].title} — {filteredList.length}
-                    </h2>
-
-                    <ul className={styles.listContainer}>
-                        {filteredList?.map((user, index) => (
-                            <UserListItem
-                                key={uuidv4()}
-                                index={index}
-                                user={user}
-                                content={content}
-                            />
-                        ))}
-                    </ul>
-                </div>
-            ), [filteredList, search])
-        )
+        ) : contentComponent
     );
 };
 

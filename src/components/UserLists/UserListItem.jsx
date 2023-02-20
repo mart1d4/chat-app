@@ -316,7 +316,7 @@ const UserListItem = ({ content, user }) => {
                                 height={32}
                                 alt="Avatar"
                             />
-                            {((content !== "pending" && content !== "blocked") || type === 1) && (
+                            {((content !== "pending" && content !== "blocked")) && (
                                 <AvatarStatus
                                     status={user.status}
                                     background={(liHover || (menu?.parent?.type === "userListItem" &&

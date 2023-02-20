@@ -123,7 +123,7 @@
     position: relative;
     flex: 1 1 auto;
     overflow: hidden auto;
-    padding: 0 12px;
+    padding: 12px 8px 12px 0;
     height: 100%;
 }
 
@@ -142,7 +142,7 @@
     background-color: var(--background-3);
 }
 
-.contentUser > div {
+.contentUser > div:not(.contentUserFriend) {
     padding: 16px 0;
 }
 
@@ -263,52 +263,11 @@
     align-items: center;
 }
 
-.topSectionToolbar > div:last-child button {
-    height: 32px;
-    background-color: var(--success-1);
-    cursor: pointer;
-}
-
-.topSectionToolbar > div:last-child button.secondButton {
+.topSectionToolbar > div:last-child button:nth-child(2) {
     margin-left: 8px;
-    background-color: var(--default-1);
 }
 
-.topSectionToolbar > div:last-child button.secondButton:hover {
-    background-color: var(--default-2);
-}
-
-.topSectionToolbar > div:last-child button.secondButton:active {
-    background-color: var(--default-3);
-}
-
-.topSectionToolbar > div:last-child .disabled {
-    background-color: var(--success-1);
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.topSectionToolbar > div:last-child .disabled:hover {
-    background-color: var(--success-1);
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.topSectionToolbar > div:last-child .disabled:active {
-    background-color: var(--success-1);
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.topSectionToolbar > div:last-child button:hover {
-    background-color: var(--success-2);
-}
-
-.topSectionToolbar > div:last-child button:active {
-    background-color: var(--success-3);
-}
-
-.topSectionToolbar > div:last-child > div {
+.topSectionToolbar > div:last-child > .moreButton {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -323,4 +282,36 @@
 
 .topSectionToolbar svg:active path:last-child {
     fill: var(--foreground-1);
+}
+
+.contentUserFriend {
+    display: flex;
+    font-weight: 500;
+    align-items: center;
+    cursor: pointer;
+    line-height: 30px;
+    padding: 4px;
+    color: var(--foreground-2);
+    border-radius: 4px;
+    margin: 1px 0 1px 8px;
+}
+
+.contentUserFriend:hover {
+    background-color: var(--background-3);
+}
+
+.contentUserFriend > div:first-child {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.contentUserFriend > div:first-child > img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
 }

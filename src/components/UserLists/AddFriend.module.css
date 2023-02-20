@@ -60,26 +60,6 @@
     outline: none;
 }
 
-.inputWrapper > button {
-    background-color: var(--accent-1);
-    color: var(--foreground-1);
-    width: auto;
-    height: 32px;
-    min-width: 60px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 3px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 16px;
-    padding: 2px 16px;
-    user-select: none;
-    cursor: pointer;
-}
-
 .error {
     margin-top: 8px;
     color: var(--error-light);

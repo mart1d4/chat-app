@@ -55,7 +55,9 @@ const ChannelListItem = ({ channel, special }) => {
         } else if (response.data.success) {
             const newChannels = channels.filter((chan) => chan._id.toString() !== channel._id.toString());
             setChannels(newChannels);
-            router.push("/channels/@me");
+            if (currentPath === `/channels/${channel._id}`) {
+                router.push("/channels/@me");
+            }
         } else {
             setError(true);
         }
@@ -170,10 +172,6 @@ const ChannelListItem = ({ channel, special }) => {
                     ? styles.liContainerActive
                     : styles.liContainer}
                 onClick={() => {
-                    localStorage.setItem(
-                        "private-channel-url",
-                        `/channels/@me`
-                    );
                     router.push("/channels/@me")
                 }}
             >
@@ -218,10 +216,6 @@ const ChannelListItem = ({ channel, special }) => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(null)}
             onClick={() => {
-                localStorage.setItem(
-                    "private-channel-url",
-                    `/channels/@me/${channel?._id}`
-                );
                 router.push(`/channels/@me/${channel?._id}`);
             }}
             onContextMenu={(e) => {

@@ -5,6 +5,36 @@
     margin-top: -8px;
 }
 
+.wrapperBlocked {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 52px;
+    position: relative;
+    border-radius: 5px;
+    margin-bottom: 24px;
+    padding: 16px 0;
+    width: 100%;
+    background-color: var(--background-1);
+}
+
+.wrapperBlocked > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 16px;
+    height: 20px;
+    color: var(--foreground-1);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+    user-select: none;
+}
+
+.wrapperBlocked > button {
+    margin-right: 12px;
+}
+
 .bottomForm {
     overflow: visible;
     position: absolute;
@@ -175,26 +205,14 @@
 }
 
 .toolsContainer > button {
-    cursor: pointer;
-    width: auto;
-    background: transparent;
-    border: 0;
-    margin: 0;
-    padding: 0;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
-    user-select: none;
-}
-
-.toolsContainer > button > .button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: 4px;
     margin: 0 4px;
+    height: 44px;
+    width: 32px;
+}
+
+.toolsContainer > button:first-child {
+    width: 38px;
 }
 
 .toolsContainer > button:not(:last-child):hover path {

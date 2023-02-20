@@ -110,10 +110,7 @@ const AddFriend = () => {
                         </div>
 
                         <button
-                            style={{
-                                opacity: input.length > 0 ? 1 : 0.5,
-                                cursor: input.length > 0 ? "pointer" : "not-allowed",
-                            }}
+                            className={input.length > 0 ? "blue" : "blue disabled"}
                             onClick={(e) => {
                                 e.preventDefault();
                                 if (!input.length) {

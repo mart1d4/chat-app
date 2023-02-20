@@ -16,7 +16,6 @@ const Layout = ({ children }) => {
     const { auth, isLoading } = useAuth();
     const {
         showSettings,
-        userProfile,
         modal,
     } = useComponents();
     const {

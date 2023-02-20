@@ -4,15 +4,15 @@ const Schema = mongoose.Schema;
 const defaults = [
     {
         avatar: "/assets/default-avatars/blue.png",
-        color: "#5865f2",
+        color: "#5a63f2",
     },
     {
         avatar: "/assets/default-avatars/green.png",
-        color: "#43b581",
+        color: "#38a65a",
     },
     {
         avatar: "/assets/default-avatars/grey.png",
-        color: "#99aab5",
+        color: "#757e8a",
     },
     {
         avatar: "/assets/default-avatars/red.png",
@@ -23,8 +23,6 @@ const defaults = [
         color: "#faa519",
     },
 ];
-
-const index = Math.floor(Math.random() * defaults.length);
 
 const userSchema = new Schema(
     {
@@ -38,8 +36,6 @@ const userSchema = new Schema(
         },
         avatar: {
             type: String,
-            required: true,
-            default: defaults[index].avatar,
         },
         banner: {
             type: String,
@@ -57,7 +53,6 @@ const userSchema = new Schema(
         },
         accentColor: {
             type: String,
-            default: defaults[index].color,
         },
         system: {
             type: Boolean,
@@ -111,6 +106,15 @@ const userSchema = new Schema(
         timestamps: true,
     }
 );
+
+userSchema.pre("save", async function () {
+    if (!this.avatar && !this.accentColor) {
+        const index = Math.floor(Math.random() * defaults.length);
+
+        this.avatar = defaults[index].avatar;
+        this.accentColor = defaults[index].color;
+    }
+});
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

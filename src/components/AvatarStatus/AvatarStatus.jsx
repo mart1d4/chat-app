@@ -2,7 +2,17 @@ import { Tooltip } from '../';
 import { useState } from 'react';
 import styles from './AvatarStatus.module.css';
 
-const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlyStatus, size }) => {
+const AvatarStatus = ({
+    status,
+    background,
+    tooltip,
+    tooltipPos,
+    tooltipDist,
+    friend,
+    onlyStatus,
+    size,
+    mid,
+}) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const isFriend = friend ?? true;
@@ -11,11 +21,12 @@ const AvatarStatus = ({ status, background, tooltip, tooltipPos, friend, onlySta
     return (
         <div
             className={!onlyStatus
-                ? size ? styles.containerBig : styles.container : ""}
+                ? size ? styles.containerBig : mid ? styles.containerMid : styles.container : ""}
         >
             <Tooltip
                 show={tooltip && showTooltip}
                 pos={tooltipPosition}
+                dist={tooltipDist ?? 0}
             >
                 {status}
             </Tooltip>

@@ -9,8 +9,10 @@ import useAuth from '../../hooks/useAuth';
 import { Icon } from "../";
 import { MyAccount, Profiles, PrivacySafety } from './UserSettings';
 
-const Settings = () => {
-    const [activeTab, setActiveTab] = useState('My Account');
+const Settings = ({ tab }) => {
+    const [activeTab, setActiveTab] = useState(
+        tab ?? 'My Account',
+    );
     const [newUsername, setNewUsername] = useState('');
     const [newAvatar, setNewAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
@@ -95,15 +97,21 @@ const Settings = () => {
         },
         {
             name: 'My Account',
-            component: <MyAccount />,
+            component: <MyAccount
+                setActiveTab={setActiveTab}
+            />,
         },
         {
             name: 'Profiles',
-            component: <Profiles />,
+            component: <Profiles
+                setActiveTab={setActiveTab}
+            />,
         },
         {
             name: 'Privacy & Safety',
-            component: <PrivacySafety />,
+            component: <PrivacySafety
+                setActiveTab={setActiveTab}
+            />,
         },
         {
             name: 'Authorized Apps',

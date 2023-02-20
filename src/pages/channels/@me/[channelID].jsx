@@ -5,11 +5,11 @@ import {
     NestedLayout,
     Message,
     TextArea,
+    AvatarStatus,
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import React, { useState, useEffect, useCallback } from "react";
-import { v4 as uuidv4 } from 'uuid';
+import { useState, useEffect, useCallback, useRef } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import useAuth from "../../../hooks/useAuth";
@@ -25,6 +25,10 @@ const Channels = () => {
     });
     const [messages, setMessages] = useState([]);
     const [error, setError] = useState(null);
+    const [note, setNote] = useState("");
+    const [showUsers, setShowUsers] = useState(
+        localStorage.getItem("show-users") === "true"
+    );
 
     const { auth } = useAuth();
     const {
@@ -38,49 +42,43 @@ const Channels = () => {
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+    const noteRef = useRef(null);
 
     const buttons = {
         add: {
             text: "Add Friend",
             func: () => addFriend(),
-            disabled: false,
-            class: styles.blue,
+            class: "blue",
         },
         remove: {
             text: "Remove Friend",
             func: () => deleteFriend(),
-            disabled: false,
-            class: styles.grey,
+            class: "grey",
         },
         sent: {
             text: "Friend Request Sent",
             func: () => { },
-            disabled: true,
-            class: styles.blue,
+            class: "blue disabled",
         },
         received: {
             text: "Accept",
             func: () => addFriend(),
-            disabled: false,
-            class: styles.green,
+            class: "green",
         },
         ignore: {
             text: "Ignore",
             func: () => deleteFriend(),
-            disabled: false,
-            class: styles.grey,
+            class: "grey",
         },
         block: {
             text: "Block",
             func: () => blockUser(),
-            disabled: false,
-            class: styles.grey,
+            class: "grey",
         },
         unblock: {
             text: "Unblock",
             func: () => unblockUser(),
-            disabled: false,
-            class: styles.grey,
+            class: "grey",
         },
     }
 
@@ -91,40 +89,28 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
-        if (
-            !router.query.channelID ||
-            !channels ||
-            !channels.length ||
-            !channels.find((channel) => channel._id === router.query.channelID)
-        ) {
+        if (!channels?.find((channel) => channel._id === router.query.channelID)) {
             router.push("/channels/@me");
             return;
         }
 
-        let isMounted = true;
-        const controller = new AbortController();
+        localStorage.setItem(
+            "channel-url",
+            `/channels/@me/${router.query.channelID}`
+        );
 
-        const friendID = channels.find(
+        const friend = channels.find(
             (channel) => channel._id === router.query.channelID
         )?.recipients?.find(
             (recipient) => recipient._id !== auth.user._id
-        )._id;
-
-        if (!friendID) return;
-
-        const response = axiosPrivate.get(
-            `/users/${friendID}`,
-            { signal: controller.signal }
         );
 
-        response.then((data) => {
-            isMounted && setFriend(data.data.user);
-        });
-
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
+        if (!friend) {
+            router.push("/channels/@me");
+            return;
+        } else {
+            setFriend(friend);
+        }
     }, [router.query.channelID, friends, requests, blocked, channels]);
 
     useEffect(() => {
@@ -167,7 +153,11 @@ const Channels = () => {
                 3: "block",
             }));
         }
-    }, [friend]);
+    }, [friend, friends, requests, blocked]);
+
+    const isFriend = () => {
+        return (friends?.find((user) => user?._id.toString() === friend?._id.toString()));
+    }
 
     const addFriend = async () => {
         const response = await axiosPrivate.post(
@@ -271,61 +261,27 @@ const Channels = () => {
         return date1.getDate() !== date2.getDate();
     };
 
-    const sendMessage = async (message) => {
-        if (message.length === 0) return;
-        if (message.length > 4000) {
-            return setError("Message too long");
-        }
-
-        while (message[0] === "\\" && message[1] === "n") {
-            message = message.slice(2);
-        }
-
-        while (message[message.length - 2] === "\\" && message[message.length - 1] === "n") {
-            message = message.slice(0, message.length - 2);
-        }
-
-        const newMessage = {
-            sender: auth.user,
-            content: message,
-            createdAt: new Date(),
-        }
-
-        const data = await axiosPrivate.post(
-            `/private/${router.query.channelID}/send`,
-            { message: newMessage }
-        );
-
-        if (data.data.error) {
-            setError(data.data.error);
-        } else {
-            setMessages((messages) => [...messages, data.data.message]);
-
-            // Move the channel to the top of the list
-            const channelIndex = channelList.findIndex(
-                (channel) => channel._id.toString() === router.query.channelID
-            );
-            const channel = channelList[channelIndex];
-            const newChannelList = [
-                channel,
-                ...channelList.slice(0, channelIndex),
-                ...channelList.slice(channelIndex + 1),
-            ];
-            setChannelList(newChannelList);
-        }
+    const sendMessage = (message) => {
+        console.log(message);
     };
 
     return (
         <>
             <Head>
-                <title>Unthrust | {("@" + friend?.username) || "Loading"}</title>
+                <title>Unthrust | @{friend?.username || ""}</title>
             </Head>
 
             <div className={styles.container}>
                 <AppHeader
-                    content="channels"
-                    friend={friend}
+                    friend={
+                        isFriend() ? friend : {
+                            ...friend,
+                            status: "Offline",
+                        }}
+                    showUsers={showUsers}
+                    setShowUsers={setShowUsers}
                 />
+
                 <div className={styles.content}>
                     <main className={styles.main}>
                         <div className={styles.messagesWrapper}>
@@ -355,7 +311,6 @@ const Channels = () => {
                                                     {friendStatus[3] === "block" && (
                                                         <button
                                                             className={buttons[friendStatus[1]]?.class}
-                                                            disabled={buttons[friendStatus[1]]?.disabled}
                                                             onClick={() => buttons[friendStatus[1]]?.func()}
                                                         >
                                                             {buttons[friendStatus[1]]?.text}
@@ -381,12 +336,10 @@ const Channels = () => {
                                             </div>
                                         </div>
 
-                                        {messages.map((message, index) => (
-                                            <React.Fragment key={uuidv4()}>
-                                                {isNewDay(index) && (
-                                                    <div
-                                                        className={styles.messageDivider}
-                                                    >
+                                        {messages.map((message, index) => {
+                                            if (isNewDay(index)) {
+                                                return (
+                                                    <div className={styles.messageDivider}>
                                                         <span>
                                                             {format(
                                                                 new Date(message.createdAt),
@@ -394,15 +347,18 @@ const Channels = () => {
                                                             )}
                                                         </span>
                                                     </div>
-                                                )}
-                                                <Message
-                                                    message={message}
-                                                    start={isStart(index)}
-                                                    setError={setError}
-                                                    setMessages={setMessages}
-                                                />
-                                            </React.Fragment>
-                                        ))}
+                                                );
+                                            } else {
+                                                return (
+                                                    <Message
+                                                        message={message}
+                                                        start={isStart(index)}
+                                                        setError={setError}
+                                                        setMessages={setMessages}
+                                                    />
+                                                );
+                                            }
+                                        })}
 
                                         <div className={styles.scrollerSpacer} />
                                     </ol>
@@ -413,8 +369,94 @@ const Channels = () => {
                         <TextArea
                             friend={friend}
                             sendMessage={sendMessage}
+                            userBlocked={friendStatus[3] === "unblock"}
                         />
                     </main>
+
+                    {showUsers && (
+                        <aside className={styles.aside}>
+                            <div
+                                className={styles.asideHeader}
+                                style={{
+                                    backgroundColor: friend?.accentColor
+                                        || "var(--background-dark)"
+                                }}
+                            >
+                                <div className={styles.userAvatar}>
+                                    {friend?.avatar && (
+                                        <Image
+                                            src={friend.avatar}
+                                            alt="User Avatar"
+                                            width={80}
+                                            height={80}
+                                        />
+                                    )}
+
+                                    <AvatarStatus
+                                        status={isFriend() ? friend?.status : "Offline"}
+                                        background="var(--background-2)"
+                                        mid
+                                        tooltip
+                                        tooltipDist={2}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles.asideContent}>
+                                <div className={styles.username}>
+                                    {friend?.username || " "}
+                                </div>
+                                {(friend?.customStatus && isFriend()) && (
+                                    <div className={styles.customStatus}>
+                                        {friend?.customStatus}
+                                    </div>
+                                )}
+
+                                <div className={styles.asideDivider} />
+
+                                {(friend?.description && isFriend()) && (
+                                    <div>
+                                        <h2>About Me</h2>
+                                        <div className={styles.contentUserDate}>
+                                            <div>
+                                                {friend?.description}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <h2>Unthrust Member Since</h2>
+                                    <div className={styles.contentUserDate}>
+                                        <div>
+                                            {friend ? format(
+                                                new Date(friend?.createdAt),
+                                                "MMM dd, yyyy"
+                                            ) : " "}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.asideDivider} />
+
+                                <div>
+                                    <h2>Note</h2>
+                                    <div className={styles.contentNote}>
+                                        <textarea
+                                            ref={noteRef}
+                                            style={{ height: noteRef?.current?.scrollHeight || 44 }}
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                            placeholder="Click to add a note"
+                                            maxLength={256}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div></div>
+                        </aside>
+                    )}
                 </div>
             </div>
         </>
@@ -424,7 +466,9 @@ const Channels = () => {
 Channels.getLayout = function getLayout(page) {
     return (
         <Layout>
-            <NestedLayout>{page}</NestedLayout>
+            <NestedLayout>
+                {page}
+            </NestedLayout>
         </Layout>
     );
 };

@@ -103,12 +103,25 @@
 }
 
 .sidebarWrapper::-webkit-scrollbar {
-    width: 4px;
+    width: 8px;
 }
 
 .sidebarWrapper::-webkit-scrollbar-track {
+    border-radius: 100vw;
+    border: 2px var(--background-3) solid;
     background-color: transparent;
-    border: none;
+    background-clip: padding-box;
+}
+
+.sidebarWrapper::-webkit-scrollbar-thumb {
+    border-radius: 100vw;
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+    background-clip: padding-box;
+}
+
+.sidebarWrapper:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
 }
 
 .contentContainer {

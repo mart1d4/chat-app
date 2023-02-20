@@ -32,7 +32,11 @@ const FilePreview = ({ file, setFiles }) => {
                         >
                             <Icon name="eye" size={20} />
                         </div>
-                        <Tooltip show={showTooltip === 1}>
+                        <Tooltip
+                            show={showTooltip === 1}
+                            pos="top"
+                            dist={5}
+                        >
                             Spoiler Attachment
                         </Tooltip>
                     </div>
@@ -45,7 +49,11 @@ const FilePreview = ({ file, setFiles }) => {
                         >
                             <Icon name="edit" size={20} />
                         </div>
-                        <Tooltip show={showTooltip === 2}>
+                        <Tooltip
+                            show={showTooltip === 2}
+                            pos="top"
+                            dist={5}
+                        >
                             Modify Attachment
                         </Tooltip>
                     </div>
@@ -55,7 +63,9 @@ const FilePreview = ({ file, setFiles }) => {
                             className={styles.fileMenuButton + " " + styles.danger}
                             onMouseEnter={() => setShowTooltip(3)}
                             onMouseLeave={() => setShowTooltip(null)}
-                            onClick={() => setFiles(file)}
+                            onClick={() => setFiles(
+                                (files) => files.filter((f) => f !== file)
+                            )}
                         >
                             <Icon
                                 name="delete"
@@ -63,14 +73,18 @@ const FilePreview = ({ file, setFiles }) => {
                                 fill="var(--error-1)"
                             />
                         </div>
-                        <Tooltip show={showTooltip === 3}>
+                        <Tooltip
+                            show={showTooltip === 3}
+                            pos="top"
+                            dist={5}
+                        >
                             Remove Attachment
                         </Tooltip>
                     </div>
                 </div>
             </div>
         </li>
-    ), []);
+    ), [showTooltip]);
 };
 
 export default FilePreview;

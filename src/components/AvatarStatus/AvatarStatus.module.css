@@ -1,4 +1,5 @@
 .container,
+.containerMid,
 .containerBig {
     position: absolute;
     bottom: -3px;
@@ -7,13 +8,23 @@
 }
 
 .containerBig {
+    bottom: -6px;
+    right: -6px;
+}
+
+.containerMid {
     bottom: -2px;
     right: -2px;
 }
 
 .containerBig .firstLayer {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+}
+
+.containerMid .firstLayer {
+    width: 26px;
+    height: 26px;
 }
 
 .firstLayer {
@@ -27,8 +38,13 @@
 }
 
 .containerBig .firstLayer > div {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
+}
+
+.containerMid .firstLayer > div {
+    width: 16px;
+    height: 16px;
 }
 
 .firstLayer > div {
@@ -47,8 +63,13 @@
 }
 
 .containerBig .offline {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
+}
+
+.containerMid .offline {
+    width: 8px;
+    height: 8px;
 }
 
 .busy {
@@ -58,8 +79,13 @@
 }
 
 .containerBig .busy {
-    width: 14px;
+    width: 18px;
     height: 4px;
+}
+
+.containerMid .busy {
+    width: 10px;
+    height: 2px;
 }
 
 .away {
@@ -73,6 +99,11 @@
 }
 
 .containerBig .away {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
+}
+
+.containerMid .away {
+    width: 12px;
+    height: 12px;
 }

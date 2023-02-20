@@ -115,15 +115,20 @@ export default async (req, res) => {
             user.channels.unshift(channel._id);
             await user.save();
 
-            for (const recipient of recipientsObjects) {
-                const recipientHasChannel = recipient.channels.find((chan) => {
-                    return chan.toString() === channel._id.toString();
+            // If user isn't friend, don't add channel to recipient
+            if (
+                recipients.length === 1 &&
+                !user.friends.find((friend) => friend._id.toString() === recipients[0])
+            ) {
+                return res.json({
+                    success: true,
+                    channel: {
+                        _id: channel._id,
+                        recipients: recipientsObjects,
+                        type: channel.type,
+                    },
+                    message: "Channel created",
                 });
-
-                if (!recipientHasChannel) {
-                    recipient.channels.unshift(channel._id);
-                    await recipient.save();
-                }
             }
 
             recipientsObjects = recipientsObjects.map((recipient) => cleanUser(recipient));

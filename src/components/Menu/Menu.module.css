@@ -41,7 +41,6 @@
     color: var(--error-1);
 }
 
-.menuItem:hover,
 .menuItemActive {
     background-color: var(--accent-1);
     color: var(--foregroun-1);
@@ -52,7 +51,6 @@
     color: var(--foregroun-1);
 }
 
-.menuItemDanger:hover,
 .menuItemDangerActive {
     background-color: var(--error-1);
     color: var(--foreground-1);
@@ -67,8 +65,6 @@
     fill: var(--error-1);
 }
 
-.menuItem:hover path,
-.menuItemDanger:hover path,
 .menuItemActive path,
 .menuItemDangerActive path {
     fill: var(--foreground-1);

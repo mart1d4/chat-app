@@ -21,8 +21,6 @@ const ConversationList = () => {
             const selectedChannelRect = selectedChannel.getBoundingClientRect();
             const channelListRect = channelListRef.current.getBoundingClientRect();
 
-            console.log(selectedChannelRect, channelListRect);
-
             if (selectedChannelRect.top < channelListRect.top) {
                 channelListRef.current.scrollTo({
                     top: selectedChannel.offsetTop,

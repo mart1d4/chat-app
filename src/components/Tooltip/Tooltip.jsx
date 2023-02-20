@@ -2,7 +2,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useCallback, useState } from 'react';
 import styles from './Tooltip.module.css';
 
-const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
+const Tooltip = ({
+    children,
+    show,
+    pos,
+    dist,
+    delay,
+    arrow,
+    big,
+    sizeBig,
+    background,
+}) => {
     const [parentRect, setParentRect] = useState({});
     const [containerRect, setContainerRect] = useState({});
     const [tooltipPos, setTooltipPos] = useState({});
@@ -12,12 +22,11 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
     const showArrow = arrow ?? true;
 
     const containerRef = useCallback(node => {
-        console.log("REEEEEEEEEEEEEEEEEEEEEEEEEE");
         if (node !== null) {
             setParentRect(node.parentElement.getBoundingClientRect());
             setContainerRect(node.getBoundingClientRect());
         }
-    }, [children]);
+    }, [children, show, pos, dist, delay, arrow, big, sizeBig, background]);
 
     useEffect(() => {
         if (!parent) return;
@@ -43,36 +52,46 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
                 break;
             case 'right':
                 setTooltipPos({
-                    top: parentRect.top - containerRect.height + parentRect.height / 2,
+                    top: parentRect.top + containerRect.height - parentRect.height / 2,
                     left: parentRect.left + parentRect.width + distance,
                 });
                 break;
         }
+
+        // If there's not enough space to the right, move it 20px from the right edge
+        if (window.innerWidth - 10 - tooltipPos.left < containerRect.width) {
+            setTooltipPos({
+                ...tooltipPos,
+                right: 20,
+            });
+        }
+
+
     }, [containerRect]);
 
     const arrowPosition = {
         "top": {
             top: '100%',
             left: '50%',
-            borderTopColor: 'var(--background-dark)',
+            borderTopColor: background ?? 'var(--background-dark)',
             marginLeft: '-5px',
         },
         "bottom": {
             bottom: '100%',
             left: '50%',
-            borderBottomColor: 'var(--background-dark)',
+            borderBottomColor: background ?? 'var(--background-dark)',
             marginLeft: '-5px',
         },
         "left": {
             left: '100%',
             top: '50%',
-            borderLeftColor: 'var(--background-dark)',
+            borderLeftColor: background ?? 'var(--background-dark)',
             marginTop: '-5px',
         },
         "right": {
             right: '100%',
             top: '50%',
-            borderRightColor: 'var(--background-dark)',
+            borderRightColor: background ?? 'var(--background-dark)',
             marginTop: '-5px',
         },
     };
@@ -87,7 +106,9 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
                     onClick={(e) => e.preventDefault()}
                 >
                     <motion.span
-                        className={styles.tooltip}
+                        className={
+                            sizeBig ? styles.tooltipBig : styles.tooltip
+                        }
                         initial={{
                             opacity: 0,
                             scale: 0.95,
@@ -112,6 +133,7 @@ const Tooltip = ({ children, show, pos, dist, delay, arrow, big }) => {
                         }}
                         style={{
                             maxWidth: big ? '190px' : '',
+                            backgroundColor: background ?? 'var(--background-dark)',
                         }}
                     >
                         {children}

@@ -132,13 +132,12 @@
     flex: 0 0 auto;
     min-width: 0;
     background-color: var(--background-4);
-    /* big shadow on the left so the hidden elements fade out  */
     box-shadow: -10px 0px 5px -4px var(--background-4),
         20px 0px 5px -4px var(--background-4);
     z-index: 2;
 }
 
-.toolbar > div {
+.toolbarIcon {
     position: relative;
     height: 24px;
     width: auto;
@@ -146,4 +145,47 @@
     margin: 0 8px;
     cursor: pointer;
     border-radius: 4px;
+}
+
+.toolbarIcon:hover path {
+    fill: var(--foreground-2);
+}
+
+.search {
+    background-color: var(--background-1);
+    display: flex;
+    align-items: stretch;
+    height: 24px;
+    width: 144px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: text;
+    padding: 0 2px;
+    margin: 0 8px;
+    color: var(--foreground-2);
+}
+
+.search > div:first-child {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    overflow: hidden;
+    padding: 2px 0;
+    padding-left: 4px;
+    white-space: pre-wrap;
+    color: var(--foreground-4);
+    position: relative;
+}
+
+.search > div:first-child:focus {
+    outline: none;
+}
+
+.search > div:last-child {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

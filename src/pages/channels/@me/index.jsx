@@ -13,6 +13,11 @@ const Friends = () => {
             localStorage.getItem("friends-tab")
             || "online"
         );
+
+        localStorage.setItem(
+            "channel-url",
+            "/channels/@me"
+        );
     }, [])
 
     const handleContent = (content) => {
@@ -39,9 +44,8 @@ const Friends = () => {
 
             <div className={styles.main}>
                 <AppHeader
-                    content="friends"
                     setContent={handleContent}
-                    active={content}
+                    content={content}
                 />
 
                 <div className={styles.content}>

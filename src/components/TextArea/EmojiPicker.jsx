@@ -27,7 +27,9 @@ const scale = {
 };
 
 const EmojiPicker = () => {
-    const [emojisPosIndex, setEmojisPosIndex] = useState(0);
+    const [emojisPosIndex, setEmojisPosIndex] = useState(
+        Math.floor(Math.random() * emojisPos.length)
+    );
 
     return (
         <motion.button
@@ -37,17 +39,15 @@ const EmojiPicker = () => {
             className={styles.buttonContainer}
             whileHover="hover"
         >
-            <div className={styles.button}>
-                <motion.div
-                    className={styles.emoji}
-                    style={{
-                        backgroundPosition:
-                            `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`
-                    }}
-                    variants={scale}
-                >
-                </motion.div>
-            </div>
+            <motion.div
+                className={styles.emoji}
+                style={{
+                    backgroundPosition:
+                        `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`
+                }}
+                variants={scale}
+            >
+            </motion.div>
         </motion.button>
     );
 }

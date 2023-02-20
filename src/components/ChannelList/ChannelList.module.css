@@ -59,17 +59,13 @@
 }
 
 .scroller::-webkit-scrollbar-track {
-    border-radius: 100vw;
     border: 2px var(--background-3) solid;
     background-color: transparent;
-    background-clip: padding-box;
 }
 
 .scroller::-webkit-scrollbar-thumb {
-    border-radius: 100vw;
     border: 2px var(--background-3) solid;
     background-color: transparent;
-    background-clip: padding-box;
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
