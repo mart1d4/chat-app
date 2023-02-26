@@ -73,6 +73,7 @@
     justify-content: flex-start;
     align-items: stretch;
     display: flex;
+    z-index: 2;
 }
 
 .header > h1 {
@@ -127,8 +128,11 @@
     font-size: 16px;
     line-height: 32px;
     height: 30px;
+    min-width: 48px;
+    appearance: none;
     margin: 1px;
     padding: 0 8px;
+    box-sizing: border-box;
     background-color: transparent;
     border: none;
     resize: none;
@@ -156,13 +160,13 @@
     text-align: center;
     margin: 1px;
     cursor: pointer;
-    background-color: var(--background-3);
+    background-color: var(--background-4);
     color: var(--foreground-3);
     text-transform: none;
 }
 
 .friendChip:hover {
-    background-color: var(--background-2);
+    opacity: 0.9;
 }
 
 .friendChip svg {
@@ -172,6 +176,7 @@
 .scroller {
     overflow: hidden scroll;
     padding-right: 0px;
+    padding-bottom: 14px;
     max-height: 190px;
     position: relative;
     flex: 1 1 auto;

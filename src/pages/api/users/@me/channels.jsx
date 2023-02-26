@@ -6,6 +6,18 @@ import cleanUser from "../../../../utils/cleanUser";
 
 connectDB();
 
+const defaultChannelAvatars = [
+    "/assets/default-channel-avatars/blue.png",
+    "/assets/default-channel-avatars/green.png",
+    "/assets/default-channel-avatars/orange.png",
+    "/assets/default-channel-avatars/blue-green.png",
+    "/assets/default-channel-avatars/purple.png",
+    "/assets/default-channel-avatars/red.png",
+    "/assets/default-channel-avatars/yellow.png",
+];
+
+const index = Math.floor(Math.random() * defaultChannelAvatars.length);
+
 export default async (req, res) => {
     const userString = req.headers.user;
     const userJson = JSON.parse(userString);
@@ -110,6 +122,7 @@ export default async (req, res) => {
             const channel = await Channel.create({
                 type: recipients.length === 1 ? 0 : 1,
                 recipients: [...recipients, user._id],
+                avatar: defaultChannelAvatars[index],
             });
 
             user.channels.unshift(channel._id);

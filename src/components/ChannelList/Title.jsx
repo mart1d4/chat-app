@@ -14,11 +14,13 @@ const Title = () => {
     const [filteredList, setFilteredList] = useState([]);
     const [chosen, setChosen] = useState([]);
     const [error, setError] = useState("");
+    const [scrollHeight, setScrollHeight] = useState(0);
 
     const { friends, setChannels } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-
+    
+    const showButton = useRef();
     const inputRef = useRef();
 
     useEffect(() => {
@@ -42,20 +44,32 @@ const Title = () => {
             }
         };
 
-        const handleOutsideClick = (e) => {
-            if (e.target.closest(`.${styles.popup}`)) {
-                return;
-            }
-        };
-
         window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("click", handleOutsideClick);
 
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("click", handleOutsideClick);
         };
     }, []);
+
+    useEffect(() => {
+        if (!showButton.current || !inputRef.current) return;
+
+        const handleClickOutside = (e) => {
+            if (showButton.current.contains(e.target) || inputRef.current.contains(e.target)) {
+                return;
+            }
+
+            setShow(false);
+            setChosen([]);
+            setSearch("");
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showButton, inputRef]);
 
     useEffect(() => {
         if (show) {
@@ -87,6 +101,7 @@ const Title = () => {
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <div
+                ref={showButton}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
                 onClick={() => {
@@ -96,6 +111,7 @@ const Title = () => {
                         setSearch("");
                     } else {
                         setShow(true);
+                        setHover(false);
                     }
                 }}
             >
@@ -115,7 +131,14 @@ const Title = () => {
                         onMouseEnter={() => setHover(false)}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className={styles.header}>
+                        <div
+                            className={styles.header}
+                            style={
+                                scrollHeight > 40 ? {
+                                    boxShadow: "0 1px 0 0 hsla(220, 8.1%, 7.3%, 0.3), 0 1px 2px 0 hsla(220, 8.1%, 7.3%, 0.3)",
+                                } : {}
+                            }
+                        >
                             <h1>Select Friends</h1>
                             <div>
                                 {chosen?.length < 9 ?
@@ -149,8 +172,18 @@ const Title = () => {
                                                     "Find or start a conversation"
                                                     : "Type the username of a friend"
                                             }
-                                            value={search}
+                                            value={search || ""}
+                                            spellCheck="false"
+                                            role="combobox"
+                                            aria-autocomplete="list"
+                                            aria-expanded="true"
+                                            aria-haspopup="true"
                                             onChange={(e) => setSearch(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Backspace" && !search) {
+                                                    setChosen(chosen?.slice(0, -1));
+                                                }
+                                            }}
                                         />
 
                                         <div>
@@ -160,7 +193,10 @@ const Title = () => {
                             </div>
                         </div>
 
-                        <div className={styles.scroller}>
+                        <div
+                            className={styles.scroller}
+                            onScroll={(e) => setScrollHeight(e.target.scrollTop)}
+                        >
                             {filteredList?.map((friend) => (
                                 <div
                                     key={uuidv4()}

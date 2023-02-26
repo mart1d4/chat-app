@@ -21,8 +21,12 @@ const ChannelListItem = ({ channel, special }) => {
             setUser(channel?.recipients.filter(
                 (recipient) => recipient._id.toString() !== auth?.user?._id.toString()
             )[0]);
-        } else {
-            setRecipients(channel?.recipients);
+        } else if (channel?.type === 1) {
+            const recipientsWithoutMe = channel?.recipients.filter(
+                (recipient) => recipient._id.toString() !== auth?.user?._id.toString()
+            );
+
+            setRecipients(recipientsWithoutMe);
         }
     }, [channel]);
 
@@ -239,7 +243,8 @@ const ChannelListItem = ({ channel, special }) => {
                                     alt="Avatar"
                                 />
                             )}
-                            <AvatarStatus
+                            {user?.avatar && (
+                                <AvatarStatus
                                 status={(isFriend() || receivedRequest())
                                     ? user?.status : "Offline"}
                                 background={
@@ -251,17 +256,38 @@ const ChannelListItem = ({ channel, special }) => {
                                 }
                                 tooltip={true}
                             />
+                            )}
+
+                            {channel?.avatar && (
+                                <Image
+                                    src={channel.avatar}
+                                    width={32}
+                                    height={32}
+                                    alt="Avatar"
+                                />
+                            )}
                         </div>
                         <div className={styles.layoutContent}>
                             <div className={styles.contentName}>
                                 <div className={styles.nameWrapper}>
-                                    {user?.username}
+                                    {recipients?.length > 0 ? (
+                                        recipients?.map((recipient) =>
+                                            recipient.username + ", "
+                                        )
+                                    ) : user?.username}
                                 </div>
                             </div>
-                            {(user?.customStatus !== null && (isFriend() || receivedRequest()))
-                                && (<div className={styles.contentStatus}>
+                            {(user?.customStatus !== null && (isFriend() || receivedRequest())) && (
+                                <div className={styles.contentStatus}>
                                     {user?.customStatus}
-                                </div>)}
+                                </div>
+                            )}
+                            
+                            {recipients?.length > 0 && (
+                                <div className={styles.contentStatus}>
+                                    {recipients?.length} Members
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
