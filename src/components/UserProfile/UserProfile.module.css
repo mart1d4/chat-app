@@ -199,6 +199,10 @@
     overflow: hidden;
 }
 
+.contentNote > textarea::placeholder {
+    user-select: none;
+}
+
 .contentNote > textarea:focus {
     outline: none;
 }

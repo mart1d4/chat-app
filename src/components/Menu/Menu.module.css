@@ -12,6 +12,7 @@
 }
 
 .menuContainer > div {
+    max-width: 320px;
     padding: 6px 8px;
     position: relative;
     min-height: 0;

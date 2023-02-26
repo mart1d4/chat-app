@@ -1,11 +1,12 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon, AvatarStatus } from "../";
-import { useState } from "react";
+import ToolbarIcon from "./ToolbarIcon";
+import { useState, useMemo } from "react";
 import useUserData from "../../hooks/useUserData";
 import useComponents from "../../hooks/useComponents";
 import { v4 as uuidv4 } from "uuid";
 
-const AppHeader = ({ content, setContent, showUsers, setShowUsers, friend }) => {
+const AppHeader = ({ content, setContent, friend, showUsers, setShowUsers }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const [recipients, setRecipients] = useState([]);
 
@@ -33,20 +34,14 @@ const AppHeader = ({ content, setContent, showUsers, setShowUsers, friend }) => 
             icon: friend ? "userProfile" : "memberList",
             func: () => {
                 localStorage.setItem("show-users", !showUsers);
-                setShowUsers((prev) => !prev);
+                setShowUsers(!showUsers);
             },
         },
     ] : [
         { name: "New Group DM", icon: "newDM", func: () => { } },
     ];
 
-    if (
-        !friend &&
-        !content &&
-        !recipients.length
-    ) return null;
-
-    return (
+    return useMemo(() => (
         <div className={styles.header}>
             <div className={styles.nav}>
                 {content ? (
@@ -114,23 +109,11 @@ const AppHeader = ({ content, setContent, showUsers, setShowUsers, friend }) => 
             </div>
 
             <div className={styles.toolbar}>
-                {toolbarItems.map((item, index) => (
-                    <div
+                {toolbarItems.map((item) => (
+                    <ToolbarIcon
                         key={uuidv4()}
-                        className={styles.toolbarIcon}
-                        onMouseEnter={() => setShowTooltip(index)}
-                        onMouseLeave={() => setShowTooltip(null)}
-                        onClick={() => item.func()}
-                    >
-                        <Icon name={item.icon} />
-
-                        <Tooltip
-                            show={showTooltip === index}
-                            pos="bottom"
-                        >
-                            {item.name}
-                        </Tooltip>
-                    </div>
+                        item={item}
+                    />
                 ))}
 
                 {content ? (
@@ -167,13 +150,14 @@ const AppHeader = ({ content, setContent, showUsers, setShowUsers, friend }) => 
                     <Tooltip
                         show={showTooltip === "inbox"}
                         pos="bottom"
+                        dist={5}
                     >
                         Inbox
                     </Tooltip>
                 </div>
             </div>
         </div>
-    );
+    ), [content, setContent, friend, showUsers, showTooltip]);
 };
 
 export default AppHeader;

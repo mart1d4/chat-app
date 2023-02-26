@@ -45,3 +45,239 @@
 .title svg:hover polygon {
     fill: var(--foreground-2);
 }
+
+.popup {
+    position: fixed;
+    width: 440px;
+    min-height: 200px;
+    max-height: 720px;
+    background-color: var(--background-4);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--elevation-low), var(--elevation-high-dark);
+    margin-top: 6px;
+    z-index: 100;
+    cursor: default;
+}
+
+.header {
+    flex: 0 0 auto;
+    border-radius: 4px 4px 0 0;
+    word-wrap: break-word;
+    position: relative;
+    padding: 16px;
+    overflow-x: hidden;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    display: flex;
+}
+
+.header > h1 {
+    color: var(--foreground-1);
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    text-transform: none;
+}
+
+.header > div:nth-child(2) {
+    color: var(--foreground-3);
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+    text-transform: none;
+}
+
+.input {
+    flex: 1 1 auto;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.input > div {
+    display: flex;
+    flex: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--background-1);
+}
+
+.input > div > div {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    position: relative;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    padding: 1px;
+    display: flex;
+}
+
+.input > div > div::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.input input {
+    font-size: 16px;
+    line-height: 32px;
+    height: 30px;
+    margin: 1px;
+    padding: 0 8px;
+    background-color: transparent;
+    border: none;
+    resize: none;
+    flex: 1;
+    color: var(--foreground-3);
+}
+
+.input input:focus {
+    outline: none;
+}
+
+.input input::placeholder {
+    font-weight: 400;
+    color: var(--foreground-4);
+}
+
+.friendChip {
+    font-size: 16px;
+    line-height: 32px;
+    height: 30px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    border-radius: 2px;
+    text-align: center;
+    margin: 1px;
+    cursor: pointer;
+    background-color: var(--background-3);
+    color: var(--foreground-3);
+    text-transform: none;
+}
+
+.friendChip:hover {
+    background-color: var(--background-2);
+}
+
+.friendChip svg {
+    margin-left: 4px;
+}
+
+.scroller {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    max-height: 190px;
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroller::-webkit-scrollbar-track {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller::-webkit-scrollbar-thumb {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.friend {
+    cursor: pointer;
+    padding: 1px 0;
+    margin: 0 4px 0 12px;
+}
+
+.friend > div {
+    display: flex;
+    border-radius: 4px;
+    height: 40px;
+    padding: 6px 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.friend:hover > div {
+    background-color: var(--background-5);
+}
+
+.friendAvatar {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.friendAvatar > img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.friendUsername {
+    flex: 1 1 auto;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+    text-transform: none;
+}
+
+.friendCheck {
+    height: 100%;
+    aspect-ratio: 1;
+    padding: 4px;
+}
+
+.friendCheck > div {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--foreground-5);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.friendCheck svg {
+    margin: 0;
+}
+
+.separator {
+    height: 1px;
+    margin: 0 10px;
+    box-shadow: 0 -1px 0 hsla(0, 0%, 100%, 0.04);
+}
+
+.footer {
+    flex: 1 1 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.footer button {
+    height: 38px;
+}

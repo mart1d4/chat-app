@@ -55,6 +55,7 @@ const ChannelListItem = ({ channel, special }) => {
         } else if (response.data.success) {
             const newChannels = channels.filter((chan) => chan._id.toString() !== channel._id.toString());
             setChannels(newChannels);
+            setMenu(null);
             if (currentPath === `/channels/${channel._id}`) {
                 router.push("/channels/@me");
             }
@@ -257,7 +258,7 @@ const ChannelListItem = ({ channel, special }) => {
                                     {user?.username}
                                 </div>
                             </div>
-                            {(user?.customStatus !== null && isFriend())
+                            {(user?.customStatus !== null && (isFriend() || receivedRequest()))
                                 && (<div className={styles.contentStatus}>
                                     {user?.customStatus}
                                 </div>)}

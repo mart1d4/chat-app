@@ -1,0 +1,143 @@
+.aside {
+    position: relative;
+    width: 340px;
+    overflow: hidden scroll;
+    padding-right: 0px;
+    height: 100%;
+    background-color: var(--background-2);
+}
+
+.aside::-webkit-scrollbar {
+    width: 0px;
+}
+
+.asideHeader {
+    min-width: 340px;
+    min-height: 120px;
+}
+
+.userAvatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 7px solid var(--background-2);
+    background-color: var(--background-2);
+    position: absolute;
+    top: 65px;
+    left: 15px;
+}
+
+.userAvatar > img {
+    width: 102%;
+    height: 102%;
+    transform: translate(-1%, -1%);
+    border-radius: 50%;
+    user-select: none;
+}
+
+.asideContent {
+    padding: 0 12px 12px;
+    margin: 16px;
+    margin-top: 52px;
+    min-width: 308px;
+    position: relative;
+    background-color: var(--background-dark);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.asideContent > div {
+    margin-top: 12px;
+}
+
+.asideContent h2 {
+    font-weight: 700;
+    color: var(--foreground-1);
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.asideContent .username {
+    user-select: text;
+    white-space: pre-wrap;
+    overflow: hidden;
+    word-break: break-all;
+    line-height: 24px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.contentUserDate {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+}
+
+.contentUserDate > div {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-3);
+}
+
+.contentNote {
+    margin: -4px;
+}
+
+.contentNote > textarea {
+    border-radius: 3px;
+    padding: 4px;
+    font-size: 14px;
+    line-height: 22px;
+    background-color: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--foreground-2);
+    min-height: 44px;
+    max-height: 88px;
+    resize: none;
+    width: 100%;
+    overflow: hidden scroll;
+}
+
+.contentNote > textarea::-webkit-scrollbar {
+    width: 10px;
+}
+
+.contentNote > textarea::-webkit-scrollbar-track {
+    border: 4px var(--background-dark) solid;
+    background-color: var(--background-dark);
+}
+
+.contentNote > textarea::-webkit-scrollbar-thumb {
+    border: 4px var(--background-dark) solid;
+    background-color: var(--background-5);
+}
+
+.contentNote > textarea:focus {
+    outline: none;
+}
+
+.contentNote > textarea::placeholder {
+    user-select: none;
+}
+
+.asideDivider {
+    height: 1px;
+    background-color: var(--border-light);
+}
+
+.customStatus {
+    line-height: 18px;
+    margin-top: 12px;
+    user-select: text;
+    color: var(--foreground-3);
+    font-size: 14px;
+    font-weight: 400;
+}

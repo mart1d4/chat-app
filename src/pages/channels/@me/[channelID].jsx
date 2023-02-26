@@ -5,11 +5,11 @@ import {
     NestedLayout,
     Message,
     TextArea,
-    AvatarStatus,
+    MemberList,
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import useAuth from "../../../hooks/useAuth";
@@ -25,7 +25,6 @@ const Channels = () => {
     });
     const [messages, setMessages] = useState([]);
     const [error, setError] = useState(null);
-    const [note, setNote] = useState("");
     const [showUsers, setShowUsers] = useState(
         localStorage.getItem("show-users") === "true"
     );
@@ -42,7 +41,6 @@ const Channels = () => {
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const noteRef = useRef(null);
 
     const buttons = {
         add: {
@@ -89,7 +87,8 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
-        if (!channels?.find((channel) => channel._id === router.query.channelID)) {
+        const channel = channels?.find((channel) => channel._id === router.query.channelID);
+        if (!channel) {
             router.push("/channels/@me");
             return;
         }
@@ -99,9 +98,7 @@ const Channels = () => {
             `/channels/@me/${router.query.channelID}`
         );
 
-        const friend = channels.find(
-            (channel) => channel._id === router.query.channelID
-        )?.recipients?.find(
+        const friend = channel.recipients.find(
             (recipient) => recipient._id !== auth.user._id
         );
 
@@ -261,26 +258,32 @@ const Channels = () => {
         return date1.getDate() !== date2.getDate();
     };
 
-    const sendMessage = (message) => {
-        console.log(message);
-    };
+    const MemberListComponent = useMemo(() => (
+        <MemberList
+            showMemberList={showUsers}
+            friend={friend}
+        />
+    ), [friend, showUsers]);
 
-    return (
+    const AppHeaderComponent = useMemo(() => (
+        <AppHeader
+            friend={isFriend() ? friend : {
+                ...friend,
+                status: "Offline"
+            }}
+            showUsers={showUsers}
+            setShowUsers={setShowUsers}
+        />
+    ), [friend, showUsers]);
+
+    return useMemo(() => (
         <>
             <Head>
                 <title>Unthrust | @{friend?.username || ""}</title>
             </Head>
 
             <div className={styles.container}>
-                <AppHeader
-                    friend={
-                        isFriend() ? friend : {
-                            ...friend,
-                            status: "Offline",
-                        }}
-                    showUsers={showUsers}
-                    setShowUsers={setShowUsers}
-                />
+                {AppHeaderComponent}
 
                 <div className={styles.content}>
                     <main className={styles.main}>
@@ -368,99 +371,15 @@ const Channels = () => {
 
                         <TextArea
                             friend={friend}
-                            sendMessage={sendMessage}
                             userBlocked={friendStatus[3] === "unblock"}
                         />
                     </main>
 
-                    {showUsers && (
-                        <aside className={styles.aside}>
-                            <div
-                                className={styles.asideHeader}
-                                style={{
-                                    backgroundColor: friend?.accentColor
-                                        || "var(--background-dark)"
-                                }}
-                            >
-                                <div className={styles.userAvatar}>
-                                    {friend?.avatar && (
-                                        <Image
-                                            src={friend.avatar}
-                                            alt="User Avatar"
-                                            width={80}
-                                            height={80}
-                                        />
-                                    )}
-
-                                    <AvatarStatus
-                                        status={isFriend() ? friend?.status : "Offline"}
-                                        background="var(--background-2)"
-                                        mid
-                                        tooltip
-                                        tooltipDist={2}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.asideContent}>
-                                <div className={styles.username}>
-                                    {friend?.username || " "}
-                                </div>
-                                {(friend?.customStatus && isFriend()) && (
-                                    <div className={styles.customStatus}>
-                                        {friend?.customStatus}
-                                    </div>
-                                )}
-
-                                <div className={styles.asideDivider} />
-
-                                {(friend?.description && isFriend()) && (
-                                    <div>
-                                        <h2>About Me</h2>
-                                        <div className={styles.contentUserDate}>
-                                            <div>
-                                                {friend?.description}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div>
-                                    <h2>Unthrust Member Since</h2>
-                                    <div className={styles.contentUserDate}>
-                                        <div>
-                                            {friend ? format(
-                                                new Date(friend?.createdAt),
-                                                "MMM dd, yyyy"
-                                            ) : " "}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={styles.asideDivider} />
-
-                                <div>
-                                    <h2>Note</h2>
-                                    <div className={styles.contentNote}>
-                                        <textarea
-                                            ref={noteRef}
-                                            style={{ height: noteRef?.current?.scrollHeight || 44 }}
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            placeholder="Click to add a note"
-                                            maxLength={256}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div></div>
-                        </aside>
-                    )}
+                    {MemberListComponent}
                 </div>
             </div>
         </>
-    );
+    ), [requests, friends, blocked, friendStatus]);
 };
 
 Channels.getLayout = function getLayout(page) {

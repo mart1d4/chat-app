@@ -26,6 +26,7 @@ import UserProfile from './UserProfile/UserProfile';
 import FilePreview from './TextArea/FilePreview';
 import Title from './ChannelList/Title';
 import Modal from './Modal/Modal';
+import MemberList from './MemberList/MemberList';
 
 export {
     AppHeader,
@@ -56,4 +57,5 @@ export {
     FilePreview,
     Title,
     Modal,
+    MemberList,
 };

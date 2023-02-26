@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
-const TextArea = ({ friend, sendMessage, userBlocked }) => {
+const TextArea = ({ friend, userBlocked }) => {
     const [message, setMessage] = useState("");
     const [files, setFiles] = useState([]);
     const [friendTyping, setFriendTyping] = useState(false);
@@ -85,7 +85,7 @@ const TextArea = ({ friend, sendMessage, userBlocked }) => {
                             moveCursorToEnd();
                         } else if (e.key === "Enter") {
                             e.preventDefault();
-                            sendMessage(message);
+                            console.log("Send message: ", message);
                             setMessage("");
                             e.target.innerText = "";
                         }
