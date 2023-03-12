@@ -22,7 +22,8 @@
 .menuItem,
 .menuItemDanger,
 .menuItemActive,
-.menuItemDangerActive {
+.menuItemDangerActive,
+.menuItemDisabled {
     color: var(--foreground-3);
     display: flex;
     align-items: center;
@@ -36,6 +37,11 @@
     line-height: 18px;
     cursor: pointer;
     user-select: none;
+}
+
+.menuItemDisabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 .menuItemDanger {
@@ -91,6 +97,15 @@
     height: 18px;
     width: 18px;
     margin-left: 8px;
+}
+
+.menuItem > .text,
+.menuItemActive > .text,
+.menuItemDanger > .text,
+.menuItemDangerActive > .text {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    max-height: 18px;
 }
 
 .divider {

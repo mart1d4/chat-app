@@ -1,39 +1,21 @@
 import styles from './MessageMenu.module.css';
-import { Tooltip, Icon, Menu } from '../';
-import { useEffect, useState } from 'react';
+import { Tooltip, Icon } from '../';
+import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import useAuth from '../../hooks/useAuth';
+import useComponents from '../../hooks/useComponents';
 
-const MessageMenu = ({ message, start, functions }) => {
+const MessageMenu = ({ message, start, functions, menuItems }) => {
     const [showTooltip, setShowTooltip] = useState(null);
-    const [showMenu, setShowMenu] = useState(false);
     const [menuType, setMenuType] = useState(null);
 
-    const senderItems = [
-        { name: 'Edit Message', icon: "edit", func: functions.editMessage },
-        { name: 'Pin Message', icon: "pin", func: functions.pinMessage },
-        { name: 'Reply', icon: "reply", func: functions.replyToMessage },
-        { name: 'Mark Unread', icon: "mark", func: functions.markUnread },
-        { name: 'Copy Message Link', icon: "link", func: functions.copyMessageLink },
-        { name: 'Delete Message', icon: "delete", func: functions.deleteMessage, danger: true },
-        { name: 'Divider' },
-        { name: 'Copy Message ID', icon: "id", func: functions.copyMessageID },
-    ];
-
-    const receiverItems = [
-        { name: 'Pin Message', icon: "pin", func: functions.pinMessage, },
-        { name: 'Reply', icon: "reply", func: functions.replyToMessage, },
-        { name: 'Mark Unread', icon: "mark", func: functions.markUnread, },
-        { name: 'Copy Message Link', icon: "link", func: functions.copyMessageLink, },
-        { name: 'Divider', },
-        { name: 'Copy Message ID', icon: "id", func: functions.copyMessageID, },
-    ];
-
     const { auth } = useAuth();
+    const { menu, setMenu } = useComponents();
+    const menuButtonRef = useRef(null);
 
     useEffect(() => {
         if (
-            message?.sender?._id.toString()
+            message?.author?._id.toString()
             === auth?.user?._id.toString()
         ) {
             setMenuType('sender');
@@ -56,6 +38,7 @@ const MessageMenu = ({ message, start, functions }) => {
                     >
                         <Tooltip
                             show={showTooltip === 1}
+                            dist={5}
                         >
                             Add Reaction
                         </Tooltip>
@@ -67,9 +50,11 @@ const MessageMenu = ({ message, start, functions }) => {
                             role="button"
                             onMouseEnter={() => setShowTooltip(2)}
                             onMouseLeave={() => setShowTooltip(null)}
+                            onClick={() => functions.editMessage()}
                         >
                             <Tooltip
                                 show={showTooltip === 2}
+                                dist={5}
                             >
                                 Edit
                             </Tooltip>
@@ -80,9 +65,11 @@ const MessageMenu = ({ message, start, functions }) => {
                             role="button"
                             onMouseEnter={() => setShowTooltip(2)}
                             onMouseLeave={() => setShowTooltip(null)}
+                            onClick={() => functions.replyToMessage()}
                         >
                             <Tooltip
                                 show={showTooltip === 2}
+                                dist={5}
                             >
                                 Reply
                             </Tooltip>
@@ -91,26 +78,27 @@ const MessageMenu = ({ message, start, functions }) => {
                     )}
 
                     <div
+                        ref={menuButtonRef}
                         role="button"
                         onMouseEnter={() => setShowTooltip(3)}
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={(e) => {
-                            setShowMenu({ event: e });
+                            e.stopPropagation();
+                            if (menu?.event?.target?.contains(menuButtonRef.current)) {
+                                setMenu(null);
+                            } else {
+                                setMenu({
+                                    event: e,
+                                    items: menuItems,
+                                    message: message?._id,
+                                });
+                                setShowTooltip(null);
+                            }
                         }}
                     >
-                        {showMenu && (
-                            <Menu
-                                items={menuType === 'sender' ? senderItems : receiverItems}
-                                position={{
-                                    right: "120%",
-                                    top: 0,
-                                }}
-                                setMenu={{ func: () => setShowMenu(false) }}
-                            />
-                        )}
-
                         <Tooltip
                             show={showTooltip === 3}
+                            dist={5}
                         >
                             More
                         </Tooltip>

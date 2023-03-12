@@ -19,7 +19,7 @@ import AvatarStatus from './AvatarStatus/AvatarStatus';
 import Menu from './Menu/Menu';
 import Settings from './Settings/Settings';
 import UserListItem from './UserLists/UserListItem';
-import ChannelListItem from './ChannelList/ChannelListItem';
+import UserListItemSmall from './ChannelList/UserListItemSmall';
 import UserSection from './ChannelList/UserSection';
 import EmojiPicker from './TextArea/EmojiPicker';
 import UserProfile from './UserProfile/UserProfile';
@@ -50,7 +50,7 @@ export {
     Menu,
     Settings,
     UserListItem,
-    ChannelListItem,
+    UserListItemSmall,
     UserSection,
     EmojiPicker,
     UserProfile,

@@ -110,6 +110,7 @@ const Register = () => {
                 <img
                     src="/assets/auth-background.svg"
                     alt=""
+                    draggable="false"
                 />
 
                 <AnimatePresence>

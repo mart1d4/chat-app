@@ -59,8 +59,7 @@ const UserSection = () => {
                         )}
                         <AvatarStatus
                             status={auth?.user?.status}
-                            background={hover === "user"
-                                ? "var(--background-hover-1)" : "var(--background-2)"}
+                            background={"var(--background-2)"}
                         />
                     </div>
                     <div className={styles.contentWrapper}>

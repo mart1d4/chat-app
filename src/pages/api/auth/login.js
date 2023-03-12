@@ -33,7 +33,7 @@ export default async (req, res) => {
             )
                 .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
-                .setExpirationTime("1h")
+                .setExpirationTime("1d")
                 .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
             const refreshToken = await new SignJWT(
@@ -41,7 +41,7 @@ export default async (req, res) => {
             )
                 .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
-                .setExpirationTime("1d")
+                .setExpirationTime("10d")
                 .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
 
             user.refreshToken = refreshToken;
@@ -53,7 +53,7 @@ export default async (req, res) => {
                     httpOnly: true,
                     secure: true,
                     sameSite: "None",
-                    maxAge: 1000 * 60 * 60 * 24,
+                    maxAge: 1000 * 120,
                     path: "/",
                 })
             );

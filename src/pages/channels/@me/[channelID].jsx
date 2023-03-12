@@ -9,15 +9,18 @@ import {
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import useAuth from "../../../hooks/useAuth";
 import Image from "next/image";
 import { parseISO, format } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
 
 const Channels = () => {
     const [friend, setFriend] = useState(null);
+    const [recipients, setRecipients] = useState([]);
+    const [channel, setChannel] = useState(null);
     const [friendStatus, setFriendStatus] = useState({
         1: null,
         2: null,
@@ -28,6 +31,8 @@ const Channels = () => {
     const [showUsers, setShowUsers] = useState(
         localStorage.getItem("show-users") === "true"
     );
+    const [edit, setEdit] = useState(null);
+    const [reply, setReply] = useState(null);
 
     const { auth } = useAuth();
     const {
@@ -87,6 +92,18 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
+        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
+
+        if (localChannel?.edit) {
+            setEdit(localChannel.edit);
+        }
+
+        if (localChannel?.reply) {
+            setReply(localChannel.reply);
+        }
+    }, [channel]);
+
+    useEffect(() => {
         const channel = channels?.find((channel) => channel._id === router.query.channelID);
         if (!channel) {
             router.push("/channels/@me");
@@ -98,16 +115,16 @@ const Channels = () => {
             `/channels/@me/${router.query.channelID}`
         );
 
-        const friend = channel.recipients.find(
-            (recipient) => recipient._id !== auth.user._id
-        );
-
-        if (!friend) {
-            router.push("/channels/@me");
-            return;
-        } else {
-            setFriend(friend);
+        if (channel.type === 0) {
+            setFriend(channel?.recipients?.find(
+                (recipient) => recipient._id !== auth?.user._id
+            ));
+        } else if (channel.type === 1) {
+            setRecipients(channel?.recipients?.filter(
+                (recipient) => recipient._id !== auth?.user._id
+            ));
         }
+        setChannel(channel);
     }, [router.query.channelID, friends, requests, blocked, channels]);
 
     useEffect(() => {
@@ -151,6 +168,26 @@ const Channels = () => {
             }));
         }
     }, [friend, friends, requests, blocked]);
+
+    useEffect(() => {
+        if (!channel) return;
+
+        setMessages([]);
+
+        const getMessages = async () => {
+            const response = await axiosPrivate.get(
+                `/channels/${channel._id}/messages`,
+            );
+
+            if (!response.data.success) {
+                setError(response.data.message);
+            } else {
+                setMessages(response.data.messages);
+            }
+        };
+
+        getMessages();
+    }, [channel]);
 
     const isFriend = () => {
         return (friends?.find((user) => user?._id.toString() === friend?._id.toString()));
@@ -240,7 +277,7 @@ const Channels = () => {
 
     const isStart = (index) => {
         if (index === 0) return true;
-        if ((messages[index - 1].sender._id !== messages[index].sender._id)
+        if ((messages[index - 1].author._id !== messages[index].author._id)
             || isMoreThan5Minutes(
                 messages[index - 1].createdAt,
                 messages[index].createdAt
@@ -258,28 +295,46 @@ const Channels = () => {
         return date1.getDate() !== date2.getDate();
     };
 
-    const MemberListComponent = useMemo(() => (
-        <MemberList
-            showMemberList={showUsers}
-            friend={friend}
-        />
-    ), [friend, showUsers]);
+    const MemberListComponent = useMemo(() => {
+        if (!channel) return null;
 
-    const AppHeaderComponent = useMemo(() => (
-        <AppHeader
-            friend={isFriend() ? friend : {
-                ...friend,
-                status: "Offline"
-            }}
-            showUsers={showUsers}
-            setShowUsers={setShowUsers}
-        />
-    ), [friend, showUsers]);
+        return (
+            <MemberList
+                showMemberList={showUsers}
+                friend={channel?.type === 0 ? friend : null}
+                recipients={channel?.type === 1 ? [...recipients, auth.user] : null}
+            />
+        );
+    }, [channel, showUsers]);
+
+    const AppHeaderComponent = useMemo(() => {
+        if (friend) {
+            return (
+                <AppHeader
+                    friend={isFriend() ? friend : {
+                        ...friend,
+                        status: "Offline"
+                    }}
+                    showUsers={showUsers}
+                    setShowUsers={setShowUsers}
+                />
+            )
+        } else {
+            return (
+                <AppHeader
+                    recipients={recipients}
+                    channel={channel}
+                    showUsers={showUsers}
+                    setShowUsers={setShowUsers}
+                />
+            )
+        }
+    }, [friend, recipients, showUsers]);
 
     return useMemo(() => (
         <>
             <Head>
-                <title>Unthrust | @{friend?.username || ""}</title>
+                <title>Unthrust | {friend ? friend.username : channel?.name}</title>
             </Head>
 
             <div className={styles.container}>
@@ -296,52 +351,72 @@ const Channels = () => {
                                     <ol className={styles.scrollContentInner}>
                                         <div className={styles.firstTimeMessageContainer}>
                                             <div className={styles.imageWrapper}>
-                                                {friend?.avatar && (
+                                                {friend ? (
                                                     <Image
-                                                        src={friend.avatar}
+                                                        src={friend?.avatar || ""}
                                                         alt="Avatar"
                                                         width={80}
                                                         height={80}
                                                     />
-                                                )}
+                                                ) : channel ? (
+                                                    <Image
+                                                        src={channel?.icon || ""}
+                                                        alt="Icon"
+                                                        width={80}
+                                                        height={80}
+                                                    />
+                                                ) : null}
                                             </div>
                                             <h3 className={styles.friendUsername}>
-                                                {friend?.username}
+                                                {friend ? friend?.username : channel?.name}
                                             </h3>
                                             <div className={styles.descriptionContainer}>
-                                                This is the beginning of your direct message history with <strong>@{friend?.username}</strong>.
-                                                <div className={styles.descriptionActions}>
-                                                    {friendStatus[3] === "block" && (
-                                                        <button
-                                                            className={buttons[friendStatus[1]]?.class}
-                                                            onClick={() => buttons[friendStatus[1]]?.func()}
-                                                        >
-                                                            {buttons[friendStatus[1]]?.text}
-                                                        </button>
-                                                    )}
+                                                {friend ? (
+                                                    <>
+                                                        This is the beginning of your direct message history with
+                                                        <strong> @{friend?.username}</strong>.
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Welcome to the beginning of the
+                                                        <strong> {channel?.name}</strong> group.
+                                                    </>
+                                                )}
 
-                                                    {friendStatus[2] && (
-                                                        <button
-                                                            className={buttons[friendStatus[2]].class}
-                                                            onClick={() => buttons[friendStatus[2]].func()}
-                                                        >
-                                                            {buttons[friendStatus[2]].text}
-                                                        </button>
-                                                    )}
+                                                {friend && (
+                                                    <div className={styles.descriptionActions}>
+                                                        {friendStatus[3] === "block" && (
+                                                            <button
+                                                                className={buttons[friendStatus[1]]?.class}
+                                                                onClick={() => buttons[friendStatus[1]]?.func()}
+                                                            >
+                                                                {buttons[friendStatus[1]]?.text}
+                                                            </button>
+                                                        )}
 
-                                                    <button
-                                                        className={buttons[friendStatus[3]]?.class}
-                                                        onClick={() => buttons[friendStatus[3]]?.func()}
-                                                    >
-                                                        {buttons[friendStatus[3]]?.text}
-                                                    </button>
-                                                </div>
+                                                        {friendStatus[2] && (
+                                                            <button
+                                                                className={buttons[friendStatus[2]].class}
+                                                                onClick={() => buttons[friendStatus[2]].func()}
+                                                            >
+                                                                {buttons[friendStatus[2]].text}
+                                                            </button>
+                                                        )}
+
+                                                        <button
+                                                            className={buttons[friendStatus[3]]?.class}
+                                                            onClick={() => buttons[friendStatus[3]]?.func()}
+                                                        >
+                                                            {buttons[friendStatus[3]]?.text}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {messages.map((message, index) => {
-                                            if (isNewDay(index)) {
-                                                return (
+                                        {messages.map((message, index) => (
+                                            <React.Fragment key={uuidv4()}>
+                                                {isNewDay(index) && (
                                                     <div className={styles.messageDivider}>
                                                         <span>
                                                             {format(
@@ -350,18 +425,19 @@ const Channels = () => {
                                                             )}
                                                         </span>
                                                     </div>
-                                                );
-                                            } else {
-                                                return (
-                                                    <Message
-                                                        message={message}
-                                                        start={isStart(index)}
-                                                        setError={setError}
-                                                        setMessages={setMessages}
-                                                    />
-                                                );
-                                            }
-                                        })}
+                                                )}
+
+                                                <Message
+                                                    message={message}
+                                                    setMessages={setMessages}
+                                                    start={isStart(index)}
+                                                    edit={edit}
+                                                    setEdit={setEdit}
+                                                    reply={reply}
+                                                    setReply={setReply}
+                                                />
+                                            </React.Fragment>
+                                        ))}
 
                                         <div className={styles.scrollerSpacer} />
                                     </ol>
@@ -372,6 +448,11 @@ const Channels = () => {
                         <TextArea
                             friend={friend}
                             userBlocked={friendStatus[3] === "unblock"}
+                            channel={channel}
+                            messages={messages}
+                            setMessages={setMessages}
+                            reply={reply}
+                            setReply={setReply}
                         />
                     </main>
 
@@ -379,7 +460,7 @@ const Channels = () => {
                 </div>
             </div>
         </>
-    ), [requests, friends, blocked, friendStatus]);
+    ), [requests, friends, blocked, friendStatus, channel, messages, edit, reply, showUsers]);
 };
 
 Channels.getLayout = function getLayout(page) {

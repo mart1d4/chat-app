@@ -10,15 +10,22 @@ const messageSchema = new Schema(
             min: 0,
             max: 8,
         },
-        channel: {
+        channelId: {
             type: Schema.Types.ObjectId,
             ref: "Channel",
             required: true,
         },
         author: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
+            _id: {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+            username: {
+                type: String,
+            },
+            avatar: {
+                type: String,
+            },
         },
         content: {
             type: String,
@@ -38,10 +45,34 @@ const messageSchema = new Schema(
                 ref: "Embed",
             },
         ],
+        messageReference: {
+            type: Schema.Types.ObjectId,
+            ref: "Message",
+        },
         reactions: [
             {
-                type: Schema.Types.ObjectId,
-                ref: "Reaction",
+                count: {
+                    type: Number,
+                    required: true,
+                    default: 0,
+                    min: 0,
+                },
+                emoji: {
+                    _id: {
+                        type: Schema.Types.ObjectId,
+                        ref: "Emoji",
+                    },
+                    name: {
+                        type: String,
+                        required: true,
+                        maxlength: 32,
+                        trim: true,
+                    },
+                },
+                me: {
+                    type: Boolean,
+                    default: false,
+                },
             },
         ],
         mentions: [

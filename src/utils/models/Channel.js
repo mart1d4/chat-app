@@ -52,6 +52,12 @@ const channelSchema = new Schema(
                 ref: "Message",
             },
         ],
+        pinnedMessages: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Message",
+            },
+        ],
     },
     {
         timestamps: true,

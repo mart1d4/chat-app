@@ -141,3 +141,53 @@
     font-size: 14px;
     font-weight: 400;
 }
+
+.memberList {
+    width: 240px;
+    position: relative;
+    display: flex;
+    background-color: var(--background-3);
+}
+
+.memberList > div {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    width: 240px;
+    padding: 0 0 20px;
+    flex: 0 0 auto;
+    height: auto;
+    position: relative;
+    list-style: none;
+}
+
+.memberList > div::-webkit-scrollbar {
+    width: 8px;
+}
+
+.memberList > div::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.memberList > div::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.memberList > div:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.memberList > div > h2 {
+    padding: 24px 8px 0 16px;
+    height: 40px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    color: var(--foreground-4);
+    font-weight: 600;
+}

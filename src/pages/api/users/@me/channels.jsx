@@ -6,7 +6,7 @@ import cleanUser from "../../../../utils/cleanUser";
 
 connectDB();
 
-const defaultChannelAvatars = [
+const defaultChannelIcons = [
     "/assets/default-channel-avatars/blue.png",
     "/assets/default-channel-avatars/green.png",
     "/assets/default-channel-avatars/orange.png",
@@ -16,7 +16,7 @@ const defaultChannelAvatars = [
     "/assets/default-channel-avatars/yellow.png",
 ];
 
-const index = Math.floor(Math.random() * defaultChannelAvatars.length);
+const index = Math.floor(Math.random() * defaultChannelIcons.length);
 
 export default async (req, res) => {
     const userString = req.headers.user;
@@ -104,6 +104,9 @@ export default async (req, res) => {
                         _id: sameChannel._id,
                         recipients: [...recipientsObjects, cleanUser(user)],
                         type: sameChannel.type,
+                        icon: sameChannel.icon || null,
+                        name: sameChannel.name || null,
+                        owner: sameChannel.owner || null,
                     },
                     message: "Channel created",
                 });
@@ -115,14 +118,21 @@ export default async (req, res) => {
                     _id: sameChannel._id,
                     recipients: [...recipientsObjects, cleanUser(user)],
                     type: sameChannel.type,
+                    icon: sameChannel.icon || null,
+                    name: sameChannel.name || null,
+                    owner: sameChannel.owner || null,
                 },
                 message: "Channel already exists",
             });
         } else {
+            const channelName = recipientsObjects.map((recipient) => recipient.username).join(", ");
+
             const channel = await Channel.create({
                 type: recipients.length === 1 ? 0 : 1,
                 recipients: [...recipients, user._id],
-                avatar: defaultChannelAvatars[index],
+                icon: defaultChannelIcons[index],
+                name: recipients.length > 1 ? channelName : null,
+                owner: recipients.length > 1 ? user._id : null,
             });
 
             user.channels.unshift(channel._id);
@@ -137,11 +147,19 @@ export default async (req, res) => {
                     success: true,
                     channel: {
                         _id: channel._id,
-                        recipients: recipientsObjects,
+                        recipients: [...recipientsObjects, cleanUser(user)],
                         type: channel.type,
+                        icon: channel.icon || null,
+                        name: channelName || null,
+                        owner: channel.owner || null,
                     },
                     message: "Channel created",
                 });
+            }
+
+            for (const recipient of recipientsObjects) {
+                recipient.channels.unshift(channel._id);
+                await recipient.save();
             }
 
             recipientsObjects = recipientsObjects.map((recipient) => cleanUser(recipient));
@@ -150,8 +168,11 @@ export default async (req, res) => {
                 success: true,
                 channel: {
                     _id: channel._id,
-                    recipients: recipientsObjects,
+                    recipients: [...recipientsObjects, cleanUser(user)],
                     type: channel.type,
+                    icon: channel.icon || null,
+                    name: channelName || null,
+                    owner: channel.owner || null,
                 },
                 message: "Channel created",
             });

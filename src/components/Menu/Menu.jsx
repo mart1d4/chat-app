@@ -150,11 +150,13 @@ const Menu = () => {
                         ) : (
                             <div
                                 key={uuidv4()}
-                                className={item.danger
-                                    ? active === item.name ? styles.menuItemDangerActive : styles.menuItemDanger
-                                    : active === item.name ? styles.menuItemActive : styles.menuItem
+                                className={item.disabled
+                                    ? styles.menuItemDisabled : item.danger
+                                        ? active === item.name ? styles.menuItemDangerActive : styles.menuItemDanger
+                                        : active === item.name ? styles.menuItemActive : styles.menuItem
                                 }
                                 onClick={() => {
+                                    if (item.disabled) return;
                                     setMenu(null);
                                     item.func();
                                 }}
@@ -171,6 +173,12 @@ const Menu = () => {
                                             size={item.iconSize ?? 16}
                                             fill={active === item.name ? "var(--foreground-1)" : ""}
                                         />
+                                    </div>
+                                )}
+
+                                {item.text && (
+                                    <div className={styles.text}>
+                                        {item.text}
                                     </div>
                                 )}
                             </div>

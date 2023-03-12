@@ -1,14 +1,13 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon, AvatarStatus } from "../";
 import ToolbarIcon from "./ToolbarIcon";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useUserData from "../../hooks/useUserData";
 import useComponents from "../../hooks/useComponents";
 import { v4 as uuidv4 } from "uuid";
 
-const AppHeader = ({ content, setContent, friend, showUsers, setShowUsers }) => {
+const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers, setShowUsers }) => {
     const [showTooltip, setShowTooltip] = useState(false);
-    const [recipients, setRecipients] = useState([]);
 
     const { requests } = useUserData();
     const { setUserProfile } = useComponents();
@@ -75,17 +74,22 @@ const AppHeader = ({ content, setContent, friend, showUsers, setShowUsers }) => 
                         </ul>
                     </>
                 ) : (
-                    friend ? (
-                        <>
-                            <div className={styles.icon}>
-                                <Icon name="at" fill="var(--foreground-4)" />
-                            </div>
-                            <h1
-                                className={styles.titleFriend}
-                                onClick={() => setUserProfile({ user: friend })}
-                            >
-                                {friend.username || ""}
-                            </h1>
+
+                    <>
+                        <div className={styles.icon}>
+                            <Icon name={
+                                friend ? "at" : "memberList"
+                            } fill="var(--foreground-4)" />
+                        </div>
+
+                        <h1
+                            className={styles.titleFriend}
+                            onClick={() => setUserProfile({ user: friend })}
+                        >
+                            {(friend ? friend.username : channel?.name) || ""}
+                        </h1>
+
+                        {friend && (
                             <div
                                 className={styles.status}
                                 onMouseEnter={() => setShowTooltip("status")}
@@ -99,12 +103,8 @@ const AppHeader = ({ content, setContent, friend, showUsers, setShowUsers }) => 
                                     onlyStatus
                                 />
                             </div>
-                        </>
-                    ) : (
-                        <div>
-                            hey
-                        </div>
-                    )
+                        )}
+                    </>
                 )}
             </div>
 
@@ -157,7 +157,7 @@ const AppHeader = ({ content, setContent, friend, showUsers, setShowUsers }) => 
                 </div>
             </div>
         </div>
-    ), [content, setContent, friend, showUsers, showTooltip]);
+    ), [content, setContent, friend, recipients, showUsers, showTooltip]);
 };
 
 export default AppHeader;

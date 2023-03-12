@@ -1,39 +1,14 @@
 import styles from "./ChannelList.module.css";
-import stylesItem from "./ChannelListItem.module.css";
-import { ChannelListItem, UserSection, Title } from "..";
+import { UserListItemSmall, UserSection, Title } from "..";
 import useUserData from "../../hooks/useUserData";
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/router";
+import { useMemo } from "react";
+import useAuth from "../../hooks/useAuth";
 
 const ConversationList = () => {
     const { channels } = useUserData();
-    const router = useRouter();
 
-    const channelListRef = useRef(null);
-
-    useEffect(() => {
-        if (!channelListRef) return;
-
-        const selectedChannel = document.querySelector(`.${stylesItem.liContainerActive}`);
-
-        if (selectedChannel) {
-            const selectedChannelRect = selectedChannel.getBoundingClientRect();
-            const channelListRect = channelListRef.current.getBoundingClientRect();
-
-            if (selectedChannelRect.top < channelListRect.top) {
-                channelListRef.current.scrollTo({
-                    top: selectedChannel.offsetTop,
-                    behavior: "smooth",
-                });
-            } else if (selectedChannelRect.bottom > channelListRect.bottom) {
-                channelListRef.current.scrollTo({
-                    top: selectedChannel.offsetTop - channelListRect.height + selectedChannelRect.height,
-                    behavior: "smooth",
-                });
-            }
-        }
-    }, [router.query, channelListRef?.current]);
+    const { auth } = useAuth();
 
     return useMemo(() => (
         <div className={styles.nav}>
@@ -45,22 +20,24 @@ const ConversationList = () => {
                 </div>
 
                 <div className={styles.scroller}>
-                    <ul
-                        ref={channelListRef}
-                        className={styles.channelList}
-                    >
+                    <ul className={styles.channelList}>
                         <div></div>
 
-                        <ChannelListItem special />
+                        <UserListItemSmall special />
 
                         <Title />
 
-                        {channels?.length ? channels?.map((channel) => (
-                            <ChannelListItem
-                                key={uuidv4()}
-                                channel={channel}
-                            />
-                        )) : (
+                        {channels?.length ? channels?.map((channel) => {
+                            const user = channel?.recipients?.find((member) => member?._id !== auth?.user._id);
+
+                            return (
+                                <UserListItemSmall
+                                    key={uuidv4()}
+                                    user={user}
+                                    channel={channel}
+                                />
+                            );
+                        }) : (
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 184 428"

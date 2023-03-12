@@ -29,6 +29,6 @@ export async function middleware(req) {
             }
         });
     } else {
-        return NextResponse.redirect('http://localhost:3000/login');
+        return NextResponse.redirect('/login');
     }
 }

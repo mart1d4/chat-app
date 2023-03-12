@@ -16,7 +16,7 @@
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--foreground-5);
+    color: var(--foreground-4);
 }
 
 .title:hover span {

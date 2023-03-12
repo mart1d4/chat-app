@@ -36,11 +36,6 @@
 }
 
 .bottomForm {
-    overflow: visible;
-    position: absolute;
-    bottom: 1px;
-    left: 16px;
-    right: 16px;
     height: 24px;
     font-size: 14px;
     font-weight: 500;
@@ -86,7 +81,6 @@
 }
 
 .textArea {
-    margin-bottom: 24px;
     background-color: var(--background-5);
     position: relative;
     width: 100%;
@@ -241,4 +235,50 @@
     position: relative;
     flex: 0 0 auto;
     pointer-events: none;
+}
+
+.replyContainer {
+    border-radius: 8px 8px 0 0;
+    background-color: var(--background-3);
+    overflow: hidden;
+    padding-top: 3px;
+    margin-top: -3px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.replyName {
+    color: var(--foreground-4);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-left: 16px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+}
+
+.replyName > span {
+    color: var(--foreground-3);
+    font-weight: 500;
+}
+
+.replyClose {
+    display: flex;
+    align-items: center;
+}
+
+.replyClose:hover path {
+    fill: var(--foreground-2);
+}
+
+.replyClose > div {
+    flex: 0 0 auto;
+    line-height: 0;
+    cursor: pointer;
+    color: var(--foreground-3);
+    padding: 8px 18px 8px 16px;
 }

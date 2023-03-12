@@ -319,11 +319,7 @@ const UserListItem = ({ content, user }) => {
                             {((content !== "pending" && content !== "blocked")) && (
                                 <AvatarStatus
                                     status={user.status}
-                                    background={(liHover || (menu?.parent?.type === "userListItem" &&
-                                        menu?.parent?.id === user._id))
-                                        ? "var(--background-hover-1)"
-                                        : "var(--background-4)"
-                                    }
+                                    background={"var(--background-4)"}
                                 />
                             )}
                         </div>

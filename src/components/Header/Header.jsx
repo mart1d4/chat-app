@@ -34,7 +34,7 @@ const Header = () => {
                     Unthrust
                 </a>
 
-                <nav>
+                {/* <nav>
                     <ul className={styles.links}>
                         {navLinks.map((link) => (
                             <li
@@ -70,7 +70,7 @@ const Header = () => {
                             </li>
                         ))}
                     </ul>
-                </nav>
+                </nav> */}
 
                 <div className={styles.buttons}>
                     {auth?.accessToken ? (
