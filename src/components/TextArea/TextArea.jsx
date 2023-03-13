@@ -85,11 +85,7 @@ const TextArea = ({
 
     useEffect(() => {
         if (!editedMessage) return;
-
         setMessage(editedMessage);
-        textAreaRef.current.innerText = editedMessage;
-        moveCursorToEnd();
-        textAreaRef.current.focus();
     }, [editedMessage]);
 
     const { auth } = useAuth();
@@ -252,25 +248,11 @@ const TextArea = ({
                     contentEditable="true"
                     onInput={(e) => {
                         const text = e.target.innerText.toString();
-                        e.target.innerText = text;
-                        if (editedMessage) {
-                            setEditedMessage(text);
-                        } else {
-                            setMessage(text);
-                        }
-                        moveCursorToEnd();
+                        if (editedMessage) setEditedMessage(text);
+                        else setMessage(text);
                     }}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.shiftKey) {
-                            e.preventDefault();
-                            e.target.innerText += "\n";
-                            if (editedMessage) {
-                                setEditedMessage(e.target.innerText);
-                            } else {
-                                setMessage(e.target.innerText);
-                            }
-                            moveCursorToEnd();
-                        } else if (e.key === "Enter") {
+                        if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             if (editedMessage) return;
                             sendMessage();

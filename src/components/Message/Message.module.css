@@ -201,12 +201,12 @@
     left: -36px;
     margin-right: 6px;
     margin-top: -2px;
-    margin-left: -2px;
+    margin-left: -1px;
     margin-bottom: calc(0.125rem - 2px);
-    border-left: 2px solid var(--foreground-5);
-    border-bottom: 0 solid var(--foreground-5);
-    border-right: 0 solid var(--foreground-5);
-    border-top: 2px solid var(--foreground-5);
+    border-left: 2px solid hsla(228, 6%, 32.5%, 1);
+    border-bottom: 0 solid hsla(228, 6%, 32.5%, 1);
+    border-right: 0 solid hsla(228, 6%, 32.5%, 1);
+    border-top: 2px solid hsla(228, 6%, 32.5%, 1);
     border-top-left-radius: 6px;
 }
 
@@ -230,9 +230,18 @@
     overflow: hidden;
 }
 
+.messageReply > span:hover {
+    text-decoration: underline;
+}
+
 .messageReply > div {
     cursor: pointer;
     text-overflow: ellipsis;
     flex: 0 1 auto;
     overflow: hidden;
+    white-space: nowrap;
+}
+
+.messageReply > div:hover {
+    color: var(--foreground-1);
 }

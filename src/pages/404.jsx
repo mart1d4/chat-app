@@ -1,15 +1,16 @@
-import Link from 'next/link';
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 const Custom404 = () => {
+    const router = useRouter();
+
+    useEffect(() => {
+        router.push("/channels/@me");
+    }, []);
+
     return (
         <div>
             <h1>404 - Page Not Found</h1>
-
-            <p>
-                <Link href="/channels/@me/friends">
-                    Go back home
-                </Link>
-            </p>
         </div>
     );
 }

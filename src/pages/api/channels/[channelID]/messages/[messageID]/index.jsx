@@ -29,6 +29,8 @@ export default async (req, res) => {
     const channel = await Channel.findById(channelID);
     const message = await Message.findById(messageID);
 
+    const messageRef = await Message.findById(message.messageReference);
+
     if (!channel) {
         return res.status(404).json({
             success: false,
@@ -59,14 +61,20 @@ export default async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message
+            message: {
+                ...message._doc,
+                messageReference: messageRef ?? null,
+            },
         });
     } else if (req.method === "DELETE") {
         await message.remove();
 
         res.status(200).json({
             success: true,
-            message,
+            message: {
+                ...message._doc,
+                messageReference: messageRef ?? null,
+            },
         });
     } else {
         res.status(400).json({
