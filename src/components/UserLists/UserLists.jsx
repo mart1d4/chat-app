@@ -121,7 +121,7 @@ const UserLists = ({ list, content }) => {
                 {contentData[content].title} — {filteredList.length}
             </h2>
 
-            <ul className={styles.listContainer}>
+            <ul className={styles.listContainer + " scrollbar"}>
                 {filteredList?.map((user, index) => (
                     <UserListItem
                         key={uuidv4()}

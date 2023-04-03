@@ -368,7 +368,7 @@ const Channels = () => {
                         <div className={styles.messagesWrapper}>
                             <div
                                 ref={scrollableContainer}
-                                className={styles.messagesScrollableContainer}
+                                className={styles.messagesScrollableContainer + " scrollbar"}
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>

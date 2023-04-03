@@ -122,7 +122,6 @@ const Login = () => {
                                             type="text"
                                             name="username"
                                             aria-label="Username"
-                                            required
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"
@@ -159,7 +158,6 @@ const Login = () => {
                                             type="password"
                                             name="password"
                                             aria-label="Password"
-                                            required
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"

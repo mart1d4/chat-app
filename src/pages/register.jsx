@@ -161,7 +161,6 @@ const Register = () => {
                                             type="text"
                                             name="username"
                                             aria-label="Username"
-                                            required
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"
@@ -200,7 +199,6 @@ const Register = () => {
                                             type="password"
                                             name="password"
                                             aria-label="Password"
-                                            required
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"
@@ -238,7 +236,6 @@ const Register = () => {
                                             type="password"
                                             name="password-match"
                                             aria-label="Password Match"
-                                            required
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"

@@ -280,18 +280,18 @@
 
 /* Change scrollbar */
 
-::-webkit-scrollbar.scrollbar {
+.scrollbar::-webkit-scrollbar {
     width: 16px;
 }
 
-::-webkit-scrollbar-track.scrollbar {
+.scrollbar::-webkit-scrollbar-track {
     border-radius: 100vw;
     border: 4px var(--background-4) solid;
     background-color: var(--background-3);
     background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb.scrollbar {
+.scrollbar::-webkit-scrollbar-thumb {
     border-radius: 100vw;
     border: 4px var(--background-4) solid;
     border-color: transparent;

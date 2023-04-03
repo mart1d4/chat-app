@@ -200,6 +200,291 @@
     margin-left: 370px;
 }
 
-.content {
-    height: 3000px;
+.contentGrid {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.contentGrid:nth-child(2),
+.contentGrid:nth-child(4),
+.contentGrid:nth-child(5) {
+    background-color: hsl(0, 0%, 96%);
+}
+
+.contentGrid > div {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 0 20px;
+    padding: 120px 40px;
+    max-width: 1260px;
+}
+
+.contentGrid > div > img {
+    grid-column: span 7;
+    margin-top: auto;
+    margin-bottom: auto;
+    max-width: 678px;
+    max-height: 440px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.contentGrid > div > div {
+    grid-column: 9 / span 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: hsl(206, 9%, 15%);
+}
+
+.contentGrid:nth-child(2) > div > div {
+    grid-column: 1 / span 4;
+    order: 1;
+}
+
+.contentGrid:nth-child(2) > div > img {
+    grid-column: 6 / span 7;
+    order: 2;
+}
+
+.contentGrid:nth-child(4) > div {
+    padding-bottom: 80px;
+}
+
+.contentGrid:nth-child(4) > div > div {
+    grid-column: 2 / span 10;
+    text-align: center;
+}
+
+.contentGrid:nth-child(4) > div > div > h2 {
+    font-size: clamp(20px, 4vw, 40px);
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
+        sans-serif;
+    font-weight: 800;
+    line-height: 95%;
+    text-transform: uppercase;
+    text-rendering: geometricPrecision;
+}
+
+.contentGrid:nth-child(4) > div > img {
+    margin-top: 16px;
+    grid-column: span 12;
+    max-width: none;
+    max-height: none;
+}
+
+.contentGrid:nth-child(5) > div {
+    margin-bottom: 120px;
+    padding-top: 0;
+    padding-bottom: 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+}
+
+.contentGrid:nth-child(5) > div > div {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.contentGrid:nth-child(5) > div > div > img {
+    height: 49px;
+    width: auto;
+    user-select: none;
+}
+
+.contentGrid:nth-child(5) > div > h4 {
+    margin-top: 30px;
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 120%;
+    color: hsl(0, 0%, 0%);
+    user-select: text;
+    cursor: initial;
+}
+
+.contentGrid:nth-child(5) > div > a {
+    width: auto;
+    margin-top: 40px;
+    justify-content: center;
+    border-radius: 28px;
+    font-size: 20px;
+    padding: 16px 32px;
+    background-color: #5865f2;
+    color: #fff;
+    line-height: 24px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+}
+
+.contentGrid:nth-child(5) > div > a:hover {
+    background-color: hsl(235, 86.1%, 71.8%);
+    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+}
+
+.contentGrid:nth-child(5) > div > a > svg {
+    margin-right: 8px;
+}
+
+.contentGrid > div > div > h2 {
+    font-size: 48px;
+    line-height: 120%;
+    font-weight: 800;
+    user-select: text;
+    cursor: initial;
+}
+
+.contentGrid > div > div > div {
+    margin-top: 24px;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.625;
+}
+
+.footer {
+    background-color: hsl(206, 9%, 15%);
+    padding-top: 80px;
+    padding-bottom: 64px;
+    color: hsl(0, 0%, 100%);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.footer > div {
+    width: 100%;
+    max-width: 1260px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 0 20px;
+    padding: 0 40px;
+}
+
+.infoBox {
+    grid-column: span 3;
+    grid-row-end: span 2;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 56px;
+}
+
+.infoBox > h4 {
+    color: #5865f2;
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
+        sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    line-height: 95%;
+    text-transform: uppercase;
+    text-rendering: geometricPrecision;
+    user-select: text;
+    cursor: initial;
+}
+
+.socials {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.socials > a {
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.socials > a:not(:first-child) {
+    margin-left: 24px;
+}
+
+.footer > div:first-child > div:nth-child(2) {
+    grid-column: span 1;
+    grid-row-end: span 2;
+}
+
+.footerColumn {
+    grid-column: span 2;
+    margin-bottom: 40px;
+}
+
+.footerColumn > h5 {
+    color: hsl(235, 86%, 65%);
+    padding-top: 8px;
+    font-size: 16px;
+    line-height: 24px;
+    user-select: text;
+    cursor: initial;
+}
+
+.footerColumn > a {
+    color: inherit;
+    margin-top: 8px;
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 24px;
+}
+
+.footerColumn > a:hover {
+    text-decoration: underline;
+}
+
+.footer > div:last-child > div {
+    grid-column: span 12;
+}
+
+.footerSeparator {
+    background-color: hsl(235, 86%, 65%);
+    height: 1px;
+    width: 100%;
+    margin-bottom: 32px;
+}
+
+.bottomFooterContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bottomFooterContent > a:first-child {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.bottomFooterContent > a:last-child {
+    border-radius: 40px;
+    font-size: 14px;
+    padding: 7px 16px;
+    background-color: hsl(235, 86%, 65%);
+    color: hsl(0, 0%, 100%);
+    line-height: 24px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+}
+
+.bottomFooterContent > a:last-child:hover {
+    background-color: hsl(235, 86.1%, 71.8%);
+    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
 }

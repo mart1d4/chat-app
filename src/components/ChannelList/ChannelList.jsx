@@ -19,7 +19,7 @@ const ConversationList = () => {
                     </button>
                 </div>
 
-                <div className={styles.scroller}>
+                <div className={styles.scroller + " scrollbar"}>
                     <ul className={styles.channelList}>
                         <div></div>
 
