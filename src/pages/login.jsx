@@ -106,7 +106,7 @@ const Login = () => {
                                                 : "var(--foreground-3)",
                                         }}
                                     >
-                                        Username
+                                        Email or Username
                                         {error.length ? (
                                             <span className={styles.errorLabel}>
                                                 - {error}
@@ -126,7 +126,6 @@ const Login = () => {
                                             autoCapitalize="off"
                                             autoComplete="off"
                                             autoCorrect="off"
-                                            maxLength={32}
                                             spellCheck="false"
                                             aria-labelledby="uid"
                                             aria-describedby="uid"
@@ -184,7 +183,7 @@ const Login = () => {
                                     </div>
                                 </button>
 
-                                <div>
+                                <div className={styles.bottomText}>
                                     <span>Need an account?</span>
                                     <button
                                         onClick={() => {

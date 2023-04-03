@@ -1,0 +1,205 @@
+.mainContainer {
+    width: 100%;
+    min-height: 100vh;
+    background-color: hsl(0, 0%, 100%);
+    overflow-y: scroll;
+    color-scheme: light;
+}
+
+.heading {
+    width: 100%;
+    min-height: 626px;
+    background-color: hsl(235, 83%, 59%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.header {
+    width: 100%;
+    max-width: 1260px;
+    padding: 0 40px;
+}
+
+.header > nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 80px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+}
+
+.navLinks {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 16px;
+    line-height: 140%;
+    font-weight: 600;
+}
+
+.navLink {
+    color: hsl(0, 0%, 100%);
+    margin: 10px;
+    padding: 10px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.navLink:hover {
+    text-decoration: underline;
+}
+
+.appButton {
+    flex: 0 0 auto;
+    width: 124px;
+    text-align: end;
+    display: flex;
+    flex-flow: row-reverse;
+}
+
+.appButton > a {
+    white-space: nowrap;
+    border-radius: 40px;
+    font-size: 14px;
+    padding: 7px 16px;
+    background-color: hsl(0, 0%, 100%);
+    color: hsl(206, 9%, 15%);
+    line-height: 24px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.appButton > a:hover {
+    color: hsl(235, 86%, 65%);
+    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+}
+
+.hero {
+    width: 100%;
+    max-width: 1260px;
+    padding: 120px 40px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    box-sizing: border-box;
+}
+
+.hero > div {
+    grid-column: 3 / span 8;
+    text-align: center;
+}
+
+.heroText {
+    margin-bottom: 8px;
+    color: hsl(0, 0%, 100%);
+}
+
+.heroText > h1 {
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
+        sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 95%;
+    text-transform: uppercase;
+    text-rendering: geometricPrecision;
+    user-select: text;
+    cursor: initial;
+}
+
+.heroText > div {
+    margin-top: 40px;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.625;
+    font-weight: 300;
+}
+
+.heroButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.heroButtons > a {
+    margin-top: 24px;
+    border-radius: 28px;
+    font-size: 20px;
+    padding: 16px 32px;
+    background-color: hsl(206, 9%, 15%);
+    color: hsl(0, 0%, 100%);
+    text-decoration: none;
+    line-height: 24px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.heroButtons > a:first-child {
+    margin-right: 24px;
+    background-color: hsl(0, 0%, 100%);
+    color: hsl(206, 9%, 15%);
+}
+
+.heroButtons > a:first-child:hover {
+    color: hsl(235, 86%, 65%);
+    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+}
+
+.heroButtons > a:last-child:hover {
+    background-color: hsl(223, 6.7%, 20.6%);
+    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+}
+
+.heroButtons > a:first-child > svg {
+    margin-right: 8px;
+}
+
+.imageBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.imageBackground > img:first-child {
+    position: absolute;
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    margin-left: -1280px;
+}
+
+.imageBackground > img:nth-child(2) {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    height: auto;
+    width: auto;
+    max-width: none;
+    margin-left: -1030px;
+}
+
+.imageBackground > img:last-child {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    margin-left: 370px;
+}
+
+.content {
+    height: 3000px;
+}

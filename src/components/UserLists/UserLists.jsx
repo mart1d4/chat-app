@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./UserList.module.css";
 import { v4 as uuidv4 } from "uuid";
+import useComponents from "../../hooks/useComponents";
 
 const contentData = {
     all: {
@@ -43,6 +44,25 @@ const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [filteredList, setFilteredList] = useState([]);
 
+    const { setMenu } = useComponents();
+
+    const searchbarMenuItems = [
+        {
+            name: "Spellcheck",
+            icon: "box",
+            iconSize: 18,
+        },
+        { name: "Divider" },
+        {
+            name: "Paste",
+            text: "Ctrl+V",
+            func: async () => {
+                const text = await navigator.clipboard.readText();
+                setSearch(search + text);
+            },
+        },
+    ];
+
     useEffect(() => {
         if (search) {
             setFilteredList(list?.filter((user) => {
@@ -74,6 +94,13 @@ const UserLists = ({ list, content }) => {
                         aria-label="Search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setMenu({
+                                event: e,
+                                items: searchbarMenuItems,
+                            });
+                        }}
                     />
 
                     <div

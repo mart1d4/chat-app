@@ -1,9 +1,6 @@
 import AppHeader from './AppHeader/AppHeader';
 import AppNav from './AppNav/AppNav';
-import Footer from './Footer/Footer';
 import ChannelList from './ChannelList/ChannelList';
-import Header from './Header/Header';
-import Main from './Main/Main';
 import Message from './Message/Message';
 import Tooltip from './Tooltip/Tooltip';
 import AddFriend from './UserLists/AddFriend';
@@ -27,14 +24,12 @@ import FilePreview from './TextArea/FilePreview';
 import Title from './ChannelList/Title';
 import Modal from './Modal/Modal';
 import MemberList from './MemberList/MemberList';
+import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 
 export {
     AppHeader,
     AppNav,
-    Footer,
     ChannelList,
-    Header,
-    Main,
     Message,
     Tooltip,
     AddFriend,
@@ -58,4 +53,5 @@ export {
     Title,
     Modal,
     MemberList,
+    MessageSkeleton,
 };

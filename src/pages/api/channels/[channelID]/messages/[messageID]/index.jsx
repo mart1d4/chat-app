@@ -9,9 +9,6 @@ export default async (req, res) => {
     const channelID = req.query.channelID;
     const messageID = req.query.messageID;
 
-    console.log(channelID);
-    console.log(messageID);
-
     if (!mongoose.Types.ObjectId.isValid(channelID)) {
         return res.status(400).json({
             success: false,

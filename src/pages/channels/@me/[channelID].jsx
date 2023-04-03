@@ -6,6 +6,7 @@ import {
     Message,
     TextArea,
     MemberList,
+    MessageSkeleton,
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
@@ -33,6 +34,7 @@ const Channels = () => {
     );
     const [edit, setEdit] = useState(null);
     const [reply, setReply] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const { auth } = useAuth();
     const {
@@ -46,6 +48,23 @@ const Channels = () => {
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+
+    useEffect(() => {
+        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
+
+        if (localChannel?.edit) {
+            setEdit(localChannel.edit);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!channel) return;
+
+        localStorage.setItem(`channel-${channel?._id}`, JSON.stringify({
+            ...JSON.parse(localStorage.getItem(`channel-${channel?._id}`)),
+            edit: edit,
+        }));
+    }, [edit]);
 
     const buttons = {
         add: {
@@ -114,6 +133,8 @@ const Channels = () => {
             "channel-url",
             `/channels/@me/${router.query.channelID}`
         );
+
+        setIsLoading(true);
 
         if (channel.type === 0) {
             setFriend(channel?.recipients?.find(
@@ -184,6 +205,8 @@ const Channels = () => {
             } else {
                 setMessages(response.data.messages);
             }
+
+            setIsLoading(false);
         };
 
         getMessages();
@@ -334,7 +357,7 @@ const Channels = () => {
     return useMemo(() => (
         <>
             <Head>
-                <title>Unthrust | {friend ? friend.username : channel?.name}</title>
+                <title>Unthrust | @{friend ? friend.username : channel?.name}</title>
             </Head>
 
             <div className={styles.container}>
@@ -349,97 +372,107 @@ const Channels = () => {
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
-                                        <div className={styles.firstTimeMessageContainer}>
-                                            <div className={styles.imageWrapper}>
-                                                {friend ? (
-                                                    <Image
-                                                        src={friend?.avatar || ""}
-                                                        alt="Avatar"
-                                                        width={80}
-                                                        height={80}
-                                                    />
-                                                ) : channel ? (
-                                                    <Image
-                                                        src={channel?.icon || ""}
-                                                        alt="Icon"
-                                                        width={80}
-                                                        height={80}
-                                                    />
-                                                ) : null}
-                                            </div>
-                                            <h3 className={styles.friendUsername}>
-                                                {friend ? friend?.username : channel?.name}
-                                            </h3>
-                                            <div className={styles.descriptionContainer}>
-                                                {friend ? (
-                                                    <>
-                                                        This is the beginning of your direct message history with
-                                                        <strong> @{friend?.username}</strong>.
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        Welcome to the beginning of the
-                                                        <strong> {channel?.name}</strong> group.
-                                                    </>
-                                                )}
-
-                                                {friend && (
-                                                    <div className={styles.descriptionActions}>
-                                                        {friendStatus[3] === "block" && (
-                                                            <button
-                                                                className={buttons[friendStatus[1]]?.class}
-                                                                onClick={() => buttons[friendStatus[1]]?.func()}
-                                                            >
-                                                                {buttons[friendStatus[1]]?.text}
-                                                            </button>
+                                        {isLoading ? (
+                                            <>
+                                                <MessageSkeleton />
+                                                <div className={styles.scrollerSpacer} />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className={styles.firstTimeMessageContainer}>
+                                                    <div className={styles.imageWrapper}>
+                                                        {friend ? (
+                                                            <Image
+                                                                src={friend?.avatar || ""}
+                                                                alt="Avatar"
+                                                                width={80}
+                                                                height={80}
+                                                            />
+                                                        ) : channel ? (
+                                                            <Image
+                                                                src={channel?.icon || ""}
+                                                                alt="Icon"
+                                                                width={80}
+                                                                height={80}
+                                                            />
+                                                        ) : null}
+                                                    </div>
+                                                    <h3 className={styles.friendUsername}>
+                                                        {friend ? friend?.username : channel?.name}
+                                                    </h3>
+                                                    <div className={styles.descriptionContainer}>
+                                                        {friend ? (
+                                                            <>
+                                                                This is the beginning of your direct message history with
+                                                                <strong> @{friend?.username}</strong>.
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                Welcome to the beginning of the
+                                                                <strong> {channel?.name}</strong> group.
+                                                            </>
                                                         )}
 
-                                                        {friendStatus[2] && (
-                                                            <button
-                                                                className={buttons[friendStatus[2]].class}
-                                                                onClick={() => buttons[friendStatus[2]].func()}
-                                                            >
-                                                                {buttons[friendStatus[2]].text}
-                                                            </button>
+                                                        {friend && (
+                                                            <div className={styles.descriptionActions}>
+                                                                {friendStatus[3] === "block" && (
+                                                                    <button
+                                                                        className={buttons[friendStatus[1]]?.class}
+                                                                        onClick={() => buttons[friendStatus[1]]?.func()}
+                                                                    >
+                                                                        {buttons[friendStatus[1]]?.text}
+                                                                    </button>
+                                                                )}
+
+                                                                {friendStatus[2] && (
+                                                                    <button
+                                                                        className={buttons[friendStatus[2]].class}
+                                                                        onClick={() => buttons[friendStatus[2]].func()}
+                                                                    >
+                                                                        {buttons[friendStatus[2]].text}
+                                                                    </button>
+                                                                )}
+
+                                                                <button
+                                                                    className={buttons[friendStatus[3]]?.class}
+                                                                    onClick={() => buttons[friendStatus[3]]?.func()}
+                                                                >
+                                                                    {buttons[friendStatus[3]]?.text}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {messages.map((message, index) => (
+                                                    <React.Fragment key={uuidv4()}>
+                                                        {isNewDay(index) && (
+                                                            <div className={styles.messageDivider}>
+                                                                <span>
+                                                                    {format(
+                                                                        new Date(message.createdAt),
+                                                                        "PPP"
+                                                                    )}
+                                                                </span>
+                                                            </div>
                                                         )}
 
-                                                        <button
-                                                            className={buttons[friendStatus[3]]?.class}
-                                                            onClick={() => buttons[friendStatus[3]]?.func()}
-                                                        >
-                                                            {buttons[friendStatus[3]]?.text}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
+                                                        <Message
+                                                            channelID={channel?._id}
+                                                            message={message}
+                                                            setMessages={setMessages}
+                                                            start={isStart(index)}
+                                                            edit={edit}
+                                                            setEdit={setEdit}
+                                                            reply={reply}
+                                                            setReply={setReply}
+                                                        />
+                                                    </React.Fragment>
+                                                ))}
 
-                                        {messages.map((message, index) => (
-                                            <React.Fragment key={uuidv4()}>
-                                                {isNewDay(index) && (
-                                                    <div className={styles.messageDivider}>
-                                                        <span>
-                                                            {format(
-                                                                new Date(message.createdAt),
-                                                                "PPP"
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                <Message
-                                                    message={message}
-                                                    setMessages={setMessages}
-                                                    start={isStart(index)}
-                                                    edit={edit}
-                                                    setEdit={setEdit}
-                                                    reply={reply}
-                                                    setReply={setReply}
-                                                />
-                                            </React.Fragment>
-                                        ))}
-
-                                        <div className={styles.scrollerSpacer} />
+                                                <div className={styles.scrollerSpacer} />
+                                            </>
+                                        )}
                                     </ol>
                                 </div>
                             </div>
@@ -454,11 +487,11 @@ const Channels = () => {
                             reply={reply}
                             setReply={setReply}
                         />
-                    </main>
+                    </main >
 
                     {MemberListComponent}
-                </div>
-            </div>
+                </div >
+            </div >
         </>
     ), [requests, friends, blocked, friendStatus, channel, messages, edit, reply, showUsers]);
 };

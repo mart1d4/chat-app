@@ -85,7 +85,13 @@ const TextArea = ({
 
     useEffect(() => {
         if (!editedMessage) return;
-        setMessage(editedMessage);
+        const text = textAreaRef.current.innerText;
+
+        if (text !== editedMessage) {
+            setMessage(editedMessage);
+            textAreaRef.current.innerText = editedMessage;
+            moveCursorToEnd();
+        }
     }, [editedMessage]);
 
     const { auth } = useAuth();
@@ -249,7 +255,7 @@ const TextArea = ({
                     onInput={(e) => {
                         const text = e.target.innerText.toString();
                         if (editedMessage) setEditedMessage(text);
-                        else setMessage(text);
+                        setMessage(text);
                     }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {

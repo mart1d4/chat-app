@@ -106,7 +106,7 @@ const Register = () => {
                 <title>Unthrust | Register</title>
             </Head>
 
-            <div className={styles.wrapper}>
+            <div className={styles.wrapper + " " + styles.wrapperRegister}>
                 <img
                     src="/assets/auth-background.svg"
                     alt=""
@@ -258,7 +258,7 @@ const Register = () => {
                                     </div>
                                 </button>
 
-                                <div>
+                                <div className={styles.bottomText}>
                                     <button
                                         onClick={() => {
                                             router.push("/login");

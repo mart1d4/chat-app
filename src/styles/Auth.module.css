@@ -7,13 +7,16 @@
     background-color: var(--accent-1);
 }
 
+.wrapperRegister {
+    width: 480px;
+}
+
 .wrapper > img {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
     user-select: none;
 }
 
@@ -63,7 +66,7 @@
     margin-top: 20px;
 }
 
-.loginBlock > div {
+.loginBlock > div:not(:last-child) {
     margin-bottom: 20px;
 }
 
@@ -152,17 +155,17 @@
     background-color: var(--accent-3);
 }
 
-.loginBlock > div:last-child {
+.bottomText {
     margin-top: 4px;
 }
 
-.loginBlock > div:last-child > span {
+.bottomText > span {
     font-size: 14px;
     line-height: 16px;
     user-select: none;
 }
 
-.loginBlock > div:last-child > button {
+.bottomText > button {
     color: var(--accent-light);
     display: inline-block;
     margin-left: 4px;
@@ -171,7 +174,7 @@
     height: auto;
 }
 
-.loginBlock > div:last-child > button:hover {
+.bottomText > button:hover {
     text-decoration: underline;
     cursor: pointer;
 }

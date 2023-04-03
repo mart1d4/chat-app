@@ -9,10 +9,13 @@ import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 
 
-const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }) => {
+const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply, setReply }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [hover, setHover] = useState(false);
-    const [editedMessage, setEditedMessage] = useState(message.content);
+    const [editedMessage, setEditedMessage] = useState(
+        edit?.content
+        || message.content
+    );
 
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -20,6 +23,8 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
     const { auth } = useAuth();
 
     useEffect(() => {
+        if (!editedMessage) return;
+
         const handleKeyDown = (e) => {
             if (e.key === "Escape") {
                 setEdit(null);
@@ -28,12 +33,20 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
                     edit: null,
                 }));
             } else if (e.key === "Enter" && e.shiftKey === false) {
-                if (!edit || edit !== message._id) return;
+                if (!edit || edit?.messageID !== message._id) return;
                 sendEditedMessage();
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
+
+        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
+            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
+            edit: {
+                messageID: message._id,
+                content: editedMessage,
+            },
+        }));
 
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [editedMessage]);
@@ -120,12 +133,10 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
     };
 
     const editMessage = async () => {
-        setEdit(message._id);
-
-        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
-            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
-            edit: message._id,
-        }));
+        setEdit({
+            messageID: message._id,
+            content: message.content,
+        });
     };
 
     const pinMessage = async () => {
@@ -189,11 +200,11 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
                     message: message._id,
                 });
             }}
-            style={(hover || (menu?.message === message?._id)) || edit === message._id
+            style={(hover || (menu?.message === message?._id)) || edit?.messageID === message._id
                 ? { backgroundColor: reply?._id === message._id ? "" : "var(--background-hover-4)" }
                 : {}}
         >
-            {((hover || (menu?.message === message?._id)) && edit !== message._id) && (
+            {((hover || (menu?.message === message?._id)) && edit?.messageID !== message._id) && (
                 <MessageMenu
                     message={message}
                     start={start}
@@ -274,10 +285,10 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
                                 </Tooltip>
                             </span>
                         </h3>
-                        {edit === message._id ? (
+                        {edit?.messageID === message._id ? (
                             <>
                                 <TextArea
-                                    editedMessage={editedMessage || message.content}
+                                    editedMessage={editedMessage || " "}
                                     setEditedMessage={setEditedMessage}
                                 />
                                 <div className={styles.editHint}>
@@ -361,7 +372,7 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply }
                                 </span>
                             </span>
                         )}
-                        {edit === message._id ? (
+                        {edit?.messageID === message._id ? (
                             <>
                                 <TextArea
                                     editedMessage={editedMessage || message.content}

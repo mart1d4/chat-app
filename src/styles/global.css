@@ -14,6 +14,16 @@
 
 @font-face {
     font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/gg-sans-700.woff');
+    src: local('gg sans 700'), local('gg-sans-700'),
+        url('../../public/fonts/ggsans/gg-sans-700.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'gg sans';
     src: url('../../public/fonts/ggsans/ggsans-SemiboldItalic.eot');
     src: local('gg sans SemiBold Italic'), local('ggsans-SemiboldItalic'),
         url('../../public/fonts/ggsans/ggsans-SemiboldItalic.eot?#iefix')
@@ -46,7 +56,7 @@
 }
 
 @font-face {
-    font-family: 'gg sans Normal';
+    font-family: 'gg sans';
     src: url('../../public/fonts/ggsans/ggsans-BoldItalic.eot');
     src: local('gg sans Bold Italic'), local('ggsans-BoldItalic'),
         url('../../public/fonts/ggsans/ggsans-BoldItalic.eot?#iefix')
@@ -120,7 +130,7 @@
 }
 
 @font-face {
-    font-family: 'gg sans Normal';
+    font-family: 'gg sans';
     src: url('../../public/fonts/ggsans/ggsans-Normal.eot');
     src: local('gg sans Normal'), local('ggsans-Normal'),
         url('../../public/fonts/ggsans/ggsans-Normal.eot?#iefix')
@@ -134,7 +144,7 @@
 }
 
 @font-face {
-    font-family: 'gg sans Normal';
+    font-family: 'gg sans';
     src: url('../../public/fonts/ggsans/ggsans-NormalItalic.eot');
     src: local('gg sans Normal Italic'), local('ggsans-NormalItalic'),
         url('../../public/fonts/ggsans/ggsans-NormalItalic.eot?#iefix')
@@ -146,6 +156,29 @@
             format('truetype');
     font-weight: normal;
     font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'gg sans';
+    src: url('../../public/fonts/ggsans/gg-sans-300.woff');
+    src: local('gg sans 300'), local('gg-sans-300'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff2')
+            format('woff2'),
+        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ginto Nord';
+    src: url('../../public/fonts/ginto/Ginto-Nord-700.woff');
+    src: local('Ginto Nord'), local('Ginto-Nord-700'),
+        url('../../public/fonts/ginto/Ginto-Nord-700.woff2') format('woff2'),
+        url('../../public/fonts/ginto/Ginto-Nord-700.woff') format('woff');
+    font-weight: bolder;
+    font-style: normal;
     font-display: swap;
 }
 
@@ -167,12 +200,12 @@
         --background-active: hsl(218, 8%, 28%);
         --background-message-highlight: hsl(235, 86.1%, 77.5%, 0.08);
         --background-message-highlight-hover: hsl(235, 85.6%, 64.7%, 0.1);
-        --foreground-1: hsl(210, 9.1%, 95.7%, 1);
-        --foreground-2: hsl(210, 3%, 87%);
-        --foreground-3: hsl(216, 4%, 74%);
-        --foreground-4: hsl(214, 4%, 65%);
-        --foreground-5: hsl(213, 4%, 57%);
-        --foreground-light: hsl(218, 5%, 47%);
+        --foreground-1: hsl(210, 9%, 95%, 1);
+        --foreground-2: hsl(210, 9%, 87%, 1);
+        --foreground-3: hsl(216, 4%, 74%, 1);
+        --foreground-4: hsl(214, 4%, 65%, 1);
+        --foreground-5: hsl(213, 4%, 57%, 1);
+        --foreground-light: hsl(218, 5%, 47%, 1);
         --accent-1: hsl(235, 86%, 65%);
         --accent-2: hsl(235, 51%, 52%);
         --accent-3: hsl(235, 47%, 44%);
@@ -247,18 +280,18 @@
 
 /* Change scrollbar */
 
-::-webkit-scrollbar {
+::-webkit-scrollbar.scrollbar {
     width: 16px;
 }
 
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track.scrollbar {
     border-radius: 100vw;
     border: 4px var(--background-4) solid;
     background-color: var(--background-3);
     background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb.scrollbar {
     border-radius: 100vw;
     border: 4px var(--background-4) solid;
     border-color: transparent;
