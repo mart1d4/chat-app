@@ -3,6 +3,8 @@ import styles from '../styles/Index.module.css';
 import Link from 'next/link';
 import useAuth from '../hooks/useAuth';
 import { v4 as uuidv4 } from 'uuid';
+import { motion } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
 
 const links = [
     {
@@ -150,8 +152,151 @@ const routes = [
     },
 ];
 
+const languages = [
+    {
+        name: 'български',
+        flag: 'blg'
+    },
+    {
+        name: 'Čeština',
+        flag: 'cze',
+    },
+    {
+        name: 'Dansk',
+        flag: 'den',
+    },
+    {
+        name: 'Deutsch',
+        flag: 'ger',
+    },
+    {
+        name: 'Ελληνικά',
+        flag: 'gre',
+    },
+    {
+        name: 'English, USA',
+        flag: 'usa',
+    },
+    {
+        name: 'Español',
+        flag: 'esp',
+    },
+    {
+        name: 'Suomi',
+        flag: 'fin',
+    },
+    {
+        name: 'Français',
+        flag: 'fra',
+    },
+    {
+        name: 'हिंदी',
+        flag: 'ind',
+    },
+    {
+        name: 'Hrvatski',
+        flag: 'cro',
+    },
+    {
+        name: 'Magyar',
+        flag: 'hun',
+    },
+    {
+        name: 'Italiano',
+        flag: 'ita',
+    },
+    {
+        name: '日本語',
+        flag: 'jpn',
+    },
+    {
+        name: '한국어',
+        flag: 'kor',
+    },
+    {
+        name: 'Lietuviškai',
+        flag: 'lit',
+    },
+    {
+        name: 'Nederlands',
+        flag: 'ned',
+    },
+    {
+        name: 'Norwegian',
+        flag: 'nor',
+    },
+    {
+        name: 'Polski',
+        flag: 'pol',
+    },
+    {
+        name: 'Português do Brasil',
+        flag: 'bra',
+    },
+    {
+        name: 'Română',
+        flag: 'rom',
+    },
+    {
+        name: 'Pyccĸий',
+        flag: 'rus',
+    },
+    {
+        name: 'Svenska',
+        flag: 'swe',
+    },
+    {
+        name: 'ไทย',
+        flag: 'tha',
+    },
+    {
+        name: 'Türkçe',
+        flag: 'tur',
+    },
+    {
+        name: 'Українська',
+        flag: 'ukr',
+    },
+    {
+        name: 'Tiếng Việt',
+        flag: 'vie',
+    },
+    {
+        name: '中文',
+        flag: 'chn',
+    },
+    {
+        name: '繁體中文',
+        flag: 'twn',
+    },
+];
+
 const Index = () => {
+    const [lang, setLang] = useState({
+        name: 'English, USA',
+        flag: 'usa'
+    });
+    const [showLangMenu, setShowLangMenu] = useState(false);
+
     const { auth } = useAuth();
+    const langButton = useRef(null);
+    const langMenu = useRef(null);
+
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (langMenu?.current?.contains(e.target) || langButton?.current?.contains(e.target)) {
+                return;
+            }
+
+            setShowLangMenu(false);
+        };
+
+        document.addEventListener('click', handleClick);
+
+        return () => {
+            document.removeEventListener('click', handleClick);
+        };
+    }, []);
 
     return (
         <>
@@ -260,7 +405,13 @@ const Index = () => {
                 </div>
 
                 <div>
-                    <div className={styles.contentGrid}>
+                    <motion.div
+                        className={styles.contentGrid}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true, margin: "-300px" }}
+                    >
                         <div>
                             <img src="/assets/home-content1.svg" alt="Stylized image of a Discord server with multiple channels for studying, games, cooking, and pet photos." />
 
@@ -274,9 +425,15 @@ const Index = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className={styles.contentGrid}>
+                    <motion.div
+                        className={styles.contentGrid}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true, margin: "-300px" }}
+                    >
                         <div>
                             <img src="/assets/home-content2.svg" alt="Stylized image showing friends hanging out in multiple voice channels." />
 
@@ -290,9 +447,15 @@ const Index = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className={styles.contentGrid}>
+                    <motion.div
+                        className={styles.contentGrid}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true, margin: "-300px" }}
+                    >
                         <div>
                             <img src="/assets/home-content3.svg" alt="Stylized image showing friends in a server organized into roles for Coach, Student Lead, and Animal Crossing." />
 
@@ -306,9 +469,15 @@ const Index = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className={styles.contentGrid}>
+                    <motion.div
+                        className={styles.contentGrid}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true, margin: "-300px" }}
+                    >
                         <div>
                             <div>
                                 <h2>
@@ -322,7 +491,7 @@ const Index = () => {
 
                             <img src="/assets/home-content4.svg" alt="Stylized image showing friends video talking with each other on desktop and mobile." />
                         </div>
-                    </div>
+                    </motion.div>
 
                     <div className={styles.contentGrid}>
                         <div>
@@ -360,8 +529,42 @@ const Index = () => {
                                 Imagine a place
                             </h4>
 
-                            <div>
+                            <div className={styles.language}>
+                                <div>
+                                    {showLangMenu && (
+                                        <div className={styles.langChooser} ref={langMenu}>
+                                            <div>
+                                                {languages.map((language) => (
+                                                    <div
+                                                        className={styles.langItem}
+                                                        onClick={() => {
+                                                            setLang(language);
+                                                            setShowLangMenu(false);
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <img src={`/assets/flags/${language.flag}.png`} />
+                                                            <div>
+                                                                {language.name}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
+                                    <div onClick={() => setShowLangMenu(prev => !prev)} ref={langButton}>
+                                        <div>
+                                            <img src={`/assets/flags/${lang?.flag}.png`} />
+                                            <div>
+                                                {lang?.name}
+                                            </div>
+                                        </div>
+
+                                        <img src="/assets/home-arrow.svg" alt="Open Locale Picker" />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className={styles.socials}>
@@ -445,7 +648,10 @@ const Index = () => {
                                     {route.title}
                                 </h5>
                                 {route.children.map((child) => (
-                                    <a href={child.link}>
+                                    <a
+                                        href={child.link}
+                                        key={uuidv4()}
+                                    >
                                         {child.name}
                                     </a>
                                 ))}
@@ -489,7 +695,9 @@ const Index = () => {
                                         </g>
                                     </svg>
                                 </a>
-                                <a href="/register">Sign up</a>
+                                <Link href="/register">
+                                    {auth?.accessToken ? "Open Discord" : "Sign up"}
+                                </Link>
                             </div>
                         </div>
                     </div>
