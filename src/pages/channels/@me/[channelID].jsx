@@ -34,7 +34,10 @@ const Channels = () => {
     );
     const [edit, setEdit] = useState(null);
     const [reply, setReply] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasMoreMessages, setHasMoreMessages] = useState(false);
+    const [scrollHeight, setScrollHeight] = useState(0);
+    const [scrollPosition, setScrollPosition] = useState(0);
 
     const { auth } = useAuth();
     const {
@@ -48,23 +51,6 @@ const Channels = () => {
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-
-    useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
-
-        if (localChannel?.edit) {
-            setEdit(localChannel.edit);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!channel) return;
-
-        localStorage.setItem(`channel-${channel?._id}`, JSON.stringify({
-            ...JSON.parse(localStorage.getItem(`channel-${channel?._id}`)),
-            edit: edit,
-        }));
-    }, [edit]);
 
     const buttons = {
         add: {
@@ -107,8 +93,43 @@ const Channels = () => {
     const scrollableContainer = useCallback(node => {
         if (node !== null) {
             node.scrollTop = node.scrollHeight;
+            setScrollHeight(node.scrollHeight);
         }
     }, [messages]);
+
+    useEffect(() => {
+        console.log("scrollHeight", scrollHeight);
+        console.log("scrollPosition", scrollPosition);
+
+        if (
+            (scrollHeight - scrollPosition < 1000)
+            && hasMoreMessages
+        ) {
+            const firstMessageDate = messages[0]?.createdAt;
+
+            const getMessages = async () => {
+                setIsLoading(true);
+
+                const response = await axiosPrivate.get(
+                    `/channels/${channel._id}/messages`,
+                    {
+                        before: firstMessageDate,
+                    },
+                );
+
+                if (!response.data.success) {
+                    setError(response.data.message);
+                } else {
+                    setMessages((messages) => [...response.data.messages, ...messages]);
+                    setHasMoreMessages(response.data.hasMoreMessages);
+                }
+
+                setIsLoading(false);
+            };
+
+            getMessages();
+        }
+    }, [scrollHeight, scrollPosition]);
 
     useEffect(() => {
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
@@ -133,8 +154,6 @@ const Channels = () => {
             "channel-url",
             `/channels/@me/${router.query.channelID}`
         );
-
-        setIsLoading(true);
 
         if (channel.type === 0) {
             setFriend(channel?.recipients?.find(
@@ -196,6 +215,8 @@ const Channels = () => {
         setMessages([]);
 
         const getMessages = async () => {
+            setIsLoading(true);
+
             const response = await axiosPrivate.get(
                 `/channels/${channel._id}/messages`,
             );
@@ -204,6 +225,7 @@ const Channels = () => {
                 setError(response.data.message);
             } else {
                 setMessages(response.data.messages);
+                setHasMoreMessages(response.data.hasMoreMessages);
             }
 
             setIsLoading(false);
@@ -369,6 +391,11 @@ const Channels = () => {
                             <div
                                 ref={scrollableContainer}
                                 className={styles.messagesScrollableContainer + " scrollbar"}
+                                onScroll={(e) => {
+                                    if (e.target.scrollTop === 500 && !isLoading && hasMoreMessages) {
+                                        console.log("Loading more messages");
+                                    }
+                                }}
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
@@ -379,70 +406,74 @@ const Channels = () => {
                                             </>
                                         ) : (
                                             <>
-                                                <div className={styles.firstTimeMessageContainer}>
-                                                    <div className={styles.imageWrapper}>
-                                                        {friend ? (
-                                                            <Image
-                                                                src={friend?.avatar || ""}
-                                                                alt="Avatar"
-                                                                width={80}
-                                                                height={80}
-                                                            />
-                                                        ) : channel ? (
-                                                            <Image
-                                                                src={channel?.icon || ""}
-                                                                alt="Icon"
-                                                                width={80}
-                                                                height={80}
-                                                            />
-                                                        ) : null}
-                                                    </div>
-                                                    <h3 className={styles.friendUsername}>
-                                                        {friend ? friend?.username : channel?.name}
-                                                    </h3>
-                                                    <div className={styles.descriptionContainer}>
-                                                        {friend ? (
-                                                            <>
-                                                                This is the beginning of your direct message history with
-                                                                <strong> @{friend?.username}</strong>.
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                Welcome to the beginning of the
-                                                                <strong> {channel?.name}</strong> group.
-                                                            </>
-                                                        )}
+                                                {hasMoreMessages ? (
+                                                    <MessageSkeleton />
+                                                ) : (
+                                                    <div className={styles.firstTimeMessageContainer}>
+                                                        <div className={styles.imageWrapper}>
+                                                            {friend ? (
+                                                                <Image
+                                                                    src={friend?.avatar || ""}
+                                                                    alt="Avatar"
+                                                                    width={80}
+                                                                    height={80}
+                                                                />
+                                                            ) : channel ? (
+                                                                <Image
+                                                                    src={channel?.icon || ""}
+                                                                    alt="Icon"
+                                                                    width={80}
+                                                                    height={80}
+                                                                />
+                                                            ) : null}
+                                                        </div>
+                                                        <h3 className={styles.friendUsername}>
+                                                            {friend ? friend?.username : channel?.name}
+                                                        </h3>
+                                                        <div className={styles.descriptionContainer}>
+                                                            {friend ? (
+                                                                <>
+                                                                    This is the beginning of your direct message history with
+                                                                    <strong> @{friend?.username}</strong>.
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    Welcome to the beginning of the
+                                                                    <strong> {channel?.name}</strong> group.
+                                                                </>
+                                                            )}
 
-                                                        {friend && (
-                                                            <div className={styles.descriptionActions}>
-                                                                {friendStatus[3] === "block" && (
+                                                            {friend && (
+                                                                <div className={styles.descriptionActions}>
+                                                                    {friendStatus[3] === "block" && (
+                                                                        <button
+                                                                            className={buttons[friendStatus[1]]?.class}
+                                                                            onClick={() => buttons[friendStatus[1]]?.func()}
+                                                                        >
+                                                                            {buttons[friendStatus[1]]?.text}
+                                                                        </button>
+                                                                    )}
+
+                                                                    {friendStatus[2] && (
+                                                                        <button
+                                                                            className={buttons[friendStatus[2]].class}
+                                                                            onClick={() => buttons[friendStatus[2]].func()}
+                                                                        >
+                                                                            {buttons[friendStatus[2]].text}
+                                                                        </button>
+                                                                    )}
+
                                                                     <button
-                                                                        className={buttons[friendStatus[1]]?.class}
-                                                                        onClick={() => buttons[friendStatus[1]]?.func()}
+                                                                        className={buttons[friendStatus[3]]?.class}
+                                                                        onClick={() => buttons[friendStatus[3]]?.func()}
                                                                     >
-                                                                        {buttons[friendStatus[1]]?.text}
+                                                                        {buttons[friendStatus[3]]?.text}
                                                                     </button>
-                                                                )}
-
-                                                                {friendStatus[2] && (
-                                                                    <button
-                                                                        className={buttons[friendStatus[2]].class}
-                                                                        onClick={() => buttons[friendStatus[2]].func()}
-                                                                    >
-                                                                        {buttons[friendStatus[2]].text}
-                                                                    </button>
-                                                                )}
-
-                                                                <button
-                                                                    className={buttons[friendStatus[3]]?.class}
-                                                                    onClick={() => buttons[friendStatus[3]]?.func()}
-                                                                >
-                                                                    {buttons[friendStatus[3]]?.text}
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
 
                                                 {messages.map((message, index) => (
                                                     <React.Fragment key={uuidv4()}>

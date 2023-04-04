@@ -6,6 +6,7 @@ import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useComponents from "../../hooks/useComponents";
 import useAuth from "../../hooks/useAuth";
+import { useRouter } from "next/router";
 
 const TextArea = ({
     friend,
@@ -25,6 +26,7 @@ const TextArea = ({
     const textAreaRef = useRef(null);
     const { blocked, setBlocked, channels, setChannels } = useUserData();
     const axiosPrivate = useAxiosPrivate();
+    const router = useRouter();
 
     useEffect(() => {
         if (reply) {
@@ -254,7 +256,16 @@ const TextArea = ({
                     contentEditable="true"
                     onInput={(e) => {
                         const text = e.target.innerText.toString();
-                        if (editedMessage) setEditedMessage(text);
+                        if (editedMessage) {
+                            setEditedMessage(text)
+                            localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
+                                ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
+                                edit: {
+                                    ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)).edit,
+                                    content: text,
+                                }
+                            }));
+                        };
                         setMessage(text);
                     }}
                     onKeyDown={(e) => {
@@ -366,7 +377,7 @@ const TextArea = ({
                     borderRadius: reply?.channelId === channel?._id ? "0 0 8px 8px" : "8px",
                 }}
             >
-                <div className={styles.scrollableContainer}>
+                <div className={styles.scrollableContainer + " scrollbar"}>
                     {files.length > 0 && (
                         <>
                             {imageList}

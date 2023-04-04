@@ -29,22 +29,57 @@ export default async (req, res) => {
 
     if (req.method === "GET") {
         const limit = req.body.limit || 50;
+        const before = req.body.before || null;
 
         const messagesReverse = channel.messages.reverse();
-        const messagesLimited = messagesReverse.slice(0, limit);
-        const messages = messagesLimited.reverse();
 
-        for (const message of messages) {
-            if (message.type === 1) {
-                const messageReference = await Message.findById(message.messageReference);
-                message.messageReference = messageReference;
+        if (before) {
+            const index = messagesReverse.findIndex(message => message.createdAt === before);
+
+            if (index === -1) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid before message."
+                });
             }
-        }
 
-        res.status(200).json({
-            success: true,
-            messages
-        });
+            const messagesLimited = messagesReverse.slice(index + 1, index + 1 + limit);
+            const messages = messagesLimited.reverse();
+
+            const hasMoreMessages = channel.messages.length > index + 1 + limit;
+
+            for (const message of messages) {
+                if (message.type === 1) {
+                    const messageReference = await Message.findById(message.messageReference);
+                    message.messageReference = messageReference;
+                }
+            }
+
+            return res.status(200).json({
+                success: true,
+                messages,
+                hasMoreMessages,
+            });
+
+        } else {
+            const messagesLimited = messagesReverse.slice(0, limit);
+            const messages = messagesLimited.reverse();
+
+            const hasMoreMessages = channel.messages.length > limit;
+
+            for (const message of messages) {
+                if (message.type === 1) {
+                    const messageReference = await Message.findById(message.messageReference);
+                    message.messageReference = messageReference;
+                }
+            }
+
+            res.status(200).json({
+                success: true,
+                messages,
+                hasMoreMessages,
+            });
+        }
     } else if (req.method === "POST") {
         const { message } = req.body;
 

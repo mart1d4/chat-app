@@ -25,6 +25,8 @@ import Title from './ChannelList/Title';
 import Modal from './Modal/Modal';
 import MemberList from './MemberList/MemberList';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
+import Header from './Header/Header';
+import Footer from './Footer/Footer';
 
 export {
     AppHeader,
@@ -54,4 +56,6 @@ export {
     Modal,
     MemberList,
     MessageSkeleton,
+    Header,
+    Footer,
 };

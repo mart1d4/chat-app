@@ -13,8 +13,8 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     const [showTooltip, setShowTooltip] = useState(null);
     const [hover, setHover] = useState(false);
     const [editedMessage, setEditedMessage] = useState(
-        edit?.content
-        || message.content
+        (edit?.content || edit?.content === "")
+            ? edit?.content : message.content
     );
 
     const axiosPrivate = useAxiosPrivate();
@@ -39,14 +39,6 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
         };
 
         document.addEventListener("keydown", handleKeyDown);
-
-        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
-            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
-            edit: {
-                messageID: message._id,
-                content: editedMessage,
-            },
-        }));
 
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [editedMessage]);
@@ -137,6 +129,14 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             messageID: message._id,
             content: message.content,
         });
+
+        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
+            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
+            edit: {
+                messageID: message._id,
+                content: message.content,
+            },
+        }));
     };
 
     const pinMessage = async () => {
