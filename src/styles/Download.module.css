@@ -161,7 +161,13 @@
     cursor: initial;
 }
 
-.card:not(:last-child) > div > a {
+.card:not(:last-child) > div > div {
+    position: relative;
+}
+
+.card:not(:last-child) > div > a,
+.card:not(:last-child) > div > div > button {
+    height: auto;
     margin-top: 16px;
     border-radius: 28px;
     font-size: 20px;
@@ -177,7 +183,7 @@
     transition: all 0.2s ease-in-out;
 }
 
-.card:not(:last-child) > div > a > svg {
+.card:not(:last-child) > div > div > button > svg {
     margin-left: 8px;
     transform: rotate(90deg);
 }
@@ -187,7 +193,8 @@
     width: auto;
 }
 
-.card:not(:last-child) > div > a:hover {
+.card:not(:last-child) > div > a:hover,
+.card:not(:last-child) > div > div > button:hover {
     background-color: hsl(223, 6.7%, 20.6%);
     box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
 }
@@ -247,4 +254,37 @@
 .card:last-child > div:last-child > button > svg {
     margin-left: 8px;
     transform: rotate(90deg);
+}
+
+.popup {
+    padding: 16px;
+    width: 100%;
+    margin-top: 8px;
+    position: absolute;
+    top: 100%;
+    background-color: hsl(0, 0%, 100%);
+    border-radius: 8px;
+    box-shadow: 0 1px 1px hsla(0, 0%, 0%, 0.1);
+    overflow: hidden;
+}
+
+.popup > div:hover {
+    border-radius: 4px;
+    background-color: hsla(217, 8%, 34%, 0.16);
+}
+
+.popup > div > a {
+    color: hsl(206, 9%, 15%);
+    text-decoration: none;
+}
+
+.popup > div > a:hover {
+    color: hsl(235, 86%, 65%);
+    text-decoration: underline;
+}
+
+.popup > div > a > div {
+    padding: 4px 8px;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.625;
 }

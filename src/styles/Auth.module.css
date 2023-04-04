@@ -30,6 +30,7 @@
     color: var(--foreground-4);
     background-color: var(--background-4);
     z-index: 1;
+    animation: popIn 0.25s ease-in-out;
 }
 
 .loginContainer {
@@ -192,5 +193,14 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: translateY(-100px) scale(1.1);
+    }
+    to {
+        transform: translateY(0px) scale(1);
     }
 }

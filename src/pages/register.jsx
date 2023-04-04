@@ -113,161 +113,143 @@ const Register = () => {
                     draggable="false"
                 />
 
-                <AnimatePresence>
-                    <motion.form
-                        onSubmit={handleSubmit}
-                        initial={{
-                            scale: 1.2,
-                        }}
-                        animate={{
-                            scale: 1,
-                        }}
-                        exit={{
-                            scale: 1.2,
-                        }}
-                        transition={{
-                            duration: 0.6,
-                            type: "spring",
-
-                        }}
-                    >
-                        <div className={styles.loginContainer}>
-                            <div className={styles.header}>
-                                <h1>Create an account</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className={styles.loginContainer}>
+                        <div className={styles.header}>
+                            <h1>Create an account</h1>
+                        </div>
+                        <div className={styles.loginBlock}>
+                            <div>
+                                <label
+                                    htmlFor="uid"
+                                    style={{
+                                        color: usernameError.length
+                                            ? "var(--error-light)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Username
+                                    {usernameError.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {usernameError}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        ref={uidInputRef}
+                                        id="uid"
+                                        type="text"
+                                        name="username"
+                                        aria-label="Username"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        minLength={2}
+                                        maxLength={32}
+                                        spellCheck="false"
+                                        aria-labelledby="uid"
+                                        aria-describedby="uid"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                    />
+                                </div>
                             </div>
-                            <div className={styles.loginBlock}>
-                                <div>
-                                    <label
-                                        htmlFor="uid"
-                                        style={{
-                                            color: usernameError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Username
-                                        {usernameError.length ? (
-                                            <span className={styles.errorLabel}>
-                                                - {usernameError}
-                                            </span>
-                                        ) : (
-                                            <span>*</span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            ref={uidInputRef}
-                                            id="uid"
-                                            type="text"
-                                            name="username"
-                                            aria-label="Username"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            minLength={2}
-                                            maxLength={32}
-                                            spellCheck="false"
-                                            aria-labelledby="uid"
-                                            aria-describedby="uid"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
 
-                                <div>
-                                    <label
-                                        htmlFor="password"
-                                        style={{
-                                            color: passwordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Password
-                                        {passwordError.length ? (
-                                            <span className={styles.errorLabel}>
-                                                - {passwordError}
-                                            </span>
-                                        ) : (
-                                            <span>*</span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            aria-label="Password"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            maxLength={256}
-                                            spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                        />
-                                    </div>
+                            <div>
+                                <label
+                                    htmlFor="password"
+                                    style={{
+                                        color: passwordError.length
+                                            ? "var(--error-light)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Password
+                                    {passwordError.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {passwordError}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        aria-label="Password"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        maxLength={256}
+                                        spellCheck="false"
+                                        aria-labelledby="password"
+                                        aria-describedby="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
                                 </div>
+                            </div>
 
-                                <div>
-                                    <label
-                                        htmlFor="password-match"
-                                        style={{
-                                            color: passwordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Password Match
-                                        {passwordError.length ? (
-                                            <span className={styles.errorLabel}>
-                                                - {passwordError}
-                                            </span>
-                                        ) : (
-                                            <span>*</span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="password-match"
-                                            type="password"
-                                            name="password-match"
-                                            aria-label="Password Match"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            maxLength={256}
-                                            spellCheck="false"
-                                            aria-labelledby="password-match"
-                                            aria-describedby="password-match"
-                                            value={passwordMatch}
-                                            onChange={(e) => setPasswordMatch(e.target.value)}
-                                        />
-                                    </div>
+                            <div>
+                                <label
+                                    htmlFor="password-match"
+                                    style={{
+                                        color: passwordError.length
+                                            ? "var(--error-light)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Password Match
+                                    {passwordError.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {passwordError}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        id="password-match"
+                                        type="password"
+                                        name="password-match"
+                                        aria-label="Password Match"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        maxLength={256}
+                                        spellCheck="false"
+                                        aria-labelledby="password-match"
+                                        aria-describedby="password-match"
+                                        value={passwordMatch}
+                                        onChange={(e) => setPasswordMatch(e.target.value)}
+                                    />
                                 </div>
+                            </div>
 
-                                <button type="submit" className={styles.buttonSubmit}>
-                                    <div className={isLoading ? styles.loading : ""}>
-                                        {!isLoading && "Register"}
-                                    </div>
+                            <button type="submit" className={styles.buttonSubmit}>
+                                <div className={isLoading ? styles.loading : ""}>
+                                    {!isLoading && "Register"}
+                                </div>
+                            </button>
+
+                            <div className={styles.bottomText}>
+                                <button
+                                    onClick={() => {
+                                        router.push("/login");
+                                    }}
+                                >
+                                    Already have an account?
                                 </button>
-
-                                <div className={styles.bottomText}>
-                                    <button
-                                        onClick={() => {
-                                            router.push("/login");
-                                        }}
-                                    >
-                                        Already have an account?
-                                    </button>
-                                </div>
                             </div>
                         </div>
-                    </motion.form>
-                </AnimatePresence>
+                    </div>
+                </form>
             </div>
         </>
     );

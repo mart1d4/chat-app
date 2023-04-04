@@ -3,7 +3,6 @@ import axios from "../api/axios";
 import useAuth from "../hooks/useAuth";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
-import { motion, AnimatePresence } from "framer-motion";
 import Head from "next/head";
 
 const Login = () => {
@@ -74,127 +73,110 @@ const Login = () => {
                     draggable="false"
                 />
 
-                <AnimatePresence>
-                    <motion.form
-                        onSubmit={handleSubmit}
-                        initial={{
-                            scale: 1.2,
-                        }}
-                        animate={{
-                            scale: 1,
-                        }}
-                        exit={{
-                            scale: 1.2,
-                        }}
-                        transition={{
-                            duration: 0.6,
-                            type: "spring",
-                        }}
-                    >
-                        <div className={styles.loginContainer}>
-                            <div className={styles.header}>
-                                <h1>Welcome back!</h1>
-                                <div>We're so excited to see you again!</div>
+                <form onSubmit={handleSubmit}>
+                    <div className={styles.loginContainer}>
+                        <div className={styles.header}>
+                            <h1>Welcome back!</h1>
+                            <div>We're so excited to see you again!</div>
+                        </div>
+                        <div className={styles.loginBlock}>
+                            <div>
+                                <label
+                                    htmlFor="uid"
+                                    style={{
+                                        color: error.length
+                                            ? "var(--error-light)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Email or Username
+                                    {error.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {error}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        ref={uidInputRef}
+                                        id="uid"
+                                        type="text"
+                                        name="username"
+                                        aria-label="Username"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        spellCheck="false"
+                                        aria-labelledby="uid"
+                                        aria-describedby="uid"
+                                        value={uid}
+                                        onChange={(e) => setUID(e.target.value)}
+                                    />
+                                </div>
                             </div>
-                            <div className={styles.loginBlock}>
-                                <div>
-                                    <label
-                                        htmlFor="uid"
-                                        style={{
-                                            color: error.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Email or Username
-                                        {error.length ? (
-                                            <span className={styles.errorLabel}>
-                                                - {error}
-                                            </span>
-                                        ) : (
-                                            <span>*</span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            ref={uidInputRef}
-                                            id="uid"
-                                            type="text"
-                                            name="username"
-                                            aria-label="Username"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="uid"
-                                            aria-describedby="uid"
-                                            value={uid}
-                                            onChange={(e) => setUID(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
 
-                                <div style={{ marginBottom: 0 }}>
-                                    <label
-                                        htmlFor="password"
-                                        style={{
-                                            color: error.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Password
-                                        {error.length ? (
-                                            <span className={styles.errorLabel}>
-                                                - {error}
-                                            </span>
-                                        ) : (
-                                            <span>*</span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            aria-label="Password"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            maxLength={256}
-                                            minLength={8}
-                                            spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                        />
-                                    </div>
+                            <div style={{ marginBottom: 0 }}>
+                                <label
+                                    htmlFor="password"
+                                    style={{
+                                        color: error.length
+                                            ? "var(--error-light)"
+                                            : "var(--foreground-3)",
+                                    }}
+                                >
+                                    Password
+                                    {error.length ? (
+                                        <span className={styles.errorLabel}>
+                                            - {error}
+                                        </span>
+                                    ) : (
+                                        <span>*</span>
+                                    )}
+                                </label>
+                                <div className={styles.inputContainer}>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        aria-label="Password"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        maxLength={256}
+                                        minLength={8}
+                                        spellCheck="false"
+                                        aria-labelledby="password"
+                                        aria-describedby="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
                                 </div>
+                            </div>
 
-                                <button className={styles.passwordForgot}>
-                                    Forgot your password?
+                            <button className={styles.passwordForgot}>
+                                Forgot your password?
+                            </button>
+                            <button type="submit" className={styles.buttonSubmit}>
+                                <div className={isLoading ? styles.loading : ""}>
+                                    {!isLoading && "Login"}
+                                </div>
+                            </button>
+
+                            <div className={styles.bottomText}>
+                                <span>Need an account?</span>
+                                <button
+                                    onClick={() => {
+                                        router.push("/register");
+                                    }}
+                                >
+                                    Register
                                 </button>
-                                <button type="submit" className={styles.buttonSubmit}>
-                                    <div className={isLoading ? styles.loading : ""}>
-                                        {!isLoading && "Login"}
-                                    </div>
-                                </button>
-
-                                <div className={styles.bottomText}>
-                                    <span>Need an account?</span>
-                                    <button
-                                        onClick={() => {
-                                            router.push("/register");
-                                        }}
-                                    >
-                                        Register
-                                    </button>
-                                </div>
                             </div>
                         </div>
-                    </motion.form>
-                </AnimatePresence>
+                    </div>
+                </form>
             </div>
         </>
     );

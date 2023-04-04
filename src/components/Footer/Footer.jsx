@@ -283,6 +283,7 @@ const Footer = () => {
                                     <div>
                                         {languages.map((language) => (
                                             <div
+                                                key={uuidv4()}
                                                 className={styles.langItem}
                                                 onClick={() => {
                                                     setLang(language);
