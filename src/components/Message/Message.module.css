@@ -3,7 +3,7 @@
     position: relative;
 }
 
-.li:hover {
+.li:not(.noInt):hover {
     background-color: var(--background-hover-4);
 }
 
@@ -11,7 +11,7 @@
     background-color: var(--background-message-highlight);
 }
 
-.liReply:hover {
+.liReply:not(.noInt):hover {
     background-color: var(--background-message-highlight-hover);
 }
 

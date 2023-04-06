@@ -56,7 +56,8 @@
     background-color: var(--accent-1);
 }
 
-.listItemWrapper path {
+.listItemWrapper path,
+.listItemWrapperActive path {
     fill: var(--foreground-2);
 }
 

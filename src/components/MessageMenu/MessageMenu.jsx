@@ -90,6 +90,9 @@ const MessageMenu = ({ message, start, functions, menuItems }) => {
                                 setMenu({
                                     event: e,
                                     items: menuItems,
+                                    side: 'left',
+                                    element: menuButtonRef.current,
+                                    gap: 5,
                                     message: message?._id,
                                 });
                                 setShowTooltip(null);

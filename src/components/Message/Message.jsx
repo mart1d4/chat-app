@@ -1,7 +1,7 @@
 import styles from "./Message.module.css";
 import { format, formatRelative } from "date-fns";
 import { Tooltip, MessageMenu, TextArea } from "../";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useComponents from "../../hooks/useComponents";
 import { useRouter } from "next/router";
@@ -9,17 +9,20 @@ import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 
 
-const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply, setReply }) => {
+const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply, setReply, noInt }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [hover, setHover] = useState(false);
+    const [shift, setShift] = useState(false);
     const [editedMessage, setEditedMessage] = useState(
         (edit?.content || edit?.content === "")
             ? edit?.content : message.content
     );
 
+    let noInteraction = noInt || false;
+
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const { menu, setMenu } = useComponents();
+    const { menu, setMenu, setPopup } = useComponents();
     const { auth } = useAuth();
 
     useEffect(() => {
@@ -42,6 +45,28 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [editedMessage]);
+
+    useEffect(() => {
+        const handleShift = (e) => {
+            if (e.key === "Shift") {
+                setShift(true);
+            }
+        };
+
+        const handleShiftUp = (e) => {
+            if (e.key === "Shift") {
+                setShift(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleShift);
+        document.addEventListener("keyup", handleShiftUp);
+
+        return () => {
+            document.removeEventListener("keydown", handleShift);
+            document.removeEventListener("keyup", handleShiftUp);
+        };
+    }, []);
 
     const checkMessageDate = (date) => {
         const today = new Date();
@@ -108,9 +133,19 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
         }));
     }
 
+    const deletePopup = () => {
+        setPopup({
+            delete: {
+                channelID: channelID,
+                message: message,
+                func: () => deleteMessage(),
+            }
+        });
+    };
+
     const deleteMessage = async () => {
         const response = await axiosPrivate.delete(
-            `/channels/${router.query.channelID}/messages/${message._id}`
+            `/channels/${channelID}/messages/${message._id}`
         );
 
         if (!response.data.success) {
@@ -120,7 +155,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                 return messages.filter(
                     (message) => message._id !== response.data.message._id
                 );
-            });
+            })
         }
     };
 
@@ -139,9 +174,65 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
         }));
     };
 
-    const pinMessage = async () => {
-        console.log(message._id);
+    const pinPopup = async () => {
+        setPopup({
+            pin: {
+                channelID: channelID,
+                message: message,
+                func: () => pinMessage(),
+            }
+        });
     };
+
+    const pinMessage = async () => {
+        const response = await axiosPrivate.put(
+            `/channels/${channelID}/pins/${message._id}`,
+        );
+
+        if (!response.data.success) {
+            console.log(response.data.message);
+        } else {
+            setMessages((messages) => {
+                return messages.map((message) => {
+                    if (message._id === response.data.data._id) {
+                        return response.data.data;
+                    } else {
+                        return message;
+                    }
+                });
+            });
+        }
+    }
+
+    const unpinPopup = async () => {
+        setPopup({
+            unpin: {
+                channelID: channelID,
+                message: message,
+                func: () => unpinMessage(),
+            }
+        });
+    };
+
+    const unpinMessage = async () => {
+        const response = await axiosPrivate.delete(
+            `/channels/${channelID}/pins/${message._id}`,
+        );
+
+        if (!response.data.success) {
+            console.log(response.data.message);
+        } else {
+            setMessages((messages) => {
+                return messages.map((message) => {
+                    if (message._id === response.data.data._id) {
+                        return response.data.data;
+                    } else {
+                        return message;
+                    }
+                });
+            });
+        }
+    }
 
     const replyToMessage = async () => {
         setReply(message);
@@ -157,7 +248,9 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     };
 
     const copyMessageLink = async () => {
-        console.log(message._id);
+        navigator.clipboard.writeText(
+            `https://discord.com/channels/@me/${router.query.channelID}/${message._id}`
+        );
     };
 
     const copyMessageID = () => {
@@ -166,17 +259,27 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const senderItems = [
         { name: 'Edit Message', icon: "edit", func: editMessage },
-        { name: 'Pin Message', icon: "pin", func: pinMessage },
+        {
+            name: message?.pinned ? 'Unpin Message' : 'Pin Message',
+            icon: "pin",
+            func: message?.pinned ? unpinPopup : pinPopup,
+            funcShift: message?.pinned ? unpinMessage : pinMessage
+        },
         { name: 'Reply', icon: "reply", func: replyToMessage },
         { name: 'Mark Unread', icon: "mark", func: markUnread },
         { name: 'Copy Message Link', icon: "link", func: copyMessageLink },
-        { name: 'Delete Message', icon: "delete", func: deleteMessage, danger: true },
+        { name: 'Delete Message', icon: "delete", func: deletePopup, funcShift: deleteMessage, danger: true },
         { name: 'Divider' },
         { name: 'Copy Message ID', icon: "id", func: copyMessageID },
     ];
 
     const receiverItems = [
-        { name: 'Pin Message', icon: "pin", func: pinMessage, },
+        {
+            name: message?.pinned ? 'Unpin Message' : 'Pin Message',
+            icon: "pin",
+            func: message?.pinned ? unpinPopup : pinPopup,
+            funcShift: message?.pinned ? unpinMessage : pinMessage
+        },
         { name: 'Reply', icon: "reply", func: replyToMessage, },
         { name: 'Mark Unread', icon: "mark", func: markUnread, },
         { name: 'Copy Message Link', icon: "link", func: copyMessageLink, },
@@ -188,12 +291,16 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
         <div
             className={
                 reply?._id === message._id
-                    ? styles.liReply : styles.li
+                    ? styles.liReply + " " + styles.noInt : styles.li + " " + styles.noInt
             }
-            onMouseEnter={() => setHover(true)}
+            onMouseEnter={() => {
+                if (noInteraction) return;
+                setHover(true);
+            }}
             onMouseLeave={() => setHover(false)}
             onContextMenu={(e) => {
                 e.preventDefault();
+                if (noInteraction) return;
                 setMenu({
                     items: message.author._id === auth?.user?._id ? senderItems : receiverItems,
                     event: e,
@@ -204,11 +311,12 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                 ? { backgroundColor: reply?._id === message._id ? "" : "var(--background-hover-4)" }
                 : {}}
         >
-            {((hover || (menu?.message === message?._id)) && edit?.messageID !== message._id) && (
+            {((hover || (menu?.message === message?._id)) && (edit?.messageID !== message._id)) && (
                 <MessageMenu
                     message={message}
                     start={start}
                     functions={{
+                        deletePopup,
                         deleteMessage,
                         editMessage,
                         pinMessage,
@@ -221,9 +329,8 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                 />
             )}
 
-            {(start || message.type === 1) ? (
+            {(start || message.type === 1 || noInteraction) ? (
                 <div className={styles.messageStart}>
-
                     {message.type === 1 && (
                         <div className={styles.messageReply}>
                             <Image
@@ -246,6 +353,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
+                            if (noInteraction) return;
                             if (message.author._id === auth?.user?._id) {
                                 editMessage();
                             } else {

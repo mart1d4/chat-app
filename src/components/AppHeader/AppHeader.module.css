@@ -37,6 +37,12 @@
     margin-right: 8px;
     flex: 0 0 auto;
     min-width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--foreground-1);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
 }
 
 .titleFriend {

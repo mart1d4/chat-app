@@ -81,6 +81,7 @@
     font-size: 14px;
     line-height: 18px;
     font-weight: 600;
+    color: var(--foreground-1);
 }
 
 .contentWrapper > div:last-child {

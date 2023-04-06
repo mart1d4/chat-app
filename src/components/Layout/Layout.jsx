@@ -1,4 +1,4 @@
-import { AppNav, Loader, Settings, UserProfile, Menu, Modal } from "../";
+import { AppNav, Loader, Settings, UserProfile, Menu, Popup } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
@@ -14,10 +14,7 @@ const Layout = ({ children }) => {
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
     const { auth, isLoading } = useAuth();
-    const {
-        showSettings,
-        modal,
-    } = useComponents();
+    const { showSettings } = useComponents();
     const {
         setFriends,
         setRequests,
@@ -96,11 +93,7 @@ const Layout = ({ children }) => {
                     </AnimatePresence>
 
                     <UserProfile />
-
-                    <AnimatePresence>
-                        {modal && <Modal />}
-                    </AnimatePresence>
-
+                    <Popup />
                     <AppNav />
 
                     <div className={styles.wrapper}>

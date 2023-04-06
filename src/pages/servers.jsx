@@ -1,38 +1,22 @@
 import { Layout, NestedLayout, AppHeader } from '../components/';
+import styles from '../styles/Servers.module.css';
 
-const servers = () => {
+const Servers = () => {
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                backgroundColor: "var(--background-4)",
-                height: "100%",
-                width: "100%",
-            }}
-        >
+        <div className={styles.container}>
             <AppHeader
                 content="friends"
                 active={"online"}
             />
 
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "100%",
-                    width: "100%",
-                    fontSize: "2rem",
-                }}
-            >
+            <div className={styles.content}>
                 Servers coming soon!
             </div>
         </div>
     );
 }
 
-servers.getLayout = (page) => {
+Servers.getLayout = (page) => {
     return (
         <Layout>
             <NestedLayout>
@@ -42,4 +26,4 @@ servers.getLayout = (page) => {
     );
 };
 
-export default servers;
+export default Servers;

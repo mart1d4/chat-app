@@ -322,7 +322,7 @@ const UserProfile = () => {
                                     status={(userSatus === "Friends" || isSameUser())
                                         ? user.status
                                         : "Offline"}
-                                    background="var(--background-3)"
+                                    background="var(--background-2)"
                                     size
                                     tooltip={true}
                                     tooltipDist={5}
@@ -447,7 +447,7 @@ const UserProfile = () => {
                             </div>
 
                             <div
-                                className={styles.contentUser}
+                                className={styles.contentUser + " scrollbar"}
                                 style={{
                                     padding: activeNavItem === 0 ? "0 12px" : "",
                                 }}
@@ -466,7 +466,7 @@ const UserProfile = () => {
                                                 </>
                                             )}
 
-                                        <h1>Unthrust Member Since</h1>
+                                        <h1>Discord Member Since</h1>
                                         <div className={styles.contentUserDate}>
                                             <div>
                                                 {format(
@@ -480,7 +480,7 @@ const UserProfile = () => {
                                         <div className={styles.contentNote}>
                                             <textarea
                                                 ref={noteRef}
-                                                style={{ height: noteRef?.current?.scrollHeight || 44 }}
+                                                style={{ height: noteRef?.current?.scrollHeight + 2 || 44 }}
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}
                                                 placeholder="Click to add a note"
@@ -527,7 +527,7 @@ const UserProfile = () => {
                                                             background={
                                                                 hoveredFriend === index
                                                                     ? "var(--background-3)"
-                                                                    : "var(--background-1)"
+                                                                    : "var(--background-dark)"
                                                             }
                                                         />
                                                     </div>

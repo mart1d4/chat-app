@@ -109,7 +109,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                                 )}
 
                                 <div>
-                                    <h2>Unthrust Member Since</h2>
+                                    <h2>Discord Member Since</h2>
                                     <div className={styles.contentUserDate}>
                                         <div>
                                             {friend ? format(
@@ -126,6 +126,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                                     <h2>Note</h2>
                                     <div className={styles.contentNote}>
                                         <textarea
+                                            className="scrollbar"
                                             ref={noteRef}
                                             style={{
                                                 height: noteRef?.current?.scrollHeight ?

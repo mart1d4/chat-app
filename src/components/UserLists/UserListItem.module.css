@@ -91,6 +91,11 @@
     align-items: flex-end;
     line-height: 1.1;
     font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: var(--foreground-1);
+    font-weight: 600;
 }
 
 .textStatus {

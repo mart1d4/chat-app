@@ -22,11 +22,11 @@ import EmojiPicker from './TextArea/EmojiPicker';
 import UserProfile from './UserProfile/UserProfile';
 import FilePreview from './TextArea/FilePreview';
 import Title from './ChannelList/Title';
-import Modal from './Modal/Modal';
 import MemberList from './MemberList/MemberList';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
+import Popup from './Popup/Popup';
 
 export {
     AppHeader,
@@ -53,9 +53,9 @@ export {
     UserProfile,
     FilePreview,
     Title,
-    Modal,
     MemberList,
     MessageSkeleton,
     Header,
     Footer,
+    Popup,
 };

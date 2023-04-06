@@ -50,12 +50,12 @@
 
 .menuItemActive {
     background-color: var(--accent-1);
-    color: var(--foregroun-1);
+    color: var(--foreground-1);
 }
 
 .menuItemActive:active {
     background-color: var(--accent-2) !important;
-    color: var(--foregroun-1);
+    color: var(--foreground-1);
 }
 
 .menuItemDangerActive {
@@ -65,7 +65,7 @@
 
 .menuItemDangerActive:active {
     background-color: var(--error-2) !important;
-    color: var(--foregroun-1);
+    color: var(--foreground-1);
 }
 
 .menuItemDanger path {
@@ -111,4 +111,134 @@
 .divider {
     margin: 4px;
     border-bottom: 1px solid var(--border-light);
+}
+
+.pinContainer {
+    position: fixed;
+    max-height: calc(100vh - 32px);
+    z-index: 100000;
+    background-color: var(--background-3);
+    width: 420px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    box-shadow: var(--elevation-high), var(--elevation-low);
+    user-select: none;
+}
+
+.pinContainer > div:first-child {
+    padding: 16px;
+    background-color: var(--background-1);
+    box-shadow: var(--elevation-low);
+}
+
+.pinContainer > div:first-child > h1 {
+    color: var(--foreground-1);
+    font-weight: 500;
+    font: 16px;
+    line-height: 20px;
+}
+
+.pinContainer > div:nth-child(2) {
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding: 8px 0 0 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: var(--background-3);
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    border-color: transparent;
+    background-color: var(--background-1);
+}
+
+.noPinnedContent {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 8px 0 16px 0;
+}
+
+.noPinnedContent > div:first-child {
+    background-image: url(/assets/no-pinned.svg);
+    width: 120px;
+    height: 120px;
+    background-size: 94px 120px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.noPinnedContent > div:last-child {
+    white-space: pre;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--foreground-2);
+}
+
+.noPinnedBottom {
+    padding: 16px;
+    text-align: center;
+    background-color: var(--background-1);
+    height: 53px;
+    box-sizing: content-box;
+}
+
+.noPinnedBottom > div {
+    padding-top: 10px;
+}
+
+.noPinnedBottom > div > div:first-child {
+    color: var(--success-light);
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 18px;
+}
+
+.noPinnedBottom > div > div:last-child {
+    font-size: 14px;
+    line-height: 16px;
+    opacity: 0.6;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.messageContainer {
+    position: relative;
+    border: 1px solid var(--background-1);
+    border-radius: 4px;
+    user-select: none;
+    margin: 0 0 6px;
+    overflow: hidden;
+}
+
+.messageContainer > div {
+    padding: 10px 0;
+    background-color: var(--background-4);
+}
+
+.messageContainer > div > div {
+    margin-top: 0;
+}
+
+.messageContainer > div img {
+    pointer-events: none;
+}
+
+.pinContainer .messageContainer > div > div * {
+    user-select: none;
 }

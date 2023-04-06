@@ -329,7 +329,7 @@ const TextArea = ({
                     marginBottom: "0",
                 }}
             >
-                <div className={styles.scrollableContainer}>
+                <div className={styles.scrollableContainer + " scrollbar"}>
                     <div className={styles.input}>
                         {textContainer}
 

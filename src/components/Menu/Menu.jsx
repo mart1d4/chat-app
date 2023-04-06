@@ -1,33 +1,77 @@
-import { Icon } from "../";
+import { Icon, Message } from "../";
 import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
 import useComponents from "../../hooks/useComponents";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import { useRouter } from "next/router";
 
 const Menu = () => {
     const [positions, setPositions] = useState({});
-    const [parent, setParent] = useState(null);
     const [container, setContainer] = useState(null);
     const [active, setActive] = useState(null);
+    const [shift, setShift] = useState(false);
+    const [pinnedMessages, setPinnedMessages] = useState(null);
 
     const { menu, setMenu } = useComponents();
     const event = menu?.event;
+    const side = menu?.side;
+    const side2 = menu?.side2;
+    const element = menu?.element;
+    const gap = menu?.gap;
     const items = menu?.items;
+
+    const axiosPrivate = useAxiosPrivate();
+    const router = useRouter();
 
     useEffect(() => {
         if (!menu) {
             setPositions({});
-            setParent(null);
             setContainer(null);
             setActive(null);
         }
     }, [menu]);
 
+    useEffect(() => {
+        if (!menu?.name === "pin") return;
+
+        const getPinnedMessages = async () => {
+            const response = await axiosPrivate.get(
+                `/channels/${router.query.channelID}/pins`,
+            );
+
+            setPinnedMessages(response.data.pins);
+        };
+
+        getPinnedMessages();
+    }, [menu]);
+
+    useEffect(() => {
+        const handleShift = (e) => {
+            if (e.key === "Shift") {
+                setShift(true);
+            }
+        };
+
+        const handleShiftUp = (e) => {
+            if (e.key === "Shift") {
+                setShift(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleShift);
+        document.addEventListener("keyup", handleShiftUp);
+
+        return () => {
+            document.removeEventListener("keydown", handleShift);
+            document.removeEventListener("keyup", handleShiftUp);
+        };
+    }, []);
+
     const containerRef = useCallback(node => {
         if (!event) return;
 
         if (node !== null) {
-            setParent(node.parentElement);
             setContainer({
                 width: node.offsetWidth,
                 height: node.offsetHeight,
@@ -39,37 +83,140 @@ const Menu = () => {
     const menuItems = items?.filter((item) => item.name !== "Divider");
 
     useEffect(() => {
-        if (!parent || !container || !event) return;
+        if (!container || !event) return;
 
         let pos = {}
 
-        // If there's not enough space to the right, open to the left
-        if (window.innerWidth - 10 - event.clientX < container.width) {
-            pos = {
-                top: event.clientY,
-                left: event.clientX - container.width,
-            };
-        } else {
-            pos = {
-                top: event.clientY,
-                left: event.clientX,
-            };
-        }
+        if (!side && !element) {
+            // If there's not enough space to the right, open to the left
+            if (window.innerWidth - 10 - event.clientX < container.width) {
+                pos = {
+                    top: event.clientY,
+                    left: event.clientX - container.width,
+                };
+            } else {
+                pos = {
+                    top: event.clientY,
+                    left: event.clientX,
+                };
+            }
 
-        // If there's not enough space to the bottom, move the menu up
-        if (window.innerHeight - 10 - event.clientY < container.height) {
-            pos = {
-                ...pos,
-                bottom: 10,
-                top: "unset",
-            };
+            // If there's not enough space to the bottom, move the menu up
+            if (window.innerHeight - 10 - event.clientY < container.height) {
+                pos = {
+                    ...pos,
+                    bottom: 10,
+                    top: "unset",
+                };
+            }
+        } else {
+            // If a side is specified, open the menu to that side of the element
+
+            const elementRect = element.getBoundingClientRect();
+
+            if (side === "left") {
+                pos = {
+                    top: elementRect.top,
+                    left: elementRect.left - container.width - gap,
+                };
+
+                if (side2 === "top") {
+                    pos = {
+                        ...pos,
+                        top: elementRect.top,
+                    };
+                } else if (side2 === "bottom") {
+                    pos = {
+                        ...pos,
+                        top: elementRect.bottom - container.height,
+                    };
+                }
+            } else if (side === "right") {
+                pos = {
+                    top: elementRect.top,
+                    left: elementRect.right + gap,
+                };
+
+                if (side2 === "top") {
+                    pos = {
+                        ...pos,
+                        top: elementRect.top,
+                    };
+                } else if (side2 === "bottom") {
+                    pos = {
+                        ...pos,
+                        top: elementRect.bottom - container.height,
+                    };
+                }
+            } else if (side === "top") {
+                pos = {
+                    top: elementRect.top - container.height - gap,
+                    left: elementRect.left,
+                };
+
+                if (side2 === "left") {
+                    pos = {
+                        ...pos,
+                        left: elementRect.left,
+                    };
+                } else if (side2 === "right") {
+                    pos = {
+                        ...pos,
+                        left: elementRect.right - container.width,
+                    };
+                }
+            } else if (side === "bottom") {
+                pos = {
+                    top: elementRect.bottom + gap,
+                    left: elementRect.left,
+                };
+
+                if (side2 === "left") {
+                    pos = {
+                        ...pos,
+                        left: elementRect.left,
+                    };
+                } else if (side2 === "right") {
+                    pos = {
+                        ...pos,
+                        left: elementRect.right - container.width,
+                    };
+                }
+            }
+
+            // If there's not enough space to the bottom, move the menu up
+            if (window.innerHeight - 10 - pos.top < container.height) {
+                pos = {
+                    ...pos,
+                    bottom: 10,
+                    top: "unset",
+                };
+            } else {
+                pos = {
+                    ...pos,
+                    bottom: "unset",
+                };
+            }
+
+            // If there's not enough space to the right, move the menu to the left
+            if (window.innerWidth - 10 - pos.left < container.width) {
+                pos = {
+                    ...pos,
+                    left: elementRect.right - container.width,
+                };
+            } else {
+                pos = {
+                    ...pos,
+                    right: "unset",
+                };
+            }
         }
 
         setPositions(pos);
-    }, [parent, container, container?.width]);
+    }, [container, container?.width]);
 
     useEffect(() => {
-        if (!parent || !container || !event) return;
+        if (!container || !event) return;
 
         const handleClickOutside = (e) => {
             if (e.clientX === event.clientX) return;
@@ -116,9 +263,74 @@ const Menu = () => {
             document.removeEventListener("click", handleClickOutside);
             document.removeEventListener("keydown", handlekeyDown);
         };
-    }, [parent, active]);
+    }, [active]);
 
     if (!menu) return null;
+
+    if (menu.name === "pin") {
+        return (
+            <div
+                ref={containerRef}
+                className={styles.pinContainer}
+                style={{
+                    ...positions,
+                    opacity: (container && positions.top) ? 1 : 0,
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+                onContextMenu={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+                onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+            >
+                <div>
+                    <h1>Pinned Messages</h1>
+                </div>
+
+                <div className="scrollbar">
+                    {(!pinnedMessages || pinnedMessages.length === 0) ? (
+                        <div className={styles.noPinnedContent}>
+                            <div />
+
+                            <div>
+                                This direct message doesn't have <br />
+                                any pinned messages... yet.
+                            </div>
+                        </div>
+                    ) :
+                        pinnedMessages.map((message) => (
+                            <div
+                                key={uuidv4()}
+                                className={styles.messageContainer}
+                            >
+                                <Message message={message} noInt={true} />
+                            </div>
+                        ))
+                    }
+                </div>
+
+                {(!pinnedMessages || pinnedMessages.length === 0) && (
+                    <div className={styles.noPinnedBottom}>
+                        <div>
+                            <div>
+                                Protip:
+                            </div>
+
+                            <div>
+                                You and { } can pin a message from its cog menu.
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div
@@ -158,6 +370,10 @@ const Menu = () => {
                                 onClick={() => {
                                     if (item.disabled) return;
                                     setMenu(null);
+                                    if (shift && item.funcShift) {
+                                        item.funcShift();
+                                        return;
+                                    }
                                     item.func();
                                 }}
                                 onMouseEnter={() => setActive(item.name)}

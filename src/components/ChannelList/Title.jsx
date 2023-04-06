@@ -19,7 +19,7 @@ const Title = () => {
     const { friends, setChannels } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    
+
     const showButton = useRef();
     const inputRef = useRef();
 
@@ -194,7 +194,7 @@ const Title = () => {
                         </div>
 
                         <div
-                            className={styles.scroller}
+                            className={styles.scroller + " scrollbar"}
                             onScroll={(e) => setScrollHeight(e.target.scrollTop)}
                         >
                             {filteredList?.map((friend) => (

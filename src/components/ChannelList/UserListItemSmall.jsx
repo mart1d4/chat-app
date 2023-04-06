@@ -453,7 +453,10 @@ const UserListItemSmall = ({ special, user, channel }) => {
                                         <AvatarStatus
                                             status={(isFriend() || receivedRequest())
                                                 ? user?.status : "Offline"}
-                                            background={"var(--background-3)"}
+                                            background={
+                                                currentPath === `/channels/@me/${channel?._id}`
+                                                    ? "var(--background-5)" : "var(--background-3)"
+                                            }
                                             tooltip={true}
                                         />
                                     )}

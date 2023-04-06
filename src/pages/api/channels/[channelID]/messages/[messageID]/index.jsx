@@ -23,10 +23,10 @@ export default async (req, res) => {
         });
     }
 
-    const channel = await Channel.findById(channelID);
+    const channel = await Channel.findById(channelID).populate("pinnedMessages");
     const message = await Message.findById(messageID);
 
-    const messageRef = await Message.findById(message.messageReference);
+    const messageRef = await Message.findById(message?.messageReference);
 
     if (!channel) {
         return res.status(404).json({
@@ -65,6 +65,11 @@ export default async (req, res) => {
         });
     } else if (req.method === "DELETE") {
         await message.remove();
+
+        if (channel.pinnedMessages.includes(message._id)) {
+            channel.pinnedMessages = channel.pinnedMessages.filter((m) => m !== message._id);
+            await channel.save();
+        }
 
         res.status(200).json({
             success: true,

@@ -7,16 +7,6 @@
         url('../../public/fonts/ggsans/ggsans-Bold.woff2') format('woff2'),
         url('../../public/fonts/ggsans/ggsans-Bold.woff') format('woff'),
         url('../../public/fonts/ggsans/ggsans-Bold.ttf') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../../public/fonts/ggsans/gg-sans-700.woff');
-    src: local('gg sans 700'), local('gg-sans-700'),
-        url('../../public/fonts/ggsans/gg-sans-700.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -65,7 +55,7 @@
         url('../../public/fonts/ggsans/ggsans-BoldItalic.woff') format('woff'),
         url('../../public/fonts/ggsans/ggsans-BoldItalic.ttf')
             format('truetype');
-    font-weight: bold;
+    font-weight: 700;
     font-style: italic;
     font-display: swap;
 }
@@ -107,7 +97,7 @@
         url('../../public/fonts/ggsans/ggsans-ExtraBold.woff2') format('woff2'),
         url('../../public/fonts/ggsans/ggsans-ExtraBold.woff') format('woff'),
         url('../../public/fonts/ggsans/ggsans-ExtraBold.ttf') format('truetype');
-    font-weight: bold;
+    font-weight: 800;
     font-style: normal;
     font-display: swap;
 }
@@ -124,7 +114,7 @@
             format('woff'),
         url('../../public/fonts/ggsans/ggsans-ExtraBoldItalic.ttf')
             format('truetype');
-    font-weight: bold;
+    font-weight: 800;
     font-style: italic;
     font-display: swap;
 }
@@ -138,7 +128,7 @@
         url('../../public/fonts/ggsans/ggsans-Normal.woff2') format('woff2'),
         url('../../public/fonts/ggsans/ggsans-Normal.woff') format('woff'),
         url('../../public/fonts/ggsans/ggsans-Normal.ttf') format('truetype');
-    font-weight: normal;
+    font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
@@ -154,7 +144,7 @@
         url('../../public/fonts/ggsans/ggsans-NormalItalic.woff') format('woff'),
         url('../../public/fonts/ggsans/ggsans-NormalItalic.ttf')
             format('truetype');
-    font-weight: normal;
+    font-weight: 400;
     font-style: italic;
     font-display: swap;
 }
@@ -163,11 +153,9 @@
     font-family: 'gg sans';
     src: url('../../public/fonts/ggsans/gg-sans-300.woff');
     src: local('gg sans 300'), local('gg-sans-300'),
-        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff2')
-            format('woff2'),
-        url('../../public/fonts/ggsans/ggsans-NormalItalic.woff') format('woff');
+        url('../../public/fonts/ggsans/gg-sans-300.woff') format('woff');
     font-weight: 300;
-    font-style: italic;
+    font-style: normal;
     font-display: swap;
 }
 
@@ -177,7 +165,7 @@
     src: local('Ginto Nord'), local('Ginto-Nord-700'),
         url('../../public/fonts/ginto/Ginto-Nord-700.woff2') format('woff2'),
         url('../../public/fonts/ginto/Ginto-Nord-700.woff') format('woff');
-    font-weight: bolder;
+    font-weight: 700;
     font-style: normal;
     font-display: swap;
 }
@@ -204,7 +192,7 @@
         --foreground-2: hsl(210, 9%, 87%, 1);
         --foreground-3: hsl(216, 4%, 74%, 1);
         --foreground-4: hsl(214, 4%, 65%, 1);
-        --foreground-5: hsl(213, 4%, 57%, 1);
+        --foreground-5: hsl(223, 5.8%, 52.9%, 1);
         --foreground-light: hsl(218, 5%, 47%, 1);
         --accent-1: hsl(235, 86%, 65%);
         --accent-2: hsl(235, 51%, 52%);
@@ -326,14 +314,9 @@ body,
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
-    background-color: var(--background-1);
-    color: var(--foreground-1);
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;
-    color-scheme: dark light;
     scroll-behavior: smooth;
-    min-height: -webkit-fill-available;
-    height: -webkit-fill-available;
 }
 
 .container {
@@ -353,6 +336,7 @@ h6 {
 }
 
 button {
+    color: var(--foreground-2);
     position: relative;
     display: flex;
     align-items: center;

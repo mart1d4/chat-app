@@ -16,7 +16,7 @@ const defaults = [
     },
     {
         avatar: "/assets/default-avatars/red.png",
-        color: "#de2761",
+        color: "#ed4546",
     },
     {
         avatar: "/assets/default-avatars/yellow.png",

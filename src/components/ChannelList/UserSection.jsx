@@ -1,7 +1,7 @@
 import styles from "./UserSection.module.css";
 import { Tooltip, Icon, AvatarStatus } from "..";
 import useLogout from "../../hooks/useLogout";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 import useComponents from "../../hooks/useComponents";
@@ -15,10 +15,12 @@ const UserSection = () => {
     const {
         setShowSettings,
         setUserProfile,
+        menu,
         setMenu,
     } = useComponents();
     const { userSettings, setUserSettings } = useUserSettings();
     const { logout } = useLogout();
+    const userSection = useRef(null);
 
     const menuItems = [
         { name: "Profile", func: () => setUserProfile({ user: auth?.user }) },
@@ -37,13 +39,22 @@ const UserSection = () => {
         <div className={styles.userSectionContainer}>
             <div className={styles.userSection}>
                 <div
+                    ref={userSection}
                     className={styles.avatarWrapper}
                     onClick={(e) => {
                         e.stopPropagation();
-                        setMenu({
-                            items: menuItems,
-                            event: e,
-                        })
+                        if (menu?.name === "user") {
+                            setMenu(null);
+                        } else {
+                            setMenu({
+                                items: menuItems,
+                                event: e,
+                                side: "top",
+                                element: userSection.current,
+                                gap: 10,
+                                name: "user",
+                            })
+                        }
                     }}
                     onMouseEnter={() => setHover("user")}
                     onMouseLeave={() => setHover(false)}

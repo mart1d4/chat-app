@@ -1,7 +1,7 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon, AvatarStatus } from "../";
 import ToolbarIcon from "./ToolbarIcon";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import useUserData from "../../hooks/useUserData";
 import useComponents from "../../hooks/useComponents";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +10,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
     const [showTooltip, setShowTooltip] = useState(false);
 
     const { requests } = useUserData();
-    const { setUserProfile } = useComponents();
+    const { setUserProfile, setMenu } = useComponents();
     const requestReceived = requests?.filter((request) => request.type === 1).length;
 
     const tabs = [
@@ -24,7 +24,30 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
     const toolbarItems = !content ? [
         { name: "Start Voice Call", icon: "call", func: () => { } },
         { name: "Start Video Call", icon: "video", func: () => { } },
-        { name: "Pinned Messages", icon: "pin", func: () => { } },
+        {
+            name: "Pinned Messages", icon: "pin", func: (e, element, menu) => {
+                if (menu?.name === "pin") {
+                    setMenu(null);
+                    return;
+                } else {
+                    setMenu({
+                        event: e,
+                        items: [
+                            { name: "Divider" },
+                            { name: "Divider" },
+                            { name: "Divider" },
+                            { name: "Divider" },
+                            { name: "Divider" }
+                        ],
+                        side: "bottom",
+                        side2: "right",
+                        element: element,
+                        gap: 5,
+                        name: "pin",
+                    });
+                }
+            }
+        },
         { name: "Add Friends to DM", icon: "addUser", func: () => { } },
         {
             name: friend ? (
@@ -46,7 +69,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                 {content ? (
                     <>
                         <div className={styles.icon}>
-                            <Icon name="friends" fill="var(--foreground-4)" />
+                            <Icon name="friends" fill="var(--foreground-5)" />
                         </div>
                         <h1 className={styles.title}>Friends</h1>
                         <div className={styles.divider}></div>
