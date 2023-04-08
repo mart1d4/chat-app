@@ -358,6 +358,11 @@ button {
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+input:-internal-autofill-previewed,
+input:-internal-autofill-selected {
+    -webkit-box-shadow: none;
+}
+
 button.blue {
     background-color: var(--accent-1);
 }
