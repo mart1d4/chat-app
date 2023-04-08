@@ -358,9 +358,11 @@ button {
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-input:-internal-autofill-previewed,
-input:-internal-autofill-selected {
-    -webkit-box-shadow: none;
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 0s ease-in-out 100000s;
 }
 
 button.blue {
