@@ -21,7 +21,7 @@ export default async (req, res) => {
                 path: "/",
             }),
         ]);
-        return res.status(204).send({
+        return res.send({
             message: "No user found",
         });
     }
@@ -35,7 +35,8 @@ export default async (req, res) => {
             path: "/",
         }),
     ]);
-    return res.status(204).send({
+
+    return res.send({
         message: "Logged out",
     });
 };

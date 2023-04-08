@@ -1,6 +1,6 @@
+import mongoose from "mongoose";
 import Channel from "../../../../../utils/models/Channel";
 import Message from "../../../../../utils/models/Message";
-import mongoose from "mongoose";
 import connectDB from "../../../../../utils/connectDB";
 
 connectDB();

@@ -3,8 +3,8 @@ import useAuth from '../../../../hooks/useAuth';
 import Image from 'next/image';
 import { AvatarStatus, Tooltip } from '../../../../../src/components/';
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 import { v4 as uuidv4 } from 'uuid';
+import useComponents from '../../../../hooks/useComponents';
 
 const MyAccount = ({ setActiveTab }) => {
     const [tooltip, setTooltip] = useState({
@@ -14,7 +14,7 @@ const MyAccount = ({ setActiveTab }) => {
     });
 
     const { auth } = useAuth();
-    const router = useRouter();
+    const { setPopup } = useComponents();
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(auth?.user?.id);
@@ -35,7 +35,17 @@ const MyAccount = ({ setActiveTab }) => {
     };
 
     const fields = [
-        { title: 'Username', value: auth?.user?.username },
+        {
+            title: 'Username',
+            value: auth?.user?.username,
+            func: () => {
+                setPopup({
+                    username: {
+
+                    }
+                });
+            },
+        },
         { title: 'Email', value: auth?.user?.email || 'Not set' },
         { title: 'Phone Number', value: auth?.user?.phone || 'Not set' },
     ];
@@ -110,7 +120,10 @@ const MyAccount = ({ setActiveTab }) => {
                                     <div>{field.value}</div>
                                 </div>
 
-                                <button className="grey">
+                                <button
+                                    className="grey"
+                                    onClick={() => field.func()}
+                                >
                                     Edit
                                 </button>
                             </div>
@@ -126,7 +139,15 @@ const MyAccount = ({ setActiveTab }) => {
                     <h2 className={styles.titleBig}>Password and Authentication</h2>
                 </div>
 
-                <button className="red" style={{ marginBottom: "28px" }}>
+                <button
+                    className="blue"
+                    style={{ marginBottom: "28px" }}
+                    onClick={() => setPopup({
+                        password: {
+
+                        },
+                    })}
+                >
                     Change Password
                 </button>
 

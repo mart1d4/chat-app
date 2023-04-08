@@ -73,7 +73,7 @@ const Login = () => {
                     draggable="false"
                 />
 
-                <form onSubmit={handleSubmit}>
+                <form>
                     <div className={styles.loginContainer}>
                         <div className={styles.header}>
                             <h1>Welcome back!</h1>
@@ -144,8 +144,6 @@ const Login = () => {
                                         autoCapitalize="off"
                                         autoComplete="off"
                                         autoCorrect="off"
-                                        maxLength={256}
-                                        minLength={8}
                                         spellCheck="false"
                                         aria-labelledby="password"
                                         aria-describedby="password"
@@ -155,10 +153,20 @@ const Login = () => {
                                 </div>
                             </div>
 
-                            <button className={styles.passwordForgot}>
+                            <button
+                                className={styles.passwordForgot}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    router.push("/forgot-password");
+                                }}
+                            >
                                 Forgot your password?
                             </button>
-                            <button type="submit" className={styles.buttonSubmit}>
+                            <button
+                                type="submit"
+                                className={styles.buttonSubmit}
+                                onClick={handleSubmit}
+                            >
                                 <div className={isLoading ? styles.loading : ""}>
                                     {!isLoading && "Login"}
                                 </div>
@@ -167,7 +175,8 @@ const Login = () => {
                             <div className={styles.bottomText}>
                                 <span>Need an account?</span>
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault();
                                         router.push("/register");
                                     }}
                                 >

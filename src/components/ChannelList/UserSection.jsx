@@ -90,6 +90,7 @@ const UserSection = () => {
                         onMouseEnter={() => setShowTooltip(1)}
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={() => {
+                            setMenu(null);
                             if (!userSettings?.microphone
                                 && !userSettings?.sound) {
                                 setUserSettings({
@@ -130,6 +131,7 @@ const UserSection = () => {
                         onMouseEnter={() => setShowTooltip(2)}
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={() => {
+                            setMenu(null);
                             if (userSettings?.microphone
                                 && userSettings?.sound) {
                                 setUserSettings({
@@ -167,7 +169,10 @@ const UserSection = () => {
                     <button
                         onMouseEnter={() => setShowTooltip(3)}
                         onMouseLeave={() => setShowTooltip(null)}
-                        onClick={() => setShowSettings(true)}
+                        onClick={() => {
+                            setShowSettings(true);
+                            setMenu(null);
+                        }}
                     >
                         <Tooltip show={showTooltip === 3}>
                             User Settings

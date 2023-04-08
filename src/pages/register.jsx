@@ -3,10 +3,9 @@ import axios from "../api/axios";
 import useAuth from "../hooks/useAuth";
 import { useRouter } from "next/router";
 import styles from "../styles/Auth.module.css";
-import { motion, AnimatePresence } from "framer-motion";
 import Head from "next/head";
 
-const USER_REGEX = /^.{4,32}$/;
+const USER_REGEX = /^.{2,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
 
 const Register = () => {
@@ -24,9 +23,9 @@ const Register = () => {
 
     const uidInputRef = useRef();
 
-    useEffect(() => {
-        if (auth?.accessToken) router.push("/channels/@me");
-    }, [auth]);
+    // useEffect(() => {
+    //     if (auth?.accessToken) router.push("/channels/@me");
+    // }, [auth]);
 
     useEffect(() => {
         uidInputRef.current.focus();
@@ -113,7 +112,7 @@ const Register = () => {
                     draggable="false"
                 />
 
-                <form onSubmit={handleSubmit}>
+                <form>
                     <div className={styles.loginContainer}>
                         <div className={styles.header}>
                             <h1>Create an account</h1>
@@ -232,7 +231,11 @@ const Register = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className={styles.buttonSubmit}>
+                            <button
+                                type="submit"
+                                className={styles.buttonSubmit}
+                                onClick={handleSubmit}
+                            >
                                 <div className={isLoading ? styles.loading : ""}>
                                     {!isLoading && "Register"}
                                 </div>
@@ -240,7 +243,8 @@ const Register = () => {
 
                             <div className={styles.bottomText}>
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault();
                                         router.push("/login");
                                     }}
                                 >

@@ -115,7 +115,7 @@
 
 .pinContainer {
     position: fixed;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100vh - 48px);
     z-index: 100000;
     background-color: var(--background-3);
     width: 420px;

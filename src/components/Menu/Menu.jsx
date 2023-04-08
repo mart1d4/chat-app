@@ -33,17 +33,31 @@ const Menu = () => {
     }, [menu]);
 
     useEffect(() => {
-        if (!menu?.name === "pin") return;
+        if (menu?.name !== "pin" || !router.query.channelID) return;
+
+        const handleClick = (e) => {
+            if (
+                e.target.contains(containerRef.current) ||
+                menu?.name !== "pin" || !menu
+            ) return;
+            setMenu(null);
+        };
 
         const getPinnedMessages = async () => {
             const response = await axiosPrivate.get(
                 `/channels/${router.query.channelID}/pins`,
             );
 
-            setPinnedMessages(response.data.pins);
+            setPinnedMessages(response.data.pins.reverse());
         };
 
         getPinnedMessages();
+
+        document.addEventListener("click", handleClick);
+
+        return () => {
+            document.removeEventListener("click", handleClick);
+        };
     }, [menu]);
 
     useEffect(() => {
@@ -184,31 +198,33 @@ const Menu = () => {
                 }
             }
 
-            // If there's not enough space to the bottom, move the menu up
-            if (window.innerHeight - 10 - pos.top < container.height) {
-                pos = {
-                    ...pos,
-                    bottom: 10,
-                    top: "unset",
-                };
-            } else {
-                pos = {
-                    ...pos,
-                    bottom: "unset",
-                };
-            }
+            if (menu?.name !== "pin") {
+                // If there's not enough space to the bottom, move the menu up
+                if (window.innerHeight - 10 - pos.top < container.height) {
+                    pos = {
+                        ...pos,
+                        bottom: 10,
+                        top: "unset",
+                    };
+                } else {
+                    pos = {
+                        ...pos,
+                        bottom: "unset",
+                    };
+                }
 
-            // If there's not enough space to the right, move the menu to the left
-            if (window.innerWidth - 10 - pos.left < container.width) {
-                pos = {
-                    ...pos,
-                    left: elementRect.right - container.width,
-                };
-            } else {
-                pos = {
-                    ...pos,
-                    right: "unset",
-                };
+                // If there's not enough space to the right, move the menu to the left
+                if (window.innerWidth - 10 - pos.left < container.width) {
+                    pos = {
+                        ...pos,
+                        left: elementRect.right - container.width,
+                    };
+                } else {
+                    pos = {
+                        ...pos,
+                        right: "unset",
+                    };
+                }
             }
         }
 
@@ -219,11 +235,16 @@ const Menu = () => {
         if (!container || !event) return;
 
         const handleClickOutside = (e) => {
-            if (e.clientX === event.clientX) return;
+            if (
+                e.clientX === event.clientX
+                || side
+            ) return;
             setMenu(null);
         };
 
         const handlekeyDown = (e) => {
+            if (menu?.name === "pin") return;
+
             if (e.key === "Escape") {
                 setMenu(null);
             } else if (e.key === "ArrowDown") {

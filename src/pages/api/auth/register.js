@@ -9,7 +9,7 @@ export default async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
-        if (user) return res.status(422).send(`User already exists with username ${username}`);
+        if (user) return res.send(`User already exists with username ${username}`);
 
         const hash = await bcrypt.hash(password, 10);
         await new User({
@@ -17,8 +17,8 @@ export default async (req, res) => {
             password: hash
         }).save();
 
-        res.status(201).json({ message: 'User created successfully' });
+        res.json({ message: 'User created successfully' });
     } catch (error) {
-        res.status(500).send('Error registering new user. Please try again later.');
+        res.send('Error registering new user. Please try again later.');
     }
 };

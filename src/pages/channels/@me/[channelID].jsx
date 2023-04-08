@@ -98,9 +98,6 @@ const Channels = () => {
     }, [messages]);
 
     useEffect(() => {
-        console.log("scrollHeight", scrollHeight);
-        console.log("scrollPosition", scrollPosition);
-
         if (
             (scrollHeight - scrollPosition < 1000)
             && hasMoreMessages

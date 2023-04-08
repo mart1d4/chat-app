@@ -42,7 +42,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                         side: "bottom",
                         side2: "right",
                         element: element,
-                        gap: 5,
+                        gap: 8,
                         name: "pin",
                     });
                 }

@@ -58,6 +58,7 @@
     height: 40px;
     background: none;
     outline: none;
+    color: var(--foreground-2);
 }
 
 .error {

@@ -1,28 +1,13 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon } from "../";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import useComponents from "../../hooks/useComponents";
 
 const ToolbarIcon = ({ item }) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
-    const { menu, setMenu } = useComponents();
+    const { menu } = useComponents();
     const element = useRef(null);
-
-    useEffect(() => {
-        if (item?.name !== "Pinned Messages") return;
-
-        const handleClick = (e) => {
-            if (element.current.contains(e.target)) return;
-            // setMenu(null);
-        };
-
-        document.addEventListener("click", handleClick);
-
-        return () => {
-            document.removeEventListener("click", handleClick);
-        };
-    }, []);
 
     return (
         <div
@@ -30,7 +15,11 @@ const ToolbarIcon = ({ item }) => {
             className={styles.toolbarIcon}
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
-            onClick={(e) => item.func(e, element.current, menu)}
+            onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                item.func(e, element.current, menu);
+            }}
         >
             <Icon name={item.icon} />
 

@@ -7,7 +7,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 100;
+    z-index: 10000;
     background-color: hsla(0, 0%, 0%, 0.85);
     user-select: none;
 }
@@ -24,7 +24,7 @@
     box-shadow: var(--elevation-high), var(--elevation-low);
 }
 
-.cardContainer > div:first-child {
+.titleBlock {
     flex: 0 0 auto;
     border-radius: 4px 4px 0 0;
     word-wrap: break-word;
@@ -36,11 +36,101 @@
     align-items: center;
 }
 
-.cardContainer > div:first-child > h1 {
+.titleBlock > h1 {
     color: var(--foreground-1);
     font-size: 20px;
     line-height: 24px;
     font-weight: 600;
+}
+
+.titleBlockCentered {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    word-wrap: break-word;
+    position: relative;
+    padding: 24px 16px;
+    overflow-x: hidden;
+}
+
+.titleBlockCentered > div:first-child {
+    text-align: center;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 30px;
+    color: var(--foreground-1);
+}
+
+.titleBlockCentered > div:nth-child(2) {
+    color: var(--foreground-3);
+    margin-top: 8px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.titleBlockCentered > button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px;
+    opacity: 0.5;
+    cursor: pointer;
+    border-radius: 3px;
+    color: var(--foreground-3);
+}
+
+.titleBlockCentered > button:hover {
+    opacity: 1;
+}
+
+.input label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    user-select: none;
+}
+
+.input label > span {
+    color: var(--error-light);
+    padding-left: 4px;
+}
+
+.errorLabel {
+    font-size: 12px;
+    font-weight: 500;
+    font-style: italic;
+    text-transform: none;
+}
+
+.errorLabel > span {
+    padding: 0 4px;
+}
+
+.inputContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    border-radius: 3px;
+    background-color: var(--background-1);
+    border: none;
+}
+
+.inputContainer > input {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    padding: 10px;
+    height: 40px;
+    outline: none;
+    color: var(--foreground-3);
 }
 
 .popupContent {
@@ -76,7 +166,7 @@
     color: var(--foreground-2);
 }
 
-.popupContent > div:nth-child(2) {
+.messagesContainer {
     box-shadow: var(--elevation-medium), var(--elevation-low);
     position: relative;
     border-radius: 3px;
@@ -84,15 +174,15 @@
     padding: 10px 0;
 }
 
-.popupContent > div:nth-child(2) > div > div {
+.messagesContainer > div > div {
     margin-top: 0;
 }
 
-.popupContent > div:nth-child(2) > div * {
+.messagesContainer > div * {
     user-select: none;
 }
 
-.popupContent > div:nth-child(2) img {
+.messagesContainer img {
     pointer-events: none;
 }
 
@@ -137,4 +227,20 @@
 .cardContainer > div:last-child > button {
     height: 38px;
     min-width: 96px;
+}
+
+.loader {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--foreground-1);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

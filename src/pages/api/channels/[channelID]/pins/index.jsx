@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-import connectDB from "../../../../../utils/connectDB";
+import Message from "../../../../../utils/models/Message";
 import Channel from "../../../../../utils/models/Channel";
+import connectDB from "../../../../../utils/connectDB";
 
 connectDB();
 
@@ -25,6 +26,13 @@ export default async (req, res) => {
         }
 
         const pins = channel.pinnedMessages;
+
+        for (const message of pins) {
+            if (message.type === 1) {
+                const messageReference = await Message.findById(message.messageReference);
+                message.messageReference = messageReference;
+            }
+        }
 
         return res.status(200).json({
             success: true,

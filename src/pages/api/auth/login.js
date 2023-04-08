@@ -28,17 +28,13 @@ export default async (req, res) => {
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
         if (passwordsMatch) {
-            const accessToken = await new SignJWT(
-                cleanUser(user)
-            )
+            const accessToken = await new SignJWT(cleanUser(user))
                 .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
                 .setExpirationTime("1d")
                 .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
-            const refreshToken = await new SignJWT(
-                cleanUser(user)
-            )
+            const refreshToken = await new SignJWT(cleanUser(user))
                 .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
                 .setExpirationTime("10d")
