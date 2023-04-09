@@ -4,7 +4,7 @@ import { Icon, AvatarStatus } from "..";
 import useUserData from "../../hooks/useUserData";
 import useComponents from "../../hooks/useComponents";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 
@@ -17,7 +17,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
     const axiosPrivate = useAxiosPrivate();
 
     const { auth } = useAuth();
-    const { setMenu, setUserProfile } = useComponents();
+    const { menu, setMenu, setUserProfile } = useComponents();
     const {
         friends,
         requests,
@@ -28,6 +28,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
         setBlocked,
         setChannels,
     } = useUserData();
+    const listItemRef = useRef(null);
 
     const removeChannel = async () => {
         const response = await axiosPrivate.delete(
@@ -410,13 +411,33 @@ const UserListItemSmall = ({ special, user, channel }) => {
 
     return useMemo(() => (
         <li
+            ref={listItemRef}
             className={(currentPath === `/channels/@me/${channel?._id}` && channel)
                 ? styles.liContainerActive
                 : styles.liContainer}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(null)}
-            onClick={() => {
-                if (currentPath === `/channels/@me/${channel?._id}` || !channel) return;
+            onClick={(e) => {
+                if (currentPath === `/channels/@me/${channel?._id}` || !channel) {
+                    if (!channel) {
+                        if (menu?.element === listItemRef.current) {
+                            setMenu(null);
+                        } else {
+                            setMenu(null);
+                            setTimeout(() => {
+                                setMenu({
+                                    event: e,
+                                    name: "userProfile",
+                                    element: listItemRef.current,
+                                    side: "left",
+                                    gap: 16,
+                                    user: user,
+                                });
+                            }, 10);
+                        }
+                    };
+                    return;
+                };
                 router.push(`/channels/@me/${channel?._id}`);
             }}
             onContextMenu={(e) => {

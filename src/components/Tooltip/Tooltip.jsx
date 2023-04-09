@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import styles from './Tooltip.module.css';
 
 const Tooltip = ({
@@ -67,7 +67,7 @@ const Tooltip = ({
         }
 
 
-    }, [containerRect]);
+    }, [containerRect, children]);
 
     const arrowPosition = {
         "top": {
@@ -96,7 +96,7 @@ const Tooltip = ({
         },
     };
 
-    return (
+    return useMemo(() => (
         <AnimatePresence>
             {show && (
                 <motion.div
@@ -148,8 +148,7 @@ const Tooltip = ({
                 </motion.div>)
             }
         </AnimatePresence >
-    );
-
-}
+    ), [show, children, position, tooltipPos, showArrow, big, sizeBig, background]);
+};
 
 export default Tooltip;

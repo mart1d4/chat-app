@@ -1,4 +1,4 @@
-import { Icon, Message } from "../";
+import { Icon, Message, UserProfile } from "../";
 import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import styles from './Menu.module.css';
@@ -287,6 +287,33 @@ const Menu = () => {
     }, [active]);
 
     if (!menu) return null;
+
+    if (menu.name === "userProfile") {
+        return (
+            <div
+                ref={containerRef}
+                className={styles.profileContainer}
+                style={{
+                    ...positions,
+                    opacity: (container && positions.top) ? 1 : 0,
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+                onContextMenu={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+                onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+            >
+                <UserProfile littleUser={menu.user} side={side} />
+            </div>
+        );
+    }
 
     if (menu.name === "pin") {
         return (

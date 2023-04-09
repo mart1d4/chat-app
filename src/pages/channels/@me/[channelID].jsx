@@ -10,7 +10,7 @@ import {
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import useAuth from "../../../hooks/useAuth";
@@ -51,6 +51,43 @@ const Channels = () => {
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+
+    const requestMessages = async () => {
+        if (isLoading) return;
+        setIsLoading(true);
+
+        const response = await axiosPrivate.get(
+            `/channels/${channel?._id}/messages`,
+            {
+                before: messages[0]?.createdAt,
+            }
+        );
+
+        if (!response?.data?.success) {
+            setError(response?.data?.error);
+        } else {
+            setHasMoreMessages(response?.data?.hasMoreMessages);
+            setMessages((messages) => [...response?.data?.messages, ...messages]);
+        }
+
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
+        if (isLoading || messages.length === 0) return;
+
+        if (scrollPosition < 3600) {
+            console.log("requesting messages");
+            setIsLoading(true);
+        }
+    }, [scrollPosition]);
+
+    const requestMessagesRef = useCallback(node => {
+        if (node !== null) {
+            const { top } = node.getBoundingClientRect();
+            console.log(top);
+        }
+    }, [scrollPosition]);
 
     const buttons = {
         add: {
@@ -96,37 +133,6 @@ const Channels = () => {
             setScrollHeight(node.scrollHeight);
         }
     }, [messages]);
-
-    useEffect(() => {
-        if (
-            (scrollHeight - scrollPosition < 1000)
-            && hasMoreMessages
-        ) {
-            const firstMessageDate = messages[0]?.createdAt;
-
-            const getMessages = async () => {
-                setIsLoading(true);
-
-                const response = await axiosPrivate.get(
-                    `/channels/${channel._id}/messages`,
-                    {
-                        before: firstMessageDate,
-                    },
-                );
-
-                if (!response.data.success) {
-                    setError(response.data.message);
-                } else {
-                    setMessages((messages) => [...response.data.messages, ...messages]);
-                    setHasMoreMessages(response.data.hasMoreMessages);
-                }
-
-                setIsLoading(false);
-            };
-
-            getMessages();
-        }
-    }, [scrollHeight, scrollPosition]);
 
     useEffect(() => {
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
@@ -319,7 +325,7 @@ const Channels = () => {
 
     const isStart = (index) => {
         if (index === 0) return true;
-        if ((messages[index - 1].author._id !== messages[index].author._id)
+        if ((messages[index - 1].author?._id !== messages[index].author?._id)
             || isMoreThan5Minutes(
                 messages[index - 1].createdAt,
                 messages[index].createdAt
@@ -389,9 +395,7 @@ const Channels = () => {
                                 ref={scrollableContainer}
                                 className={styles.messagesScrollableContainer + " scrollbar"}
                                 onScroll={(e) => {
-                                    if (e.target.scrollTop === 500 && !isLoading && hasMoreMessages) {
-                                        console.log("Loading more messages");
-                                    }
+                                    setScrollPosition(e.target.scrollTop);
                                 }}
                             >
                                 <div className={styles.scrollContent}>
@@ -473,7 +477,10 @@ const Channels = () => {
                                                 )}
 
                                                 {messages.map((message, index) => (
-                                                    <React.Fragment key={uuidv4()}>
+                                                    <div
+                                                        ref={index === 0 ? requestMessagesRef : null}
+                                                        key={uuidv4()}
+                                                    >
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
@@ -495,7 +502,7 @@ const Channels = () => {
                                                             reply={reply}
                                                             setReply={setReply}
                                                         />
-                                                    </React.Fragment>
+                                                    </div>
                                                 ))}
 
                                                 <div className={styles.scrollerSpacer} />

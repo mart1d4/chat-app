@@ -18,7 +18,12 @@ export default async (req, res) => {
         });
     }
 
-    const channel = await Channel.findById(channelID).populate("messages").populate("recipients");
+    const channel = await Channel.findById(channelID)
+        .populate("messages")
+        .populate("recipients")
+        .populate("messages.author")
+        .populate("messages.messageReference")
+        .populate("messages.messageReference.author");
 
     if (!channel) {
         return res.status(404).json({
@@ -45,15 +50,7 @@ export default async (req, res) => {
 
             const messagesLimited = messagesReverse.slice(index + 1, index + 1 + limit);
             const messages = messagesLimited.reverse();
-
             const hasMoreMessages = channel.messages.length > index + 1 + limit;
-
-            for (const message of messages) {
-                if (message.type === 1) {
-                    const messageReference = await Message.findById(message.messageReference);
-                    message.messageReference = messageReference;
-                }
-            }
 
             return res.status(200).json({
                 success: true,
@@ -103,11 +100,7 @@ export default async (req, res) => {
             embeds: message.embeds || [],
             mentionEveryone: message.mentionEveryone || false,
             pinned: false,
-            author: {
-                _id: userJson._id,
-                username: userJson.username,
-                avatar: userJson.avatar,
-            },
+            author: userJson._id,
             mentionRoles: message.mentionRoles || [],
             content: message.content || "",
             channelId: channelID,

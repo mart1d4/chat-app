@@ -16,16 +16,9 @@ const messageSchema = new Schema(
             required: true,
         },
         author: {
-            _id: {
-                type: Schema.Types.ObjectId,
-                ref: "User",
-            },
-            username: {
-                type: String,
-            },
-            avatar: {
-                type: String,
-            },
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
         },
         content: {
             type: String,

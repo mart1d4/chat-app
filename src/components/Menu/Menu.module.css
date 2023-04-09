@@ -242,3 +242,11 @@
 .pinContainer .messageContainer > div > div * {
     user-select: none;
 }
+
+.profileContainer {
+    position: fixed;
+    display: flex;
+    cursor: default;
+    max-height: calc(100vh - 28px);
+    z-index: 100000;
+}

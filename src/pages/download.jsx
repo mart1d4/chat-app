@@ -38,22 +38,28 @@ const Download = () => {
 
     useEffect(() => {
         const handleClick = (e) => {
-            console.log("click");
-
             if (
-                e.target.includes(linuxButton) || e.target.includes(testButton)
-                || e.target.includes(linuxPopup) || e.target.includes(testPopup)
+                linuxPopup.current
+                && !linuxPopup.current.contains(e.target)
+                && !linuxButton.current.contains(e.target)
             ) {
-                return;
+                setLinuxOpen(false);
             }
 
-            setLinuxOpen(false);
-            setTestOpen(false);
+            if (
+                testPopup.current
+                && !testPopup.current.contains(e.target)
+                && !testButton.current.contains(e.target)
+            ) {
+                setTestOpen(false);
+            }
         };
 
-        document.addEventListener('click', handleClick);
+        document.addEventListener("mousedown", handleClick);
 
-        return document.removeEventListener('click', handleClick);
+        return () => {
+            document.removeEventListener("mousedown", handleClick);
+        };
     }, [])
 
     return (

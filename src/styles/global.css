@@ -364,6 +364,7 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
     transition: background-color 0s ease-in-out 100000s;
     -webkit-text-fill-color: var(--foreground-2);
+    caret-color: var(--foreground-2);
 }
 
 button.blue {

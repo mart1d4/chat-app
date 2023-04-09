@@ -11,14 +11,13 @@ import useUserData from "../../hooks/useUserData";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 
-const UserProfile = () => {
+const UserProfile = ({ littleUser, side }) => {
     const [activeNavItem, setActiveNavItem] = useState(0);
     const [userSatus, setUserStatus] = useState("");
     const [mutualFriends, setMutualFriends] = useState([]);
     const [note, setNote] = useState("");
     const [error, setError] = useState("");
     const [showTooltip, setShowTooltip] = useState(false);
-    const [hoveredFriend, setHoveredFriend] = useState(null);
 
     const { auth } = useAuth();
     const {
@@ -39,7 +38,7 @@ const UserProfile = () => {
     const cardRef = useRef(null);
     const noteRef = useRef(null);
 
-    const user = userProfile?.user;
+    const user = littleUser || userProfile?.user;
     const router = useRouter();
     const axiosPrivate = useAxiosPrivate();
 
@@ -48,9 +47,9 @@ const UserProfile = () => {
     };
 
     useEffect(() => {
-        if (!userProfile) return;
+        if (!userProfile && !user) return;
 
-        if (userProfile.focusNote && noteRef.current) noteRef.current.focus();
+        if (userProfile?.focusNote && noteRef.current) noteRef.current.focus();
 
         const isFriend = () => {
             return friends?.map((friend) => friend._id.toString()).includes(user?._id);
@@ -89,17 +88,17 @@ const UserProfile = () => {
 
         const friendsIDs = friends.map((friend) => friend._id.toString());
 
-        const mutualFriends = user.friends.filter(
+        const mutualFriends = user?.friends?.filter(
             (friend) => friendsIDs.includes(friend)
         );
 
-        const mutualFriendsData = mutualFriends.map((user) => {
+        const mutualFriendsData = mutualFriends?.map((user) => {
             const friendData = friends.find((friend) => friend._id.toString() === user);
             return friendData;
         });
 
         setMutualFriends(mutualFriendsData);
-    }, [userProfile, friends, blocked, requests]);
+    }, [user, userProfile, friends, blocked, requests]);
 
     const sectionNavItems = isSameUser() ? [
         "User Info",
@@ -132,52 +131,6 @@ const UserProfile = () => {
                 navigator.clipboard.writeText(user._id);
             }, icon: "id"
         }
-    ];
-
-    const largeMenuItems = [
-        {
-            name: "Profile",
-            func: () => setUserProfile({ user }),
-        },
-        {
-            name: "Message",
-            func: () => createChannel(),
-        },
-        {
-            name: "Call",
-            func: () => console.log("Call"),
-        },
-        {
-            name: "Add Note",
-            func: () => setUserProfile({ user, focusNote: true }),
-        },
-        {
-            name: "Add Friend Nickname",
-            func: () => console.log("Add Friend Nickname"),
-        },
-        { name: "Divider" },
-        {
-            name: "Invite to Server",
-            func: () => console.log("Invite to Server"),
-            icon: "arrow",
-            iconSize: 10,
-        },
-        {
-            name: "Remove Friend",
-            func: () => deleteFriend(),
-            danger: true,
-        },
-        {
-            name: "Block",
-            func: () => blockUser(),
-            danger: true,
-        },
-        { name: "Divider" },
-        {
-            name: "Copy ID",
-            func: () => navigator.clipboard.writeText(user._id),
-            icon: "id",
-        },
     ];
 
     const addFriend = async () => {
@@ -268,6 +221,189 @@ const UserProfile = () => {
         } else {
             setError("An error occurred.");
         }
+    };
+
+    if (littleUser) {
+        return (
+            <AnimatePresence>
+                {user && (
+                    <motion.div
+                        ref={cardRef}
+                        className={styles.cardContainer}
+                        initial={{
+                            transform: `translateX(${side === "left" && "-"}20px)`,
+                        }}
+                        animate={{
+                            transform: "translateX(0px)",
+                        }}
+                        transition={{
+                            ease: "easeOut",
+                        }}
+                        style={{
+                            width: "340px",
+                        }}
+                    >
+                        <div
+                            className={styles.topSection}
+                            style={{
+                                backgroundColor: user?.accentColor,
+                                width: "340px",
+                                height: "60px",
+                                marginBottom: "20px",
+                                minHeight: "60px",
+                                minWidth: "340px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: "80px",
+                                    height: "80px",
+                                    borderWidth: "6px",
+                                    top: "10px",
+                                    left: "16px",
+                                }}
+                            >
+                                <Image
+                                    src={user.avatar}
+                                    alt="User Avatar"
+                                    width={80}
+                                    height={80}
+                                />
+                                {/* <AvatarStatus
+                                    status={(userSatus === "Friends" || isSameUser())
+                                        ? user.status
+                                        : "Offline"}
+                                    background="var(--background-2)"
+                                    size
+                                    tooltip={true}
+                                    tooltipDist={5}
+                                /> */}
+                            </div>
+                        </div>
+
+                        <div
+                            className={styles.contentSection}
+                            style={{
+                                marginTop: "28px",
+                                height: "auto",
+                            }}
+                        >
+                            <div className={styles.contentHeader}>
+                                <div className={styles.username}>
+                                    {user.username}
+                                </div>
+                                {/* {((user.customStatus && userSatus === "Friends")
+                                    || (user.customStatus && isSameUser())) && (
+                                        <div className={styles.customStatus}>
+                                            {user.customStatus}
+                                        </div>
+                                    )} */}
+                            </div>
+
+                            <div
+                                className={styles.contentUser + " scrollbar"}
+                                style={{
+                                    padding: activeNavItem === 0 ? "0 12px" : "",
+                                }}
+                            >
+                                {activeNavItem === 0 && (
+                                    <div>
+                                        {((user.description && userSatus === "Friends")
+                                            || (user.description && isSameUser())) && (
+                                                <>
+                                                    <h1>
+                                                        About Me
+                                                    </h1>
+                                                    <div className={styles.contentUserDescription}>
+                                                        {/* {user.description} */}
+                                                    </div>
+                                                </>
+                                            )}
+
+                                        <h1>Discord Member Since</h1>
+                                        <div className={styles.contentUserDate}>
+                                            <div>
+                                                {/* {format(
+                                                    new Date(user.createdAt),
+                                                    "MMM dd, yyyy"
+                                                )} */}
+                                            </div>
+                                        </div>
+
+                                        <h1>Note</h1>
+                                        <div className={styles.contentNote}>
+                                            <textarea
+                                                ref={noteRef}
+                                                style={{ height: noteRef?.current?.scrollHeight + 2 || 44 }}
+                                                value={note}
+                                                onChange={(e) => setNote(e.target.value)}
+                                                placeholder="Click to add a note"
+                                                maxLength={256}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeNavItem === 1 && (
+                                    <div className={styles.empty}>
+                                        <div />
+                                        <div>No servers in common</div>
+                                    </div>
+                                )}
+
+                                {activeNavItem === 2 && (
+                                    <>
+                                        {mutualFriends.length > 0 ?
+                                            mutualFriends.map((friend, index) => (
+                                                <div
+                                                    key={uuidv4()}
+                                                    className={styles.contentUserFriend}
+                                                    onMouseEnter={() => setHoveredFriend(index)}
+                                                    onMouseLeave={() => setHoveredFriend(null)}
+                                                    onClick={() => {
+                                                        setUserProfile(null);
+
+                                                        setTimeout(() => {
+                                                            setUserProfile({ user: friend });
+                                                        }, 200);
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <Image
+                                                            src={friend?.avatar}
+                                                            alt="User Avatar"
+                                                            width={40}
+                                                            height={40}
+                                                        />
+
+                                                        <AvatarStatus
+                                                            status={friend?.status}
+                                                            background={
+                                                                hoveredFriend === index
+                                                                    ? "var(--background-3)"
+                                                                    : "var(--background-dark)"
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        {friend?.username}
+                                                    </div>
+                                                </div>
+                                            )) : (
+                                                <div className={styles.empty + " " + styles.noFriends}>
+                                                    <div />
+                                                    <div>No friends in common</div>
+                                                </div>
+                                            )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        );
     };
 
     return (
@@ -500,42 +636,8 @@ const UserProfile = () => {
                                 {activeNavItem === 2 && (
                                     <>
                                         {mutualFriends.length > 0 ?
-                                            mutualFriends.map((friend, index) => (
-                                                <div
-                                                    key={uuidv4()}
-                                                    className={styles.contentUserFriend}
-                                                    onMouseEnter={() => setHoveredFriend(index)}
-                                                    onMouseLeave={() => setHoveredFriend(null)}
-                                                    onClick={() => {
-                                                        setUserProfile(null);
-
-                                                        setTimeout(() => {
-                                                            setUserProfile({ user: friend });
-                                                        }, 200);
-                                                    }}
-                                                >
-                                                    <div>
-                                                        <Image
-                                                            src={friend?.avatar}
-                                                            alt="User Avatar"
-                                                            width={40}
-                                                            height={40}
-                                                        />
-
-                                                        <AvatarStatus
-                                                            status={friend?.status}
-                                                            background={
-                                                                hoveredFriend === index
-                                                                    ? "var(--background-3)"
-                                                                    : "var(--background-dark)"
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        {friend?.username}
-                                                    </div>
-                                                </div>
+                                            mutualFriends.map((friend) => (
+                                                <FriendItem friend={friend} />
                                             )) : (
                                                 <div className={styles.empty + " " + styles.noFriends}>
                                                     <div />
@@ -553,5 +655,116 @@ const UserProfile = () => {
         </AnimatePresence >
     );
 }
+
+const FriendItem = ({ friend }) => {
+    const [hover, setHover] = useState(false);
+
+    const {
+        setUserProfile,
+        setMenu
+    } = useComponents();
+
+    const menuItems = [
+        {
+            name: "Profile",
+            func: () => {
+                setUserProfile(null);
+
+                setTimeout(() => {
+                    setUserProfile({ user: friend });
+                }, 200);
+            },
+        },
+        {
+            name: "Message",
+            func: () => createChannel(),
+        },
+        {
+            name: "Call",
+            func: () => console.log("Call"),
+        },
+        {
+            name: "Add Note",
+            func: () => {
+                setUserProfile(null);
+
+                setTimeout(() => {
+                    setUserProfile({ user: friend, focusNote: true });
+                }, 200);
+            },
+        },
+        {
+            name: "Add Friend Nickname",
+            func: () => console.log("Add Friend Nickname"),
+        },
+        { name: "Divider" },
+        {
+            name: "Invite to Server",
+            func: () => console.log("Invite to Server"),
+            icon: "arrow",
+            iconSize: 10,
+        },
+        {
+            name: "Remove Friend",
+            func: () => deleteFriend(),
+            danger: true,
+        },
+        {
+            name: "Block",
+            func: () => blockUser(),
+            danger: true,
+        },
+        { name: "Divider" },
+        {
+            name: "Copy ID",
+            func: () => navigator.clipboard.writeText(friend._id),
+            icon: "id",
+        },
+    ];
+
+    return (
+        <div
+            key={uuidv4()}
+            className={styles.contentUserFriend}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => {
+                setUserProfile(null);
+
+                setTimeout(() => {
+                    setUserProfile({ user: friend });
+                }, 200);
+            }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({
+                    items: menuItems,
+                    event: e,
+                });
+            }}
+        >
+            <div>
+                <Image
+                    src={friend?.avatar}
+                    alt="User Avatar"
+                    width={40}
+                    height={40}
+                />
+
+                <AvatarStatus
+                    status={friend?.status}
+                    background={
+                        hover ? "var(--background-3)"
+                            : "var(--background-dark)"
+                    }
+                />
+            </div>
+
+            <div>
+                {friend?.username}
+            </div>
+        </div>
+    );
+};
 
 export default UserProfile;

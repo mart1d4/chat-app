@@ -18,6 +18,22 @@ const Login = () => {
     const [error, setError] = useState("");
 
     useEffect(() => {
+        const handleKeyDown = (e) => {
+            e.stopPropagation();
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit(e);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    useEffect(() => {
         if (auth?.accessToken) router.push("/channels/@me");
     }, [auth]);
 
@@ -165,7 +181,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 className={styles.buttonSubmit}
-                                onClick={handleSubmit}
+                                onClick={(e) => handleSubmit(e)}
                             >
                                 <div className={isLoading ? styles.loading : ""}>
                                     {!isLoading && "Login"}

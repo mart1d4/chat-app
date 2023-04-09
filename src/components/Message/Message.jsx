@@ -1,7 +1,7 @@
 import styles from "./Message.module.css";
 import { format, formatRelative } from "date-fns";
 import { Tooltip, MessageMenu, TextArea } from "../";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useComponents from "../../hooks/useComponents";
 import { useRouter } from "next/router";
@@ -24,6 +24,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     const router = useRouter();
     const { menu, setMenu, setPopup } = useComponents();
     const { auth } = useAuth();
+    const userImageRef = useRef(null);
 
     useEffect(() => {
         if (!editedMessage) return;
@@ -302,7 +303,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                 e.preventDefault();
                 if (noInteraction) return;
                 setMenu({
-                    items: message.author._id === auth?.user?._id ? senderItems : receiverItems,
+                    items: message.author?._id === auth?.user?._id ? senderItems : receiverItems,
                     event: e,
                     message: message._id,
                 });
@@ -325,7 +326,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                         copyMessageLink,
                         copyMessageID,
                     }}
-                    menuItems={message.author._id === auth?.user?._id ? senderItems : receiverItems}
+                    menuItems={message.author?._id === auth?.user?._id ? senderItems : receiverItems}
                 />
             )}
 
@@ -362,15 +363,33 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                         }}
                     >
                         <Image
-                            src={message.author.avatar}
+                            ref={userImageRef}
+                            src={message.author?.avatar}
                             alt="Avatar"
                             width={40}
                             height={40}
+                            onClick={(e) => {
+                                if (menu?.element === userImageRef.current) {
+                                    setMenu(null);
+                                } else {
+                                    setMenu(null);
+                                    setTimeout(() => {
+                                        setMenu({
+                                            event: e,
+                                            name: "userProfile",
+                                            element: userImageRef.current,
+                                            side: "right",
+                                            gap: 10,
+                                            user: message.author,
+                                        });
+                                    }, 10);
+                                }
+                            }}
                             onDoubleClick={(e) => e.stopPropagation()}
                         />
                         <h3 onDoubleClick={(e) => e.stopPropagation()}>
                             <span className={styles.titleUsername}>
-                                {message.author.username}
+                                {message.author?.username}
                             </span>
                             <span
                                 className={styles.titleTimestamp}
@@ -455,7 +474,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (message.author._id === auth?.user?._id) {
+                            if (message.author?._id === auth?.user?._id) {
                                 editMessage();
                             } else {
                                 replyToMessage();
