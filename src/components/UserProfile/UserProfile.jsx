@@ -20,21 +20,12 @@ const UserProfile = ({ littleUser, side }) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const { auth } = useAuth();
+    const { userProfile, setUserProfile, setMenu, setFixedLayer } = useComponents();
     const {
-        userProfile,
-        setUserProfile,
-        setMenu
-    } = useComponents();
-    const {
-        friends,
-        setFriends,
-        requests,
-        setRequests,
-        blocked,
-        setBlocked,
-        channels,
-        setChannels
+        channels, friends, setFriends, setChannels,
+        requests, setRequests, blocked, setBlocked,
     } = useUserData();
+
     const cardRef = useRef(null);
     const noteRef = useRef(null);
 
@@ -106,31 +97,6 @@ const UserProfile = ({ littleUser, side }) => {
         "User Info",
         "Mutual Servers",
         "Mutual Friends",
-    ];
-
-    const menuItems = userSatus === "Friends" ? [
-        { name: "Remove Friend", func: () => deleteFriend(), danger: true },
-        { name: "Block", func: () => blockUser(), danger: true },
-        { name: "Message", func: () => createChannel() },
-        { name: "Divider" },
-        {
-            name: "Copy ID", func: () => {
-                navigator.clipboard.writeText(user._id);
-            }, icon: "id"
-        }
-    ] : [
-        {
-            name: userSatus === "Blocked" ? "Unblock" : "Block",
-            func: () => userSatus === "Blocked" ? unblockUser() : blockUser(),
-            danger: userSatus !== "Blocked"
-        },
-        { name: "Message", func: () => createChannel() },
-        { name: "Divider" },
-        {
-            name: "Copy ID", func: () => {
-                navigator.clipboard.writeText(user._id);
-            }, icon: "id"
-        }
     ];
 
     const addFriend = async () => {
@@ -230,18 +196,10 @@ const UserProfile = ({ littleUser, side }) => {
                     <motion.div
                         ref={cardRef}
                         className={styles.cardContainer}
-                        initial={{
-                            transform: `translateX(${side === "left" && "-"}20px)`,
-                        }}
-                        animate={{
-                            transform: "translateX(0px)",
-                        }}
-                        transition={{
-                            ease: "easeOut",
-                        }}
-                        style={{
-                            width: "340px",
-                        }}
+                        initial={{ transform: `translateX(${side === "left" && "-"}20px)` }}
+                        animate={{ transform: "translateX(0px)" }}
+                        transition={{ ease: "easeOut" }}
+                        style={{ width: "340px" }}
                     >
                         <div
                             className={styles.topSection}
@@ -268,16 +226,27 @@ const UserProfile = ({ littleUser, side }) => {
                                     alt="User Avatar"
                                     width={80}
                                     height={80}
+                                    onClick={() => {
+                                        setFixedLayer(false);
+                                        setUserProfile(null);
+
+                                        setTimeout(() => {
+                                            setUserProfile({ user })
+                                        }, 100);
+                                    }}
+                                    style={{
+                                        cursor: "pointer",
+                                    }}
                                 />
-                                {/* <AvatarStatus
+                                <AvatarStatus
                                     status={(userSatus === "Friends" || isSameUser())
                                         ? user.status
                                         : "Offline"}
                                     background="var(--background-2)"
-                                    size
-                                    tooltip={true}
+                                    mid
+                                    tooltip
                                     tooltipDist={5}
-                                /> */}
+                                />
                             </div>
                         </div>
 
@@ -288,17 +257,28 @@ const UserProfile = ({ littleUser, side }) => {
                                 height: "auto",
                             }}
                         >
-                            <div className={styles.contentHeader}>
+                            <div className={styles.contentHeader} style={{ cursor: "text" }}>
                                 <div className={styles.username}>
                                     {user.username}
                                 </div>
-                                {/* {((user.customStatus && userSatus === "Friends")
+                                {((user.customStatus && userSatus === "Friends")
                                     || (user.customStatus && isSameUser())) && (
                                         <div className={styles.customStatus}>
                                             {user.customStatus}
                                         </div>
-                                    )} */}
+                                    )}
                             </div>
+
+                            <div
+                                style={{
+                                    margin: "12px 12px 0",
+                                    height: "1px",
+                                    top: "0",
+                                    position: "sticky",
+                                    backgroundColor: "var(--background-5)",
+                                    padding: "0",
+                                }}
+                            />
 
                             <div
                                 className={styles.contentUser + " scrollbar"}
@@ -314,19 +294,19 @@ const UserProfile = ({ littleUser, side }) => {
                                                     <h1>
                                                         About Me
                                                     </h1>
-                                                    <div className={styles.contentUserDescription}>
-                                                        {/* {user.description} */}
+                                                    <div className={styles.contentUserDescription} style={{ cursor: "text" }}>
+                                                        {user.description}
                                                     </div>
                                                 </>
                                             )}
 
                                         <h1>Discord Member Since</h1>
                                         <div className={styles.contentUserDate}>
-                                            <div>
-                                                {/* {format(
+                                            <div style={{ cursor: "text" }}>
+                                                {format(
                                                     new Date(user.createdAt),
                                                     "MMM dd, yyyy"
-                                                )} */}
+                                                )}
                                             </div>
                                         </div>
 
@@ -419,7 +399,7 @@ const UserProfile = ({ littleUser, side }) => {
                         if (e.button === 2) return;
                         if (!cardRef.current.contains(e.target)) {
                             setUserProfile(null);
-                            setMenu(null);
+                            setFixedLayer(null);
                         }
                     }}
                 >
@@ -532,9 +512,11 @@ const UserProfile = ({ littleUser, side }) => {
                                             <div
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setMenu({
-                                                        items: menuItems,
+                                                    setFixedLayer({
+                                                        type: "menu",
                                                         event: e,
+                                                        user: user,
+                                                        userprofile: true,
                                                     });
                                                 }}
                                                 className={styles.moreButton}
@@ -637,7 +619,7 @@ const UserProfile = ({ littleUser, side }) => {
                                     <>
                                         {mutualFriends.length > 0 ?
                                             mutualFriends.map((friend) => (
-                                                <FriendItem friend={friend} />
+                                                <FriendItem friend={friend} key={uuidv4()} />
                                             )) : (
                                                 <div className={styles.empty + " " + styles.noFriends}>
                                                     <div />
@@ -724,7 +706,6 @@ const FriendItem = ({ friend }) => {
 
     return (
         <div
-            key={uuidv4()}
             className={styles.contentUserFriend}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(null)}

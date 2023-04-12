@@ -8,7 +8,7 @@ const Index = () => {
     return (
         <>
             <Head>
-                <title>Unthrust | Your Place to Talk and to Hang Out</title>
+                <title>Discord | Your Place to Talk and to Hang Out</title>
             </Head>
 
             <div className={styles.mainContainer}>

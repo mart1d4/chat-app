@@ -1,12 +1,10 @@
-import { AppNav, Loader, Settings, UserProfile, Menu, Popup } from "../";
+import { AppNav, Loader, Settings, UserProfile, Popup, FixedLayer } from "../";
 import { useEffect, useState } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
 import useAuth from "../../hooks/useAuth";
-import useComponents from "../../hooks/useComponents";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import { useRouter } from "next/router";
-import { AnimatePresence } from "framer-motion";
 
 const Layout = ({ children }) => {
     const [isFetching, setIsFetching] = useState(true);
@@ -14,7 +12,6 @@ const Layout = ({ children }) => {
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
     const { auth, isLoading } = useAuth();
-    const { showSettings } = useComponents();
     const {
         setFriends,
         setRequests,
@@ -82,27 +79,21 @@ const Layout = ({ children }) => {
         isLoading || isFetching ? (
             <Loader />
         ) : (
-            <>
-                <div
-                    className={styles.container}
-                    onDragStart={(e) => e.preventDefault()}
-                    onContextMenu={(e) => e.preventDefault()}
-                >
-                    <AnimatePresence>
-                        {showSettings && <Settings />}
-                    </AnimatePresence>
+            <div
+                className={styles.container}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+            >
+                <AppNav />
+                <Settings />
+                <UserProfile />
+                <Popup />
+                <FixedLayer />
 
-                    <UserProfile />
-                    <Popup />
-                    <AppNav />
-
-                    <div className={styles.wrapper}>
-                        {children}
-                    </div>
+                <div className={styles.wrapper}>
+                    {children}
                 </div>
-
-                <Menu />
-            </>
+            </div>
         )
     );
 };

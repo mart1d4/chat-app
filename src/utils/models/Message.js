@@ -10,7 +10,7 @@ const messageSchema = new Schema(
             min: 0,
             max: 8,
         },
-        channelId: {
+        channel: {
             type: Schema.Types.ObjectId,
             ref: "Channel",
             required: true,

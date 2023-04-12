@@ -2,6 +2,7 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./AddFriend.module.css";
 import { useEffect, useState, useRef } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import useComponents from "../../hooks/useComponents";
 import Image from "next/image";
 
 const AddFriend = () => {
@@ -16,8 +17,15 @@ const AddFriend = () => {
         setFriends,
         setChannels,
     } = useUserData();
+    const { setFixedLayer } = useComponents();
     const axiosPrivate = useAxiosPrivate();
     const inputRef = useRef();
+
+    const pasteText = async () => {
+        const text = await navigator.clipboard.readText();
+        setInput(prev => prev + text);
+        inputRef.current.focus();
+    };
 
     useEffect(() => {
         inputRef.current.focus();
@@ -105,6 +113,15 @@ const AddFriend = () => {
                                     if (e.key === "Enter") {
                                         requestFriend();
                                     }
+                                }}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    setFixedLayer({
+                                        type: "menu",
+                                        event: e,
+                                        input: true,
+                                        pasteText,
+                                    });
                                 }}
                             />
                         </div>

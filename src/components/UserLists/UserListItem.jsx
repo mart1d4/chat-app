@@ -5,14 +5,11 @@ import useUserData from "../../hooks/useUserData";
 import styles from "./UserListItem.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { AnimatePresence, motion } from "framer-motion";
-import useAuth from "../../hooks/useAuth";
 import useComponents from "../../hooks/useComponents";
 
 const UserListItem = ({ content, user }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [liHover, setLiHover] = useState(false);
-    const [error, setError] = useState(null);
 
     let type;
     if (content === "pending") {
@@ -20,8 +17,7 @@ const UserListItem = ({ content, user }) => {
         user = user.user;
     }
 
-    const { auth } = useAuth();
-    const { setUserProfile, menu, setMenu } = useComponents();
+    const { fixedLayer, setFixedLayer } = useComponents();
     const {
         friends,
         setFriends,
@@ -41,42 +37,41 @@ const UserListItem = ({ content, user }) => {
                 name: "Message",
                 icon: "message",
                 fill: "var(--foreground-2)",
-                func: () => createChannel()
+                func: () => createChannel(),
             },
             second: {
                 name: "More",
                 icon: "more",
                 fill: "var(--foreground-2)",
                 func: (event) => {
-                    setMenu({
-                        items: smallMenuItems,
+                    setFixedLayer({
+                        type: "menu",
                         event: event,
-                        parent: {
-                            type: "userListItem",
-                            id: user._id,
-                        }
+                        id: user._id,
+                        user: user,
+                        userlist: true,
                     });
-                }
-            }
+                },
+            },
         },
         pending: {
             first: {
                 name: "Accept",
                 icon: "accept",
                 fill: "var(--success-light)",
-                func: () => addFriend()
+                func: () => addFriend(),
             },
             second: {
                 name: "Ignore",
                 icon: "cancel",
                 fill: "var(--error-1)",
-                func: () => deleteFriend()
+                func: () => removeFriend(),
             },
             third: {
                 name: "Cancel",
                 icon: "cancel",
                 fill: "var(--error-1)",
-                func: () => deleteFriend()
+                func: () => removeFriend(),
             }
         },
         blocked: {
@@ -84,119 +79,19 @@ const UserListItem = ({ content, user }) => {
                 name: "Unblock",
                 icon: "userDelete",
                 fill: "var(--error-1)",
-                func: () => unblockUser()
+                func: () => unblockUser(),
             },
-        }
+        },
     }
 
     const buttonContent = content === "online" ? "all" : content;
-
-    const largeMenuItems = content === "blocked" ? [
-        {
-            name: "Profile",
-            func: () => setUserProfile({ user }),
-        },
-        {
-            name: "Message",
-            func: () => createChannel(),
-        },
-        {
-            name: "Add Note",
-            func: () => setUserProfile({ user, focusNote: true }),
-        },
-        { name: "Divider" },
-        {
-            name: "Unblock",
-            func: () => unblockUser(),
-        },
-        { name: "Divider" },
-        {
-            name: "Copy ID",
-            func: () => navigator.clipboard.writeText(user._id),
-            icon: "id",
-        },
-    ] : [
-        {
-            name: "Profile",
-            func: () => setUserProfile({ user }),
-        },
-        {
-            name: "Message",
-            func: () => createChannel(),
-        },
-        {
-            name: content === "pending" ? "None" : "Call",
-            func: () => console.log("Call"),
-        },
-        {
-            name: "Add Note",
-            func: () => setUserProfile({ user, focusNote: true }),
-        },
-        {
-            name: content === "pending" ? "None" : "Add Friend Nickname",
-            func: () => console.log("Add Friend Nickname"),
-        },
-        { name: "Divider" },
-        {
-            name: "Invite to Server",
-            func: () => console.log("Invite to Server"),
-            icon: "arrow",
-            iconSize: 10,
-        },
-        {
-            name: content === "pending"
-                ? (type === 0 ? "Cancel Request" : "Accept Request")
-                : "Remove Friend",
-            func: () => {
-                if (content === "pending") {
-                    if (type === 0) {
-                        deleteFriend();
-                    } else {
-                        addFriend();
-                    }
-                } else {
-                    deleteFriend();
-                }
-            },
-            danger: content !== "pending",
-        },
-        {
-            name: "Block",
-            func: () => blockUser(),
-            danger: true,
-        },
-        { name: "Divider" },
-        {
-            name: "Copy ID",
-            func: () => navigator.clipboard.writeText(user._id),
-            icon: "id",
-        },
-    ];
-
-    const smallMenuItems = [
-        {
-            name: "Start Video Call",
-            func: () => console.log("Start Video Call"),
-        },
-        {
-            name: "Start Voice Call",
-            func: () => console.log("Start Voice Call"),
-        },
-        {
-            name: "Remove Friend",
-            func: () => deleteFriend(),
-            danger: true,
-        },
-    ];
 
     const addFriend = async () => {
         const response = await axiosPrivate.post(
             `/users/@me/friends/${user._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             setFriends((prev) => [...prev, response.data.friend]);
             setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
 
@@ -205,26 +100,20 @@ const UserListItem = ({ content, user }) => {
                     setChannels((prev) => [response.data.channel, ...prev]);
                 }
             }
-        } else {
-            setError("An error occurred.");
         }
     };
 
-    const deleteFriend = async () => {
+    const removeFriend = async () => {
         const response = await axiosPrivate.delete(
             `/users/@me/friends/${user._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             if (response.data.message === "Friend removed") {
                 setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
             } else if (response.data.message === "Request cancelled") {
                 setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
             }
-        } else {
-            setError("An error occurred.");
         }
     };
 
@@ -234,15 +123,11 @@ const UserListItem = ({ content, user }) => {
             { recipients: [user._id] },
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             if (response.data.message === "Channel created") {
                 setChannels((prev) => [response.data.channel, ...prev]);
             }
             router.push(`/channels/@me/${response.data.channel._id}`);
-        } else {
-            setError("An error occurred.");
         }
     };
 
@@ -251,14 +136,10 @@ const UserListItem = ({ content, user }) => {
             `/users/${user._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             setBlocked((prev) => [...prev, response.data.blocked]);
             setFriends(friends.filter((friend) => friend._id.toString() !== user._id));
             setRequests(requests.filter((request) => request.user._id.toString() !== user._id));
-        } else {
-            setError("An error occurred.");
         }
     };
 
@@ -267,155 +148,143 @@ const UserListItem = ({ content, user }) => {
             `/users/${user._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
-            setBlocked(blocked.filter((blocked) => blocked._id.toString() !== user._id));
-        } else {
-            setError("An error occurred.");
-        }
+        response.data.success && setBlocked(
+            blocked.filter((blocked) => blocked._id.toString() !== user._id)
+        );
     };
 
-    if (!user || !user.avatar) return null;
+    if (!user) return null;
 
     return useMemo(() => (
-        <AnimatePresence>
-            <motion.li
-                className={(menu?.parent?.type === "userListItem" &&
-                    menu?.parent?.id === user._id)
-                    ? styles.liContainerActive : styles.liContainer}
-                onClick={() => {
-                    if ((content !== "online" && content !== "all")) return;
-                    createChannel(user._id);
-                }}
-                onContextMenu={(event) => {
-                    event.preventDefault();
-                    setMenu({
-                        items: largeMenuItems,
-                        event: event,
-                        parent: {
-                            type: "userListItem",
-                            id: user._id,
-                        },
-                    });
-                }}
-                onMouseEnter={() => {
-                    setLiHover(true);
-                    if (menu?.parent?.type !== "userListItem" ||
-                        menu?.parent?.id === user._id) return;
-                    setMenu(null);
-                }}
-                onMouseLeave={() => setLiHover(false)}
-            >
-                <div className={styles.li}>
-                    <div className={styles.userInfo}>
-                        <div className={styles.avatarWrapper}>
-                            <Image
-                                src={user.avatar}
-                                width={32}
-                                height={32}
-                                alt="Avatar"
+        <li
+            className={
+                (fixedLayer?.id === user._id || liHover)
+                    ? styles.liContainerActive : styles.liContainer
+            }
+            onClick={() => {
+                if ((content !== "online" && content !== "all")) return;
+                createChannel(user._id);
+            }}
+            onContextMenu={(event) => {
+                event.preventDefault();
+                setFixedLayer({
+                    type: "menu",
+                    event: event,
+                    id: user._id,
+                    user: user,
+                });
+            }}
+            onMouseEnter={() => {
+                setLiHover(true);
+                if (!fixedLayer?.id || fixedLayer?.id === user._id) return;
+                setFixedLayer(null);
+            }}
+            onMouseLeave={() => setLiHover(false)}
+        >
+            <div className={styles.li}>
+                <div className={styles.userInfo}>
+                    <div className={styles.avatarWrapper}>
+                        <Image
+                            src={user.avatar}
+                            width={32}
+                            height={32}
+                            alt="Avatar"
+                        />
+                        {((content !== "pending" && content !== "blocked")) && (
+                            <AvatarStatus
+                                status={user.status}
+                                background={"var(--background-4)"}
                             />
-                            {((content !== "pending" && content !== "blocked")) && (
-                                <AvatarStatus
-                                    status={user.status}
-                                    background={"var(--background-4)"}
-                                />
-                            )}
-                        </div>
-                        <div className={styles.text}>
-                            <p className={styles.textUsername}>
-                                {user.username}
-                            </p>
-
-                            <p className={styles.textStatus}>
-                                <span>
-                                    {(content === "all" || content === "online") ? (
-                                        !user.customStatus
-                                            ? user.status
-                                            : user.customStatus
-                                    ) : content === "pending" ? (
-                                        type === 0
-                                            ? "Outgoing request"
-                                            : "Incoming request"
-                                    ) : "Blocked"}
-                                </span>
-                            </p>
-                        </div>
+                        )}
                     </div>
-                    <div className={styles.actions}>
+                    <div className={styles.text}>
+                        <p className={styles.textUsername}>
+                            {user.username}
+                        </p>
 
-                        {(
-                            content !== "blocked"
-                            && type !== 0
-                        ) && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        buttons[buttonContent]?.first.func(user._id);
-                                    }}
-                                    onMouseEnter={() => setShowTooltip(1)}
-                                    onMouseLeave={() => setShowTooltip(null)}
-                                >
-                                    <Icon
-                                        name={buttons[buttonContent]?.first?.icon}
-                                        size={20}
-                                        fill={
-                                            showTooltip === 1
-                                            && buttons[buttonContent]?.first?.fill
-                                        }
-                                    />
+                        <p className={styles.textStatus}>
+                            <span>
+                                {type === 0 ? "Outgoing Friend Request"
+                                    : type === 1 ? "Incoming Friend Request"
+                                        : content === "blocked" ? "Blocked"
+                                            : user.customStatus ? user.customStatus
+                                                : user.status}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div className={styles.actions}>
 
-                                    <Tooltip
-                                        show={showTooltip === 1}
-                                        dist={4}
-                                    >
-                                        {buttons[buttonContent]?.first?.name}
-                                    </Tooltip>
-                                </button>
-                            )}
-
-                        {buttons[buttonContent]?.second && (
+                    {(
+                        content !== "blocked"
+                        && type !== 0
+                    ) && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (type === 0) {
-                                        buttons[buttonContent]?.third?.func(user._id);
-                                    } else {
-                                        buttons[buttonContent]?.second?.func(
-                                            (content === "online" || content === "all"
-                                                ? e
-                                                : user._id), e
-                                        );
-                                    }
+                                    buttons[buttonContent]?.first.func(user._id);
                                 }}
-                                onMouseEnter={() => setShowTooltip(2)}
+                                onMouseEnter={() => setShowTooltip(1)}
                                 onMouseLeave={() => setShowTooltip(null)}
                             >
                                 <Icon
-                                    name={buttons[buttonContent]?.second?.icon}
+                                    name={buttons[buttonContent]?.first?.icon}
                                     size={20}
                                     fill={
-                                        showTooltip === 2
-                                        && buttons[buttonContent]?.second?.fill
+                                        showTooltip === 1
+                                        && buttons[buttonContent]?.first?.fill
                                     }
                                 />
 
                                 <Tooltip
-                                    show={showTooltip === 2}
+                                    show={showTooltip === 1}
                                     dist={4}
                                 >
-                                    {type === 0
-                                        ? "Cancel"
-                                        : buttons[buttonContent]?.second?.name}
+                                    {buttons[buttonContent]?.first?.name}
                                 </Tooltip>
                             </button>
                         )}
-                    </div>
+
+                    {buttons[buttonContent]?.second && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (type === 0) {
+                                    buttons[buttonContent]?.third?.func(user._id);
+                                } else {
+                                    buttons[buttonContent]?.second?.func(
+                                        (content === "online" || content === "all"
+                                            ? e
+                                            : user._id), e
+                                    );
+                                }
+                            }}
+                            onMouseEnter={() => setShowTooltip(2)}
+                            onMouseLeave={() => setShowTooltip(null)}
+                        >
+                            <Icon
+                                name={buttons[buttonContent]?.second?.icon}
+                                size={20}
+                                fill={
+                                    showTooltip === 2
+                                    && buttons[buttonContent]?.second?.fill
+                                }
+                            />
+
+                            <Tooltip
+                                show={showTooltip === 2}
+                                dist={4}
+                            >
+                                {type === 0
+                                    ? "Cancel"
+                                    : buttons[buttonContent]?.second?.name}
+                            </Tooltip>
+                        </button>
+                    )}
                 </div>
-            </motion.li>
-        </AnimatePresence >
-    ), [showTooltip, liHover, menu]);
+            </div>
+        </li>
+    ), [showTooltip, liHover, fixedLayer]);
 }
 
 export default UserListItem;

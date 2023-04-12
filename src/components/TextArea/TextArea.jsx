@@ -1,32 +1,29 @@
 import { useState, useRef, useMemo, useEffect } from "react";
-import styles from "./TextArea.module.css";
-import { EmojiPicker, Icon, FilePreview } from "../";
-import { v4 as uuidv4 } from "uuid";
-import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useComponents from "../../hooks/useComponents";
+import useUserData from "../../hooks/useUserData";
 import useAuth from "../../hooks/useAuth";
+import styles from "./TextArea.module.css";
 import { useRouter } from "next/router";
+import { motion } from "framer-motion";
+import { Icon, Tooltip } from "../";
+import { v4 as uuidv4 } from "uuid";
+import useUserSettings from "../../hooks/useUserSettings";
 
-const TextArea = ({
-    friend,
-    userBlocked,
-    channel,
-    setMessages,
-    editedMessage,
-    setEditedMessage,
-    reply,
-    setReply
+const TextArea = ({ friend, userBlocked, channel, setMessages,
+    editedMessage, setEditedMessage, reply, setReply
 }) => {
     const [message, setMessage] = useState("");
     const [files, setFiles] = useState([]);
     const [friendTyping, setFriendTyping] = useState(false);
-    const [error, setError] = useState(null);
 
-    const textAreaRef = useRef(null);
+    const { auth } = useAuth();
+    const { userSettings } = useUserSettings();
+    const { setFixedLayer } = useComponents();
     const { blocked, setBlocked, channels, setChannels } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+    const textAreaRef = useRef(null);
 
     useEffect(() => {
         if (reply) {
@@ -35,30 +32,12 @@ const TextArea = ({
         }
     }, [reply]);
 
-    const inputMenuItems = [
-        {
-            name: "Send Message Button",
-            icon: "box",
-            iconSize: 18,
-        },
-        { name: "Divider" },
-        {
-            name: "Spellcheck",
-            icon: "box",
-            iconSize: 18,
-        },
-        { name: "Divider" },
-        {
-            name: "Paste",
-            text: "Ctrl+V",
-            func: async () => {
-                const text = await navigator.clipboard.readText();
-                textAreaRef.current.innerText += text;
-                setMessage((message) => message + text);
-                moveCursorToEnd();
-            },
-        },
-    ];
+    const pasteText = async () => {
+        const text = await navigator.clipboard.readText();
+        textAreaRef.current.innerText += text;
+        setMessage((message) => message + text);
+        moveCursorToEnd();
+    };
 
     useEffect(() => {
         if (!channel) return;
@@ -83,6 +62,12 @@ const TextArea = ({
             ...JSON.parse(localStorage.getItem(`channel-${channel._id}`)),
             message: message,
         }));
+
+        if (textAreaRef.current.innerHTML.includes("<span")) {
+            const cursorPosition = window.getSelection().getRangeAt(0).startOffset;
+            textAreaRef.current.innerText = message;
+            moveCursorToEnd();
+        }
     }, [message]);
 
     useEffect(() => {
@@ -96,21 +81,14 @@ const TextArea = ({
         }
     }, [editedMessage]);
 
-    const { auth } = useAuth();
-    const { setMenu } = useComponents();
-
     const unblockUser = async () => {
         const response = await axiosPrivate.post(
             `/users/${friend._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             setBlocked(blocked.filter((blocked) => blocked._id.toString() !== friend._id));
-        } else {
-            setError("An error occurred.");
-        }
+        };
     };
 
     const moveCursorToEnd = () => {
@@ -140,14 +118,11 @@ const TextArea = ({
 
         let messageContent = message;
 
-        while (messageContent.startsWith("\n") || messageContent.endsWith("\n")) {
-            // Onlye remove the first or last newline
-            if (messageContent.startsWith("\n")) {
-                messageContent = messageContent.substring(1);
-            }
-            if (messageContent.endsWith("\n")) {
-                messageContent = messageContent.substring(0, messageContent.length - 1);
-            }
+        while (messageContent.startsWith("\n")) {
+            messageContent = messageContent.substring(1);
+        }
+        while (messageContent.endsWith("\n")) {
+            messageContent = messageContent.substring(0, messageContent.length - 1);
         }
 
         const id = uuidv4();
@@ -194,7 +169,6 @@ const TextArea = ({
         );
 
         if (!response.data.success) {
-            setError(response.data.message);
             setMessages((messages) => messages.map((message) => {
                 if (message._id === id) {
                     return {
@@ -209,6 +183,7 @@ const TextArea = ({
                 if (message._id === id) {
                     return {
                         ...response.data.message,
+                        _id: response.data.message._id,
                         error: false,
                         waiting: false,
                     };
@@ -216,7 +191,6 @@ const TextArea = ({
                 return message;
             }));
         } else {
-            setError("An error occurred.");
             setMessages((messages) => messages.map((message) => {
                 if (message._id === id) {
                     return {
@@ -253,7 +227,7 @@ const TextArea = ({
                             : `Message ${friend ? `@${friend.username}` : channel?.name}`
                     }
                     aria-autocomplete="list"
-                    contentEditable="true"
+                    contentEditable="plaintext-only"
                     onInput={(e) => {
                         const text = e.target.innerText.toString();
                         if (editedMessage) {
@@ -279,9 +253,11 @@ const TextArea = ({
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        setMenu({
+                        setFixedLayer({
+                            type: "menu",
                             event: e,
-                            items: inputMenuItems,
+                            input: true,
+                            pasteText,
                         });
                     }}
                 />
@@ -344,7 +320,7 @@ const TextArea = ({
 
     else if (!userBlocked) return (
         <form className={styles.form} >
-            {reply?.channelId === channel?._id && (
+            {reply?.channel === channel?._id && (
                 <div className={styles.replyContainer}>
                     <div className={styles.replyName}>
                         Replying to <span>{reply?.author?.username}</span>
@@ -395,7 +371,6 @@ const TextArea = ({
                                 onChange={(e) => {
                                     const newFiles = Array.from(e.target.files);
                                     if (files.length + newFiles.length > 10) {
-                                        setError("You can only attach up to 10 files");
                                         return;
                                     }
                                     setFiles(files.concat(newFiles).slice(0, 10));
@@ -419,20 +394,34 @@ const TextArea = ({
                         {textContainer}
 
                         <div className={styles.toolsContainer}>
-                            <button>
+                            <button onClick={(e) => e.preventDefault()}>
                                 <Icon
                                     name="keyboard"
                                     size={30}
                                 />
                             </button>
 
-                            <button>
+                            <button onClick={(e) => e.preventDefault()}>
                                 <Icon
                                     name="gif"
                                 />
                             </button>
 
                             <EmojiPicker />
+
+                            {userSettings?.sendButton && (
+                                <button
+                                    className={styles.sendButton}
+                                    onClick={(e) => e.preventDefault()}
+                                >
+                                    <div>
+                                        <Icon
+                                            name="sendButton"
+                                            size={20}
+                                        />
+                                    </div>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -483,5 +472,141 @@ const TextArea = ({
         </form>
     );
 }
+
+const emojisPos = [
+    { x: 0, y: 0 }, { x: 0, y: -22 }, { x: 0, y: -44 }, { x: 0, y: -66 }, { x: 0, y: -88 },
+    { x: -22, y: 0 }, { x: -22, y: -22 }, { x: -22, y: -44 }, { x: -22, y: -66 }, { x: -22, y: -88 },
+    { x: -44, y: 0 }, { x: -44, y: -22 }, { x: -44, y: -44 }, { x: -44, y: -66 }, { x: -44, y: -88 },
+    { x: -66, y: 0 }, { x: -66, y: -22 }, { x: -66, y: -44 }, { x: -66, y: -66 }, { x: -66, y: -88 },
+    { x: -88, y: 0 }, { x: -88, y: -22 }, { x: -88, y: -44 }, { x: -88, y: -66 }, { x: -88, y: -88 },
+    { x: -110, y: 0 }, { x: -110, y: -22 }, { x: -110, y: -44 }, { x: -110, y: -66 }, { x: -110, y: -88 },
+    { x: -132, y: 0 }, { x: -132, y: -22 }, { x: -132, y: -44 }, { x: -132, y: -66 },
+    { x: -154, y: 0 }, { x: -154, y: -22 }, { x: -154, y: -44 }, { x: -154, y: -66 },
+    { x: -176, y: 0 }, { x: -176, y: -22 }, { x: -176, y: -44 }, { x: -176, y: -66 },
+    { x: -198, y: 0 }, { x: -198, y: -22 }, { x: -198, y: -44 }, { x: -198, y: -66 },
+    { x: -220, y: 0 }, { x: -220, y: -22 }, { x: -220, y: -44 }, { x: -220, y: -66 },
+];
+
+const scale = {
+    hover: {
+        scale: 1.15,
+        transition: {
+            duration: 0.1,
+            ease: "easeInOut",
+        }
+    }
+};
+
+const EmojiPicker = () => {
+    const [emojisPosIndex, setEmojisPosIndex] = useState(
+        Math.floor(Math.random() * emojisPos.length)
+    );
+
+    return (
+        <motion.button
+            onMouseEnter={() => setEmojisPosIndex(
+                Math.floor(Math.random() * emojisPos.length)
+            )}
+            onClick={(e) => e.preventDefault()}
+            className={styles.buttonContainer}
+            whileHover="hover"
+        >
+            <motion.div
+                className={styles.emoji}
+                style={{
+                    backgroundPosition:
+                        `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`
+                }}
+                variants={scale}
+            >
+            </motion.div>
+        </motion.button>
+    );
+}
+
+const FilePreview = ({ file, setFiles }) => {
+    const [showTooltip, setShowTooltip] = useState(null);
+
+    return useMemo(() => (
+        <li className={styles.fileItem}>
+            <div className={styles.fileItemContainer}>
+                <div className={styles.image}>
+                    <img
+                        src={URL.createObjectURL(file)}
+                        alt="File Preview"
+                    />
+                </div>
+
+                <div className={styles.fileName}>
+                    <div>
+                        {file.name}
+                    </div>
+                </div>
+            </div>
+
+            <div className={styles.fileMenu}>
+                <div>
+                    <div>
+                        <div
+                            className={styles.fileMenuButton}
+                            onMouseEnter={() => setShowTooltip(1)}
+                            onMouseLeave={() => setShowTooltip(null)}
+                        >
+                            <Icon name="eye" size={20} />
+                        </div>
+                        <Tooltip
+                            show={showTooltip === 1}
+                            pos="top"
+                            dist={5}
+                        >
+                            Spoiler Attachment
+                        </Tooltip>
+                    </div>
+
+                    <div>
+                        <div
+                            className={styles.fileMenuButton}
+                            onMouseEnter={() => setShowTooltip(2)}
+                            onMouseLeave={() => setShowTooltip(null)}
+                        >
+                            <Icon name="edit" size={20} />
+                        </div>
+                        <Tooltip
+                            show={showTooltip === 2}
+                            pos="top"
+                            dist={5}
+                        >
+                            Modify Attachment
+                        </Tooltip>
+                    </div>
+
+                    <div>
+                        <div
+                            className={styles.fileMenuButton + " " + styles.danger}
+                            onMouseEnter={() => setShowTooltip(3)}
+                            onMouseLeave={() => setShowTooltip(null)}
+                            onClick={() => setFiles(
+                                (files) => files.filter((f) => f !== file)
+                            )}
+                        >
+                            <Icon
+                                name="delete"
+                                size={20}
+                                fill="var(--error-1)"
+                            />
+                        </div>
+                        <Tooltip
+                            show={showTooltip === 3}
+                            pos="top"
+                            dist={5}
+                        >
+                            Remove Attachment
+                        </Tooltip>
+                    </div>
+                </div>
+            </div>
+        </li>
+    ), [showTooltip]);
+};
 
 export default TextArea;

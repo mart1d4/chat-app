@@ -1,6 +1,5 @@
 import styles from "./UserSection.module.css";
 import { Tooltip, Icon, AvatarStatus } from "..";
-import useLogout from "../../hooks/useLogout";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
@@ -8,32 +7,12 @@ import useComponents from "../../hooks/useComponents";
 import useUserSettings from "../../hooks/useUserSettings";
 
 const UserSection = () => {
-    const [hover, setHover] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
     const { auth } = useAuth();
-    const {
-        setShowSettings,
-        setUserProfile,
-        menu,
-        setMenu,
-    } = useComponents();
+    const { setShowSettings } = useComponents();
     const { userSettings, setUserSettings } = useUserSettings();
-    const { logout } = useLogout();
     const userSection = useRef(null);
-
-    const menuItems = [
-        { name: "Profile", func: () => setUserProfile({ user: auth?.user }) },
-        { name: "Set Status", func: () => { } },
-        { name: "Divider" },
-        { name: "Logout", icon: "logout", func: () => logout() },
-        { name: "Divider" },
-        {
-            name: "Copy ID", icon: "id", func: () => {
-                navigator.clipboard.writeText(auth?.user?._id);
-            }
-        },
-    ];
 
     return (
         <div className={styles.userSectionContainer}>
@@ -41,23 +20,6 @@ const UserSection = () => {
                 <div
                     ref={userSection}
                     className={styles.avatarWrapper}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (menu?.name === "user") {
-                            setMenu(null);
-                        } else {
-                            setMenu({
-                                items: menuItems,
-                                event: e,
-                                side: "top",
-                                element: userSection.current,
-                                gap: 10,
-                                name: "user",
-                            })
-                        }
-                    }}
-                    onMouseEnter={() => setHover("user")}
-                    onMouseLeave={() => setHover(false)}
                 >
                     <div>
                         {auth?.user?.avatar && (
@@ -90,7 +52,6 @@ const UserSection = () => {
                         onMouseEnter={() => setShowTooltip(1)}
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={() => {
-                            setMenu(null);
                             if (!userSettings?.microphone
                                 && !userSettings?.sound) {
                                 setUserSettings({
@@ -131,7 +92,6 @@ const UserSection = () => {
                         onMouseEnter={() => setShowTooltip(2)}
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={() => {
-                            setMenu(null);
                             if (userSettings?.microphone
                                 && userSettings?.sound) {
                                 setUserSettings({
@@ -169,10 +129,7 @@ const UserSection = () => {
                     <button
                         onMouseEnter={() => setShowTooltip(3)}
                         onMouseLeave={() => setShowTooltip(null)}
-                        onClick={() => {
-                            setShowSettings(true);
-                            setMenu(null);
-                        }}
+                        onClick={() => setShowSettings(true)}
                     >
                         <Tooltip show={showTooltip === 3}>
                             User Settings

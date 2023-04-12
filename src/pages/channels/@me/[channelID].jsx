@@ -78,7 +78,6 @@ const Channels = () => {
 
         if (scrollPosition < 3600) {
             console.log("requesting messages");
-            setIsLoading(true);
         }
     }, [scrollPosition]);
 
@@ -163,6 +162,7 @@ const Channels = () => {
                 (recipient) => recipient._id !== auth?.user._id
             ));
         } else if (channel.type === 1) {
+            setFriend(null);
             setRecipients(channel?.recipients?.filter(
                 (recipient) => recipient._id !== auth?.user._id
             ));
@@ -379,10 +379,77 @@ const Channels = () => {
         }
     }, [friend, recipients, showUsers]);
 
+    const FirstMessage = useMemo(() => (
+        <div className={styles.firstTimeMessageContainer}>
+            <div className={styles.imageWrapper}>
+                {friend ? (
+                    <Image
+                        src={friend?.avatar || ""}
+                        alt="Avatar"
+                        width={80}
+                        height={80}
+                    />
+                ) : channel ? (
+                    <Image
+                        src={channel?.icon || ""}
+                        alt="Icon"
+                        width={80}
+                        height={80}
+                    />
+                ) : null}
+            </div>
+            <h3 className={styles.friendUsername}>
+                {friend ? friend?.username : channel?.name}
+            </h3>
+            <div className={styles.descriptionContainer}>
+                {friend ? (
+                    <>
+                        This is the beginning of your direct message history with
+                        <strong> @{friend?.username}</strong>.
+                    </>
+                ) : (
+                    <>
+                        Welcome to the beginning of the
+                        <strong> {channel?.name}</strong> group.
+                    </>
+                )}
+
+                {friend && (
+                    <div className={styles.descriptionActions}>
+                        {friendStatus[3] === "block" && (
+                            <button
+                                className={buttons[friendStatus[1]]?.class}
+                                onClick={() => buttons[friendStatus[1]]?.func()}
+                            >
+                                {buttons[friendStatus[1]]?.text}
+                            </button>
+                        )}
+
+                        {friendStatus[2] && (
+                            <button
+                                className={buttons[friendStatus[2]].class}
+                                onClick={() => buttons[friendStatus[2]].func()}
+                            >
+                                {buttons[friendStatus[2]].text}
+                            </button>
+                        )}
+
+                        <button
+                            className={buttons[friendStatus[3]]?.class}
+                            onClick={() => buttons[friendStatus[3]]?.func()}
+                        >
+                            {buttons[friendStatus[3]]?.text}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    ), [friend, channel, friendStatus, friends, blocked, requests]);
+
     return useMemo(() => (
         <>
             <Head>
-                <title>Unthrust | @{friend ? friend.username : channel?.name}</title>
+                <title>Discord | @{friend ? friend.username : channel?.name}</title>
             </Head>
 
             <div className={styles.container}>
@@ -409,72 +476,7 @@ const Channels = () => {
                                             <>
                                                 {hasMoreMessages ? (
                                                     <MessageSkeleton />
-                                                ) : (
-                                                    <div className={styles.firstTimeMessageContainer}>
-                                                        <div className={styles.imageWrapper}>
-                                                            {friend ? (
-                                                                <Image
-                                                                    src={friend?.avatar || ""}
-                                                                    alt="Avatar"
-                                                                    width={80}
-                                                                    height={80}
-                                                                />
-                                                            ) : channel ? (
-                                                                <Image
-                                                                    src={channel?.icon || ""}
-                                                                    alt="Icon"
-                                                                    width={80}
-                                                                    height={80}
-                                                                />
-                                                            ) : null}
-                                                        </div>
-                                                        <h3 className={styles.friendUsername}>
-                                                            {friend ? friend?.username : channel?.name}
-                                                        </h3>
-                                                        <div className={styles.descriptionContainer}>
-                                                            {friend ? (
-                                                                <>
-                                                                    This is the beginning of your direct message history with
-                                                                    <strong> @{friend?.username}</strong>.
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    Welcome to the beginning of the
-                                                                    <strong> {channel?.name}</strong> group.
-                                                                </>
-                                                            )}
-
-                                                            {friend && (
-                                                                <div className={styles.descriptionActions}>
-                                                                    {friendStatus[3] === "block" && (
-                                                                        <button
-                                                                            className={buttons[friendStatus[1]]?.class}
-                                                                            onClick={() => buttons[friendStatus[1]]?.func()}
-                                                                        >
-                                                                            {buttons[friendStatus[1]]?.text}
-                                                                        </button>
-                                                                    )}
-
-                                                                    {friendStatus[2] && (
-                                                                        <button
-                                                                            className={buttons[friendStatus[2]].class}
-                                                                            onClick={() => buttons[friendStatus[2]].func()}
-                                                                        >
-                                                                            {buttons[friendStatus[2]].text}
-                                                                        </button>
-                                                                    )}
-
-                                                                    <button
-                                                                        className={buttons[friendStatus[3]]?.class}
-                                                                        onClick={() => buttons[friendStatus[3]]?.func()}
-                                                                    >
-                                                                        {buttons[friendStatus[3]]?.text}
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                ) : FirstMessage}
 
                                                 {messages.map((message, index) => (
                                                     <div

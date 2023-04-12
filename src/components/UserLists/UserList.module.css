@@ -35,6 +35,7 @@
     min-width: 48px;
     margin: 1px;
     outline: none;
+    color: var(--foreground-3);
 }
 
 .searchBarInner input::placeholder {

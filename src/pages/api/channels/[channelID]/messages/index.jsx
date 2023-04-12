@@ -21,9 +21,30 @@ export default async (req, res) => {
     const channel = await Channel.findById(channelID)
         .populate("messages")
         .populate("recipients")
-        .populate("messages.author")
-        .populate("messages.messageReference")
-        .populate("messages.messageReference.author");
+        .populate({
+            path: "messages",
+            populate: {
+                path: "author",
+                model: "User",
+            }
+        })
+        .populate({
+            path: "messages",
+            populate: {
+                path: "messageReference",
+                model: "Message",
+            }
+        })
+        .populate({
+            path: "messages",
+            populate: {
+                path: "messageReference",
+                populate: {
+                    path: "author",
+                    model: "User",
+                }
+            }
+        });
 
     if (!channel) {
         return res.status(404).json({
@@ -103,7 +124,7 @@ export default async (req, res) => {
             author: userJson._id,
             mentionRoles: message.mentionRoles || [],
             content: message.content || "",
-            channelId: channelID,
+            channel: channelID,
             mentions: message.mentions || [],
             messageReference: message.messageReference || null,
             type: message.messageReference ? 1 : 0,
@@ -133,6 +154,7 @@ export default async (req, res) => {
             success: true,
             message: {
                 ...newMessage._doc,
+                author: userJson,
                 messageReference: messageRef,
             }
         });

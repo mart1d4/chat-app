@@ -7,10 +7,10 @@ export default function useComponents() {
         setShowSettings,
         userProfile,
         setUserProfile,
-        menu,
-        setMenu,
         popup,
         setPopup,
+        fixedLayer,
+        setFixedLayer,
     } = useContext(ComponentsContext);
     return useContext(ComponentsContext);
 }

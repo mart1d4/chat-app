@@ -62,8 +62,6 @@ export default async (req, res) => {
         }
 
         if (newPassword) {
-            console.log(password);
-            console.log(newPassword);
             if (newPassword.length < 8) {
                 return res.json({
                     success: false,

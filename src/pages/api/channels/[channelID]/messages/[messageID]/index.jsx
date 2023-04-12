@@ -24,7 +24,13 @@ export default async (req, res) => {
     }
 
     const channel = await Channel.findById(channelID).populate("pinnedMessages");
-    const message = await Message.findById(messageID);
+    const message = await Message.findById(messageID).populate("messageReference").populate("author").populate({
+        path: "messageReference",
+        populate: {
+            path: "author",
+            model: "User",
+        },
+    });
 
     const messageRef = await Message.findById(message?.messageReference);
 

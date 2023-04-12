@@ -11,23 +11,16 @@ export function UserSettingsProvider({ children }) {
         if (userSettings) {
             setUserSettings(userSettings);
         } else {
-            const userSettings = {
-                theme: localStorage.getItem('theme') || 'dark',
-                language: localStorage.getItem('language') || 'en',
-                microphone: localStorage.getItem('microphone') || true,
-                camera: localStorage.getItem('camera') || true,
-                notifications: localStorage.getItem('notifications') || true,
-                sound: localStorage.getItem('sound') || true,
-                videoQuality: localStorage.getItem('videoQuality') || '720p',
-                videoResolution: localStorage.getItem('videoResolution') || '720p',
-                videoFrameRate: localStorage.getItem('videoFrameRate') || '30',
-                videoBitrate: localStorage.getItem('videoBitrate') || '1000',
-                audioBitrate: localStorage.getItem('audioBitrate') || '128',
-                audioSampleRate: localStorage.getItem('audioSampleRate') || '44100',
-                audioChannelCount: localStorage.getItem('audioChannelCount') || '2',
-                appearance: localStorage.getItem('appearance') || 'default',
-                size: localStorage.getItem('size') || 'default',
-                font: localStorage.getItem('font') || 'default',
+            const userSettings = localStorage.getItem('user-settings') || {
+                language: 'en-US',
+                microphone: false,
+                sound: true,
+                camera: false,
+                notifications: true,
+                appearance: 'default',
+                font: 'default',
+                theme: 'dark',
+                sendButton: false,
             };
             setUserSettings(userSettings);
         }

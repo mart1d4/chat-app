@@ -23,10 +23,6 @@ const Register = () => {
 
     const uidInputRef = useRef();
 
-    // useEffect(() => {
-    //     if (auth?.accessToken) router.push("/channels/@me");
-    // }, [auth]);
-
     useEffect(() => {
         uidInputRef.current.focus();
     }, []);
@@ -102,7 +98,7 @@ const Register = () => {
     return (
         <>
             <Head>
-                <title>Unthrust | Register</title>
+                <title>Discord | Register</title>
             </Head>
 
             <div className={styles.wrapper + " " + styles.wrapperRegister}>

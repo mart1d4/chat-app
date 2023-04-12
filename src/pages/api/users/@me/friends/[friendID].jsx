@@ -90,11 +90,8 @@ export default async (req, res) => {
             const { data } = response;
             let channel;
 
-            if (!data.success) {
-                return res.json(data);
-            } else {
-                channel = data.channel;
-            }
+            if (!data.success) return res.json(data);
+            else channel = data.channel;
 
             return res.status(200).json({
                 success: true,

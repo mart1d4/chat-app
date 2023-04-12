@@ -198,14 +198,14 @@
     top: 0;
 }
 
-.toolsContainer > button {
+.toolsContainer > button:not(.sendButton) {
     padding: 4px;
     margin: 0 4px;
     height: 44px;
     width: 32px;
 }
 
-.toolsContainer > button:first-child {
+.toolsContainer > button:first-child:not(.sendButton) {
     width: 38px;
 }
 
@@ -281,4 +281,174 @@
     cursor: pointer;
     color: var(--foreground-3);
     padding: 8px 18px 8px 16px;
+}
+
+.buttonContainer {
+    cursor: pointer;
+    width: auto;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.buttonContainer:hover .emoji {
+    filter: grayscale(0%);
+}
+
+.emoji {
+    background-image: url('../../../public/assets/emoji-picker.png');
+    background-repeat: no-repeat;
+    background-size: 242px 110px;
+    width: 22px;
+    height: 22px;
+    background-position: -176px -66px;
+    background-size: 242px 110px;
+    filter: grayscale(100%);
+    transition: filter 0.15s ease;
+}
+
+.fileItem {
+    display: inline-flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 4px;
+    padding: 8px;
+    width: 200px;
+    height: 200px;
+    aspect-ratio: 1;
+    background-color: var(--background-2);
+}
+
+.fileMenu {
+    position: absolute;
+    top: -5px;
+    right: -15px;
+}
+
+.fileMenu > div {
+    display: grid;
+    grid-auto-flow: column;
+    height: 32px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--elevation-low);
+    background-color: var(--background-3);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.fileMenu > div:hover {
+    box-shadow: var(--elevation-low), var(--elevation-medium);
+}
+
+.fileMenu > div > div {
+    position: relative;
+}
+
+.fileMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    padding: 4px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    position: relative;
+}
+
+.fileMenuButton:active svg {
+    transform: translateY(1px);
+}
+
+.fileMenuButton:hover {
+    background-color: var(--background-4);
+}
+
+.fileMenuButton:not(.danger):hover path {
+    fill: var(--foreground-2);
+}
+
+.fileMenuButton:active {
+    background-color: var(--background-5);
+}
+
+.fileItemContainer {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    position: relative;
+}
+
+.fileItemContainer > .image {
+    margin-top: auto;
+    position: relative;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.fileItemContainer > .image > img {
+    border-radius: 3px;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.fileItemContainer > .fileName {
+    margin-top: auto;
+}
+
+.fileItemContainer > .fileName > div {
+    margin-top: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
+.sendButton {
+    padding: 0;
+    margin-left: 8px;
+    width: 44px;
+    height: 44px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+}
+
+.sendButton::before {
+    content: '';
+    border-left: 1px solid var(--foreground-2);
+    opacity: 0.1;
+    height: 65%;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.sendButton > div {
+    padding: 4px;
+    margin-left: 12px;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

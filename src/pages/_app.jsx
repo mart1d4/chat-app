@@ -16,7 +16,7 @@ const App = ({ Component, pageProps }) => {
         <AuthProvider>
             <PersistLogin>
                 <Head>
-                    <title>Unthrust</title>
+                    <title>Discord</title>
                     <link rel='icon' href='/assets/favicon.ico' />
                 </Head>
 

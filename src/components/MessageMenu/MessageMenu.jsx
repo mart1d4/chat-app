@@ -5,12 +5,12 @@ import React from 'react';
 import useAuth from '../../hooks/useAuth';
 import useComponents from '../../hooks/useComponents';
 
-const MessageMenu = ({ message, start, functions, menuItems }) => {
+const MessageMenu = ({ message, start, functions }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [menuType, setMenuType] = useState(null);
 
     const { auth } = useAuth();
-    const { menu, setMenu } = useComponents();
+    const { setFixedLayer, fixedLayer } = useComponents();
     const menuButtonRef = useRef(null);
 
     useEffect(() => {
@@ -84,16 +84,24 @@ const MessageMenu = ({ message, start, functions, menuItems }) => {
                         onMouseLeave={() => setShowTooltip(null)}
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (menu?.event?.target?.contains(menuButtonRef.current)) {
-                                setMenu(null);
+                            if (fixedLayer?.element === menuButtonRef.current) {
+                                setFixedLayer(null);
                             } else {
-                                setMenu({
+                                setFixedLayer({
+                                    type: 'menu',
                                     event: e,
-                                    items: menuItems,
-                                    side: 'left',
+                                    firstSide: 'left',
                                     element: menuButtonRef.current,
                                     gap: 5,
-                                    message: message?._id,
+                                    message: message,
+                                    deletePopup: functions.deletePopup,
+                                    deleteMessage: functions.deleteMessage,
+                                    pinPopup: functions.pinPopup,
+                                    pinMessage: functions.pinMessage,
+                                    unpinPopup: functions.unpinPopup,
+                                    unpinMessage: functions.unpinMessage,
+                                    editMessage: functions.editMessage,
+                                    replyToMessage: functions.replyToMessage,
                                 });
                                 setShowTooltip(null);
                             }

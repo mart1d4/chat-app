@@ -21,7 +21,7 @@ export default async (req, res) => {
     }
 
     const channel = await Channel.findById(channelID);
-    const message = await Message.findById(messageID);
+    const message = await Message.findById(messageID).populate("author");
 
     if (!channel) {
         return res.status(404).json({

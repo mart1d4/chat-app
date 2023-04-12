@@ -44,24 +44,13 @@ const UserLists = ({ list, content }) => {
     const [search, setSearch] = useState("");
     const [filteredList, setFilteredList] = useState([]);
 
-    const { setMenu } = useComponents();
+    const { setFixedLayer } = useComponents();
 
-    const searchbarMenuItems = [
-        {
-            name: "Spellcheck",
-            icon: "box",
-            iconSize: 18,
-        },
-        { name: "Divider" },
-        {
-            name: "Paste",
-            text: "Ctrl+V",
-            func: async () => {
-                const text = await navigator.clipboard.readText();
-                setSearch(search + text);
-            },
-        },
-    ];
+    const pasteText = async () => {
+        const text = await navigator.clipboard.readText();
+        setSearch(prev => prev + text);
+        searchBar.current.focus();
+    };
 
     useEffect(() => {
         if (search) {
@@ -96,9 +85,11 @@ const UserLists = ({ list, content }) => {
                         onChange={(e) => setSearch(e.target.value)}
                         onContextMenu={(e) => {
                             e.preventDefault();
-                            setMenu({
+                            setFixedLayer({
+                                type: "menu",
                                 event: e,
-                                items: searchbarMenuItems,
+                                input: true,
+                                pasteText,
                             });
                         }}
                     />

@@ -9,7 +9,7 @@ import Image from "next/image";
 import useAuth from "../../hooks/useAuth";
 
 
-const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply, setReply, noInt }) => {
+const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, noInt }) => {
     const [showTooltip, setShowTooltip] = useState(null);
     const [hover, setHover] = useState(false);
     const [shift, setShift] = useState(false);
@@ -22,7 +22,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-    const { menu, setMenu, setPopup } = useComponents();
+    const { menu, fixedLayer, setFixedLayer, setPopup } = useComponents();
     const { auth } = useAuth();
     const userImageRef = useRef(null);
 
@@ -81,7 +81,6 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const sendEditedMessage = async () => {
         if (editedMessage.length === 0) {
-            console.log("Message is empty");
             setEdit(null);
             localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
                 ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
@@ -89,7 +88,6 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             }));
             return;
         } else if (editedMessage.length > 4000) {
-            console.log("Message is too long");
             setEdit(null);
             localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
                 ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
@@ -97,7 +95,6 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             }));
             return;
         } else if (editedMessage === message.content) {
-            console.log("Message is the same");
             setEdit(null);
             localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
                 ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
@@ -132,12 +129,12 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
             edit: null,
         }));
-    }
+    };
 
     const deletePopup = () => {
         setPopup({
             delete: {
-                channelID: channelID,
+                channelID: message.channel,
                 message: message,
                 func: () => deleteMessage(),
             }
@@ -146,12 +143,10 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const deleteMessage = async () => {
         const response = await axiosPrivate.delete(
-            `/channels/${channelID}/messages/${message._id}`
+            `/channels/${message.channel}/messages/${message._id}`
         );
 
-        if (!response.data.success) {
-            console.log(response.data.message);
-        } else {
+        if (response.data.success) {
             setMessages((messages) => {
                 return messages.filter(
                     (message) => message._id !== response.data.message._id
@@ -166,8 +161,8 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             content: message.content,
         });
 
-        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
-            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
+        localStorage.setItem(`channel-${message.channel}`, JSON.stringify({
+            ...JSON.parse(localStorage.getItem(`channel-${message.channel}`)),
             edit: {
                 messageID: message._id,
                 content: message.content,
@@ -176,9 +171,10 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     };
 
     const pinPopup = async () => {
+        console.log(message.channel);
         setPopup({
             pin: {
-                channelID: channelID,
+                channelID: message.channel,
                 message: message,
                 func: () => pinMessage(),
             }
@@ -187,12 +183,10 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const pinMessage = async () => {
         const response = await axiosPrivate.put(
-            `/channels/${channelID}/pins/${message._id}`,
+            `/channels/${message.channel}/pins/${message._id}`,
         );
 
-        if (!response.data.success) {
-            console.log(response.data.message);
-        } else {
+        if (response.data.success) {
             setMessages((messages) => {
                 return messages.map((message) => {
                     if (message._id === response.data.data._id) {
@@ -208,7 +202,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     const unpinPopup = async () => {
         setPopup({
             unpin: {
-                channelID: channelID,
+                channelID: message.channel,
                 message: message,
                 func: () => unpinMessage(),
             }
@@ -217,12 +211,10 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
 
     const unpinMessage = async () => {
         const response = await axiosPrivate.delete(
-            `/channels/${channelID}/pins/${message._id}`,
+            `/channels/${message.channel}/pins/${message._id}`,
         );
 
-        if (!response.data.success) {
-            console.log(response.data.message);
-        } else {
+        if (response.data.success) {
             setMessages((messages) => {
                 return messages.map((message) => {
                     if (message._id === response.data.data._id) {
@@ -238,55 +230,11 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
     const replyToMessage = async () => {
         setReply(message);
 
-        localStorage.setItem(`channel-${router.query.channelID}`, JSON.stringify({
-            ...JSON.parse(localStorage.getItem(`channel-${router.query.channelID}`)),
+        localStorage.setItem(`channel-${message.channel}`, JSON.stringify({
+            ...JSON.parse(localStorage.getItem(`channel-${message.channel}`)),
             reply: message,
         }));
     };
-
-    const markUnread = async () => {
-        console.log(message._id);
-    };
-
-    const copyMessageLink = async () => {
-        navigator.clipboard.writeText(
-            `https://discord.com/channels/@me/${router.query.channelID}/${message._id}`
-        );
-    };
-
-    const copyMessageID = () => {
-        navigator.clipboard.writeText(message._id);
-    };
-
-    const senderItems = [
-        { name: 'Edit Message', icon: "edit", func: editMessage },
-        {
-            name: message?.pinned ? 'Unpin Message' : 'Pin Message',
-            icon: "pin",
-            func: message?.pinned ? unpinPopup : pinPopup,
-            funcShift: message?.pinned ? unpinMessage : pinMessage
-        },
-        { name: 'Reply', icon: "reply", func: replyToMessage },
-        { name: 'Mark Unread', icon: "mark", func: markUnread },
-        { name: 'Copy Message Link', icon: "link", func: copyMessageLink },
-        { name: 'Delete Message', icon: "delete", func: deletePopup, funcShift: deleteMessage, danger: true },
-        { name: 'Divider' },
-        { name: 'Copy Message ID', icon: "id", func: copyMessageID },
-    ];
-
-    const receiverItems = [
-        {
-            name: message?.pinned ? 'Unpin Message' : 'Pin Message',
-            icon: "pin",
-            func: message?.pinned ? unpinPopup : pinPopup,
-            funcShift: message?.pinned ? unpinMessage : pinMessage
-        },
-        { name: 'Reply', icon: "reply", func: replyToMessage, },
-        { name: 'Mark Unread', icon: "mark", func: markUnread, },
-        { name: 'Copy Message Link', icon: "link", func: copyMessageLink, },
-        { name: 'Divider', },
-        { name: 'Copy Message ID', icon: "id", func: copyMessageID, },
-    ];
 
     return (
         <div
@@ -301,32 +249,39 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
             onMouseLeave={() => setHover(false)}
             onContextMenu={(e) => {
                 e.preventDefault();
-                if (noInteraction) return;
-                setMenu({
-                    items: message.author?._id === auth?.user?._id ? senderItems : receiverItems,
+                if (noInteraction || edit?.messageID === message._id) return;
+                setFixedLayer({
+                    type: "menu",
                     event: e,
-                    message: message._id,
+                    message: message,
+                    deletePopup,
+                    deleteMessage,
+                    pinPopup,
+                    pinMessage,
+                    unpinPopup,
+                    unpinMessage,
+                    editMessage,
+                    replyToMessage,
                 });
             }}
-            style={(hover || (menu?.message === message?._id)) || edit?.messageID === message._id
+            style={(hover || (fixedLayer?.message?._id === message?._id)) || edit?.messageID === message._id
                 ? { backgroundColor: reply?._id === message._id ? "" : "var(--background-hover-4)" }
                 : {}}
         >
-            {((hover || (menu?.message === message?._id)) && (edit?.messageID !== message._id)) && (
+            {((hover || (fixedLayer?.message?._id === message?._id)) && (edit?.messageID !== message._id)) && (
                 <MessageMenu
                     message={message}
                     start={start}
                     functions={{
                         deletePopup,
                         deleteMessage,
-                        editMessage,
+                        pinPopup,
                         pinMessage,
+                        unpinPopup,
+                        unpinMessage,
+                        editMessage,
                         replyToMessage,
-                        markUnread,
-                        copyMessageLink,
-                        copyMessageID,
                     }}
-                    menuItems={message.author?._id === auth?.user?._id ? senderItems : receiverItems}
                 />
             )}
 
@@ -354,7 +309,7 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (noInteraction) return;
+                            if (noInteraction || edit?.messageID === message._id) return;
                             if (message.author._id === auth?.user?._id) {
                                 editMessage();
                             } else {
@@ -369,25 +324,33 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                             width={40}
                             height={40}
                             onClick={(e) => {
-                                if (menu?.element === userImageRef.current) {
-                                    setMenu(null);
+                                if (fixedLayer?.element === userImageRef.current) {
+                                    setFixedLayer(null);
                                 } else {
-                                    setMenu(null);
+                                    setFixedLayer(null);
                                     setTimeout(() => {
-                                        setMenu({
+                                        setFixedLayer({
+                                            type: "usercard",
                                             event: e,
-                                            name: "userProfile",
+                                            user: message.author,
                                             element: userImageRef.current,
                                             side: "right",
                                             gap: 10,
-                                            user: message.author,
                                         });
                                     }, 10);
                                 }
                             }}
-                            onDoubleClick={(e) => e.stopPropagation()}
+                            onContextMenu={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setFixedLayer({
+                                    type: "menu",
+                                    event: e,
+                                    user: message.author,
+                                });
+                            }}
                         />
-                        <h3 onDoubleClick={(e) => e.stopPropagation()}>
+                        <h3>
                             <span className={styles.titleUsername}>
                                 {message.author?.username}
                             </span>
@@ -554,8 +517,9 @@ const Message = ({ channelID, message, setMessages, start, edit, setEdit, reply,
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

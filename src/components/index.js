@@ -18,15 +18,14 @@ import Settings from './Settings/Settings';
 import UserListItem from './UserLists/UserListItem';
 import UserListItemSmall from './ChannelList/UserListItemSmall';
 import UserSection from './ChannelList/UserSection';
-import EmojiPicker from './TextArea/EmojiPicker';
 import UserProfile from './UserProfile/UserProfile';
-import FilePreview from './TextArea/FilePreview';
 import Title from './ChannelList/Title';
 import MemberList from './MemberList/MemberList';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import Popup from './Popup/Popup';
+import FixedLayer from './FixedLayer/FixedLayer';
 
 export {
     AppHeader,
@@ -49,13 +48,12 @@ export {
     UserListItem,
     UserListItemSmall,
     UserSection,
-    EmojiPicker,
     UserProfile,
-    FilePreview,
     Title,
     MemberList,
     MessageSkeleton,
     Header,
     Footer,
     Popup,
+    FixedLayer,
 };
