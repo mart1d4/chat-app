@@ -13,14 +13,13 @@
     width: 100%;
     max-width: 1260px;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0 20px;
-    padding: 0 40px;
+    padding: 0 24px;
 }
 
 .infoBox {
-    grid-column: span 3;
-    grid-row-end: span 2;
+    grid-column: span 4;
     display: flex;
     flex-direction: column;
     margin-bottom: 56px;
@@ -132,6 +131,7 @@
     color: inherit;
     cursor: pointer;
     text-decoration: none;
+    display: flex;
 }
 
 .socials > a:not(:first-child) {
@@ -139,8 +139,7 @@
 }
 
 .footer > div:first-child > div:nth-child(2) {
-    grid-column: span 1;
-    grid-row-end: span 2;
+    display: none;
 }
 
 .footerColumn {
@@ -213,4 +212,29 @@
 .bottomFooterContent > a:last-child:hover {
     background-color: hsl(235, 86.1%, 71.8%);
     box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+}
+
+@media screen and (min-width: 768px) {
+    .footer > div {
+        grid-template-columns: repeat(8, 1fr);
+        padding: 0 40px;
+    }
+
+    .footer > div:first-child > div:nth-child(2) {
+        display: block;
+        grid-column: span 1;
+        grid-row-end: span 2;
+    }
+
+    .infoBox {
+        grid-column: span 3;
+        grid-row-end: span 2;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .footer > div {
+        grid-template-columns: repeat(12, 1fr);
+        padding: 0 40px;
+    }
 }

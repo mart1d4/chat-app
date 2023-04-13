@@ -88,26 +88,25 @@
 .hero {
     width: 100%;
     max-width: 1260px;
-    padding: 120px 40px;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    padding: 56px 24px;
+    grid-template-columns: repeat(4, 1fr);
     box-sizing: border-box;
+    z-index: 1;
 }
 
 .hero > div {
-    grid-column: 3 / span 8;
-    text-align: center;
+    grid-column: span 4;
 }
 
 .heroText {
-    margin-bottom: 8px;
     color: hsl(0, 0%, 100%);
 }
 
 .heroText > h1 {
     font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
         sans-serif;
-    font-size: 56px;
+    font-size: clamp(24px, 5vw, 44px);
     font-weight: 800;
     line-height: 95%;
     text-transform: uppercase;
@@ -117,7 +116,7 @@
 }
 
 .heroText > div {
-    margin-top: 40px;
+    margin-top: 24px;
     font-size: clamp(16px, 2vw, 20px);
     line-height: 1.625;
     font-weight: 300;
@@ -125,8 +124,7 @@
 
 .heroButtons {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    align-self: center;
     flex-wrap: wrap;
 }
 
@@ -167,16 +165,14 @@
 }
 
 .imageBackground {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: relative;
     pointer-events: none;
     user-select: none;
+    z-index: 0;
 }
 
 .imageBackground > img:first-child {
+    display: none;
     position: absolute;
     left: 50%;
     top: auto;
@@ -185,16 +181,15 @@
 }
 
 .imageBackground > img:nth-child(2) {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    height: auto;
-    width: auto;
-    max-width: none;
-    margin-left: -1030px;
+    display: block;
+    width: 100%;
+    max-width: 880px;
+    position: relative;
+    margin-left: -80px;
 }
 
 .imageBackground > img:last-child {
+    display: none;
     position: absolute;
     bottom: 0;
     left: 50%;
@@ -217,47 +212,27 @@
 .contentGrid > div {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    padding: 56px 24px;
     gap: 0 20px;
-    padding: 120px 40px;
     max-width: 1260px;
 }
 
 .contentGrid > div > img {
-    grid-column: span 7;
     margin-top: auto;
     margin-bottom: auto;
     max-width: 678px;
     max-height: 440px;
     width: 100%;
     object-fit: cover;
+    grid-column: span 4;
+    margin-top: 24px;
 }
 
 .contentGrid > div > div {
-    grid-column: 9 / span 4;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    grid-column: span 4;
+    margin-top: 20px;
     color: hsl(206, 9%, 15%);
-}
-
-.contentGrid:nth-child(2) > div > div {
-    grid-column: 1 / span 4;
-    order: 1;
-}
-
-.contentGrid:nth-child(2) > div > img {
-    grid-column: 6 / span 7;
-    order: 2;
-}
-
-.contentGrid:nth-child(4) > div {
-    padding-bottom: 80px;
-}
-
-.contentGrid:nth-child(4) > div > div {
-    grid-column: 2 / span 10;
-    text-align: center;
 }
 
 .contentGrid:nth-child(4) > div > div > h2 {
@@ -270,17 +245,20 @@
     text-rendering: geometricPrecision;
 }
 
+.contentGrid:nth-child(4) > div > div {
+    margin-top: 0;
+}
+
 .contentGrid:nth-child(4) > div > img {
-    margin-top: 16px;
-    grid-column: span 12;
+    margin-top: 24px;
     max-width: none;
     max-height: none;
 }
 
 .contentGrid:nth-child(5) > div {
-    margin-bottom: 120px;
-    padding-top: 0;
-    padding-bottom: 0;
+    width: 100%;
+    padding: 0 24px;
+    margin-bottom: 56px;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -293,6 +271,7 @@
     position: absolute;
     top: 0;
     width: 100%;
+    margin-top: 0;
     overflow: hidden;
     display: flex;
     justify-content: center;
@@ -316,7 +295,7 @@
 }
 
 .contentGrid:nth-child(5) > div > a {
-    width: auto;
+    width: 100%;
     margin-top: 40px;
     justify-content: center;
     border-radius: 28px;
@@ -343,7 +322,7 @@
 }
 
 .contentGrid > div > div > h2 {
-    font-size: 48px;
+    font-size: clamp(20px, 4vw, 40px);
     line-height: 120%;
     font-weight: 800;
     user-select: text;
@@ -356,219 +335,188 @@
     line-height: 1.625;
 }
 
-.footer {
-    background-color: hsl(206, 9%, 15%);
-    padding-top: 80px;
-    padding-bottom: 64px;
-    color: hsl(0, 0%, 100%);
-    width: 100%;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+@media screen and (min-width: 768px) {
+    .heading {
+        padding-bottom: 80px;
+        min-height: 626px;
+    }
+
+    .hero {
+        padding: 80px 40px;
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    .hero > div {
+        grid-column: span 5;
+    }
+
+    .heroText {
+        margin-bottom: 8px;
+    }
+
+    .heroText > h1 {
+        font-size: 56px;
+    }
+
+    .heroText > div {
+        margin-top: 40px;
+    }
+
+    .heroButtons {
+        justify-content: left;
+    }
+
+    .imageBackground {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .imageBackground > img:first-child {
+        display: block;
+        margin-left: -1320px;
+    }
+
+    .imageBackground > img:nth-child(2) {
+        display: none;
+    }
+
+    .imageBackground > img:last-child {
+        display: block;
+        margin-left: -70px;
+    }
+
+    .contentGrid > div {
+        grid-template-columns: repeat(8, 1fr);
+        padding: 80px 40px;
+    }
+
+    .contentGrid > div > img {
+        grid-column: span 4;
+        margin-top: auto;
+    }
+
+    .contentGrid > div > div {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        grid-column: span 4;
+        margin-top: 0;
+    }
+
+    .contentGrid > div > div > h2 {
+        font-size: 48px;
+    }
+
+    .contentGrid:nth-child(2) > div > div {
+        order: 1;
+    }
+
+    .contentGrid:nth-child(2) > div > img {
+        order: 2;
+    }
+
+    .contentGrid:nth-child(4) > div {
+        padding-bottom: 80px;
+    }
+
+    .contentGrid:nth-child(4) > div > div {
+        grid-column: span 8;
+        text-align: center;
+    }
+
+    .contentGrid:nth-child(4) > div > img {
+        margin-top: 24px;
+        grid-column: span 8;
+    }
+
+    .contentGrid:nth-child(5) > div {
+        margin-bottom: 80px;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .contentGrid:nth-child(5) > div > a {
+        width: auto;
+    }
 }
 
-.footer > div {
-    width: 100%;
-    max-width: 1260px;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 0 20px;
-    padding: 0 40px;
-}
+@media screen and (min-width: 1024px) {
+    .heading {
+        padding-bottom: 0;
+        min-height: 626px;
+    }
 
-.infoBox {
-    grid-column: span 3;
-    grid-row-end: span 2;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 56px;
-    user-select: none;
-}
+    .hero {
+        padding: 120px 40px;
+        grid-template-columns: repeat(12, 1fr);
+    }
 
-.infoBox > h4 {
-    color: #5865f2;
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
-        sans-serif;
-    font-weight: 800;
-    font-size: 32px;
-    line-height: 95%;
-    text-transform: uppercase;
-    text-rendering: geometricPrecision;
-    user-select: text;
-    cursor: initial;
-}
+    .hero > div {
+        grid-column: 3 / span 8;
+        text-align: center;
+    }
 
-.language {
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-}
+    .heroButtons {
+        justify-content: center;
+    }
 
-.langChooser {
-    position: absolute;
-    z-index: 10;
-    bottom: 100%;
-    margin-bottom: 8px;
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 1px hsla(0, 0%, 0%, 0.1);
-}
+    .imageBackground > img:first-child {
+        left: 50%;
+        margin-left: -1280px;
+    }
 
-.langChooser > div {
-    max-height: 320px;
-    min-width: 150px;
-    overflow: hidden auto;
-    overscroll-behavior: contain;
-}
+    .imageBackground > img:nth-child(2) {
+        position: absolute;
+        display: block;
+        bottom: 0;
+        left: 50%;
+        height: auto;
+        width: auto;
+        max-width: none;
+        margin-left: -1030px;
+    }
 
-.langItem {
-    padding: 8px;
-    cursor: pointer;
-}
+    .imageBackground > img:last-child {
+        margin-left: 370px;
+    }
 
-.langItem:hover {
-    border-radius: 4px;
-    background-color: hsla(217, 8%, 34%, 0.16);
-}
+    .contentGrid > div {
+        grid-template-columns: repeat(12, 1fr);
+        padding: 120px 40px;
+    }
 
-.langItem > div {
-    display: flex;
-    align-items: center;
-}
+    .contentGrid > div > img {
+        grid-column: span 7;
+    }
 
-.langItem > div > img {
-    width: 24px;
-    height: 16px;
-    margin-right: 8px;
-}
+    .contentGrid > div > div {
+        grid-column: 9 / span 4;
+    }
 
-.langItem > div > div {
-    color: hsl(206, 9%, 15%);
-    font-size: 14px;
-    line-height: 18px;
-}
+    .contentGrid:nth-child(2) > div > div {
+        grid-column: 1 / span 4;
+        order: 1;
+    }
 
-.language > div {
-    position: relative;
-}
+    .contentGrid:nth-child(2) > div > img {
+        grid-column: 6 / span 7;
+        order: 2;
+    }
 
-.language > div > div {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
+    .contentGrid:nth-child(4) > div > div {
+        grid-column: 2 / span 10;
+        text-align: center;
+    }
 
-.language > div > div > div:not(.langChooser > div) {
-    display: flex;
-    align-items: center;
-}
+    .contentGrid:nth-child(4) > div > img {
+        margin-top: 16px;
+        grid-column: span 12;
+    }
 
-.language > div > div > div > img {
-    width: 24px;
-    height: 16px;
-    margin-right: 8px;
-}
-
-.language > div > div > div > div {
-    color: hsl(0, 0%, 100%);
-    font-size: 14px;
-    line-height: 18px;
-}
-
-.language > div > div > img {
-    padding-left: 8px;
-}
-
-.socials {
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-}
-
-.socials > a {
-    color: inherit;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-.socials > a:not(:first-child) {
-    margin-left: 24px;
-}
-
-.footer > div:first-child > div:nth-child(2) {
-    grid-column: span 1;
-    grid-row-end: span 2;
-}
-
-.footerColumn {
-    grid-column: span 2;
-    margin-bottom: 40px;
-}
-
-.footerColumn > h5 {
-    color: hsl(235, 86%, 65%);
-    padding-top: 8px;
-    font-size: 16px;
-    line-height: 24px;
-    user-select: text;
-    cursor: initial;
-}
-
-.footerColumn > a {
-    color: inherit;
-    margin-top: 8px;
-    display: block;
-    cursor: pointer;
-    text-decoration: none;
-    line-height: 24px;
-}
-
-.footerColumn > a:hover {
-    text-decoration: underline;
-}
-
-.footer > div:last-child > div {
-    grid-column: span 12;
-}
-
-.footerSeparator {
-    background-color: hsl(235, 86%, 65%);
-    height: 1px;
-    width: 100%;
-    margin-bottom: 32px;
-}
-
-.bottomFooterContent {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.bottomFooterContent > a:first-child {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-.bottomFooterContent > a:last-child {
-    border-radius: 40px;
-    font-size: 14px;
-    padding: 7px 16px;
-    background-color: hsl(235, 86%, 65%);
-    color: hsl(0, 0%, 100%);
-    line-height: 24px;
-    cursor: pointer;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    transition: all 0.2s ease-in-out;
-    text-decoration: none;
-}
-
-.bottomFooterContent > a:last-child:hover {
-    background-color: hsl(235, 86.1%, 71.8%);
-    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+    .contentGrid:nth-child(5) > div {
+        margin-bottom: 120px;
+    }
 }

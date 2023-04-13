@@ -2,6 +2,7 @@ import styles from './Header.module.css';
 import Link from 'next/link';
 import useAuth from '../../hooks/useAuth';
 import { v4 as uuidv4 } from 'uuid';
+import { useState, useEffect } from 'react';
 
 const links = [
     {
@@ -35,7 +36,21 @@ const links = [
 ];
 
 const Header = () => {
+    const [innerWidthSmall, setInnerWidthSmall] = useState(false);
     const { auth } = useAuth();
+
+    useEffect(() => {
+        const handleWidth = () => {
+            if (window.innerWidth < 1024) setInnerWidthSmall(true);
+            else setInnerWidthSmall(false);
+        };
+
+        handleWidth();
+
+        window.addEventListener('resize', handleWidth);
+
+        return () => window.removeEventListener('resize', handleWidth);
+    }, []);
 
     return (
         <header className={styles.header}>
@@ -72,17 +87,19 @@ const Header = () => {
                     </svg>
                 </a>
 
-                <div className={styles.navLinks}>
-                    {links.map((link) => (
-                        <a
-                            href={link.href}
-                            className={styles.navLink}
-                            key={uuidv4()}
-                        >
-                            {link.name}
-                        </a>
-                    ))}
-                </div>
+                {!innerWidthSmall && (
+                    <div className={styles.navLinks}>
+                        {links.map((link) => (
+                            <a
+                                href={link.href}
+                                className={styles.navLink}
+                                key={uuidv4()}
+                            >
+                                {link.name}
+                            </a>
+                        ))}
+                    </div>
+                )}
 
                 <div className={styles.appButton}>
                     <Link href="/login">

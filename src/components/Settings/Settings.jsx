@@ -265,7 +265,7 @@ const MyAccount = () => {
     const { setPopup } = useComponents();
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(auth?.user?.id);
+        navigator.clipboard.writeText(auth?.user?._id);
         setTooltip({
             ...tooltip,
             text: 'Copied!',
