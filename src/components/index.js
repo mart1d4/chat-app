@@ -13,19 +13,18 @@ import Loader from './Loader/Loader';
 import TextArea from './TextArea/TextArea';
 import Icon from './Icon/Icon';
 import AvatarStatus from './AvatarStatus/AvatarStatus';
-import Menu from './Menu/Menu';
 import Settings from './Settings/Settings';
 import UserListItem from './UserLists/UserListItem';
 import UserListItemSmall from './ChannelList/UserListItemSmall';
-import UserSection from './ChannelList/UserSection';
 import UserProfile from './UserProfile/UserProfile';
-import Title from './ChannelList/Title';
 import MemberList from './MemberList/MemberList';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
-import Popup from './Popup/Popup';
 import FixedLayer from './FixedLayer/FixedLayer';
+import Popup from './Popup/Popup';
+import Popout from './Popout/Popout';
+import Menu from './Menu/Menu';
 
 export {
     AppHeader,
@@ -43,17 +42,16 @@ export {
     TextArea,
     Icon,
     AvatarStatus,
-    Menu,
     Settings,
     UserListItem,
     UserListItemSmall,
-    UserSection,
     UserProfile,
-    Title,
     MemberList,
     MessageSkeleton,
     Header,
     Footer,
-    Popup,
     FixedLayer,
+    Popup,
+    Popout,
+    Menu,
 };

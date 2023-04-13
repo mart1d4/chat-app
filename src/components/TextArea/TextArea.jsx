@@ -258,6 +258,7 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
                             event: e,
                             input: true,
                             pasteText,
+                            sendButton: true,
                         });
                     }}
                 />
@@ -411,8 +412,19 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
 
                             {userSettings?.sendButton && (
                                 <button
-                                    className={styles.sendButton}
-                                    onClick={(e) => e.preventDefault()}
+                                    className={message.length === 0 ? styles.sendButton + " " + styles.empty : styles.sendButton}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        if (editedMessage) return;
+                                        sendMessage();
+                                        setMessage("");
+                                        e.target.innerText = "";
+                                    }}
+                                    style={{
+                                        disabled: message.length === 0,
+                                        cursor: message.length === 0 ? "not-allowed" : "pointer",
+                                        opacity: message.length === 0 ? 0.5 : 1,
+                                    }}
                                 >
                                     <div>
                                         <Icon

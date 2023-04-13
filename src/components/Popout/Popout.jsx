@@ -1,81 +1,53 @@
-import { Icon, Tooltip, AvatarStatus } from "../";
-import { useState, useEffect, useRef } from "react";
-import styles from "./Title.module.css";
-import useUserData from "../../hooks/useUserData";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
-import Image from "next/image";
-import { v4 as uuidv4 } from "uuid";
+import useComponents from "../../hooks/useComponents";
+import useUserData from "../../hooks/useUserData";
+import { useEffect, useState, useRef } from "react";
+import { Message, AvatarStatus, Icon } from "../";
+import styles from "./Popout.module.css";
 import { useRouter } from "next/router";
+import { v4 as uuidv4 } from "uuid";
+import Image from "next/image";
 
-const Title = () => {
-    const [hover, setHover] = useState(false);
-    const [show, setShow] = useState(false);
-    const [search, setSearch] = useState("");
+const Popout = ({ content }) => {
+    const [pinnedMessages, setPinnedMessages] = useState(null);
     const [filteredList, setFilteredList] = useState([]);
+    const [search, setSearch] = useState("");
     const [chosen, setChosen] = useState([]);
-    const [error, setError] = useState("");
-    const [scrollHeight, setScrollHeight] = useState(0);
 
     const { friends, setChannels } = useUserData();
+    const { setFixedLayer } = useComponents();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
-
-    const showButton = useRef();
     const inputRef = useRef();
 
     useEffect(() => {
+        if (!content?.channel) {
+            setFilteredList(friends?.sort(
+                (a, b) => a?.username?.localeCompare(b.username)
+            ));
+            return;
+        };
+
+        const getPinnedMessages = async () => {
+            const response = await axiosPrivate.get(
+                `/channels/${content?.channel}/pins`,
+            );
+
+            setPinnedMessages(response.data.pins.reverse());
+        };
+
+        getPinnedMessages();
+    }, [content]);
+
+    useEffect(() => {
+        if (content?.channel) return;
+
         if (search) {
             setFilteredList(friends?.filter((user) => {
                 return user?.username?.toLowerCase().includes(search.toLowerCase());
             }));
-        } else {
-            setFilteredList(friends);
-        }
+        } else setFilteredList(friends);
     }, [search]);
-
-    useEffect(() => {
-        setFilteredList(friends?.sort(
-            (a, b) => a?.username?.localeCompare(b.username)
-        ));
-
-        const handleKeyDown = (e) => {
-            if (e.key === "Escape") {
-                setShow(false);
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!showButton.current || !inputRef.current) return;
-
-        const handleClickOutside = (e) => {
-            if (showButton.current.contains(e.target) || inputRef.current.contains(e.target)) {
-                return;
-            }
-
-            setShow(false);
-            setChosen([]);
-            setSearch("");
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [showButton, inputRef]);
-
-    useEffect(() => {
-        if (show) {
-            inputRef.current.focus();
-        }
-    }, [show, chosen]);
 
     const createChannel = async () => {
         const recipientIDs = chosen?.map((user) => user?._id);
@@ -85,65 +57,68 @@ const Title = () => {
             { recipients: recipientIDs },
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response.data.success) {
             if (response.data.message === "Channel created") {
                 setChannels((prev) => [response.data.channel, ...prev]);
-            }
+            };
             router.push(`/channels/@me/${response.data.channel._id}`);
-        } else {
-            setError("An error occurred.");
-        }
+        };
     };
 
-    return (
-        <h2 className={styles.title}>
-            <span>Direct Messages</span>
-            <div
-                ref={showButton}
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                onClick={() => {
-                    if (show) {
-                        setShow(false);
-                        setChosen([]);
-                        setSearch("");
-                    } else {
-                        setShow(true);
-                        setHover(false);
+    if (content?.channel) {
+        return (
+            <div className={styles.pinContainer}>
+                <div>
+                    <h1>Pinned Messages</h1>
+                </div>
+
+                <div className="scrollbar">
+                    {(!pinnedMessages || pinnedMessages.length === 0) ? (
+                        <div className={styles.noPinnedContent}>
+                            <div />
+
+                            <div>
+                                This direct message doesn't have <br />
+                                any pinned messages... yet.
+                            </div>
+                        </div>
+                    ) :
+                        pinnedMessages.map((message) => (
+                            <div
+                                key={uuidv4()}
+                                className={styles.messageContainer}
+                            >
+                                <Message message={message} noInt={true} />
+                            </div>
+                        ))
                     }
-                }}
-            >
-                <Icon
-                    name="add"
-                    size={16}
-                    viewbox="0 0 18 18"
-                />
+                </div>
 
-                <Tooltip show={hover}>
-                    Create DM
-                </Tooltip>
+                {(!pinnedMessages || pinnedMessages.length === 0) && (
+                    <div className={styles.noPinnedBottom}>
+                        <div>
+                            <div>
+                                Protip:
+                            </div>
 
-                {show && (
-                    <div
-                        className={styles.popup}
-                        onMouseEnter={() => setHover(false)}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div
-                            className={styles.header}
-                            style={
-                                scrollHeight > 40 ? {
-                                    boxShadow: "0 1px 0 0 hsla(220, 8.1%, 7.3%, 0.3), 0 1px 2px 0 hsla(220, 8.1%, 7.3%, 0.3)",
-                                } : {}
-                            }
-                        >
-                            <h1>Select Friends</h1>
+                            <div>
+                                You and { } can pin a message from its cog content.
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    } else {
+        return (
+            <div className={styles.popup}>
+                <div className={styles.header}>
+                    <h1>Select Friends</h1>
+                    {friends.length > 0 && (
+                        <>
                             <div>
                                 {chosen?.length < 9 ?
-                                    `You can add ${9 - chosen.length} more friend${9 - chosen.length === 1 ? "" : "s"
-                                    }.`
+                                    `You can add ${9 - chosen.length} more friend${9 - chosen.length === 1 ? "" : "s"}.`
                                     : "This group has a 10 member limit."}
                             </div>
 
@@ -191,12 +166,13 @@ const Title = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </>
+                    )}
+                </div>
 
-                        <div
-                            className={styles.scroller + " scrollbar"}
-                            onScroll={(e) => setScrollHeight(e.target.scrollTop)}
-                        >
+                {(friends.length > 0 && filteredList.length > 0) && (
+                    <>
+                        <div className={styles.scroller + " scrollbar"}>
                             {filteredList?.map((friend) => (
                                 <div
                                     key={uuidv4()}
@@ -254,23 +230,87 @@ const Title = () => {
                                 className="blue"
                                 onClick={() => {
                                     if (chosen?.length) {
-                                        setShow(false);
-                                        setChosen([]);
-                                        setSearch("");
+                                        setFixedLayer(null);
                                         createChannel();
-                                    } else {
-                                        setError("Please select at least one friend.");
                                     }
                                 }}
                             >
                                 Create DM
                             </button>
                         </div>
+                    </>
+                )}
+
+                {(friends.length > 0 && filteredList.length === 0) && (
+                    <>
+                        <div
+                            className={styles.noFriends}
+                            style={{
+                                padding: "0 20px",
+                                marginBottom: "20px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    backgroundImage: `url(/assets/nothing-found.svg)`,
+                                    width: "85px",
+                                    height: "85px",
+                                }}
+                            />
+
+                            <div>
+                                No friends found that are not already in this DM.
+                            </div>
+
+                        </div>
+
+                        <div className={styles.separator} />
+
+                        <div className={styles.footer}>
+                            <button
+                                className="blue"
+                                onClick={() => {
+                                    if (chosen?.length) {
+                                        setFixedLayer(null);
+                                        createChannel();
+                                    }
+                                }}
+                            >
+                                Create DM
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {friends.length === 0 && (
+                    <div className={styles.noFriends}>
+                        <div
+                            style={{
+                                backgroundImage: `url(/assets/no-friends-popout.svg)`,
+                                width: "171px",
+                                height: "86px",
+                            }}
+                        />
+
+                        <div>
+                            You don't have any friends to add!
+                        </div>
+
+                        <button
+                            className="green"
+                            onClick={() => {
+                                setFixedLayer(null);
+                                localStorage.setItem("friends-tab", "add");
+                                router.push("/channels/@me");
+                            }}
+                        >
+                            Add Friend
+                        </button>
                     </div>
                 )}
             </div>
-        </h2>
-    )
-}
+        );
+    };
+};
 
-export default Title;
+export default Popout;

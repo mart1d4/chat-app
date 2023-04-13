@@ -1,7 +1,6 @@
 import styles from "./AppHeader.module.css";
 import { Tooltip, Icon, AvatarStatus } from "../";
-import ToolbarIcon from "./ToolbarIcon";
-import { useState, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import useUserData from "../../hooks/useUserData";
 import useComponents from "../../hooks/useComponents";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +9,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
     const [showTooltip, setShowTooltip] = useState(false);
 
     const { requests } = useUserData();
-    const { setUserProfile, setMenu } = useComponents();
+    const { setUserProfile, fixedLayer, setFixedLayer } = useComponents();
     const requestReceived = requests?.filter((request) => request.type === 1).length;
 
     const tabs = [
@@ -25,30 +24,38 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
         { name: "Start Voice Call", icon: "call", func: () => { } },
         { name: "Start Video Call", icon: "video", func: () => { } },
         {
-            name: "Pinned Messages", icon: "pin", func: (e, element, menu) => {
-                if (menu?.name === "pin") {
-                    setMenu(null);
+            name: "Pinned Messages", icon: "pin", func: (e, element) => {
+                if (fixedLayer?.element === element) {
+                    setFixedLayer(null);
                     return;
+                };
+                setFixedLayer({
+                    type: "popout",
+                    event: e,
+                    firstSide: "bottom",
+                    secondSide: "left",
+                    element: element,
+                    gap: 10,
+                    channel: channel?._id,
+                });
+            }
+        },
+        {
+            name: "Add Friends to DM", icon: "addUser", func: (e, element) => {
+                if (fixedLayer?.element === element) {
+                    setFixedLayer(null);
                 } else {
-                    setMenu({
+                    setFixedLayer({
+                        type: "popout",
                         event: e,
-                        items: [
-                            { name: "Divider" },
-                            { name: "Divider" },
-                            { name: "Divider" },
-                            { name: "Divider" },
-                            { name: "Divider" }
-                        ],
-                        side: "bottom",
-                        side2: "right",
+                        gap: 10,
                         element: element,
-                        gap: 8,
-                        name: "pin",
+                        firstSide: "bottom",
+                        secondSide: "right",
                     });
                 }
             }
         },
-        { name: "Add Friends to DM", icon: "addUser", func: () => { } },
         {
             name: friend ? (
                 !showUsers ? "Show User Profile" : "Hide User Profile"
@@ -180,7 +187,42 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                 </div>
             </div>
         </div>
-    ), [content, setContent, friend, recipients, showUsers, showTooltip]);
+    ), [channel, recipients, content, setContent, friend, showUsers, showTooltip]);
 };
+
+const ToolbarIcon = ({ item }) => {
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const { fixedLayer } = useComponents();
+    const element = useRef(null);
+
+    return (
+        <div
+            ref={element}
+            className={styles.toolbarIcon}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                item.func(e, element.current);
+            }}
+        >
+            <Icon name={item.icon} />
+
+            <Tooltip
+                show={showTooltip && (
+                    item.name === "Pinned Messages" || item.name === "Add Friends to DM" ? (
+                        fixedLayer?.element !== element.current
+                    ) : true
+                )}
+                pos="bottom"
+                dist={5}
+            >
+                {item.name}
+            </Tooltip>
+        </div>
+    );
+}
 
 export default AppHeader;

@@ -452,3 +452,16 @@
     align-items: center;
     justify-content: center;
 }
+
+.sendButton:not(.empty) > div path {
+    fill: hsl(235, 86.1%, 77.5%);
+    transition: fill 0.2s ease-in-out;
+}
+
+.sendButton:not(.empty):hover > div path {
+    fill: hsl(235, 85.7%, 69.8%);
+}
+
+.sendButton:not(.empty):active > div path {
+    fill: var(--accent-1);
+}

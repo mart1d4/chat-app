@@ -13,14 +13,7 @@ const FixedLayer = () => {
     const firstSide = fixedLayer?.firstSide;
     const secondSide = fixedLayer?.secondSide;
     const element = fixedLayer?.element;
-    const gap = fixedLayer?.gap;
-
-    useEffect(() => {
-        if (!fixedLayer) {
-            setPositions({});
-            setContainer(null);
-        }
-    }, [fixedLayer]);
+    const gap = fixedLayer?.gap || 10;
 
     const layerRef = useCallback(node => {
         if (!fixedLayer) return;
@@ -28,8 +21,8 @@ const FixedLayer = () => {
         if (node !== null) {
             setTimeout(() => {
                 setContainer({
-                    width: node.children[0].offsetWidth,
-                    height: node.children[0].offsetHeight,
+                    width: node.children[0]?.offsetWidth,
+                    height: node.children[0]?.offsetHeight,
                 });
             }, 10);
         }
@@ -75,11 +68,6 @@ const FixedLayer = () => {
                 if (secondSide === "top") {
                     pos = {
                         ...pos,
-                        top: elementRect.top,
-                    };
-                } else if (secondSide === "bottom") {
-                    pos = {
-                        ...pos,
                         top: elementRect.bottom - container.height,
                     };
                 }
@@ -90,11 +78,6 @@ const FixedLayer = () => {
                 };
 
                 if (secondSide === "top") {
-                    pos = {
-                        ...pos,
-                        top: elementRect.top,
-                    };
-                } else if (secondSide === "bottom") {
                     pos = {
                         ...pos,
                         top: elementRect.bottom - container.height,
@@ -109,11 +92,6 @@ const FixedLayer = () => {
                 if (secondSide === "left") {
                     pos = {
                         ...pos,
-                        left: elementRect.left,
-                    };
-                } else if (secondSide === "right") {
-                    pos = {
-                        ...pos,
                         left: elementRect.right - container.width,
                     };
                 }
@@ -124,11 +102,6 @@ const FixedLayer = () => {
                 };
 
                 if (secondSide === "left") {
-                    pos = {
-                        ...pos,
-                        left: elementRect.left,
-                    };
-                } else if (secondSide === "right") {
                     pos = {
                         ...pos,
                         left: elementRect.right - container.width,
@@ -168,17 +141,33 @@ const FixedLayer = () => {
     }, [container, fixedLayer]);
 
     useEffect(() => {
-        if (!container || !fixedLayer) return;
+        if (!container || !fixedLayer) {
+            setPositions({});
+            setContainer(null);
+            return;
+        };
 
-        const handleClickOutside = (e) => {
+        const handleClickOutside = () => {
             setFixedLayer(null);
             setContainer(null);
             setPositions({});
         };
 
-        document.addEventListener("click", handleClickOutside);
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                setFixedLayer(null);
+                setContainer(null);
+                setPositions({});
+            }
+        };
 
-        return () => document.removeEventListener("click", handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
     }, [container, fixedLayer]);
 
     return (

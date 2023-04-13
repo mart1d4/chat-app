@@ -118,7 +118,6 @@ const UserListItemSmall = ({ special, user, channel }) => {
             onMouseLeave={() => setHover(null)}
             onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 if (currentPath === `/channels/@me/${channel?._id}` || !channel) {
                     if (!channel) {
                         if (fixedLayer?.element === listItemRef.current) {

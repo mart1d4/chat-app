@@ -1,53 +1,132 @@
-.title {
+.pinContainer {
+    max-height: calc(100vh - 48px);
+    background-color: var(--background-3);
+    width: 420px;
+    overflow: hidden;
     display: flex;
-    padding: 18px 8px 4px 18px;
-    height: 40px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    text-transform: uppercase;
-    font-size: 12px;
-    line-height: 16px;
-    letter-spacing: 0.02rem;
-    font-weight: 600;
+    flex-direction: column;
+    border-radius: 4px;
+    box-shadow: var(--elevation-high), var(--elevation-low);
+    user-select: none;
 }
 
-.title > span {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--foreground-4);
+.pinContainer > div:first-child {
+    padding: 16px;
+    background-color: var(--background-1);
+    box-shadow: var(--elevation-low);
 }
 
-.title:hover span {
+.pinContainer > div:first-child > h1 {
+    color: var(--foreground-1);
+    font-weight: 500;
+    font: 16px;
+    line-height: 20px;
+}
+
+.pinContainer > div:nth-child(2) {
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding: 8px 0 0 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: var(--background-3);
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    border-color: transparent;
+    background-color: var(--background-1);
+}
+
+.noPinnedContent {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 8px 0 16px 0;
+}
+
+.noPinnedContent > div:first-child {
+    background-image: url(/assets/no-pinned.svg);
+    width: 120px;
+    height: 120px;
+    background-size: 94px 120px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.noPinnedContent > div:last-child {
+    white-space: pre;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: center;
     color: var(--foreground-2);
 }
 
-.title > div {
-    flex: 0;
-    width: 16px;
-    height: 16px;
-    margin: 0 8px;
-    margin-left: 0;
-    margin-right: 2px;
+.noPinnedBottom {
+    padding: 16px;
+    text-align: center;
+    background-color: var(--background-1);
+    height: 53px;
+    box-sizing: content-box;
+}
+
+.noPinnedBottom > div {
+    padding-top: 10px;
+}
+
+.noPinnedBottom > div > div:first-child {
+    color: var(--success-light);
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 18px;
+}
+
+.noPinnedBottom > div > div:last-child {
+    font-size: 14px;
+    line-height: 16px;
+    opacity: 0.6;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.messageContainer {
     position: relative;
-    cursor: pointer;
+    border: 1px solid var(--background-1);
     border-radius: 4px;
+    user-select: none;
+    margin: 0 0 6px;
+    overflow: hidden;
 }
 
-.title svg {
-    margin-left: 0;
-    margin-right: 2px;
-    display: block;
-    cursor: pointer;
+.messageContainer > div {
+    padding: 10px 0;
+    background-color: var(--background-4);
 }
 
-.title svg:hover polygon {
-    fill: var(--foreground-2);
+.messageContainer > div > div {
+    margin-top: 0;
+}
+
+.messageContainer > div img {
+    pointer-events: none;
+}
+
+.pinContainer .messageContainer > div > div * {
+    user-select: none;
 }
 
 .popup {
-    position: fixed;
     width: 440px;
     min-height: 200px;
     max-height: 720px;
@@ -56,9 +135,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: var(--elevation-low), var(--elevation-high-dark);
-    margin-top: 6px;
-    z-index: 100;
-    cursor: default;
+    user-select: none;
 }
 
 .header {
@@ -89,7 +166,7 @@
     margin-top: 4px;
     font-size: 12px;
     line-height: 16px;
-    font-weight: 400;
+    font-weight: 500;
     text-transform: none;
 }
 
@@ -285,4 +362,32 @@
 
 .footer button {
     height: 38px;
+}
+
+.noFriends {
+    flex: 1 1 auto;
+    padding: 20px 20px 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    flex-wrap: nowrap;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--foreground-5);
+}
+
+.noFriends > div:first-child {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    margin-bottom: 20px;
+}
+
+.noFriends > button {
+    margin-top: 20px;
+    width: 100%;
+    font-weight: 500;
+    color: var(--foreground-1);
 }

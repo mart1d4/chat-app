@@ -16,7 +16,28 @@ export default async (req, res) => {
     }
 
     if (req.method === "GET") {
-        const channel = await Channel.findById(channelID).populate("pinnedMessages");
+        const channel = await Channel.findById(channelID).populate("pinnedMessages").populate({
+            path: "pinnedMessages",
+            populate: {
+                path: "author",
+                model: "User",
+            },
+        }).populate({
+            path: "pinnedMessages",
+            populate: {
+                path: "messageReference",
+                model: "Message",
+            },
+        }).populate({
+            path: "pinnedMessages",
+            populate: {
+                path: "messageReference",
+                populate: {
+                    path: "author",
+                    model: "User",
+                },
+            },
+        });
 
         if (!channel) {
             return res.status(404).json({

@@ -1,13 +1,15 @@
-import styles from "./ChannelList.module.css";
-import { UserListItemSmall, UserSection, Title } from "..";
+import { UserListItemSmall, Icon, Tooltip, AvatarStatus } from "..";
+import useUserSettings from "../../hooks/useUserSettings";
+import useComponents from "../../hooks/useComponents";
 import useUserData from "../../hooks/useUserData";
-import { v4 as uuidv4 } from "uuid";
-import { useMemo } from "react";
+import { useMemo, useState, useRef } from "react";
+import styles from "./ChannelList.module.css";
 import useAuth from "../../hooks/useAuth";
+import { v4 as uuidv4 } from "uuid";
+import Image from "next/image";
 
 const ConversationList = () => {
     const { channels } = useUserData();
-
     const { auth } = useAuth();
 
     return useMemo(() => (
@@ -79,6 +81,185 @@ const ConversationList = () => {
             <UserSection />
         </div>
     ), [channels]);
+};
+
+const Title = () => {
+    const [hover, setHover] = useState(false);
+    const { fixedLayer, setFixedLayer } = useComponents();
+    const showButton = useRef();
+
+    return (
+        <h2 className={styles.title}>
+            <span>Direct Messages</span>
+            <div
+                ref={showButton}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                onClick={(e) => {
+                    if (fixedLayer?.type === "popout" && !fixedLayer?.channel) {
+                        setFixedLayer(null);
+                    } else {
+                        setFixedLayer({
+                            type: "popout",
+                            event: e,
+                            gap: 5,
+                            element: showButton.current,
+                            firstSide: "bottom",
+                            secondSide: "right",
+                        });
+                    }
+                }}
+            >
+                <Icon
+                    name="add"
+                    size={16}
+                    viewbox="0 0 18 18"
+                />
+
+                <Tooltip show={hover && fixedLayer?.element !== showButton?.current}>
+                    Create DM
+                </Tooltip>
+            </div>
+        </h2>
+    )
+};
+
+const UserSection = () => {
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const { auth } = useAuth();
+    const { setShowSettings } = useComponents();
+    const { userSettings, setUserSettings } = useUserSettings();
+    const userSection = useRef(null);
+
+    return (
+        <div className={styles.userSectionContainer}>
+            <div className={styles.userSection}>
+                <div
+                    ref={userSection}
+                    className={styles.avatarWrapper}
+                >
+                    <div>
+                        {auth?.user?.avatar && (
+                            <Image
+                                src={auth?.user?.avatar}
+                                width={32}
+                                height={32}
+                                alt="Avatar"
+                            />
+                        )}
+                        <AvatarStatus
+                            status={auth?.user?.status}
+                            background={"var(--background-2)"}
+                        />
+                    </div>
+                    <div className={styles.contentWrapper}>
+                        <div>
+                            {auth?.user?.username}
+                        </div>
+                        <div>
+                            {auth?.user?.customStatus === null
+                                ? "#0001"
+                                : auth?.user?.customStatus}
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.toolbar}>
+                    <button
+                        onMouseEnter={() => setShowTooltip(1)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                        onClick={() => {
+                            if (!userSettings?.microphone
+                                && !userSettings?.sound) {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: true,
+                                    sound: true,
+                                })
+                                const audio = new Audio("/assets/sounds/undeafen.mp3");
+                                audio.volume = 0.5;
+                                audio.play();
+                            } else {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: !userSettings?.microphone,
+                                })
+                                const audio = new Audio(`
+                                    /assets/sounds/${userSettings?.microphone
+                                        ? "mute" : "unmute"}.mp3
+                                `);
+                                audio.volume = 0.5;
+                                audio.play();
+                            }
+                        }}
+                        className={userSettings?.microphone ? "" : styles.cut}
+                    >
+                        <Tooltip show={showTooltip === 1}>
+                            {userSettings?.microphone ? "Mute" : "Unmute"}
+                        </Tooltip>
+                        <div className={styles.toolbar}>
+                            <Icon
+                                name={userSettings?.microphone ? "mic" : "micCut"}
+                                size="20"
+                            />
+                        </div>
+                    </button>
+
+                    <button
+                        onMouseEnter={() => setShowTooltip(2)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                        onClick={() => {
+                            if (userSettings?.microphone
+                                && userSettings?.sound) {
+                                setUserSettings({
+                                    ...userSettings,
+                                    microphone: false,
+                                    sound: false,
+                                })
+                            } else {
+                                setUserSettings({
+                                    ...userSettings,
+                                    sound: !userSettings?.sound,
+                                })
+                            }
+
+                            const audio = new Audio(`
+                                    /assets/sounds/${userSettings?.sound
+                                    ? "deafen" : "undeafen"}.mp3
+                                `);
+                            audio.volume = 0.5;
+                            audio.play();
+                        }}
+                        className={userSettings?.sound ? "" : styles.cut}
+                    >
+                        <Tooltip show={showTooltip === 2}>
+                            {userSettings?.sound ? "Deafen" : "Undeafen"}
+                        </Tooltip>
+                        <div className={styles.toolbar}>
+                            <Icon
+                                name={userSettings?.sound ? "headset" : "headsetCut"}
+                                size="20"
+                            />
+                        </div>
+                    </button>
+
+                    <button
+                        onMouseEnter={() => setShowTooltip(3)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                        onClick={() => setShowSettings(true)}
+                    >
+                        <Tooltip show={showTooltip === 3}>
+                            User Settings
+                        </Tooltip>
+                        <div className={styles.toolbar}>
+                            <Icon name="settings" size="20" />
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default ConversationList;

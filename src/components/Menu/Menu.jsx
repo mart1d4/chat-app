@@ -52,7 +52,9 @@ const content = ({ content }) => {
     }, []);
 
     useEffect(() => {
-        menuItems = items?.filter((item) => item.name !== "Divider" && item.name !== null && item.name !== false);
+        menuItems = items?.filter(
+            (item) => item.name !== "Divider" && item.name !== null && item.name !== false && !item?.disabled
+        );
 
         const handlekeyDown = (e) => {
             if (e.key === "Escape") {
@@ -115,7 +117,7 @@ const content = ({ content }) => {
         if (content?.input) {
             setItems([
                 {
-                    name: "Send Message Button",
+                    name: content?.sendButton && "Send Message Button",
                     icon: userSettings?.sendButton ? "boxFilled" : "box",
                     iconSize: 18,
                     iconFill: userSettings?.sendButton && "var(--accent-1)",
@@ -124,7 +126,7 @@ const content = ({ content }) => {
                     func: () => setUserSettings({ ...userSettings, sendButton: !userSettings?.sendButton }),
                     menuOpen: true,
                 },
-                { name: "Divider" },
+                { name: content?.sendButton && "Divider" },
                 {
                     name: "Spellcheck",
                     icon: "box",
@@ -158,7 +160,10 @@ const content = ({ content }) => {
                 setItems([
                     {
                         name: "Profile",
-                        func: () => setUserProfile({ user }),
+                        func: () => {
+                            setUserProfile(null);
+                            setTimeout(() => setUserProfile({ user }), 50);
+                        },
                     },
                     {
                         name: "Mention",
@@ -214,7 +219,10 @@ const content = ({ content }) => {
                 setItems([
                     {
                         name: "Profile",
-                        func: () => setUserProfile({ user }),
+                        func: () => {
+                            setUserProfile(null);
+                            setTimeout(() => setUserProfile({ user }), 50);
+                        },
                     },
                     {
                         name: "Message",
@@ -222,7 +230,10 @@ const content = ({ content }) => {
                     },
                     {
                         name: "Add Note",
-                        func: () => setUserProfile({ user, focusNote: true }),
+                        func: () => {
+                            setUserProfile(null);
+                            setTimeout(() => setUserProfile({ user, focusNote: true }), 50);
+                        },
                     },
                     { name: "Divider" },
                     {
@@ -282,7 +293,10 @@ const content = ({ content }) => {
                     { name: content?.channel && "Divider" },
                     {
                         name: "Profile",
-                        func: () => setUserProfile({ user }),
+                        func: () => {
+                            setUserProfile(null);
+                            setTimeout(() => setUserProfile({ user }), 50);
+                        },
                     },
                     {
                         name: "Message",
@@ -294,7 +308,10 @@ const content = ({ content }) => {
                     },
                     {
                         name: "Add Note",
-                        func: () => setUserProfile({ user, focusNote: true }),
+                        func: () => {
+                            setUserProfile(null);
+                            setTimeout(() => setUserProfile({ user, focusNote: true }), 50);
+                        },
                     },
                     {
                         name: !(incoming || outgoing || !friend) && "Add Friend Nickname",
@@ -405,34 +422,6 @@ const content = ({ content }) => {
         );
     };
 
-    // useEffect(() => {
-    //     if (content?.name !== "pin" || !router.query.channelID) return;
-
-    //     const handleClick = (e) => {
-    //         if (
-    //             e.target.contains(containerRef.current) ||
-    //             content?.name !== "pin" || !content
-    //         ) return;
-    //         setMenu(null);
-    //     };
-
-    //     const getPinnedMessages = async () => {
-    //         const response = await axiosPrivate.get(
-    //             `/channels/${router.query.channelID}/pins`,
-    //         );
-
-    //         setPinnedMessages(response.data.pins.reverse());
-    //     };
-
-    //     getPinnedMessages();
-
-    //     document.addEventListener("click", handleClick);
-
-    //     return () => {
-    //         document.removeEventListener("click", handleClick);
-    //     };
-    // }, [content]);
-
     // if (content.name === "userProfile") {
     //     return (
     //         <div
@@ -456,54 +445,6 @@ const content = ({ content }) => {
     //             }}
     //         >
     //             <UserProfile littleUser={content.user} side={side} />
-    //         </div>
-    //     );
-    // }
-
-    // if (content.name === "pin") {
-    //     return (
-    //         <div
-    //             className={styles.pinContainer}
-    //         >
-    //             <div>
-    //                 <h1>Pinned Messages</h1>
-    //             </div>
-
-    //             <div className="scrollbar">
-    //                 {(!pinnedMessages || pinnedMessages.length === 0) ? (
-    //                     <div className={styles.noPinnedContent}>
-    //                         <div />
-
-    //                         <div>
-    //                             This direct message doesn't have <br />
-    //                             any pinned messages... yet.
-    //                         </div>
-    //                     </div>
-    //                 ) :
-    //                     pinnedMessages.map((message) => (
-    //                         <div
-    //                             key={uuidv4()}
-    //                             className={styles.messageContainer}
-    //                         >
-    //                             <Message message={message} noInt={true} />
-    //                         </div>
-    //                     ))
-    //                 }
-    //             </div>
-
-    //             {(!pinnedMessages || pinnedMessages.length === 0) && (
-    //                 <div className={styles.noPinnedBottom}>
-    //                     <div>
-    //                         <div>
-    //                             Protip:
-    //                         </div>
-
-    //                         <div>
-    //                             You and { } can pin a message from its cog content.
-    //                         </div>
-    //                     </div>
-    //                 </div>
-    //             )}
     //         </div>
     //     );
     // }

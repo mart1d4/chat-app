@@ -20,7 +20,7 @@ const UserProfile = ({ littleUser, side }) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const { auth } = useAuth();
-    const { userProfile, setUserProfile, setMenu, setFixedLayer } = useComponents();
+    const { userProfile, setUserProfile, setFixedLayer } = useComponents();
     const {
         channels, friends, setFriends, setChannels,
         requests, setRequests, blocked, setBlocked,
@@ -643,66 +643,8 @@ const FriendItem = ({ friend }) => {
 
     const {
         setUserProfile,
-        setMenu
+        setFixedLayer,
     } = useComponents();
-
-    const menuItems = [
-        {
-            name: "Profile",
-            func: () => {
-                setUserProfile(null);
-
-                setTimeout(() => {
-                    setUserProfile({ user: friend });
-                }, 200);
-            },
-        },
-        {
-            name: "Message",
-            func: () => createChannel(),
-        },
-        {
-            name: "Call",
-            func: () => console.log("Call"),
-        },
-        {
-            name: "Add Note",
-            func: () => {
-                setUserProfile(null);
-
-                setTimeout(() => {
-                    setUserProfile({ user: friend, focusNote: true });
-                }, 200);
-            },
-        },
-        {
-            name: "Add Friend Nickname",
-            func: () => console.log("Add Friend Nickname"),
-        },
-        { name: "Divider" },
-        {
-            name: "Invite to Server",
-            func: () => console.log("Invite to Server"),
-            icon: "arrow",
-            iconSize: 10,
-        },
-        {
-            name: "Remove Friend",
-            func: () => deleteFriend(),
-            danger: true,
-        },
-        {
-            name: "Block",
-            func: () => blockUser(),
-            danger: true,
-        },
-        { name: "Divider" },
-        {
-            name: "Copy ID",
-            func: () => navigator.clipboard.writeText(friend._id),
-            icon: "id",
-        },
-    ];
 
     return (
         <div
@@ -718,9 +660,10 @@ const FriendItem = ({ friend }) => {
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
-                setMenu({
-                    items: menuItems,
+                setFixedLayer({
+                    type: "menu",
                     event: e,
+                    user: friend,
                 });
             }}
         >

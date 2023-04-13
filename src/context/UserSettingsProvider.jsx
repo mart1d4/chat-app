@@ -3,15 +3,13 @@ import { createContext, useEffect, useState } from 'react';
 export const UserSettingsContext = createContext({});
 
 export function UserSettingsProvider({ children }) {
-    const [userSettings, setUserSettings] = useState({});
+    const [userSettings, setUserSettings] = useState(null);
 
     useEffect(() => {
-        const userSettings = JSON.parse(localStorage.getItem('user-settings'));
+        const userSettingsLocal = localStorage.getItem('user-settings');
 
-        if (userSettings) {
-            setUserSettings(userSettings);
-        } else {
-            const userSettings = localStorage.getItem('user-settings') || {
+        if (!userSettingsLocal) {
+            const userSettingsLocal = {
                 language: 'en-US',
                 microphone: false,
                 sound: true,
@@ -22,11 +20,14 @@ export function UserSettingsProvider({ children }) {
                 theme: 'dark',
                 sendButton: false,
             };
-            setUserSettings(userSettings);
+            setUserSettings(userSettingsLocal);
+        } else {
+            setUserSettings(JSON.parse(userSettingsLocal));
         }
     }, []);
 
     useEffect(() => {
+        if (!userSettings) return;
         localStorage.setItem('user-settings', JSON.stringify(userSettings));
     }, [userSettings]);
 
