@@ -10,212 +10,64 @@ import {
 } from "../../../components";
 import styles from "./Channels.module.css";
 import Head from "next/head";
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useUserData from "../../../hooks/useUserData";
 import useAuth from "../../../hooks/useAuth";
 import Image from "next/image";
 import { parseISO, format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
+import useComponents from "../../../hooks/useComponents";
 
 const Channels = () => {
-    const [friend, setFriend] = useState(null);
-    const [recipients, setRecipients] = useState([]);
     const [channel, setChannel] = useState(null);
-    const [friendStatus, setFriendStatus] = useState({
-        1: null,
-        2: null,
-        3: null,
-    });
     const [messages, setMessages] = useState([]);
-    const [error, setError] = useState(null);
-    const [showUsers, setShowUsers] = useState(
-        localStorage.getItem("show-users") === "true"
-    );
-    const [edit, setEdit] = useState(null);
     const [reply, setReply] = useState(null);
+    const [edit, setEdit] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
-    const [scrollHeight, setScrollHeight] = useState(0);
-    const [scrollPosition, setScrollPosition] = useState(0);
+    const [friend, setFriend] = useState(null);
+    const [outgoing, setOutgoing] = useState(false);
+    const [incoming, setIncoming] = useState(false);
+    const [userBlocked, setUserBlocked] = useState(false);
+    const [isFriend, setIsFriend] = useState(false);
 
     const { auth } = useAuth();
-    const {
-        friends,
-        setFriends,
-        requests,
-        setRequests,
-        blocked,
-        setBlocked,
-        channels,
+    const { friends, setFriends, requests, setRequests,
+        blocked, setBlocked, channels,
     } = useUserData();
+    const { setFixedLayer } = useComponents();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
 
-    const requestMessages = async () => {
-        if (isLoading) return;
-        setIsLoading(true);
-
-        const response = await axiosPrivate.get(
-            `/channels/${channel?._id}/messages`,
-            {
-                before: messages[0]?.createdAt,
-            }
-        );
-
-        if (!response?.data?.success) {
-            setError(response?.data?.error);
-        } else {
-            setHasMoreMessages(response?.data?.hasMoreMessages);
-            setMessages((messages) => [...response?.data?.messages, ...messages]);
-        }
-
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        if (isLoading || messages.length === 0) return;
-
-        if (scrollPosition < 3600) {
-            console.log("requesting messages");
-        }
-    }, [scrollPosition]);
-
-    const requestMessagesRef = useCallback(node => {
-        if (node !== null) {
-            const { top } = node.getBoundingClientRect();
-            console.log(top);
-        }
-    }, [scrollPosition]);
-
-    const buttons = {
-        add: {
-            text: "Add Friend",
-            func: () => addFriend(),
-            class: "blue",
-        },
-        remove: {
-            text: "Remove Friend",
-            func: () => deleteFriend(),
-            class: "grey",
-        },
-        sent: {
-            text: "Friend Request Sent",
-            func: () => { },
-            class: "blue disabled",
-        },
-        received: {
-            text: "Accept",
-            func: () => addFriend(),
-            class: "green",
-        },
-        ignore: {
-            text: "Ignore",
-            func: () => deleteFriend(),
-            class: "grey",
-        },
-        block: {
-            text: "Block",
-            func: () => blockUser(),
-            class: "grey",
-        },
-        unblock: {
-            text: "Unblock",
-            func: () => unblockUser(),
-            class: "grey",
-        },
-    }
-
     const scrollableContainer = useCallback(node => {
-        if (node !== null) {
-            node.scrollTop = node.scrollHeight;
-            setScrollHeight(node.scrollHeight);
-        }
+        if (node) node.scrollTop = node.scrollHeight;
     }, [messages]);
 
     useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
-
-        if (localChannel?.edit) {
-            setEdit(localChannel.edit);
-        }
-
-        if (localChannel?.reply) {
-            setReply(localChannel.reply);
-        }
-    }, [channel]);
-
-    useEffect(() => {
-        const channel = channels?.find((channel) => channel._id === router.query.channelID);
-        if (!channel) {
-            router.push("/channels/@me");
-            return;
-        }
-
-        localStorage.setItem(
-            "channel-url",
-            `/channels/@me/${router.query.channelID}`
-        );
-
-        if (channel.type === 0) {
-            setFriend(channel?.recipients?.find(
-                (recipient) => recipient._id !== auth?.user._id
-            ));
-        } else if (channel.type === 1) {
-            setFriend(null);
-            setRecipients(channel?.recipients?.filter(
-                (recipient) => recipient._id !== auth?.user._id
-            ));
-        }
-        setChannel(channel);
-    }, [router.query.channelID, friends, requests, blocked, channels]);
-
-    useEffect(() => {
-        if (!friend) return;
-
-        if (friends?.find((user) => user?._id === friend?._id)) {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                1: "remove",
-                2: null,
-            }));
-        } else if (requests?.find((request) => request?.user?._id === friend?._id && request?.type === 0)) {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                1: "sent",
-                2: null,
-            }));
-        } else if (requests.find((request) => request?.user?._id === friend?._id && request?.type === 1)) {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                1: "received",
-                2: "ignore",
-            }));
-        } else {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                1: "add",
-                2: null,
-            }));
-        }
-
-        if (blocked?.find((blocked) => blocked?._id === friend?._id)) {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                3: "unblock",
-            }));
-        } else {
-            setFriendStatus((friendStatus) => ({
-                ...friendStatus,
-                3: "block",
-            }));
-        }
-    }, [friend, friends, requests, blocked]);
+        const sameChannel = channels?.find((channel) => channel._id === router.query.channelID);
+        if (!sameChannel) router.push("/channels/@me");
+        else setChannel(sameChannel);
+        setFixedLayer(null);
+    }, [router.query.channelID, channels]);
 
     useEffect(() => {
         if (!channel) return;
 
-        setMessages([]);
+        localStorage.setItem(
+            "channel-url",
+            `/channels/@me/${channel?._id}`
+        );
+
+        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel?._id}`));
+        if (localChannel?.edit) setEdit(localChannel.edit);
+        if (localChannel?.reply) setReply(localChannel.reply);
+
+        if (channel?.type === 0) {
+            setFriend(channel?.recipients?.find((member) => member?._id !== auth?.user?._id));
+        } else {
+            setFriend(null);
+        };
 
         const getMessages = async () => {
             setIsLoading(true);
@@ -224,9 +76,7 @@ const Channels = () => {
                 `/channels/${channel._id}/messages`,
             );
 
-            if (!response.data.success) {
-                setError(response.data.message);
-            } else {
+            if (response?.data?.success) {
                 setMessages(response.data.messages);
                 setHasMoreMessages(response.data.hasMoreMessages);
             }
@@ -235,38 +85,33 @@ const Channels = () => {
         };
 
         getMessages();
+
     }, [channel]);
 
-    const isFriend = () => {
-        return (friends?.find((user) => user?._id.toString() === friend?._id.toString()));
-    }
+    useEffect(() => {
+        if (!friend) return;
+
+        setOutgoing(requests?.find((request) => request.user._id === friend._id && request?.type === 0));
+        setIncoming(requests?.find((request) => request.user._id === friend._id && request?.type === 1));
+        setUserBlocked(blocked?.find((blocked) => blocked._id === friend._id));
+        setIsFriend(friends?.find((user) => user._id === friend._id));
+    }, [friend, requests, blocked, friends]);
 
     const addFriend = async () => {
         const response = await axiosPrivate.post(
             `/users/@me/friends/${friend._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
-            if (response.data.message === "Friend request sent") {
-                setRequests([
-                    ...requests,
-                    response.data.request,
-                ]);
-            } else if (response.data.message === "Friend request accepted") {
-                setFriends([
-                    ...friends,
-                    response.data.friend,
-                ]);
-
+        if (response?.data?.success) {
+            if (response.data.message.includes("sent")) {
+                setRequests([...requests, response.data.request]);
+            } else if (response.data.message.includes("accepted")) {
+                setFriends([...friends, response.data.friend]);
                 setRequests(requests.filter(
                     (request) => request.user._id !== response.data.friend._id
                 ));
             }
-        } else {
-            setError("An error occurred.");
-        }
+        };
     };
 
     const deleteFriend = async () => {
@@ -274,16 +119,16 @@ const Channels = () => {
             `/users/@me/friends/${friend._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
-            if (response.data.message === "Friend removed") {
-                setFriends(friends.filter((friend) => friend._id.toString() !== friend._id));
-            } else if (response.data.message === "Request cancelled") {
-                setRequests(requests.filter((request) => request.user._id.toString() !== friend._id));
+        if (response?.data?.success) {
+            if (response.data.message.includes("removed")) {
+                setFriends(friends.filter(
+                    (user) => user._id !== friend._id
+                ));
+            } else if (response.data.message.includes("cancelled")) {
+                setRequests(requests.filter(
+                    (request) => request.user._id !== friend._id
+                ));
             }
-        } else {
-            setError("An error occurred.");
         }
     };
 
@@ -292,14 +137,10 @@ const Channels = () => {
             `/users/${friend._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
+        if (response?.data?.success) {
             setBlocked((prev) => [...prev, response.data.blocked]);
-            setFriends(friends.filter((friend) => friend._id.toString() !== friend._id));
-            setRequests(requests.filter((request) => request.user._id.toString() !== friend._id));
-        } else {
-            setError("An error occurred.");
+            setFriends(friends.filter((user) => user._id !== friend._id));
+            setRequests(requests.filter((request) => request.user._id !== friend._id));
         }
     };
 
@@ -308,12 +149,8 @@ const Channels = () => {
             `/users/${friend._id}`,
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
-            setBlocked(blocked.filter((blocked) => blocked._id.toString() !== friend._id));
-        } else {
-            setError("An error occurred.");
+        if (response?.data?.success) {
+            setBlocked(blocked.filter((blocked) => blocked._id !== friend._id));
         }
     };
 
@@ -323,7 +160,7 @@ const Channels = () => {
         return Math.abs(date1 - date2) > 300000;
     };
 
-    const isStart = (index) => {
+    const isFullMessage = (index) => {
         if (index === 0) return true;
         if ((messages[index - 1].author?._id !== messages[index].author?._id)
             || isMoreThan5Minutes(
@@ -343,66 +180,25 @@ const Channels = () => {
         return date1.getDate() !== date2.getDate();
     };
 
-    const MemberListComponent = useMemo(() => {
-        if (!channel) return null;
-
-        return (
-            <MemberList
-                showMemberList={showUsers}
-                friend={channel?.type === 0 ? friend : null}
-                recipients={channel?.type === 1 ? [...recipients, auth.user] : null}
-            />
-        );
-    }, [channel, showUsers]);
-
-    const AppHeaderComponent = useMemo(() => {
-        if (friend) {
-            return (
-                <AppHeader
-                    friend={isFriend() ? friend : {
-                        ...friend,
-                        status: "Offline"
-                    }}
-                    showUsers={showUsers}
-                    setShowUsers={setShowUsers}
-                />
-            )
-        } else {
-            return (
-                <AppHeader
-                    recipients={recipients}
-                    channel={channel}
-                    showUsers={showUsers}
-                    setShowUsers={setShowUsers}
-                />
-            )
-        }
-    }, [friend, recipients, showUsers]);
-
     const FirstMessage = useMemo(() => (
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
-                {friend ? (
-                    <Image
-                        src={friend?.avatar || ""}
-                        alt="Avatar"
-                        width={80}
-                        height={80}
-                    />
-                ) : channel ? (
-                    <Image
-                        src={channel?.icon || ""}
-                        alt="Icon"
-                        width={80}
-                        height={80}
-                    />
-                ) : null}
+                <Image
+                    src={(channel?.type === 0 ?
+                        friend?.avatar : channel?.icon) || "/assets/default-avatars/blue.png"}
+                    alt={channel?.type === 0 ?
+                        "Avatar" : "Icon"}
+                    width={80}
+                    height={80}
+                />
             </div>
+
             <h3 className={styles.friendUsername}>
-                {friend ? friend?.username : channel?.name}
+                {channel?.type === 0 ? friend?.username : channel?.name}
             </h3>
+
             <div className={styles.descriptionContainer}>
-                {friend ? (
+                {channel?.type === 0 ? (
                     <>
                         This is the beginning of your direct message history with
                         <strong> @{friend?.username}</strong>.
@@ -414,46 +210,91 @@ const Channels = () => {
                     </>
                 )}
 
-                {friend && (
+                {channel?.type === 0 && (
                     <div className={styles.descriptionActions}>
-                        {friendStatus[3] === "block" && (
-                            <button
-                                className={buttons[friendStatus[1]]?.class}
-                                onClick={() => buttons[friendStatus[1]]?.func()}
-                            >
-                                {buttons[friendStatus[1]]?.text}
-                            </button>
-                        )}
+                        {isFriend ? (
+                            <>
+                                <button
+                                    className="grey"
+                                    onClick={() => deleteFriend()}
+                                >
+                                    Remove Friend
+                                </button>
 
-                        {friendStatus[2] && (
-                            <button
-                                className={buttons[friendStatus[2]].class}
-                                onClick={() => buttons[friendStatus[2]].func()}
-                            >
-                                {buttons[friendStatus[2]].text}
-                            </button>
-                        )}
+                                <button
+                                    className="grey"
+                                    onClick={() => blockUser()}
+                                >
+                                    Block
+                                </button>
+                            </>
+                        ) : outgoing ? (
+                            <>
+                                <button className="blue disabled">
+                                    Friend Request Sent
+                                </button>
 
-                        <button
-                            className={buttons[friendStatus[3]]?.class}
-                            onClick={() => buttons[friendStatus[3]]?.func()}
-                        >
-                            {buttons[friendStatus[3]]?.text}
-                        </button>
+                                <button
+                                    className="grey"
+                                    onClick={() => blockUser()}
+                                >
+                                    Block
+                                </button>
+                            </>
+                        ) : incoming ? (
+                            <>
+                                <button
+                                    className="grey"
+                                    onClick={() => addFriend()}
+                                >
+                                    Accept Friend Request
+                                </button>
+
+                                <button
+                                    className="grey"
+                                    onClick={() => blockUser()}
+                                >
+                                    Block
+                                </button>
+                            </>
+                        ) : userBlocked ? (
+                            <button
+                                className="grey"
+                                onClick={() => unblockUser()}
+                            >
+                                Unblock
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    className="blue"
+                                    onClick={() => addFriend()}
+                                >
+                                    Add Friend
+                                </button>
+
+                                <button
+                                    className="grey"
+                                    onClick={() => blockUser()}
+                                >
+                                    Block
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
         </div>
-    ), [friend, channel, friendStatus, friends, blocked, requests]);
+    ), [outgoing, incoming, userBlocked, isFriend, friend, channel]);
 
     return useMemo(() => (
         <>
             <Head>
-                <title>Discord | @{friend ? friend.username : channel?.name}</title>
+                <title>Discord | @{channel?.type === 0 ? friend?.username : channel?.name}</title>
             </Head>
 
             <div className={styles.container}>
-                {AppHeaderComponent}
+                <AppHeader channel={channel} />
 
                 <div className={styles.content}>
                     <main className={styles.main}>
@@ -461,28 +302,15 @@ const Channels = () => {
                             <div
                                 ref={scrollableContainer}
                                 className={styles.messagesScrollableContainer + " scrollbar"}
-                                onScroll={(e) => {
-                                    setScrollPosition(e.target.scrollTop);
-                                }}
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
-                                        {isLoading ? (
+                                        {isLoading ? <MessageSkeleton /> : (
                                             <>
-                                                <MessageSkeleton />
-                                                <div className={styles.scrollerSpacer} />
-                                            </>
-                                        ) : (
-                                            <>
-                                                {hasMoreMessages ? (
-                                                    <MessageSkeleton />
-                                                ) : FirstMessage}
+                                                {hasMoreMessages ? <MessageSkeleton /> : FirstMessage}
 
                                                 {messages.map((message, index) => (
-                                                    <div
-                                                        ref={index === 0 ? requestMessagesRef : null}
-                                                        key={uuidv4()}
-                                                    >
+                                                    <div key={uuidv4()}>
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
@@ -498,7 +326,7 @@ const Channels = () => {
                                                             channelID={channel?._id}
                                                             message={message}
                                                             setMessages={setMessages}
-                                                            start={isStart(index)}
+                                                            start={isFullMessage(index)}
                                                             edit={edit}
                                                             setEdit={setEdit}
                                                             reply={reply}
@@ -506,10 +334,9 @@ const Channels = () => {
                                                         />
                                                     </div>
                                                 ))}
-
-                                                <div className={styles.scrollerSpacer} />
                                             </>
                                         )}
+                                        <div className={styles.scrollerSpacer} />
                                     </ol>
                                 </div>
                             </div>
@@ -517,20 +344,19 @@ const Channels = () => {
 
                         <TextArea
                             friend={friend}
-                            userBlocked={friendStatus[3] === "unblock"}
+                            userBlocked={userBlocked}
                             channel={channel}
-                            messages={messages}
                             setMessages={setMessages}
                             reply={reply}
                             setReply={setReply}
                         />
                     </main >
 
-                    {MemberListComponent}
+                    <MemberList channel={channel} />
                 </div >
             </div >
         </>
-    ), [requests, friends, blocked, friendStatus, channel, messages, edit, reply, showUsers]);
+    ), [isLoading, channel, messages, edit, reply]);
 };
 
 Channels.getLayout = function getLayout(page) {

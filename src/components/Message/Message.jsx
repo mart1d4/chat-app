@@ -290,7 +290,7 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                     {message.type === 1 && (
                         <div className={styles.messageReply}>
                             <Image
-                                src={message.messageReference?.author?.avatar}
+                                src={message.messageReference?.author?.avatar || "/assets/default-avatars/blue.png"}
                                 alt="Avatar"
                                 width={16}
                                 height={16}
@@ -319,7 +319,7 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                     >
                         <Image
                             ref={userImageRef}
-                            src={message.author?.avatar}
+                            src={message.author?.avatar || "/assets/default-avatars/blue.png"}
                             alt="Avatar"
                             width={40}
                             height={40}
@@ -332,14 +332,15 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                                         setFixedLayer({
                                             type: "usercard",
                                             event: e,
-                                            user: message.author,
+                                            user: message?.author,
                                             element: userImageRef.current,
-                                            side: "right",
+                                            firstSide: "right",
                                             gap: 10,
                                         });
                                     }, 10);
                                 }
                             }}
+                            onDoubleClick={(e) => e.stopPropagation()}
                             onContextMenu={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();

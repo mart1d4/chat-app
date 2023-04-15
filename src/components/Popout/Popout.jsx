@@ -13,24 +13,37 @@ const Popout = ({ content }) => {
     const [filteredList, setFilteredList] = useState([]);
     const [search, setSearch] = useState("");
     const [chosen, setChosen] = useState([]);
+    const [copied, setCopied] = useState(false);
+    const [placesLeft, setPlacesLeft] = useState(9);
 
     const { friends, setChannels } = useUserData();
     const { setFixedLayer } = useComponents();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
     const inputRef = useRef();
+    const inputLinkRef = useRef();
 
     useEffect(() => {
-        if (!content?.channel) {
-            setFilteredList(friends?.sort(
+        if (!content?.pinned) {
+            const recipientsIds = content?.channel?.recipients?.map(
+                (recipient) => recipient._id
+            );
+
+            const filteredFriends = friends?.filter((friend) => {
+                return !recipientsIds?.includes(friend?._id);
+            }).sort(
                 (a, b) => a?.username?.localeCompare(b.username)
-            ));
+            );
+
+            setFilteredList(filteredFriends);
+            setPlacesLeft(10 - content?.channel?.recipients?.length);
+
             return;
         };
 
         const getPinnedMessages = async () => {
             const response = await axiosPrivate.get(
-                `/channels/${content?.channel}/pins`,
+                `/channels/${content?.channel?._id}/pins`,
             );
 
             setPinnedMessages(response.data.pins.reverse());
@@ -40,17 +53,47 @@ const Popout = ({ content }) => {
     }, [content]);
 
     useEffect(() => {
-        if (content?.channel) return;
+        if (content?.pinned) return;
+        if (content?.channel) {
+            if (chosen?.length === 0) {
+                setPlacesLeft(10 - content?.channel?.recipients?.length);
+            } else {
+                setPlacesLeft(10 - content?.channel?.recipients?.length - chosen?.length);
+            }
+        } else {
+            if (chosen?.length === 0) {
+                setPlacesLeft(9);
+            } else {
+                setPlacesLeft(9 - chosen?.length);
+            }
+        };
+    }, [chosen]);
+
+    useEffect(() => {
+        if (content?.pinned) return;
+
+        const recipientsIds = content?.channel?.recipients?.map(
+            (recipient) => recipient._id
+        );
+
+        const filteredFriends = friends?.filter((friend) => {
+            return !recipientsIds?.includes(friend?._id);
+        }).sort(
+            (a, b) => a?.username?.localeCompare(b.username)
+        );
 
         if (search) {
-            setFilteredList(friends?.filter((user) => {
+            setFilteredList(filteredFriends?.filter((user) => {
                 return user?.username?.toLowerCase().includes(search.toLowerCase());
             }));
-        } else setFilteredList(friends);
+        } else {
+            setFilteredList(filteredFriends);
+        };
     }, [search]);
 
     const createChannel = async () => {
-        const recipientIDs = chosen?.map((user) => user?._id);
+        const allRecipients = [...chosen, ...content?.channel?.recipients];
+        const recipientIDs = allRecipients?.map((recipient) => recipient?._id);
 
         const response = await axiosPrivate.post(
             `/users/@me/channels`,
@@ -58,14 +101,14 @@ const Popout = ({ content }) => {
         );
 
         if (response.data.success) {
-            if (response.data.message === "Channel created") {
+            if (response.data.message.includes("created")) {
                 setChannels((prev) => [response.data.channel, ...prev]);
             };
             router.push(`/channels/@me/${response.data.channel._id}`);
         };
     };
 
-    if (content?.channel) {
+    if (content?.pinned) {
         return (
             <div className={styles.pinContainer}>
                 <div>
@@ -117,8 +160,8 @@ const Popout = ({ content }) => {
                     {friends.length > 0 && (
                         <>
                             <div>
-                                {chosen?.length < 9 ?
-                                    `You can add ${9 - chosen.length} more friend${9 - chosen.length === 1 ? "" : "s"}.`
+                                {placesLeft > 0 ?
+                                    `You can add ${placesLeft} more friend${placesLeft > 1 ? "s" : ""}.`
                                     : "This group has a 10 member limit."}
                             </div>
 
@@ -181,7 +224,7 @@ const Popout = ({ content }) => {
                                         if (chosen?.includes(friend)) {
                                             setChosen(chosen?.filter((user) => user !== friend));
                                         } else {
-                                            if (chosen?.length < 9) {
+                                            if (placesLeft > 0) {
                                                 setChosen([...chosen, friend]);
                                                 setSearch("");
                                             }
@@ -191,7 +234,7 @@ const Popout = ({ content }) => {
                                     <div>
                                         <div className={styles.friendAvatar}>
                                             <Image
-                                                src={friend?.avatar}
+                                                src={friend?.avatar || "/assets/default-avatars/blue.png"}
                                                 alt={friend?.username}
                                                 width={32}
                                                 height={32}
@@ -225,19 +268,50 @@ const Popout = ({ content }) => {
 
                         <div className={styles.separator} />
 
-                        <div className={styles.footer}>
-                            <button
-                                className="blue"
-                                onClick={() => {
-                                    if (chosen?.length) {
-                                        setFixedLayer(null);
-                                        createChannel();
-                                    }
-                                }}
-                            >
-                                Create DM
-                            </button>
-                        </div>
+                        {content?.channel?.type === 1 ? (
+                            <div className={styles.footer}>
+                                <h1>Or, send an invite link to a friend!</h1>
+
+                                <div>
+                                    <div>
+                                        <input
+                                            ref={inputLinkRef}
+                                            type="text"
+                                            readOnly
+                                            value={`https://unthrust.com/${content?.channel?._id}`}
+                                            onClick={() => inputLinkRef.current.select()}
+                                        />
+                                    </div>
+
+                                    <button
+                                        className={copied ? "green" : "blue"}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`https://unthrust.com/${content?.channel?._id}`);
+                                            setCopied(true);
+                                            setTimeout(() => setCopied(false), 1000);
+                                        }}
+                                    >
+                                        {copied ? "Copied" : "Copy"}
+                                    </button>
+                                </div>
+
+                                <div>Your invite link expires in 24 hours.</div>
+                            </div>
+                        ) : (
+                            <div className={styles.footer}>
+                                <button
+                                    className="blue"
+                                    onClick={() => {
+                                        if (chosen?.length) {
+                                            setFixedLayer(null);
+                                            createChannel();
+                                        }
+                                    }}
+                                >
+                                    Create DM
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -266,19 +340,50 @@ const Popout = ({ content }) => {
 
                         <div className={styles.separator} />
 
-                        <div className={styles.footer}>
-                            <button
-                                className="blue"
-                                onClick={() => {
-                                    if (chosen?.length) {
-                                        setFixedLayer(null);
-                                        createChannel();
-                                    }
-                                }}
-                            >
-                                Create DM
-                            </button>
-                        </div>
+                        {content?.channel?.type === 1 ? (
+                            <div className={styles.footer}>
+                                <h1>Or, send an invite link to a friend!</h1>
+
+                                <div>
+                                    <div>
+                                        <input
+                                            ref={inputLinkRef}
+                                            type="text"
+                                            readOnly
+                                            value={`https://unthrust.com/${content?.channel?._id}`}
+                                            onClick={() => inputLinkRef.current.select()}
+                                        />
+                                    </div>
+
+                                    <button
+                                        className={copied ? "green" : "blue"}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`https://unthrust.com/${content?.channel?._id}`);
+                                            setCopied(true);
+                                            setTimeout(() => setCopied(false), 1000);
+                                        }}
+                                    >
+                                        {copied ? "Copied" : "Copy"}
+                                    </button>
+                                </div>
+
+                                <div>Your invite link expires in 24 hours.</div>
+                            </div>
+                        ) : (
+                            <div className={styles.footer}>
+                                <button
+                                    className="blue"
+                                    onClick={() => {
+                                        if (chosen?.length) {
+                                            setFixedLayer(null);
+                                            createChannel();
+                                        }
+                                    }}
+                                >
+                                    Create DM
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
 

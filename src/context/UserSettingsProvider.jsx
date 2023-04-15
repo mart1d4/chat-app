@@ -19,6 +19,7 @@ export function UserSettingsProvider({ children }) {
                 font: 'default',
                 theme: 'dark',
                 sendButton: false,
+                showUsers: true,
             };
             setUserSettings(userSettingsLocal);
         } else {

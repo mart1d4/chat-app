@@ -316,7 +316,7 @@ const MyAccount = () => {
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
                             <Image
-                                src={auth?.user?.avatar}
+                                src={auth?.user?.avatar || "/assets/default-avatars/blue.png"}
                                 alt="User Avatar"
                                 width={80}
                                 height={80}

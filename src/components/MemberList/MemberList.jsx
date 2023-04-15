@@ -1,15 +1,23 @@
-import { AvatarStatus, UserListItemSmall } from "../";
-import styles from "./MemberList.module.css";
+import useUserSettings from "../../hooks/useUserSettings";
 import { useState, useRef, useMemo, useEffect } from "react";
-import useUserData from "../../hooks/useUserData";
-import Image from "next/image";
-import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { AvatarStatus, UserListItemSmall } from "../";
+import useUserData from "../../hooks/useUserData";
+import styles from "./MemberList.module.css";
+import useAuth from "../../hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
+import Image from "next/image";
 
-const MemberList = ({ showMemberList, friend, recipients }) => {
+const MemberList = ({ channel }) => {
     const [note, setNote] = useState("");
     const [widthLimitPassed, setWidthLimitPassed] = useState(false);
+    const [friend, setFriend] = useState(null);
+
+    const { auth } = useAuth();
+    const { friends } = useUserData();
+    const { userSettings } = useUserSettings();
+    const noteRef = useRef(null);
 
     useEffect(() => {
         const width = window.innerWidth;
@@ -37,20 +45,21 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
         }
     }, []);
 
-    const { friends } = useUserData();
-    const noteRef = useRef(null);
+    useEffect(() => {
+        if (channel?.type === 0) {
+            setFriend(channel?.recipients.find((recipient) => recipient?._id !== auth?.user?._id));
+        }
+    }, [channel]);
 
     const isFriend = () => {
-        return friends?.find(
-            (user) => user?._id.toString() === friend?._id.toString()
-        );
+        return friends?.find((user) => user?._id === friend?._id);
     };
 
     return useMemo(() => {
-        if (friend) {
+        if (channel?.type === 0) {
             return (
                 <AnimatePresence>
-                    {(showMemberList && widthLimitPassed) && (
+                    {(userSettings?.showUsers && widthLimitPassed) && (
                         <motion.aside
                             className={styles.aside}
                             initial={{ width: "0" }}
@@ -68,7 +77,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                                 <div className={styles.userAvatar}>
                                     {friend?.avatar && (
                                         <Image
-                                            src={friend.avatar}
+                                            src={friend?.avatar || "/assets/default-avatars/blue.png"}
                                             alt="User Avatar"
                                             width={80}
                                             height={80}
@@ -147,7 +156,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                 </AnimatePresence>
             );
         } else {
-            const onlineMembers = recipients.filter(
+            const onlineMembers = channel?.recipients.filter(
                 (recipient) => recipient?.status === "Online"
                     || recipient?.status === "Idle"
                     || recipient?.status === "Do Not Disturb"
@@ -155,7 +164,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                 (a, b) => a?.username?.localeCompare(b.username)
             );
 
-            const offlineMembers = recipients.filter(
+            const offlineMembers = channel?.recipients.filter(
                 (recipient) => recipient?.status === "Offline"
             ).sort(
                 (a, b) => a?.username?.localeCompare(b.username)
@@ -163,7 +172,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
 
             return (
                 <AnimatePresence>
-                    {(showMemberList && widthLimitPassed) && (
+                    {(userSettings?.showUsers && widthLimitPassed) && (
                         <motion.aside
                             className={styles.memberList}
                             initial={{ width: "0" }}
@@ -172,9 +181,9 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                             transition={{ duration: 0.15 }}
                         >
                             <div>
-                                <h2>Members—{recipients.length}</h2>
+                                <h2>Members—{channel?.recipients.length}</h2>
 
-                                {onlineMembers.length > 0 && (
+                                {onlineMembers?.length > 0 && (
                                     onlineMembers.map((user) => (
                                         <UserListItemSmall
                                             key={uuidv4()}
@@ -183,7 +192,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                                     ))
                                 )}
 
-                                {offlineMembers.length > 0 && (
+                                {offlineMembers?.length > 0 && (
                                     offlineMembers.map((user) => (
                                         <UserListItemSmall
                                             key={uuidv4()}
@@ -197,7 +206,7 @@ const MemberList = ({ showMemberList, friend, recipients }) => {
                 </AnimatePresence>
             );
         }
-    }, [friend, recipients, showMemberList, note, widthLimitPassed])
+    }, [friend, channel, userSettings, note, widthLimitPassed])
 };
 
 export default MemberList;

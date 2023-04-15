@@ -88,7 +88,7 @@ const Title = () => {
     const { fixedLayer, setFixedLayer } = useComponents();
     const showButton = useRef();
 
-    return (
+    return useMemo(() => (
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <div
@@ -121,7 +121,7 @@ const Title = () => {
                 </Tooltip>
             </div>
         </h2>
-    )
+    ), [hover, fixedLayer]);
 };
 
 const UserSection = () => {

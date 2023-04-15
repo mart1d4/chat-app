@@ -130,7 +130,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
                                     event: e,
                                     user: user,
                                     element: listItemRef.current,
-                                    side: "left",
+                                    firstSide: "left",
                                     gap: 16,
                                 });
                             }, 10);

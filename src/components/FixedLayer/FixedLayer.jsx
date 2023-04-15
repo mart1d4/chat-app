@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 const FixedLayer = () => {
     const [positions, setPositions] = useState({});
     const [container, setContainer] = useState(null);
+    const [resetPosition, setResetPosition] = useState(false);
 
     const { fixedLayer, setFixedLayer } = useComponents();
     const type = fixedLayer?.type;
@@ -26,7 +27,7 @@ const FixedLayer = () => {
                 });
             }, 10);
         }
-    }, [fixedLayer]);
+    }, [fixedLayer, resetPosition]);
 
     useEffect(() => {
         if (!container || !fixedLayer) return;
@@ -57,7 +58,7 @@ const FixedLayer = () => {
             }
         } else {
             // If a firstSide is specified, open the menu to that firstSide of the element
-            const elementRect = element.getBoundingClientRect();
+            const elementRect = element?.getBoundingClientRect();
 
             if (firstSide === "left") {
                 pos = {
@@ -197,7 +198,7 @@ const FixedLayer = () => {
             <AnimatePresence>
                 {type === "menu" && <Menu content={fixedLayer} />}
                 {type === "popout" && <Popout content={fixedLayer} />}
-                {type === "usercard" && <UserCard content={fixedLayer} />}
+                {type === "usercard" && <UserCard content={fixedLayer} side={firstSide} resetPosition={setResetPosition} />}
             </AnimatePresence>
         </div>
     );

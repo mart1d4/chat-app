@@ -25,6 +25,7 @@ import FixedLayer from './FixedLayer/FixedLayer';
 import Popup from './Popup/Popup';
 import Popout from './Popout/Popout';
 import Menu from './Menu/Menu';
+import UserCard from './UserCard/UserCard';
 
 export {
     AppHeader,
@@ -54,4 +55,5 @@ export {
     Popup,
     Popout,
     Menu,
+    UserCard,
 };

@@ -1,16 +1,29 @@
-import styles from "./AppHeader.module.css";
-import { Tooltip, Icon, AvatarStatus } from "../";
-import { useState, useRef, useMemo } from "react";
-import useUserData from "../../hooks/useUserData";
+import useUserSettings from "../../hooks/useUserSettings";
 import useComponents from "../../hooks/useComponents";
+import useUserData from "../../hooks/useUserData";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { Tooltip, Icon, AvatarStatus } from "../";
+import styles from "./AppHeader.module.css";
 import { v4 as uuidv4 } from "uuid";
+import useAuth from "../../hooks/useAuth";
 
-const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers, setShowUsers }) => {
+const AppHeader = ({ content, setContent, channel }) => {
     const [showTooltip, setShowTooltip] = useState(false);
+    const [friend, setFriend] = useState(null);
 
+    const { auth } = useAuth();
     const { requests } = useUserData();
     const { setUserProfile, fixedLayer, setFixedLayer } = useComponents();
+    const { userSettings, setUserSettings } = useUserSettings();
     const requestReceived = requests?.filter((request) => request.type === 1).length;
+
+    useEffect(() => {
+        if (channel?.type === 0) {
+            setFriend(channel?.recipients?.find(
+                (recipient) => recipient._id !== auth?.user?._id
+            ));
+        }
+    }, [channel]);
 
     const tabs = [
         { name: "Online", func: "online" },
@@ -20,7 +33,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
         { name: "Add Friend", func: "add" },
     ];
 
-    const toolbarItems = !content ? [
+    const toolbarItems = channel ? [
         { name: "Start Voice Call", icon: "call", func: () => { } },
         { name: "Start Video Call", icon: "video", func: () => { } },
         {
@@ -36,12 +49,15 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                     secondSide: "left",
                     element: element,
                     gap: 10,
-                    channel: channel?._id,
+                    channel: channel,
+                    pinned: true,
                 });
             }
         },
         {
-            name: "Add Friends to DM", icon: "addUser", func: (e, element) => {
+            name: "Add Friends to DM",
+            icon: "addUser",
+            func: (e, element) => {
                 if (fixedLayer?.element === element) {
                     setFixedLayer(null);
                 } else {
@@ -52,19 +68,18 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                         element: element,
                         firstSide: "bottom",
                         secondSide: "right",
+                        channel: channel,
                     });
                 }
             }
         },
         {
-            name: friend ? (
-                !showUsers ? "Show User Profile" : "Hide User Profile"
-            ) : "Show Member List",
-            icon: friend ? "userProfile" : "memberList",
-            func: () => {
-                localStorage.setItem("show-users", !showUsers);
-                setShowUsers(!showUsers);
-            },
+            name: channel?.type === 0
+                ? userSettings?.showUsers ? "Hide User Profile" : "Show User Profile"
+                : userSettings?.showUsers ? "Hide Member List" : "Show Member List",
+            icon: channel?.type === 0 ? "userProfile" : "memberList",
+            iconFill: userSettings?.showUsers && "var(--foreground-1)",
+            func: () => setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers })
         },
     ] : [
         { name: "New Group DM", icon: "newDM", func: () => { } },
@@ -108,7 +123,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                     <>
                         <div className={styles.icon}>
                             <Icon name={
-                                friend ? "at" : "memberList"
+                                channel?.type === 0 ? "at" : "memberList"
                             } fill="var(--foreground-4)" />
                         </div>
 
@@ -116,17 +131,17 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                             className={styles.titleFriend}
                             onClick={() => setUserProfile({ user: friend })}
                         >
-                            {(friend ? friend.username : channel?.name) || ""}
+                            {(channel?.type === 0 ? friend?.username : channel?.name) || ""}
                         </h1>
 
-                        {friend && (
+                        {channel?.type === 0 && (
                             <div
                                 className={styles.status}
                                 onMouseEnter={() => setShowTooltip("status")}
                                 onMouseLeave={() => setShowTooltip(null)}
                             >
                                 <AvatarStatus
-                                    status={friend.status}
+                                    status={friend?.status}
                                     background="var(--background-4)"
                                     tooltip
                                     tooltipPos="bottom"
@@ -187,7 +202,7 @@ const AppHeader = ({ content, setContent, friend, recipients, channel, showUsers
                 </div>
             </div>
         </div>
-    ), [channel, recipients, content, setContent, friend, showUsers, showTooltip]);
+    ), [content, channel, userSettings, showTooltip]);
 };
 
 const ToolbarIcon = ({ item }) => {
@@ -208,7 +223,7 @@ const ToolbarIcon = ({ item }) => {
                 item.func(e, element.current);
             }}
         >
-            <Icon name={item.icon} />
+            <Icon name={item.icon} fill={item?.iconFill && item.iconFill} />
 
             <Tooltip
                 show={showTooltip && (

@@ -47,10 +47,7 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
             setMessage(message);
             textAreaRef.current.innerText = message;
             moveCursorToEnd();
-        } else {
-            setMessage("");
-            textAreaRef.current.innerText = "";
-        }
+        };
 
         textAreaRef?.current?.focus();
     }, [channel]);
@@ -266,32 +263,6 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
         </div>
     ), [message, friend, channel, editedMessage]);
 
-    const imageList = useMemo(() => (
-        <ul className={styles.filesList}>
-            {files?.map((file) => (
-                <FilePreview
-                    key={uuidv4()}
-                    file={file}
-                    setFiles={setFiles}
-                />
-            ))}
-        </ul>
-    ), [files]);
-
-    const caracterCounter = useMemo(() => (
-        <div className={styles.counterContainer}>
-            <span
-                style={{
-                    color: message.length > 4000
-                        ? "var(--error-1)"
-                        : "var(--foreground-3)"
-                }}
-            >
-                {message.length}
-            </span>/4000
-        </div>
-    ), [message]);
-
     if (editedMessage) return (
         <form
             className={styles.form}
@@ -357,7 +328,15 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
                 <div className={styles.scrollableContainer + " scrollbar"}>
                     {files.length > 0 && (
                         <>
-                            {imageList}
+                            <ul className={styles.filesList}>
+                                {files?.map((file) => (
+                                    <FilePreview
+                                        key={uuidv4()}
+                                        file={file}
+                                        setFiles={setFiles}
+                                    />
+                                ))}
+                            </ul>
                             <div className={styles.formDivider} />
                         </>
                     )}
@@ -459,7 +438,17 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
                     )}
                 </div>
 
-                {caracterCounter}
+                <div className={styles.counterContainer}>
+                    <span
+                        style={{
+                            color: message.length > 4000
+                                ? "var(--error-1)"
+                                : "var(--foreground-3)"
+                        }}
+                    >
+                        {message.length}
+                    </span>/4000
+                </div>
             </div>
         </form >
     );
@@ -473,10 +462,7 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
 
                 <button
                     className="grey"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        unblockUser();
-                    }}
+                    onClick={(e) => unblockUser()}
                 >
                     Unblock
                 </button>

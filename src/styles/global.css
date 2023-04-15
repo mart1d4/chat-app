@@ -217,6 +217,10 @@
         --elevation-high: 0 8px 16px hsla(0, 0%, 0%, 0.24);
         --elevation-high-dark: 0 2px 10px hsla(0, 0%, 0%, 0.2);
         --border-light: hsla(217, 8%, 34%, 0.5);
+        --font-display: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica,
+            Arial, sans-serif;
+        --font-heading: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica,
+            Arial, sans-serif;
     }
 }
 
