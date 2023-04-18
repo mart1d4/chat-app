@@ -1,5 +1,5 @@
 import { AppNav, Loader, Settings, UserProfile, Popup, FixedLayer } from "../";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styles from "./Layout.module.css";
 import useUserData from "../../hooks/useUserData";
 import useAuth from "../../hooks/useAuth";
@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
         setBlocked,
         setChannels,
     } = useUserData();
+    const effectRun = useRef(false);
 
     useEffect(() => {
         if (isLoading) return;
@@ -59,19 +60,22 @@ const Layout = ({ children }) => {
             isMounted && setIsFetching(false);
         };
 
-        getFriends();
-        getRequests();
-        getBlocked();
-        getChannels();
-        console.log(
-            '%c[Layout]',
-            'color: hsl(38, 96%, 54%)',
-            'Fetching data...'
-        );
+        if (effectRun.current) {
+            getFriends();
+            getRequests();
+            getBlocked();
+            getChannels();
+            console.log(
+                '%c[Layout]',
+                'color: hsl(38, 96%, 54%)',
+                'Fetching data...'
+            );
+        };
 
         return () => {
             controller.abort();
             isMounted = false;
+            effectRun.current = true;
         };
     }, [isLoading]);
 

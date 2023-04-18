@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Channel from "../../../../../utils/models/Channel";
 import Message from "../../../../../utils/models/Message";
 import connectDB from "../../../../../utils/connectDB";
+import cleanUser from "../../../../../utils/cleanUser";
 
 connectDB();
 
@@ -51,7 +52,7 @@ export default async (req, res) => {
             success: false,
             message: "Channel not found."
         });
-    }
+    };
 
     if (req.method === "GET") {
         const limit = req.body.limit || 50;
@@ -67,7 +68,7 @@ export default async (req, res) => {
                     success: false,
                     message: "Invalid before message."
                 });
-            }
+            };
 
             const messagesLimited = messagesReverse.slice(index + 1, index + 1 + limit);
             const messages = messagesLimited.reverse();

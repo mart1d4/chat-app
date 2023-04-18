@@ -48,11 +48,11 @@ const UserProfile = () => {
         if (userProfile?.focusNote && noteRef.current) noteRef.current.focus();
 
         const isFriend = () => {
-            return friends?.map((friend) => friend._id.toString()).includes(user?._id);
+            return friends?.map((friend) => friend?._id.toString()).includes(user?._id);
         };
 
         const isBlocked = () => {
-            return blocked?.map((blocked) => blocked._id.toString()).includes(user?._id);
+            return blocked?.map((blocked) => blocked?._id.toString()).includes(user?._id);
         };
 
         const requestSent = () => {
@@ -147,17 +147,13 @@ const UserProfile = () => {
             { recipients: [user._id] },
         );
 
-        if (!response.data.success) {
-            setError(response.data.message);
-        } else if (response.data.success) {
-            if (response.data.message === "Channel created") {
+        if (response.data.success) {
+            if (!channels?.map((channel) => channel._id).includes(response.data.channel._id)) {
                 setChannels((prev) => [response.data.channel, ...prev]);
-            }
+            };
             router.push(`/channels/@me/${response.data.channel._id}`);
             setUserProfile(null);
-        } else {
-            setError("An error occurred.");
-        }
+        };
     };
 
     return (

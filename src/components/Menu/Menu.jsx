@@ -140,20 +140,69 @@ const content = ({ content }) => {
                 },
             ]);
         } else if (message) {
+            if (message?.type === 2) {
+                setItems([
+                    { name: "Add Reaction", icon: "arrow", iconSize: 10, func: () => { } },
+                    { name: 'Mark Unread', icon: "mark", func: () => { } },
+                    { name: 'Copy Message Link', icon: "link", func: () => navigator.clipboard.writeText(`/channels/@me/${message?.channel}/${message?._id}`) },
+                    { name: 'Divider' },
+                    { name: 'Copy Message ID', icon: "id", func: () => navigator.clipboard.writeText(message?._id) },
+                ]);
+            } else {
+                setItems([
+                    { name: "Add Reaction", icon: "arrow", iconSize: 10, func: () => { } },
+                    { name: self && 'Edit Message', icon: "edit", func: () => content?.editMessage() },
+                    {
+                        name: message?.pinned ? 'Unpin Message' : 'Pin Message',
+                        icon: "pin",
+                        func: message?.pinned ? () => content?.unpinPopup() : () => content?.pinPopup(),
+                        funcShift: message?.pinned ? () => content?.unpinMessage() : () => content?.pinMessage(),
+                    },
+                    { name: 'Reply', icon: "reply", func: () => content?.replyToMessage() },
+                    { name: 'Mark Unread', icon: "mark", func: () => { } },
+                    { name: 'Copy Message Link', icon: "link", func: () => navigator.clipboard.writeText(`/channels/@me/${message?.channel}/${message?._id}`) },
+                    { name: "Speak Message", icon: "speak", func: () => { } },
+                    { name: self && 'Delete Message', icon: "delete", func: () => content?.deletePopup(), funcShift: () => content?.deleteMessage(), danger: true },
+                    { name: !self && 'Report Message', icon: "report", func: () => { }, danger: true },
+                    { name: 'Divider' },
+                    { name: 'Copy Message ID', icon: "id", func: () => navigator.clipboard.writeText(message?._id) },
+                ]);
+            };
+        } else if (content?.channel?.type === 1) {
             setItems([
-                { name: self && 'Edit Message', icon: "edit", func: () => content?.editMessage() },
                 {
-                    name: message?.pinned ? 'Unpin Message' : 'Pin Message',
-                    icon: "pin",
-                    func: message?.pinned ? () => content?.unpinPopup() : () => content?.pinPopup(),
-                    funcShift: message?.pinned ? () => content?.unpinMessage() : () => content?.pinMessage(),
+                    name: "Mark As Read",
+                    func: () => { },
+                    disabled: true,
                 },
-                { name: 'Reply', icon: "reply", func: () => content?.replyToMessage() },
-                { name: 'Mark Unread', icon: "mark", func: () => { } },
-                { name: 'Copy Message Link', icon: "link", func: () => navigator.clipboard.writeText(`/channels/@me/${message?.channel}/${message?._id}`) },
-                { name: self && 'Delete Message', icon: "delete", func: () => content?.deletePopup(), funcShift: () => content?.deleteMessage(), danger: true },
-                { name: 'Divider' },
-                { name: 'Copy Message ID', icon: "id", func: () => navigator.clipboard.writeText(message?._id) },
+                { name: "Divider" },
+                {
+                    name: "Invites",
+                    func: () => { },
+                },
+                {
+                    name: "Change Icon",
+                    func: () => { },
+                },
+                { name: "Divider" },
+                {
+                    name: "Mute Conversation",
+                    func: () => { },
+                    icon: "arrow",
+                    iconSize: 10,
+                },
+                { name: "Divider" },
+                {
+                    name: "Leave Group",
+                    func: () => leaveChannel(),
+                    danger: true,
+                },
+                { name: "Divider" },
+                {
+                    name: "Copy Channel ID",
+                    func: () => navigator.clipboard.writeText(content?.channel?._id),
+                    icon: "id",
+                }
             ]);
         } else if (content?.user) {
             if (self) {
@@ -171,7 +220,7 @@ const content = ({ content }) => {
                     },
                     { name: "Divider" },
                     {
-                        name: "Copy ID",
+                        name: "Copy User ID",
                         func: () => navigator.clipboard.writeText(user._id),
                         icon: "id",
                     },
@@ -195,7 +244,7 @@ const content = ({ content }) => {
             } else if (content?.userprofile) {
                 setItems([
                     {
-                        name: incoming ? "Accept Friend Request" : outgoing ? "Cancel Friend Request" : friend ? "Remove Friend" : "Add Friend",
+                        name: (!block) && (incoming ? "Accept Friend Request" : outgoing ? "Cancel Friend Request" : friend ? "Remove Friend" : "Add Friend"),
                         func: () => outgoing || friend ? removeFriend() : addFriend(),
                         danger: outgoing || friend,
                     },
@@ -210,7 +259,7 @@ const content = ({ content }) => {
                     },
                     { name: "Divider" },
                     {
-                        name: "Copy ID",
+                        name: "Copy User ID",
                         func: () => navigator.clipboard.writeText(user._id),
                         icon: "id",
                     },
@@ -242,43 +291,7 @@ const content = ({ content }) => {
                     },
                     { name: "Divider" },
                     {
-                        name: "Copy ID",
-                        func: () => navigator.clipboard.writeText(user._id),
-                        icon: "id",
-                    },
-                ]);
-            } else if (content?.channel?.type === 1) {
-                setItems([
-                    {
-                        name: "Mark As Read",
-                        func: () => { },
-                        disabled: true,
-                    },
-                    { name: "Divider" },
-                    {
-                        name: "Invites",
-                        func: () => { },
-                    },
-                    {
-                        name: "Change Icon",
-                        func: () => { },
-                    },
-                    { name: "Divider" },
-                    {
-                        name: "Mute Conversation",
-                        func: () => { },
-                        icon: "arrow",
-                        iconSize: 10,
-                    },
-                    { name: "Divider" },
-                    {
-                        name: "Leave Group",
-                        func: () => leaveChannel(),
-                        danger: true,
-                    },
-                    { name: "Divider" },
-                    {
-                        name: "Copy ID",
+                        name: "Copy User ID",
                         func: () => navigator.clipboard.writeText(user._id),
                         icon: "id",
                     },
@@ -346,10 +359,15 @@ const content = ({ content }) => {
                     },
                     { name: content?.channel && "Divider" },
                     {
-                        name: "Copy ID",
+                        name: "Copy User ID",
                         func: () => navigator.clipboard.writeText(user._id),
                         icon: "id",
                     },
+                    {
+                        name: content?.channel && "Copy Channel ID",
+                        func: () => navigator.clipboard.writeText(content?.channel?._id),
+                        icon: "id",
+                    }
                 ]);
             };
         };
@@ -393,9 +411,9 @@ const content = ({ content }) => {
         );
 
         if (response.data.success) {
-            if (response.data.message === "Channel created") {
+            if (!channels?.map((channel) => channel._id).includes(response.data.channel._id)) {
                 setChannels((prev) => [response.data.channel, ...prev]);
-            }
+            };
             router.push(`/channels/@me/${response.data.channel._id}`);
         }
     };

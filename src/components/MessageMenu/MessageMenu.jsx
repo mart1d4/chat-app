@@ -22,7 +22,7 @@ const MessageMenu = ({ message, start, functions }) => {
         } else {
             setMenuType('receiver');
         }
-    }, [message, auth]);
+    }, [message]);
 
     return (
         <div className={styles.buttonContainer}>

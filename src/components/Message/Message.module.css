@@ -108,7 +108,7 @@
     user-select: text;
 }
 
-.messageContent > div:not(.editHint) {
+.messageContent > div:not(.editHint, .specialIcon) {
     font-weight: 300;
     font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     user-select: text;
@@ -244,4 +244,15 @@
 
 .messageReply > div:hover {
     color: var(--foreground-1);
+}
+
+.specialIcon {
+    position: absolute;
+    right: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    padding-top: 0.25rem;
+    margin-right: -72px;
 }

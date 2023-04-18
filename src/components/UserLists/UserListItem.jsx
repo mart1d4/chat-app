@@ -19,14 +19,8 @@ const UserListItem = ({ content, user }) => {
 
     const { fixedLayer, setFixedLayer } = useComponents();
     const {
-        friends,
-        setFriends,
-        blocked,
-        setBlocked,
-        requests,
-        setRequests,
-        channels,
-        setChannels,
+        friends, setFriends, blocked, setBlocked,
+        requests, setRequests, channels, setChannels,
     } = useUserData();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -124,9 +118,9 @@ const UserListItem = ({ content, user }) => {
         );
 
         if (response.data.success) {
-            if (response.data.message === "Channel created") {
+            if (!channels?.map((channel) => channel._id).includes(response.data.channel._id)) {
                 setChannels((prev) => [response.data.channel, ...prev]);
-            }
+            };
             router.push(`/channels/@me/${response.data.channel._id}`);
         }
     };

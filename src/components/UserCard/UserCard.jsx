@@ -67,6 +67,10 @@ const UserCard = ({ content, side, resetPosition }) => {
                         </div>
                     </div>
 
+                    <div className={styles.badges}>
+
+                    </div>
+
                     <div className={styles.contentSection}>
                         <div className={styles.username}>
                             {user?.username}

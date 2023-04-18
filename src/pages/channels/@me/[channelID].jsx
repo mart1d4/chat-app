@@ -36,7 +36,7 @@ const Channels = () => {
     const { friends, setFriends, requests, setRequests,
         blocked, setBlocked, channels,
     } = useUserData();
-    const { setFixedLayer } = useComponents();
+    const { setFixedLayer, setUserProfile } = useComponents();
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
 
@@ -49,6 +49,7 @@ const Channels = () => {
         if (!sameChannel) router.push("/channels/@me");
         else setChannel(sameChannel);
         setFixedLayer(null);
+        setUserProfile(null);
     }, [router.query.channelID, channels]);
 
     useEffect(() => {
@@ -162,6 +163,7 @@ const Channels = () => {
 
     const isFullMessage = (index) => {
         if (index === 0) return true;
+        if (messages[index - 1]?.type === 2) return true;
         if ((messages[index - 1].author?._id !== messages[index].author?._id)
             || isMoreThan5Minutes(
                 messages[index - 1].createdAt,

@@ -176,14 +176,19 @@
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
+    flex-wrap: nowrap;
 }
 
-.input > div {
+.input > div:first-child {
     display: flex;
     flex: 1;
     border-radius: 4px;
     overflow: hidden;
     background-color: var(--background-1);
+}
+
+.addButton {
+    margin-left: 8px;
 }
 
 .input > div > div {

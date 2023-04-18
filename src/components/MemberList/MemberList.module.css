@@ -88,45 +88,48 @@
     color: var(--foreground-3);
 }
 
-.contentNote {
-    margin: -4px;
-}
-
-.contentNote > textarea {
-    border-radius: 3px;
-    padding: 4px;
-    font-size: 14px;
-    line-height: 22px;
+.note > textarea {
     background-color: transparent;
-    border: 1px solid var(--border-light);
-    color: var(--foreground-2);
-    min-height: 44px;
-    max-height: 88px;
+    border: none;
+    border-radius: 3px;
+    color: var(--foreground-3);
+    font-size: 12px;
+    line-height: 14px;
+    min-height: 36px;
+    max-height: 92px;
+    padding: 4px;
     resize: none;
     width: 100%;
-    overflow: hidden scroll;
+    font-weight: 500;
 }
 
-.contentNote > textarea::-webkit-scrollbar {
-    width: 10px;
-}
-
-.contentNote > textarea::-webkit-scrollbar-track {
-    border: 4px var(--background-dark) solid;
-    background-color: var(--background-dark);
-}
-
-.contentNote > textarea::-webkit-scrollbar-thumb {
-    border: 4px var(--background-dark) solid;
-    background-color: var(--background-5);
-}
-
-.contentNote > textarea:focus {
+.note > textarea:focus {
+    background-color: var(--background-1);
     outline: none;
 }
 
-.contentNote > textarea::placeholder {
-    user-select: none;
+.note > textarea:focus::placeholder {
+    color: transparent;
+}
+
+.note > textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.note > textarea::-webkit-scrollbar-track {
+    border: 2px var(--background-dark) solid;
+    background-color: var(--background-dark);
+}
+
+.note > textarea::-webkit-scrollbar-thumb {
+    border: 2px var(--background-dark) solid;
+    border-color: transparent;
+    background-color: var(--background-5);
+}
+
+.note > textarea:focus::-webkit-scrollbar-track {
+    border: 2px var(--background-1) solid;
+    background-color: var(--background-1);
 }
 
 .asideDivider {

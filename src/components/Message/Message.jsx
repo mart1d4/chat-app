@@ -25,6 +25,7 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
     const { menu, fixedLayer, setFixedLayer, setPopup } = useComponents();
     const { auth } = useAuth();
     const userImageRef = useRef(null);
+    const userImageReplyRef = useRef(null);
 
     useEffect(() => {
         if (!editedMessage) return;
@@ -236,6 +237,103 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
         }));
     };
 
+    if (message.type === 2) {
+        return (
+            <div
+                className={styles.li + " " + styles.noInt}
+                onMouseEnter={() => {
+                    if (noInteraction) return;
+                    setHover(true);
+                }}
+                onMouseLeave={() => setHover(false)}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (noInteraction) return;
+                    setFixedLayer({
+                        type: "menu",
+                        event: e,
+                        message: message,
+                        deletePopup,
+                        deleteMessage,
+                        pinPopup,
+                        pinMessage,
+                        unpinPopup,
+                        unpinMessage,
+                        editMessage,
+                        replyToMessage,
+                    });
+                }}
+                style={(hover || (fixedLayer?.message?._id === message?._id))
+                    ? { backgroundColor: "var(--background-hover-4)" }
+                    : {}}
+            >
+                {(hover || (fixedLayer?.message?._id === message?._id)) && (
+                    <MessageMenu
+                        message={message}
+                        start={start}
+                        functions={{
+                            deletePopup,
+                            deleteMessage,
+                            pinPopup,
+                            pinMessage,
+                            unpinPopup,
+                            unpinMessage,
+                            editMessage,
+                            replyToMessage,
+                        }}
+                    />
+                )}
+
+                <div className={styles.message}>
+                    <div className={styles.specialIcon}>
+                        <div
+                            style={{
+                                backgroundImage: `url(/assets/join.svg)`,
+                                width: "1rem",
+                                height: "1rem",
+                                backgroundSize: "1rem 1rem",
+                                backgroundRepeat: "no-repeat",
+                            }}
+                        />
+                    </div>
+
+                    <div className={styles.messageContent}>
+                        <div
+                            style={{
+                                whiteSpace: "pre-line",
+                                opacity: message.waiting ? 0.5 : 1,
+                                color: message.error ? "var(--error-1)" : "",
+                            }}
+                        >
+                            {message.content + " "}
+
+                            <span
+                                className={styles.contentTimestamp}
+                                onMouseEnter={() => setShowTooltip(true)}
+                                onMouseLeave={() => setShowTooltip(null)}
+                            >
+                                <span style={{ userSelect: "text" }}>
+                                    {checkMessageDate(message.createdAt)
+                                        ? formatRelative(
+                                            new Date(message.createdAt),
+                                            new Date()
+                                        ).charAt(0).toUpperCase() + formatRelative(
+                                            new Date(message.createdAt),
+                                            new Date()).slice(1)
+                                        : format(new Date(message.createdAt), "P p")}
+
+                                    <Tooltip show={showTooltip} dist={3} delay={1}>
+                                        {format(new Date(message.createdAt), "PPPP p")}
+                                    </Tooltip>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div
             className={
@@ -294,6 +392,34 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                                 alt="Avatar"
                                 width={16}
                                 height={16}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (fixedLayer?.element === userImageReplyRef.current) {
+                                        setFixedLayer(null);
+                                    } else {
+                                        setFixedLayer(null);
+                                        setTimeout(() => {
+                                            setFixedLayer({
+                                                type: "usercard",
+                                                event: e,
+                                                user: message.messageReference?.author,
+                                                element: userImageReplyRef.current,
+                                                firstSide: "right",
+                                                gap: 10,
+                                            });
+                                        }, 0);
+                                    };
+                                }}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setFixedLayer({
+                                        type: "menu",
+                                        event: e,
+                                        user: message.messageReference?.author,
+                                    });
+                                }}
                             />
 
                             <span>
@@ -438,14 +564,12 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (message.author?._id === auth?.user?._id) {
-                                editMessage();
-                            } else {
-                                replyToMessage();
-                            }
+                            if (message?.type === 2) return;
+                            if (message.author?._id === auth?.user?._id) editMessage();
+                            else replyToMessage();
                         }}
                     >
-                        {(hover || (menu?.message === message?._id)) && (
+                        {((hover || (menu?.message === message?._id)) && message?.type !== 2) && (
                             <span
                                 className={styles.messageTimestamp}
                                 onMouseEnter={() => setShowTooltip(2)}
@@ -514,12 +638,40 @@ const Message = ({ message, setMessages, start, edit, setEdit, reply, setReply, 
                                         </Tooltip>
                                     </div>
                                 )}
+
+                                {message?.type === 2 && (
+                                    <span
+                                        className={styles.contentTimestamp}
+                                        onMouseEnter={() => setShowTooltip(5)}
+                                        onMouseLeave={() => setShowTooltip(null)}
+                                        style={{
+                                            userSelect: "text",
+                                        }}
+                                    >
+                                        <span>
+                                            {checkMessageDate(message.createdAt)
+                                                ? formatRelative(
+                                                    new Date(message.createdAt),
+                                                    new Date()
+                                                ).charAt(0).toUpperCase() + formatRelative(
+                                                    new Date(message.createdAt),
+                                                    new Date()).slice(1)
+                                                : format(new Date(message.createdAt), "P p")}
+                                            <Tooltip
+                                                show={showTooltip === 5}
+                                                dist={3}
+                                                delay={1}
+                                            >
+                                                {format(new Date(message.createdAt), "PPPP p")}
+                                            </Tooltip>
+                                        </span>
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
                 </div>
-            )
-            }
+            )}
         </div >
     );
 };

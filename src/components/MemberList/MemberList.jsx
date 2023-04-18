@@ -1,5 +1,5 @@
 import useUserSettings from "../../hooks/useUserSettings";
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AvatarStatus, UserListItemSmall } from "../";
 import useUserData from "../../hooks/useUserData";
@@ -17,7 +17,13 @@ const MemberList = ({ channel }) => {
     const { auth } = useAuth();
     const { friends } = useUserData();
     const { userSettings } = useUserSettings();
-    const noteRef = useRef(null);
+    const noteRef = useCallback((node) => {
+        if (node !== null) {
+            node.style.height = "auto";
+            const height = node.scrollHeight + "px";
+            node.style.height = height;
+        }
+    }, [note]);
 
     useEffect(() => {
         const width = window.innerWidth;
@@ -133,14 +139,10 @@ const MemberList = ({ channel }) => {
 
                                 <div>
                                     <h2>Note</h2>
-                                    <div className={styles.contentNote}>
+                                    <div className={styles.note}>
                                         <textarea
                                             className="scrollbar"
                                             ref={noteRef}
-                                            style={{
-                                                height: noteRef?.current?.scrollHeight ?
-                                                    noteRef?.current?.scrollHeight + 2 : 44
-                                            }}
                                             value={note}
                                             onChange={(e) => setNote(e.target.value)}
                                             placeholder="Click to add a note"

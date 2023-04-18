@@ -18,22 +18,6 @@ const Login = () => {
     const [error, setError] = useState("");
 
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            e.stopPropagation();
-            if (e.key === "Enter") {
-                e.preventDefault();
-                handleSubmit(e);
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
-    useEffect(() => {
         if (auth?.accessToken) router.push("/channels/@me");
     }, [auth]);
 
@@ -45,11 +29,12 @@ const Login = () => {
         setError("");
     }, [uid, password]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    const handleSubmit = async () => {
         if (isLoading) return;
         setIsLoading(true);
+
+        console.log("Username: ", uid);
+        console.log("Password: ", password);
 
         const response = await axios.post(
             "/auth/login",
@@ -170,9 +155,11 @@ const Login = () => {
                             </div>
 
                             <button
+                                type="button"
                                 className={styles.passwordForgot}
                                 onClick={(e) => {
                                     e.preventDefault();
+                                    e.stopPropagation();
                                     router.push("/forgot-password");
                                 }}
                             >
@@ -181,7 +168,10 @@ const Login = () => {
                             <button
                                 type="submit"
                                 className={styles.buttonSubmit}
-                                onClick={(e) => handleSubmit(e)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleSubmit();
+                                }}
                             >
                                 <div className={isLoading ? styles.loading : ""}>
                                     {!isLoading && "Login"}

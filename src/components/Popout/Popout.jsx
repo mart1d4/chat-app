@@ -7,6 +7,7 @@ import styles from "./Popout.module.css";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
+import useAuth from "../../hooks/useAuth";
 
 const Popout = ({ content }) => {
     const [pinnedMessages, setPinnedMessages] = useState(null);
@@ -16,9 +17,10 @@ const Popout = ({ content }) => {
     const [copied, setCopied] = useState(false);
     const [placesLeft, setPlacesLeft] = useState(9);
 
-    const { friends, setChannels } = useUserData();
+    const { friends, channels, setChannels } = useUserData();
     const { setFixedLayer } = useComponents();
     const axiosPrivate = useAxiosPrivate();
+    const { auth } = useAuth();
     const router = useRouter();
     const inputRef = useRef();
     const inputLinkRef = useRef();
@@ -91,18 +93,43 @@ const Popout = ({ content }) => {
         };
     }, [search]);
 
-    const createChannel = async () => {
-        const allRecipients = [...chosen, ...content?.channel?.recipients];
+    const createChannel = async (channelID) => {
+        let allRecipients = [...chosen];
+
+        if (content?.channel) {
+            allRecipients = [...allRecipients, ...content?.channel?.recipients];
+            allRecipients = allRecipients?.filter((recipient) => {
+                return recipient?._id !== auth?.user?._id;
+            });
+        };
+
         const recipientIDs = allRecipients?.map((recipient) => recipient?._id);
 
         const response = await axiosPrivate.post(
             `/users/@me/channels`,
-            { recipients: recipientIDs },
+            {
+                recipients: recipientIDs,
+                addToChannel: channelID ? channelID : null,
+            },
         );
 
         if (response.data.success) {
-            if (response.data.message.includes("created")) {
-                setChannels((prev) => [response.data.channel, ...prev]);
+            if (response.data.message.includes("updated")) {
+                setChannels((prev) => {
+                    const updatedChannels = prev?.map((channel) => {
+                        if (channel?._id === response.data.channel?._id) {
+                            return response.data.channel;
+                        } else {
+                            return channel;
+                        };
+                    });
+
+                    return updatedChannels;
+                });
+            } else {
+                if (!channels?.map((channel) => channel._id).includes(response.data.channel._id)) {
+                    setChannels((prev) => [response.data.channel, ...prev]);
+                };
             };
             router.push(`/channels/@me/${response.data.channel._id}`);
         };
@@ -208,6 +235,21 @@ const Popout = ({ content }) => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {content?.channel?.type === 1 && (
+                                    <div className={styles.addButton}>
+                                        <button
+                                            className={chosen?.length ? "blue" : "blue disabled"}
+                                            onClick={() => {
+                                                if (chosen?.length) {
+                                                    createChannel(content?.channel?._id)
+                                                };
+                                            }}
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
@@ -302,10 +344,8 @@ const Popout = ({ content }) => {
                                 <button
                                     className="blue"
                                     onClick={() => {
-                                        if (chosen?.length) {
-                                            setFixedLayer(null);
-                                            createChannel();
-                                        }
+                                        setFixedLayer(null);
+                                        createChannel();
                                     }}
                                 >
                                     Create DM

@@ -129,6 +129,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
                                     type: "usercard",
                                     event: e,
                                     user: user,
+                                    channel: channel || null,
                                     element: listItemRef.current,
                                     firstSide: "left",
                                     gap: 16,
@@ -159,7 +160,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
                         <div className={styles.layoutAvatar}>
                             {channel?.type === 1 ? (
                                 <Image
-                                    src={channel.icon}
+                                    src={channel.icon || "/assets/default-channel-avatars/blue.png"}
                                     width={32}
                                     height={32}
                                     alt="Avatar"
@@ -167,7 +168,7 @@ const UserListItemSmall = ({ special, user, channel }) => {
                             ) : (
                                 <>
                                     <Image
-                                        src={user?.avatar}
+                                        src={user?.avatar || "/assets/default-avatars/blue.png"}
                                         width={32}
                                         height={32}
                                         alt="Avatar"

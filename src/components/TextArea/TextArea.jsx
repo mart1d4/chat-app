@@ -261,7 +261,7 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
                 />
             </div>
         </div>
-    ), [message, friend, channel, editedMessage]);
+    ), [message, friend, channel, editedMessage, reply]);
 
     if (editedMessage) return (
         <form
@@ -322,7 +322,7 @@ const TextArea = ({ friend, userBlocked, channel, setMessages,
             <div
                 className={styles.textArea}
                 style={{
-                    borderRadius: reply?.channelId === channel?._id ? "0 0 8px 8px" : "8px",
+                    borderRadius: reply?.channel === channel?._id ? "0 0 8px 8px" : "8px",
                 }}
             >
                 <div className={styles.scrollableContainer + " scrollbar"}>
