@@ -15,4 +15,4 @@ export default function cleanUser(user) {
         channels: user.channels,
         guilds: user.guilds,
     }
-}
+};
