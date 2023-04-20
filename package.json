@@ -51,6 +51,7 @@
     "homepage": "https://chat-app.mart1d4.com/",
     "devDependencies": {
         "@types/react": "18.0.37",
+        "@types/uuid": "^9.0.1",
         "typescript": "5.0.4"
     }
 }
