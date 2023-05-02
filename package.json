@@ -17,12 +17,10 @@
         "jsonwebtoken": "^9.0.0",
         "mongodb": "^5.2.0",
         "mongoose": "^7.0.4",
-        "next": "^13.3.0",
+        "next": "^13.3.2-canary.4",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.10.0",
-        "socket.io": "^4.6.1",
-        "socket.io-client": "^4.6.1",
         "uuid": "^9.0.0"
     },
     "name": "chat-app",
@@ -50,6 +48,8 @@
     },
     "homepage": "https://chat-app.mart1d4.com/",
     "devDependencies": {
+        "@types/bcryptjs": "^2.4.2",
+        "@types/cookie": "^0.5.1",
         "@types/react": "18.0.37",
         "@types/uuid": "^9.0.1",
         "typescript": "5.0.4"

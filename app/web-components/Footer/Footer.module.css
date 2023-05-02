@@ -150,7 +150,8 @@
 
 .footerColumn > h5 {
     color: hsl(235, 86%, 65%);
-    padding-top: 8px;
+    /* padding-top: 8px; */
+    margin-bottom: 20px;
     font-size: 16px;
     line-height: 24px;
     user-select: text;

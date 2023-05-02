@@ -15,6 +15,7 @@
 .brand {
     display: flex;
     align-items: center;
+    padding-right: 66px;
 }
 
 .navLinks {

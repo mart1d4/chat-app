@@ -1,128 +1,6 @@
 @font-face {
     font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-Bold.eot');
-    src: local('gg sans Bold'), local('ggsans-Bold'),
-        url('../public/fonts/ggsans/ggsans-Bold.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-Bold.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-Bold.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-Bold.ttf') format('truetype');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-SemiboldItalic.eot');
-    src: local('gg sans SemiBold Italic'), local('ggsans-SemiboldItalic'),
-        url('../public/fonts/ggsans/ggsans-SemiboldItalic.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-SemiboldItalic.woff2')
-            format('woff2'),
-        url('../public/fonts/ggsans/ggsans-SemiboldItalic.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-SemiboldItalic.ttf')
-            format('truetype');
-    font-weight: 600;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-MediumItalic.eot');
-    src: local('gg sans Medium Italic'), local('ggsans-MediumItalic'),
-        url('../public/fonts/ggsans/ggsans-MediumItalic.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-MediumItalic.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-MediumItalic.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-MediumItalic.ttf') format('truetype');
-    font-weight: 500;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-BoldItalic.eot');
-    src: local('gg sans Bold Italic'), local('ggsans-BoldItalic'),
-        url('../public/fonts/ggsans/ggsans-BoldItalic.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-BoldItalic.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-BoldItalic.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-BoldItalic.ttf') format('truetype');
-    font-weight: 700;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-Semibold.eot');
-    src: local('gg sans SemiBold'), local('ggsans-Semibold'),
-        url('../public/fonts/ggsans/ggsans-Semibold.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-Semibold.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-Semibold.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-Semibold.ttf') format('truetype');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-Medium.eot');
-    src: local('gg sans Medium'), local('ggsans-Medium'),
-        url('../public/fonts/ggsans/ggsans-Medium.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-Medium.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-Medium.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-Medium.ttf') format('truetype');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-ExtraBold.eot');
-    src: local('gg sans ExtraBold'), local('ggsans-ExtraBold'),
-        url('../public/fonts/ggsans/ggsans-ExtraBold.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-ExtraBold.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-ExtraBold.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-ExtraBold.ttf') format('truetype');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot');
-    src: local('gg sans ExtraBold Italic'), local('ggsans-ExtraBoldItalic'),
-        url('../public/fonts/ggsans/ggsans-ExtraBoldItalic.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff2')
-            format('woff2'),
-        url('../public/fonts/ggsans/ggsans-ExtraBoldItalic.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-ExtraBoldItalic.ttf')
-            format('truetype');
-    font-weight: 800;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-Normal.eot');
-    src: local('gg sans Normal'), local('ggsans-Normal'),
-        url('../public/fonts/ggsans/ggsans-Normal.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-Normal.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-Normal.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-Normal.ttf') format('truetype');
+    src: url('../public/fonts/ggsans/400.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -130,34 +8,39 @@
 
 @font-face {
     font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/ggsans-NormalItalic.eot');
-    src: local('gg sans Normal Italic'), local('ggsans-NormalItalic'),
-        url('../public/fonts/ggsans/ggsans-NormalItalic.eot?#iefix')
-            format('embedded-opentype'),
-        url('../public/fonts/ggsans/ggsans-NormalItalic.woff2') format('woff2'),
-        url('../public/fonts/ggsans/ggsans-NormalItalic.woff') format('woff'),
-        url('../public/fonts/ggsans/ggsans-NormalItalic.ttf') format('truetype');
-    font-weight: 400;
-    font-style: italic;
+    src: url('../public/fonts/ggsans/500.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/gg-sans-300.woff');
-    src: local('gg sans 300'), local('gg-sans-300'),
-        url('../public/fonts/ggsans/gg-sans-300.woff') format('woff');
-    font-weight: 300;
+    src: url('../public/fonts/ggsans/600.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'gg sans';
+    src: url('../public/fonts/ggsans/700.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'gg sans';
+    src: url('../public/fonts/ggsans/800.woff2') format('woff2');
+    font-weight: 800;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'Ginto Nord';
-    src: url('../public/fonts/ginto/Ginto-Nord-700.woff');
-    src: local('Ginto Nord'), local('Ginto-Nord-700'),
-        url('../public/fonts/ginto/Ginto-Nord-700.woff2') format('woff2'),
-        url('../public/fonts/ginto/Ginto-Nord-700.woff') format('woff');
+    src: url('../public/fonts/ginto/GintoNord.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -166,7 +49,7 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --background-1: hsl(225, 6%, 13%);
-        --background-2: hsl(228, 7%, 15%);
+        --background-2: hsl(228, 6%, 15%);
         --background-3: hsl(220, 7%, 18%);
         --background-4: hsl(223, 7%, 21%);
         --background-5: hsl(225, 7%, 24%);
@@ -185,7 +68,7 @@
         --foreground-4: hsl(214, 4%, 65%, 1);
         --foreground-5: hsl(223, 5.8%, 52.9%, 1);
         --foreground-light: hsl(218, 5%, 47%, 1);
-        --accent-1: hsl(235, 86%, 65%);
+        --accent-1: hsl(235, 87%, 65%);
         --accent-2: hsl(235, 51%, 52%);
         --accent-3: hsl(235, 47%, 44%);
         --accent-light: hsl(197, 100%, 48%);

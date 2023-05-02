@@ -1,7 +1,8 @@
 import Header from './web-components/Header/Header';
 import Footer from './web-components/Footer/Footer';
-import styles from './HomePage.module.css';
+import styles from './Home.module.css';
 import type { Metadata } from 'next';
+import { ReactElement } from 'react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
         'chat-app, chat, voice, video, text, gaming, friends, communities, free, open source, open source software, open source project',
 };
 
-const HomePage = () => {
+const HomePage = (): ReactElement => {
     return (
         <div className={styles.mainContainer}>
             <div className={styles.heading}>
@@ -47,7 +48,7 @@ const HomePage = () => {
                             </Link>
 
                             <Link href='/login'>
-                                Open Discord in your browser
+                                Open Chat App in your browser
                             </Link>
                         </div>
                     </div>
@@ -55,15 +56,15 @@ const HomePage = () => {
 
                 <div className={styles.imageBackground}>
                     <img
-                        src='/assets/home-background1.svg'
+                        src='/assets/homepages/background1.svg'
                         draggable='false'
                     />
                     <img
-                        src='/assets/home-background2.svg'
+                        src='/assets/homepages/background2.svg'
                         draggable='false'
                     />
                     <img
-                        src='/assets/home-background3.svg'
+                        src='/assets/homepages/background3.svg'
                         draggable='false'
                     />
                 </div>
@@ -73,8 +74,8 @@ const HomePage = () => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/home-content1.svg'
-                            alt='Stylized image of a Discord server with multiple channels for studying, games, cooking, and pet photos.'
+                            src='/assets/homepages/content1.svg'
+                            alt='Stylized image of a Chat App server with multiple channels for studying, games, cooking, and pet photos.'
                         />
 
                         <div>
@@ -83,7 +84,7 @@ const HomePage = () => {
                             </h2>
 
                             <div>
-                                Discord servers are organized into topic-based
+                                Chat App servers are organized into topic-based
                                 channels where you can collaborate, share, and
                                 just talk about your day without clogging up a
                                 group chat.
@@ -95,7 +96,7 @@ const HomePage = () => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/home-content2.svg'
+                            src='/assets/homepages/content2.svg'
                             alt='Stylized image showing friends hanging out in multiple voice channels.'
                         />
 
@@ -114,7 +115,7 @@ const HomePage = () => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/home-content3.svg'
+                            src='/assets/homepages/content3.svg'
                             alt='Stylized image showing friends in a server organized into roles for Coach, Student Lead, and Animal Crossing.'
                         />
 
@@ -144,7 +145,7 @@ const HomePage = () => {
                         </div>
 
                         <img
-                            src='/assets/home-content4.svg'
+                            src='/assets/homepages/content4.svg'
                             alt='Stylized image showing friends video talking with each other on desktop and mobile.'
                         />
                     </div>
@@ -154,7 +155,7 @@ const HomePage = () => {
                     <div>
                         <div>
                             <img
-                                src='/assets/home-content5.svg'
+                                src='/assets/homepages/content5.svg'
                                 draggable='false'
                             />
                         </div>
