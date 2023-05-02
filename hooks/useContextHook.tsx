@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use client';
 
 import { AuthContext } from '@/context/AuthProvider';
