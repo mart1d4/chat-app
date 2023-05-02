@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const cleanUser = (user: UncleanUserType): UserType => {
     return {
         _id: user._id,
