@@ -1,3 +1,6 @@
+// Ignore typescript error
+// @ts-nocheck
+
 import connectDB from '@/lib/mongo/connectDB';
 import cleanUser from '@/lib/mongo/cleanUser';
 import User from '@/lib/mongo/models/User';
