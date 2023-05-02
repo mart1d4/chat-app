@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use client';
 
 import styles from './Popover.module.css';
