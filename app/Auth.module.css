@@ -1,0 +1,237 @@
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent-1);
+}
+
+.wrapperRegister {
+    width: 100%;
+}
+
+.wrapper > img {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+}
+
+.wrapper form {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding: 20px 16px;
+    font-size: 18px;
+    border-radius: 0px;
+    box-shadow: var(--elevation-high);
+    color: var(--foreground-4);
+    background-color: var(--background-4);
+    z-index: 1;
+    animation: popIn 0.25s ease-in-out;
+}
+
+.loginContainer {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: flex-start;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    user-select: none;
+    text-align: center;
+}
+
+.header h1 {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 24px;
+    line-height: 30px;
+    color: var(--foreground-1);
+}
+
+.header div {
+    font-size: 1rem;
+    line-height: 20px;
+    color: var(--foreground-3);
+}
+
+.loginBlock {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.loginBlock > div:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+.loginBlock > div:nth-child(3) {
+    margin-bottom: 40px;
+}
+
+.loginBlock label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    user-select: none;
+}
+
+.loginBlock label > span {
+    color: var(--error-light);
+    padding-left: 4px;
+}
+
+.errorLabel {
+    font-size: 12px;
+    font-weight: 500;
+    font-style: italic;
+    text-transform: none;
+}
+
+.errorLabel > span {
+    padding: 0 4px;
+}
+
+.inputContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    border-radius: 3px;
+    background-color: var(--background-1);
+    border: none;
+}
+
+.inputContainer > input {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    padding: 10px;
+    height: 40px;
+    outline: none;
+    color: var(--foreground-3);
+}
+
+.passwordForgot {
+    display: block;
+    margin: 4px 0 20px 0;
+    width: auto;
+    height: auto;
+    padding: 2px 0;
+    color: var(--accent-light);
+}
+
+.passwordForgot:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.buttonSubmit {
+    color: var(--foreground-1);
+    background-color: var(--accent-1);
+    font-size: 1rem;
+    line-height: 24px;
+    margin-bottom: 8px;
+    width: 100%;
+    height: 44px;
+    min-width: 130px;
+    cursor: pointer;
+}
+
+.buttonSubmit:hover {
+    background-color: var(--accent-2);
+}
+
+.buttonSubmit:active {
+    background-color: var(--accent-3);
+}
+
+.bottomText {
+    margin-top: 4px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+}
+
+.bottomText > span {
+    font-size: 14px;
+    line-height: 16px;
+    user-select: none;
+    color: var(--foreground-4);
+    opacity: 0.9;
+}
+
+.bottomText > button {
+    color: var(--accent-light);
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0;
+    width: auto;
+    height: auto;
+}
+
+.bottomText > button:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--foreground-1);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0.5;
+        transform: translateY(-200px) scale(1.1);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0px) scale(1);
+    }
+}
+
+@media screen and (min-width: 486px) {
+    .wrapper form {
+        width: 480px;
+        height: fit-content;
+        padding: 32px;
+        border-radius: 5px;
+    }
+
+    .wrapperRegister {
+        width: 480px;
+    }
+}
+
+@media screen and (min-width: 830px) {
+    .wrapper form {
+        width: 550px;
+        height: fit-content;
+        padding: 32px;
+        border-radius: 5px;
+    }
+}

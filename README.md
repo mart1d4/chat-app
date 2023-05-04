@@ -51,8 +51,8 @@ My Web Application is a chat web application that allows users to communicate wi
 - [ ] Utilize SVG masks to get better status icons
 - [ ] User card rerendering on note change
 - [ ] User card note input not properly resized
-- [ ] JasonWebToken not being saved in cookies
-- [ ] Message Reference's user not properly displayed
+- [X] JasonWebToken not being saved in cookies
+- [X] Message Reference's user not properly displayed
   
 ## Acknowledgements
 This application is not meant to be a clone of Discord, but the UI design has been heavily inspired by Discord. A designer will be creating a custom design in the future.
