@@ -1,0 +1,12 @@
+.container {
+    width: 100%;
+    background-color: var(--background-4);
+    padding: 10px;
+}
+
+.container > h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 100%;
+    color: var(--foreground-1);
+}

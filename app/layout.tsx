@@ -1,5 +1,8 @@
+import SettingsProvider from '@/context/SettingsProvider';
+import LayerProvider from '@/context/LayerProvider';
+import PersistLogin from '@/hooks/usePersistLogin';
 import AuthProvider from '@/context/AuthProvider';
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement } from 'react';
 import type { Metadata } from 'next';
 import './global.css';
 
@@ -12,11 +15,17 @@ export const metadata: Metadata = {
     },
 };
 
-const RootLayout = ({ children }: { children: ReactNode }): ReactElement => {
+const RootLayout = ({ children }: { children: ReactElement }): ReactElement => {
     return (
         <html lang='en'>
             <body>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                    <PersistLogin>
+                        <LayerProvider>
+                            <SettingsProvider>{children}</SettingsProvider>
+                        </LayerProvider>
+                    </PersistLogin>
+                </AuthProvider>
             </body>
         </html>
     );

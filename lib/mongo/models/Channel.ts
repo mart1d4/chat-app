@@ -1,21 +1,31 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-const channelSchema = new Schema(
+const defaultChannelIcons: string[] = [
+    '/assets/channel-avatars/blue.png',
+    '/assets/channel-avatars/green.png',
+    '/assets/channel-avatars/orange.png',
+    '/assets/channel-avatars/blue-green.png',
+    '/assets/channel-avatars/purple.png',
+    '/assets/channel-avatars/red.png',
+    '/assets/channel-avatars/yellow.png',
+];
+
+const channelSchema = new Schema<ChannelType>(
     {
         recipients: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "User",
+                ref: 'User',
             },
         ],
         type: {
             type: Number,
             enum: [0, 1, 2, 3, 4],
         },
-        guildID: {
+        guild: {
             type: Schema.Types.ObjectId,
-            ref: "Guild",
+            ref: 'Guild',
         },
         position: {
             type: Number,
@@ -34,7 +44,7 @@ const channelSchema = new Schema(
         },
         owner: {
             type: Schema.Types.ObjectId,
-            ref: "User",
+            ref: 'User',
         },
         rateLimit: {
             type: Number,
@@ -42,20 +52,20 @@ const channelSchema = new Schema(
         permissions: {
             type: Array,
         },
-        parentID: {
+        parent: {
             type: Schema.Types.ObjectId,
-            ref: "Channel",
+            ref: 'Channel',
         },
         messages: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "Message",
+                ref: 'Message',
             },
         ],
         pinnedMessages: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "Message",
+                ref: 'Message',
             },
         ],
     },
@@ -64,5 +74,13 @@ const channelSchema = new Schema(
     }
 );
 
-const Channel = mongoose.models && "Channel" in mongoose.models ? mongoose.models.Channel : mongoose.model("Channel", channelSchema);
+channelSchema.pre('save', async function () {
+    if (!this.icon) {
+        const index = Math.floor(Math.random() * defaultChannelIcons.length);
+        this.icon = defaultChannelIcons[index];
+    }
+});
+
+const Channel =
+    mongoose.models.Channel || mongoose.model('Channel', channelSchema);
 export default Channel;

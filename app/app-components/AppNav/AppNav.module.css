@@ -1,0 +1,120 @@
+.nav {
+    position: relative;
+    width: 72px;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.list {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    user-select: none;
+    padding-top: 12px;
+    background-color: var(--background-1);
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.list::-webkit-scrollbar {
+    width: 0px;
+}
+
+.navIcon {
+    position: relative;
+    margin: 0 0 8px;
+    display: flex;
+    justify-content: center;
+    width: 72px;
+}
+
+.navIconWrapper,
+.navIconWrapperActive {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: var(--background-4);
+    transition: all 0.2s ease-in-out;
+}
+
+.navIconWrapperActive,
+.navIconWrapper:hover {
+    border-radius: 33%;
+    background-color: var(--accent-1);
+}
+
+.navIconWrapper path,
+.navIconWrapperActive path {
+    fill: var(--foreground-2);
+    stroke: var(--background-dark);
+}
+
+.marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    width: 8px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.marker > span {
+    position: absolute;
+    display: block;
+    width: 8px;
+    border-radius: 0 4px 4px 0;
+    margin-left: -4px;
+    background-color: var(--foreground-1);
+}
+
+.separator {
+    height: 2px;
+    width: 32px;
+    border-radius: 4px;
+    margin: 0 auto;
+    background-color: var(--background-4);
+}
+
+.badgeContainer {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 23px;
+    height: 23px;
+    background-color: var(--background-1);
+}
+
+.badgeContainer > div {
+    background-color: var(--error-1);
+    width: 16px;
+    height: 16px;
+    padding-right: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    min-height: 16px;
+    min-width: 16px;
+    color: var(--foreground-1);
+    text-align: center;
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}

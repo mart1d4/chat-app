@@ -1,0 +1,23 @@
+.appContainer {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+.appWrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    flex-grow: 1;
+}
+
+.channelsContainer {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+}
