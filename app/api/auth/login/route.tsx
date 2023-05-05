@@ -5,44 +5,53 @@ import connectDB from '@/lib/mongo/connectDB';
 import cleanUser from '@/lib/mongo/cleanUser';
 import User from '@/lib/mongo/models/User';
 import { NextResponse } from 'next/server';
-import { serialize } from 'cookie';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 
 connectDB();
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
     const { uid, password }: any = await req.json();
 
     if (!uid || !password) {
-        return NextResponse.json({
-            success: false,
-            message: 'Login or password is invalid',
-        });
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Login or password is invalid',
+            },
+            {
+                status: 400,
+            }
+        );
     }
 
     try {
         const user = await User.findOne({ username: uid });
 
         if (!user)
-            return NextResponse.json({
-                success: false,
-                message: 'Login or password is invalid',
-            });
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Login or password is invalid',
+                },
+                {
+                    status: 401,
+                }
+            );
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (passwordsMatch) {
-            const accessToken = await new SignJWT(cleanUser(user))
-                .setProtectedHeader({ alg: 'HS256' })
+            const accessToken = await new SignJWT({ id: user._id })
+                .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
                 .setIssuedAt()
                 .setExpirationTime('1d')
                 .sign(
                     new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
                 );
 
-            const refreshToken = await new SignJWT(cleanUser(user))
-                .setProtectedHeader({ alg: 'HS256' })
+            const refreshToken = await new SignJWT({ id: user._id })
+                .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
                 .setIssuedAt()
                 .setExpirationTime('7d')
                 .sign(
@@ -52,36 +61,39 @@ export async function POST(req: Request) {
             user.refreshToken = refreshToken;
             await user.save();
 
-            return new Response(
+            return NextResponse.json(
                 {
                     success: true,
                     user: cleanUser(user),
                     accessToken: accessToken,
-                } as any,
+                },
                 {
                     status: 200,
                     headers: {
-                        'Set-Cookie': serialize('jwt', refreshToken, {
-                            httpOnly: true,
-                            secure: true,
-                            sameSite: 'none',
-                            maxAge: 60 * 60 * 24 * 7,
-                            path: '/',
-                        }),
+                        'Set-Cookie': `token=${refreshToken}; path=/; HttpOnly; SameSite=Strict; Max-Age=604800;`,
                     },
                 }
             );
         } else {
-            return NextResponse.json({
-                success: false,
-                message: 'Login or password is invalid',
-            });
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Login or password is invalid',
+                },
+                {
+                    status: 401,
+                }
+            );
         }
     } catch (error) {
-        console.log(error);
-        return NextResponse.json({
-            success: false,
-            message: 'Something went wrong',
-        });
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong',
+            },
+            {
+                status: 500,
+            }
+        );
     }
 }

@@ -1,11 +1,11 @@
 'use client';
 
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
-import { useRef, useState, useEffect, ReactElement } from 'react';
+import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
 import styles from '../Auth.module.css';
-import { axiosPrivate } from '../axios';
+import { axiosPrivate } from '@/lib/axios';
 
 const USER_REGEX = /^.{2,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
@@ -20,9 +20,28 @@ const Register = (): ReactElement => {
     const [usernameError, setUsernameError] = useState<string>('');
     const [passwordError, setPasswordError] = useState<string>('');
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const uidInputRef = useRef<HTMLInputElement>(null);
     const router: AppRouterInstance = useRouter();
+    const { auth }: any = useContextHook({ context: 'auth' });
+
+    useEffect(() => {
+        if (auth.accessToken) {
+            router.push('/channels/me');
+        }
+    }, [auth]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent): void => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                handleSubmit(e as unknown as MouseEvent);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [username, password, passwordMatch, isLoading]);
 
     useEffect(() => {
         uidInputRef.current?.focus();
@@ -43,7 +62,7 @@ const Register = (): ReactElement => {
     const handleSubmit = async (e: MouseEvent): Promise<void> => {
         e.preventDefault();
 
-        if (isLoading) return;
+        if (isLoading || !username || !password || !passwordMatch) return;
         setIsLoading(true);
 
         const v1: boolean = USER_REGEX.test(username);
@@ -201,7 +220,7 @@ const Register = (): ReactElement => {
             <button
                 type='submit'
                 className={styles.buttonSubmit}
-                onClick={() => handleSubmit}
+                onClick={(e) => handleSubmit(e)}
             >
                 <div className={isLoading ? styles.loading : ''}>
                     {!isLoading && 'Register'}
@@ -210,6 +229,7 @@ const Register = (): ReactElement => {
 
             <div className={styles.bottomText}>
                 <button
+                    type='button'
                     onClick={(e) => {
                         e.preventDefault();
                         router.push('/login');

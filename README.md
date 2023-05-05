@@ -20,6 +20,7 @@ My Web Application is a chat web application that allows users to communicate wi
 
 ## Roadmap
 
+- [ ] Add disclaimer that this website does not intend to be Discord
 - [ ] Direct messaging between users
 - [ ] File sharing in chat
 - [ ] Moderation features (mute, ban, kick)

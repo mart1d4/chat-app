@@ -1,32 +1,20 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-type DefaultAvatarType = {
-    avatar: string;
-    color: string;
-}[];
+const defaultAvatars: string[] = [
+    '/assets/avatars/blue.png',
+    '/assets/avatars/green.png',
+    '/assets/avatars/grey.png',
+    '/assets/avatars/red.png',
+    '/assets/avatars/yellow.png',
+];
 
-const defaults: DefaultAvatarType = [
-    {
-        avatar: "/assets/avatars/blue.png",
-        color: "#5a63f2",
-    },
-    {
-        avatar: "/assets/avatars/green.png",
-        color: "#38a65a",
-    },
-    {
-        avatar: "/assets/avatars/grey.png",
-        color: "#757e8a",
-    },
-    {
-        avatar: "/assets/avatars/red.png",
-        color: "#ed4546",
-    },
-    {
-        avatar: "/assets/avatars/yellow.png",
-        color: "#faa519",
-    },
+const defaultColors: string[] = [
+    '#5a63f2',
+    '#38a65a',
+    '#757e8a',
+    '#ed4546',
+    '#faa519',
 ];
 
 const userSchema = new Schema<UncleanUserType>(
@@ -56,8 +44,8 @@ const userSchema = new Schema<UncleanUserType>(
         },
         status: {
             type: String,
-            enum: ["Online", "Offline", "Idle", "Do Not Disturb"],
-            default: "Offline",
+            enum: ['Online', 'Offline', 'Idle', 'Do Not Disturb'],
+            default: 'Offline',
         },
         accentColor: {
             type: String,
@@ -74,36 +62,36 @@ const userSchema = new Schema<UncleanUserType>(
             {
                 user: {
                     type: Schema.Types.ObjectId,
-                    ref: "User",
+                    ref: 'User',
                 },
                 type: {
                     type: Number,
                     enum: [0, 1],
-                }
+                },
             },
         ],
         friends: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "User",
+                ref: 'User',
             },
         ],
         blocked: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "User",
+                ref: 'User',
             },
         ],
         channels: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "Channel",
+                ref: 'Channel',
             },
         ],
         guilds: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "Guild",
+                ref: 'Guild',
             },
         ],
         refreshToken: {
@@ -115,14 +103,13 @@ const userSchema = new Schema<UncleanUserType>(
     }
 );
 
-userSchema.pre("save", async function () {
+userSchema.pre('save', async function () {
     if (!this.avatar && !this.accentColor) {
-        const index = Math.floor(Math.random() * defaults.length);
-
-        this.avatar = defaults[index].avatar;
-        this.accentColor = defaults[index].color;
+        const index = Math.floor(Math.random() * defaultAvatars.length);
+        this.avatar = defaultAvatars[index];
+        this.accentColor = defaultColors[index];
     }
 });
 
-const User = mongoose.models && "User" in mongoose.models ? mongoose.models.User : mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;

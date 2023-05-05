@@ -1,0 +1,14 @@
+.main {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+    flex-direction: column;
+    background-color: var(--background-4);
+}
+
+.content {
+    height: 100%;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}

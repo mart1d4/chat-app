@@ -4,7 +4,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
-import { axiosPrivate } from '../axios';
+import { axiosPrivate } from '@/lib/axios';
 import styles from '../Auth.module.css';
 
 const Form = (): ReactElement => {
@@ -18,6 +18,12 @@ const Form = (): ReactElement => {
     const router: AppRouterInstance = useRouter();
 
     useEffect(() => {
+        if (auth.accessToken) {
+            router.push('/channels/me');
+        }
+    }, [auth]);
+
+    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
             e.stopPropagation();
             if (e.key === 'Enter') {
@@ -29,10 +35,6 @@ const Form = (): ReactElement => {
 
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [uid, password, isLoading]);
-
-    useEffect(() => {
-        if (auth?.accessToken) router.push('/channels/@me');
-    }, [auth]);
 
     useEffect(() => {
         uidInputRef.current?.focus();
@@ -65,7 +67,7 @@ const Form = (): ReactElement => {
             setUID('');
             setPassword('');
             setIsLoading(false);
-            router.push('/channels/@me');
+            router.push('/channels/me');
         }
     };
 
