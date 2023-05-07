@@ -23,35 +23,48 @@ export async function POST(req: Request): Promise<NextResponse> {
         );
     }
 
-    const user = await User.findOne({ refreshToken: token });
-    if (!user) {
+    try {
+        const user = await User.findOne({ refreshToken: token });
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'No user found',
+                },
+                {
+                    status: 400,
+                    headers: {
+                        'Set-Cookie': `token=; path=/; HttpOnly; SameSite=Strict; Max-Age=-1;`,
+                    },
+                }
+            );
+        }
+
+        user.refreshToken = '';
+        await user.save();
+
         return NextResponse.json(
             {
-                success: false,
-                message: 'No user found',
+                success: true,
+                message: 'Logged out',
             },
             {
-                status: 400,
+                status: 200,
                 headers: {
                     'Set-Cookie': `token=; path=/; HttpOnly; SameSite=Strict; Max-Age=-1;`,
                 },
             }
         );
-    }
-
-    user.refreshToken = '';
-    await user.save();
-
-    return NextResponse.json(
-        {
-            success: true,
-            message: 'Logged out',
-        },
-        {
-            status: 200,
-            headers: {
-                'Set-Cookie': `token=; path=/; HttpOnly; SameSite=Strict; Max-Age=-1;`,
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong.',
             },
-        }
-    );
+            {
+                status: 500,
+            }
+        );
+    }
 }

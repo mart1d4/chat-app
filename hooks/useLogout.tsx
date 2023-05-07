@@ -11,7 +11,7 @@ const useLogout = () => {
     const router = useRouter();
 
     const logout = async () => {
-        setAuth({});
+        setAuth(null);
         localStorage.removeItem('channel-url');
         localStorage.removeItem('friends-tab');
         localStorage.removeItem('user-settings');
@@ -23,6 +23,7 @@ const useLogout = () => {
 
             router.push('/login');
         } catch (error) {
+            console.error(error);
             throw new Error('Error logging out');
         }
     };

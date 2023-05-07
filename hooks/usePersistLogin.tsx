@@ -2,13 +2,9 @@
 
 import useRefreshToken from './useRefreshToken';
 import useContextHook from './useContextHook';
-import { useEffect, ReactElement } from 'react';
+import { useEffect, ReactNode } from 'react';
 
-const PersistLogin = ({
-    children,
-}: {
-    children: ReactElement;
-}): ReactElement => {
+const PersistLogin = ({ children }: { children: ReactNode }): ReactNode => {
     const refresh = useRefreshToken();
     const { auth, setIsLoading }: any = useContextHook({
         context: 'auth',

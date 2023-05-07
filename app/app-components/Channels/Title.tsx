@@ -3,10 +3,15 @@
 import { ReactElement, useState, useRef } from 'react';
 import { Icon, Tooltip } from '@/app/app-components';
 import styles from './Channels.module.css';
+import useContextHook from '@/hooks/useContextHook';
 
 const Title = (): ReactElement => {
     const [hover, setHover] = useState<boolean>(false);
     const showButton = useRef<HTMLDivElement>(null);
+
+    const { fixedLayer, setFixedLayer }: any = useContextHook({
+        context: 'layer',
+    });
 
     return (
         <h2 className={styles.title}>
@@ -15,20 +20,20 @@ const Title = (): ReactElement => {
                 ref={showButton}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
-                // onClick={(e) => {
-                //     if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
-                //         setFixedLayer(null);
-                //     } else {
-                //         setFixedLayer({
-                //             type: 'popout',
-                //             event: e,
-                //             gap: 5,
-                //             element: showButton.current,
-                //             firstSide: 'bottom',
-                //             secondSide: 'right',
-                //         });
-                //     }
-                // }}
+                onClick={(e) => {
+                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
+                        setFixedLayer(null);
+                    } else {
+                        setFixedLayer({
+                            type: 'popout',
+                            event: e,
+                            gap: 5,
+                            element: showButton.current,
+                            firstSide: 'bottom',
+                            secondSide: 'right',
+                        });
+                    }
+                }}
             >
                 <Icon
                     name='add'

@@ -8,20 +8,22 @@ import {
     useState,
 } from 'react';
 
-export const SettingsContext = createContext({});
+export const SettingsContext =
+    createContext<UserSettingsContextValueType>(null);
 
 const SettingsProvider = ({
     children,
 }: {
     children: ReactNode;
 }): ReactElement => {
-    const [userSettings, setUserSettings] = useState<any>(null);
+    const [userSettings, setUserSettings] =
+        useState<UserSettingsObjectType>(null);
 
     useEffect(() => {
         const userSettingsLocal = localStorage.getItem('user-settings');
 
         if (!userSettingsLocal) {
-            const userSettingsLocal = {
+            const userSettingsLocal: UserSettingsObjectType = {
                 language: 'en-US',
                 microphone: false,
                 sound: true,
@@ -44,7 +46,7 @@ const SettingsProvider = ({
         localStorage.setItem('user-settings', JSON.stringify(userSettings));
     }, [userSettings]);
 
-    const value = {
+    const value: UserSettingsContextValueType = {
         userSettings,
         setUserSettings,
     };

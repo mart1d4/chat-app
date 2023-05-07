@@ -2,22 +2,23 @@
 
 import { ReactElement, ReactNode, createContext, useState } from 'react';
 
-export const LayerContext = createContext({});
+export const LayerContext = createContext<LayerContextValueType>(null);
 
 const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
     const [showSettings, setShowSettings] = useState<boolean>(false);
-    const [userProfile, setUserProfile] = useState(null);
-    const [popup, setPopup] = useState(null);
-    const [fixedLayer, setFixedLayer2] = useState(null);
+    const [userProfile, setUserProfile] = useState<UserProfileObjectType>(null);
+    const [popup, setPopup] = useState<PopupObjectType>(null);
+    const [fixedLayer, setRealFixedLayer] =
+        useState<null | FixedLayerObjectType>(null);
 
-    const setFixedLayer = (content: any) => {
-        setFixedLayer2(null);
+    const setFixedLayer = (content: null | FixedLayerObjectType) => {
+        setRealFixedLayer(null);
         setTimeout(() => {
-            setFixedLayer2(content);
-        }, 1);
+            setRealFixedLayer(content);
+        }, 5);
     };
 
-    const value = {
+    const value: LayerContextValueType = {
         showSettings,
         setShowSettings,
         userProfile,

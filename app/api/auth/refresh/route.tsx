@@ -25,46 +25,59 @@ export async function GET(req: Request): Promise<NextResponse> {
         );
     }
 
-    const user = await User.findOne({ refreshToken: token });
-    if (!user) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Forbidden',
-            },
-            {
-                status: 401,
-            }
-        );
-    }
-
-    const accessToken = await new SignJWT({ id: user._id })
-        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-        .setIssuedAt()
-        .setExpirationTime('1d')
-        .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
-
-    if (!accessToken) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Forbidden',
-            },
-            {
-                status: 401,
-            }
-        );
-    }
-
-    return NextResponse.json(
-        {
-            success: true,
-            message: 'Successfully refreshed token',
-            accessToken: accessToken,
-            user: cleanUser(user),
-        },
-        {
-            status: 200,
+    try {
+        const user = await User.findOne({ refreshToken: token });
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Forbidden',
+                },
+                {
+                    status: 401,
+                }
+            );
         }
-    );
+
+        const accessToken = await new SignJWT({ id: user._id })
+            .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            .setIssuedAt()
+            .setExpirationTime('1d')
+            .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
+
+        if (!accessToken) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Forbidden',
+                },
+                {
+                    status: 401,
+                }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Successfully refreshed token',
+                accessToken: accessToken,
+                user: cleanUser(user),
+            },
+            {
+                status: 200,
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong.',
+            },
+            {
+                status: 500,
+            }
+        );
+    }
 }

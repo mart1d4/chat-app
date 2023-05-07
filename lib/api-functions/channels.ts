@@ -1,13 +1,49 @@
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import axiosPrivate from '@/lib/axios';
 
-const removeChannel = async (id: string) => {
-    const axiosPrivate = useAxiosPrivate();
-
-    const response = await axiosPrivate.delete(`/channels/${id}`);
+export const createChannel = async (recipients: string[]) => {
+    const response = await axiosPrivate.post(`/users/me/channels`, {
+        recipients: recipients,
+    });
 
     if (!response.data.success) {
-        throw new Error('Could not delete channel');
-    };
+        throw new Error('Could not create channel');
+    } else {
+        return response.data;
+    }
 };
 
-export { removeChannel };
+export const leaveChannel = async (channelId: string) => {
+    const response = await axiosPrivate.delete(
+        `/users/me/channels/${channelId}`
+    );
+
+    if (!response.data.success) {
+        throw new Error('Could not leave channel');
+    } else {
+        return response.data;
+    }
+};
+
+export const getPinnedMessages = async (channelId: string) => {
+    const response = await axiosPrivate.get(
+        `/users/me/channels/${channelId}/pins`
+    );
+
+    if (!response.data.success) {
+        throw new Error('Could not get pinned messages');
+    } else {
+        return response.data;
+    }
+};
+
+export const pinMessage = async (channelId: string, messageId: string) => {
+    const response = await axiosPrivate.post(
+        `/users/me/channels/${channelId}/pins/${messageId}`
+    );
+
+    if (!response.data.success) {
+        throw new Error('Could not pin message');
+    } else {
+        return response.data;
+    }
+};

@@ -1,4 +1,11 @@
-import { AppNav, Channels } from '@/app/app-components';
+import {
+    AppNav,
+    Channels,
+    Settings,
+    UserProfile,
+    Popup,
+    FixedLayer,
+} from '@/app/app-components';
 import { ReactElement, ReactNode } from 'react';
 import styles from './Layout.module.css';
 import { Metadata } from 'next';
@@ -15,10 +22,11 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
             // onContextMenu={(e) => e.preventDefault()}
         >
             <AppNav />
-            {/* <Settings />
+
+            <Settings />
             <UserProfile />
             <Popup />
-            <FixedLayer /> */}
+            <FixedLayer />
 
             <div className={styles.appWrapper}>
                 <div className={styles.channelsContainer}>

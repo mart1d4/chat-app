@@ -9,17 +9,15 @@ connectDB();
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
-    const uncleanUserId = headersList.get('userId');
+    const uncleanSenderId = headersList.get('userId') || '';
 
-    const userId = uncleanUserId?.replace(/"/g, '');
+    const senderId = uncleanSenderId.replace(/"/g, '');
 
-    console.log(`User ID: ${userId}`);
-
-    if (!mongoose.Types.ObjectId.isValid(userId as string)) {
+    if (!mongoose.Types.ObjectId.isValid(senderId)) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'User Id is invalid',
+                message: 'Invalid user ID.',
             },
             {
                 status: 400,
@@ -27,46 +25,59 @@ export async function GET(): Promise<NextResponse> {
         );
     }
 
-    const user = await User.findById(userId)
-        .populate('channels')
-        .populate({
-            path: 'channels',
-            populate: {
-                path: 'recipients',
-                model: 'User',
-            },
-        });
+    try {
+        const sender = await User.findById(senderId)
+            .populate('channels')
+            .populate({
+                path: 'channels',
+                populate: {
+                    path: 'recipients',
+                    model: 'User',
+                },
+            });
 
-    if (!user) {
+        if (!sender) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'User not found',
+                },
+                {
+                    status: 404,
+                }
+            );
+        }
+
+        const channels = sender.channels.filter((channel: ChannelType) =>
+            [0, 1].includes(channel.type)
+        );
+
+        channels?.recipients?.map((recipient: UncleanUserType) =>
+            cleanUser(recipient)
+        );
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Channels fetched successfully',
+                channels: channels,
+            },
+            {
+                status: 200,
+            }
+        );
+    } catch (error) {
+        console.error(error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'User not found',
+                message: 'Something went wrong.',
             },
             {
-                status: 404,
+                status: 500,
             }
         );
     }
-
-    const channels = user.channels.filter((channel: ChannelType) =>
-        [0, 1].includes(channel.type)
-    );
-
-    channels?.recipients?.map((recipient: UncleanUserType) =>
-        cleanUser(recipient)
-    );
-
-    return NextResponse.json(
-        {
-            success: true,
-            message: 'Channels fetched successfully',
-            channels: channels,
-        },
-        {
-            status: 200,
-        }
-    );
 }
 
 // export async function POST(req: Request) {}

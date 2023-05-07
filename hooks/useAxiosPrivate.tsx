@@ -6,7 +6,9 @@ import { axiosPrivate } from '@/lib/axios';
 import { useEffect } from 'react';
 
 export default function useAxiosPrivate() {
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth }: any = useContextHook({
+        context: 'auth',
+    });
     const refresh = useRefreshToken();
 
     useEffect(() => {
@@ -29,9 +31,11 @@ export default function useAxiosPrivate() {
                 if (!prevRequest?.sent) {
                     prevRequest.sent = true;
                     const newAccessToken = await refresh();
+
                     prevRequest.headers[
                         'Authorization'
                     ] = `Bearer ${newAccessToken}`;
+
                     return axiosPrivate(prevRequest);
                 }
                 return Promise.reject(error);

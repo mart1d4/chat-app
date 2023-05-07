@@ -2,13 +2,13 @@
 
 import { ReactElement, ReactNode, createContext, useState } from 'react';
 
-export const AuthContext = createContext<AuthContextType>(undefined);
+export const AuthContext = createContext<AuthContextValueType>(null);
 
 const AuthProvider = ({ children }: { children: ReactNode }): ReactElement => {
-    const [auth, setAuth] = useState<AuthObjectType>({});
+    const [auth, setAuth] = useState<AuthObjectType>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const value: AuthContextType = {
+    const value: AuthContextValueType = {
         auth,
         setAuth,
         isLoading,

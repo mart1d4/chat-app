@@ -47,21 +47,32 @@ export async function middleware(req: NextRequest) {
                 }
             );
         } else {
-            const { payload } = await jwtVerify(
-                token,
-                new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
-            );
+            try {
+                const { payload } = await jwtVerify(
+                    token,
+                    new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
+                );
 
-            console.log(payload);
+                const requestHeaders = new Headers(req.headers);
+                requestHeaders.set('userId', JSON.stringify(payload?.id));
 
-            const requestHeaders = new Headers(req.headers);
-            requestHeaders.set('userId', JSON.stringify(payload?.id));
-
-            return NextResponse.next({
-                request: {
-                    headers: requestHeaders,
-                },
-            });
+                return NextResponse.next({
+                    request: {
+                        headers: requestHeaders,
+                    },
+                });
+            } catch (err) {
+                console.log(err);
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Invalid token',
+                    },
+                    {
+                        status: 401,
+                    }
+                );
+            }
         }
     }
 }

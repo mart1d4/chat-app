@@ -11,9 +11,9 @@ import bcrypt from 'bcryptjs';
 connectDB();
 
 export async function POST(req: Request): Promise<NextResponse> {
-    const { uid, password }: any = await req.json();
+    const { username, password }: any = await req.json();
 
-    if (!uid || !password) {
+    if (!username || !password) {
         return NextResponse.json(
             {
                 success: false,
@@ -26,9 +26,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await User.findOne({ username: uid });
+        const user = await User.findOne({ username: username });
 
-        if (!user)
+        if (!user) {
             return NextResponse.json(
                 {
                     success: false,
@@ -38,6 +38,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     status: 401,
                 }
             );
+        }
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
@@ -86,10 +87,11 @@ export async function POST(req: Request): Promise<NextResponse> {
             );
         }
     } catch (error) {
+        console.error(error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: 'Something went wrong.',
             },
             {
                 status: 500,

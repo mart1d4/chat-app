@@ -34,7 +34,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "app/web-components/Footer/Language.tsx", "app/register"  ],
+, "app/web-components/Footer/Language.tsx", "app/register", "lib/mongo/models/Channel.ts"  ],
   "exclude": [
     "node_modules"
   ]

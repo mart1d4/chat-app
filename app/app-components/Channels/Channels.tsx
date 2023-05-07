@@ -5,26 +5,16 @@ import { ReactElement } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Title from './Title';
 import { axiosPrivate } from '@/lib/axios';
-// import { cookies } from 'next/headers';
 
 const getChannels = async (): Promise<ChannelType[]> => {
-    // const cookieStore = cookies();
-    // const token = cookieStore.get('token')?.value;
-
-    // if (!token) {
-    //     throw new Error('No token found');
-    // }
-
     const res = await axiosPrivate.get('/users/me/channels', {
         headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzZGRkZTExZGFlYWFlOGM2ZTY4ZDQzYiIsImlhdCI6MTY4MzIzNTE5NywiZXhwIjoxNjgzMzIxNTk3fQ.6BRqaolenkv49djM08YTqdrPP2vU3eoq4s46k-bQOrY`,
+            Authorization: `Bearer `,
         },
     });
 
-    console.log(res);
-
     if (!res.data.success) {
-        throw new Error('Failed to fetch data');
+        console.log(res.data.message);
     }
 
     return res.data.channels;

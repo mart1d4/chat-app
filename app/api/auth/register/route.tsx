@@ -11,6 +11,18 @@ connectDB();
 export async function POST(req: Request): Promise<NextResponse> {
     const { username, password }: any = await req.json();
 
+    if (!username || !password) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid Username or Password',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
+
     const USER_REGEX = /^.{2,32}$/;
     const PWD_REGEX = /^.{8,256}$/;
 
@@ -71,10 +83,11 @@ export async function POST(req: Request): Promise<NextResponse> {
             }
         );
     } catch (error) {
+        console.error(error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: 'Something went wrong.',
             },
             {
                 status: 500,
