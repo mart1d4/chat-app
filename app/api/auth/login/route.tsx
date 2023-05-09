@@ -1,17 +1,12 @@
-// Ignore typescript error
-// @ts-nocheck
-
-import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/mongo/cleanUser';
-import User from '@/lib/mongo/models/User';
+import { cleanUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 
-connectDB();
-
 export async function POST(req: Request): Promise<NextResponse> {
-    const { username, password }: any = await req.json();
+    const { username, password }: { username: string; password: string } =
+        await req.json();
 
     if (!username || !password) {
         return NextResponse.json(
@@ -26,7 +21,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await User.findOne({ username: username });
+        const user = await prisma.user.findUnique({
+            where: {
+                username: username,
+            },
+        });
 
         if (!user) {
             return NextResponse.json(
@@ -43,7 +42,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (passwordsMatch) {
-            const accessToken = await new SignJWT({ id: user._id })
+            const accessToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
                 .setIssuedAt()
                 .setExpirationTime('1d')
@@ -51,7 +50,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
                 );
 
-            const refreshToken = await new SignJWT({ id: user._id })
+            const refreshToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
                 .setIssuedAt()
                 .setExpirationTime('7d')
@@ -59,12 +58,20 @@ export async function POST(req: Request): Promise<NextResponse> {
                     new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET)
                 );
 
-            user.refreshToken = refreshToken;
-            await user.save();
+            // Save refresh token to database
+            await prisma.user.update({
+                where: {
+                    id: user.id,
+                },
+                data: {
+                    refreshToken: refreshToken,
+                },
+            });
 
             return NextResponse.json(
                 {
                     success: true,
+                    // @ts-ignore
                     user: cleanUser(user),
                     accessToken: accessToken,
                 },

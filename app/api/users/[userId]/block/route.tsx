@@ -1,6 +1,6 @@
 import connectDB from '@/lib/mongo/connectDB';
 import User from '@/lib/mongo/models/User';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import mongoose from 'mongoose';
 
@@ -12,8 +12,10 @@ type RequestType = {
 };
 
 export async function POST({
+    req,
     params,
 }: {
+    req: NextRequest;
     params: { slug: string };
 }): Promise<NextResponse> {
     const userId = params.slug;
@@ -112,8 +114,10 @@ export async function POST({
 }
 
 export async function DELETE({
+    req,
     params,
 }: {
+    req: NextRequest;
     params: { slug: string };
 }): Promise<NextResponse> {
     const userId = params.slug;

@@ -1,16 +1,7 @@
-import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/mongo/cleanUser';
-import User from '@/lib/mongo/models/User';
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import mongoose from 'mongoose';
-
-connectDB();
-
-type RequestType = {
-    type: 0 | 1;
-    user: UncleanUserType;
-};
+import prisma from '@/lib/prismadb';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
@@ -18,24 +9,26 @@ export async function GET(): Promise<NextResponse> {
 
     const senderId = uncleanSenderId?.replace(/"/g, '');
 
-    if (!mongoose.Types.ObjectId.isValid(senderId)) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
+    // Make sure the senderId is a valid ObjectId with Prisma
+    // if () {
+    //     return NextResponse.json(
+    //         {
+    //             success: false,
+    //             message: 'Invalid user ID.',
+    //         },
+    //         {
+    //             status: 400,
+    //         }
+    //     );
+    // }
 
     try {
-        const sender = await User.findById(senderId).populate({
-            path: 'requests',
-            populate: {
-                path: 'user',
-                model: 'User',
+        const sender = await prisma.user.findUnique({
+            where: {
+                id: senderId,
+            },
+            include: {
+                requestsReceived: true,
             },
         });
 
@@ -50,12 +43,10 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const requests = sender.requests.map((request: RequestType) => {
-                return {
-                    type: request.type,
-                    user: cleanUser(request.user),
-                };
-            });
+            const requests = sender.requestsReceived.map((request) =>
+                // @ts-ignore
+                cleanOtherUser(request)
+            );
 
             return NextResponse.json(
                 {

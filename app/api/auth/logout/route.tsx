@@ -1,15 +1,10 @@
-// @ts-nocheck
-
-import connectDB from '@/lib/mongo/connectDB';
-import User from '@/lib/mongo/models/User';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-
-connectDB();
+import prisma from '@/lib/prismadb';
 
 export async function POST(req: Request): Promise<NextResponse> {
     const cookieStore = cookies();
-    const token = cookieStore.get('token');
+    const token = cookieStore.get('token')?.value;
 
     if (!token) {
         return NextResponse.json(
@@ -24,7 +19,13 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await User.findOne({ refreshToken: token });
+        const user = await prisma.user.findUnique({
+            where: {
+                // @ts-ignore
+                refreshToken: token,
+            },
+        });
+
         if (!user) {
             return NextResponse.json(
                 {
@@ -40,8 +41,14 @@ export async function POST(req: Request): Promise<NextResponse> {
             );
         }
 
-        user.refreshToken = '';
-        await user.save();
+        await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                refreshToken: '',
+            },
+        });
 
         return NextResponse.json(
             {

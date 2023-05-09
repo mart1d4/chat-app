@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+// Types
+
+type Button {
+  label String
+  url   String
+}
+
+type WelcomeScreen {
+  title         String
+  subtitle      String
+  content       String[]
+  links         String[]
+  buttons       Button[]
+  primaryColor  String
+  accentColor   String
+  backgroundUrl String
+}
+
+// Enums
+
+enum UserStatus {
+  Online
+  Idle
+  Do_Not_Disturb
+  Invisible
+  Offline
+}
+
+enum ChannelType {
+  DM
+  GROUP_DM
+  GUILD_TEXT
+  GUILD_VOICE
+  GUILD_CATEGORY
+}
+
+enum MessageType {
+  DEFAULT
+  REPLY
+  RECIPIENT_ADD
+  RECIPIENT_REMOVE
+  CALL
+  CHANNEL_NAME_CHANGE
+  CHANNEL_ICON_CHANGE
+  CHANNEL_PINNED_MESSAGE
+  GUILD_MEMBER_JOIN
+}
+
+// Models
+
+model User {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  username     String     @unique
+  avatar       String     @default("blue")
+  banner       String?
+  primaryColor String     @default("5a63f2")
+  accentColor  String?
+  description  String?
+  customStatus String?
+  password     String
+  refreshToken String?    @unique
+  status       UserStatus @default(Offline)
+  system       Boolean    @default(false)
+  verified     Boolean    @default(false)
+
+  guildIds String[] @map("guilds") @db.ObjectId
+  guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
+
+  ownedGuildIds String[] @map("ownedGuilds") @db.ObjectId
+  ownedGuilds   Guild[]  @relation("Owner")
+
+  channelIds String[]  @map("channels") @db.ObjectId
+  channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
+
+  ownedChannelIds String[]  @map("ownedChannels") @db.ObjectId
+  ownedChannels   Channel[] @relation("Owner")
+
+  messages Message[]
+
+  friendIds String[] @map("friends") @db.ObjectId
+  friends   User[]   @relation("UserData", fields: [friendIds], references: [id])
+
+  requestReceivedIds String[] @map("requestsReceived") @db.ObjectId
+  requestsReceived   User[]   @relation("Request", fields: [requestReceivedIds], references: [id])
+
+  requestSentIds String[] @map("requestsSent") @db.ObjectId
+  requestsSent   User[]   @relation("Request", fields: [requestSentIds], references: [id])
+
+  blockedUserIds String[] @map("blockedUsers") @db.ObjectId
+  blockedUsers   User[]   @relation("UserData", fields: [blockedUserIds], references: [id])
+
+  createdAt DateTime @default(now()) @db.Date
+  updatedAt DateTime @default(now()) @updatedAt @db.Date
+  v         Int      @default(0) @map("__v") @ignore
+}
+
+model Guild {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  icon          String         @default("blue")
+  banner        String?
+  description   String?
+  welcomeScreen WelcomeScreen?
+  vanityUrlCode String?
+  vanityUrlUses Int?
+  invites       String[]
+  afkChannelId  String?
+  afkTimeout    Int?
+
+  ownerId String @map("owner") @db.ObjectId
+  owner   User   @relation("Owner", fields: [ownerId], references: [id])
+
+  memberIds String[] @map("members") @db.ObjectId
+  members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
+
+  channels Channel[]
+  roles    Role[]
+
+  createdAt DateTime @default(now()) @db.Date
+  updatedAt DateTime @default(now()) @updatedAt @db.Date
+  v         Int      @default(0) @map("__v") @ignore
+}
+
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  color       String
+  permissions String[]
+  position    Int
+  mentionable Boolean
+
+  guildId String @map("guild") @db.ObjectId
+  guild   Guild  @relation(fields: [guildId], references: [id])
+
+  createdAt DateTime @default(now()) @db.Date
+  updatedAt DateTime @default(now()) @updatedAt @db.Date
+  v         Int      @default(0) @map("__v") @ignore
+}
+
+model Channel {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  type        ChannelType
+  name        String
+  description String?
+  icon        String?
+  nsfw        Boolean
+  position    Int
+  parentId    String?
+  rateLimit   Int?
+  permissions String[]
+
+  guildId String @map("guild") @db.ObjectId
+  guild   Guild? @relation(fields: [guildId], references: [id])
+
+  ownerId String @map("owner") @db.ObjectId
+  owner   User?  @relation("Owner", fields: [ownerId], references: [id])
+
+  recipientIds String[] @map("recipients") @db.ObjectId
+  recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
+
+  messages Message[]
+
+  createdAt DateTime @default(now()) @db.Date
+  updatedAt DateTime @default(now()) @updatedAt @db.Date
+  v         Int      @default(0) @map("__v") @ignore
+}
+
+model Message {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  type              MessageType
+  content           String
+  attachments       String[]
+  embeds            String[]
+  messageReference  String?
+  edited            Boolean     @default(false)
+  pinned            Boolean     @default(false)
+  reactions         String[]
+  mentionEveryone   Boolean     @default(false)
+  mentionChannelIds String[]
+  mentionRoleIds    String[]
+  mentionUserIds    String[]
+
+  authorId String @map("author") @db.ObjectId
+  author   User   @relation(fields: [authorId], references: [id])
+
+  channelId String  @map("channel") @db.ObjectId
+  channel   Channel @relation(fields: [channelId], references: [id])
+
+  createdAt DateTime @default(now()) @db.Date
+  updatedAt DateTime @default(now()) @updatedAt @db.Date
+  v         Int      @default(0) @map("__v") @ignore
+}

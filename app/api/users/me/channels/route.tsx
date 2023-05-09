@@ -1,11 +1,7 @@
-import connectDB from '@/lib/mongo/connectDB';
-import User from '@/lib/mongo/models/User';
-import cleanUser from '@/lib/mongo/cleanUser';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import mongoose from 'mongoose';
-
-connectDB();
+import prisma from '@/lib/prismadb';
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
@@ -13,28 +9,42 @@ export async function GET(): Promise<NextResponse> {
 
     const senderId = uncleanSenderId.replace(/"/g, '');
 
-    if (!mongoose.Types.ObjectId.isValid(senderId)) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
+    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
+    //     return NextResponse.json(
+    //         {
+    //             success: false,
+    //             message: 'Invalid user ID.',
+    //         },
+    //         {
+    //             status: 400,
+    //         }
+    //     );
+    // }
 
     try {
-        const sender = await User.findById(senderId)
-            .populate('channels')
-            .populate({
-                path: 'channels',
-                populate: {
-                    path: 'recipients',
-                    model: 'User',
+        const sender = await prisma.user.findUnique({
+            where: {
+                id: senderId,
+            },
+            include: {
+                channels: {
+                    where: {
+                        type: {
+                            in: ['DM', 'GROUP_DM'],
+                        },
+                    },
+                    include: {
+                        recipients: {
+                            where: {
+                                id: {
+                                    not: senderId,
+                                },
+                            },
+                        },
+                    },
                 },
-            });
+            },
+        });
 
         if (!sender) {
             return NextResponse.json(
@@ -48,13 +58,17 @@ export async function GET(): Promise<NextResponse> {
             );
         }
 
-        const channels = sender.channels.filter((channel: ChannelType) =>
-            [0, 1].includes(channel.type)
-        );
+        const channels = sender.channels.map((channel) => {
+            const recipients = channel.recipients.map((recipient) => {
+                // @ts-ignore
+                return cleanOtherUser(recipient);
+            });
 
-        channels?.recipients?.map((recipient: UncleanUserType) =>
-            cleanUser(recipient)
-        );
+            return {
+                ...channel,
+                recipients: recipients,
+            };
+        });
 
         return NextResponse.json(
             {

@@ -1,5 +1,5 @@
 import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/mongo/cleanUser';
+import cleanUser from '@/lib/utils/cleanModels';
 import User from '@/lib/mongo/models/User';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';

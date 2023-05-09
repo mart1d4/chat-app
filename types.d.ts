@@ -2,52 +2,109 @@
 // Database Types //
 //#//#//#//#//#//#//
 
-type UncleanUserType = {
-    _id: string;
+type UserType = {
+    id: string;
     username: string;
-    password: string;
     avatar: string;
     banner?: string;
+    primaryColor: string;
+    accentColor?: string;
     description?: string;
     customStatus?: string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb';
-    accentColor: string;
+    password: string;
+    refreshToken?: string;
+    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
-    requests: {
-        user: string;
-        type: 0 | 1;
-    }[];
-    friends: string[];
-    blocked: string[];
-    channels: string[];
-    guilds: string[];
-    createdAt: Date;
-    updatedAt: Date;
-    accessToken?: string;
-    refreshToken?: string;
+
+    guildIds: string[];
+    guilds?: GuildType[];
+
+    ownedGuildIds: string[];
+    ownedGuilds?: GuildType[];
+
+    channelIds: string[];
+    channels?: ChannelType[];
+
+    ownedChannelIds: string[];
+    ownedChannels?: ChannelType[];
+
+    messages?: MessageType[];
+
+    friendIds: string[];
+    friends?: User[];
+
+    requestReceivedIds: string[];
+    requestsReceived?: User[];
+
+    requestSentIds: string[];
+    requestsSent?: User[];
+
+    blockedUserIds: string[];
+    blockedUsers?: User[];
+
+    createdAt: DateTime;
+    updatedAt: DateTime;
 };
 
-type UserType = {
-    _id: string;
+type CleanUserType = {
+    id: string;
     username: string;
     avatar: string;
     banner?: string;
+    primaryColor: string;
+    accentColor?: string;
     description?: string;
     customStatus?: string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb';
-    accentColor: string;
+    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
-    requests: {
-        user: string;
-        type: 0 | 1;
-    }[];
-    friends: string[];
-    blocked: string[];
-    channels: string[];
-    guilds: string[];
-    createdAt: Date;
+
+    guildIds: string[];
+    guilds?: GuildType[];
+
+    ownedGuildIds: string[];
+    ownedGuilds?: GuildType[];
+
+    channelIds: string[];
+    channels?: ChannelType[];
+
+    ownedChannelIds: string[];
+    ownedChannels?: ChannelType[];
+
+    friendIds: string[];
+    friends?: User[];
+
+    requestReceivedIds: string[];
+    requestsReceived?: User[];
+
+    requestSentIds: string[];
+    requestsSent?: User[];
+
+    blockedUserIds: string[];
+    blockedUsers?: User[];
+
+    createdAt: DateTime;
+    updatedAt: DateTime;
+};
+
+type CleanOtherUserType = {
+    id: string;
+    username: string;
+    avatar: string;
+    banner?: string;
+    primaryColor: string;
+    accentColor?: string;
+    description?: string;
+    customStatus?: string;
+    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    system: boolean;
+
+    guildIds: string[];
+    channelIds: string[];
+    friendIds: string[];
+
+    createdAt: DateTime;
 };
 
 type ChannelType = {

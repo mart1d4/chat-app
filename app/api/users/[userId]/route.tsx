@@ -1,14 +1,16 @@
 import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/mongo/cleanUser';
+import cleanUser from '@/lib/utils/cleanModels';
 import User from '@/lib/mongo/models/User';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import mongoose from 'mongoose';
 
 connectDB();
 
 export async function GET({
+    req,
     params,
 }: {
+    req: NextRequest;
     params: { slug: string };
 }): Promise<NextResponse> {
     const userId = params.slug;

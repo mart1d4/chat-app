@@ -1,13 +1,8 @@
-// @ts-nocheck
-
-import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/mongo/cleanUser';
-import User from '@/lib/mongo/models/User';
+import { cleanUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import prisma from '@/lib/prismadb';
 import { SignJWT } from 'jose';
-
-connectDB();
 
 export async function GET(req: Request): Promise<NextResponse> {
     const cookieStore = cookies();
@@ -26,7 +21,13 @@ export async function GET(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await User.findOne({ refreshToken: token });
+        const user = await prisma.user.findUnique({
+            where: {
+                // @ts-ignore
+                refreshToken: token,
+            },
+        });
+
         if (!user) {
             return NextResponse.json(
                 {
@@ -39,7 +40,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             );
         }
 
-        const accessToken = await new SignJWT({ id: user._id })
+        const accessToken = await new SignJWT({ id: user.id })
             .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
             .setIssuedAt()
             .setExpirationTime('1d')
@@ -60,8 +61,9 @@ export async function GET(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully refreshed token',
+                message: 'Successfully refreshed token.',
                 accessToken: accessToken,
+                // @ts-ignore
                 user: cleanUser(user),
             },
             {
