@@ -67,36 +67,42 @@ model User {
   description  String?
   customStatus String?
   password     String
-  refreshToken String?    @unique
+  refreshToken String?
   status       UserStatus @default(Offline)
   system       Boolean    @default(false)
   verified     Boolean    @default(false)
 
-  guildIds String[] @map("guilds") @db.ObjectId
+  guildIds String[] @db.ObjectId
   guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
 
-  ownedGuildIds String[] @map("ownedGuilds") @db.ObjectId
+  ownedGuildIds String[] @db.ObjectId
   ownedGuilds   Guild[]  @relation("Owner")
 
-  channelIds String[]  @map("channels") @db.ObjectId
+  channelIds String[]  @db.ObjectId
   channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
 
-  ownedChannelIds String[]  @map("ownedChannels") @db.ObjectId
+  ownedChannelIds String[]  @db.ObjectId
   ownedChannels   Channel[] @relation("Owner")
 
   messages Message[]
 
-  friendIds String[] @map("friends") @db.ObjectId
-  friends   User[]   @relation("UserData", fields: [friendIds], references: [id])
+  friendIds String[] @db.ObjectId
+  friends   User[]   @relation("Friend", fields: [friendIds], references: [id])
 
-  requestReceivedIds String[] @map("requestsReceived") @db.ObjectId
+  friendOfIds String[] @db.ObjectId
+  friendOf    User[]   @relation("Friend", fields: [friendOfIds], references: [id])
+
+  requestReceivedIds String[] @db.ObjectId
   requestsReceived   User[]   @relation("Request", fields: [requestReceivedIds], references: [id])
 
-  requestSentIds String[] @map("requestsSent") @db.ObjectId
+  requestSentIds String[] @db.ObjectId
   requestsSent   User[]   @relation("Request", fields: [requestSentIds], references: [id])
 
-  blockedUserIds String[] @map("blockedUsers") @db.ObjectId
-  blockedUsers   User[]   @relation("UserData", fields: [blockedUserIds], references: [id])
+  blockedUserIds String[] @db.ObjectId
+  blockedUsers   User[]   @relation("Blocked", fields: [blockedUserIds], references: [id])
+
+  blockedByUserIds String[] @db.ObjectId
+  blockedByUsers   User[]   @relation("Blocked", fields: [blockedByUserIds], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
   updatedAt DateTime @default(now()) @updatedAt @db.Date

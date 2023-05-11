@@ -13,15 +13,18 @@ const Form = (): ReactElement => {
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
+    const { auth, setAuth, loading }: any = useContextHook({
+        context: 'auth',
+    });
     const usernameInputRef = useRef<HTMLInputElement>(null);
     const router: AppRouterInstance = useRouter();
 
     useEffect(() => {
-        if (auth.accessToken) {
+        if (loading) return;
+        if (auth?.accessToken) {
             router.push('/channels/me');
         }
-    }, [auth]);
+    }, [loading]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {

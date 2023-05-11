@@ -6,7 +6,7 @@ import { useEffect, ReactNode } from 'react';
 
 const PersistLogin = ({ children }: { children: ReactNode }): ReactNode => {
     const refresh = useRefreshToken();
-    const { auth, setIsLoading }: any = useContextHook({
+    const { auth, setLoading }: any = useContextHook({
         context: 'auth',
     });
 
@@ -15,11 +15,11 @@ const PersistLogin = ({ children }: { children: ReactNode }): ReactNode => {
 
         const verifyRefreshToken = async () => {
             const response = await refresh();
-            isMounted && setIsLoading(false);
-            response?.error && setIsLoading(false);
+            isMounted && setLoading(false);
+            response?.error && setLoading(false);
         };
 
-        !auth?.accessToken ? verifyRefreshToken() : setIsLoading(false);
+        !auth?.accessToken ? verifyRefreshToken() : setLoading(false);
 
         return () => {
             isMounted = false;

@@ -22,13 +22,14 @@ const Register = (): ReactElement => {
 
     const uidInputRef = useRef<HTMLInputElement>(null);
     const router: AppRouterInstance = useRouter();
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth, loading }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
-        if (auth.accessToken) {
+        if (loading) return;
+        if (auth?.accessToken) {
             router.push('/channels/me');
         }
-    }, [auth]);
+    }, [loading]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {

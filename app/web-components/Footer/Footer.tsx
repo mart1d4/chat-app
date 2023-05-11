@@ -18,7 +18,6 @@ const routes: Route[] = [
         title: 'Product',
         children: [
             { name: 'Download', link: '/download' },
-            { name: 'Nitro', link: '' },
             { name: 'Status', link: '' },
         ],
     },
@@ -26,23 +25,16 @@ const routes: Route[] = [
         title: 'Company',
         children: [
             { name: 'About', link: '' },
-            { name: 'Jobs', link: '' },
             { name: 'Brand', link: '' },
-            { name: 'Newsroom', link: '' },
         ],
     },
     {
         title: 'Resources',
         children: [
-            { name: 'College', link: '' },
             { name: 'Support', link: '' },
             { name: 'Safety', link: '' },
             { name: 'Blog', link: '' },
             { name: 'Feedback', link: '' },
-            { name: 'Build', link: '' },
-            { name: 'StreamKit', link: '' },
-            { name: 'Creators', link: '' },
-            { name: 'Community', link: '' },
         ],
     },
     {
@@ -50,9 +42,6 @@ const routes: Route[] = [
         children: [
             { name: 'Terms', link: '' },
             { name: 'Privacy', link: '' },
-            { name: 'Cookie Settings', link: '' },
-            { name: 'Guidelines', link: '' },
-            { name: 'Acknowledgements', link: '' },
             { name: 'Licenses', link: '' },
             { name: 'Moderation', link: '' },
         ],
@@ -64,7 +53,7 @@ const Footer = (): ReactElement => {
         <footer className={styles.footer}>
             <div>
                 <div className={styles.infoBox}>
-                    <h4>Imagine a place</h4>
+                    <h4>Discover a future</h4>
 
                     <Language />
 

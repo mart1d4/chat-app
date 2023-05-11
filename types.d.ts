@@ -34,6 +34,9 @@ type UserType = {
     friendIds: string[];
     friends?: User[];
 
+    friendOfIds: string[];
+    friendOf?: User[];
+
     requestReceivedIds: string[];
     requestsReceived?: User[];
 
@@ -42,6 +45,9 @@ type UserType = {
 
     blockedUserIds: string[];
     blockedUsers?: User[];
+
+    blockedByUserIds: string[];
+    blockedByUsers?: User[];
 
     createdAt: DateTime;
     updatedAt: DateTime;
@@ -156,8 +162,8 @@ type AuthObjectType = null | {
 type AuthContextValueType = null | {
     auth: AuthObjectType;
     setAuth: Dispatch<SetStateAction<AuthObjectType>>;
-    isLoading: boolean;
-    setIsLoading: Dispatch<SetStateAction<boolean>>;
+    loading: boolean;
+    setLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 // LayerProvider

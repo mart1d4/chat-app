@@ -30,9 +30,9 @@ const UserSection = (): ReactElement => {
                 >
                     <div>
                         <Image
-                            src={
-                                auth?.user?.avatar || '/assets/avatars/blue.png'
-                            }
+                            src={`/assets/avatars/${
+                                auth?.user?.avatar || 'blue'
+                            }.png`}
                             width={32}
                             height={32}
                             alt='Avatar'

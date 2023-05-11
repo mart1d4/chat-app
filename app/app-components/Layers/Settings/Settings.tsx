@@ -52,7 +52,7 @@ const Settings = ({ tab }: any): ReactElement => {
                 setError('Username must be between 3 and 32 characters long!');
             } else {
                 const data = await axiosPrivate.patch(
-                    `/users/${auth?.user?._id}`,
+                    `/users/${auth?.user.id}`,
                     { username: newUsername }
                 );
 
@@ -253,7 +253,7 @@ const MyAccount = () => {
     });
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(auth?.user?._id);
+        navigator.clipboard.writeText(auth?.user.id);
         setTooltip({
             ...tooltip,
             text: 'Copied!',
@@ -295,17 +295,16 @@ const MyAccount = () => {
                     <div
                         className={styles.userCardHeader}
                         style={{
-                            backgroundColor: auth?.user?.accentColor,
+                            backgroundColor: `#${auth?.user?.primaryColor}`,
                         }}
                     />
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
                             <Image
-                                src={
-                                    auth?.user?.avatar ||
-                                    '/assets/default-avatars/blue.png'
-                                }
+                                src={`/assets/avatars/${
+                                    auth?.user?.avatar || 'blue '
+                                }.png`}
                                 alt='User Avatar'
                                 width={80}
                                 height={80}

@@ -1,32 +1,33 @@
-import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/utils/cleanModels';
-import User from '@/lib/mongo/models/User';
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import mongoose from 'mongoose';
-
-connectDB();
+import prisma from '@/lib/prismadb';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
-    const uncleanSenderId = headersList.get('userId') || '';
+    const senderId = headersList.get('userId') || '';
 
-    const senderId = uncleanSenderId?.replace(/"/g, '');
-
-    if (!mongoose.Types.ObjectId.isValid(senderId)) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
+    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
+    //     return NextResponse.json(
+    //         {
+    //             success: false,
+    //             message: 'Invalid user ID.',
+    //         },
+    //         {
+    //             status: 400,
+    //         }
+    //     );
+    // }
 
     try {
-        const sender = await User.findById(senderId).populate('blocked');
+        const sender = await prisma.user.findUnique({
+            where: {
+                id: senderId,
+            },
+            include: {
+                blockedUsers: true,
+            },
+        });
 
         if (!sender) {
             return NextResponse.json(
@@ -39,15 +40,15 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const blocked = sender.blocked.map((blockedUser: UncleanUserType) =>
-                cleanUser(blockedUser)
+            const blockedUsers = sender.blockedUsers.map((user: any) =>
+                cleanOtherUser(user)
             );
 
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Successfully retrieved friends.',
-                    blocked: blocked,
+                    message: 'Successfully retrieved blocked users.',
+                    blockedUsers: blockedUsers,
                 },
                 {
                     status: 200,

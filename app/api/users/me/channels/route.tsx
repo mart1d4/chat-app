@@ -5,9 +5,7 @@ import { cleanOtherUser } from '@/lib/utils/cleanModels';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
-    const uncleanSenderId = headersList.get('userId') || '';
-
-    const senderId = uncleanSenderId.replace(/"/g, '');
+    const senderId = headersList.get('userId') || '';
 
     // if (!mongoose.Types.ObjectId.isValid(senderId)) {
     //     return NextResponse.json(

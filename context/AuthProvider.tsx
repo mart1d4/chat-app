@@ -6,13 +6,13 @@ export const AuthContext = createContext<AuthContextValueType>(null);
 
 const AuthProvider = ({ children }: { children: ReactNode }): ReactElement => {
     const [auth, setAuth] = useState<AuthObjectType>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(true);
 
     const value: AuthContextValueType = {
         auth,
         setAuth,
-        isLoading,
-        setIsLoading,
+        loading,
+        setLoading,
     };
 
     return (

@@ -36,6 +36,7 @@ export async function middleware(req: NextRequest) {
         );
     } else {
         const token = authorization.split(' ')[1];
+
         if (!token) {
             return NextResponse.json(
                 {
@@ -54,7 +55,7 @@ export async function middleware(req: NextRequest) {
                 );
 
                 const requestHeaders = new Headers(req.headers);
-                requestHeaders.set('userId', JSON.stringify(payload?.id));
+                requestHeaders.set('userId', payload?.id as string);
 
                 return NextResponse.next({
                     request: {

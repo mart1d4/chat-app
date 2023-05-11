@@ -60,8 +60,12 @@ export const getFriends = async () => {
     }
 };
 
-export const getRequests = async () => {
-    const response = await axiosPrivate.get(`/users/me/requests`);
+export const getRequests = async (type: 'sent' | 'received') => {
+    if (type !== 'sent' && type !== 'received') {
+        throw new Error('Invalid request type');
+    }
+
+    const response = await axiosPrivate.get(`/users/me/requests/${type}`);
 
     if (!response.data.success) {
         throw new Error('Could not get requests');

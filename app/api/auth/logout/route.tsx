@@ -19,7 +19,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: {
                 // @ts-ignore
                 refreshToken: token,

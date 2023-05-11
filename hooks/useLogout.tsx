@@ -17,7 +17,7 @@ const useLogout = () => {
         localStorage.removeItem('user-settings');
 
         try {
-            await axios('/auth/logout', {
+            await axios.post('/auth/logout', {
                 withCredentials: true,
             });
 

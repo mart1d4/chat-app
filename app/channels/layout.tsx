@@ -5,6 +5,7 @@ import {
     UserProfile,
     Popup,
     FixedLayer,
+    Loading,
 } from '@/app/app-components';
 import { ReactElement, ReactNode } from 'react';
 import styles from './Layout.module.css';
@@ -16,27 +17,26 @@ export const metadata: Metadata = {
 
 const Layout = ({ children }: { children: ReactNode }): ReactElement => {
     return (
-        <div
-            className={styles.appContainer}
-            // onDragStart={(e) => e.preventDefault()}
-            // onContextMenu={(e) => e.preventDefault()}
-        >
-            <AppNav />
+        // @ts-expect-error Server Component
+        <Loading>
+            <div className={styles.appContainer}>
+                <AppNav />
 
-            <Settings />
-            <UserProfile />
-            <Popup />
-            <FixedLayer />
+                <Settings />
+                <UserProfile />
+                <Popup />
+                <FixedLayer />
 
-            <div className={styles.appWrapper}>
-                <div className={styles.channelsContainer}>
-                    {/* @ts-expect-error Server Component */}
-                    <Channels />
+                <div className={styles.appWrapper}>
+                    <div className={styles.channelsContainer}>
+                        {/* @ts-expect-error Server Component */}
+                        <Channels />
 
-                    {children}
+                        {children}
+                    </div>
                 </div>
             </div>
-        </div>
+        </Loading>
     );
 };
 

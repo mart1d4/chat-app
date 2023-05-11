@@ -9,7 +9,7 @@ import { axiosPrivate } from '@/lib/axios';
 const getChannels = async (): Promise<ChannelType[]> => {
     const res = await axiosPrivate.get('/users/me/channels', {
         headers: {
-            Authorization: `Bearer `,
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NWE1ZmM2MzM5M2FkMmZiMmViMWQ0ZiIsImlhdCI6MTY4MzczNDQ0MiwiZXhwIjoxNjgzODIwODQyfQ.8HNQFnNJ3Ctj88PAzmRZnM-9T15FiWDzZpwg2Pk6cpc`,
         },
     });
 

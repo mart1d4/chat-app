@@ -1,67 +1,65 @@
-import connectDB from '@/lib/mongo/connectDB';
-import cleanUser from '@/lib/utils/cleanModels';
-import User from '@/lib/mongo/models/User';
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse, NextRequest } from 'next/server';
-import mongoose from 'mongoose';
+import prisma from '@/lib/prismadb';
 
-connectDB();
+export async function GET(
+    req: NextRequest,
+    { params }: { params: { userId: string } }
+): Promise<NextResponse> {
+    const userId = params.userId;
 
-export async function GET({
-    req,
-    params,
-}: {
-    req: NextRequest;
-    params: { slug: string };
-}): Promise<NextResponse> {
-    const userId = params.slug;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
+    // if (!mongoose.Types.ObjectId.isValid(userId)) {
+    //     return NextResponse.json(
+    //         {
+    //             success: false,
+    //             message: 'Invalid user ID.',
+    //         },
+    //         {
+    //             status: 400,
+    //         }
+    //     );
+    // } else {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId,
             },
-            {
-                status: 400,
-            }
-        );
-    } else {
-        try {
-            const user = await User.findById(userId);
+        });
 
-            if (!user) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: 'User not found.',
-                    },
-                    {
-                        status: 404,
-                    }
-                );
-            } else {
-                return NextResponse.json(
-                    {
-                        success: true,
-                        message: 'User found.',
-                        user: cleanUser(user),
-                    },
-                    {
-                        status: 200,
-                    }
-                );
-            }
-        } catch (error) {
-            console.error(error);
+        if (!user) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Something went wrong.',
+                    message: 'User not found.',
                 },
                 {
-                    status: 500,
+                    status: 404,
+                }
+            );
+        } else {
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'User found.',
+                    // @ts-ignore
+                    user: cleanOtherUser(user),
+                },
+                {
+                    status: 200,
                 }
             );
         }
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong.',
+            },
+            {
+                status: 500,
+            }
+        );
     }
+    // }
 }

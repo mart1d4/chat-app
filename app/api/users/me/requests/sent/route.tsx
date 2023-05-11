@@ -5,9 +5,7 @@ import prisma from '@/lib/prismadb';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
-    const uncleanSenderId = headersList.get('userId') || '';
-
-    const senderId = uncleanSenderId?.replace(/"/g, '');
+    const senderId = headersList.get('userId') || '';
 
     // Make sure the senderId is a valid ObjectId with Prisma
     // if () {

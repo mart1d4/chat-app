@@ -22,13 +22,14 @@ const HomePage = (): ReactElement => {
                 <div className={styles.hero}>
                     <div>
                         <div className={styles.heroText}>
-                            <h1>IMAGINE A PLACE...</h1>
+                            <h1>Discover a future</h1>
                             <div>
-                                ...where you can belong to a school club, a
-                                gaming group, or a worldwide art community.
-                                Where just you and a handful of friends can
-                                spend time together. A place that makes it easy
-                                to talk every day and hang out more often.
+                                A future of communication with our web app. Our
+                                platform offers advanced features and tools that
+                                allow you to communicate in new and exciting
+                                ways. From video calls to voice messages and
+                                more, you'll be able to express yourself like
+                                never before.
                             </div>
                         </div>
 
@@ -74,20 +75,19 @@ const HomePage = (): ReactElement => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/content1.svg'
+                            src='/assets/homepages/community.svg'
                             alt='Stylized image of a Chat App server with multiple channels for studying, games, cooking, and pet photos.'
                         />
 
                         <div>
-                            <h2>
-                                Create an invite-only place where you belong
-                            </h2>
+                            <h2>Connect with Friends and Communities</h2>
 
                             <div>
-                                Chat App servers are organized into topic-based
-                                channels where you can collaborate, share, and
-                                just talk about your day without clogging up a
-                                group chat.
+                                Get in touch and communicate with your friends
+                                and communities. With features such as voice and
+                                video calls, messaging, and channels, you can
+                                easily stay connected and engage with others who
+                                share your interests.
                             </div>
                         </div>
                     </div>
@@ -96,17 +96,19 @@ const HomePage = (): ReactElement => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/content2.svg'
+                            src='/assets/homepages/connected.svg'
                             alt='Stylized image showing friends hanging out in multiple voice channels.'
                         />
 
                         <div>
-                            <h2>Where hanging out is easy</h2>
+                            <h2>Stay On Anytime, Anywhere</h2>
 
                             <div>
-                                Grab a seat in a voice channel when you’re free.
-                                Friends in your server can see you’re around and
-                                instantly pop in to talk without having to call.
+                                Stay connected with your friends and communities
+                                anytime, anywhere. With our responsive design
+                                and mobile app support, access your
+                                conversations on any device. Never miss out on a
+                                conversation or update again.
                             </div>
                         </div>
                     </div>
@@ -115,17 +117,19 @@ const HomePage = (): ReactElement => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/content3.svg'
+                            src='/assets/homepages/group.svg'
                             alt='Stylized image showing friends in a server organized into roles for Coach, Student Lead, and Animal Crossing.'
                         />
 
                         <div>
-                            <h2>From few to a fandom</h2>
+                            <h2>Your Personal Communication Hub</h2>
 
                             <div>
-                                Get any community running with moderation tools
-                                and custom member access. Give members special
-                                powers, set up private channels, and more.
+                                Connect with your friends, collaborate with your
+                                team, and build your community all in one place.
+                                With features such as server customization and
+                                mobile support, you'll be able to communicate on
+                                your terms.
                             </div>
                         </div>
                     </div>
@@ -134,18 +138,20 @@ const HomePage = (): ReactElement => {
                 <div className={styles.contentGrid}>
                     <div>
                         <div>
-                            <h2>Reliable tech for staying close</h2>
+                            <h2>Unleash Your Potential</h2>
 
                             <div>
-                                Low-latency voice and video feels like you’re in
-                                the same room. Wave hello over video, watch
-                                friends stream their games, or gather up and
-                                have a drawing session with screen share.
+                                Connect with people in ways you never thought
+                                possible. From voice and video calls to
+                                messaging and channels, our platform provides a
+                                seamless experience that allows you to
+                                communicate with friends, teams, and
+                                communities.
                             </div>
                         </div>
 
                         <img
-                            src='/assets/homepages/content4.svg'
+                            src='/assets/homepages/video.svg'
                             alt='Stylized image showing friends video talking with each other on desktop and mobile.'
                         />
                     </div>
@@ -160,7 +166,7 @@ const HomePage = (): ReactElement => {
                             />
                         </div>
 
-                        <h4>Ready to start your journey?</h4>
+                        <h4>Ready to begin on your journey?</h4>
 
                         <a href=''>
                             <svg
