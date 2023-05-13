@@ -51,7 +51,7 @@ export async function middleware(req: NextRequest) {
             try {
                 const { payload } = await jwtVerify(
                     token,
-                    new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
+                    new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET)
                 );
 
                 const requestHeaders = new Headers(req.headers);

@@ -1,7 +1,7 @@
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prismadb';
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
@@ -32,13 +32,10 @@ export async function GET(): Promise<NextResponse> {
                         },
                     },
                     include: {
-                        recipients: {
-                            where: {
-                                id: {
-                                    not: senderId,
-                                },
-                            },
-                        },
+                        recipients: true,
+                    },
+                    orderBy: {
+                        updatedAt: 'desc',
                     },
                 },
             },
@@ -57,10 +54,18 @@ export async function GET(): Promise<NextResponse> {
         }
 
         const channels = sender.channels.map((channel) => {
-            const recipients = channel.recipients.map((recipient) => {
-                // @ts-ignore
-                return cleanOtherUser(recipient);
-            });
+            const recipients = channel.recipients
+                .map((recipient) => {
+                    // @ts-ignore
+                    return cleanOtherUser(recipient);
+                })
+                .filter((recipient) => {
+                    if (channel.recipients.length === 1) {
+                        return true;
+                    } else {
+                        return recipient.id !== sender.id;
+                    }
+                });
 
             return {
                 ...channel,
@@ -92,298 +97,355 @@ export async function GET(): Promise<NextResponse> {
     }
 }
 
-// export async function POST(req: Request) {}
+export async function POST(req: Request) {
+    const headersList = headers();
+    const senderId = headersList.get('userId') || '';
 
-// export async function DELETE(req: Request) {
-//     const userString = req.headers.user;
-//     const userJson = JSON.parse(userString);
+    const { recipients, channelId } = await req.json();
+    let recipientObjects = [];
 
-//     let user;
+    if (recipients.includes(senderId)) {
+        recipients.splice(recipients.indexOf(senderId), 1);
+    }
 
-//     if (req.method === 'GET' || req.method === 'POST') {
-//         const userID = userJson._id;
+    if (recipients?.length > 10 && recipients?.length < 1) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid recipients.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
-//         if (!mongoose.Types.ObjectId.isValid(userID)) {
-//             return res.status(400).json({ message: 'Invalid user ID.' });
-//         }
+    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
+    //     return NextResponse.json(
+    //         {
+    //             success: false,
+    //             message: 'Invalid user ID.',
+    //         },
+    //         {
+    //             status: 400,
+    //         }
+    //     );
+    // }
 
-//         user = await User.findById(userID)
-//             .populate('channels')
-//             .populate({
-//                 path: 'channels',
-//                 populate: {
-//                     path: 'recipients',
-//                     model: 'User',
-//                 },
-//             });
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: senderId,
+            },
+        });
 
-//         if (!user) {
-//             return res.status(404).json({ message: 'User not found.' });
-//         }
-//     }
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'User not found',
+                },
+                {
+                    status: 404,
+                }
+            );
+        }
 
-//     if (req.method === 'GET') {
-//         const channels = user.channels.filter((channel) =>
-//             [0, 1].includes(channel.type)
-//         );
-//         channels?.recipients?.map((recipient) => cleanUser(recipient));
+        if (recipients.length === 0) {
+            // Create channel with just user
+            const channel = await prisma.channel.create({
+                // @ts-ignore
+                data: {
+                    type: 'GROUP_DM',
+                    recipients: {
+                        connect: {
+                            id: user.id,
+                        },
+                    },
+                    icon: '/assets/channel-avatars/blue.png',
+                    name: 'Unnamed',
+                    owner: {
+                        connect: {
+                            id: user.id,
+                        },
+                    },
+                },
+            });
 
-//         return res.json({ success: true, channels });
-//     } else if (req.method === 'POST') {
-//         const { recipients, addToChannel } = req.body;
-//         let recipientsObjects = [];
+            await prisma.user.update({
+                where: {
+                    id: user.id,
+                },
+                data: {
+                    channels: {
+                        connect: {
+                            id: channel.id,
+                        },
+                    },
+                },
+            });
 
-//         if (recipients.length === 0) {
-//             const channel = await Channel.create({
-//                 type: 1,
-//                 recipients: [user._id],
-//                 icon: defaultChannelIcons[index],
-//                 name: 'Unnamed',
-//                 owner: user._id,
-//             });
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Successfully created channel',
+                },
+                {
+                    status: 200,
+                }
+            );
+        }
 
-//             user.channels.unshift(channel._id);
-//             await user.save();
+        for (const recipient of recipients) {
+            const recipientUser = await prisma.user.findUnique({
+                where: {
+                    id: recipient,
+                },
+            });
 
-//             return res.json({
-//                 success: true,
-//                 channel: {
-//                     _id: channel._id,
-//                     recipients: [cleanUser(user)],
-//                     type: channel.type,
-//                     icon:
-//                         channel.icon ||
-//                         '/assets/default-channel-avatars/blue.png',
-//                     name: channel.name || 'Unnamed',
-//                     owner: channel.owner || null,
-//                 },
-//                 message: 'Channel created',
-//             });
-//         }
+            if (!recipientUser) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Recipient not found.',
+                    },
+                    {
+                        status: 404,
+                    }
+                );
+            }
 
-//         if (!recipients.includes(user?._id)) {
-//             recipients.unshift(user?._id.toString());
-//         }
+            recipientObjects.push(recipientUser);
+        }
 
-//         for (const recipient of recipients) {
-//             if (!mongoose.Types.ObjectId.isValid(recipient)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Invalid recipients.',
-//                 });
-//             }
+        if (channelId) {
+            // Add users to existing channel
+            const channel = await prisma.channel.findUnique({
+                where: {
+                    id: channelId,
+                },
+                include: {
+                    recipients: true,
+                },
+            });
 
-//             const recipientUser = await User.findById(recipient);
+            if (!channel || channel.type !== 'GROUP_DM') {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Channel not found.',
+                    },
+                    {
+                        status: 404,
+                    }
+                );
+            }
 
-//             if (!recipientUser) {
-//                 return res.status(404).json({
-//                     success: false,
-//                     message: 'Recipient not found.',
-//                 });
-//             }
+            const usersToAdd = recipientObjects.filter((recipient) => {
+                return !channel.recipientIds.includes(recipient.id);
+            });
 
-//             recipientsObjects.push(recipientUser);
-//         }
+            if (usersToAdd.length === 0) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'No users to add.',
+                    },
+                    {
+                        status: 400,
+                    }
+                );
+            }
 
-//         if (addToChannel) {
-//             const channel = await Channel.findById(addToChannel);
+            for (const newUser of usersToAdd) {
+                const message = await prisma.message.create({
+                    data: {
+                        channel: {
+                            connect: {
+                                id: channel.id,
+                            },
+                        },
+                        author: {
+                            connect: {
+                                id: user.id,
+                            },
+                        },
+                        content: `<@${user.id}> added <@${newUser.id}> to the group.`,
+                        type: 'RECIPIENT_ADD',
+                    },
+                });
 
-//             if (!channel) {
-//                 return res.status(404).json({
-//                     success: false,
-//                     message: 'Channel not found.',
-//                 });
-//             }
+                await prisma.channel.update({
+                    where: {
+                        id: channel.id,
+                    },
+                    data: {
+                        messages: {
+                            connect: {
+                                id: message.id,
+                            },
+                        },
+                        recipients: {
+                            connect: {
+                                id: newUser.id,
+                            },
+                        },
+                    },
+                });
 
-//             if (channel.type !== 1) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Cannot add users to this channel.',
-//                 });
-//             }
+                if (!newUser.channelIds.includes(channel.id)) {
+                    await prisma.user.update({
+                        where: {
+                            id: newUser.id,
+                        },
+                        data: {
+                            channels: {
+                                connect: {
+                                    id: channel.id,
+                                },
+                            },
+                        },
+                    });
+                }
+            }
 
-//             const usersToAdd = recipients.filter((recipient) => {
-//                 return !channel.recipients.includes(recipient);
-//             });
+            const channelName = recipientObjects
+                .map((recipient) => recipient.username)
+                .join(', ');
 
-//             if (usersToAdd.length === 0) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'All users are already in this channel.',
-//                 });
-//             }
+            await prisma.channel.update({
+                where: {
+                    id: channel.id,
+                },
+                data: {
+                    name: channelName,
+                },
+            });
 
-//             if (usersToAdd.length + channel.recipients.length > 15) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Too many recipients.',
-//                 });
-//             }
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Successfully added users to channel.',
+                },
+                {
+                    status: 200,
+                }
+            );
+        }
 
-//             for (const recipient of recipientsObjects) {
-//                 if (!channel.recipients.includes(recipient._id)) {
-//                     channel.recipients.push(recipient._id);
+        const sameChannel = await prisma.channel.findFirst({
+            where: {
+                recipientIds: {
+                    equals: [...recipients, user.id],
+                },
+            },
+            include: {
+                recipients: true,
+            },
+        });
 
-//                     const message = new Message({
-//                         channel: addToChannel,
-//                         author: user._id,
-//                         content: `${user.username} added ${recipient.username} to the group.`,
-//                         type: 2,
-//                     });
+        if (sameChannel) {
+            if (sameChannel.type === 'GROUP_DM') {
+                for (const recipient of recipientObjects) {
+                    if (!recipient.channelIds.includes(sameChannel.id)) {
+                        await prisma.user.update({
+                            where: {
+                                id: recipient.id,
+                            },
+                            data: {
+                                channels: {
+                                    connect: {
+                                        id: sameChannel.id,
+                                    },
+                                },
+                            },
+                        });
+                    }
+                }
+            } else {
+                if (!user.channelIds.includes(sameChannel.id)) {
+                    await prisma.user.update({
+                        where: {
+                            id: user.id,
+                        },
+                        data: {
+                            channels: {
+                                connect: {
+                                    id: sameChannel.id,
+                                },
+                            },
+                        },
+                    });
+                }
+            }
 
-//                     channel.messages.push(message._id);
-//                     await message.save();
-//                 }
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Successfully added users to channel.',
+                },
+                {
+                    status: 200,
+                }
+            );
+        }
 
-//                 if (!recipient.channels.includes(channel._id)) {
-//                     recipient.channels.unshift(channel._id);
-//                     await recipient.save();
-//                 }
-//             }
+        const channelName = recipientObjects
+            .map((recipient) => recipient.username)
+            .join(', ');
 
-//             channel.name = recipientsObjects
-//                 .map((recipient) => recipient.username)
-//                 .join(', ');
+        const channel = await prisma.channel.create({
+            // @ts-ignore
+            data: {
+                type: recipients.length === 1 ? 'DM' : 'GROUP_DM',
+                recipients: {
+                    connect: [...recipients, user.id].map((id) => ({ id })),
+                },
+                icon: '/assets/channel-avatars/blue.png',
+                name: recipients.length > 1 ? channelName : 'Unnamed',
+                owner:
+                    recipients.length > 1
+                        ? {
+                              connect: {
+                                  id: user.id,
+                              },
+                          }
+                        : undefined,
+            },
+        });
 
-//             await channel.save();
+        await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                channels: {
+                    connect: {
+                        id: channel.id,
+                    },
+                },
+            },
+        });
 
-//             recipientsObjects.map((recipient) => cleanUser(recipient));
-
-//             return res.json({
-//                 success: true,
-//                 channel: {
-//                     _id: channel._id,
-//                     recipients: recipientsObjects,
-//                     type: channel.type,
-//                     icon:
-//                         channel.icon ||
-//                         '/assets/default-channel-avatars/blue.png',
-//                     name: channel.name || 'Unnamed',
-//                     owner: channel.owner || null,
-//                 },
-//                 message: 'Channel updated',
-//             });
-//         }
-
-//         const sameChannel = await Channel.findOne({
-//             recipients: {
-//                 $all: recipients,
-//                 $size: recipients.length,
-//             },
-//         }).populate('recipients');
-
-//         if (sameChannel) {
-//             if (sameChannel?.type === 1) {
-//                 for (const recipient of recipientsObjects) {
-//                     const userHasChannel = recipient.channels.find(
-//                         (channel) => {
-//                             return (
-//                                 channel.toString() ===
-//                                 sameChannel?._id.toString()
-//                             );
-//                         }
-//                     );
-
-//                     if (!userHasChannel) {
-//                         recipient.channels.unshift(sameChannel._id);
-//                         await recipient.save();
-//                     }
-//                 }
-//             } else {
-//                 const userHasChannel = user.channels.find((channel) => {
-//                     return (
-//                         channel?._id.toString() === sameChannel?._id.toString()
-//                     );
-//                 });
-
-//                 if (!userHasChannel) {
-//                     user.channels.unshift(sameChannel._id);
-//                     await user.save();
-//                 }
-//             }
-
-//             recipientsObjects.map((recipient) => cleanUser(recipient));
-
-//             return res.json({
-//                 success: true,
-//                 channel: {
-//                     _id: sameChannel._id,
-//                     recipients: recipientsObjects,
-//                     type: sameChannel.type,
-//                     icon:
-//                         sameChannel.icon ||
-//                         '/assets/default-channel-avatars/blue.png',
-//                     name: sameChannel.name || 'Unnamed',
-//                     owner: sameChannel.owner || null,
-//                 },
-//                 message: 'Channel already exists',
-//             });
-//         } else {
-//             const channelName = recipientsObjects
-//                 .map((recipient) => recipient.username)
-//                 .join(', ');
-
-//             const channel = await Channel.create({
-//                 type: recipients.length === 2 ? 0 : 1,
-//                 recipients: [...recipients],
-//                 icon: defaultChannelIcons[index],
-//                 name: recipients.length > 2 ? channelName : 'Unnamed',
-//                 owner: recipients.length === 2 ? null : user._id,
-//             });
-
-//             user.channels.unshift(channel._id);
-//             await user.save();
-
-//             // If user isn't friend, don't add channel to recipient
-//             if (
-//                 recipients.length === 2 &&
-//                 !user.friends.find((friend) => friend === recipients[1])
-//             ) {
-//                 recipientsObjects.map((recipient) => cleanUser(recipient));
-
-//                 return res.json({
-//                     success: true,
-//                     channel: {
-//                         _id: channel._id,
-//                         recipients: recipientsObjects,
-//                         type: channel.type,
-//                         icon:
-//                             channel.icon ||
-//                             '/assets/default-channel-avatars/blue.png',
-//                         name: channel.name || 'Unnamed',
-//                         owner: channel.owner || null,
-//                     },
-//                     message: 'Channel created',
-//                 });
-//             }
-
-//             for (const recipient of recipientsObjects) {
-//                 if (recipient._id === user._id) continue;
-//                 recipient.channels.unshift(channel._id);
-//                 await recipient.save();
-//             }
-
-//             recipientsObjects.map((recipient) => cleanUser(recipient));
-
-//             return res.json({
-//                 success: true,
-//                 channel: {
-//                     _id: channel._id,
-//                     recipients: recipientsObjects,
-//                     type: channel.type,
-//                     icon:
-//                         channel.icon ||
-//                         '/assets/default-channel-avatars/blue.png',
-//                     name: channel.name || 'Unnamed',
-//                     owner: channel.owner || null,
-//                 },
-//                 message: 'Channel created',
-//             });
-//         }
-//     } else {
-//         res.status(400).json({
-//             success: false,
-//             message: 'Invalid request method.',
-//         });
-//     }
-// }
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Successfully created channel.',
+            },
+            {
+                status: 200,
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong.',
+            },
+            {
+                status: 500,
+            }
+        );
+    }
+}

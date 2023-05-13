@@ -152,16 +152,16 @@ const Settings = ({ tab }: any): ReactElement => {
                     animate={{
                         opacity: 1,
                         scale: 1,
+                        transition: {
+                            duration: 0.2,
+                        },
                     }}
                     exit={{
                         opacity: 0,
                         scale: 1.2,
-                    }}
-                    transition={{
-                        duration: 0.3,
-                        type: 'spring',
-                        stiffness: 200,
-                        damping: 20,
+                        transition: {
+                            duration: 0.05,
+                        },
                     }}
                 >
                     <div className={styles.sidebar}>
@@ -295,7 +295,7 @@ const MyAccount = () => {
                     <div
                         className={styles.userCardHeader}
                         style={{
-                            backgroundColor: `#${auth?.user?.primaryColor}`,
+                            backgroundColor: auth?.user.primaryColor,
                         }}
                     />
 
@@ -303,7 +303,7 @@ const MyAccount = () => {
                         <div className={styles.userAvatar}>
                             <Image
                                 src={`/assets/avatars/${
-                                    auth?.user?.avatar || 'blue '
+                                    auth?.user.avatar || 'blue '
                                 }.png`}
                                 alt='User Avatar'
                                 width={80}
@@ -311,7 +311,7 @@ const MyAccount = () => {
                             />
 
                             <AvatarStatus
-                                status={auth?.user?.status}
+                                status={auth?.user.status}
                                 background='var(--background-2)'
                                 mid
                             />
@@ -343,6 +343,7 @@ const MyAccount = () => {
                                         ? 'var(--success-light)'
                                         : ''
                                 }
+                                arrow
                             >
                                 {tooltip?.text}
                             </Tooltip>

@@ -11,6 +11,8 @@ import Menu from './Layers/Menu/Menu';
 import Popout from './Layers/Popout/Popout';
 import UserCard from './Layers/UserCard/UserCard';
 import Loading from './Loading/Loading';
+import Message from './Message/Message';
+import TextArea from './TextArea/TextArea';
 
 export {
     AppNav,
@@ -26,4 +28,6 @@ export {
     Popout,
     UserCard,
     Loading,
+    Message,
+    TextArea,
 };

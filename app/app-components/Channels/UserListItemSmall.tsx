@@ -1,11 +1,13 @@
 'use client';
 
+import { leaveChannel } from '@/lib/api-functions/channels';
 import { Icon, AvatarStatus } from '@/app/app-components';
 import { useRouter, usePathname } from 'next/navigation';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserListItemSmall.module.css';
 import { useRef, ReactElement } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type Props = {
     special?: boolean;
@@ -15,7 +17,7 @@ type Props = {
 const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
     const router = useRouter();
     const pathname = usePathname();
-    const listItemRef = useRef<HTMLLIElement>(null);
+    const listItemRef = useRef<HTMLAnchorElement>(null);
 
     const { auth }: any = useContextHook({
         context: 'auth',
@@ -25,11 +27,9 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
         context: 'layer',
     });
 
-    let user: any;
-    if (channel?.type === 0) {
-        user = channel?.recipients?.find(
-            (recipient) => recipient._id !== auth.user._id
-        );
+    let user: CleanOtherUserType;
+    if (channel?.type === 'DM') {
+        user = channel.recipients[0];
     }
 
     const requests = [1];
@@ -37,12 +37,16 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
     if (special) {
         return (
             <li
-                className={
-                    pathname === '/channels/me'
-                        ? styles.liContainerActive
-                        : styles.liContainer
-                }
+                className={styles.liContainer}
                 onClick={() => router.push('/channels/me')}
+                style={
+                    pathname === '/channels/me'
+                        ? {
+                              backgroundColor: 'var(--background-5)',
+                              color: 'var(--foreground-1)',
+                          }
+                        : {}
+                }
             >
                 <div className={styles.liWrapper}>
                     <div className={styles.linkFriends}>
@@ -57,6 +61,7 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
                                     }
                                 />
                             </div>
+
                             <div className={styles.layoutContent}>
                                 <div className={styles.contentName}>
                                     <div className={styles.nameWrapper}>
@@ -77,52 +82,126 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
         );
     }
 
-    return (
-        <li
-            ref={listItemRef}
-            className={
-                pathname === `/channels/me/${channel?._id}`
-                    ? styles.liContainerActive
-                    : styles.liContainer
-            }
-            onClick={(e) => {
-                e.preventDefault();
-                if (pathname === `/channels/me/${channel?._id}` || !channel) {
-                    if (!channel) {
-                        if (fixedLayer?.element === listItemRef.current) {
-                            setFixedLayer(null);
-                        } else {
-                            setFixedLayer(null);
-                            setTimeout(() => {
-                                setFixedLayer({
-                                    type: 'usercard',
-                                    event: e,
-                                    user: user,
-                                    channel: channel || null,
-                                    element: listItemRef.current,
-                                    firstSide: 'left',
-                                    gap: 16,
-                                });
-                            }, 10);
-                        }
-                    }
-                    return;
+    if (!channel) {
+        return (
+            <li
+                ref={listItemRef}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    setFixedLayer({
+                        type: 'menu',
+                        event: e,
+                        user: user,
+                        channel: channel,
+                    });
+                }}
+                style={
+                    !channel && user?.status === 'Offline'
+                        ? {
+                              opacity: 0.3,
+                          }
+                        : {}
                 }
-                router.push(`/channels/@me/${channel?._id}`);
-            }}
+            >
+                <div className={styles.liWrapper}>
+                    <div className={styles.link}>
+                        <div className={styles.layout}>
+                            <div className={styles.layoutAvatar}>
+                                {channel?.type === 1 ? (
+                                    <Image
+                                        src={
+                                            channel.icon ||
+                                            '/assets/default-channel-avatars/blue.png'
+                                        }
+                                        width={32}
+                                        height={32}
+                                        alt='Avatar'
+                                    />
+                                ) : (
+                                    <>
+                                        <Image
+                                            src={
+                                                user?.avatar ||
+                                                '/assets/default-avatars/blue.png'
+                                            }
+                                            width={32}
+                                            height={32}
+                                            alt='Avatar'
+                                        />
+                                        {((!channel &&
+                                            user?.status !== 'Offline') ||
+                                            channel) && (
+                                            <AvatarStatus
+                                                status={user?.status}
+                                                background={
+                                                    pathname ===
+                                                    `/channels/me/${channel?._id}`
+                                                        ? 'var(--background-5)'
+                                                        : 'var(--background-3)'
+                                                }
+                                                tooltip={true}
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            <div className={styles.layoutContent}>
+                                <div className={styles.contentName}>
+                                    <div className={styles.nameWrapper}>
+                                        {channel?.type === 1
+                                            ? channel.name
+                                            : user?.username}
+                                    </div>
+                                </div>
+
+                                {user?.customStatus !== null &&
+                                    channel?.type !== 1 && (
+                                        <div className={styles.contentStatus}>
+                                            {user?.customStatus}
+                                        </div>
+                                    )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {channel && (
+                        <div
+                            className={styles.closeButton}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // removeChannel();
+                            }}
+                        >
+                            <Icon
+                                name='close'
+                                size={16}
+                            />
+                        </div>
+                    )}
+                </div>
+            </li>
+        );
+    }
+
+    return (
+        <Link
+            ref={listItemRef}
+            className={styles.liContainer}
+            href={`/channels/me/${channel.id}`}
             onContextMenu={(e) => {
                 e.preventDefault();
                 setFixedLayer({
                     type: 'menu',
                     event: e,
                     user: user,
-                    channel: channel || null,
                 });
             }}
             style={
-                !channel && user?.status === 'Offline'
+                pathname === `/channels/me/${channel.id}`
                     ? {
-                          opacity: 0.3,
+                          backgroundColor: 'var(--background-5)',
+                          color: 'var(--foreground-1)',
                       }
                     : {}
             }
@@ -131,35 +210,33 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
                 <div className={styles.link}>
                     <div className={styles.layout}>
                         <div className={styles.layoutAvatar}>
-                            {channel?.type === 1 ? (
+                            {channel.type === 'GROUP_DM' ? (
                                 <Image
                                     src={
                                         channel.icon ||
-                                        '/assets/default-channel-avatars/blue.png'
+                                        '/assets/channel-avatars/blue.png'
                                     }
                                     width={32}
                                     height={32}
                                     alt='Avatar'
+                                    draggable={false}
                                 />
                             ) : (
                                 <>
                                     <Image
-                                        src={
-                                            user?.avatar ||
-                                            '/assets/default-avatars/blue.png'
-                                        }
+                                        src={`/assets/avatars/${
+                                            user?.avatar || 'blue'
+                                        }.png`}
                                         width={32}
                                         height={32}
                                         alt='Avatar'
                                     />
-                                    {((!channel &&
-                                        user?.status !== 'Offline') ||
-                                        channel) && (
+                                    {user?.status !== 'Offline' && (
                                         <AvatarStatus
-                                            status={user?.status}
+                                            status={user.status}
                                             background={
                                                 pathname ===
-                                                `/channels/me/${channel?._id}`
+                                                `/channels/me/${channel.id}`
                                                     ? 'var(--background-5)'
                                                     : 'var(--background-3)'
                                             }
@@ -173,45 +250,44 @@ const UserListItemSmall = ({ special, channel }: Props): ReactElement => {
                         <div className={styles.layoutContent}>
                             <div className={styles.contentName}>
                                 <div className={styles.nameWrapper}>
-                                    {channel?.type === 1
+                                    {channel.type === 'GROUP_DM'
                                         ? channel.name
-                                        : user?.username}
+                                        : user.username}
                                 </div>
                             </div>
 
-                            {user?.customStatus !== null &&
-                                channel?.type !== 1 && (
+                            {user?.customStatus !== undefined &&
+                                channel.type !== 'GROUP_DM' && (
                                     <div className={styles.contentStatus}>
-                                        {user?.customStatus}
+                                        {user.customStatus}
                                     </div>
                                 )}
 
-                            {channel?.type === 1 && (
+                            {channel.type === 'GROUP_DM' && (
                                 <div className={styles.contentStatus}>
-                                    {channel?.recipients?.length} Member
-                                    {channel?.recipients?.length > 1 && 's'}
+                                    {channel.recipients.length} Member
+                                    {channel.recipients.length > 1 && 's'}
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {channel && (
-                    <div
-                        className={styles.closeButton}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            // removeChannel();
-                        }}
-                    >
-                        <Icon
-                            name='close'
-                            size={16}
-                        />
-                    </div>
-                )}
+                <div
+                    className={styles.closeButton}
+                    onClick={async (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        await leaveChannel(channel.id);
+                    }}
+                >
+                    <Icon
+                        name='close'
+                        size={16}
+                    />
+                </div>
             </div>
-        </li>
+        </Link>
     );
 };
 

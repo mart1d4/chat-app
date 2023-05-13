@@ -114,9 +114,9 @@ type CleanOtherUserType = {
 };
 
 type ChannelType = {
-    _id: string;
+    id: string;
     recipients: string[];
-    type: 0 | 1 | 2 | 3 | 4;
+    type: 'DM' | 'GROUP_DM' | 'GUILD_TEXT' | 'GUILD_VOICE' | 'GUILD_CATEGORY';
     guild: GuildType._id;
     position?: number;
     name: string;
@@ -137,11 +137,38 @@ type GuildType = {
 };
 
 type MessageType = {
-    _id: string;
-};
+    id: string;
+    type:
+        | 'DEFAULT'
+        | 'REPLY'
+        | 'RECIPIENT_ADD'
+        | 'RECIPIENT_REMOVE'
+        | 'CALL'
+        | 'CHANNEL_NAME_CHANGE'
+        | 'CHANNEL_ICON_CHANGE'
+        | 'CHANNEL_PINNED_MESSAGE'
+        | 'GUILD_MEMBER_JOIN'
+        | 'OWNER_CHANGE';
+    content: string;
+    attachments: string[];
+    embeds: string[];
+    messageReference?: string;
+    edited: boolean;
+    pinned: boolean;
+    reactions: string[];
+    mentionEveryone: boolean;
+    mentionChannelIds: string[];
+    mentionRoleIds: string[];
+    mentionUserIds: string[];
 
-type PermissionType = {
-    _id: string;
+    authorId: string;
+    author: CleanOtherUserType;
+
+    channelId: string;
+    channel: ChannelType;
+
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 //#//#//#//#//#//#//

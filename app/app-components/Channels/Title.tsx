@@ -2,8 +2,8 @@
 
 import { ReactElement, useState, useRef } from 'react';
 import { Icon, Tooltip } from '@/app/app-components';
-import styles from './Channels.module.css';
 import useContextHook from '@/hooks/useContextHook';
+import styles from './Channels.module.css';
 
 const Title = (): ReactElement => {
     const [hover, setHover] = useState<boolean>(false);
@@ -28,7 +28,7 @@ const Title = (): ReactElement => {
                             type: 'popout',
                             event: e,
                             gap: 5,
-                            element: showButton.current,
+                            element: showButton?.current,
                             firstSide: 'bottom',
                             secondSide: 'right',
                         });
@@ -42,8 +42,7 @@ const Title = (): ReactElement => {
                 />
 
                 <Tooltip
-                    // show={hover && fixedLayer?.element !== showButton?.current}
-                    show={hover}
+                    show={hover && fixedLayer?.element !== showButton?.current}
                 >
                     Create DM
                 </Tooltip>

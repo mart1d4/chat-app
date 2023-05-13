@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import SettingsProvider from '@/context/SettingsProvider';
 import LayerProvider from '@/context/LayerProvider';
 import PersistLogin from '@/hooks/usePersistLogin';

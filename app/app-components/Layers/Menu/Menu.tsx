@@ -2,13 +2,13 @@
 
 'use client';
 
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import styles from './Menu.module.css';
 import { useEffect, useState, ReactElement } from 'react';
-import { useRouter } from 'next/router';
-import { v4 as uuidv4 } from 'uuid';
-import { Icon } from '@/app/app-components';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import useContextHook from '@/hooks/useContextHook';
+import { useRouter } from 'next/navigation';
+import { Icon } from '@/app/app-components';
+import styles from './Menu.module.css';
+import { v4 as uuidv4 } from 'uuid';
 
 const content = ({ content }: any): ReactElement => {
     const [active, setActive] = useState(null);

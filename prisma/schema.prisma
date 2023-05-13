@@ -53,6 +53,7 @@ enum MessageType {
   CHANNEL_ICON_CHANGE
   CHANNEL_PINNED_MESSAGE
   GUILD_MEMBER_JOIN
+  OWNER_CHANGE
 }
 
 // Models
@@ -62,7 +63,7 @@ model User {
   username     String     @unique
   avatar       String     @default("blue")
   banner       String?
-  primaryColor String     @default("5a63f2")
+  primaryColor String     @default("#5a63f2")
   accentColor  String?
   description  String?
   customStatus String?
@@ -158,17 +159,17 @@ model Channel {
   name        String
   description String?
   icon        String?
-  nsfw        Boolean
-  position    Int
+  nsfw        Boolean?    @default(false)
+  position    Int?
   parentId    String?
   rateLimit   Int?
   permissions String[]
 
-  guildId String @map("guild") @db.ObjectId
-  guild   Guild? @relation(fields: [guildId], references: [id])
+  guildId String? @map("guild") @db.ObjectId
+  guild   Guild?  @relation(fields: [guildId], references: [id])
 
-  ownerId String @map("owner") @db.ObjectId
-  owner   User?  @relation("Owner", fields: [ownerId], references: [id])
+  ownerId String? @map("owner") @db.ObjectId
+  owner   User?   @relation("Owner", fields: [ownerId], references: [id])
 
   recipientIds String[] @map("recipients") @db.ObjectId
   recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])

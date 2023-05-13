@@ -2,28 +2,29 @@
 
 'use client';
 
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import { useEffect, useState, useRef } from 'react';
 import { Message, AvatarStatus, Icon } from '@/app/app-components';
-import styles from './Popout.module.css';
+import { createChannel } from '@/lib/api-functions/channels';
+import { getFriends } from '@/lib/api-functions/users';
+import useContextHook from '@/hooks/useContextHook';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
-import useContextHook from '@/hooks/useContextHook';
-import { getFriends } from '@/lib/api-functions/users';
 
-const Popout = async ({ content }: any) => {
+const Popout = ({ content }: any) => {
     const [pinnedMessages, setPinnedMessages] = useState(null);
     const [filteredList, setFilteredList] = useState([]);
     const [search, setSearch] = useState('');
     const [chosen, setChosen] = useState([]);
     const [copied, setCopied] = useState(false);
-    const [placesLeft, setPlacesLeft] = useState(9);
+    const [placesLeft, setPlacesLeft] = useState<number>(9);
+    const [friends, setFriends] = useState<UserType[]>([]);
+    const [pinned, setPinned] = useState<MessageType[]>([]);
 
     const { setFixedLayer }: any = useContextHook({
         context: 'layer',
     });
-    const axiosPrivate = useAxiosPrivate();
     const { auth }: any = useContextHook({
         context: 'auth',
     });
@@ -31,53 +32,47 @@ const Popout = async ({ content }: any) => {
     const inputRef = useRef();
     const inputLinkRef = useRef();
 
-    const friends = await getFriends();
+    useEffect(() => {
+        if (content?.pinned) {
+            const getPinnedList = async () => {
+                setPinned(await getPinnedMessages(content?.channel?.id));
+            };
 
-    useEffect(async () => {
-        if (!content?.pinned) {
-            const recipientsIds = content?.channel?.recipients?.map(
-                (recipient) => recipient._id
-            );
+            getPinnedList();
+        } else {
+            const getFriendList = async () => {
+                const friendList = await getFriends();
+                setFriends(friendList);
 
-            const filteredFriends = friends.sort((a, b) =>
-                a?.username?.localeCompare(b.username)
-            );
+                if (content?.channel) {
+                    const filteredFriends = friendList
+                        .filter((friend) => {
+                            return !channel?.recipientIds?.includes(friend.id);
+                        })
+                        .sort((a, b) => a?.username?.localeCompare(b.username));
 
-            // const filteredFriends = friends
-            //     ?.filter((friend) => {
-            //         return !recipientsIds?.includes(friend?._id);
-            //     })
-            //     .sort((a, b) => a?.username?.localeCompare(b.username));
+                    setFilteredList(filteredFriends);
+                    setPlacesLeft(10 - content?.channel?.recipients?.length);
+                } else {
+                    setFilteredList(friendList);
+                    setPlacesLeft(9);
+                }
+            };
 
-            setFilteredList(filteredFriends);
-            // setPlacesLeft(10 - content?.channel?.recipients?.length);
-            setPlacesLeft(10);
-
-            return;
+            getFriendList();
         }
-
-        const getPinnedMessages = async () => {
-            const response = await axiosPrivate.get(
-                `/channels/${content?.channel?._id}/pins`
-            );
-
-            setPinnedMessages(response.data.pins.reverse());
-        };
-
-        getPinnedMessages();
     }, [content]);
 
     useEffect(() => {
-        if (content?.pinned) return;
-        if (content?.channel) {
-            // if (chosen?.length === 0) {
-            //     setPlacesLeft(10 - content?.channel?.recipients?.length);
-            // } else {
-            //     setPlacesLeft(
-            //         10 - content?.channel?.recipients?.length - chosen?.length
-            //     );
-            // }
-        } else {
+        if (!content?.pinned && content?.channel) {
+            if (chosen?.length === 0) {
+                setPlacesLeft(10 - content?.channel?.recipients?.length);
+            } else {
+                setPlacesLeft(
+                    10 - content?.channel?.recipients?.length - chosen?.length
+                );
+            }
+        } else if (!content?.pinned) {
             if (chosen?.length === 0) {
                 setPlacesLeft(9);
             } else {
@@ -89,70 +84,37 @@ const Popout = async ({ content }: any) => {
     useEffect(() => {
         if (content?.pinned) return;
 
-        // const recipientsIds = content?.channel?.recipients?.map(
-        //     (recipient) => recipient._id
-        // );
+        const filteredFriends = friends
+            ?.filter((friend) => {
+                return !channel?.recipientIds?.includes(friend.id);
+            })
+            .sort((a, b) => a?.username?.localeCompare(b.username));
 
-        // const filteredFriends = friends
-        //     ?.filter((friend) => {
-        //         return !recipientsIds?.includes(friend?._id);
-        //     })
-        //     .sort((a, b) => a?.username?.localeCompare(b.username));
-
-        // if (search) {
-        //     setFilteredList(
-        //         filteredFriends?.filter((user) => {
-        //             return user?.username
-        //                 ?.toLowerCase()
-        //                 .includes(search.toLowerCase());
-        //         })
-        //     );
-        // } else {
-        //     setFilteredList(filteredFriends);
-        // }
+        if (search) {
+            setFilteredList(
+                filteredFriends?.filter((user) => {
+                    return user.username
+                        .toLowerCase()
+                        .includes(search.toLowerCase());
+                })
+            );
+        } else {
+            setFilteredList(filteredFriends);
+        }
     }, [search]);
 
-    const createChannel = async (channelID) => {
+    const createChan = async (channelId) => {
         let allRecipients = [...chosen];
 
         if (content?.channel) {
-            allRecipients = [...allRecipients, ...content?.channel?.recipients];
-            allRecipients = allRecipients?.filter((recipient) => {
-                return recipient?._id !== auth?.user?._id;
+            allRecipients = [...allRecipients, ...content?.channel.recipients];
+            allRecipients = allRecipients.filter((recipient) => {
+                return recipient.id !== auth?.user.id;
             });
         }
 
-        const recipientIDs = allRecipients?.map((recipient) => recipient?._id);
-
-        const response = await axiosPrivate.post(`/users/@me/channels`, {
-            recipients: recipientIDs,
-            addToChannel: channelID ? channelID : null,
-        });
-
-        if (response.data.success) {
-            if (response.data.message.includes('updated')) {
-                setChannels((prev) => {
-                    const updatedChannels = prev?.map((channel) => {
-                        if (channel?._id === response.data.channel?._id) {
-                            return response.data.channel;
-                        } else {
-                            return channel;
-                        }
-                    });
-
-                    return updatedChannels;
-                });
-            } else {
-                if (
-                    !channels
-                        ?.map((channel) => channel._id)
-                        .includes(response.data.channel._id)
-                ) {
-                    setChannels((prev) => [response.data.channel, ...prev]);
-                }
-            }
-            router.push(`/channels/@me/${response.data.channel._id}`);
-        }
+        const recipientIds = allRecipients?.map((recipient) => recipient.id);
+        await createChannel(recipientIds, channelId || null);
     };
 
     if (content?.pinned) {
@@ -227,12 +189,13 @@ const Popout = async ({ content }: any) => {
                                                     setChosen(
                                                         chosen?.filter(
                                                             (user) =>
-                                                                user !== friend
+                                                                user.id !==
+                                                                friend.id
                                                         )
                                                     )
                                                 }
                                             >
-                                                {friend?.username}
+                                                {friend.username}
                                                 <Icon
                                                     name='close'
                                                     size={12}
@@ -273,7 +236,7 @@ const Popout = async ({ content }: any) => {
                                     </div>
                                 </div>
 
-                                {content?.channel?.type === 1 && (
+                                {content?.channel?.type === 'GROUP_DM' && (
                                     <div className={styles.addButton}>
                                         <button
                                             className={
@@ -283,8 +246,8 @@ const Popout = async ({ content }: any) => {
                                             }
                                             onClick={() => {
                                                 if (chosen?.length) {
-                                                    createChannel(
-                                                        content?.channel?._id
+                                                    createChan(
+                                                        content?.channel.id
                                                     );
                                                 }
                                             }}
@@ -301,15 +264,16 @@ const Popout = async ({ content }: any) => {
                 {friends.length > 0 && filteredList.length > 0 && (
                     <>
                         <div className={styles.scroller + ' scrollbar'}>
-                            {filteredList?.map((friend) => (
+                            {filteredList.map((friend) => (
                                 <div
                                     key={uuidv4()}
                                     className={styles.friend}
                                     onClick={() => {
-                                        if (chosen?.includes(friend)) {
+                                        if (chosen.includes(friend)) {
                                             setChosen(
                                                 chosen?.filter(
-                                                    (user) => user !== friend
+                                                    (user) =>
+                                                        user.id !== friend.id
                                                 )
                                             );
                                         } else {
@@ -323,10 +287,9 @@ const Popout = async ({ content }: any) => {
                                     <div>
                                         <div className={styles.friendAvatar}>
                                             <Image
-                                                src={
-                                                    friend?.avatar ||
-                                                    '/assets/default-avatars/blue.png'
-                                                }
+                                                src={`/assets/avatars/${
+                                                    friend.avatar || blue
+                                                }.png`}
                                                 alt={friend?.username}
                                                 width={32}
                                                 height={32}
@@ -339,7 +302,7 @@ const Popout = async ({ content }: any) => {
                                         </div>
 
                                         <div className={styles.friendUsername}>
-                                            {friend?.username}
+                                            {friend.username}
                                         </div>
 
                                         <div className={styles.friendCheck}>
@@ -360,7 +323,7 @@ const Popout = async ({ content }: any) => {
 
                         <div className={styles.separator} />
 
-                        {content?.channel?.type === 1 ? (
+                        {content?.channel?.type === 'GROUP_DM' ? (
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
@@ -370,7 +333,7 @@ const Popout = async ({ content }: any) => {
                                             ref={inputLinkRef}
                                             type='text'
                                             readOnly
-                                            value={`https://unthrust.com/${content?.channel?._id}`}
+                                            value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
                                             onClick={() =>
                                                 inputLinkRef.current.select()
                                             }
@@ -381,7 +344,7 @@ const Popout = async ({ content }: any) => {
                                         className={copied ? 'green' : 'blue'}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
-                                                `https://unthrust.com/${content?.channel?._id}`
+                                                `https://chat-app.mart1d4.com/${content?.channel.id}`
                                             );
                                             setCopied(true);
                                             setTimeout(
@@ -402,7 +365,7 @@ const Popout = async ({ content }: any) => {
                                     className='blue'
                                     onClick={() => {
                                         setFixedLayer(null);
-                                        createChannel();
+                                        createChan();
                                     }}
                                 >
                                     Create DM
@@ -447,7 +410,7 @@ const Popout = async ({ content }: any) => {
                                             ref={inputLinkRef}
                                             type='text'
                                             readOnly
-                                            value={`https://unthrust.com/${content?.channel?._id}`}
+                                            value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
                                             onClick={() =>
                                                 inputLinkRef.current.select()
                                             }
@@ -458,7 +421,7 @@ const Popout = async ({ content }: any) => {
                                         className={copied ? 'green' : 'blue'}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
-                                                `https://unthrust.com/${content?.channel?._id}`
+                                                `https://chat-app.mart1d4.com/${content?.channel.id}`
                                             );
                                             setCopied(true);
                                             setTimeout(
@@ -480,7 +443,7 @@ const Popout = async ({ content }: any) => {
                                     onClick={() => {
                                         if (chosen?.length) {
                                             setFixedLayer(null);
-                                            createChannel();
+                                            createChan();
                                         }
                                     }}
                                 >
@@ -495,7 +458,7 @@ const Popout = async ({ content }: any) => {
                     <div className={styles.noFriends}>
                         <div
                             style={{
-                                backgroundImage: `url(/assets/no-friends-popout.svg)`,
+                                backgroundImage: `url(/assets/app/no-friends-popout.svg)`,
                                 width: '171px',
                                 height: '86px',
                             }}
@@ -508,7 +471,6 @@ const Popout = async ({ content }: any) => {
                             onClick={() => {
                                 setFixedLayer(null);
                                 localStorage.setItem('friends-tab', 'add');
-                                router.push('/channels/@me');
                             }}
                         >
                             Add Friend

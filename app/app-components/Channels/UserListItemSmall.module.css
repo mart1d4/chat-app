@@ -1,36 +1,25 @@
-.liContainer,
-.liContainerActive {
+.liContainer {
+    display: flex;
     position: relative;
     max-width: 224px;
     margin: 0 0 2px 8px;
     border-radius: 4px;
     color: var(--foreground-4);
+    text-decoration: none;
 }
 
-.liContainer:hover .closeButton,
-.liContainerActive:hover .closeButton {
+.liContainer:hover {
+    background-color: var(--background-4);
+    color: var(--foreground-2);
+}
+
+.liContainer:hover .closeButton {
     display: block;
 }
 
-.liContainer:nth-child(2):hover path:first-child {
-    fill: var(--foreground-2);
-}
-
-.liContainerActive {
+.liContainer:active {
+    background-color: var(--background-5);
     color: var(--foreground-1);
-    background-color: var(--background-hover-2);
-}
-
-.liContainerActive polygon {
-    fill: var(--foreground-1);
-}
-
-.liContainer:hover,
-.liContainerActive:hover {
-    color: var(--foreground-1);
-    background-color: var(--background-hover-1);
-    cursor: pointer;
-    opacity: 1 !important;
 }
 
 .liWrapper {

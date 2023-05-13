@@ -76,7 +76,7 @@ const HomePage = (): ReactElement => {
                     <div>
                         <img
                             src='/assets/homepages/community.svg'
-                            alt='Stylized image of a Chat App server with multiple channels for studying, games, cooking, and pet photos.'
+                            alt='Stylized image of friends talking and communicating with each other.'
                         />
 
                         <div>
@@ -97,7 +97,7 @@ const HomePage = (): ReactElement => {
                     <div>
                         <img
                             src='/assets/homepages/connected.svg'
-                            alt='Stylized image showing friends hanging out in multiple voice channels.'
+                            alt='Stylized image showing the world connected through Chat App.'
                         />
 
                         <div>
@@ -118,7 +118,7 @@ const HomePage = (): ReactElement => {
                     <div>
                         <img
                             src='/assets/homepages/group.svg'
-                            alt='Stylized image showing friends in a server organized into roles for Coach, Student Lead, and Animal Crossing.'
+                            alt='Stylized image showing friends displaying their interests and hobbies.'
                         />
 
                         <div>
@@ -152,7 +152,7 @@ const HomePage = (): ReactElement => {
 
                         <img
                             src='/assets/homepages/video.svg'
-                            alt='Stylized image showing friends video talking with each other on desktop and mobile.'
+                            alt='Stylized image showing friends video talking with each other on desktop.'
                         />
                     </div>
                 </div>

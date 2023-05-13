@@ -8,14 +8,12 @@ const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
     const [showSettings, setShowSettings] = useState<boolean>(false);
     const [userProfile, setUserProfile] = useState<UserProfileObjectType>(null);
     const [popup, setPopup] = useState<PopupObjectType>(null);
-    const [fixedLayer, setRealFixedLayer] =
-        useState<null | FixedLayerObjectType>(null);
+    const [fixedLayer, setFixedLayer2] = useState<null | FixedLayerObjectType>(
+        null
+    );
 
     const setFixedLayer = (content: null | FixedLayerObjectType) => {
-        setRealFixedLayer(null);
-        setTimeout(() => {
-            setRealFixedLayer(content);
-        }, 5);
+        setFixedLayer2(content);
     };
 
     const value: LayerContextValueType = {

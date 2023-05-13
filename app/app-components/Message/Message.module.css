@@ -1,0 +1,328 @@
+.li,
+.liReply {
+    position: relative;
+}
+
+.li:not(.noInt):hover {
+    background-color: var(--background-hover-4);
+}
+
+.liReply {
+    background-color: var(--background-message-highlight);
+}
+
+.liReply:not(.noInt):hover {
+    background-color: var(--background-message-highlight-hover);
+}
+
+.liReply::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    pointer-events: none;
+    display: block;
+    background-color: var(--accent-1);
+}
+
+.messageStart {
+    margin-top: 1.0625rem;
+    min-height: 2.75rem;
+    padding: 0.125rem 48px 0.125rem 72px;
+    position: relative;
+    word-wrap: break-word;
+    user-select: text;
+}
+
+.message {
+    padding: 0.125rem 48px 0.125rem 72px;
+    position: relative;
+    word-wrap: break-word;
+    user-select: text;
+    min-height: 1.375rem;
+}
+
+.messageContent {
+    position: static;
+    margin-left: 0;
+    padding-left: 0;
+    text-indent: 0;
+}
+
+.messageContent img {
+    pointer-events: auto;
+    position: absolute;
+    left: 16px;
+    margin-top: calc(4px - 0.125rem);
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    z-index: 1;
+}
+
+.messageContent img:active {
+    transform: translateY(0.5px);
+}
+
+.messageContent img:hover {
+    filter: drop-shadow(0 4px 4px hsla(0, 0%, 0%, 0.16));
+}
+
+.messageContent h3 {
+    display: block;
+    position: relative;
+    line-height: 1.375rem;
+    min-height: 1.375rem;
+}
+
+.titleUsername {
+    margin-right: 0.25rem;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.375rem;
+    display: inline;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    color: var(--foreground-1);
+    user-select: text;
+}
+
+.titleUsername:hover {
+    text-decoration: underline;
+}
+
+.titleTimestamp {
+    position: relative;
+    font-size: 0.75rem;
+    line-height: 1.375rem;
+    color: var(--foreground-4);
+    margin-left: 0.25rem;
+    display: inline-block;
+    cursor: default;
+    font-weight: 500;
+    height: 1.375rem;
+    user-select: text;
+}
+
+.messageContent > div:not(.editHint, .specialIcon) {
+    font-weight: 300;
+    font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    user-select: text;
+    font-size: 1rem;
+    line-height: 1.375rem;
+    margin-left: -72px;
+    padding-left: 72px;
+    overflow: hidden;
+    position: relative;
+    text-indent: 0;
+    color: var(--foreground-2);
+}
+
+.messageTimestamp {
+    position: absolute;
+    left: 0;
+    height: 1.375rem;
+    line-height: 1.375rem;
+    width: 56px;
+    user-select: none;
+    text-align: right;
+    z-index: 1;
+    font-size: 0.6875rem;
+    margin-right: 0.25rem;
+    text-indent: 0;
+    font-weight: 500;
+    cursor: default;
+    display: inline-block;
+    color: var(--foreground-4);
+}
+
+.messageTimestamp > span {
+    position: relative;
+    line-height: 1.375rem;
+    height: 100%;
+}
+
+.editHint {
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
+.editHint > span {
+    color: var(--accent-light);
+    cursor: pointer;
+}
+
+.editHint > span:hover {
+    text-decoration: underline;
+}
+
+.contentTimestamp {
+    display: inline-block;
+}
+
+.contentTimestamp > span {
+    font-size: 0.75rem;
+    line-height: 1.375rem;
+    color: var(--foreground-4);
+    height: 1.25rem;
+    cursor: default;
+    font-weight: 500;
+    user-select: none;
+}
+
+.messageReply {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--foreground-3);
+    line-height: 1.125rem;
+    position: relative;
+    white-space: pre;
+    user-select: none;
+    word-wrap: break-word;
+}
+
+.messageReply::before {
+    content: '';
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    bottom: 0;
+    left: -36px;
+    margin-right: 6px;
+    margin-top: -2px;
+    margin-left: -1px;
+    margin-bottom: calc(0.125rem - 2px);
+    border-left: 2px solid hsla(228, 6%, 32.5%, 1);
+    border-bottom: 0 solid hsla(228, 6%, 32.5%, 1);
+    border-right: 0 solid hsla(228, 6%, 32.5%, 1);
+    border-top: 2px solid hsla(228, 6%, 32.5%, 1);
+    border-top-left-radius: 6px;
+}
+
+.messageReply > img {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    user-select: none;
+    margin-right: 0.25rem;
+}
+
+.messageReply > span {
+    flex-shrink: 0;
+    margin-right: 0.25rem;
+    opacity: 0.64;
+    font-weight: 500;
+    color: var(--foreground-1);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.messageReply > span:hover {
+    text-decoration: underline;
+}
+
+.messageReply > div {
+    cursor: pointer;
+    text-overflow: ellipsis;
+    flex: 0 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.messageReply > div:hover {
+    color: var(--foreground-1);
+}
+
+.specialIcon {
+    position: absolute;
+    right: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    padding-top: 0.25rem;
+    margin-right: -72px;
+}
+
+/* Message menu */
+
+.buttonContainer {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.buttonWrapper {
+    pointer-events: auto;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+    padding: 0 14px 0 32px;
+}
+
+.buttons {
+    background-color: var(--background-4);
+    display: grid;
+    grid-auto-flow: column;
+    height: 32px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+    position: relative;
+    box-shadow: var(--elevation-low);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.buttons:hover {
+    box-shadow: var(--elevation-low), var(--elevation-medium);
+}
+
+.buttons > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 4px;
+    width: 32px;
+    cursor: pointer;
+    position: relative;
+    color: var(--foreground-2);
+}
+
+.buttons > div:active > svg {
+    transform: translateY(0.5px);
+}
+
+.buttons > div:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.buttons > div:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.buttons > div:hover {
+    background-color: var(--background-hover-1);
+}
+
+.buttons > div > svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+    pointer-events: none;
+}

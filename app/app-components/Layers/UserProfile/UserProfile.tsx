@@ -59,78 +59,6 @@ const UserProfile = (): ReactElement => {
         ? ['User Info']
         : ['User Info', 'Mutual Servers', 'Mutual Friends'];
 
-    // const addFriend = async () => {
-    //     const response = await axiosPrivate.post(
-    //         `/users/@me/friends/${user._id}`
-    //     );
-
-    //     if (response.data.success) {
-    //         if (response.data.message === 'Friend request sent') {
-    //             setRequests((prev) => [...prev, response.data.request]);
-    //         } else if (response.data.message === 'Friend request accepted') {
-    //             setFriends((prev) => [...prev, response.data.friend]);
-    //             setRequests(
-    //                 requests.filter(
-    //                     (request) => request.user._id.toString() !== user._id
-    //                 )
-    //             );
-    //             if (response.data.channel) {
-    //                 if (
-    //                     channels
-    //                         ?.map((channel) => channel._id)
-    //                         .includes(response.data.channel._id)
-    //                 )
-    //                     return;
-    //                 setChannels((prev) => [response.data.channel, ...prev]);
-    //             }
-    //         }
-    //     }
-    // };
-
-    // const deleteFriend = async () => {
-    //     const response = await axiosPrivate.delete(
-    //         `/users/@me/friends/${user._id}`
-    //     );
-
-    //     if (!response.data.success) {
-    //         setError(response.data.message);
-    //     } else if (response.data.success) {
-    //         if (response.data.message === 'Friend removed') {
-    //             setFriends(
-    //                 friends.filter(
-    //                     (friend) => friend?._id?.toString() !== user._id
-    //                 )
-    //             );
-    //         } else if (response.data.message === 'Request cancelled') {
-    //             setRequests(
-    //                 requests.filter(
-    //                     (request) => request?.user?._id?.toString() !== user._id
-    //                 )
-    //             );
-    //         }
-    //     } else {
-    //         setError('An error occurred.');
-    //     }
-    // };
-
-    // const createChannel = async () => {
-    //     const response = await axiosPrivate.post(`/users/@me/channels`, {
-    //         recipients: [user._id],
-    //     });
-
-    //     if (response.data.success) {
-    //         if (
-    //             !channels
-    //                 ?.map((channel) => channel._id)
-    //                 .includes(response.data.channel._id)
-    //         ) {
-    //             setChannels((prev) => [response.data.channel, ...prev]);
-    //         }
-    //         router.push(`/channels/@me/${response.data.channel._id}`);
-    //         setUserProfile(null);
-    //     }
-    // };
-
     return (
         <AnimatePresence>
             {user && (
@@ -170,11 +98,13 @@ const UserProfile = (): ReactElement => {
                     >
                         <div
                             className={styles.topSection}
-                            style={{ backgroundColor: user.accentColor }}
+                            style={{ backgroundColor: user.primaryColor }}
                         >
                             <div>
                                 <Image
-                                    src={user.avatar}
+                                    src={`/assets/avatars/${
+                                        user.avatar || 'blue'
+                                    }.png`}
                                     alt='User Avatar'
                                     width={120}
                                     height={120}
@@ -376,7 +306,7 @@ const UserProfile = (): ReactElement => {
                                             </>
                                         )}
 
-                                        <h1>Discord Member Since</h1>
+                                        <h1>Chat App Member Since</h1>
                                         <div className={styles.contentUserDate}>
                                             <div>
                                                 {new Intl.DateTimeFormat(
@@ -476,7 +406,7 @@ const FriendItem = ({ friend }: any): ReactElement => {
         >
             <div>
                 <Image
-                    src={friend?.avatar}
+                    src={`/assets/avatars/${friend.avatar || 'blue'}.png`}
                     alt='User Avatar'
                     width={40}
                     height={40}

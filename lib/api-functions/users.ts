@@ -1,17 +1,28 @@
 import axiosPrivate from '@/lib/axios';
 
+const TOKEN =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NWE1ZjJkZWJiY2VkNzMxZmFhM2M1MyIsImlhdCI6MTY4MzkwMDI2MSwiZXhwIjoxNjg0NTA1MDYxfQ.-qGUmwSAN5zwriTl6P-KR30sHSL_-JPpW1g7JT9LSE8';
+
 export const getUser = async (userId: string) => {
-    const response = await axiosPrivate.get(`/users/${userId}`);
+    const response = await axiosPrivate.get(`/users/${userId}`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not get user');
     } else {
-        return response.data;
+        return response.data.user;
     }
 };
 
 export const blockUser = async (userId: string) => {
-    const response = await axiosPrivate.post(`/users/${userId}/block`);
+    const response = await axiosPrivate.post(`/users/${userId}/block`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not block user');
@@ -21,7 +32,11 @@ export const blockUser = async (userId: string) => {
 };
 
 export const unblockUser = async (userId: string) => {
-    const response = await axiosPrivate.delete(`/users/${userId}/block`);
+    const response = await axiosPrivate.delete(`/users/${userId}/block`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not unblock user');
@@ -31,7 +46,11 @@ export const unblockUser = async (userId: string) => {
 };
 
 export const addFriend = async (userId: string) => {
-    const response = await axiosPrivate.post(`/users/me/friends/${userId}`);
+    const response = await axiosPrivate.post(`/users/me/friends/${userId}`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not add friend');
@@ -41,7 +60,11 @@ export const addFriend = async (userId: string) => {
 };
 
 export const removeFriend = async (userId: string) => {
-    const response = await axiosPrivate.delete(`/users/me/friends/${userId}`);
+    const response = await axiosPrivate.delete(`/users/me/friends/${userId}`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not remove friend');
@@ -51,12 +74,16 @@ export const removeFriend = async (userId: string) => {
 };
 
 export const getFriends = async () => {
-    const response = await axiosPrivate.get(`/users/me/friends`);
+    const response = await axiosPrivate.get(`/users/me/friends`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not get friends');
     } else {
-        return response.data;
+        return response.data.friends;
     }
 };
 
@@ -65,21 +92,29 @@ export const getRequests = async (type: 'sent' | 'received') => {
         throw new Error('Invalid request type');
     }
 
-    const response = await axiosPrivate.get(`/users/me/requests/${type}`);
+    const response = await axiosPrivate.get(`/users/me/requests/${type}`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not get requests');
     } else {
-        return response.data;
+        return response.data.requests;
     }
 };
 
 export const getBlockedUsers = async () => {
-    const response = await axiosPrivate.get(`/users/me/blocked`);
+    const response = await axiosPrivate.get(`/users/me/blocked`, {
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+        },
+    });
 
     if (!response.data.success) {
         throw new Error('Could not get blocked users');
     } else {
-        return response.data;
+        return response.data.blockedUsers;
     }
 };

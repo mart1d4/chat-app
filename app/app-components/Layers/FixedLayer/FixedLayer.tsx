@@ -2,9 +2,8 @@
 
 'use client';
 
-import { Menu, Popout, UserCard } from '@/app/app-components';
 import { useEffect, useState, useCallback, ReactElement } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { Menu, Popout, UserCard } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 
 const FixedLayer = (): ReactElement => {
@@ -151,23 +150,19 @@ const FixedLayer = (): ReactElement => {
     }, [container, fixedLayer]);
 
     useEffect(() => {
-        if (!container || !fixedLayer) {
+        if (!fixedLayer) {
             setPositions({});
             setContainer(null);
             return;
         }
 
-        const handleClickOutside = () => {
-            setFixedLayer(null);
-            setContainer(null);
-            setPositions({});
+        const handleClickOutside = (e) => {
+            return;
         };
 
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 setFixedLayer(null);
-                setContainer(null);
-                setPositions({});
             }
         };
 
@@ -178,7 +173,7 @@ const FixedLayer = (): ReactElement => {
             document.removeEventListener('click', handleClickOutside);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [container, fixedLayer]);
+    }, [fixedLayer]);
 
     return (
         <div
@@ -204,17 +199,15 @@ const FixedLayer = (): ReactElement => {
                 e.preventDefault();
             }}
         >
-            <AnimatePresence>
-                {type === 'menu' && <Menu content={fixedLayer} />}
-                {type === 'popout' && <Popout content={fixedLayer} />}
-                {type === 'usercard' && (
-                    <UserCard
-                        content={fixedLayer}
-                        side={firstSide}
-                        resetPosition={setResetPosition}
-                    />
-                )}
-            </AnimatePresence>
+            {type === 'menu' && <Menu content={fixedLayer} />}
+            {type === 'popout' && <Popout content={fixedLayer} />}
+            {type === 'usercard' && (
+                <UserCard
+                    content={fixedLayer}
+                    side={firstSide}
+                    resetPosition={setResetPosition}
+                />
+            )}
         </div>
     );
 };
