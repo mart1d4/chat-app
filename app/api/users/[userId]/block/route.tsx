@@ -49,9 +49,7 @@ export async function POST(
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find(
-            (blocked: string) => blocked === user.id
-        );
+        const isBlocked = sender.blockedUserIds.find((blocked: string) => blocked === user.id);
 
         if (!isBlocked) {
             await prisma.user.update({
@@ -126,14 +124,11 @@ export async function POST(
     // }
 }
 
-export async function DELETE({
-    req,
-    params,
-}: {
-    req: NextRequest;
-    params: { slug: string };
-}): Promise<NextResponse> {
-    const userId = params.slug;
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: { userId: string } }
+): Promise<NextResponse> {
+    const userId = params.userId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
@@ -176,9 +171,7 @@ export async function DELETE({
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find(
-            (blocked: string) => blocked === user.id
-        );
+        const isBlocked = sender.blockedUserIds.find((blocked: string) => blocked === user.id);
 
         if (isBlocked) {
             await prisma.user.update({
