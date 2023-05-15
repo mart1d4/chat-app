@@ -3,8 +3,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prismadb';
 
 export async function POST(req: Request): Promise<NextResponse> {
-    const { username, password }: { username: string; password: string } =
-        await req.json();
+    const { username, password }: { username: string; password: string } = await req.json();
 
     if (!username || !password) {
         return NextResponse.json(
@@ -70,7 +69,6 @@ export async function POST(req: Request): Promise<NextResponse> {
         const hash = await bcrypt.hash(password, 10);
 
         await prisma.user.create({
-            // @ts-expect-error
             data: {
                 username: username,
                 password: hash,
