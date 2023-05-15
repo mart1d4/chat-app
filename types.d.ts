@@ -5,6 +5,7 @@
 type UserType = {
     id: string;
     username: string;
+    email?: string;
     avatar: string;
     banner?: string;
     primaryColor: string;
@@ -56,6 +57,7 @@ type UserType = {
 type CleanUserType = {
     id: string;
     username: string;
+    email?: string;
     avatar: string;
     banner?: string;
     primaryColor: string;
@@ -103,7 +105,7 @@ type CleanOtherUserType = {
     accentColor?: string;
     description?: string;
     customStatus?: string;
-    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
 
     guildIds: string[];
@@ -115,7 +117,7 @@ type CleanOtherUserType = {
 
 type ChannelType = {
     id: string;
-    recipients: string[];
+    recipients: CleanOtherUserType[];
     type: 'DM' | 'GROUP_DM' | 'GUILD_TEXT' | 'GUILD_VOICE' | 'GUILD_CATEGORY';
     guild: GuildType._id;
     position?: number;

@@ -1,11 +1,11 @@
 'use client';
 
-import styles from './UserCard.module.css';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useState, ReactElement } from 'react';
-import Image from 'next/image';
+import { useState, ReactElement, useRef } from 'react';
 import { AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import styles from './UserCard.module.css';
+import Image from 'next/image';
 
 const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState('');
@@ -18,17 +18,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
         context: 'layer',
     });
 
-    const noteRef = useCallback(
-        (node: any) => {
-            if (node !== null) {
-                node.style.height = 'auto';
-                const height = node.scrollHeight + 'px';
-                node.style.height = height;
-                resetPosition((prev: any) => !prev);
-            }
-        },
-        [note]
-    );
+    const noteRef = useRef<HTMLTextAreaElement>(null);
     const user = content?.user;
 
     return (
@@ -44,14 +34,11 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                 >
                     <div
                         className={styles.topSection}
-                        style={{ backgroundColor: user?.accentColor }}
+                        style={{ backgroundColor: user.primaryColor }}
                     >
                         <div>
                             <Image
-                                src={
-                                    user?.avatar ||
-                                    '/assets/default-avatars/blue.png'
-                                }
+                                src={`/assets/avatars/${user.avatar}.png`}
                                 alt='User Avatar'
                                 width={80}
                                 height={80}
@@ -68,7 +55,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             <div className={styles.layer}>View Profile</div>
 
                             <AvatarStatus
-                                status={user?.status}
+                                status={user.status}
                                 background='var(--background-2)'
                                 mid
                                 tooltip
@@ -83,9 +70,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                         <div className={styles.username}>{user?.username}</div>
 
                         {user?.customStatus && (
-                            <div className={styles.customStatus}>
-                                {user.customStatus}
-                            </div>
+                            <div className={styles.customStatus}>{user.customStatus}</div>
                         )}
 
                         <div className={styles.contentSeparator} />
@@ -94,18 +79,14 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             {user?.description && (
                                 <div>
                                     <h1>About Me</h1>
-                                    <div
-                                        className={
-                                            styles.contentUserDescription
-                                        }
-                                    >
+                                    <div className={styles.contentUserDescription}>
                                         {user.description}
                                     </div>
                                 </div>
                             )}
 
                             <div>
-                                <h1>Discord Member Since</h1>
+                                <h1>Chat App Member Since</h1>
                                 <div>
                                     {new Intl.DateTimeFormat('en-US', {
                                         year: 'numeric',
@@ -122,24 +103,20 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                         className='scrollbar'
                                         ref={noteRef}
                                         value={note}
-                                        onChange={(e) =>
-                                            setNote(e.target.value)
-                                        }
+                                        onChange={(e) => setNote(e.target.value)}
                                         placeholder='Click to add a note'
                                         maxLength={256}
                                     />
                                 </div>
                             </div>
 
-                            {auth?.user?._id !== user?._id && (
+                            {auth.user.id !== user.id && (
                                 <div>
                                     <div className={styles.message}>
                                         <input
                                             value={message}
-                                            onChange={(e) =>
-                                                setMessage(e.target.value)
-                                            }
-                                            placeholder={`Message @${user?.username}`}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                            placeholder={`Message @${user.username}`}
                                             maxLength={4000}
                                         />
                                     </div>

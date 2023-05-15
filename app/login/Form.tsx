@@ -6,6 +6,7 @@ import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
 import { axiosPrivate } from '@/lib/axios';
 import styles from '../Auth.module.css';
+import Link from 'next/link';
 
 const Form = (): ReactElement => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -168,15 +169,7 @@ const Form = (): ReactElement => {
 
             <div className={styles.bottomText}>
                 <span>Need an account?</span>
-                <button
-                    type='button'
-                    onClick={(e) => {
-                        e.preventDefault();
-                        router.push('/register');
-                    }}
-                >
-                    Register
-                </button>
+                <Link href='/register'>Register</Link>
             </div>
         </div>
     );

@@ -1,25 +1,21 @@
-//  @ts-nocheck
-
 'use client';
 
 import { Message, AvatarStatus, Icon } from '@/app/app-components';
-import { createChannel } from '@/lib/api-functions/channels';
+import { createChannel, getPinnedMessages } from '@/lib/api-functions/channels';
 import { getFriends } from '@/lib/api-functions/users';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
 
 const Popout = ({ content }: any) => {
-    const [pinnedMessages, setPinnedMessages] = useState(null);
-    const [filteredList, setFilteredList] = useState([]);
-    const [search, setSearch] = useState('');
-    const [chosen, setChosen] = useState([]);
-    const [copied, setCopied] = useState(false);
+    const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
+    const [search, setSearch] = useState<string>('');
+    const [chosen, setChosen] = useState<CleanOtherUserType[]>([]);
+    const [copied, setCopied] = useState<boolean>(false);
     const [placesLeft, setPlacesLeft] = useState<number>(9);
-    const [friends, setFriends] = useState<UserType[]>([]);
+    const [friends, setFriends] = useState<CleanOtherUserType[]>([]);
     const [pinned, setPinned] = useState<MessageType[]>([]);
 
     const { setFixedLayer }: any = useContextHook({
@@ -28,31 +24,29 @@ const Popout = ({ content }: any) => {
     const { auth }: any = useContextHook({
         context: 'auth',
     });
-    const router = useRouter();
-    const inputRef = useRef();
-    const inputLinkRef = useRef();
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const inputLinkRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (content?.pinned) {
-            const getPinnedList = async () => {
-                setPinned(await getPinnedMessages(content?.channel?.id));
+            const fetchPinned = async () => {
+                setPinned(await getPinnedMessages(content.channel.id));
             };
 
-            getPinnedList();
+            fetchPinned();
         } else {
             const getFriendList = async () => {
                 const friendList = await getFriends();
                 setFriends(friendList);
 
                 if (content?.channel) {
-                    const filteredFriends = friendList
-                        .filter((friend) => {
-                            return !channel?.recipientIds?.includes(friend.id);
-                        })
-                        .sort((a, b) => a?.username?.localeCompare(b.username));
+                    const filteredFriends = friendList.filter((friend: any) => {
+                        return !content.channel.recipientIds.includes(friend.id);
+                    });
 
                     setFilteredList(filteredFriends);
-                    setPlacesLeft(10 - content?.channel?.recipients?.length);
+                    setPlacesLeft(10 - content.channel.recipientIds.length);
                 } else {
                     setFilteredList(friendList);
                     setPlacesLeft(9);
@@ -66,17 +60,15 @@ const Popout = ({ content }: any) => {
     useEffect(() => {
         if (!content?.pinned && content?.channel) {
             if (chosen?.length === 0) {
-                setPlacesLeft(10 - content?.channel?.recipients?.length);
+                setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
-                setPlacesLeft(
-                    10 - content?.channel?.recipients?.length - chosen?.length
-                );
+                setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
             }
         } else if (!content?.pinned) {
             if (chosen?.length === 0) {
                 setPlacesLeft(9);
             } else {
-                setPlacesLeft(9 - chosen?.length);
+                setPlacesLeft(9 - chosen.length);
             }
         }
     }, [chosen]);
@@ -84,26 +76,34 @@ const Popout = ({ content }: any) => {
     useEffect(() => {
         if (content?.pinned) return;
 
-        const filteredFriends = friends
-            ?.filter((friend) => {
-                return !channel?.recipientIds?.includes(friend.id);
-            })
-            .sort((a, b) => a?.username?.localeCompare(b.username));
+        if (content?.channel) {
+            const filteredFriends = friends?.filter((friend: any) => {
+                return !content?.channel.recipientIds.includes(friend.id);
+            });
 
-        if (search) {
-            setFilteredList(
-                filteredFriends?.filter((user) => {
-                    return user.username
-                        .toLowerCase()
-                        .includes(search.toLowerCase());
-                })
-            );
+            if (search) {
+                setFilteredList(
+                    filteredFriends?.filter((user: any) => {
+                        return user.username.toLowerCase().includes(search.toLowerCase());
+                    })
+                );
+            } else {
+                setFilteredList(filteredFriends);
+            }
         } else {
-            setFilteredList(filteredFriends);
+            if (search) {
+                setFilteredList(
+                    friends?.filter((user: any) => {
+                        return user.username.toLowerCase().includes(search.toLowerCase());
+                    })
+                );
+            } else {
+                setFilteredList(friends);
+            }
         }
     }, [search]);
 
-    const createChan = async (channelId) => {
+    const createChan = async (channelId?: string) => {
         let allRecipients = [...chosen];
 
         if (content?.channel) {
@@ -114,7 +114,7 @@ const Popout = ({ content }: any) => {
         }
 
         const recipientIds = allRecipients?.map((recipient) => recipient.id);
-        await createChannel(recipientIds, channelId || null);
+        await createChannel(recipientIds, channelId);
     };
 
     if (content?.pinned) {
@@ -125,7 +125,7 @@ const Popout = ({ content }: any) => {
                 </div>
 
                 <div className='scrollbar'>
-                    {!pinnedMessages || pinnedMessages.length === 0 ? (
+                    {!pinned || pinned.length === 0 ? (
                         <div className={styles.noPinnedContent}>
                             <div />
 
@@ -135,7 +135,7 @@ const Popout = ({ content }: any) => {
                             </div>
                         </div>
                     ) : (
-                        pinnedMessages.map((message) => (
+                        pinned.map((message) => (
                             <div
                                 key={uuidv4()}
                                 className={styles.messageContainer}
@@ -149,15 +149,12 @@ const Popout = ({ content }: any) => {
                     )}
                 </div>
 
-                {(!pinnedMessages || pinnedMessages.length === 0) && (
+                {(!pinned || pinned.length === 0) && (
                     <div className={styles.noPinnedBottom}>
                         <div>
                             <div>Protip:</div>
 
-                            <div>
-                                You and {} can pin a message from its cog
-                                content.
-                            </div>
+                            <div>You and {} can pin a message from its cog content.</div>
                         </div>
                     </div>
                 )}
@@ -188,9 +185,7 @@ const Popout = ({ content }: any) => {
                                                 onClick={() =>
                                                     setChosen(
                                                         chosen?.filter(
-                                                            (user) =>
-                                                                user.id !==
-                                                                friend.id
+                                                            (user) => user.id !== friend.id
                                                         )
                                                     )
                                                 }
@@ -217,17 +212,10 @@ const Popout = ({ content }: any) => {
                                             aria-autocomplete='list'
                                             aria-expanded='true'
                                             aria-haspopup='true'
-                                            onChange={(e) =>
-                                                setSearch(e.target.value)
-                                            }
+                                            onChange={(e) => setSearch(e.target.value)}
                                             onKeyDown={(e) => {
-                                                if (
-                                                    e.key === 'Backspace' &&
-                                                    !search
-                                                ) {
-                                                    setChosen(
-                                                        chosen?.slice(0, -1)
-                                                    );
+                                                if (e.key === 'Backspace' && !search) {
+                                                    setChosen(chosen?.slice(0, -1));
                                                 }
                                             }}
                                         />
@@ -239,16 +227,10 @@ const Popout = ({ content }: any) => {
                                 {content?.channel?.type === 'GROUP_DM' && (
                                     <div className={styles.addButton}>
                                         <button
-                                            className={
-                                                chosen?.length
-                                                    ? 'blue'
-                                                    : 'blue disabled'
-                                            }
+                                            className={chosen?.length ? 'blue' : 'blue disabled'}
                                             onClick={() => {
                                                 if (chosen?.length) {
-                                                    createChan(
-                                                        content?.channel.id
-                                                    );
+                                                    createChan(content?.channel.id);
                                                 }
                                             }}
                                         >
@@ -271,10 +253,7 @@ const Popout = ({ content }: any) => {
                                     onClick={() => {
                                         if (chosen.includes(friend)) {
                                             setChosen(
-                                                chosen?.filter(
-                                                    (user) =>
-                                                        user.id !== friend.id
-                                                )
+                                                chosen?.filter((user) => user.id !== friend.id)
                                             );
                                         } else {
                                             if (placesLeft > 0) {
@@ -288,7 +267,7 @@ const Popout = ({ content }: any) => {
                                         <div className={styles.friendAvatar}>
                                             <Image
                                                 src={`/assets/avatars/${
-                                                    friend.avatar || blue
+                                                    friend.avatar || 'blue'
                                                 }.png`}
                                                 alt={friend?.username}
                                                 width={32}
@@ -334,9 +313,7 @@ const Popout = ({ content }: any) => {
                                             type='text'
                                             readOnly
                                             value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
-                                            onClick={() =>
-                                                inputLinkRef.current.select()
-                                            }
+                                            onClick={() => inputLinkRef.current?.select()}
                                         />
                                     </div>
 
@@ -347,10 +324,7 @@ const Popout = ({ content }: any) => {
                                                 `https://chat-app.mart1d4.com/${content?.channel.id}`
                                             );
                                             setCopied(true);
-                                            setTimeout(
-                                                () => setCopied(false),
-                                                1000
-                                            );
+                                            setTimeout(() => setCopied(false), 1000);
                                         }}
                                     >
                                         {copied ? 'Copied' : 'Copy'}
@@ -392,10 +366,7 @@ const Popout = ({ content }: any) => {
                                 }}
                             />
 
-                            <div>
-                                No friends found that are not already in this
-                                DM.
-                            </div>
+                            <div>No friends found that are not already in this DM.</div>
                         </div>
 
                         <div className={styles.separator} />
@@ -411,9 +382,7 @@ const Popout = ({ content }: any) => {
                                             type='text'
                                             readOnly
                                             value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
-                                            onClick={() =>
-                                                inputLinkRef.current.select()
-                                            }
+                                            onClick={() => inputLinkRef.current?.select()}
                                         />
                                     </div>
 
@@ -424,10 +393,7 @@ const Popout = ({ content }: any) => {
                                                 `https://chat-app.mart1d4.com/${content?.channel.id}`
                                             );
                                             setCopied(true);
-                                            setTimeout(
-                                                () => setCopied(false),
-                                                1000
-                                            );
+                                            setTimeout(() => setCopied(false), 1000);
                                         }}
                                     >
                                         {copied ? 'Copied' : 'Copy'}

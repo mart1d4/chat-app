@@ -88,6 +88,10 @@
     border-radius: 8px;
 }
 
+/* .textArea:has(.textContainerInner:focus-within) {
+    outline: 4px solid var(--accent-light);
+} */
+
 .scrollableContainer {
     overflow: hidden scroll;
     max-height: 50vh;
@@ -150,6 +154,11 @@
     height: 24px;
 }
 
+.attachWrapper > button:focus-visible {
+    border-radius: 8px;
+    outline-offset: -4px;
+}
+
 .textContainer {
     padding: 0;
     resize: none;
@@ -202,7 +211,7 @@
     padding: 4px;
     margin: 0 4px;
     height: 44px;
-    width: 32px;
+    width: 38px;
 }
 
 .toolsContainer > button:first-child:not(.sendButton) {
@@ -211,6 +220,10 @@
 
 .toolsContainer > button:not(:last-child):hover path {
     fill: var(--foreground-2);
+}
+
+.toolsContainer > button:focus-visible {
+    outline-offset: -4px;
 }
 
 .filesList {

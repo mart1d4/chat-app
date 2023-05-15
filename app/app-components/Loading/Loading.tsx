@@ -41,7 +41,14 @@ const Loading = ({ children }: Props): ReactNode => {
         return <div></div>;
     }
 
-    return children;
+    return (
+        <div
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+        >
+            {children}
+        </div>
+    );
 };
 
 export default Loading;

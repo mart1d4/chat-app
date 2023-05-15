@@ -5,25 +5,20 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import { Icon, Tooltip } from '@/app/app-components';
+import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
 import styles from './TextArea.module.css';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import useContextHook from '@/hooks/useContextHook';
 
-const TextArea = ({
-    friend,
-    userBlocked,
-    channel,
-    setMessages,
-    editedMessage,
-    setEditedMessage,
-    reply,
-    setReply,
-}: any) => {
-    const [message, setMessage] = useState('');
+const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
+    const [message, setMessage] = useState<string>('');
     const [files, setFiles] = useState([]);
-    const [friendTyping, setFriendTyping] = useState(false);
+    const [usersTyping, setUsersTyping] = useState<
+        {
+            [key: string]: boolean;
+        }[]
+    >(false);
 
     const { auth }: any = useContextHook({
         context: 'auth',
@@ -32,7 +27,7 @@ const TextArea = ({
         context: 'settings',
     });
     const { setFixedLayer }: any = useContextHook({
-        context: 'fixedLayer',
+        context: 'layer',
     });
     const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
@@ -47,8 +42,7 @@ const TextArea = ({
 
     const pasteText = async () => {
         const text = await navigator.clipboard.readText();
-        // @ts-expect-error
-        // textAreaRef?.current?.innerText += text;
+        // textAreaRef?.current.innerText += text;
         setMessage((message) => message + text);
         moveCursorToEnd();
     };
@@ -56,51 +50,44 @@ const TextArea = ({
     useEffect(() => {
         if (!channel) return;
 
-        const message = JSON.parse(
-            localStorage.getItem(`channel-${channel._id}`) ?? '{}'
-        )?.message;
+        const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}')?.message;
         if (message) {
             setMessage(message);
-            // @ts-expect-error
             textAreaRef.current.innerText = message;
             moveCursorToEnd();
         }
 
-        textAreaRef?.current?.focus();
+        textAreaRef?.current.focus();
     }, [channel]);
 
     useEffect(() => {
         if (!channel) return;
 
         localStorage.setItem(
-            `channel-${channel._id}`,
+            `channel-${channel.id}`,
             JSON.stringify({
-                ...(JSON.parse(
-                    localStorage.getItem(`channel-${channel._id}`)
-                ) ?? {}),
+                ...(JSON.parse(localStorage.getItem(`channel-${channel.id}`)) ?? {}),
                 message: message,
             })
         );
 
-        if (textAreaRef.current.innerHTML.includes('<span')) {
-            const cursorPosition = window
-                .getSelection()
-                .getRangeAt(0).startOffset;
+        if (textAreaRef.current.innerHTML.includes('<span>')) {
+            const cursorPosition = window.getSelection().getRangeAt(0).startOffset;
             textAreaRef.current.innerText = message;
             moveCursorToEnd();
         }
     }, [message]);
 
     useEffect(() => {
-        if (!editedMessage) return;
+        if (!edit) return;
         const text = textAreaRef.current.innerText;
 
-        if (text !== editedMessage) {
-            setMessage(editedMessage);
-            textAreaRef.current.innerText = editedMessage;
+        if (text !== edit) {
+            setMessage(edit);
+            textAreaRef.current.innerText = edit;
             moveCursorToEnd();
         }
-    }, [editedMessage]);
+    }, [edit]);
 
     const moveCursorToEnd = () => {
         textAreaRef.current.focus();
@@ -133,10 +120,7 @@ const TextArea = ({
             messageContent = messageContent.substring(1);
         }
         while (messageContent.endsWith('\n')) {
-            messageContent = messageContent.substring(
-                0,
-                messageContent.length - 1
-            );
+            messageContent = messageContent.substring(0, messageContent.length - 1);
         }
 
         const id = uuidv4();
@@ -148,26 +132,21 @@ const TextArea = ({
         if (reply) {
             setReply(null);
             localStorage.setItem(
-                `channel-${channel._id}`,
+                `channel-${channel.id}`,
                 JSON.stringify({
-                    ...JSON.parse(
-                        localStorage.getItem(`channel-${channel._id}`) ?? '{}'
-                    ),
+                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}'),
                     reply: null,
                 })
             );
         }
 
-        const response = await axiosPrivate.post(
-            `/channels/${channel._id}/messages`,
-            {
-                message: {
-                    content: message,
-                    attachments: files,
-                    messageReference: messRef?._id ?? null,
-                },
-            }
-        );
+        const response = await axiosPrivate.post(`/channels/${channel.id}/messages`, {
+            message: {
+                content: message,
+                attachments: files,
+                messageReference: messRef?.id ?? null,
+            },
+        });
     };
 
     const textContainer = useMemo(
@@ -177,10 +156,9 @@ const TextArea = ({
                 style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
             >
                 <div>
-                    {message.length === 0 && !editedMessage && (
+                    {message.length === 0 && !edit && (
                         <div className={styles.textContainerPlaceholder}>
-                            Message{' '}
-                            {friend ? `@${friend.username}` : channel?.name}
+                            Message {friend ? `@${friend.username}` : channel?.name}
                         </div>
                     )}
 
@@ -192,20 +170,16 @@ const TextArea = ({
                         autoCorrect='off'
                         aria-multiline='true'
                         aria-label={
-                            editedMessage
+                            edit
                                 ? 'Edit Message'
-                                : `Message ${
-                                      friend
-                                          ? `@${friend.username}`
-                                          : channel?.name
-                                  }`
+                                : `Message ${friend ? `@${friend.username}` : channel?.name}`
                         }
                         aria-autocomplete='list'
                         contentEditable='plaintext-only'
                         onInput={(e) => {
                             const text = e.target.innerText.toString();
-                            if (editedMessage) {
-                                setEditedMessage(text);
+                            if (edit) {
+                                setEdit(text);
                                 localStorage.setItem(
                                     `channel-${router.query.channelID}`,
                                     JSON.stringify({
@@ -230,7 +204,7 @@ const TextArea = ({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                if (editedMessage) return;
+                                if (edit) return;
                                 sendMessage();
                                 setMessage('');
                                 e.target.innerText = '';
@@ -250,10 +224,10 @@ const TextArea = ({
                 </div>
             </div>
         ),
-        [message, friend, channel, editedMessage, reply]
+        [message, friend, channel, edit, reply]
     );
 
-    if (editedMessage)
+    if (edit)
         return (
             <form
                 className={styles.form}
@@ -280,13 +254,13 @@ const TextArea = ({
                 </div>
             </form>
         );
-    else if (!userBlocked)
+    else if (!auth.user.blockedUserIds.includes(friend?.id)) {
         return (
             <form className={styles.form}>
-                {reply?.channel === channel?._id && (
+                {reply?.channel === channel?.id && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
-                            Replying to <span>{reply?.author?.username}</span>
+                            Replying to <span>{reply?.author.username}</span>
                         </div>
 
                         <div
@@ -294,12 +268,10 @@ const TextArea = ({
                             onClick={() => {
                                 setReply(null);
                                 localStorage.setItem(
-                                    `channel-${channel._id}`,
+                                    `channel-${channel.id}`,
                                     JSON.stringify({
                                         ...JSON.parse(
-                                            localStorage.getItem(
-                                                `channel-${channel._id}`
-                                            ) ?? '{}'
+                                            localStorage.getItem(`channel-${channel.id}`) ?? '{}'
                                         ),
                                         reply: null,
                                     })
@@ -320,10 +292,7 @@ const TextArea = ({
                 <div
                     className={styles.textArea}
                     style={{
-                        borderRadius:
-                            reply?.channel === channel?._id
-                                ? '0 0 8px 8px'
-                                : '8px',
+                        borderRadius: reply?.channel === channel?.id ? '0 0 8px 8px' : '8px',
                     }}
                 >
                     <div className={styles.scrollableContainer + ' scrollbar'}>
@@ -350,18 +319,11 @@ const TextArea = ({
                                     accept='image/*'
                                     multiple
                                     onChange={(e) => {
-                                        const newFiles = Array.from(
-                                            e.target.files
-                                        );
-                                        if (
-                                            files.length + newFiles.length >
-                                            10
-                                        ) {
+                                        const newFiles = Array.from(e.target.files);
+                                        if (files.length + newFiles.length > 10) {
                                             return;
                                         }
-                                        setFiles(
-                                            files.concat(newFiles).slice(0, 10)
-                                        );
+                                        setFiles(files.concat(newFiles).slice(0, 10));
                                     }}
                                     style={{ display: 'none' }}
                                 />
@@ -370,9 +332,7 @@ const TextArea = ({
                                     onClick={(e) => e.preventDefault()}
                                     onDoubleClick={(e) => {
                                         e.preventDefault();
-                                        document
-                                            .getElementById('file')
-                                            ?.click();
+                                        document.getElementById('file')?.click();
                                     }}
                                 >
                                     <div>
@@ -401,14 +361,12 @@ const TextArea = ({
                                     <button
                                         className={
                                             message.length === 0
-                                                ? styles.sendButton +
-                                                  ' ' +
-                                                  styles.empty
+                                                ? styles.sendButton + ' ' + styles.empty
                                                 : styles.sendButton
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (editedMessage) return;
+                                            if (edit) return;
                                             sendMessage();
                                             setMessage('');
                                             e.target.innerText = '';
@@ -416,11 +374,8 @@ const TextArea = ({
                                         style={{
                                             disabled: message.length === 0,
                                             cursor:
-                                                message.length === 0
-                                                    ? 'not-allowed'
-                                                    : 'pointer',
-                                            opacity:
-                                                message.length === 0 ? 0.5 : 1,
+                                                message.length === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: message.length === 0 ? 0.5 : 1,
                                         }}
                                     >
                                         <div>
@@ -438,7 +393,7 @@ const TextArea = ({
 
                 <div className={styles.bottomForm}>
                     <div className={styles.typingContainer}>
-                        {friendTyping && (
+                        {usersTyping.length > 0 && (
                             <>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'
@@ -462,8 +417,11 @@ const TextArea = ({
                                     />
                                 </svg>
                                 <span>
-                                    <strong>{friend?.username}</strong> is
-                                    typing...
+                                    {usersTyping.map((user) => (
+                                        <span>{user.username}, </span>
+                                    ))}
+
+                                    {usersTyping.length > 0 ? 'are typing...' : 'is typing...'}
                                 </span>
                             </>
                         )}
@@ -485,13 +443,11 @@ const TextArea = ({
                 </div>
             </form>
         );
-    else
+    } else {
         return (
             <form className={styles.form}>
                 <div className={styles.wrapperBlocked}>
-                    <div>
-                        You cannot send messages to a user you have blocked.
-                    </div>
+                    <div>You cannot send messages to a user you have blocked.</div>
 
                     <button
                         className='grey'
@@ -502,6 +458,7 @@ const TextArea = ({
                 </div>
             </form>
         );
+    }
 };
 
 const emojisPos = [
@@ -574,9 +531,7 @@ const EmojiPicker = () => {
 
     return (
         <motion.button
-            onMouseEnter={() =>
-                setEmojisPosIndex(Math.floor(Math.random() * emojisPos.length))
-            }
+            onMouseEnter={() => setEmojisPosIndex(Math.floor(Math.random() * emojisPos.length))}
             onClick={(e) => e.preventDefault()}
             className={styles.buttonContainer}
             whileHover='hover'
@@ -655,16 +610,10 @@ const FilePreview = ({ file, setFiles }: any) => {
 
                         <div>
                             <div
-                                className={
-                                    styles.fileMenuButton + ' ' + styles.danger
-                                }
+                                className={styles.fileMenuButton + ' ' + styles.danger}
                                 onMouseEnter={() => setShowTooltip(3)}
                                 onMouseLeave={() => setShowTooltip(null)}
-                                onClick={() =>
-                                    setFiles((files) =>
-                                        files.filter((f) => f !== file)
-                                    )
-                                }
+                                onClick={() => setFiles((files) => files.filter((f) => f !== file))}
                             >
                                 <Icon
                                     name='delete'

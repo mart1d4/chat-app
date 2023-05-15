@@ -1,0 +1,65 @@
+.wrapper {
+    position: relative;
+    padding-left: 4.5rem;
+    padding-right: 1rem;
+    display: block;
+}
+
+.avatar {
+    opacity: 0.08;
+    position: absolute;
+    top: 0.25rem;
+    left: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--foreground-2);
+}
+
+.username {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 1.375rem;
+    overflow: hidden;
+    line-height: 1.375rem;
+}
+
+.username > div.blob {
+    opacity: 0.195;
+}
+
+.blobContainer {
+    display: flex;
+    align-items: center;
+    height: 1.375rem;
+    overflow: hidden;
+    flex-wrap: wrap;
+    text-indent: 0;
+}
+
+.blob {
+    opacity: 0.06;
+    background-color: var(--foreground-2);
+    border-radius: 0.5rem;
+    flex: 0 0 auto;
+    height: 1rem;
+    line-height: 1.375rem;
+    margin-top: 0.1875rem;
+}
+
+.blob:not(:first-child) {
+    margin-left: 0.25rem;
+}
+
+.attachement {
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+}
+
+.attachement > div {
+    opacity: 0.03;
+    background-color: var(--foreground-2);
+    border-radius: 6px;
+    margin-top: 0.125rem;
+}

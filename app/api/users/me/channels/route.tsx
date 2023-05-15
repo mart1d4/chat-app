@@ -54,18 +54,10 @@ export async function GET(): Promise<NextResponse> {
         }
 
         const channels = sender.channels.map((channel) => {
-            const recipients = channel.recipients
-                .map((recipient) => {
-                    // @ts-ignore
-                    return cleanOtherUser(recipient);
-                })
-                .filter((recipient) => {
-                    if (channel.recipients.length === 1) {
-                        return true;
-                    } else {
-                        return recipient.id !== sender.id;
-                    }
-                });
+            const recipients = channel.recipients.map((recipient) => {
+                // @ts-ignore
+                return cleanOtherUser(recipient);
+            });
 
             return {
                 ...channel,
@@ -309,9 +301,7 @@ export async function POST(req: Request) {
                 }
             }
 
-            const channelName = recipientObjects
-                .map((recipient) => recipient.username)
-                .join(', ');
+            const channelName = recipientObjects.map((recipient) => recipient.username).join(', ');
 
             await prisma.channel.update({
                 where: {
@@ -335,9 +325,20 @@ export async function POST(req: Request) {
 
         const sameChannel = await prisma.channel.findFirst({
             where: {
-                recipientIds: {
-                    equals: [...recipients, user.id],
-                },
+                // Recipient IDs array is the same as recipients + user id, with no extra IDs
+                AND: [
+                    {
+                        recipientIds: {
+                            equals: [...recipients, user.id],
+                        },
+                    },
+                    {
+                        recipientIds: {
+                            // @ts-ignore
+                            notIn: [...recipients, user.id],
+                        },
+                    },
+                ],
             },
             include: {
                 recipients: true,
@@ -390,9 +391,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const channelName = recipientObjects
-            .map((recipient) => recipient.username)
-            .join(', ');
+        const channelName = recipientObjects.map((recipient) => recipient.username).join(', ');
 
         const channel = await prisma.channel.create({
             // @ts-ignore

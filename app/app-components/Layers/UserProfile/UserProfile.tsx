@@ -1,19 +1,18 @@
 'use client';
 
-import styles from './UserProfile.module.css';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useEffect, useRef, useState, ReactElement } from 'react';
-import Image from 'next/image';
+import { addFriend, getFriends, removeFriend } from '@/lib/api-functions/users';
 import { AvatarStatus, Icon, Tooltip } from '@/app/app-components';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
+import { useEffect, useRef, useState, ReactElement } from 'react';
+import { createChannel } from '@/lib/api-functions/channels';
+import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
+import styles from './UserProfile.module.css';
+import { v4 as uuidv4 } from 'uuid';
+import Image from 'next/image';
 
 const UserProfile = (): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
-    const [userSatus, setUserStatus] = useState<string>('');
-    const [mutualFriends, setMutualFriends] = useState([]);
+    const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
     const [note, setNote] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
@@ -25,35 +24,32 @@ const UserProfile = (): ReactElement => {
     });
 
     const cardRef = useRef<HTMLDivElement>(null);
-    const noteRef: any = useCallback(
-        (node: any) => {
-            if (node !== null) {
-                node.style.height = 'auto';
-                const height = node.scrollHeight + 'px';
-                node.style.height = height;
-            }
-        },
-        [note]
-    );
+    const noteRef = useRef<HTMLTextAreaElement>(null);
 
-    const user = userProfile?.user;
-    const router = useRouter();
-    const axiosPrivate = useAxiosPrivate();
+    const user: null | CleanOtherUserType = userProfile?.user;
 
     const isSameUser = () => {
-        return user?._id === auth?.user?._id;
+        return user?.id === auth.user.id;
     };
 
     useEffect(() => {
-        if (!userProfile && !user) return;
+        if (!user) return;
 
-        if (userProfile?.focusNote && noteRef?.current)
-            noteRef?.current?.focus();
+        if (!isSameUser()) {
+            const getMutuals = async () => {
+                const friends = await getFriends();
+                const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
+                setMutualFriends(mutuals);
+            };
+
+            getMutuals();
+        }
+
+        if (userProfile?.focusNote) noteRef.current?.focus();
 
         setActiveNavItem(0);
         setNote('');
-        setUserStatus('');
-    }, [user, userProfile]);
+    }, [user]);
 
     const sectionNavItems = isSameUser()
         ? ['User Info']
@@ -70,7 +66,7 @@ const UserProfile = (): ReactElement => {
                     transition={{ duration: 0.2 }}
                     onMouseDown={(e) => {
                         if (e.button === 2) return;
-                        if (!cardRef?.current?.contains(e.target as Node)) {
+                        if (!cardRef.current?.contains(e.target as Node)) {
                             setUserProfile(null);
                             setFixedLayer(null);
                         }
@@ -102,16 +98,14 @@ const UserProfile = (): ReactElement => {
                         >
                             <div>
                                 <Image
-                                    src={`/assets/avatars/${
-                                        user.avatar || 'blue'
-                                    }.png`}
+                                    src={`/assets/avatars/${user.avatar || 'blue'}.png`}
                                     alt='User Avatar'
                                     width={120}
                                     height={120}
                                 />
                                 <AvatarStatus
                                     status={
-                                        userSatus === 'Friends' || isSameUser()
+                                        user.friendIds.includes(auth.user.id) || isSameUser()
                                             ? user.status
                                             : 'Offline'
                                     }
@@ -125,126 +119,107 @@ const UserProfile = (): ReactElement => {
                             <div className={styles.topSectionToolbar}>
                                 <div></div>
 
-                                <div>
-                                    {!isSameUser() && (
-                                        <>
-                                            {userSatus !== 'Blocked' && (
-                                                <>
-                                                    {userSatus ===
-                                                    'Request Received' ? (
-                                                        <>
-                                                            <button
-                                                                className='green'
-                                                                // onClick={() =>
-                                                                //     addFriend()
-                                                                // }
-                                                            >
-                                                                Accept
-                                                            </button>
-                                                            <button
-                                                                className='grey'
-                                                                // onClick={() =>
-                                                                //     deleteFriend()
-                                                                // }
-                                                            >
-                                                                Ignore
-                                                            </button>
-                                                        </>
-                                                    ) : userSatus ===
-                                                      'Friends' ? (
+                                {!isSameUser() && (
+                                    <div>
+                                        {!auth.user.blockedUserIds.includes(user.id) && (
+                                            <>
+                                                {auth.user.requestReceivedIds.includes(user.id) ? (
+                                                    <>
                                                         <button
                                                             className='green'
-                                                            // onClick={() =>
-                                                            //     createChannel()
-                                                            // }
+                                                            onClick={() => addFriend(user.id)}
                                                         >
-                                                            Send Message
+                                                            Accept
                                                         </button>
-                                                    ) : (
-                                                        <div>
-                                                            <button
-                                                                className={
-                                                                    userSatus ===
-                                                                    'Request Sent'
-                                                                        ? 'green disabled'
-                                                                        : 'green'
-                                                                }
-                                                                onClick={() => {
-                                                                    if (
-                                                                        userSatus ===
-                                                                        'Request Sent'
+
+                                                        <button
+                                                            className='grey'
+                                                            onClick={() => removeFriend(user.id)}
+                                                        >
+                                                            Ignore
+                                                        </button>
+                                                    </>
+                                                ) : auth.user.friendIds.includes(user.id) ? (
+                                                    <button
+                                                        className='green'
+                                                        onClick={() => createChannel([user.id])}
+                                                    >
+                                                        Send Message
+                                                    </button>
+                                                ) : (
+                                                    <div>
+                                                        <button
+                                                            className={
+                                                                auth.user.requestSentIds.includes(
+                                                                    user.id
+                                                                )
+                                                                    ? 'green disabled'
+                                                                    : 'green'
+                                                            }
+                                                            onClick={() => {
+                                                                if (
+                                                                    auth.user.requestSentIds.includes(
+                                                                        user.id
                                                                     )
-                                                                        return;
-                                                                    // addFriend();
-                                                                }}
-                                                                onMouseEnter={() =>
-                                                                    setShowTooltip(
-                                                                        true
-                                                                    )
+                                                                ) {
+                                                                    return;
                                                                 }
-                                                                onMouseLeave={() =>
-                                                                    setShowTooltip(
-                                                                        false
-                                                                    )
-                                                                }
+                                                                addFriend(user.id);
+                                                            }}
+                                                            onMouseEnter={() =>
+                                                                setShowTooltip(true)
+                                                            }
+                                                            onMouseLeave={() =>
+                                                                setShowTooltip(false)
+                                                            }
+                                                        >
+                                                            Send Friend Request
+                                                        </button>
+
+                                                        {auth.user.requestSentIds.includes(
+                                                            user.id
+                                                        ) && (
+                                                            <Tooltip
+                                                                show={showTooltip}
+                                                                // @ts-expect-error
+                                                                position='top'
+                                                                dist={5}
+                                                                big
                                                             >
-                                                                Send Friend
-                                                                Request
-                                                            </button>
+                                                                You sent a friend request to this
+                                                                user.
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
 
-                                                            {userSatus ===
-                                                                'Request Sent' && (
-                                                                <Tooltip
-                                                                    show={
-                                                                        showTooltip
-                                                                    }
-                                                                    // @ts-expect-error
-                                                                    position='top'
-                                                                    dist={5}
-                                                                    big
-                                                                >
-                                                                    You sent a
-                                                                    friend
-                                                                    request to
-                                                                    this user.
-                                                                </Tooltip>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-
-                                            <div
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setFixedLayer({
-                                                        type: 'menu',
-                                                        event: e,
-                                                        user: user,
-                                                        userprofile: true,
-                                                    });
-                                                }}
-                                                className={styles.moreButton}
-                                            >
-                                                <Icon name='more' />
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                        <div
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFixedLayer({
+                                                    type: 'menu',
+                                                    event: e,
+                                                    user: user,
+                                                    userprofile: true,
+                                                });
+                                            }}
+                                            className={styles.moreButton}
+                                        >
+                                            <Icon name='more' />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className={styles.contentSection}>
                             <div className={styles.contentHeader}>
-                                <div className={styles.username}>
-                                    {user.username}
-                                </div>
-                                {((user.customStatus &&
-                                    userSatus === 'Friends') ||
+                                <div className={styles.username}>{user.username}</div>
+                                {((user.customStatus && auth.user.friendIds.includes(user.id)) ||
                                     (user.customStatus && isSameUser())) && (
-                                    <div className={styles.customStatus}>
-                                        {user.customStatus}
-                                    </div>
+                                    <div className={styles.customStatus}>{user.customStatus}</div>
                                 )}
                             </div>
 
@@ -253,9 +228,7 @@ const UserProfile = (): ReactElement => {
                                     {!isSameUser() &&
                                         sectionNavItems.map((item, index) => (
                                             <div
-                                                className={
-                                                    styles.contentNavItem
-                                                }
+                                                className={styles.contentNavItem}
                                                 key={index}
                                                 style={{
                                                     color:
@@ -271,9 +244,7 @@ const UserProfile = (): ReactElement => {
                                                             ? 'default'
                                                             : 'pointer',
                                                 }}
-                                                onClick={() =>
-                                                    setActiveNavItem(index)
-                                                }
+                                                onClick={() => setActiveNavItem(index)}
                                             >
                                                 {item}
                                             </div>
@@ -284,23 +255,17 @@ const UserProfile = (): ReactElement => {
                             <div
                                 className={styles.contentUser + ' scrollbar'}
                                 style={{
-                                    padding:
-                                        activeNavItem === 0 ? '0 12px' : '',
+                                    padding: activeNavItem === 0 ? '0 12px' : '',
                                 }}
                             >
                                 {activeNavItem === 0 && (
                                     <div>
                                         {((user.description &&
-                                            userSatus === 'Friends') ||
-                                            (user.description &&
-                                                isSameUser())) && (
+                                            auth.user.friendIds.includes(user.id)) ||
+                                            (user.description && isSameUser())) && (
                                             <>
                                                 <h1>About Me</h1>
-                                                <div
-                                                    className={
-                                                        styles.contentUserDescription
-                                                    }
-                                                >
+                                                <div className={styles.contentUserDescription}>
                                                     {user.description}
                                                 </div>
                                             </>
@@ -309,16 +274,11 @@ const UserProfile = (): ReactElement => {
                                         <h1>Chat App Member Since</h1>
                                         <div className={styles.contentUserDate}>
                                             <div>
-                                                {new Intl.DateTimeFormat(
-                                                    'en-US',
-                                                    {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: '2-digit',
-                                                    }
-                                                ).format(
-                                                    new Date(user.createdAt)
-                                                )}
+                                                {new Intl.DateTimeFormat('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: '2-digit',
+                                                }).format(new Date(user.createdAt))}
                                             </div>
                                         </div>
 
@@ -327,9 +287,7 @@ const UserProfile = (): ReactElement => {
                                             <textarea
                                                 ref={noteRef}
                                                 value={note}
-                                                onChange={(e) =>
-                                                    setNote(e.target.value)
-                                                }
+                                                onChange={(e) => setNote(e.target.value)}
                                                 placeholder='Click to add a note'
                                                 maxLength={256}
                                             />
@@ -349,18 +307,12 @@ const UserProfile = (): ReactElement => {
                                         {mutualFriends.length > 0 ? (
                                             mutualFriends.map((friend) => (
                                                 <FriendItem
-                                                    friend={friend}
                                                     key={uuidv4()}
+                                                    friend={friend}
                                                 />
                                             ))
                                         ) : (
-                                            <div
-                                                className={
-                                                    styles.empty +
-                                                    ' ' +
-                                                    styles.noFriends
-                                                }
-                                            >
+                                            <div className={styles.empty + ' ' + styles.noFriends}>
                                                 <div />
                                                 <div>No friends in common</div>
                                             </div>
@@ -414,9 +366,7 @@ const FriendItem = ({ friend }: any): ReactElement => {
 
                 <AvatarStatus
                     status={friend?.status}
-                    background={
-                        hover ? 'var(--background-3)' : 'var(--background-dark)'
-                    }
+                    background={hover ? 'var(--background-3)' : 'var(--background-dark)'}
                 />
             </div>
 

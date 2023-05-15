@@ -1,8 +1,9 @@
 'use client';
 
-import { Tooltip } from '@/app/app-components';
-import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, ReactElement, ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import useContextHook from '@/hooks/useContextHook';
+import { Tooltip } from '@/app/app-components';
 import styles from './AppNav.module.css';
 import { motion } from 'framer-motion';
 
@@ -18,9 +19,13 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
+    const { auth }: any = useContextHook({
+        context: 'auth',
+    });
+
     const pathname = usePathname();
     const router = useRouter();
-    const requests = [1];
+    const requests = auth.user.requestReceivedIds.length;
 
     useEffect(() => {
         if (pathname.includes(link)) {
@@ -64,9 +69,7 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
             </div>
 
             <motion.div
-                className={
-                    active ? styles.navIconWrapperActive : styles.navIconWrapper
-                }
+                className={active ? styles.navIconWrapperActive : styles.navIconWrapper}
                 onMouseEnter={() => {
                     setShowTooltip(true);
                     if (!active) {

@@ -13,6 +13,8 @@ import UserCard from './Layers/UserCard/UserCard';
 import Loading from './Loading/Loading';
 import Message from './Message/Message';
 import TextArea from './TextArea/TextArea';
+import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
+import MemberList from './MemberList/MemberList';
 
 export {
     AppNav,
@@ -30,4 +32,6 @@ export {
     Loading,
     Message,
     TextArea,
+    MessageSkeleton,
+    MemberList,
 };

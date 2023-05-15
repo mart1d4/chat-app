@@ -1,0 +1,162 @@
+.container {
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--background-4);
+}
+
+.content {
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    position: relative;
+}
+
+.main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.messagesWrapper {
+    display: flex;
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    z-index: 0;
+}
+
+.messagesScrollableContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden scroll;
+    overflow-anchor: none;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.messagesScrollableContainer::-webkit-scrollbar-track {
+    margin-bottom: 8px;
+}
+
+.scrollContent {
+    overflow-anchor: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    min-height: 100%;
+    position: relative;
+}
+
+.scrollContentInner {
+    min-height: 0;
+    overflow: hidden;
+    list-style: none;
+}
+
+.firstTimeMessageContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 16px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.imageWrapper {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    border-radius: 50%;
+    background-color: var(--background-5);
+}
+
+.imageWrapper img {
+    border-radius: 50%;
+}
+
+.friendUsername {
+    font-weight: 700;
+    margin: 8px 0;
+    font-size: 32px;
+    line-height: 40px;
+    color: var(--foreground-1);
+}
+
+.descriptionContainer {
+    color: var(--foreground-3);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.descriptionContainer strong {
+    font-weight: 600;
+}
+
+.descriptionActions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.descriptionActions button {
+    margin-right: 8px;
+    width: auto;
+    height: 24px;
+    min-width: 52px;
+    pointer-events: all;
+}
+
+.scrollerSpacer {
+    display: block;
+    height: 30px;
+    width: 1px;
+    pointer-events: none;
+}
+
+.messageDivider {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    left: auto;
+    right: auto;
+    z-index: 1;
+    height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    margin-left: 1rem;
+    margin-right: 0.875rem;
+    border-top: thin solid var(--border-light);
+}
+
+.messageDivider span {
+    display: block;
+    flex: 0 0 auto;
+    padding: 2px 4px;
+    line-height: 13px;
+    font-size: 12px;
+    margin-top: -1px;
+    font-weight: 600;
+    border-radius: 8px;
+    color: var(--foreground-3);
+    background-color: var(--background-4);
+}

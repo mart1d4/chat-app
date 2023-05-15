@@ -1,6 +1,84 @@
+import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prismadb';
+
+export async function GET(
+    req: Request,
+    { params }: { params: { channelId: string } }
+) {
+    const channelId = params.channelId;
+    const headersList = headers();
+    const senderId = headersList.get('userId') || '';
+
+    try {
+        const channel = await prisma.channel.findUnique({
+            where: {
+                id: channelId,
+            },
+            include: {
+                recipients: {
+                    orderBy: {
+                        username: 'asc',
+                    },
+                },
+            },
+        });
+
+        if (!channel) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Channel not found',
+                },
+                {
+                    status: 404,
+                }
+            );
+        }
+
+        if (!channel.recipientIds.includes(senderId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You are not in this channel',
+                },
+                {
+                    status: 401,
+                }
+            );
+        }
+
+        const recipients = channel.recipients.map((recipient) => {
+            return cleanOtherUser(recipient as UserType);
+        });
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Successfully retrieved channel',
+                channel: {
+                    ...channel,
+                    recipients,
+                },
+            },
+            {
+                status: 200,
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong.',
+            },
+            {
+                status: 500,
+            }
+        );
+    }
+}
 
 export async function DELETE(
     req: Request,

@@ -25,7 +25,11 @@ export async function GET(): Promise<NextResponse> {
                 id: senderId,
             },
             include: {
-                friends: true,
+                friends: {
+                    orderBy: {
+                        username: 'asc',
+                    },
+                },
             },
         });
 

@@ -106,8 +106,6 @@ const Popup = (): ReactElement => {
             }
         );
 
-        console.log(response);
-
         if (!response.data.success) {
             const err = response?.data?.message?.toLowerCase();
             if (err.includes('password')) {

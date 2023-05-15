@@ -61,6 +61,7 @@ enum MessageType {
 model User {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   username     String     @unique
+  email        String?
   avatar       String     @default("blue")
   banner       String?
   primaryColor String     @default("#5a63f2")
@@ -123,10 +124,10 @@ model Guild {
   afkChannelId  String?
   afkTimeout    Int?
 
-  ownerId String @map("owner") @db.ObjectId
+  ownerId String @db.ObjectId
   owner   User   @relation("Owner", fields: [ownerId], references: [id])
 
-  memberIds String[] @map("members") @db.ObjectId
+  memberIds String[] @db.ObjectId
   members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
 
   channels Channel[]
@@ -145,7 +146,7 @@ model Role {
   position    Int
   mentionable Boolean
 
-  guildId String @map("guild") @db.ObjectId
+  guildId String @db.ObjectId
   guild   Guild  @relation(fields: [guildId], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
@@ -165,13 +166,13 @@ model Channel {
   rateLimit   Int?
   permissions String[]
 
-  guildId String? @map("guild") @db.ObjectId
+  guildId String? @db.ObjectId
   guild   Guild?  @relation(fields: [guildId], references: [id])
 
-  ownerId String? @map("owner") @db.ObjectId
+  ownerId String? @db.ObjectId
   owner   User?   @relation("Owner", fields: [ownerId], references: [id])
 
-  recipientIds String[] @map("recipients") @db.ObjectId
+  recipientIds String[] @db.ObjectId
   recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
 
   messages Message[]
@@ -196,10 +197,10 @@ model Message {
   mentionRoleIds    String[]
   mentionUserIds    String[]
 
-  authorId String @map("author") @db.ObjectId
+  authorId String @db.ObjectId
   author   User   @relation(fields: [authorId], references: [id])
 
-  channelId String  @map("channel") @db.ObjectId
+  channelId String  @db.ObjectId
   channel   Channel @relation(fields: [channelId], references: [id])
 
   createdAt DateTime @default(now()) @db.Date

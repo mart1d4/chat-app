@@ -1,7 +1,7 @@
 import axiosPrivate from '@/lib/axios';
 
 const TOKEN =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NWE1ZjJkZWJiY2VkNzMxZmFhM2M1MyIsImlhdCI6MTY4MzkwMDI2MSwiZXhwIjoxNjg0NTA1MDYxfQ.-qGUmwSAN5zwriTl6P-KR30sHSL_-JPpW1g7JT9LSE8';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NWE1ZjJkZWJiY2VkNzMxZmFhM2M1MyIsImlhdCI6MTY4Mzk3MTY1NiwiZXhwIjoxNjg0NTc2NDU2fQ.QX3iKGQRLwzEEIvcztchjSB9USeyimewaCuBIwF_QiY';
 
 export const getUser = async (userId: string) => {
     const response = await axiosPrivate.get(`/users/${userId}`, {
@@ -18,11 +18,15 @@ export const getUser = async (userId: string) => {
 };
 
 export const blockUser = async (userId: string) => {
-    const response = await axiosPrivate.post(`/users/${userId}/block`, {
-        headers: {
-            Authorization: `Bearer ${TOKEN}`,
-        },
-    });
+    const response = await axiosPrivate.post(
+        `/users/${userId}/block`,
+        {},
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+            },
+        }
+    );
 
     if (!response.data.success) {
         throw new Error('Could not block user');
@@ -46,11 +50,15 @@ export const unblockUser = async (userId: string) => {
 };
 
 export const addFriend = async (userId: string) => {
-    const response = await axiosPrivate.post(`/users/me/friends/${userId}`, {
-        headers: {
-            Authorization: `Bearer ${TOKEN}`,
-        },
-    });
+    const response = await axiosPrivate.post(
+        `/users/me/friends/${userId}`,
+        {},
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+            },
+        }
+    );
 
     if (!response.data.success) {
         throw new Error('Could not add friend');

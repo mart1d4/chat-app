@@ -62,8 +62,8 @@ export async function middleware(req: NextRequest) {
                         headers: requestHeaders,
                     },
                 });
-            } catch (err) {
-                console.log(err);
+            } catch (error) {
+                console.error('Middleware error: ', error);
                 return NextResponse.json(
                     {
                         success: false,

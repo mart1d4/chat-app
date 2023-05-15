@@ -3,9 +3,7 @@
 'use client';
 
 import { useEffect, useState, ReactElement } from 'react';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import useContextHook from '@/hooks/useContextHook';
-import { useRouter } from 'next/navigation';
 import { Icon } from '@/app/app-components';
 import styles from './Menu.module.css';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,15 +19,13 @@ const content = ({ content }: any): ReactElement => {
     const [incoming, setIncoming] = useState(false);
 
     const { auth }: any = useContextHook({ context: 'auth' });
-    const axiosPrivate = useAxiosPrivate();
     const { userSettings, setUserSettings }: any = useContextHook({
         context: 'settings',
     });
-    const { setFixedLayer, setUserProfile, setPopup }: any = useContextHook({
+    const { setFixedLayer, setUserProfile }: any = useContextHook({
         context: 'layer',
     });
 
-    const router = useRouter();
     const user = content?.user || null;
     const message = content?.message || null;
     let menuItems: any;
@@ -68,9 +64,7 @@ const content = ({ content }: any): ReactElement => {
                 if (active === null) {
                     setActive(menuItems[0].name);
                 } else {
-                    const index = menuItems.findIndex(
-                        (item) => item.name === active
-                    );
+                    const index = menuItems.findIndex((item) => item.name === active);
                     if (index < menuItems.length - 1) {
                         setActive(menuItems[index + 1].name);
                     } else {
@@ -81,9 +75,7 @@ const content = ({ content }: any): ReactElement => {
                 if (active === null) {
                     setActive(menuItems[menuItems.length - 1].name);
                 } else {
-                    const index = menuItems.findIndex(
-                        (item) => item.name === active
-                    );
+                    const index = menuItems.findIndex((item) => item.name === active);
                     if (index > 0) {
                         setActive(menuItems[index - 1].name);
                     } else {
@@ -91,12 +83,8 @@ const content = ({ content }: any): ReactElement => {
                     }
                 }
             } else if (e.key === 'Enter') {
-                const func = menuItems
-                    .find((item) => item.name === active)
-                    ?.func();
-                const funcShift = menuItems
-                    .find((item) => item.name === active)
-                    ?.funcShift();
+                const func = menuItems.find((item) => item.name === active)?.func();
+                const funcShift = menuItems.find((item) => item.name === active)?.funcShift();
 
                 if (active) {
                     setFixedLayer(null);
@@ -115,14 +103,12 @@ const content = ({ content }: any): ReactElement => {
     }, [active, items]);
 
     useEffect(() => {
-        if (user) {
-            setSelf(content?.user?._id === auth?.user?._id);
+        if (content?.user) {
+            setSelf(content.user.id === auth.user.id);
         } else if (content?.message) {
-            setSelf(
-                content?.message?.author?._id.toString() === auth?.user?._id
-            );
+            setSelf(content.message.author.id === auth.user.id);
         }
-    }, [content, user, message, auth]);
+    }, [content]);
 
     useEffect(() => {
         if (content?.input) {
@@ -132,8 +118,7 @@ const content = ({ content }: any): ReactElement => {
                     icon: userSettings?.sendButton ? 'boxFilled' : 'box',
                     iconSize: 18,
                     iconFill: userSettings?.sendButton && 'var(--accent-1)',
-                    iconFill2:
-                        userSettings?.sendButton && 'var(--foreground-1)',
+                    iconFill2: userSettings?.sendButton && 'var(--foreground-1)',
                     iconFill2Hover: 'var(--accent-1)',
                     func: () =>
                         setUserSettings({
@@ -170,14 +155,14 @@ const content = ({ content }: any): ReactElement => {
                         icon: 'link',
                         func: () =>
                             navigator.clipboard.writeText(
-                                `/channels/@me/${message?.channel}/${message?._id}`
+                                `/channels/@me/${message.channel}/${message.id}`
                             ),
                     },
                     { name: 'Divider' },
                     {
                         name: 'Copy Message ID',
                         icon: 'id',
-                        func: () => navigator.clipboard.writeText(message?._id),
+                        func: () => navigator.clipboard.writeText(message.id),
                     },
                 ]);
             } else {
@@ -194,12 +179,12 @@ const content = ({ content }: any): ReactElement => {
                         func: () => content?.editMessage(),
                     },
                     {
-                        name: message?.pinned ? 'Unpin Message' : 'Pin Message',
+                        name: message.pinned ? 'Unpin Message' : 'Pin Message',
                         icon: 'pin',
                         func: message?.pinned
                             ? () => content?.unpinPopup()
                             : () => content?.pinPopup(),
-                        funcShift: message?.pinned
+                        funcShift: message.pinned
                             ? () => content?.unpinMessage()
                             : () => content?.pinMessage(),
                     },
@@ -214,7 +199,7 @@ const content = ({ content }: any): ReactElement => {
                         icon: 'link',
                         func: () =>
                             navigator.clipboard.writeText(
-                                `/channels/@me/${message?.channel}/${message?._id}`
+                                `/channels/@me/${message.channel}/${message.id}`
                             ),
                     },
                     { name: 'Speak Message', icon: 'speak', func: () => {} },
@@ -235,11 +220,11 @@ const content = ({ content }: any): ReactElement => {
                     {
                         name: 'Copy Message ID',
                         icon: 'id',
-                        func: () => navigator.clipboard.writeText(message?._id),
+                        func: () => navigator.clipboard.writeText(message.id),
                     },
                 ]);
             }
-        } else if (content?.channel?.type === 1) {
+        } else if (content?.channel?.type === 'GROUP_DM') {
             setItems([
                 {
                     name: 'Mark As Read',
@@ -271,8 +256,7 @@ const content = ({ content }: any): ReactElement => {
                 { name: 'Divider' },
                 {
                     name: 'Copy Channel ID',
-                    func: () =>
-                        navigator.clipboard.writeText(content?.channel?._id),
+                    func: () => navigator.clipboard.writeText(content.channel.id),
                     icon: 'id',
                 },
             ]);
@@ -293,7 +277,7 @@ const content = ({ content }: any): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: 'Copy User ID',
-                        func: () => navigator.clipboard.writeText(user._id),
+                        func: () => navigator.clipboard.writeText(user.id),
                         icon: 'id',
                     },
                 ]);
@@ -325,8 +309,7 @@ const content = ({ content }: any): ReactElement => {
                                 : friend
                                 ? 'Remove Friend'
                                 : 'Add Friend'),
-                        func: () =>
-                            outgoing || friend ? removeFriend() : addFriend(),
+                        func: () => (outgoing || friend ? removeFriend() : addFriend()),
                         danger: outgoing || friend,
                     },
                     {
@@ -341,7 +324,7 @@ const content = ({ content }: any): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: 'Copy User ID',
-                        func: () => navigator.clipboard.writeText(user._id),
+                        func: () => navigator.clipboard.writeText(user.id),
                         icon: 'id',
                     },
                 ]);
@@ -362,10 +345,7 @@ const content = ({ content }: any): ReactElement => {
                         name: 'Add Note',
                         func: () => {
                             setUserProfile(null);
-                            setTimeout(
-                                () => setUserProfile({ user, focusNote: true }),
-                                50
-                            );
+                            setTimeout(() => setUserProfile({ user, focusNote: true }), 50);
                         },
                     },
                     { name: 'Divider' },
@@ -376,7 +356,7 @@ const content = ({ content }: any): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: 'Copy User ID',
-                        func: () => navigator.clipboard.writeText(user._id),
+                        func: () => navigator.clipboard.writeText(user.id),
                         icon: 'id',
                     },
                 ]);
@@ -407,16 +387,11 @@ const content = ({ content }: any): ReactElement => {
                         name: 'Add Note',
                         func: () => {
                             setUserProfile(null);
-                            setTimeout(
-                                () => setUserProfile({ user, focusNote: true }),
-                                50
-                            );
+                            setTimeout(() => setUserProfile({ user, focusNote: true }), 50);
                         },
                     },
                     {
-                        name:
-                            !(incoming || outgoing || !friend) &&
-                            'Add Friend Nickname',
+                        name: !(incoming || outgoing || !friend) && 'Add Friend Nickname',
                         func: () => {},
                     },
                     {
@@ -438,8 +413,7 @@ const content = ({ content }: any): ReactElement => {
                             : friend
                             ? 'Remove Friend'
                             : 'Add Friend',
-                        func: () =>
-                            outgoing || friend ? removeFriend() : addFriend(),
+                        func: () => (outgoing || friend ? removeFriend() : addFriend()),
                     },
                     {
                         name: block ? 'Unblock' : 'Block',
@@ -456,15 +430,12 @@ const content = ({ content }: any): ReactElement => {
                     { name: content?.channel && 'Divider' },
                     {
                         name: 'Copy User ID',
-                        func: () => navigator.clipboard.writeText(user._id),
+                        func: () => navigator.clipboard.writeText(user.id),
                         icon: 'id',
                     },
                     {
                         name: content?.channel && 'Copy Channel ID',
-                        func: () =>
-                            navigator.clipboard.writeText(
-                                content?.channel?._id
-                            ),
+                        func: () => navigator.clipboard.writeText(content.channel.id),
                         icon: 'id',
                     },
                 ]);
@@ -539,11 +510,7 @@ const content = ({ content }: any): ReactElement => {
                                     </div>
                                 )}
 
-                                {item.text && (
-                                    <div className={styles.text}>
-                                        {item.text}
-                                    </div>
-                                )}
+                                {item.text && <div className={styles.text}>{item.text}</div>}
                             </div>
                         );
                 })}

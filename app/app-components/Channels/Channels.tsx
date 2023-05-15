@@ -1,9 +1,9 @@
 import { getChannels } from '@/lib/api-functions/channels';
-import UserListItemSmall from './UserListItemSmall';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
 import { ReactElement } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import UserItem from './UserItem';
 import Title from './Title';
 
 const Channels = async (): Promise<ReactElement> => {
@@ -13,22 +13,20 @@ const Channels = async (): Promise<ReactElement> => {
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
                 <div className={styles.searchContainer}>
-                    <button className={styles.searchButton}>
-                        Find or start a conversation
-                    </button>
+                    <button className={styles.searchButton}>Find or start a conversation</button>
                 </div>
 
                 <div className={styles.scroller + ' scrollbar'}>
                     <ul className={styles.channelList}>
                         <div></div>
 
-                        <UserListItemSmall special />
+                        <UserItem special />
 
                         <Title />
 
                         {channels?.length ? (
                             channels?.map((channel) => (
-                                <UserListItemSmall
+                                <UserItem
                                     key={uuidv4()}
                                     channel={channel}
                                 />
