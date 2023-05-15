@@ -14,7 +14,7 @@ type UserType = {
     customStatus?: string;
     password: string;
     refreshToken?: string;
-    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
 
@@ -64,7 +64,7 @@ type CleanUserType = {
     accentColor?: string;
     description?: string;
     customStatus?: string;
-    status?: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
 
