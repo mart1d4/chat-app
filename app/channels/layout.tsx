@@ -1,4 +1,12 @@
-import { AppNav, Channels } from '@/app/app-components';
+import {
+    AppNav,
+    Channels,
+    Settings,
+    UserProfile,
+    Popup,
+    FixedLayer,
+    Loading,
+} from '@/app/app-components';
 import { ReactElement, ReactNode } from 'react';
 import styles from './Layout.module.css';
 import { Metadata } from 'next';
@@ -9,26 +17,26 @@ export const metadata: Metadata = {
 
 const Layout = ({ children }: { children: ReactNode }): ReactElement => {
     return (
-        <div
-            className={styles.appContainer}
-            // onDragStart={(e) => e.preventDefault()}
-            // onContextMenu={(e) => e.preventDefault()}
-        >
-            <AppNav />
-            {/* <Settings />
-            <UserProfile />
-            <Popup />
-            <FixedLayer /> */}
+        // @ts-expect-error
+        <Loading>
+            <div className={styles.appContainer}>
+                <AppNav />
 
-            <div className={styles.appWrapper}>
-                <div className={styles.channelsContainer}>
-                    {/* @ts-expect-error Server Component */}
-                    <Channels />
+                <Popup />
+                <Settings />
+                <FixedLayer />
+                <UserProfile />
 
-                    {children}
+                <div className={styles.appWrapper}>
+                    <div className={styles.channelsContainer}>
+                        {/* @ts-expect-error Server Component */}
+                        <Channels />
+
+                        {children}
+                    </div>
                 </div>
             </div>
-        </div>
+        </Loading>
     );
 };
 

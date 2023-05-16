@@ -1,27 +1,17 @@
 'use client';
 
-import {
-    ReactElement,
-    ReactNode,
-    createContext,
-    useEffect,
-    useState,
-} from 'react';
+import { ReactElement, ReactNode, createContext, useEffect, useState } from 'react';
 
-export const SettingsContext = createContext({});
+export const SettingsContext = createContext<UserSettingsContextValueType>(null);
 
-const SettingsProvider = ({
-    children,
-}: {
-    children: ReactNode;
-}): ReactElement => {
-    const [userSettings, setUserSettings] = useState<any>(null);
+const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement => {
+    const [userSettings, setUserSettings] = useState<UserSettingsObjectType>(null);
 
     useEffect(() => {
         const userSettingsLocal = localStorage.getItem('user-settings');
 
         if (!userSettingsLocal) {
-            const userSettingsLocal = {
+            const userSettingsLocal: UserSettingsObjectType = {
                 language: 'en-US',
                 microphone: false,
                 sound: true,
@@ -30,6 +20,7 @@ const SettingsProvider = ({
                 appearance: 'default',
                 font: 'default',
                 theme: 'dark',
+                friendTab: 'add',
                 sendButton: false,
                 showUsers: true,
             };
@@ -44,16 +35,12 @@ const SettingsProvider = ({
         localStorage.setItem('user-settings', JSON.stringify(userSettings));
     }, [userSettings]);
 
-    const value = {
+    const value: UserSettingsContextValueType = {
         userSettings,
         setUserSettings,
     };
 
-    return (
-        <SettingsContext.Provider value={value}>
-            {children}
-        </SettingsContext.Provider>
-    );
+    return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
 
 export default SettingsProvider;

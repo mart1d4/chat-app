@@ -4,8 +4,9 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
-import styles from '../Auth.module.css';
 import { axiosPrivate } from '@/lib/axios';
+import styles from '../Auth.module.css';
+import Link from 'next/link';
 
 const USER_REGEX = /^.{2,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
@@ -22,13 +23,14 @@ const Register = (): ReactElement => {
 
     const uidInputRef = useRef<HTMLInputElement>(null);
     const router: AppRouterInstance = useRouter();
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth, loading }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
-        if (auth.accessToken) {
+        if (loading) return;
+        if (auth?.accessToken) {
             router.push('/channels/me');
         }
-    }, [auth]);
+    }, [loading]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
@@ -228,15 +230,7 @@ const Register = (): ReactElement => {
             </button>
 
             <div className={styles.bottomText}>
-                <button
-                    type='button'
-                    onClick={(e) => {
-                        e.preventDefault();
-                        router.push('/login');
-                    }}
-                >
-                    Already have an account?
-                </button>
+                <Link href='/login'>Already have an account?</Link>
             </div>
         </div>
     );

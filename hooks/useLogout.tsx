@@ -11,18 +11,19 @@ const useLogout = () => {
     const router = useRouter();
 
     const logout = async () => {
-        setAuth({});
+        setAuth(null);
         localStorage.removeItem('channel-url');
         localStorage.removeItem('friends-tab');
         localStorage.removeItem('user-settings');
 
         try {
-            await axios('/auth/logout', {
+            await axios.post('/auth/logout', {
                 withCredentials: true,
             });
 
             router.push('/login');
         } catch (error) {
+            console.error(error);
             throw new Error('Error logging out');
         }
     };

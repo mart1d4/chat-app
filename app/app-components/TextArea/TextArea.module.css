@@ -1,0 +1,480 @@
+.form {
+    position: relative;
+    flex-shrink: 0;
+    padding: 0 16px;
+    margin-top: -8px;
+}
+
+.wrapperBlocked {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 52px;
+    position: relative;
+    border-radius: 5px;
+    margin-bottom: 24px;
+    padding: 16px 0;
+    width: 100%;
+    background-color: var(--background-1);
+}
+
+.wrapperBlocked > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 16px;
+    height: 20px;
+    color: var(--foreground-1);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+    user-select: none;
+}
+
+.wrapperBlocked > button {
+    margin-right: 12px;
+}
+
+.bottomForm {
+    height: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 24px;
+    resize: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--foreground-3);
+}
+
+.typingContainer {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.typingContainer svg {
+    flex: 0 0 auto;
+    display: block;
+    margin-left: 9px;
+    color: var(--foreground-2);
+    pointer-events: none;
+}
+
+.typingContainer span {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+    user-select: none;
+}
+
+.typingContainer strong {
+    font-weight: 700;
+}
+
+.counterContainer {
+    user-select: none;
+}
+
+.textArea {
+    background-color: var(--background-5);
+    position: relative;
+    width: 100%;
+    text-indent: 0;
+    border-radius: 8px;
+}
+
+/* .textArea:has(.textContainerInner:focus-within) {
+    outline: 4px solid var(--accent-light);
+} */
+
+.scrollableContainer {
+    overflow: hidden scroll;
+    max-height: 50vh;
+    border-radius: 8px;
+}
+
+.scrollableContainer::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+    border: 4px var(--background-5) solid;
+    background-color: var(--background-5);
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+    border: 4px var(--background-5) solid;
+    background-color: var(--background-1);
+}
+
+.input {
+    padding-left: 16px;
+    display: flex;
+    position: relative;
+}
+
+.attachWrapper {
+    position: sticky;
+    flex: 0 0 auto;
+    align-self: stretch;
+}
+
+.attachWrapper > button {
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    height: 44px;
+    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    margin-left: -16px;
+    width: auto;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.attachWrapper > button path {
+    fill: var(--foreground-3);
+}
+
+.attachWrapper > button:hover path {
+    fill: var(--foreground-2);
+}
+
+.attachWrapper > button > div {
+    height: 24px;
+}
+
+.attachWrapper > button:focus-visible {
+    border-radius: 8px;
+    outline-offset: -4px;
+}
+
+.textContainer {
+    padding: 0;
+    resize: none;
+    border: 0;
+    appearance: none;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.375rem;
+    font-weight: 300;
+    font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    width: 100%;
+    height: 44px;
+    color: var(--foreground-2);
+    position: relative;
+}
+
+.textContainerPlaceholder {
+    padding: 11px 10px 11px 0;
+    position: absolute;
+    left: 0;
+    right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    color: var(--foreground-light);
+}
+
+.textContainerInner {
+    outline: none;
+    position: relative;
+    overflow-wrap: break-word;
+    padding: 11px 10px 11px 0;
+    left: 0;
+    right: 10px;
+    text-align: left;
+    word-break: break-word;
+    white-space: break-spaces;
+}
+
+.toolsContainer {
+    margin-right: -6px;
+    display: flex;
+    height: 44px;
+    position: sticky;
+    top: 0;
+}
+
+.toolsContainer > button:not(.sendButton) {
+    padding: 4px;
+    margin: 0 4px;
+    height: 44px;
+    width: 38px;
+}
+
+.toolsContainer > button:first-child:not(.sendButton) {
+    width: 38px;
+}
+
+.toolsContainer > button:not(:last-child):hover path {
+    fill: var(--foreground-2);
+}
+
+.toolsContainer > button:focus-visible {
+    outline-offset: -4px;
+}
+
+.filesList {
+    display: flex;
+    gap: 24px;
+    margin: 0 0 2px 6px;
+    padding: 20px 10px 10px;
+    overflow: auto hidden;
+    list-style: none;
+}
+
+.filesList::-webkit-scrollbar-track {
+    border-color: var(--background-5);
+}
+
+.formDivider {
+    height: 0;
+    border-top: thin solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex: 0 0 auto;
+    pointer-events: none;
+}
+
+.replyContainer {
+    border-radius: 8px 8px 0 0;
+    background-color: var(--background-3);
+    overflow: hidden;
+    padding-top: 3px;
+    margin-top: -3px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.replyName {
+    color: var(--foreground-4);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-left: 16px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+}
+
+.replyName > span {
+    color: var(--foreground-3);
+    font-weight: 500;
+}
+
+.replyClose {
+    display: flex;
+    align-items: center;
+}
+
+.replyClose:hover path {
+    fill: var(--foreground-2);
+}
+
+.replyClose > div {
+    flex: 0 0 auto;
+    line-height: 0;
+    cursor: pointer;
+    color: var(--foreground-3);
+    padding: 8px 18px 8px 16px;
+}
+
+.buttonContainer {
+    cursor: pointer;
+    width: auto;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    user-select: none;
+}
+
+.buttonContainer:hover .emoji {
+    filter: grayscale(0%);
+}
+
+.emoji {
+    background-image: url('/assets/app/emoji-picker.png');
+    background-repeat: no-repeat;
+    background-size: 242px 110px;
+    width: 22px;
+    height: 22px;
+    background-position: -176px -66px;
+    background-size: 242px 110px;
+    filter: grayscale(100%);
+    transition: filter 0.15s ease;
+}
+
+.fileItem {
+    display: inline-flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 4px;
+    padding: 8px;
+    width: 200px;
+    height: 200px;
+    aspect-ratio: 1;
+    background-color: var(--background-2);
+}
+
+.fileMenu {
+    position: absolute;
+    top: -5px;
+    right: -15px;
+}
+
+.fileMenu > div {
+    display: grid;
+    grid-auto-flow: column;
+    height: 32px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--elevation-low);
+    background-color: var(--background-3);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.fileMenu > div:hover {
+    box-shadow: var(--elevation-low), var(--elevation-medium);
+}
+
+.fileMenu > div > div {
+    position: relative;
+}
+
+.fileMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    padding: 4px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    position: relative;
+}
+
+.fileMenuButton:active svg {
+    transform: translateY(1px);
+}
+
+.fileMenuButton:hover {
+    background-color: var(--background-4);
+}
+
+.fileMenuButton:not(.danger):hover path {
+    fill: var(--foreground-2);
+}
+
+.fileMenuButton:active {
+    background-color: var(--background-5);
+}
+
+.fileItemContainer {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    position: relative;
+}
+
+.fileItemContainer > .image {
+    margin-top: auto;
+    position: relative;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.fileItemContainer > .image > img {
+    border-radius: 3px;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.fileItemContainer > .fileName {
+    margin-top: auto;
+}
+
+.fileItemContainer > .fileName > div {
+    margin-top: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
+.sendButton {
+    padding: 0;
+    margin-left: 8px;
+    width: 44px;
+    height: 44px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+}
+
+.sendButton::before {
+    content: '';
+    border-left: 1px solid var(--foreground-2);
+    opacity: 0.1;
+    height: 65%;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.sendButton > div {
+    padding: 4px;
+    margin-left: 12px;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sendButton:not(.empty) > div path {
+    fill: hsl(235, 86.1%, 77.5%);
+    transition: fill 0.2s ease-in-out;
+}
+
+.sendButton:not(.empty):hover > div path {
+    fill: hsl(235, 85.7%, 69.8%);
+}
+
+.sendButton:not(.empty):active > div path {
+    fill: var(--accent-1);
+}

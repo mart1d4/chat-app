@@ -10,12 +10,9 @@ type Link = {
 
 const links: Link[] = [
     { name: 'Download', href: '/download' },
-    { name: 'Nitro', href: '' },
     { name: 'Discover', href: '' },
-    { name: 'Safety', href: '' },
     { name: 'Support', href: '' },
     { name: 'Blog', href: '' },
-    { name: 'Careers', href: '' },
 ];
 
 const Header = () => {

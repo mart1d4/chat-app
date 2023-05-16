@@ -186,6 +186,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background-color: var(--background-1);
     overflow-x: hidden;
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;

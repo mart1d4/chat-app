@@ -2,72 +2,136 @@
 // Database Types //
 //#//#//#//#//#//#//
 
-type UncleanUserType = {
-    _id?: string;
+type UserType = {
+    id: string;
     username: string;
-    password: string;
+    email?: string;
     avatar: string;
-    banner: undefined | string;
-    description: undefined | string;
-    customStatus: undefined | string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb';
-    accentColor: string;
+    banner?: string;
+    primaryColor: string;
+    accentColor?: string;
+    description?: string;
+    customStatus?: string;
+    password: string;
+    refreshToken?: string;
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
-    requests: {
-        user: UserType;
-        type: 0 | 1;
-    }[];
-    friends: UserType[];
-    blocked: UserType[];
-    channels: ChannelType[];
-    guilds: GuildType[];
-    createdAt?: Date;
-    updatedAt?: Date;
-    accessToken?: string | null;
-    refreshToken: string | null;
+
+    guildIds: string[];
+    guilds?: GuildType[];
+
+    ownedGuildIds: string[];
+    ownedGuilds?: GuildType[];
+
+    channelIds: string[];
+    channels?: ChannelType[];
+
+    ownedChannelIds: string[];
+    ownedChannels?: ChannelType[];
+
+    messages?: MessageType[];
+
+    friendIds: string[];
+    friends?: User[];
+
+    friendOfIds: string[];
+    friendOf?: User[];
+
+    requestReceivedIds: string[];
+    requestsReceived?: User[];
+
+    requestSentIds: string[];
+    requestsSent?: User[];
+
+    blockedUserIds: string[];
+    blockedUsers?: User[];
+
+    blockedByUserIds: string[];
+    blockedByUsers?: User[];
+
+    createdAt: DateTime;
+    updatedAt: DateTime;
 };
 
-type UserType = {
-    _id: string;
+type CleanUserType = {
+    id: string;
     username: string;
+    email?: string;
     avatar: string;
-    banner: undefined | string;
-    description: undefined | string;
-    customStatus: undefined | string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb';
-    accentColor: string;
+    banner?: string;
+    primaryColor: string;
+    accentColor?: string;
+    description?: string;
+    customStatus?: string;
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
-    requests: {
-        user: UserType;
-        type: 0 | 1;
-    }[];
-    friends: UserType[];
-    blocked: UserType[];
-    channels: ChannelType[];
-    guilds: GuildType[];
-    createdAt: Date;
+
+    guildIds: string[];
+    guilds?: GuildType[];
+
+    ownedGuildIds: string[];
+    ownedGuilds?: GuildType[];
+
+    channelIds: string[];
+    channels?: ChannelType[];
+
+    ownedChannelIds: string[];
+    ownedChannels?: ChannelType[];
+
+    friendIds: string[];
+    friends?: User[];
+
+    requestReceivedIds: string[];
+    requestsReceived?: User[];
+
+    requestSentIds: string[];
+    requestsSent?: User[];
+
+    blockedUserIds: string[];
+    blockedUsers?: User[];
+
+    createdAt: DateTime;
+    updatedAt: DateTime;
+};
+
+type CleanOtherUserType = {
+    id: string;
+    username: string;
+    avatar: string;
+    banner?: string;
+    primaryColor: string;
+    accentColor?: string;
+    description?: string;
+    customStatus?: string;
+    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    system: boolean;
+
+    guildIds: string[];
+    channelIds: string[];
+    friendIds: string[];
+
+    createdAt: DateTime;
 };
 
 type ChannelType = {
-    _id: string;
-    recipients: UserType[];
-    type: 0 | 1 | 2 | 3 | 4;
+    id: string;
+    recipients: CleanOtherUserType[];
+    type: 'DM' | 'GROUP_DM' | 'GUILD_TEXT' | 'GUILD_VOICE' | 'GUILD_CATEGORY';
     guild: GuildType._id;
     position?: number;
     name: string;
     topic?: string;
     nsfw?: boolean;
-    icon: string;
+    icon?: string;
     owner?: UserType._id;
     rateLimit?: number;
-    permissions?: PermissionType[];
+    permissions?: string[];
     parent?: ChannelType._id;
-    messages: MessageType[];
-    pinnedMessages: MessageType[];
+    messages: string[];
+    pinnedMessages: string[];
     createdAt: Date;
-    updatedAt: Date;
 };
 
 type GuildType = {
@@ -75,11 +139,38 @@ type GuildType = {
 };
 
 type MessageType = {
-    _id: string;
-};
+    id: string;
+    type:
+        | 'DEFAULT'
+        | 'REPLY'
+        | 'RECIPIENT_ADD'
+        | 'RECIPIENT_REMOVE'
+        | 'CALL'
+        | 'CHANNEL_NAME_CHANGE'
+        | 'CHANNEL_ICON_CHANGE'
+        | 'CHANNEL_PINNED_MESSAGE'
+        | 'GUILD_MEMBER_JOIN'
+        | 'OWNER_CHANGE';
+    content: string;
+    attachments: string[];
+    embeds: string[];
+    messageReference?: string;
+    edited: boolean;
+    pinned: boolean;
+    reactions: string[];
+    mentionEveryone: boolean;
+    mentionChannelIds: string[];
+    mentionRoleIds: string[];
+    mentionUserIds: string[];
 
-type PermissionType = {
-    _id: string;
+    authorId: string;
+    author: CleanOtherUserType;
+
+    channelId: string;
+    channel: ChannelType;
+
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 //#//#//#//#//#//#//
@@ -90,19 +181,66 @@ type PermissionType = {
 // Context. Types //
 //#//#//#//#//#//#//
 
-type AuthObjectType = {
-    user?: UserType;
-    accessToken?: string;
+// AuthProvider
+
+type AuthObjectType = null | {
+    user: UserType;
+    accessToken: string;
 };
 
-type AuthContextType =
-    | undefined
-    | {
-          auth: AuthType;
-          setAuth: Dispatch<SetStateAction<AuthObjectType>>;
-          isLoading: boolean;
-          setIsLoading: Dispatch<SetStateAction<boolean>>;
-      };
+type AuthContextValueType = null | {
+    auth: AuthObjectType;
+    setAuth: Dispatch<SetStateAction<AuthObjectType>>;
+    loading: boolean;
+    setLoading: Dispatch<SetStateAction<boolean>>;
+};
+
+// LayerProvider
+
+type UserProfileObjectType = null | {};
+
+type PopupObjectType = null | {};
+
+type FixedLayerObjectType = {
+    type: string;
+    event: MouseEvent;
+    element: Element;
+    firstSide: string;
+    secondSide: string;
+    gap: number;
+};
+
+type LayerContextValueType = null | {
+    showSettings: boolean;
+    setShowSettings: Dispatch<SetStateAction<boolean>>;
+    userProfile: UserProfileObjectType;
+    setUserProfile: Dispatch<SetStateAction<UserProfileObjectType>>;
+    popup: PopupObjectType;
+    setPopup: Dispatch<SetStateAction<PopupObjectType>>;
+    fixedLayer: null | FixedLayerObjectType;
+    setFixedLayer: (content: null | FixedLayerObjectType) => void;
+};
+
+// SettingsProvider
+
+type UserSettingsObjectType = null | {
+    language: string;
+    microphone: boolean;
+    sound: boolean;
+    camera: boolean;
+    notifications: boolean;
+    appearance: string;
+    font: string;
+    theme: string;
+    friendTab: 'all' | 'online' | 'add' | 'pending' | 'blocked';
+    sendButton: boolean;
+    showUsers: boolean;
+};
+
+type UserSettingsContextValueType = null | {
+    userSettings: UserSettingsObjectType;
+    setUserSettings: Dispatch<SetStateAction<UserSettingsObjectType>>;
+};
 
 //#//#//#//#//#//#//
 // Context. Types //

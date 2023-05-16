@@ -36,6 +36,7 @@ export async function middleware(req: NextRequest) {
         );
     } else {
         const token = authorization.split(' ')[1];
+
         if (!token) {
             return NextResponse.json(
                 {
@@ -47,21 +48,32 @@ export async function middleware(req: NextRequest) {
                 }
             );
         } else {
-            const { payload } = await jwtVerify(
-                token,
-                new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
-            );
+            try {
+                const { payload } = await jwtVerify(
+                    token,
+                    new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET)
+                );
 
-            console.log(payload);
+                const requestHeaders = new Headers(req.headers);
+                requestHeaders.set('userId', payload?.id as string);
 
-            const requestHeaders = new Headers(req.headers);
-            requestHeaders.set('userId', JSON.stringify(payload?.id));
-
-            return NextResponse.next({
-                request: {
-                    headers: requestHeaders,
-                },
-            });
+                return NextResponse.next({
+                    request: {
+                        headers: requestHeaders,
+                    },
+                });
+            } catch (error) {
+                console.error('Middleware error: ', error);
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Invalid token',
+                    },
+                    {
+                        status: 401,
+                    }
+                );
+            }
         }
     }
 }

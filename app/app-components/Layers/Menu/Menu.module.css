@@ -1,0 +1,114 @@
+.menuContainer {
+    position: fixed;
+    min-width: 188px;
+    max-width: 320px;
+    display: flex;
+    cursor: default;
+    max-height: calc(100vh - 32px);
+    border-radius: 4px;
+    background-color: var(--background-dark);
+    box-shadow: var(--elevation-high);
+    z-index: 100000;
+}
+
+.menuContainer > div {
+    max-width: 320px;
+    padding: 6px 8px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.menuItem,
+.menuItemDanger,
+.menuItemActive,
+.menuItemDangerActive,
+.menuItemDisabled {
+    color: var(--foreground-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.menuItemDisabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.menuItemDanger {
+    color: var(--error-1);
+}
+
+.menuItemActive {
+    background-color: var(--accent-1);
+    color: var(--foreground-1);
+}
+
+.menuItemActive:active {
+    background-color: var(--accent-2) !important;
+    color: var(--foreground-1);
+}
+
+.menuItemDangerActive {
+    background-color: var(--error-1);
+    color: var(--foreground-1);
+}
+
+.menuItemDangerActive:active {
+    background-color: var(--error-2) !important;
+    color: var(--foreground-1);
+}
+
+.menuItemDanger path {
+    fill: var(--error-1);
+}
+
+.menuItemActive path,
+.menuItemDangerActive path {
+    fill: var(--foreground-1);
+}
+
+.menuItem > .label,
+.menuItemActive > .label,
+.menuItemDanger > .label,
+.menuItemDangerActive > .label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: 500;
+}
+
+.menuItem > .icon,
+.menuItemActive > .icon,
+.menuItemDanger > .icon,
+.menuItemDangerActive > .icon {
+    flex: 0 0 auto;
+    height: 18px;
+    width: 18px;
+    margin-left: 8px;
+}
+
+.menuItem > .text,
+.menuItemActive > .text,
+.menuItemDanger > .text,
+.menuItemDangerActive > .text {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    max-height: 18px;
+}
+
+.divider {
+    margin: 4px;
+    border-bottom: 1px solid var(--border-light);
+}

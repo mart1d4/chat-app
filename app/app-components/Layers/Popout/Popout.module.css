@@ -1,0 +1,458 @@
+.pinContainer {
+    max-height: calc(100vh - 48px);
+    background-color: var(--background-3);
+    width: 420px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    box-shadow: var(--elevation-high), var(--elevation-low);
+    user-select: none;
+}
+
+.pinContainer > div:first-child {
+    padding: 16px;
+    background-color: var(--background-1);
+    box-shadow: var(--elevation-low);
+}
+
+.pinContainer > div:first-child > h1 {
+    color: var(--foreground-1);
+    font-weight: 500;
+    font: 16px;
+    line-height: 20px;
+}
+
+.pinContainer > div:nth-child(2) {
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden scroll;
+    padding: 8px 0 0 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: var(--background-3);
+}
+
+.pinContainer > div:nth-child(2)::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    border-color: transparent;
+    background-color: var(--background-1);
+}
+
+.noPinnedContent {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 8px 0 16px 0;
+}
+
+.noPinnedContent > div:first-child {
+    background-image: url(/assets/no-pinned.svg);
+    width: 120px;
+    height: 120px;
+    background-size: 94px 120px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.noPinnedContent > div:last-child {
+    white-space: pre;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--foreground-2);
+}
+
+.noPinnedBottom {
+    padding: 16px;
+    text-align: center;
+    background-color: var(--background-1);
+    height: 53px;
+    box-sizing: content-box;
+}
+
+.noPinnedBottom > div {
+    padding-top: 10px;
+}
+
+.noPinnedBottom > div > div:first-child {
+    color: var(--success-light);
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 18px;
+}
+
+.noPinnedBottom > div > div:last-child {
+    font-size: 14px;
+    line-height: 16px;
+    opacity: 0.6;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.messageContainer {
+    position: relative;
+    border: 1px solid var(--background-1);
+    border-radius: 4px;
+    user-select: none;
+    margin: 0 0 6px;
+    overflow: hidden;
+}
+
+.messageContainer > div {
+    padding: 10px 0;
+    background-color: var(--background-4);
+}
+
+.messageContainer > div > div {
+    margin-top: 0;
+}
+
+.messageContainer > div img {
+    pointer-events: none;
+}
+
+.pinContainer .messageContainer > div > div * {
+    user-select: none;
+}
+
+.popup {
+    width: 440px;
+    min-height: 200px;
+    max-height: 720px;
+    background-color: var(--background-4);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--elevation-low), var(--elevation-high-dark);
+    user-select: none;
+}
+
+.header {
+    flex: 0 0 auto;
+    border-radius: 4px 4px 0 0;
+    word-wrap: break-word;
+    position: relative;
+    padding: 16px;
+    overflow-x: hidden;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    display: flex;
+    z-index: 2;
+}
+
+.header > h1 {
+    color: var(--foreground-1);
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    text-transform: none;
+}
+
+.header > div:nth-child(2) {
+    color: var(--foreground-3);
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    text-transform: none;
+}
+
+.input {
+    flex: 1 1 auto;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+
+.input > div:first-child {
+    display: flex;
+    flex: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--background-1);
+}
+
+.addButton {
+    margin-left: 8px;
+}
+
+.input > div > div {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    position: relative;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    padding: 1px;
+    display: flex;
+}
+
+.input > div > div::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.input input {
+    font-size: 16px;
+    line-height: 32px;
+    height: 30px;
+    min-width: 48px;
+    appearance: none;
+    margin: 1px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: none;
+    resize: none;
+    flex: 1;
+    color: var(--foreground-3);
+}
+
+.input input:focus {
+    outline: none;
+}
+
+.input input::placeholder {
+    font-weight: 400;
+    color: var(--foreground-4);
+}
+
+.friendChip {
+    font-size: 16px;
+    line-height: 32px;
+    height: 30px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    border-radius: 2px;
+    text-align: center;
+    margin: 1px;
+    cursor: pointer;
+    background-color: var(--background-4);
+    color: var(--foreground-3);
+    text-transform: none;
+}
+
+.friendChip:hover {
+    opacity: 0.9;
+}
+
+.friendChip svg {
+    margin-left: 4px;
+}
+
+.scroller {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    padding-bottom: 14px;
+    max-height: 190px;
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroller::-webkit-scrollbar-track {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller::-webkit-scrollbar-thumb {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.friend {
+    cursor: pointer;
+    padding: 1px 0;
+    margin: 0 4px 0 12px;
+}
+
+.friend > div {
+    display: flex;
+    border-radius: 4px;
+    height: 40px;
+    padding: 6px 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.friend:hover > div {
+    background-color: var(--background-5);
+}
+
+.friendAvatar {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.friendAvatar > img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.friendUsername {
+    flex: 1 1 auto;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+    text-transform: none;
+}
+
+.friendCheck {
+    height: 100%;
+    aspect-ratio: 1;
+    padding: 4px;
+}
+
+.friendCheck > div {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--foreground-5);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.friendCheck svg {
+    margin: 0;
+}
+
+.separator {
+    height: 1px;
+    margin: 0 10px;
+    box-shadow: 0 -1px 0 hsla(0, 0%, 100%, 0.04);
+}
+
+.footer {
+    flex: 1 1 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.footer button {
+    height: 38px;
+}
+
+.footer > h1 {
+    margin-bottom: 8px;
+    color: var(--foreground-3);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.footer > div:nth-child(2) {
+    flex: 1 1 auto;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-3);
+    background-color: var(--background-2);
+    border: none;
+    flex-wrap: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer > div:nth-child(2) > div {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.footer > div:nth-child(2) > div > input {
+    border: none;
+    padding: 10px;
+    height: 40px;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    background-color: var(--background-2);
+}
+
+.footer > div:nth-child(2) > div > input:active,
+.footer > div:nth-child(2) > div > input:focus {
+    outline: none;
+}
+
+.footer > div:nth-child(2) > button {
+    margin-right: 4px;
+    width: 75px;
+    height: 32px;
+}
+
+.footer > div:last-child {
+    color: var(--foreground-3);
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+.noFriends {
+    flex: 1 1 auto;
+    padding: 20px 20px 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    flex-wrap: nowrap;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--foreground-5);
+}
+
+.noFriends > div:first-child {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    margin-bottom: 20px;
+}
+
+.noFriends > button {
+    margin-top: 20px;
+    width: 100%;
+    font-weight: 500;
+    color: var(--foreground-1);
+}

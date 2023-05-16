@@ -6,22 +6,26 @@ import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
 import { axiosPrivate } from '@/lib/axios';
 import styles from '../Auth.module.css';
+import Link from 'next/link';
 
 const Form = (): ReactElement => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [uid, setUID] = useState<string>('');
+    const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-    const uidInputRef = useRef<HTMLInputElement>(null);
+    const { auth, setAuth, loading }: any = useContextHook({
+        context: 'auth',
+    });
+    const usernameInputRef = useRef<HTMLInputElement>(null);
     const router: AppRouterInstance = useRouter();
 
     useEffect(() => {
-        if (auth.accessToken) {
+        if (loading) return;
+        if (auth?.accessToken) {
             router.push('/channels/me');
         }
-    }, [auth]);
+    }, [loading]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
@@ -34,24 +38,24 @@ const Form = (): ReactElement => {
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [uid, password, isLoading]);
+    }, [username, password, isLoading]);
 
     useEffect(() => {
-        uidInputRef.current?.focus();
+        usernameInputRef.current?.focus();
     }, []);
 
     useEffect(() => {
         setError('');
-    }, [uid, password]);
+    }, [username, password]);
 
     const handleSubmit = async (e: MouseEvent): Promise<void> => {
         e.preventDefault();
 
-        if (isLoading || !uid || !password) return;
+        if (isLoading || !username || !password) return;
         setIsLoading(true);
 
         const response = await axiosPrivate.post('/auth/login', {
-            uid: uid,
+            username: username,
             password: password,
         });
 
@@ -64,7 +68,7 @@ const Form = (): ReactElement => {
                 user: response.data.user,
             });
 
-            setUID('');
+            setUsername('');
             setPassword('');
             setIsLoading(false);
             router.push('/channels/me');
@@ -75,14 +79,14 @@ const Form = (): ReactElement => {
         <div className={styles.loginBlock}>
             <div>
                 <label
-                    htmlFor='uid'
+                    htmlFor='username'
                     style={{
                         color: error.length
                             ? 'var(--error-light)'
                             : 'var(--foreground-3)',
                     }}
                 >
-                    Email or Username
+                    Username
                     {error.length ? (
                         <span className={styles.errorLabel}>- {error}</span>
                     ) : (
@@ -91,8 +95,8 @@ const Form = (): ReactElement => {
                 </label>
                 <div className={styles.inputContainer}>
                     <input
-                        ref={uidInputRef}
-                        id='uid'
+                        ref={usernameInputRef}
+                        id='username'
                         type='text'
                         name='username'
                         aria-label='Username'
@@ -100,10 +104,10 @@ const Form = (): ReactElement => {
                         autoComplete='off'
                         autoCorrect='off'
                         spellCheck='false'
-                        aria-labelledby='uid'
-                        aria-describedby='uid'
-                        value={uid}
-                        onChange={(e) => setUID(e.target.value)}
+                        aria-labelledby='username'
+                        aria-describedby='username'
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                     />
                 </div>
             </div>
@@ -143,6 +147,7 @@ const Form = (): ReactElement => {
             </div>
 
             <button
+                type='button'
                 className={styles.passwordForgot}
                 onClick={(e) => {
                     e.preventDefault();
@@ -151,6 +156,7 @@ const Form = (): ReactElement => {
             >
                 Forgot your password?
             </button>
+
             <button
                 type='submit'
                 className={styles.buttonSubmit}
@@ -163,14 +169,7 @@ const Form = (): ReactElement => {
 
             <div className={styles.bottomText}>
                 <span>Need an account?</span>
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        router.push('/register');
-                    }}
-                >
-                    Register
-                </button>
+                <Link href='/register'>Register</Link>
             </div>
         </div>
     );

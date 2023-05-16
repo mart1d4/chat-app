@@ -1,4 +1,7 @@
+// @ts-nocheck
+
 import SettingsProvider from '@/context/SettingsProvider';
+import { Analytics } from '@vercel/analytics/react';
 import LayerProvider from '@/context/LayerProvider';
 import PersistLogin from '@/hooks/usePersistLogin';
 import AuthProvider from '@/context/AuthProvider';
@@ -26,6 +29,8 @@ const RootLayout = ({ children }: { children: ReactElement }): ReactElement => {
                         </LayerProvider>
                     </PersistLogin>
                 </AuthProvider>
+
+                <Analytics />
             </body>
         </html>
     );

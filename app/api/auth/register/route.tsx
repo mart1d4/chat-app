@@ -1,15 +1,21 @@
-// Ignore typescript error
-// @ts-nocheck
-
-import connectDB from '@/lib/mongo/connectDB';
-import User from '@/lib/mongo/models/User';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-
-connectDB();
+import prisma from '@/lib/prismadb';
 
 export async function POST(req: Request): Promise<NextResponse> {
-    const { username, password }: any = await req.json();
+    const { username, password }: { username: string; password: string } = await req.json();
+
+    if (!username || !password) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid Username or Password',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     const USER_REGEX = /^.{2,32}$/;
     const PWD_REGEX = /^.{8,256}$/;
@@ -42,7 +48,12 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await User.findOne({ username: username });
+        const user = await prisma.user.findUnique({
+            where: {
+                username: username,
+            },
+        });
+
         if (user) {
             return NextResponse.json(
                 {
@@ -56,10 +67,13 @@ export async function POST(req: Request): Promise<NextResponse> {
         }
 
         const hash = await bcrypt.hash(password, 10);
-        await new User({
-            username: username,
-            password: hash,
-        }).save();
+
+        await prisma.user.create({
+            data: {
+                username: username,
+                password: hash,
+            },
+        });
 
         return NextResponse.json(
             {
@@ -71,10 +85,11 @@ export async function POST(req: Request): Promise<NextResponse> {
             }
         );
     } catch (error) {
+        console.error(error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: 'Something went wrong.',
             },
             {
                 status: 500,

@@ -173,16 +173,18 @@
     opacity: 0.9;
 }
 
-.bottomText > button {
+.bottomText > a {
     color: var(--accent-light);
+    font-size: 14px;
     display: inline-block;
     margin-left: 4px;
     padding: 0;
+    text-decoration: none;
     width: auto;
     height: auto;
 }
 
-.bottomText > button:hover {
+.bottomText > a:hover {
     text-decoration: underline;
     cursor: pointer;
 }
