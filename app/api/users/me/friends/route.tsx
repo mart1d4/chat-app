@@ -7,17 +7,17 @@ export async function GET(): Promise<NextResponse> {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (typeof senderId !== 'string' || senderId.length !== 24) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const sender = await prisma.user.findUnique({
@@ -44,9 +44,7 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const friends = sender.friends.map((user: any) =>
-                cleanOtherUser(user)
-            );
+            const friends = sender.friends.map((user: any) => cleanOtherUser(user));
 
             return NextResponse.json(
                 {

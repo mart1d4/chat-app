@@ -10,17 +10,22 @@ export async function POST(
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (
+        typeof userId !== 'string' ||
+        typeof senderId !== 'string' ||
+        userId.length !== 24 ||
+        senderId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     if (senderId === userId) {
         return NextResponse.json(
@@ -59,13 +64,9 @@ export async function POST(
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find(
-            (blocked) => blocked === user.id
-        );
+        const isBlocked = sender.blockedUserIds.find((blocked) => blocked === user.id);
 
-        const isBlockedBy = user.blockedUserIds.find(
-            (blocked) => blocked === sender.id
-        );
+        const isBlockedBy = user.blockedUserIds.find((blocked) => blocked === sender.id);
 
         if (isBlocked || isBlockedBy) {
             return NextResponse.json(
@@ -93,16 +94,13 @@ export async function POST(
             );
         }
 
-        const sentRequest = sender.requestSentIds.find(
-            (request) => request === user.id
-        );
+        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
 
         if (sentRequest) {
             return NextResponse.json(
                 {
                     success: false,
-                    message:
-                        'You have already sent a friend request to this user.',
+                    message: 'You have already sent a friend request to this user.',
                 },
                 {
                     status: 400,
@@ -110,9 +108,7 @@ export async function POST(
             );
         }
 
-        const receivedRequest = sender.requestReceivedIds.find(
-            (request) => request === user.id
-        );
+        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
 
         if (receivedRequest) {
             await prisma.user.update({
@@ -207,17 +203,22 @@ export async function DELETE(
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (
+        typeof userId !== 'string' ||
+        typeof senderId !== 'string' ||
+        userId.length !== 24 ||
+        senderId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     if (senderId === userId) {
         return NextResponse.json(
@@ -260,13 +261,9 @@ export async function DELETE(
 
         const isFriend = sender.friendIds.find((friend) => friend === user.id);
 
-        const sentRequest = sender.requestSentIds.find(
-            (request) => request === user.id
-        );
+        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
 
-        const receivedRequest = sender.requestReceivedIds.find(
-            (request) => request === user.id
-        );
+        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
 
         if (!isFriend && !sentRequest && !receivedRequest) {
             return NextResponse.json(

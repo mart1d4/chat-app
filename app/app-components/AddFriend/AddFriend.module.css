@@ -1,0 +1,101 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+}
+
+.header {
+    flex-shrink: 0;
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.header h2 {
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--foreground-1);
+    user-select: none;
+}
+
+.description {
+    color: var(--foreground-4);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    user-select: none;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    margin-top: 16px;
+    padding: 0 12px;
+    position: relative;
+    background-color: var(--background-1);
+    outline: 1px solid transparent;
+}
+
+.inputWrapper:focus-within {
+    outline: 1px solid var(--accent-light);
+}
+
+.inputWrapper > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    margin-right: 16px;
+    padding: 4px 0;
+    font-weight: 500;
+    letter-spacing: 0.04rem;
+    white-space: pre;
+}
+
+.inputWrapper input {
+    height: 40px;
+    background: none;
+    outline: none;
+    color: var(--foreground-2);
+}
+
+.error {
+    margin-top: 8px;
+    color: var(--error-light);
+    font-size: 14px;
+    user-select: none;
+}
+
+.valid {
+    margin-top: 8px;
+    color: var(--success-light);
+    font-size: 14px;
+    user-select: none;
+}
+
+.noData {
+    flex: 1 1 auto;
+    max-width: 440px;
+    margin: 0 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    pointer-events: none;
+    user-select: none;
+}
+
+.noData > img {
+    margin-bottom: 40px;
+}
+
+.noData > div {
+    flex: 0 1 auto;
+    line-height: 20px;
+    text-align: center;
+    color: var(--foreground-5);
+    margin-top: 8px;
+}

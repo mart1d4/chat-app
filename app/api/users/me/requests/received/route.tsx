@@ -7,18 +7,17 @@ export async function GET(): Promise<NextResponse> {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // Make sure the senderId is a valid ObjectId with Prisma
-    // if () {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (typeof senderId !== 'string' || senderId.length !== 24) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const sender = await prisma.user.findUnique({

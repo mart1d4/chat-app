@@ -7,17 +7,17 @@ export async function GET(): Promise<NextResponse> {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (typeof senderId !== 'string' || senderId.length !== 24) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const sender = await prisma.user.findUnique({
@@ -96,6 +96,20 @@ export async function POST(req: Request) {
     const { recipients, channelId } = await req.json();
     let recipientObjects = [];
 
+    recipients.forEach((recipient: string) => {
+        if (typeof recipient !== 'string' || recipient.length !== 24) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Invalid user ID.',
+                },
+                {
+                    status: 400,
+                }
+            );
+        }
+    });
+
     if (recipients.includes(senderId)) {
         recipients.splice(recipients.indexOf(senderId), 1);
     }
@@ -112,17 +126,17 @@ export async function POST(req: Request) {
         );
     }
 
-    // if (!mongoose.Types.ObjectId.isValid(senderId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // }
+    if (typeof senderId !== 'string' || senderId.length !== 24) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const user = await prisma.user.findUnique({
@@ -325,20 +339,9 @@ export async function POST(req: Request) {
 
         const sameChannel = await prisma.channel.findFirst({
             where: {
-                // Recipient IDs array is the same as recipients + user id, with no extra IDs
-                AND: [
-                    {
-                        recipientIds: {
-                            equals: [...recipients, user.id],
-                        },
-                    },
-                    {
-                        recipientIds: {
-                            // @ts-ignore
-                            notIn: [...recipients, user.id],
-                        },
-                    },
-                ],
+                recipientIds: {
+                    equals: [...recipients, user.id],
+                },
             },
             include: {
                 recipients: true,

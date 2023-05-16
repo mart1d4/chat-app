@@ -1,20 +1,12 @@
-// @ts-nocheck
-
 'use client';
 
-import {
-    // AppHeader,
-    Message,
-    TextArea,
-    MemberList,
-    MessageSkeleton,
-} from '@/app/app-components';
+import { AppHeader, Message, TextArea, MemberList, MessageSkeleton } from '@/app/app-components';
+import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
 import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
-import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
 
 type Props = {
     channel: ChannelType;
@@ -25,8 +17,8 @@ type Props = {
 const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
     const [reply, setReply] = useState(null);
     const [edit, setEdit] = useState(null);
-    const [friend, setFriend] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { auth }: any = useContextHook({
         context: 'auth',
@@ -80,8 +72,8 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
     const isNewDay = (index: number) => {
         if (index === 0) return true;
 
-        const firstDate = messages[index - 1].createdAt;
-        const secondDate = messages[index].createdAt;
+        const firstDate = new Date(messages[index - 1].createdAt);
+        const secondDate = new Date(messages[index].createdAt);
 
         return (
             firstDate.getDate() !== secondDate.getDate() ||
@@ -94,6 +86,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
                 <Image
+                    // @ts-ignore
                     src={friend ? `/assets/avatars/${friend.avatar}.png` : channel.icon}
                     alt={friend ? 'User Avatar' : 'Channel Icon'}
                     width={80}
@@ -168,7 +161,8 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
 
     return (
         <div className={styles.container}>
-            {/* <AppHeader channel={channel} /> */}
+            {/* @ts-expect-error */}
+            <AppHeader channel={channel} />
 
             <div className={styles.content}>
                 <main className={styles.main}>
@@ -195,7 +189,9 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                                                                     year: 'numeric',
                                                                     month: 'long',
                                                                     day: 'numeric',
-                                                                }).format(message.createdAt)}
+                                                                }).format(
+                                                                    new Date(message.createdAt)
+                                                                )}
                                                             </span>
                                                         </div>
                                                     )}
@@ -228,6 +224,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                     />
                 </main>
 
+                {/* @ts-expect-error */}
                 <MemberList channel={channel} />
             </div>
         </div>

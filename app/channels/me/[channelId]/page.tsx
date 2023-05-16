@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     title: 'Chat App | @me',
 };
 
-const ChannelPage = ({ params }: { params: { channelId: string } }): ReactNode => {
+const ChannelPage = ({ params = null }: { params: { channelId: string } | null }): ReactNode => {
     return (
         <>
             {/* @ts-ignore */}

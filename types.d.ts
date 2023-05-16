@@ -232,6 +232,7 @@ type UserSettingsObjectType = null | {
     appearance: string;
     font: string;
     theme: string;
+    friendTab: 'all' | 'online' | 'add' | 'pending' | 'blocked';
     sendButton: boolean;
     showUsers: boolean;
 };

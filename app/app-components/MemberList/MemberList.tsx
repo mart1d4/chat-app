@@ -55,9 +55,9 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
         }
     }, []);
 
-    if (channel?.type === 'DM' && friend) {
-        return useMemo(
-            () => (
+    return useMemo(() => {
+        if (channel?.type === 'DM' && friend) {
+            return (
                 <aside className={styles.aside}>
                     <div
                         className={styles.asideHeader}
@@ -120,7 +120,12 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
 
                         <div>
                             <h2>Note</h2>
-                            <div className={styles.note}>
+                            <div
+                                className={styles.note}
+                                style={{
+                                    height: noteRef.current?.scrollHeight || 36,
+                                }}
+                            >
                                 <textarea
                                     ref={noteRef}
                                     className='scrollbar'
@@ -135,20 +140,17 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
 
                     <div></div>
                 </aside>
-            ),
-            [userSettings?.showUsers, widthLimitPassed, note]
-        );
-    } else {
-        const onlineMembers: any = channel.recipients.filter((recipient: any) =>
-            ['Online', 'Idle', 'Do_Not_Disturb'].includes(recipient.status)
-        );
+            );
+        } else {
+            const onlineMembers: any = channel.recipients.filter((recipient: any) =>
+                ['Online', 'Idle', 'Do_Not_Disturb'].includes(recipient.status)
+            );
 
-        const offlineMembers: any = channel.recipients.filter(
-            (recipient: any) => recipient.status === 'Offline'
-        );
+            const offlineMembers: any = channel.recipients.filter(
+                (recipient: any) => recipient.status === 'Offline'
+            );
 
-        return useMemo(
-            () => (
+            return (
                 <aside className={styles.memberList}>
                     <div>
                         <h2>Members—{channel.recipients.length}</h2>
@@ -170,10 +172,9 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
                             ))}
                     </div>
                 </aside>
-            ),
-            [userSettings?.showUsers, widthLimitPassed]
-        );
-    }
+            );
+        }
+    }, [userSettings?.showUsers, widthLimitPassed]);
 };
 
 export default MemberList;

@@ -3,13 +3,27 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prismadb';
 
-export async function GET(
-    req: Request,
-    { params }: { params: { channelId: string } }
-) {
+export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
+
+    if (
+        typeof senderId !== 'string' ||
+        senderId.length !== 24 ||
+        typeof channelId !== 'string' ||
+        channelId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const channel = await prisma.channel.findUnique({
@@ -80,13 +94,27 @@ export async function GET(
     }
 }
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { channelId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
+
+    if (
+        typeof senderId !== 'string' ||
+        senderId.length !== 24 ||
+        typeof channelId !== 'string' ||
+        channelId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
 
     try {
         const channel = await prisma.channel.findUnique({
@@ -158,9 +186,7 @@ export async function DELETE(
                         }
                     );
                 } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * channel.recipientIds.length
-                    );
+                    const randomIndex = Math.floor(Math.random() * channel.recipientIds.length);
 
                     const newOwner = channel.recipientIds[randomIndex];
 

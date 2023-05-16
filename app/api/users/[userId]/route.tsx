@@ -8,17 +8,18 @@ export async function GET(
 ): Promise<NextResponse> {
     const userId = params.userId;
 
-    // if (!mongoose.Types.ObjectId.isValid(userId)) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // } else {
+    if (typeof userId !== 'string' || userId.length !== 24) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
+
     try {
         const user = await prisma.user.findUnique({
             where: {

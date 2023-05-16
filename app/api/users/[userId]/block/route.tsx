@@ -10,20 +10,23 @@ export async function POST(
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (
-    //     !mongoose.Types.ObjectId.isValid(userId) ||
-    //     !mongoose.Types.ObjectId.isValid(senderId)
-    // ) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // } else {
+    if (
+        typeof userId !== 'string' ||
+        typeof senderId !== 'string' ||
+        userId.length !== 24 ||
+        senderId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
+
     try {
         const sender = await prisma.user.findUnique({
             where: {
@@ -132,20 +135,23 @@ export async function DELETE(
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    // if (
-    //     !mongoose.Types.ObjectId.isValid(userId) ||
-    //     !mongoose.Types.ObjectId.isValid(senderId)
-    // ) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: 'Invalid user ID.',
-    //         },
-    //         {
-    //             status: 400,
-    //         }
-    //     );
-    // } else {
+    if (
+        typeof userId !== 'string' ||
+        typeof senderId !== 'string' ||
+        userId.length !== 24 ||
+        senderId.length !== 24
+    ) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid user ID.',
+            },
+            {
+                status: 400,
+            }
+        );
+    }
+
     try {
         const sender = await prisma.user.findUnique({
             where: {

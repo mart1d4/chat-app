@@ -11,7 +11,7 @@ export const getChannels = async () => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not create channel');
+        return response.data;
     } else {
         return response.data.channels;
     }
@@ -25,7 +25,7 @@ export const getSingleChannel = async (channelId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get channel');
+        return response.data;
     } else {
         return response.data.channel;
     }
@@ -46,7 +46,7 @@ export const createChannel = async (recipients: string[], channelId?: string) =>
     );
 
     if (!response.data.success) {
-        throw new Error('Could not create channel');
+        return response.data;
     } else {
         return response.data;
     }
@@ -60,7 +60,7 @@ export const leaveChannel = async (channelId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not leave channel');
+        return response.data;
     } else {
         return response.data;
     }
@@ -74,7 +74,7 @@ export const getPinnedMessages = async (channelId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get pinned messages');
+        return response.data;
     } else {
         return response.data;
     }
@@ -88,7 +88,7 @@ export const pinMessage = async (channelId: string, messageId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not pin message');
+        return response.data;
     } else {
         return response.data;
     }
@@ -106,7 +106,7 @@ export const getMessages = async (channelId: string, skip?: number, limit?: numb
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get messages');
+        return response.data;
     } else {
         return {
             messages: response.data.messages,

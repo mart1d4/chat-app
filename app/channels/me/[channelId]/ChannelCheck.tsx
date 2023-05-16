@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 type Props = {
     children: ReactNode;
-    channelId: string;
+    channelId: string | null;
 };
 
 const ChannelCheck = ({ children, channelId }: Props): ReactNode => {

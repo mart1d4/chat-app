@@ -15,6 +15,9 @@ import Message from './Message/Message';
 import TextArea from './TextArea/TextArea';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 import MemberList from './MemberList/MemberList';
+import AddFriend from './AddFriend/AddFriend';
+import UserList from './UserList/UserList';
+import AppHeader from './AppHeader/AppHeader';
 
 export {
     AppNav,
@@ -34,4 +37,7 @@ export {
     TextArea,
     MessageSkeleton,
     MemberList,
+    AddFriend,
+    UserList,
+    AppHeader,
 };

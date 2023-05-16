@@ -44,18 +44,14 @@ const Message = ({
             if (e.key === 'Escape') {
                 setEdit(null);
                 localStorage.setItem(
-                    `channel-${params.channelID}`,
+                    `channel-${params.channelId}`,
                     JSON.stringify({
-                        ...JSON.parse(
-                            localStorage.getItem(
-                                `channel-${params.channelID}`
-                            ) || '{}'
-                        ),
+                        ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
                         edit: null,
                     })
                 );
             } else if (e.key === 'Enter' && e.shiftKey === false) {
-                if (!edit || edit?.messageID !== message._id) return;
+                if (!edit || edit?.messageId !== message.id) return;
                 sendEditedMessage();
             }
         };
@@ -93,12 +89,9 @@ const Message = ({
         if (editedMessage.length === 0) {
             setEdit(null);
             localStorage.setItem(
-                `channel-${params.channelID}`,
+                `channel-${params.channelId}`,
                 JSON.stringify({
-                    ...JSON.parse(
-                        localStorage.getItem(`channel-${params.channelID}`) ||
-                            '{}'
-                    ),
+                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
                     edit: null,
                 })
             );
@@ -106,12 +99,9 @@ const Message = ({
         } else if (editedMessage.length > 4000) {
             setEdit(null);
             localStorage.setItem(
-                `channel-${params.channelID}`,
+                `channel-${params.channelId}`,
                 JSON.stringify({
-                    ...JSON.parse(
-                        localStorage.getItem(`channel-${params.channelID}`) ||
-                            '{}'
-                    ),
+                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
                     edit: null,
                 })
             );
@@ -119,12 +109,9 @@ const Message = ({
         } else if (editedMessage === message.content) {
             setEdit(null);
             localStorage.setItem(
-                `channel-${params.channelID}`,
+                `channel-${params.channelId}`,
                 JSON.stringify({
-                    ...JSON.parse(
-                        localStorage.getItem(`channel-${params.channelID}`) ||
-                            '{}'
-                    ),
+                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
                     edit: null,
                 })
             );
@@ -132,7 +119,7 @@ const Message = ({
         }
 
         const response = await axiosPrivate.patch(
-            `/channels/${params.channelID}/messages/${message._id}`,
+            `/channels/${params.channelId}/messages/${message.id}`,
             {
                 content: editedMessage,
             }
@@ -143,7 +130,7 @@ const Message = ({
         } else {
             setMessages((messages: any) => {
                 return messages.map((message: any) => {
-                    if (message._id === response.data.message._id) {
+                    if (message.id === response.data.message.id) {
                         return response.data.message;
                     } else {
                         return message;
@@ -154,11 +141,9 @@ const Message = ({
 
         setEdit(null);
         localStorage.setItem(
-            `channel-${params.channelID}`,
+            `channel-${params.channelId}`,
             JSON.stringify({
-                ...JSON.parse(
-                    localStorage.getItem(`channel-${params.channelID}`) || '{}'
-                ),
+                ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
                 edit: null,
             })
         );
@@ -167,7 +152,7 @@ const Message = ({
     const deletePopup = () => {
         setPopup({
             delete: {
-                channelID: message.channel,
+                channelId: message.channel,
                 message: message,
                 func: () => deleteMessage(),
             },
@@ -176,32 +161,28 @@ const Message = ({
 
     const deleteMessage = async () => {
         const response = await axiosPrivate.delete(
-            `/channels/${message.channel}/messages/${message._id}`
+            `/channels/${message.channel}/messages/${message.id}`
         );
 
         if (response.data.success) {
             setMessages((messages: any) => {
-                return messages.filter(
-                    (message: any) => message._id !== response.data.message._id
-                );
+                return messages.filter((message: any) => message.id !== response.data.message.id);
             });
         }
     };
 
     const editMessage = async () => {
         setEdit({
-            messageID: message._id,
+            messageId: message.id,
             content: message.content,
         });
 
         localStorage.setItem(
             `channel-${message.channel}`,
             JSON.stringify({
-                ...JSON.parse(
-                    localStorage.getItem(`channel-${message?.channel}`) || '{}'
-                ),
+                ...JSON.parse(localStorage.getItem(`channel-${message?.channel}`) || '{}'),
                 edit: {
-                    messageID: message._id,
+                    messageId: message.id,
                     content: message.content,
                 },
             })
@@ -209,10 +190,9 @@ const Message = ({
     };
 
     const pinPopup = async () => {
-        console.log(message.channel);
         setPopup({
             pin: {
-                channelID: message.channel,
+                channelId: message.channel,
                 message: message,
                 func: () => pinMessage(),
             },
@@ -220,14 +200,12 @@ const Message = ({
     };
 
     const pinMessage = async () => {
-        const response = await axiosPrivate.put(
-            `/channels/${message.channel}/pins/${message._id}`
-        );
+        const response = await axiosPrivate.put(`/channels/${message.channel}/pins/${message.id}`);
 
         if (response.data.success) {
             setMessages((messages: any) => {
                 return messages.map((message: any) => {
-                    if (message._id === response.data.data._id) {
+                    if (message.id === response.data.data.id) {
                         return response.data.data;
                     } else {
                         return message;
@@ -240,7 +218,7 @@ const Message = ({
     const unpinPopup = async () => {
         setPopup({
             unpin: {
-                channelID: message.channel,
+                channelId: message.channel,
                 message: message,
                 func: () => unpinMessage(),
             },
@@ -249,13 +227,13 @@ const Message = ({
 
     const unpinMessage = async () => {
         const response = await axiosPrivate.delete(
-            `/channels/${message.channel}/pins/${message._id}`
+            `/channels/${message.channel}/pins/${message.id}`
         );
 
         if (response.data.success) {
             setMessages((messages: any) => {
                 return messages.map((message: any) => {
-                    if (message._id === response.data.data._id) {
+                    if (message.id === response.data.data.id) {
                         return response.data.data;
                     } else {
                         return message;
@@ -271,15 +249,13 @@ const Message = ({
         localStorage.setItem(
             `channel-${message.channel}`,
             JSON.stringify({
-                ...JSON.parse(
-                    localStorage.getItem(`channel-${message?.channel}`) || '{}'
-                ),
+                ...JSON.parse(localStorage.getItem(`channel-${message?.channel}`) || '{}'),
                 reply: message,
             })
         );
     };
 
-    if (message.type === 2) {
+    if (message.type === 'RECIPIENT_ADD') {
         return (
             <div
                 className={styles.li + ' ' + styles.noInt}
@@ -306,12 +282,12 @@ const Message = ({
                     });
                 }}
                 style={
-                    hover || fixedLayer?.message?._id === message?._id
+                    hover || fixedLayer?.message?.id === message?.id
                         ? { backgroundColor: 'var(--background-hover-4)' }
                         : {}
                 }
             >
-                {(hover || fixedLayer?.message?._id === message?._id) && (
+                {(hover || fixedLayer?.message?.id === message?.id) && (
                     <MessageMenu
                         message={message}
                         start={start}
@@ -394,7 +370,7 @@ const Message = ({
     return (
         <div
             className={
-                reply?._id === message._id
+                reply?.id === message.id
                     ? styles.liReply + ' ' + styles.noInt
                     : styles.li + ' ' + styles.noInt
             }
@@ -405,7 +381,7 @@ const Message = ({
             onMouseLeave={() => setHover(false)}
             onContextMenu={(e) => {
                 e.preventDefault();
-                if (noInteraction || edit?.messageID === message._id) return;
+                if (noInteraction || edit?.messageId === message.id) return;
                 setFixedLayer({
                     type: 'menu',
                     event: e,
@@ -421,20 +397,16 @@ const Message = ({
                 });
             }}
             style={
-                hover ||
-                fixedLayer?.message?._id === message?._id ||
-                edit?.messageID === message._id
+                hover || fixedLayer?.message?.id === message?.id || edit?.messageId === message.id
                     ? {
                           backgroundColor:
-                              reply?._id === message._id
-                                  ? ''
-                                  : 'var(--background-hover-4)',
+                              reply?.id === message.id ? '' : 'var(--background-hover-4)',
                       }
                     : {}
             }
         >
-            {(hover || fixedLayer?.message?._id === message?._id) &&
-                edit?.messageID !== message._id && (
+            {(hover || fixedLayer?.message?.id === message?.id) &&
+                edit?.messageId !== message.id && (
                     <MessageMenu
                         message={message}
                         start={start}
@@ -451,32 +423,25 @@ const Message = ({
                     />
                 )}
 
-            {start || message.type === 1 || noInteraction ? (
+            {start || message.type === 'REPLY' || noInteraction ? (
                 <div className={styles.messageStart}>
-                    {message.type === 1 && (
+                    {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
                             <Image
-                                src={
-                                    message.messageReference?.author?.avatar ||
-                                    '/assets/default-avatars/blue.png'
-                                }
+                                src={`/assets/avatars/${message.messageReference.author.avatar}.png`}
                                 alt='Avatar'
                                 width={16}
                                 height={16}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (
-                                        fixedLayer?.element ===
-                                        userImageReplyRef.current
-                                    ) {
+                                    if (fixedLayer?.element === userImageReplyRef.current) {
                                         setFixedLayer(null);
                                     } else {
                                         setFixedLayer({
                                             type: 'usercard',
                                             event: e,
-                                            user: message.messageReference
-                                                ?.author,
+                                            user: message.messageReference?.author,
                                             element: userImageReplyRef.current,
                                             firstSide: 'right',
                                             gap: 10,
@@ -494,9 +459,7 @@ const Message = ({
                                 }}
                             />
 
-                            <span>
-                                {message.messageReference?.author?.username}
-                            </span>
+                            <span>{message.messageReference?.author?.username}</span>
 
                             <div>{message.messageReference?.content}</div>
                         </div>
@@ -505,12 +468,8 @@ const Message = ({
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (
-                                noInteraction ||
-                                edit?.messageID === message._id
-                            )
-                                return;
-                            if (message.author._id === auth?.user?._id) {
+                            if (noInteraction || edit?.messageId === message.id) return;
+                            if (message.author.id === auth?.user?.id) {
                                 editMessage();
                             } else {
                                 replyToMessage();
@@ -519,17 +478,12 @@ const Message = ({
                     >
                         <Image
                             ref={userImageRef}
-                            src={
-                                message.author?.avatar ||
-                                '/assets/default-avatars/blue.png'
-                            }
+                            src={`/assets/avatars/${message.author.avatar}.png`}
                             alt='Avatar'
                             width={40}
                             height={40}
                             onClick={(e) => {
-                                if (
-                                    fixedLayer?.element === userImageRef.current
-                                ) {
+                                if (fixedLayer?.element === userImageRef.current) {
                                     setFixedLayer(null);
                                 } else {
                                     setFixedLayer({
@@ -554,9 +508,7 @@ const Message = ({
                             }}
                         />
                         <h3>
-                            <span className={styles.titleUsername}>
-                                {message.author?.username}
-                            </span>
+                            <span className={styles.titleUsername}>{message.author?.username}</span>
                             <span
                                 className={styles.titleTimestamp}
                                 onMouseEnter={() => setShowTooltip(1)}
@@ -587,7 +539,7 @@ const Message = ({
                                 </Tooltip>
                             </span>
                         </h3>
-                        {edit?.messageID === message._id ? (
+                        {edit?.messageId === message.id ? (
                             <>
                                 <TextArea
                                     editedMessage={editedMessage || ' '}
@@ -599,11 +551,11 @@ const Message = ({
                                         onClick={() => {
                                             setEdit(null);
                                             localStorage.setItem(
-                                                `channel-${params.channelID}`,
+                                                `channel-${params.channelId}`,
                                                 JSON.stringify({
                                                     ...JSON.parse(
                                                         localStorage.getItem(
-                                                            `channel-${params.channelID}`
+                                                            `channel-${params.channelId}`
                                                         ) || '{}'
                                                     ),
                                                     edit: null,
@@ -614,9 +566,7 @@ const Message = ({
                                         cancel{' '}
                                     </span>
                                     • enter to{' '}
-                                    <span onClick={() => sendEditedMessage()}>
-                                        save{' '}
-                                    </span>
+                                    <span onClick={() => sendEditedMessage()}>save </span>
                                 </div>
                             </>
                         ) : (
@@ -624,21 +574,15 @@ const Message = ({
                                 style={{
                                     whiteSpace: 'pre-line',
                                     opacity: message.waiting ? 0.5 : 1,
-                                    color: message.error
-                                        ? 'var(--error-1)'
-                                        : '',
+                                    color: message.error ? 'var(--error-1)' : '',
                                 }}
                             >
                                 {message.content}{' '}
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
-                                            onMouseEnter={() =>
-                                                setShowTooltip(2)
-                                            }
-                                            onMouseLeave={() =>
-                                                setShowTooltip(false)
-                                            }
+                                            onMouseEnter={() => setShowTooltip(2)}
+                                            onMouseLeave={() => setShowTooltip(false)}
                                         >
                                             (edited)
                                         </span>
@@ -655,9 +599,7 @@ const Message = ({
                                                 hour: 'numeric',
                                                 minute: 'numeric',
                                                 second: 'numeric',
-                                            }).format(
-                                                new Date(message.createdAt)
-                                            )}
+                                            }).format(new Date(message.createdAt))}
                                         </Tooltip>
                                     </div>
                                 )}
@@ -670,14 +612,13 @@ const Message = ({
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (message?.type === 2) return;
-                            if (message.author?._id === auth?.user?._id)
-                                editMessage();
+                            if (message?.type === 'RECIPIENT_ADD') return;
+                            if (message.author?.id === auth?.user?.id) editMessage();
                             else replyToMessage();
                         }}
                     >
-                        {(hover || menu?.message === message?._id) &&
-                            message?.type !== 2 && (
+                        {(hover || menu?.message === message?.id) &&
+                            message?.type !== 'RECIPIENT_ADD' && (
                                 <span
                                     className={styles.messageTimestamp}
                                     onMouseEnter={() => setShowTooltip(3)}
@@ -706,19 +647,15 @@ const Message = ({
                                                 hour: 'numeric',
                                                 minute: 'numeric',
                                                 second: 'numeric',
-                                            }).format(
-                                                new Date(message.createdAt)
-                                            )}
+                                            }).format(new Date(message.createdAt))}
                                         </Tooltip>
                                     </span>
                                 </span>
                             )}
-                        {edit?.messageID === message._id ? (
+                        {edit?.messageId === message.id ? (
                             <>
                                 <TextArea
-                                    editedMessage={
-                                        editedMessage || message.content
-                                    }
+                                    editedMessage={editedMessage || message.content}
                                     setEditedMessage={setEditedMessage}
                                 />
                                 <div className={styles.editHint}>
@@ -727,11 +664,11 @@ const Message = ({
                                         onClick={() => {
                                             setEdit(null);
                                             localStorage.setItem(
-                                                `channel-${params.channelID}`,
+                                                `channel-${params.channelId}`,
                                                 JSON.stringify({
                                                     ...JSON.parse(
                                                         localStorage.getItem(
-                                                            `channel-${params.channelID}`
+                                                            `channel-${params.channelId}`
                                                         ) || '{}'
                                                     ),
                                                     edit: null,
@@ -742,9 +679,7 @@ const Message = ({
                                         cancel{' '}
                                     </span>
                                     • enter to{' '}
-                                    <span onClick={() => sendEditedMessage()}>
-                                        save{' '}
-                                    </span>
+                                    <span onClick={() => sendEditedMessage()}>save </span>
                                 </div>
                             </>
                         ) : (
@@ -752,21 +687,15 @@ const Message = ({
                                 style={{
                                     whiteSpace: 'pre-line',
                                     opacity: message.waiting ? 0.5 : 1,
-                                    color: message.error
-                                        ? 'var(--error-1)'
-                                        : '',
+                                    color: message.error ? 'var(--error-1)' : '',
                                 }}
                             >
                                 {message.content}{' '}
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
-                                            onMouseEnter={() =>
-                                                setShowTooltip(2)
-                                            }
-                                            onMouseLeave={() =>
-                                                setShowTooltip(false)
-                                            }
+                                            onMouseEnter={() => setShowTooltip(2)}
+                                            onMouseLeave={() => setShowTooltip(false)}
                                         >
                                             (edited)
                                         </span>
@@ -783,19 +712,15 @@ const Message = ({
                                                 hour: 'numeric',
                                                 minute: 'numeric',
                                                 second: 'numeric',
-                                            }).format(
-                                                new Date(message.updateddAt)
-                                            )}
+                                            }).format(new Date(message.updateddAt))}
                                         </Tooltip>
                                     </div>
                                 )}
-                                {message?.type === 2 && (
+                                {message?.type === 'RECIPIENT_ADD' && (
                                     <span
                                         className={styles.contentTimestamp}
                                         onMouseEnter={() => setShowTooltip(3)}
-                                        onMouseLeave={() =>
-                                            setShowTooltip(false)
-                                        }
+                                        onMouseLeave={() => setShowTooltip(false)}
                                         style={{
                                             userSelect: 'text',
                                         }}
@@ -809,28 +734,21 @@ const Message = ({
                                                 hour: 'numeric',
                                                 minute: 'numeric',
                                                 second: 'numeric',
-                                            }).format(
-                                                new Date(message.createdAt)
-                                            )}
+                                            }).format(new Date(message.createdAt))}
                                             <Tooltip
                                                 show={showTooltip === 3}
                                                 dist={3}
                                                 delay={1}
                                             >
-                                                {new Intl.DateTimeFormat(
-                                                    'en-US',
-                                                    {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: 'numeric',
-                                                        second: 'numeric',
-                                                    }
-                                                ).format(
-                                                    new Date(message.createdAt)
-                                                )}
+                                                {new Intl.DateTimeFormat('en-US', {
+                                                    weekday: 'long',
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    hour: 'numeric',
+                                                    minute: 'numeric',
+                                                    second: 'numeric',
+                                                }).format(new Date(message.createdAt))}
                                             </Tooltip>
                                         </span>
                                     </span>

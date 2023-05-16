@@ -51,6 +51,20 @@ const UserProfile = (): ReactElement => {
         setNote('');
     }, [user]);
 
+    useEffect(() => {
+        const handleClick = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setUserProfile(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleClick);
+
+        return () => {
+            window.removeEventListener('keydown', handleClick);
+        };
+    }, [userProfile]);
+
     const sectionNavItems = isSameUser()
         ? ['User Info']
         : ['User Info', 'Mutual Servers', 'Mutual Friends'];
@@ -58,12 +72,8 @@ const UserProfile = (): ReactElement => {
     return (
         <AnimatePresence>
             {user && (
-                <motion.div
+                <div
                     className={styles.wrapper}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
                     onMouseDown={(e) => {
                         if (e.button === 2) return;
                         if (!cardRef.current?.contains(e.target as Node)) {
@@ -80,16 +90,16 @@ const UserProfile = (): ReactElement => {
                         }}
                         animate={{
                             scale: 1,
+                            transition: {
+                                duration: 0.2,
+                            },
                         }}
                         exit={{
-                            scale: 0.75,
+                            scale: 0,
                             opacity: 0,
-                        }}
-                        transition={{
-                            duration: 0.5,
-                            type: 'spring',
-                            stiffness: 750,
-                            damping: 25,
+                            transition: {
+                                duration: 0.1,
+                            },
                         }}
                     >
                         <div
@@ -283,7 +293,12 @@ const UserProfile = (): ReactElement => {
                                         </div>
 
                                         <h1>Note</h1>
-                                        <div className={styles.contentNote}>
+                                        <div
+                                            className={styles.contentNote}
+                                            // style={{
+                                            //     height: noteRef.current?.scrollHeight || 44,
+                                            // }}
+                                        >
                                             <textarea
                                                 ref={noteRef}
                                                 value={note}
@@ -322,7 +337,7 @@ const UserProfile = (): ReactElement => {
                             </div>
                         </div>
                     </motion.div>
-                </motion.div>
+                </div>
             )}
         </AnimatePresence>
     );
@@ -341,11 +356,7 @@ const FriendItem = ({ friend }: any): ReactElement => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             onClick={() => {
-                setUserProfile(null);
-
-                setTimeout(() => {
-                    setUserProfile({ user: friend });
-                }, 200);
+                setUserProfile({ user: friend });
             }}
             onContextMenu={(e) => {
                 e.preventDefault();

@@ -11,7 +11,7 @@ export const getUser = async (userId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get user');
+        return response.data;
     } else {
         return response.data.user;
     }
@@ -29,7 +29,7 @@ export const blockUser = async (userId: string) => {
     );
 
     if (!response.data.success) {
-        throw new Error('Could not block user');
+        return response.data;
     } else {
         return response.data;
     }
@@ -43,7 +43,7 @@ export const unblockUser = async (userId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not unblock user');
+        return response.data;
     } else {
         return response.data;
     }
@@ -61,7 +61,7 @@ export const addFriend = async (userId: string) => {
     );
 
     if (!response.data.success) {
-        throw new Error('Could not add friend');
+        return response.data;
     } else {
         return response.data;
     }
@@ -75,7 +75,7 @@ export const removeFriend = async (userId: string) => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not remove friend');
+        return response.data;
     } else {
         return response.data;
     }
@@ -89,7 +89,7 @@ export const getFriends = async () => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get friends');
+        return response.data;
     } else {
         return response.data.friends;
     }
@@ -107,7 +107,7 @@ export const getRequests = async (type: 'sent' | 'received') => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get requests');
+        return response.data;
     } else {
         return response.data.requests;
     }
@@ -121,7 +121,7 @@ export const getBlockedUsers = async () => {
     });
 
     if (!response.data.success) {
-        throw new Error('Could not get blocked users');
+        return response.data;
     } else {
         return response.data.blockedUsers;
     }

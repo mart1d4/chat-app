@@ -183,26 +183,44 @@
 }
 
 .contentNote {
-    margin: -4px;
+    display: flex;
+    width: 100%;
+    height: 46px;
+    box-sizing: border-box;
 }
 
 .contentNote > textarea {
+    background-color: transparent;
     border-radius: 3px;
-    padding: 4px;
+    color: var(--foreground-3);
+    border: 1px solid var(--border-light);
     font-size: 14px;
     line-height: 18px;
-    background-color: transparent;
-    border: 1px solid var(--border-light);
-    color: var(--foreground-3);
-    min-height: 44px;
-    max-height: 108px;
+    padding: 4px;
+    padding-right: 0;
     resize: none;
     width: 100%;
-    overflow: hidden;
+    max-height: 100%;
+    font-weight: 500;
+    overflow: hidden scroll;
 }
 
 .contentNote > textarea::placeholder {
     user-select: none;
+}
+
+.contentNote > textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.contentNote > textarea::-webkit-scrollbar-track {
+    border: 2px var(--background-dark) solid;
+    background-color: var(--background-dark);
+}
+
+.contentNote > textarea::-webkit-scrollbar-thumb {
+    border: 2px var(--background-dark) solid;
+    background-color: var(--background-3);
 }
 
 .contentNote > textarea:focus {

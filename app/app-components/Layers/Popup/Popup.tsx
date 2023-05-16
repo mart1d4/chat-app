@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import styles from './Popup.module.css';
 import useContextHook from '@/hooks/useContextHook';
-// import { Message } from '@/app/app-components';
+import { Message } from '@/app/app-components';
 
 const Popup = (): ReactElement => {
     const [isLoading, setIsLoading] = useState(false);
@@ -220,7 +220,7 @@ const Popup = (): ReactElement => {
 
                             {!popup?.username && !popup?.password && (
                                 <div className={styles.messagesContainer}>
-                                    {/* <Message
+                                    <Message
                                         message={
                                             popup?.delete
                                                 ? popup.delete.message
@@ -231,7 +231,7 @@ const Popup = (): ReactElement => {
                                                 : null
                                         }
                                         noInt={true}
-                                    /> */}
+                                    />
                                 </div>
                             )}
 
@@ -265,11 +265,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Username
                                             {usernameError.length > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.errorLabel
-                                                    }
-                                                >
+                                                <span className={styles.errorLabel}>
                                                     - {usernameError}
                                                 </span>
                                             )}
@@ -288,9 +284,7 @@ const Popup = (): ReactElement => {
                                                 aria-labelledby='uid'
                                                 aria-describedby='uid'
                                                 value={uid}
-                                                onChange={(e) =>
-                                                    setUID(e.target.value)
-                                                }
+                                                onChange={(e) => setUID(e.target.value)}
                                             />
                                         </div>
                                     </div>
@@ -306,11 +300,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Current Password
                                             {passwordError.length > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.errorLabel
-                                                    }
-                                                >
+                                                <span className={styles.errorLabel}>
                                                     - {passwordError}
                                                 </span>
                                             )}
@@ -328,9 +318,7 @@ const Popup = (): ReactElement => {
                                                 aria-labelledby='password'
                                                 aria-describedby='password'
                                                 value={password}
-                                                onChange={(e) =>
-                                                    setPassword(e.target.value)
-                                                }
+                                                onChange={(e) => setPassword(e.target.value)}
                                             />
                                         </div>
                                     </div>
@@ -350,11 +338,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Current Password
                                             {password1Error.length > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.errorLabel
-                                                    }
-                                                >
+                                                <span className={styles.errorLabel}>
                                                     - {password1Error}
                                                 </span>
                                             )}
@@ -373,9 +357,7 @@ const Popup = (): ReactElement => {
                                                 aria-labelledby='password'
                                                 aria-describedby='password'
                                                 value={password1}
-                                                onChange={(e) =>
-                                                    setPassword1(e.target.value)
-                                                }
+                                                onChange={(e) => setPassword1(e.target.value)}
                                             />
                                         </div>
                                     </div>
@@ -394,11 +376,7 @@ const Popup = (): ReactElement => {
                                         >
                                             New Password
                                             {newPasswordError.length > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.errorLabel
-                                                    }
-                                                >
+                                                <span className={styles.errorLabel}>
                                                     - {newPasswordError}
                                                 </span>
                                             )}
@@ -416,11 +394,7 @@ const Popup = (): ReactElement => {
                                                 aria-labelledby='password'
                                                 aria-describedby='password'
                                                 value={newPassword}
-                                                onChange={(e) =>
-                                                    setNewPassword(
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => setNewPassword(e.target.value)}
                                             />
                                         </div>
                                     </div>
@@ -436,11 +410,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Confirm New Password
                                             {newPasswordError.length > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.errorLabel
-                                                    }
-                                                >
+                                                <span className={styles.errorLabel}>
                                                     - {newPasswordError}
                                                 </span>
                                             )}
@@ -458,11 +428,7 @@ const Popup = (): ReactElement => {
                                                 aria-labelledby='password'
                                                 aria-describedby='password'
                                                 value={confirmPassword}
-                                                onChange={(e) =>
-                                                    setConfirmPassword(
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
                                             />
                                         </div>
                                     </div>
@@ -482,9 +448,7 @@ const Popup = (): ReactElement => {
                                 className={
                                     popup?.delete || popup?.unpin
                                         ? 'red'
-                                        : popup?.pin ||
-                                          popup?.username ||
-                                          popup?.password
+                                        : popup?.pin || popup?.username || popup?.password
                                         ? 'blue'
                                         : 'grey'
                                 }
@@ -497,14 +461,10 @@ const Popup = (): ReactElement => {
                                         popup.unpin.func();
                                     } else if (popup?.username) {
                                         if (uid.length < 2) {
-                                            setUsernameError(
-                                                'Must be between 2 and 32 in length.'
-                                            );
+                                            setUsernameError('Must be between 2 and 32 in length.');
                                             return;
                                         } else if (uid.length > 32) {
-                                            setUsernameError(
-                                                'Must be between 2 and 32 in length.'
-                                            );
+                                            setUsernameError('Must be between 2 and 32 in length.');
                                             return;
                                         } else {
                                             handleUsernameSubmit();
@@ -512,22 +472,14 @@ const Popup = (): ReactElement => {
                                         }
                                     } else if (popup?.password) {
                                         if (password1.length === 0) {
-                                            setPassword1Error(
-                                                'Your password cannot be empty.'
-                                            );
+                                            setPassword1Error('Your password cannot be empty.');
                                             return;
                                         }
                                         if (newPassword.length < 8) {
-                                            setNewPasswordError(
-                                                'Must be 8 or more in length.'
-                                            );
+                                            setNewPasswordError('Must be 8 or more in length.');
                                             return;
-                                        } else if (
-                                            newPassword !== confirmPassword
-                                        ) {
-                                            setNewPasswordError(
-                                                'Passwords do not match.'
-                                            );
+                                        } else if (newPassword !== confirmPassword) {
+                                            setNewPasswordError('Passwords do not match.');
                                             return;
                                         } else {
                                             handlePasswordSubmit();
@@ -541,9 +493,7 @@ const Popup = (): ReactElement => {
                                 {popup?.delete && 'Delete'}
                                 {popup?.pin && 'Oh yeah. Pin it'}
                                 {popup?.unpin && 'Remove it please!'}
-                                {(popup?.username || popup?.password) &&
-                                    !isLoading &&
-                                    'Done'}
+                                {(popup?.username || popup?.password) && !isLoading && 'Done'}
                                 {isLoading && <div className={styles.loader} />}
                             </button>
                         </div>

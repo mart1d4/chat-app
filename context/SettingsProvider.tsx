@@ -1,23 +1,11 @@
 'use client';
 
-import {
-    ReactElement,
-    ReactNode,
-    createContext,
-    useEffect,
-    useState,
-} from 'react';
+import { ReactElement, ReactNode, createContext, useEffect, useState } from 'react';
 
-export const SettingsContext =
-    createContext<UserSettingsContextValueType>(null);
+export const SettingsContext = createContext<UserSettingsContextValueType>(null);
 
-const SettingsProvider = ({
-    children,
-}: {
-    children: ReactNode;
-}): ReactElement => {
-    const [userSettings, setUserSettings] =
-        useState<UserSettingsObjectType>(null);
+const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement => {
+    const [userSettings, setUserSettings] = useState<UserSettingsObjectType>(null);
 
     useEffect(() => {
         const userSettingsLocal = localStorage.getItem('user-settings');
@@ -32,6 +20,7 @@ const SettingsProvider = ({
                 appearance: 'default',
                 font: 'default',
                 theme: 'dark',
+                friendTab: 'add',
                 sendButton: false,
                 showUsers: true,
             };
@@ -51,11 +40,7 @@ const SettingsProvider = ({
         setUserSettings,
     };
 
-    return (
-        <SettingsContext.Provider value={value}>
-            {children}
-        </SettingsContext.Provider>
-    );
+    return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
 
 export default SettingsProvider;
