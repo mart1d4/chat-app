@@ -1,7 +1,6 @@
 import axiosPrivate from '@/lib/axios';
 
-const TOKEN =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NWE1ZjJkZWJiY2VkNzMxZmFhM2M1MyIsImlhdCI6MTY4Mzk3MTY1NiwiZXhwIjoxNjg0NTc2NDU2fQ.QX3iKGQRLwzEEIvcztchjSB9USeyimewaCuBIwF_QiY';
+const TOKEN = process.env.TEST_TOKEN;
 
 export const getChannels = async () => {
     const response = await axiosPrivate.get(`/users/me/channels`, {
