@@ -24,7 +24,7 @@ const Channels = async (): Promise<ReactElement> => {
 
                         <Title />
 
-                        {channels?.length ? (
+                        {channels?.length > 0 ? (
                             channels?.map((channel) => (
                                 <UserItem
                                     key={uuidv4()}
