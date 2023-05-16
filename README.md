@@ -21,7 +21,7 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 
 ## Issue Tracker
 
--[ ] //
+- [ ] ## Issue ##
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 
