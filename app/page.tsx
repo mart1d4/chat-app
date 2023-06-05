@@ -2,7 +2,7 @@ import Header from './web-components/Header/Header';
 import Footer from './web-components/Footer/Footer';
 import styles from './Home.module.css';
 import type { Metadata } from 'next';
-import { ReactElement } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
         'chat-app, chat, voice, video, text, gaming, friends, communities, free, open source, open source software, open source project',
 };
 
-const HomePage = (): ReactElement => {
+const HomePage = (): ReactNode => {
     return (
         <div className={styles.mainContainer}>
             <div className={styles.heading}>
@@ -24,12 +24,10 @@ const HomePage = (): ReactElement => {
                         <div className={styles.heroText}>
                             <h1>Discover a future</h1>
                             <div>
-                                A future of communication with our web app. Our
-                                platform offers advanced features and tools that
-                                allow you to communicate in new and exciting
-                                ways. From video calls to voice messages and
-                                more, you'll be able to express yourself like
-                                never before.
+                                A future of communication with our web app. Our platform offers
+                                advanced features and tools that allow you to communicate in new and
+                                exciting ways. From video calls to voice messages and more, you'll
+                                be able to express yourself like never before.
                             </div>
                         </div>
 
@@ -48,9 +46,7 @@ const HomePage = (): ReactElement => {
                                 Download for Windows
                             </Link>
 
-                            <Link href='/login'>
-                                Open Chat App in your browser
-                            </Link>
+                            <Link href='/login'>Open Chat App in your browser</Link>
                         </div>
                     </div>
                 </div>
@@ -83,11 +79,10 @@ const HomePage = (): ReactElement => {
                             <h2>Connect with Friends and Communities</h2>
 
                             <div>
-                                Get in touch and communicate with your friends
-                                and communities. With features such as voice and
-                                video calls, messaging, and channels, you can
-                                easily stay connected and engage with others who
-                                share your interests.
+                                Get in touch and communicate with your friends and communities. With
+                                features such as voice and video calls, messaging, and channels, you
+                                can easily stay connected and engage with others who share your
+                                interests.
                             </div>
                         </div>
                     </div>
@@ -104,11 +99,10 @@ const HomePage = (): ReactElement => {
                             <h2>Stay On Anytime, Anywhere</h2>
 
                             <div>
-                                Stay connected with your friends and communities
-                                anytime, anywhere. With our responsive design
-                                and mobile app support, access your
-                                conversations on any device. Never miss out on a
-                                conversation or update again.
+                                Stay connected with your friends and communities anytime, anywhere.
+                                With our responsive design and mobile app support, access your
+                                conversations on any device. Never miss out on a conversation or
+                                update again.
                             </div>
                         </div>
                     </div>
@@ -125,10 +119,9 @@ const HomePage = (): ReactElement => {
                             <h2>Your Personal Communication Hub</h2>
 
                             <div>
-                                Connect with your friends, collaborate with your
-                                team, and build your community all in one place.
-                                With features such as server customization and
-                                mobile support, you'll be able to communicate on
+                                Connect with your friends, collaborate with your team, and build
+                                your community all in one place. With features such as server
+                                customization and mobile support, you'll be able to communicate on
                                 your terms.
                             </div>
                         </div>
@@ -141,12 +134,10 @@ const HomePage = (): ReactElement => {
                             <h2>Unleash Your Potential</h2>
 
                             <div>
-                                Connect with people in ways you never thought
-                                possible. From voice and video calls to
-                                messaging and channels, our platform provides a
-                                seamless experience that allows you to
-                                communicate with friends, teams, and
-                                communities.
+                                Connect with people in ways you never thought possible. From voice
+                                and video calls to messaging and channels, our platform provides a
+                                seamless experience that allows you to communicate with friends,
+                                teams, and communities.
                             </div>
                         </div>
 

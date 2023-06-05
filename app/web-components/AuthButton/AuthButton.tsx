@@ -11,11 +11,7 @@ const AuthButton = ({ link }: { link: string }): ReactElement => {
 
     return (
         <Link href={link}>
-            {auth?.accessToken
-                ? 'Open Chat App'
-                : link === 'register'
-                ? 'Sign up'
-                : 'Login'}
+            {auth?.accessToken ? 'Open Chat App' : link === 'register' ? 'Sign up' : 'Login'}
         </Link>
     );
 };

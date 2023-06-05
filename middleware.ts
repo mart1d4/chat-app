@@ -17,10 +17,7 @@ export async function middleware(req: NextRequest) {
     const authorization = req.headers.get('Authorization');
     const { pathname } = req.nextUrl;
 
-    if (
-        nonProtectedRoutes.includes(pathname) ||
-        pathname.startsWith('/_next')
-    ) {
+    if (nonProtectedRoutes.includes(pathname) || pathname.startsWith('/_next')) {
         return NextResponse.next();
     }
 
@@ -49,9 +46,14 @@ export async function middleware(req: NextRequest) {
             );
         } else {
             try {
-                const { payload } = await jwtVerify(
+                console.log('token: ', token);
+                const { payload, protectedHeader } = await jwtVerify(
                     token,
-                    new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET)
+                    new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET),
+                    {
+                        issuer: 'http://localhost:3000',
+                        audience: 'http://localhost:3000',
+                    }
                 );
 
                 const requestHeaders = new Headers(req.headers);
