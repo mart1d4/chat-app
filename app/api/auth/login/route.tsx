@@ -5,8 +5,7 @@ import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request): Promise<NextResponse> {
-    const { username, password }: { username: string; password: string } =
-        await req.json();
+    const { username, password }: { username: string; password: string } = await req.json();
 
     if (!username || !password) {
         return NextResponse.json(
@@ -42,21 +41,21 @@ export async function POST(req: Request): Promise<NextResponse> {
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (passwordsMatch) {
-            const accessToken = await new SignJWT({ id: user.id })
-                .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            const accessToken = await new SignJWT({ 'chat-app.mart1d4.com': true })
+                .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
+                .setIssuer('chat-app.mart1d4.com')
+                .setAudience('chat-app.mart1d4.com')
                 .setExpirationTime('1d')
-                .sign(
-                    new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET)
-                );
+                .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
-            const refreshToken = await new SignJWT({ id: user.id })
-                .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            const refreshToken = await new SignJWT({ 'chat-app.mart1d4.com': true })
+                .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
+                .setIssuer('chat-app.mart1d4.com')
+                .setAudience('chat-app.mart1d4.com')
                 .setExpirationTime('7d')
-                .sign(
-                    new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET)
-                );
+                .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
 
             // Save refresh token to database
             await prisma.user.update({
@@ -86,7 +85,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Login or password is invalid',
+                    message: 'Login or password is invalid bitch',
                 },
                 {
                     status: 401,

@@ -168,14 +168,15 @@ const UserLists = ({ content }: Props): ReactNode => {
                 </h2>
 
                 <ul className={styles.listContainer + ' scrollbar'}>
-                    {filteredList?.map((user) => (
-                        // @ts-ignore
-                        <UserItem
-                            key={uuidv4()}
-                            user={user}
-                            content={content}
-                        />
-                    ))}
+                    {filteredList.length &&
+                        filteredList?.map((user) => (
+                            // @ts-ignore
+                            <UserItem
+                                key={uuidv4()}
+                                user={user}
+                                content={content}
+                            />
+                        ))}
                 </ul>
             </div>
         ),

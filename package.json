@@ -39,7 +39,7 @@
         "mongoose",
         "aws"
     ],
-    "license": "ISC",
+    "license": "MIT",
     "bugs": {
         "url": "https://github.com/mart1d4/chat-app/issues"
     },

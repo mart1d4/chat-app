@@ -116,16 +116,12 @@ const Register = (): ReactElement => {
                 <label
                     htmlFor='uid'
                     style={{
-                        color: usernameError.length
-                            ? 'var(--error-light)'
-                            : 'var(--foreground-3)',
+                        color: usernameError.length ? 'var(--error-light)' : 'var(--foreground-3)',
                     }}
                 >
                     Username
                     {usernameError.length > 0 && (
-                        <span className={styles.errorLabel}>
-                            - {usernameError}
-                        </span>
+                        <span className={styles.errorLabel}>- {usernameError}</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -153,16 +149,12 @@ const Register = (): ReactElement => {
                 <label
                     htmlFor='password'
                     style={{
-                        color: passwordError.length
-                            ? 'var(--error-light)'
-                            : 'var(--foreground-3)',
+                        color: passwordError.length ? 'var(--error-light)' : 'var(--foreground-3)',
                     }}
                 >
                     Password
                     {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>
-                            - {passwordError}
-                        </span>
+                        <span className={styles.errorLabel}>- {passwordError}</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -188,16 +180,12 @@ const Register = (): ReactElement => {
                 <label
                     htmlFor='password-match'
                     style={{
-                        color: passwordError.length
-                            ? 'var(--error-light)'
-                            : 'var(--foreground-3)',
+                        color: passwordError.length ? 'var(--error-light)' : 'var(--foreground-3)',
                     }}
                 >
                     Password Match
                     {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>
-                            - {passwordError}
-                        </span>
+                        <span className={styles.errorLabel}>- {passwordError}</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -224,9 +212,7 @@ const Register = (): ReactElement => {
                 className={styles.buttonSubmit}
                 onClick={(e) => handleSubmit(e)}
             >
-                <div className={isLoading ? styles.loading : ''}>
-                    {!isLoading && 'Register'}
-                </div>
+                <div className={isLoading ? styles.loading : ''}>{!isLoading && 'Register'}</div>
             </button>
 
             <div className={styles.bottomText}>
