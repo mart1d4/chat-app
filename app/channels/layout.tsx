@@ -28,12 +28,12 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
                 <UserProfile />
 
                 <div className={styles.appWrapper}>
-                    <div className={styles.channelsContainer}>
-                        {/* @ts-expect-error Server Component */}
+                    {/* <div className={styles.channelsContainer}>
+                        @ts-expect-error Server Component
                         <Channels />
 
                         {children}
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </Loading>
