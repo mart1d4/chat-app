@@ -46,13 +46,12 @@ export async function middleware(req: NextRequest) {
             );
         } else {
             try {
-                console.log('token: ', token);
-                const { payload, protectedHeader } = await jwtVerify(
+                const { payload } = await jwtVerify(
                     token,
                     new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET),
                     {
-                        issuer: 'http://localhost:3000',
-                        audience: 'http://localhost:3000',
+                        issuer: process.env.ISSUER,
+                        audience: process.env.ISSUER,
                     }
                 );
 
@@ -65,7 +64,7 @@ export async function middleware(req: NextRequest) {
                     },
                 });
             } catch (error) {
-                console.error('Middleware error: ', error);
+                console.error('[MIDDLEWARE] Error: ', error);
                 return NextResponse.json(
                     {
                         success: false,

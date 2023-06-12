@@ -17,9 +17,9 @@ const UserItem = ({ content, user }: Props): ReactNode => {
     const [showTooltip, setShowTooltip] = useState<number>(0);
     const [liHover, setLiHover] = useState<boolean>(false);
 
-    const { fixedLayer, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const token = auth.accessToken;
 
     return useMemo(
         () => (
@@ -31,7 +31,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                 }
                 onClick={async () => {
                     if (content !== 'online' && content !== 'all') return;
-                    await createChannel([user.id]);
+                    await createChannel(token, [user.id]);
                 }}
                 onContextMenu={(e) => {
                     e.preventDefault();
@@ -89,7 +89,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                                 <button
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        await createChannel([user.id]);
+                                        await createChannel(token, [user.id]);
                                     }}
                                     onMouseEnter={() => setShowTooltip(1)}
                                     onMouseLeave={() => setShowTooltip(0)}
@@ -143,7 +143,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                                     <button
                                         onClick={async (e) => {
                                             e.stopPropagation();
-                                            await addFriend(user.id);
+                                            await addFriend(token, user.id);
                                         }}
                                         onMouseEnter={() => setShowTooltip(1)}
                                         onMouseLeave={() => setShowTooltip(0)}
@@ -166,7 +166,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                                 <button
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        await removeFriend(user.id);
+                                        await removeFriend(token, user.id);
                                     }}
                                     onMouseEnter={() => setShowTooltip(2)}
                                     onMouseLeave={() => setShowTooltip(0)}
@@ -191,7 +191,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation();
-                                    await unblockUser(user.id);
+                                    await unblockUser(token, user.id);
                                 }}
                                 onMouseEnter={() => setShowTooltip(1)}
                                 onMouseLeave={() => setShowTooltip(0)}

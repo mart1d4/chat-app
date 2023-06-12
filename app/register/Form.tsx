@@ -4,7 +4,6 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
-import { axiosPrivate } from '@/lib/axios';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
 
@@ -86,19 +85,22 @@ const Register = (): ReactElement => {
             return;
         }
 
-        const response = await axiosPrivate.post('/auth/register', {
-            username: username,
-            password: password,
-        });
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        }).then((res) => res.json());
 
-        if (!response.data.success) {
-            if (response.data.message.includes('Username')) {
-                setUsernameError(response.data.message);
-            } else if (response.data.message.includes('Password')) {
-                setPasswordError(response.data.message);
+        if (!response.success) {
+            if (response.message.includes('Username')) {
+                setUsernameError(response.message);
+            } else if (response.message.includes('Password')) {
+                setPasswordError(response.message);
             } else {
-                setUsernameError(response.data.message);
-                setPasswordError(response.data.message);
+                setUsernameError(response.message);
+                setPasswordError(response.message);
             }
             setIsLoading(false);
         } else {

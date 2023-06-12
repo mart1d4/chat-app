@@ -1,23 +1,28 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
-import axiosPrivate from '@/lib/axios';
 
 export default function useRefreshToken() {
     const { setAuth }: any = useContextHook({ context: 'auth' });
 
     const refresh = async () => {
-        const response = await axiosPrivate.get('/auth/refresh');
+        const response = await fetch('/api/auth/refresh', {
+            method: 'GET',
+            credentials: 'include',
+        }).then((res) => {
+            if (!res.ok) throw new Error('Could not refresh token');
+            return res.json();
+        });
 
         setAuth((prev: AuthContextValueType) => {
             return {
                 ...prev,
-                accessToken: response.data.accessToken,
-                user: response.data.user,
+                accessToken: response.accessToken,
+                user: response.user,
             };
         });
 
-        return response.data.accessToken;
+        return response.accessToken;
     };
 
     return refresh;

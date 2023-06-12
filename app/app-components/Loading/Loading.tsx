@@ -1,9 +1,9 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
+import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Loading.module.css';
-import { ReactNode } from 'react';
 
 type Props = {
     children: ReactNode;
@@ -15,9 +15,13 @@ type Props = {
 // If user is logged in, show children
 
 const Loading = ({ children }: Props): ReactNode => {
-    const { auth, loading }: any = useContextHook({
-        context: 'auth',
-    });
+    const { auth, loading }: any = useContextHook({ context: 'auth' });
+
+    useEffect(() => {
+        if (!loading && !auth?.accessToken) {
+            useRouter().push('/login');
+        }
+    }, [loading]);
 
     if (loading) {
         return (
@@ -33,12 +37,6 @@ const Loading = ({ children }: Props): ReactNode => {
                 </video>
             </div>
         );
-    }
-
-    if (!auth?.accessToken) {
-        const router = useRouter();
-        router.push('/login');
-        return <div></div>;
     }
 
     return (

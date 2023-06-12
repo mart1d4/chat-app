@@ -12,9 +12,7 @@ type Props = {
 const ChannelCheck = ({ children, channelId }: Props): ReactNode => {
     const router = useRouter();
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
         if (!auth.user.channelIds.includes(channelId)) {

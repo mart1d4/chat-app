@@ -20,12 +20,9 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const token = auth?.accessToken;
 
     useEffect(() => {
         if (channel?.type === 'DM') {
@@ -170,7 +167,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                await leaveChannel(channel.id);
+                                await leaveChannel(token, channel.id);
                             }}
                         >
                             <Icon

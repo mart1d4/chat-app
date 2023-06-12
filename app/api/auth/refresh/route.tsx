@@ -23,7 +23,6 @@ export async function GET(req: Request): Promise<NextResponse> {
     try {
         const user = await prisma.user.findFirst({
             where: {
-                // @ts-ignore
                 refreshToken: token,
             },
         });
@@ -41,9 +40,11 @@ export async function GET(req: Request): Promise<NextResponse> {
         }
 
         const accessToken = await new SignJWT({ id: user.id })
-            .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setExpirationTime('1d')
+            .setIssuer(process.env.ISSUER as string)
+            .setAudience(process.env.ISSUER as string)
             .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
         if (!accessToken) {
@@ -63,8 +64,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: true,
                 message: 'Successfully refreshed token.',
                 accessToken: accessToken,
-                // @ts-ignore
-                user: cleanUser(user),
+                user: cleanUser(user as any),
             },
             {
                 status: 200,

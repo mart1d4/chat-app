@@ -41,20 +41,20 @@ export async function POST(req: Request): Promise<NextResponse> {
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (passwordsMatch) {
-            const accessToken = await new SignJWT({ 'chat-app.mart1d4.com': true })
+            const accessToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setIssuer('chat-app.mart1d4.com')
-                .setAudience('chat-app.mart1d4.com')
                 .setExpirationTime('1d')
+                .setIssuer(process.env.ISSUER as string)
+                .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
 
-            const refreshToken = await new SignJWT({ 'chat-app.mart1d4.com': true })
+            const refreshToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setIssuer('chat-app.mart1d4.com')
-                .setAudience('chat-app.mart1d4.com')
                 .setExpirationTime('7d')
+                .setIssuer(process.env.ISSUER as string)
+                .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
 
             // Save refresh token to database
@@ -70,8 +70,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: true,
-                    // @ts-ignore
-                    user: cleanUser(user),
+                    user: cleanUser(user as any),
                     accessToken: accessToken,
                 },
                 {
@@ -85,7 +84,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Login or password is invalid bitch',
+                    message: 'Login or password is invalid',
                 },
                 {
                     status: 401,

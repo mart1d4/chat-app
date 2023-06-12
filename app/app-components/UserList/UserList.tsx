@@ -64,7 +64,9 @@ const UserLists = ({ content }: Props): ReactNode => {
     const [list, setList] = useState<CleanOtherUserType[]>([]);
     const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
 
+    const { auth }: any = useContextHook({ context: 'auth' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const token = auth.accessToken;
     const searchBar = useRef<HTMLInputElement>(null);
 
     const pasteText = async () => {
@@ -76,27 +78,38 @@ const UserLists = ({ content }: Props): ReactNode => {
     useEffect(() => {
         const getList = async () => {
             if (content === 'all' || content === 'online') {
-                let friends = await getFriends();
+                let friends = (await getFriends(token)) || [];
 
                 if (content === 'online') {
-                    friends = friends.filter(
-                        (user: CleanOtherUserType) => user.status === 'Online'
-                    );
+                    if (friends.length) {
+                        friends = friends.filter(
+                            (user: CleanOtherUserType) => user.status === 'Online'
+                        );
+                    }
                     setList(friends);
                     return;
                 }
 
                 setList(friends);
             } else if (content === 'pending') {
-                const sent = await getRequests('sent');
-                const received = await getRequests('received');
+                const sent = await getRequests(token, 'sent');
+                const received = await getRequests(token, 'received');
 
-                const sentReq = sent.map((user: CleanOtherUserType) => {
-                    return { ...user, req: 'Sent' };
-                });
-                const receivedReq = received.map((user: CleanOtherUserType) => {
-                    return { ...user, req: 'Received' };
-                });
+                let sentReq = [];
+                if (sent.length) {
+                    sentReq =
+                        sent?.map((user: CleanOtherUserType) => {
+                            return { ...user, req: 'Sent' };
+                        }) || [];
+                }
+
+                let receivedReq = [];
+                if (received.length) {
+                    receivedReq =
+                        received?.map((user: CleanOtherUserType) => {
+                            return { ...user, req: 'Received' };
+                        }) || [];
+                }
 
                 setList(
                     [...sentReq, ...receivedReq].sort((a, b) =>
@@ -104,11 +117,10 @@ const UserLists = ({ content }: Props): ReactNode => {
                     )
                 );
             } else if (content === 'blocked') {
-                const blockedUsers = await getBlockedUsers();
+                const blockedUsers = await getBlockedUsers(token);
                 setList(blockedUsers);
             }
         };
-
         getList();
     }, [content]);
 
@@ -164,7 +176,7 @@ const UserLists = ({ content }: Props): ReactNode => {
                 </div>
 
                 <h2 className={styles.title}>
-                    {contentData[content].title} — {filteredList.length}
+                    {contentData[content]?.title} — {filteredList.length}
                 </h2>
 
                 <ul className={styles.listContainer + ' scrollbar'}>
@@ -182,6 +194,8 @@ const UserLists = ({ content }: Props): ReactNode => {
         ),
         [filteredList]
     );
+
+    if (!content) return null;
 
     return !list?.length ? (
         <div className={styles.content}>

@@ -18,12 +18,9 @@ const Popout = ({ content }: any) => {
     const [friends, setFriends] = useState<CleanOtherUserType[]>([]);
     const [pinned, setPinned] = useState<MessageType[]>([]);
 
-    const { setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const token = auth.accessToken;
 
     const inputRef = useRef<HTMLInputElement>(null);
     const inputLinkRef = useRef<HTMLInputElement>(null);
@@ -31,13 +28,13 @@ const Popout = ({ content }: any) => {
     useEffect(() => {
         if (content?.pinned) {
             const fetchPinned = async () => {
-                setPinned(await getPinnedMessages(content.channel.id));
+                setPinned(await getPinnedMessages(token, content.channel.id));
             };
 
             fetchPinned();
         } else {
             const getFriendList = async () => {
-                const friendList = await getFriends();
+                const friendList = await getFriends(token);
                 setFriends(friendList);
 
                 if (content?.channel) {
@@ -114,7 +111,7 @@ const Popout = ({ content }: any) => {
         }
 
         const recipientIds = allRecipients?.map((recipient) => recipient.id);
-        await createChannel(recipientIds, channelId);
+        await createChannel(token, recipientIds, channelId);
     };
 
     if (content?.pinned) {

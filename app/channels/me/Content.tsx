@@ -5,9 +5,7 @@ import useContextHook from '@/hooks/useContextHook';
 import { ReactElement } from 'react';
 
 const Content = (): ReactElement => {
-    const { userSettings }: any = useContextHook({
-        context: 'settings',
-    });
+    const { userSettings }: any = useContextHook({ context: 'settings' });
 
     if (userSettings?.friendTab === 'add') {
         return <AddFriend />;

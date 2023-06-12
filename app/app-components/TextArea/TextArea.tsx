@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useRef, useMemo, useEffect } from 'react';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import { Icon, Tooltip } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
@@ -140,13 +139,15 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
             );
         }
 
-        const response = await axiosPrivate.post(`/channels/${channel.id}/messages`, {
-            message: {
-                content: message,
-                attachments: files,
-                messageReference: messRef?.id ?? null,
-            },
-        });
+        // Send message
+
+        // const response = await axiosPrivate.post(`/channels/${channel.id}/messages`, {
+        //     message: {
+        //         content: message,
+        //         attachments: files,
+        //         messageReference: messRef?.id ?? null,
+        //     },
+        // });
     };
 
     const textContainer = useMemo(

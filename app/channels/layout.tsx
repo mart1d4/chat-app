@@ -22,18 +22,19 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
             <div className={styles.appContainer}>
                 <AppNav />
 
+                {/* Fixed Layer Components */}
                 <Popup />
                 <Settings />
                 <FixedLayer />
                 <UserProfile />
 
                 <div className={styles.appWrapper}>
-                    {/* <div className={styles.channelsContainer}>
-                        @ts-expect-error Server Component
+                    <div className={styles.channelsContainer}>
+                        {/* @ts-expect-error Server Component */}
                         <Channels />
 
                         {children}
-                    </div> */}
+                    </div>
                 </div>
             </div>
         </Loading>

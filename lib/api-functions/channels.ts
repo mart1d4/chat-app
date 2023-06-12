@@ -1,115 +1,149 @@
-import axiosPrivate from '@/lib/axios';
+const url = process.env.NEXT_PUBLIC_BASE_URL;
 
-const TOKEN = process.env.TEST_TOKEN;
-
-export const getChannels = async () => {
-    const response = await axiosPrivate.get(`/users/me/channels`, {
+export const getChannels = async (token: string) => {
+    const response = await fetch(`${url}/users/me/channels`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 10 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch channels');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.channels;
+        return response.channels;
     }
 };
 
-export const getSingleChannel = async (channelId: string) => {
-    const response = await axiosPrivate.get(`/users/me/channels/${channelId}`, {
+export const getSingleChannel = async (token: string, channelId: string) => {
+    const response = await fetch(`${url}/users/me/channels/${channelId}`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 30 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch channel');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.channel;
+        return response.channel;
     }
 };
 
-export const createChannel = async (recipients: string[], channelId?: string) => {
-    const response = await axiosPrivate.post(
-        `/users/me/channels`,
-        {
-            recipients: recipients,
-            channelId: channelId,
-        },
-        {
-            headers: {
-                Authorization: `Bearer ${TOKEN}`,
-            },
-        }
-    );
-
-    if (!response.data.success) {
-        return response.data;
-    } else {
-        return response.data;
-    }
-};
-
-export const leaveChannel = async (channelId: string) => {
-    const response = await axiosPrivate.delete(`/users/me/channels/${channelId}`, {
+export const createChannel = async (token: string, recipients: string[], channelId?: string) => {
+    const response = await fetch(`${url}/users/me/channels`, {
+        method: 'POST',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+            recipients,
+            channelId,
+        }),
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to create channel');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data;
+        return response;
     }
 };
 
-export const getPinnedMessages = async (channelId: string) => {
-    const response = await axiosPrivate.get(`/users/me/channels/${channelId}/pins`, {
+export const leaveChannel = async (token: string, channelId: string) => {
+    const response = await fetch(`${url}/users/me/channels/${channelId}`, {
+        method: 'DELETE',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to leave channel');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data;
+        return response;
     }
 };
 
-export const pinMessage = async (channelId: string, messageId: string) => {
-    const response = await axiosPrivate.post(`/users/me/channels/${channelId}/pins/${messageId}`, {
+export const getPinnedMessages = async (token: string, channelId: string) => {
+    const response = await fetch(`${url}/users/me/channels/${channelId}/pins`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 10 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch pinned messages');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data;
+        return response;
     }
 };
 
-export const getMessages = async (channelId: string, skip?: number, limit?: number) => {
-    const response = await axiosPrivate.get(`/users/me/channels/${channelId}/messages`, {
-        params: {
+export const pinMessage = async (token: string, channelId: string, messageId: string) => {
+    const response = await fetch(`${url}/users/me/channels/${channelId}/pins/${messageId}`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to pin message');
+        return res.json();
+    });
+
+    if (!response.success) {
+        return response;
+    } else {
+        return response;
+    }
+};
+
+export const getMessages = async (
+    token: string,
+    channelId: string,
+    skip?: number,
+    limit?: number
+) => {
+    const response = await fetch(`${url}/users/me/channels/${channelId}/messages`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
             skip: skip || 0,
             limit: limit || 50,
-        },
-        headers: {
-            Authorization: `Bearer ${TOKEN}`,
-        },
+        }),
+        next: { revalidate: 120 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch messages');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
         return {
-            messages: response.data.messages,
-            hasMore: response.data.hasMore,
+            messages: response.messages,
+            hasMore: response.hasMore,
         };
     }
 };

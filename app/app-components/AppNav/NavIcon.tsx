@@ -19,9 +19,7 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     const pathname = usePathname();
     const router = useRouter();

@@ -2,7 +2,6 @@
 
 import useContextHook from './useContextHook';
 import { useRouter } from 'next/navigation';
-import axios from '@/lib/axios';
 
 const useLogout = () => {
     const { setAuth }: any = useContextHook({
@@ -17,8 +16,9 @@ const useLogout = () => {
         localStorage.removeItem('user-settings');
 
         try {
-            await axios.post('/auth/logout', {
-                withCredentials: true,
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
             });
 
             router.push('/login');

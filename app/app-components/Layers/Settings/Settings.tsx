@@ -2,14 +2,7 @@
 
 import { AvatarStatus, Tooltip, Icon } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    ReactElement,
-    useEffect,
-    useState,
-    Dispatch,
-    SetStateAction,
-} from 'react';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
+import { ReactElement, useEffect, useState } from 'react';
 import styles from './Settings.module.css';
 import useLogout from '@/hooks/useLogout';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,13 +16,9 @@ const Settings = ({ tab }: any): ReactElement => {
     const [error, setError] = useState<null | string>(null);
     const [success, setSuccess] = useState<null | string>(null);
 
-    const { showSettings, setShowSettings }: any = useContextHook({
-        context: 'layer',
-    });
-    const { auth, setAuth }: any = useContextHook({
-        context: 'auth',
-    });
-    const axiosPrivate = useAxiosPrivate();
+    const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
+
     const { logout } = useLogout();
 
     useEffect(() => {
@@ -45,29 +34,6 @@ const Settings = ({ tab }: any): ReactElement => {
             window.removeEventListener('keydown', handleEsc);
         };
     }, []);
-
-    const saveChanges = async () => {
-        if (newUsername.length) {
-            if (newUsername.length < 3 || newUsername.length > 32) {
-                setError('Username must be between 3 and 32 characters long!');
-            } else {
-                const data = await axiosPrivate.patch(
-                    `/users/${auth?.user.id}`,
-                    { username: newUsername }
-                );
-
-                if (data?.data?.error) {
-                    setError(data.data.error);
-                } else {
-                    setSuccess('Username changed successfully!');
-                    setAuth({
-                        ...auth,
-                        user: { ...auth.user, username: newUsername },
-                    });
-                }
-            }
-        }
-    };
 
     const tabs = [
         {
@@ -181,10 +147,7 @@ const Settings = ({ tab }: any): ReactElement => {
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (
-                                                tab.name === 'separator' ||
-                                                tab.type === 'title'
-                                            )
+                                            if (tab.name === 'separator' || tab.type === 'title')
                                                 return;
                                             if (tab.name === 'Log Out') {
                                                 logout();
@@ -210,10 +173,7 @@ const Settings = ({ tab }: any): ReactElement => {
                     <div className={styles.contentContainer}>
                         <div className={styles.contentWrapper}>
                             <div className={styles.content}>
-                                {
-                                    tabs.find((tab) => tab.name === activeTab)
-                                        ?.component
-                                }
+                                {tabs.find((tab) => tab.name === activeTab)?.component}
                             </div>
 
                             <div className={styles.closeButton}>
@@ -302,9 +262,7 @@ const MyAccount = () => {
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
                             <Image
-                                src={`/assets/avatars/${
-                                    auth?.user.avatar || 'blue '
-                                }.png`}
+                                src={`/assets/avatars/${auth?.user.avatar || 'blue '}.png`}
                                 alt='User Avatar'
                                 width={80}
                                 height={80}
@@ -338,11 +296,7 @@ const MyAccount = () => {
                             <Tooltip
                                 show={tooltip?.show}
                                 pos='top'
-                                background={
-                                    tooltip?.success
-                                        ? 'var(--success-light)'
-                                        : ''
-                                }
+                                background={tooltip?.success ? 'var(--success-light)' : ''}
                                 arrow
                             >
                                 {tooltip?.text}
@@ -379,9 +333,7 @@ const MyAccount = () => {
 
             <div className={styles.section}>
                 <div className={styles.sectionTitle}>
-                    <h2 className={styles.titleBig}>
-                        Password and Authentication
-                    </h2>
+                    <h2 className={styles.titleBig}>Password and Authentication</h2>
                 </div>
 
                 <button
@@ -399,19 +351,14 @@ const MyAccount = () => {
                 <h2 className={styles.titleSmall}>SMS Backup Authentication</h2>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose
-                        your authentication app or backup codes. Your current
-                        phone number is 0001.
+                        Add your phone as a backup 2FA method in case you lose your authentication
+                        app or backup codes. Your current phone number is 0001.
                     </div>
 
                     <div className={styles.buttonsContainer}>
-                        <button className='blue'>
-                            Enable SMS Authentication
-                        </button>
+                        <button className='blue'>Enable SMS Authentication</button>
 
-                        <button className='underline'>
-                            Change phone number
-                        </button>
+                        <button className='underline'>Change phone number</button>
                     </div>
                 </div>
             </div>
@@ -425,8 +372,8 @@ const MyAccount = () => {
 
                 <div className={styles.accountRemoval}>
                     <div>
-                        Deleting your account will remove all of your data from
-                        our servers. This action is irreversible.
+                        Deleting your account will remove all of your data from our servers. This
+                        action is irreversible.
                     </div>
 
                     <button className='red'>Delete Account</button>

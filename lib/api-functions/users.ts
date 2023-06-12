@@ -1,127 +1,153 @@
-import axiosPrivate from '@/lib/axios';
+const url = process.env.NEXT_PUBLIC_BASE_URL;
 
-const TOKEN = process.env.TEST_TOKEN;
-
-export const getUser = async (userId: string) => {
-    const response = await axiosPrivate.get(`/users/${userId}`, {
+export const getUser = async (token: string, userId: string) => {
+    const response = await fetch(`${url}/users/${userId}`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 30 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch user');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.user;
+        return response.user;
     }
 };
 
-export const blockUser = async (userId: string) => {
-    const response = await axiosPrivate.post(
-        `/users/${userId}/block`,
-        {},
-        {
-            headers: {
-                Authorization: `Bearer ${TOKEN}`,
-            },
-        }
-    );
-
-    if (!response.data.success) {
-        return response.data;
-    } else {
-        return response.data;
-    }
-};
-
-export const unblockUser = async (userId: string) => {
-    const response = await axiosPrivate.delete(`/users/${userId}/block`, {
+export const blockUser = async (token: string, userId: string) => {
+    const response = await fetch(`${url}/users/${userId}/block`, {
+        method: 'POST',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to block user');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data;
+        return response;
     }
 };
 
-export const addFriend = async (userId: string) => {
-    const response = await axiosPrivate.post(
-        `/users/me/friends/${userId}`,
-        {},
-        {
-            headers: {
-                Authorization: `Bearer ${TOKEN}`,
-            },
-        }
-    );
-
-    if (!response.data.success) {
-        return response.data;
-    } else {
-        return response.data;
-    }
-};
-
-export const removeFriend = async (userId: string) => {
-    const response = await axiosPrivate.delete(`/users/me/friends/${userId}`, {
+export const unblockUser = async (token: string, userId: string) => {
+    const response = await fetch(`${url}/users/${userId}/block`, {
+        method: 'DELETE',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to unblock user');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data;
+        return response;
     }
 };
 
-export const getFriends = async () => {
-    const response = await axiosPrivate.get(`/users/me/friends`, {
+export const addFriend = async (token: string, userId: string) => {
+    const response = await fetch(`${url}/users/me/friends/${userId}`, {
+        method: 'POST',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to add friend');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.friends;
+        return response;
     }
 };
 
-export const getRequests = async (type: 'sent' | 'received') => {
+export const removeFriend = async (token: string, userId: string) => {
+    const response = await fetch(`${url}/users/me/friends/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to remove friend');
+        return res.json();
+    });
+
+    if (!response.success) {
+        return response;
+    } else {
+        return response;
+    }
+};
+
+export const getFriends = async (token: string) => {
+    const response = await fetch(`${url}/users/me/friends`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        next: { revalidate: 10 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch friends');
+        return res.json();
+    });
+
+    if (!response.success) {
+        return response;
+    } else {
+        return response.friends;
+    }
+};
+
+export const getRequests = async (token: string, type: 'sent' | 'received') => {
     if (type !== 'sent' && type !== 'received') {
         throw new Error('Invalid request type');
     }
 
-    const response = await axiosPrivate.get(`/users/me/requests/${type}`, {
+    const response = await fetch(`${url}/users/me/requests/${type}`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 10 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch requests');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.requests;
+        return response.requests;
     }
 };
 
-export const getBlockedUsers = async () => {
-    const response = await axiosPrivate.get(`/users/me/blocked`, {
+export const getBlockedUsers = async (token: string) => {
+    const response = await fetch(`${url}/users/me/blocked`, {
+        method: 'GET',
         headers: {
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 10 },
+    }).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch blocked users');
+        return res.json();
     });
 
-    if (!response.data.success) {
-        return response.data;
+    if (!response.success) {
+        return response;
     } else {
-        return response.data.blockedUsers;
+        return response.blockedUsers;
     }
 };

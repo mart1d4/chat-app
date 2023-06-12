@@ -1,13 +1,19 @@
+'use client';
+
 import { getChannels } from '@/lib/api-functions/channels';
+import useContextHook from '@/hooks/useContextHook';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
-import { ReactElement } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Title from './Title';
 
 const Channels = async (): Promise<ReactElement> => {
-    const channels: ChannelType[] = await getChannels();
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const token = auth.accessToken;
+
+    const channels: ChannelType[] = (await getChannels(token)) || [];
 
     return (
         <div className={styles.nav}>

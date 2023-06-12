@@ -30,9 +30,7 @@ const UserSection = (): ReactElement => {
                 >
                     <div>
                         <Image
-                            src={`/assets/avatars/${
-                                auth?.user?.avatar || 'blue'
-                            }.png`}
+                            src={`/assets/avatars/${auth?.user?.avatar || 'blue'}.png`}
                             width={32}
                             height={32}
                             alt='Avatar'
@@ -45,7 +43,7 @@ const UserSection = (): ReactElement => {
 
                     <div className={styles.contentWrapper}>
                         <div>{auth?.user?.username}</div>
-                        <div>{auth?.user?.customStatus || '#0001'}</div>
+                        <div>{auth?.user?.status || 'Invisible'}</div>
                     </div>
                 </div>
 
@@ -54,18 +52,13 @@ const UserSection = (): ReactElement => {
                         onMouseEnter={() => setShowTooltip(1)}
                         onMouseLeave={() => setShowTooltip(false)}
                         onClick={() => {
-                            if (
-                                !userSettings?.microphone &&
-                                !userSettings?.sound
-                            ) {
+                            if (!userSettings?.microphone && !userSettings?.sound) {
                                 setUserSettings({
                                     ...userSettings,
                                     microphone: true,
                                     sound: true,
                                 });
-                                const audio = new Audio(
-                                    '/assets/sounds/undeafen.mp3'
-                                );
+                                const audio = new Audio('/assets/sounds/undeafen.mp3');
                                 audio.volume = 0.5;
                                 audio.play();
                             } else {
@@ -75,9 +68,7 @@ const UserSection = (): ReactElement => {
                                 });
                                 const audio = new Audio(`
                                     /assets/sounds/${
-                                        userSettings?.microphone
-                                            ? 'mute'
-                                            : 'unmute'
+                                        userSettings?.microphone ? 'mute' : 'unmute'
                                     }.mp3
                                 `);
                                 audio.volume = 0.5;
@@ -91,9 +82,7 @@ const UserSection = (): ReactElement => {
                         </Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
-                                name={
-                                    userSettings?.microphone ? 'mic' : 'micCut'
-                                }
+                                name={userSettings?.microphone ? 'mic' : 'micCut'}
                                 size={20}
                             />
                         </div>
@@ -103,10 +92,7 @@ const UserSection = (): ReactElement => {
                         onMouseEnter={() => setShowTooltip(2)}
                         onMouseLeave={() => setShowTooltip(false)}
                         onClick={() => {
-                            if (
-                                userSettings?.microphone &&
-                                userSettings?.sound
-                            ) {
+                            if (userSettings?.microphone && userSettings?.sound) {
                                 setUserSettings({
                                     ...userSettings,
                                     microphone: false,
@@ -121,9 +107,7 @@ const UserSection = (): ReactElement => {
 
                             const audio = new Audio(`
                                     /assets/sounds/${
-                                        userSettings?.sound
-                                            ? 'deafen'
-                                            : 'undeafen'
+                                        userSettings?.sound ? 'deafen' : 'undeafen'
                                     }.mp3
                                 `);
                             audio.volume = 0.5;
@@ -136,11 +120,7 @@ const UserSection = (): ReactElement => {
                         </Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
-                                name={
-                                    userSettings?.sound
-                                        ? 'headset'
-                                        : 'headsetCut'
-                                }
+                                name={userSettings?.sound ? 'headset' : 'headsetCut'}
                                 size={20}
                             />
                         </div>
@@ -151,9 +131,7 @@ const UserSection = (): ReactElement => {
                         onMouseLeave={() => setShowTooltip(false)}
                         onClick={() => setShowSettings(true)}
                     >
-                        <Tooltip show={showTooltip === 3}>
-                            User Settings
-                        </Tooltip>
+                        <Tooltip show={showTooltip === 3}>User Settings</Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
                                 name='settings'

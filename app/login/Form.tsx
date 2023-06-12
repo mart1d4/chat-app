@@ -4,7 +4,6 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { useRouter } from 'next/navigation';
-import { axiosPrivate } from '@/lib/axios';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
 
@@ -54,18 +53,21 @@ const Form = (): ReactElement => {
         if (isLoading || !username || !password) return;
         setIsLoading(true);
 
-        const response = await axiosPrivate.post('/auth/login', {
-            username: username,
-            password: password,
-        });
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        }).then((res) => res.json());
 
-        if (!response.data.success) {
-            setError(response.data.message || 'An error occurred');
+        if (!response.success) {
+            setError(response.message || 'An error occurred');
             setIsLoading(false);
         } else {
             setAuth({
-                accessToken: response.data.accessToken,
-                user: response.data.user,
+                accessToken: response.accessToken,
+                user: response.user,
             });
 
             setUsername('');
@@ -81,16 +83,14 @@ const Form = (): ReactElement => {
                 <label
                     htmlFor='username'
                     style={{
-                        color: error.length
-                            ? 'var(--error-light)'
-                            : 'var(--foreground-3)',
+                        color: error.length ? 'var(--error-light)' : 'var(--foreground-3)',
                     }}
                 >
                     Username
                     {error.length ? (
-                        <span className={styles.errorLabel}>- {error}</span>
+                        <span className={styles.errorLabel}> - {error}</span>
                     ) : (
-                        <span>*</span>
+                        <span> *</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -116,9 +116,7 @@ const Form = (): ReactElement => {
                 <label
                     htmlFor='password'
                     style={{
-                        color: error.length
-                            ? 'var(--error-light)'
-                            : 'var(--foreground-3)',
+                        color: error.length ? 'var(--error-light)' : 'var(--foreground-3)',
                     }}
                 >
                     Password
@@ -162,9 +160,7 @@ const Form = (): ReactElement => {
                 className={styles.buttonSubmit}
                 onClick={(e) => handleSubmit(e)}
             >
-                <div className={isLoading ? styles.loading : ''}>
-                    {!isLoading && 'Log In'}
-                </div>
+                <div className={isLoading ? styles.loading : ''}>{!isLoading && 'Log In'}</div>
             </button>
 
             <div className={styles.bottomText}>

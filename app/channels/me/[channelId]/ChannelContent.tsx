@@ -20,9 +20,8 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const token = auth.accessToken;
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
@@ -114,7 +113,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                         {auth.user.friendIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={() => removeFriend(friend.id)}
+                                onClick={async () => await removeFriend(token, friend.id)}
                             >
                                 Remove Friend
                             </button>
@@ -123,7 +122,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                         ) : auth.user.requestReceivedIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={() => addFriend(friend.id)}
+                                onClick={async () => await addFriend(token, friend.id)}
                             >
                                 Accept Friend Request
                             </button>
@@ -131,7 +130,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                             !auth.user.blockedUserIds.includes(friend.id) && (
                                 <button
                                     className='blue'
-                                    onClick={() => addFriend(friend.id)}
+                                    onClick={async () => await addFriend(token, friend.id)}
                                 >
                                     Add Friend
                                 </button>
@@ -141,14 +140,14 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                         {!auth.user.blockedUserIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={() => blockUser(friend.id)}
+                                onClick={async () => await blockUser(token, friend.id)}
                             >
                                 Block
                             </button>
                         ) : (
                             <button
                                 className='grey'
-                                onClick={() => unblockUser(friend.id)}
+                                onClick={async () => await unblockUser(token, friend.id)}
                             >
                                 Unblock
                             </button>

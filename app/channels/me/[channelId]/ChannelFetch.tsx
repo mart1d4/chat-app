@@ -1,4 +1,7 @@
+'use client';
+
 import { getSingleChannel, getMessages } from '@/lib/api-functions/channels';
+import useContextHook from '@/hooks/useContextHook';
 import ChannelContent from './ChannelContent';
 import { ReactNode } from 'react';
 
@@ -7,8 +10,11 @@ const ChannelFetch = async ({ channelId }: { channelId: string | null }): Promis
         return null;
     }
 
-    const channel = await getSingleChannel(channelId);
-    const messages = await getMessages(channelId, 0, 50);
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const token = auth?.accessToken;
+
+    const channel = await getSingleChannel(token, channelId);
+    const messages = await getMessages(token, channelId, 0, 50);
 
     return (
         // @ts-ignore

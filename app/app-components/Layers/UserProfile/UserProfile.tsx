@@ -16,12 +16,11 @@ const UserProfile = (): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
     const { userProfile, setUserProfile, setFixedLayer }: any = useContextHook({
         context: 'layer',
     });
+    const token = auth.accessToken;
 
     const cardRef = useRef<HTMLDivElement>(null);
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -37,7 +36,7 @@ const UserProfile = (): ReactElement => {
 
         if (!isSameUser()) {
             const getMutuals = async () => {
-                const friends = await getFriends();
+                const friends = await getFriends(token);
                 const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
                 setMutualFriends(mutuals);
             };
@@ -137,14 +136,18 @@ const UserProfile = (): ReactElement => {
                                                     <>
                                                         <button
                                                             className='green'
-                                                            onClick={() => addFriend(user.id)}
+                                                            onClick={async () =>
+                                                                await addFriend(token, user.id)
+                                                            }
                                                         >
                                                             Accept
                                                         </button>
 
                                                         <button
                                                             className='grey'
-                                                            onClick={() => removeFriend(user.id)}
+                                                            onClick={async () =>
+                                                                await removeFriend(token, user.id)
+                                                            }
                                                         >
                                                             Ignore
                                                         </button>
@@ -152,7 +155,9 @@ const UserProfile = (): ReactElement => {
                                                 ) : auth.user.friendIds.includes(user.id) ? (
                                                     <button
                                                         className='green'
-                                                        onClick={() => createChannel([user.id])}
+                                                        onClick={async () =>
+                                                            await createChannel(token, [user.id])
+                                                        }
                                                     >
                                                         Send Message
                                                     </button>
@@ -166,7 +171,7 @@ const UserProfile = (): ReactElement => {
                                                                     ? 'green disabled'
                                                                     : 'green'
                                                             }
-                                                            onClick={() => {
+                                                            onClick={async () => {
                                                                 if (
                                                                     auth.user.requestSentIds.includes(
                                                                         user.id
@@ -174,7 +179,7 @@ const UserProfile = (): ReactElement => {
                                                                 ) {
                                                                     return;
                                                                 }
-                                                                addFriend(user.id);
+                                                                await addFriend(token, user.id);
                                                             }}
                                                             onMouseEnter={() =>
                                                                 setShowTooltip(true)

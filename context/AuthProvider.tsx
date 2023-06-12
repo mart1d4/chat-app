@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactElement, ReactNode, createContext, useState } from 'react';
+import { ReactElement, ReactNode, createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext<AuthContextValueType>(null);
 
@@ -15,9 +15,7 @@ const AuthProvider = ({ children }: { children: ReactNode }): ReactElement => {
         setLoading,
     };
 
-    return (
-        <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

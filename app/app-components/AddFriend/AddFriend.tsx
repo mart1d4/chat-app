@@ -11,7 +11,10 @@ const AddFriend = () => {
     const [error, setError] = useState<string>('');
     const [valid, setValid] = useState<string>('');
 
+    const { auth }: any = useContextHook({ context: 'auth' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const token = auth.accessToken;
+
     const inputRef = useRef<HTMLInputElement>(null);
 
     const pasteText = async () => {
@@ -77,7 +80,7 @@ const AddFriend = () => {
                                             setError('Invalid user ID.');
                                             return;
                                         }
-                                        const res = await addFriend(input);
+                                        const res = await addFriend(token, input);
                                         if (!res.success) {
                                             setError(res.message);
                                         } else {
@@ -109,7 +112,7 @@ const AddFriend = () => {
                                     setError('Invalid user ID.');
                                     return;
                                 }
-                                const res = await addFriend(input);
+                                const res = await addFriend(token, input);
                                 if (!res.success) {
                                     setError(res.message);
                                 } else {

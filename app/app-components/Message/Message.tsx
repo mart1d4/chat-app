@@ -1,7 +1,6 @@
 'use client';
 
 import { Tooltip, TextArea, Icon } from '@/app/app-components';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import { useEffect, useRef, useState } from 'react';
 import styles from './Message.module.css';
 import Image from 'next/image';
@@ -27,7 +26,6 @@ const Message = ({
 
     let noInteraction = noInt || false;
 
-    const axiosPrivate = useAxiosPrivate();
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({
         context: 'layer',
     });
@@ -118,26 +116,28 @@ const Message = ({
             return;
         }
 
-        const response = await axiosPrivate.patch(
-            `/channels/${params.channelId}/messages/${message.id}`,
-            {
-                content: editedMessage,
-            }
-        );
+        // Edit message (need to create a new endpoint for this)
 
-        if (!response.data.success) {
-            console.log(response.data.message);
-        } else {
-            setMessages((messages: any) => {
-                return messages.map((message: any) => {
-                    if (message.id === response.data.message.id) {
-                        return response.data.message;
-                    } else {
-                        return message;
-                    }
-                });
-            });
-        }
+        // const response = await axiosPrivate.patch(
+        //     `/channels/${params.channelId}/messages/${message.id}`,
+        //     {
+        //         content: editedMessage,
+        //     }
+        // );
+
+        // if (!response.data.success) {
+        //     console.log(response.data.message);
+        // } else {
+        //     setMessages((messages: any) => {
+        //         return messages.map((message: any) => {
+        //             if (message.id === response.data.message.id) {
+        //                 return response.data.message;
+        //             } else {
+        //                 return message;
+        //             }
+        //         });
+        //     });
+        // }
 
         setEdit(null);
         localStorage.setItem(
@@ -154,21 +154,9 @@ const Message = ({
             delete: {
                 channelId: message.channel,
                 message: message,
-                func: () => deleteMessage(),
+                // func: () => deleteMessage(),
             },
         });
-    };
-
-    const deleteMessage = async () => {
-        const response = await axiosPrivate.delete(
-            `/channels/${message.channel}/messages/${message.id}`
-        );
-
-        if (response.data.success) {
-            setMessages((messages: any) => {
-                return messages.filter((message: any) => message.id !== response.data.message.id);
-            });
-        }
     };
 
     const editMessage = async () => {
@@ -194,25 +182,9 @@ const Message = ({
             pin: {
                 channelId: message.channel,
                 message: message,
-                func: () => pinMessage(),
+                // func: () => pinMessage(),
             },
         });
-    };
-
-    const pinMessage = async () => {
-        const response = await axiosPrivate.put(`/channels/${message.channel}/pins/${message.id}`);
-
-        if (response.data.success) {
-            setMessages((messages: any) => {
-                return messages.map((message: any) => {
-                    if (message.id === response.data.data.id) {
-                        return response.data.data;
-                    } else {
-                        return message;
-                    }
-                });
-            });
-        }
     };
 
     const unpinPopup = async () => {
@@ -220,39 +192,9 @@ const Message = ({
             unpin: {
                 channelId: message.channel,
                 message: message,
-                func: () => unpinMessage(),
+                // func: () => unpinMessage(),
             },
         });
-    };
-
-    const unpinMessage = async () => {
-        const response = await axiosPrivate.delete(
-            `/channels/${message.channel}/pins/${message.id}`
-        );
-
-        if (response.data.success) {
-            setMessages((messages: any) => {
-                return messages.map((message: any) => {
-                    if (message.id === response.data.data.id) {
-                        return response.data.data;
-                    } else {
-                        return message;
-                    }
-                });
-            });
-        }
-    };
-
-    const replyToMessage = async () => {
-        setReply(message);
-
-        localStorage.setItem(
-            `channel-${message.channel}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${message?.channel}`) || '{}'),
-                reply: message,
-            })
-        );
     };
 
     if (message.type === 'RECIPIENT_ADD') {
@@ -272,13 +214,13 @@ const Message = ({
                         event: e,
                         message: message,
                         deletePopup,
-                        deleteMessage,
+                        // deleteMessage,
                         pinPopup,
-                        pinMessage,
+                        // pinMessage,
                         unpinPopup,
-                        unpinMessage,
+                        // unpinMessage,
                         editMessage,
-                        replyToMessage,
+                        // replyToMessage,
                     });
                 }}
                 style={
@@ -293,13 +235,13 @@ const Message = ({
                         start={start}
                         functions={{
                             deletePopup,
-                            deleteMessage,
+                            // deleteMessage,
                             pinPopup,
-                            pinMessage,
+                            // pinMessage,
                             unpinPopup,
-                            unpinMessage,
+                            // unpinMessage,
                             editMessage,
-                            replyToMessage,
+                            // replyToMessage,
                         }}
                     />
                 )}
@@ -387,13 +329,13 @@ const Message = ({
                     event: e,
                     message: message,
                     deletePopup,
-                    deleteMessage,
+                    // deleteMessage,
                     pinPopup,
-                    pinMessage,
+                    // pinMessage,
                     unpinPopup,
-                    unpinMessage,
+                    // unpinMessage,
                     editMessage,
-                    replyToMessage,
+                    // replyToMessage,
                 });
             }}
             style={
@@ -412,13 +354,13 @@ const Message = ({
                         start={start}
                         functions={{
                             deletePopup,
-                            deleteMessage,
+                            // deleteMessage,
                             pinPopup,
-                            pinMessage,
+                            // pinMessage,
                             unpinPopup,
-                            unpinMessage,
+                            // unpinMessage,
                             editMessage,
-                            replyToMessage,
+                            // replyToMessage,
                         }}
                     />
                 )}
@@ -472,7 +414,7 @@ const Message = ({
                             if (message.author.id === auth?.user?.id) {
                                 editMessage();
                             } else {
-                                replyToMessage();
+                                // replyToMessage();
                             }
                         }}
                     >
@@ -614,7 +556,7 @@ const Message = ({
                         onDoubleClick={() => {
                             if (message?.type === 'RECIPIENT_ADD') return;
                             if (message.author?.id === auth?.user?.id) editMessage();
-                            else replyToMessage();
+                            // else replyToMessage();
                         }}
                     >
                         {(hover || menu?.message === message?.id) &&

@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import styles from './Popup.module.css';
 import useContextHook from '@/hooks/useContextHook';
 import { Message } from '@/app/app-components';
@@ -20,17 +19,12 @@ const Popup = (): ReactElement => {
     const [password1Error, setPassword1Error] = useState('');
     const [newPasswordError, setNewPasswordError] = useState('');
 
-    const { popup, setPopup }: any = useContextHook({
-        context: 'layer',
-    });
-    const { auth, setAuth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { popup, setPopup }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
+
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
-
-    const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
         uidInputRef?.current?.focus();
@@ -57,75 +51,79 @@ const Popup = (): ReactElement => {
         if (isLoading) return;
         setIsLoading(true);
 
-        const response = await axiosPrivate.patch(
-            '/users/@me',
-            {
-                username: uid,
-                password,
-            },
-            {
-                headers: { 'Content-Type': 'application/json' },
-                withCredentials: true,
-            }
-        );
+        // Modify username
 
-        if (!response.data.success) {
-            const err = response?.data?.message?.toLowerCase();
-            if (err.includes('username')) {
-                setUsernameError(response.data.message);
-            } else if (err.includes('password')) {
-                setPasswordError(response.data.message);
-            }
-            setIsLoading(false);
-        } else {
-            setAuth({
-                ...auth,
-                user: response.data.user,
-            });
+        // const response = await axiosPrivate.patch(
+        //     '/users/@me',
+        //     {
+        //         username: uid,
+        //         password,
+        //     },
+        //     {
+        //         headers: { 'Content-Type': 'application/json' },
+        //         withCredentials: true,
+        //     }
+        // );
 
-            setUID('');
-            setPassword('');
-            setIsLoading(false);
-            setPopup(null);
-        }
+        // if (!response.data.success) {
+        //     const err = response?.data?.message?.toLowerCase();
+        //     if (err.includes('username')) {
+        //         setUsernameError(response.data.message);
+        //     } else if (err.includes('password')) {
+        //         setPasswordError(response.data.message);
+        //     }
+        //     setIsLoading(false);
+        // } else {
+        //     setAuth({
+        //         ...auth,
+        //         user: response.data.user,
+        //     });
+
+        //     setUID('');
+        //     setPassword('');
+        //     setIsLoading(false);
+        //     setPopup(null);
+        // }
     };
 
     const handlePasswordSubmit = async () => {
         if (isLoading) return;
         setIsLoading(true);
 
-        const response = await axiosPrivate.patch(
-            '/users/@me',
-            {
-                password: password1,
-                newPassword,
-            },
-            {
-                headers: { 'Content-Type': 'application/json' },
-                withCredentials: true,
-            }
-        );
+        // Modify password
 
-        if (!response.data.success) {
-            const err = response?.data?.message?.toLowerCase();
-            if (err.includes('password')) {
-                setPassword1Error(response.data.message);
-            } else if (err.includes('new')) {
-                setNewPasswordError(response.data.message);
-            }
-            setIsLoading(false);
-        } else {
-            setAuth({
-                accessToken: response.data.accessToken,
-                user: response.data.user,
-            });
+        // const response = await axiosPrivate.patch(
+        //     '/users/@me',
+        //     {
+        //         password: password1,
+        //         newPassword,
+        //     },
+        //     {
+        //         headers: { 'Content-Type': 'application/json' },
+        //         withCredentials: true,
+        //     }
+        // );
 
-            setPassword1('');
-            setNewPassword('');
-            setConfirmPassword('');
-            setIsLoading(false);
-            setPopup(null);
-        }
+        // if (!response.data.success) {
+        //     const err = response?.data?.message?.toLowerCase();
+        //     if (err.includes('password')) {
+        //         setPassword1Error(response.data.message);
+        //     } else if (err.includes('new')) {
+        //         setNewPasswordError(response.data.message);
+        //     }
+        //     setIsLoading(false);
+        // } else {
+        //     setAuth({
+        //         accessToken: response.data.accessToken,
+        //         user: response.data.user,
+        //     });
+
+        //     setPassword1('');
+        //     setNewPassword('');
+        //     setConfirmPassword('');
+        //     setIsLoading(false);
+        //     setPopup(null);
+        // }
     };
 
     return (
