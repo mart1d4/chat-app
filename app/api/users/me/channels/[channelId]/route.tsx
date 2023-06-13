@@ -194,6 +194,9 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
 
                     const ownerMessage = await prisma.message.create({
                         data: {
+                            type: 'OWNER_CHANGE',
+                            content: `<@${user.id}> has made <@${newOwner}> the owner of this group DM`,
+                            mentionEveryone: false,
                             channel: {
                                 connect: {
                                     id: channel.id,
@@ -204,14 +207,14 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                                     id: user.id,
                                 },
                             },
-                            content: `<@${user.id}> has made <@${newOwner}> the owner of this group DM`,
-                            // @ts-ignore
-                            type: 'OWNER_CHANGE',
                         },
                     });
 
                     const leaveMessage = await prisma.message.create({
                         data: {
+                            type: 'RECIPIENT_REMOVE',
+                            content: `<@${user.id}> has left this group DM`,
+                            mentionEveryone: false,
                             channel: {
                                 connect: {
                                     id: channel.id,
@@ -222,8 +225,6 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                                     id: user.id,
                                 },
                             },
-                            content: `<@${user.id}> has left this group DM`,
-                            type: 'RECIPIENT_REMOVE',
                         },
                     });
 
