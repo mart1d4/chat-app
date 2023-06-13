@@ -20,6 +20,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
+        console.log('[LOGIN] Attempting to login user:', username);
         const user = await prisma.user.findUnique({
             where: {
                 username: username,
