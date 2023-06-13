@@ -10,7 +10,7 @@ export default function useRefreshToken() {
             method: 'GET',
             credentials: 'include',
         }).then((res) => {
-            if (!res.ok) throw new Error('Could not refresh token');
+            if (!res.ok) console.error('Could not refresh token');
             return res.json();
         });
 

@@ -13,39 +13,27 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
     const [note, setNote] = useState<string>('');
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { userSettings }: any = useContextHook({
-        context: 'settings',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { userSettings }: any = useContextHook({ context: 'settings' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         const width: number = window.innerWidth;
 
-        if (width >= 1200) {
-            setWidthLimitPassed(true);
-        } else {
-            setWidthLimitPassed(false);
-        }
+        if (width >= 1200) setWidthLimitPassed(true);
+        else setWidthLimitPassed(false);
 
         const handleResize = () => {
             const width: number = window.innerWidth;
 
-            if (width >= 1200) {
-                setWidthLimitPassed(true);
-            } else {
-                setWidthLimitPassed(false);
-            }
+            if (width >= 1200) setWidthLimitPassed(true);
+            else setWidthLimitPassed(false);
         };
 
         window.addEventListener('resize', handleResize);
 
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     useEffect(() => {
@@ -56,6 +44,8 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
     }, []);
 
     return useMemo(() => {
+        if (!userSettings?.showUsers || !widthLimitPassed) return null;
+
         if (channel?.type === 'DM' && friend) {
             return (
                 <aside className={styles.aside}>

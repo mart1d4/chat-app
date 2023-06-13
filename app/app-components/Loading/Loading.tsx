@@ -1,12 +1,12 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
-import { ReactNode, useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Loading.module.css';
 
 type Props = {
-    children: ReactNode;
+    children: ReactElement;
 };
 
 // If auth is loading, show loading screen
@@ -14,37 +14,31 @@ type Props = {
 // If user is not logged in, redirect to login page
 // If user is logged in, show children
 
-const Loading = ({ children }: Props): ReactNode => {
+const Loading = ({ children }: Props): ReactElement => {
     const { auth, loading }: any = useContextHook({ context: 'auth' });
+    const router = useRouter();
 
     useEffect(() => {
         if (!loading && !auth?.accessToken) {
-            useRouter().push('/login');
+            router.push('/login');
         }
-    }, [loading]);
+    }, [auth, loading]);
 
-    if (loading) {
-        return (
-            <div className={styles.container}>
-                <video
-                    autoPlay
-                    loop
-                >
-                    <source
-                        src='/assets/app/spinner.webm'
-                        type='video/webm'
-                    />
-                </video>
-            </div>
-        );
+    if (auth?.accessToken && !loading) {
+        return children;
     }
 
     return (
-        <div
-            onDragStart={(e) => e.preventDefault()}
-            onContextMenu={(e) => e.preventDefault()}
-        >
-            {children}
+        <div className={styles.container}>
+            <video
+                autoPlay
+                loop
+            >
+                <source
+                    src='/assets/app/spinner.webm'
+                    type='video/webm'
+                />
+            </video>
         </div>
     );
 };

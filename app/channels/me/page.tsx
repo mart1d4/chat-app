@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 const FriendsPage = (): ReactElement => {
     return (
         <div className={styles.main}>
-            {/* @ts-ignore */}
             <AppHeader />
 
             <div className={styles.content}>

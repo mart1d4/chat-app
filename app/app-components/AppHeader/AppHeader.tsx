@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo, useEffect, ReactNode } from 'react';
+import { useState, useRef, useMemo, useEffect, ReactElement } from 'react';
 import { Tooltip, Icon, AvatarStatus } from '@/app/app-components';
 import styles from './AppHeader.module.css';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +10,7 @@ type Props = {
     channel?: ChannelType;
 };
 
-const AppHeader = ({ channel }: Props): ReactNode => {
+const AppHeader = ({ channel }: Props): ReactElement => {
     const [showTooltip, setShowTooltip] = useState<null | string>(null);
     const [friend, setFriend] = useState<undefined | CleanOtherUserType>();
 

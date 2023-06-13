@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = "mongodb+srv://mart1d4:T2ghgpB8pVmXI9NB@chat-app-dev.pswfocj.mongodb.net/main?retryWrites=true&w=majority"
+  url      = env("MONGODB_URI")
 }
 
 // Types
@@ -175,7 +175,8 @@ model Channel {
   recipientIds String[] @db.ObjectId
   recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
 
-  messages Message[]
+  messageIds String[]  @db.ObjectId
+  messages   Message[] @relation("ChannelMessage", fields: [messageIds], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
   updatedAt DateTime @default(now()) @updatedAt @db.Date
@@ -191,8 +192,8 @@ model Message {
   messageReference  String?
   edited            Boolean     @default(false)
   pinned            Boolean     @default(false)
-  reactions         String[]
-  mentionEveryone   Boolean     @default(false)
+  reactions         String[]    @default([])
+  mentionEveryone   Boolean
   mentionChannelIds String[]
   mentionRoleIds    String[]
   mentionUserIds    String[]
@@ -200,8 +201,8 @@ model Message {
   authorId String @db.ObjectId
   author   User   @relation(fields: [authorId], references: [id])
 
-  channelId String  @db.ObjectId
-  channel   Channel @relation(fields: [channelId], references: [id])
+  channelId String[]  @db.ObjectId
+  channel   Channel[] @relation("ChannelMessage", fields: [channelId], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
   updatedAt DateTime @default(now()) @updatedAt @db.Date

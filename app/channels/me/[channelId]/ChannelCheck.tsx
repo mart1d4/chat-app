@@ -1,7 +1,7 @@
 'use client';
 
+import { useEffect, ReactNode, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Props = {
@@ -10,15 +10,22 @@ type Props = {
 };
 
 const ChannelCheck = ({ children, channelId }: Props): ReactNode => {
-    const router = useRouter();
+    const [loading, setLoading] = useState<boolean>(true);
 
     const { auth }: any = useContextHook({ context: 'auth' });
+    const router = useRouter();
 
     useEffect(() => {
+        setLoading(true);
+
         if (!auth.user.channelIds.includes(channelId)) {
             router.push('/channels/me');
         }
+
+        setLoading(false);
     }, [channelId]);
+
+    if (loading) return null;
 
     return children;
 };

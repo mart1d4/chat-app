@@ -8,7 +8,7 @@ export const getUser = async (token: string, userId: string) => {
         },
         next: { revalidate: 30 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch user');
+        if (!res.ok) console.error('Failed to fetch user');
         return res.json();
     });
 
@@ -26,7 +26,7 @@ export const blockUser = async (token: string, userId: string) => {
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to block user');
+        if (!res.ok) console.error('Failed to block user');
         return res.json();
     });
 
@@ -44,7 +44,7 @@ export const unblockUser = async (token: string, userId: string) => {
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to unblock user');
+        if (!res.ok) console.error('Failed to unblock user');
         return res.json();
     });
 
@@ -62,7 +62,7 @@ export const addFriend = async (token: string, userId: string) => {
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to add friend');
+        if (!res.ok) console.error('Failed to add friend');
         return res.json();
     });
 
@@ -80,7 +80,7 @@ export const removeFriend = async (token: string, userId: string) => {
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to remove friend');
+        if (!res.ok) console.error('Failed to remove friend');
         return res.json();
     });
 
@@ -99,7 +99,7 @@ export const getFriends = async (token: string) => {
         },
         next: { revalidate: 10 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch friends');
+        if (!res.ok) console.error('Failed to fetch friends');
         return res.json();
     });
 
@@ -112,7 +112,7 @@ export const getFriends = async (token: string) => {
 
 export const getRequests = async (token: string, type: 'sent' | 'received') => {
     if (type !== 'sent' && type !== 'received') {
-        throw new Error('Invalid request type');
+        console.error('Invalid request type');
     }
 
     const response = await fetch(`${url}/users/me/requests/${type}`, {
@@ -122,7 +122,7 @@ export const getRequests = async (token: string, type: 'sent' | 'received') => {
         },
         next: { revalidate: 10 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch requests');
+        if (!res.ok) console.error('Failed to fetch requests');
         return res.json();
     });
 
@@ -141,7 +141,7 @@ export const getBlockedUsers = async (token: string) => {
         },
         next: { revalidate: 10 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch blocked users');
+        if (!res.ok) console.error('Failed to fetch blocked users');
         return res.json();
     });
 

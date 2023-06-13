@@ -88,8 +88,7 @@
 }
 
 .heroText > h1 {
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
-        sans-serif;
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 56px;
     font-weight: 800;
     line-height: 95%;
@@ -181,6 +180,12 @@
     bottom: 0;
     left: 50%;
     margin-left: 370px;
+}
+
+@media (max-width: 767px) {
+    .header {
+        padding: 0 24px;
+    }
 }
 
 @media (max-width: 1024px) {

@@ -19,16 +19,10 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
         }[]
     >(false);
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { userSettings }: any = useContextHook({
-        context: 'settings',
-    });
-    const { setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
-    const axiosPrivate = useAxiosPrivate();
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { userSettings }: any = useContextHook({ context: 'settings' });
+    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+
     const router = useRouter();
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -109,6 +103,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
     };
 
     const sendMessage = async () => {
+        console.log('send message');
         if (message.length === 0 && files.length === 0) {
             return;
         }
@@ -118,36 +113,43 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
         while (messageContent.startsWith('\n')) {
             messageContent = messageContent.substring(1);
         }
+
         while (messageContent.endsWith('\n')) {
             messageContent = messageContent.substring(0, messageContent.length - 1);
         }
 
-        const id = uuidv4();
-        const messRef = reply ?? null;
+        try {
+            await fetch(`/api/users/me/channels/${channel.id}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    message: {
+                        content: messageContent,
+                        attachments: files,
+                        messageReference: reply?.id ?? null,
+                    },
+                }),
+            });
 
-        textAreaRef.current.innerText = '';
-        setFiles([]);
+            textAreaRef.current.innerText = '';
+            setFiles([]);
 
-        if (reply) {
-            setReply(null);
-            localStorage.setItem(
-                `channel-${channel.id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}'),
-                    reply: null,
-                })
-            );
+            if (reply) {
+                setReply(null);
+                localStorage.setItem(
+                    `channel-${channel.id}`,
+                    JSON.stringify({
+                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}'),
+                        reply: null,
+                    })
+                );
+            }
+        } catch (err) {
+            console.error(err);
         }
-
-        // Send message
-
-        // const response = await axiosPrivate.post(`/channels/${channel.id}/messages`, {
-        //     message: {
-        //         content: message,
-        //         attachments: files,
-        //         messageReference: messRef?.id ?? null,
-        //     },
-        // });
     };
 
     const textContainer = useMemo(

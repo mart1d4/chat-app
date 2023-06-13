@@ -2,23 +2,27 @@
 
 import { AppHeader, Message, TextArea, MemberList, MessageSkeleton } from '@/app/app-components';
 import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
-import React, { useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, ReactElement } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import useAuthSWR from '@/hooks/useAuthSWR';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
 
 type Props = {
     channel: ChannelType;
-    messages: MessageType[];
-    hasMore: boolean;
 };
 
-const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
+const ChannelContent = ({ channel }: Props): ReactElement => {
     const [reply, setReply] = useState(null);
     const [edit, setEdit] = useState(null);
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const { data, isLoading } = useAuthSWR(`/users/me/channels/${channel.id}/messages`);
+    console.log(data);
+
+    const messages = data?.messages || [];
+    const hasMore = data?.hasMore || false;
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const token = auth.accessToken;
@@ -160,7 +164,6 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
 
     return (
         <div className={styles.container}>
-            {/* @ts-expect-error */}
             <AppHeader channel={channel} />
 
             <div className={styles.content}>
@@ -178,7 +181,7 @@ const ChannelContent = ({ channel, messages, hasMore }: Props): ReactNode => {
                                         <>
                                             {hasMore ? <MessageSkeleton /> : FirstMessage}
 
-                                            {messages.map((message, index) => (
+                                            {messages.map((message: any, index: number) => (
                                                 <div key={uuidv4()}>
                                                     {isNewDay(index) && (
                                                         <div className={styles.messageDivider}>

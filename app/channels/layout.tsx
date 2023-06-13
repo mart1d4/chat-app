@@ -17,12 +17,10 @@ export const metadata: Metadata = {
 
 const Layout = ({ children }: { children: ReactNode }): ReactElement => {
     return (
-        // @ts-expect-error
         <Loading>
             <div className={styles.appContainer}>
                 <AppNav />
 
-                {/* Fixed Layer Components */}
                 <Popup />
                 <Settings />
                 <FixedLayer />
@@ -30,9 +28,7 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
 
                 <div className={styles.appWrapper}>
                     <div className={styles.channelsContainer}>
-                        {/* @ts-expect-error Server Component */}
                         <Channels />
-
                         {children}
                     </div>
                 </div>

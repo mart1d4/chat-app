@@ -11,14 +11,8 @@ import useContextHook from '@/hooks/useContextHook';
 
 const Settings = ({ tab }: any): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>(tab ?? 'My Account');
-    const [newUsername, setNewUsername] = useState<string>('');
-    const [newAvatar, setNewAvatar] = useState<null | string>(null);
-    const [error, setError] = useState<null | string>(null);
-    const [success, setSuccess] = useState<null | string>(null);
 
     const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-
     const { logout } = useLogout();
 
     useEffect(() => {
@@ -30,9 +24,7 @@ const Settings = ({ tab }: any): ReactElement => {
 
         window.addEventListener('keydown', handleEsc);
 
-        return () => {
-            window.removeEventListener('keydown', handleEsc);
-        };
+        return () => window.removeEventListener('keydown', handleEsc);
     }, []);
 
     const tabs = [
@@ -205,29 +197,45 @@ const MyAccount = () => {
         success: false,
     });
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { setPopup }: any = useContextHook({
-        context: 'layer',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { setPopup }: any = useContextHook({ context: 'layer' });
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(auth?.user.id);
-        setTooltip({
-            ...tooltip,
-            text: 'Copied!',
-            success: true,
-        });
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(auth.user.id);
 
-        setTimeout(() => {
             setTooltip({
                 ...tooltip,
-                show: false,
-                text: 'Copy user ID',
+                text: 'Copied!',
+                success: true,
+            });
+
+            setTimeout(() => {
+                setTooltip({
+                    ...tooltip,
+                    show: false,
+                    text: 'Copy user ID',
+                    success: false,
+                });
+            }, 2000);
+        } catch (err) {
+            console.error(err);
+
+            setTooltip({
+                ...tooltip,
+                text: 'Failed to copy',
                 success: false,
             });
-        }, 2000);
+
+            setTimeout(() => {
+                setTooltip({
+                    ...tooltip,
+                    show: false,
+                    text: 'Copy user ID',
+                    success: false,
+                });
+            }, 2000);
+        }
     };
 
     const fields = [

@@ -8,7 +8,7 @@ export const getChannels = async (token: string) => {
         },
         next: { revalidate: 10 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch channels');
+        if (!res.ok) console.error('Failed to fetch channels');
         return res.json();
     });
 
@@ -27,7 +27,7 @@ export const getSingleChannel = async (token: string, channelId: string) => {
         },
         next: { revalidate: 30 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch channel');
+        if (!res.ok) console.error('Failed to fetch channel');
         return res.json();
     });
 
@@ -50,7 +50,7 @@ export const createChannel = async (token: string, recipients: string[], channel
             channelId,
         }),
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to create channel');
+        if (!res.ok) console.error('Failed to create channel');
         return res.json();
     });
 
@@ -68,7 +68,7 @@ export const leaveChannel = async (token: string, channelId: string) => {
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to leave channel');
+        if (!res.ok) console.error('Failed to leave channel');
         return res.json();
     });
 
@@ -87,7 +87,7 @@ export const getPinnedMessages = async (token: string, channelId: string) => {
         },
         next: { revalidate: 10 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch pinned messages');
+        if (!res.ok) console.error('Failed to fetch pinned messages');
         return res.json();
     });
 
@@ -105,7 +105,7 @@ export const pinMessage = async (token: string, channelId: string, messageId: st
             Authorization: `Bearer ${token}`,
         },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to pin message');
+        if (!res.ok) console.error('Failed to pin message');
         return res.json();
     });
 
@@ -134,7 +134,7 @@ export const getMessages = async (
         }),
         next: { revalidate: 120 },
     }).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch messages');
+        if (!res.ok) console.error('Failed to fetch messages');
         return res.json();
     });
 
