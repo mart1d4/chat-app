@@ -266,6 +266,9 @@ export async function POST(req: Request) {
             for (const newUser of usersToAdd) {
                 const message = await prisma.message.create({
                     data: {
+                        type: 'RECIPIENT_ADD',
+                        content: `<@${user.id}> added <@${newUser.id}> to the group.`,
+                        mentionEveryone: false,
                         channel: {
                             connect: {
                                 id: channel.id,
@@ -276,8 +279,6 @@ export async function POST(req: Request) {
                                 id: user.id,
                             },
                         },
-                        content: `<@${user.id}> added <@${newUser.id}> to the group.`,
-                        type: 'RECIPIENT_ADD',
                     },
                 });
 
