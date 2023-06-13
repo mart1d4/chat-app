@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import prisma from '@/lib/prismadb';
+import { prisma } from '@/lib/prismadb';
 
 export async function POST(req: Request): Promise<NextResponse> {
     const cookieStore = cookies();

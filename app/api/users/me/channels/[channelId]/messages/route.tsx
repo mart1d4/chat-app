@@ -1,7 +1,7 @@
 import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import prisma from '@/lib/prismadb';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;

@@ -1,6 +1,6 @@
 import { cleanUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prismadb';
+import { prisma } from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 

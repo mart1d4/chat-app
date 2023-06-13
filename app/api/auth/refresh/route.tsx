@@ -1,7 +1,7 @@
 import { cleanUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import prisma from '@/lib/prismadb';
+import { prisma } from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 
 export async function GET(req: Request): Promise<NextResponse> {
