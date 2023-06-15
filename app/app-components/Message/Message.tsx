@@ -18,20 +18,14 @@ const Message = ({
     noInt,
 }: any) => {
     const [showTooltip, setShowTooltip] = useState<number | boolean>(false);
-    const [hover, setHover] = useState(false);
-    const [shift, setShift] = useState(false);
-    const [editedMessage, setEditedMessage] = useState(
-        edit?.content || edit?.content === '' ? edit?.content : message.content
-    );
+    const [hover, setHover] = useState<boolean>(false);
+    const [shift, setShift] = useState<boolean>(false);
+    const [editedMessage, setEditedMessage] = useState<string>(edit?.content ?? message.content);
 
     let noInteraction = noInt || false;
 
-    const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({
-        context: 'layer',
-    });
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
+    const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
     const userImageRef = useRef(null);
     const userImageReplyRef = useRef(null);
 
@@ -81,11 +75,30 @@ const Message = ({
         };
     }, []);
 
+    const deleteMessage = async () => {
+        try {
+            await fetch(`/api/users/me/channels/${message.channelId[0]}/messages/${message.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const olderThan2Days = (date: Date) => {};
 
     const sendEditedMessage = async () => {
-        if (editedMessage.length === 0) {
+        if (
+            editedMessage.length === 0 ||
+            editedMessage.length > 4000 ||
+            editedMessage === message.content
+        ) {
             setEdit(null);
+
             localStorage.setItem(
                 `channel-${params.channelId}`,
                 JSON.stringify({
@@ -93,60 +106,33 @@ const Message = ({
                     edit: null,
                 })
             );
-            return;
-        } else if (editedMessage.length > 4000) {
-            setEdit(null);
-            localStorage.setItem(
-                `channel-${params.channelId}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
-                    edit: null,
-                })
-            );
-            return;
-        } else if (editedMessage === message.content) {
-            setEdit(null);
-            localStorage.setItem(
-                `channel-${params.channelId}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
-                    edit: null,
-                })
-            );
+
             return;
         }
 
-        // Edit message (need to create a new endpoint for this)
+        try {
+            await fetch(`/api/users/me/channels/${params.channelId}/messages/${message.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    content: editedMessage,
+                }),
+            });
 
-        // const response = await axiosPrivate.patch(
-        //     `/channels/${params.channelId}/messages/${message.id}`,
-        //     {
-        //         content: editedMessage,
-        //     }
-        // );
-
-        // if (!response.data.success) {
-        //     console.log(response.data.message);
-        // } else {
-        //     setMessages((messages: any) => {
-        //         return messages.map((message: any) => {
-        //             if (message.id === response.data.message.id) {
-        //                 return response.data.message;
-        //             } else {
-        //                 return message;
-        //             }
-        //         });
-        //     });
-        // }
-
-        setEdit(null);
-        localStorage.setItem(
-            `channel-${params.channelId}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
-                edit: null,
-            })
-        );
+            setEdit(null);
+            localStorage.setItem(
+                `channel-${params.channelId}`,
+                JSON.stringify({
+                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
+                    edit: null,
+                })
+            );
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const deletePopup = () => {
@@ -154,7 +140,7 @@ const Message = ({
             delete: {
                 channelId: message.channel,
                 message: message,
-                // func: () => deleteMessage(),
+                func: () => deleteMessage(),
             },
         });
     };
@@ -214,7 +200,7 @@ const Message = ({
                         event: e,
                         message: message,
                         deletePopup,
-                        // deleteMessage,
+                        deleteMessage,
                         pinPopup,
                         // pinMessage,
                         unpinPopup,
@@ -235,7 +221,7 @@ const Message = ({
                         start={start}
                         functions={{
                             deletePopup,
-                            // deleteMessage,
+                            deleteMessage,
                             pinPopup,
                             // pinMessage,
                             unpinPopup,
@@ -329,7 +315,7 @@ const Message = ({
                     event: e,
                     message: message,
                     deletePopup,
-                    // deleteMessage,
+                    deleteMessage,
                     pinPopup,
                     // pinMessage,
                     unpinPopup,
@@ -354,7 +340,7 @@ const Message = ({
                         start={start}
                         functions={{
                             deletePopup,
-                            // deleteMessage,
+                            deleteMessage,
                             pinPopup,
                             // pinMessage,
                             unpinPopup,
@@ -457,13 +443,11 @@ const Message = ({
                                 onMouseLeave={() => setShowTooltip(false)}
                             >
                                 {new Intl.DateTimeFormat('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
+                                    month: 'numeric',
                                     day: 'numeric',
+                                    year: 'numeric',
                                     hour: 'numeric',
                                     minute: 'numeric',
-                                    second: 'numeric',
                                 }).format(new Date(message.createdAt))}
                                 <Tooltip
                                     show={showTooltip === 1}
@@ -568,13 +552,8 @@ const Message = ({
                                 >
                                     <span>
                                         {new Intl.DateTimeFormat('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
                                             hour: 'numeric',
                                             minute: 'numeric',
-                                            second: 'numeric',
                                         }).format(new Date(message.createdAt))}
                                         <Tooltip
                                             show={showTooltip === 3}
@@ -669,13 +648,11 @@ const Message = ({
                                     >
                                         <span>
                                             {new Intl.DateTimeFormat('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
+                                                month: 'numeric',
                                                 day: 'numeric',
+                                                year: 'numeric',
                                                 hour: 'numeric',
                                                 minute: 'numeric',
-                                                second: 'numeric',
                                             }).format(new Date(message.createdAt))}
                                             <Tooltip
                                                 show={showTooltip === 3}
@@ -705,23 +682,16 @@ const Message = ({
 };
 
 const MessageMenu = ({ message, start, functions }: any) => {
-    const [showTooltip, setShowTooltip] = useState(0);
-    const [menuType, setMenuType] = useState('');
+    const [showTooltip, setShowTooltip] = useState<0 | 1 | 2 | 3>(0);
+    const [menuSender, setMenuSender] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { setFixedLayer, fixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { setFixedLayer, fixedLayer }: any = useContextHook({ context: 'layer' });
     const menuButtonRef = useRef(null);
 
     useEffect(() => {
-        if (message?.author?.id.toString() === auth?.user?.id.toString()) {
-            setMenuType('sender');
-        } else {
-            setMenuType('receiver');
-        }
+        if (message.author.id === auth.user.id) setMenuSender(true);
+        else setMenuSender(false);
     }, [message]);
 
     return (
@@ -745,7 +715,7 @@ const MessageMenu = ({ message, start, functions }: any) => {
                         <Icon name='addReaction' />
                     </div>
 
-                    {menuType === 'sender' ? (
+                    {menuSender ? (
                         <div
                             role='button'
                             onMouseEnter={() => setShowTooltip(2)}

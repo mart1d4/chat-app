@@ -21,9 +21,89 @@ export async function GET(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findUnique({
             where: {
                 refreshToken: token,
+            },
+            include: {
+                channels: {
+                    include: {
+                        recipients: {
+                            select: {
+                                id: true,
+                                username: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                friendIds: true,
+                                channelIds: true,
+                                guildIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
+                guilds: true,
+                friends: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        friendIds: true,
+                        channelIds: true,
+                        guildIds: true,
+                        createdAt: true,
+                    },
+                },
+                requestsReceived: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        friendIds: true,
+                        channelIds: true,
+                        guildIds: true,
+                        createdAt: true,
+                    },
+                },
+                requestsSent: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        createdAt: true,
+                    },
+                },
+                blockedUsers: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 

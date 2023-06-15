@@ -2,12 +2,13 @@
 
 import { AppHeader, Message, TextArea, MemberList, MessageSkeleton } from '@/app/app-components';
 import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
-import React, { useState, useEffect, useCallback, ReactElement } from 'react';
+import React, { useState, useEffect, useCallback, ReactElement, useRef } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useAuthSWR from '@/hooks/useAuthSWR';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
+import Pusher from 'pusher-js';
 
 type Props = {
     channel: ChannelType;
@@ -17,15 +18,57 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
     const [reply, setReply] = useState(null);
     const [edit, setEdit] = useState(null);
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
+    const [messages, setMessages] = useState<MessageType[]>([]);
 
     const { data, isLoading } = useAuthSWR(`/users/me/channels/${channel.id}/messages`);
-    console.log(data);
+    const ref = useRef<boolean>(false);
+    const pusherChannels = useRef<Pusher | null>(null);
 
-    const messages = data?.messages || [];
+    useEffect(() => {
+        if (!data) return;
+        setMessages(data?.messages || []);
+    }, [data]);
+
     const hasMore = data?.hasMore || false;
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const token = auth.accessToken;
+
+    useEffect(() => {
+        if (ref.current) {
+            pusherChannels.current = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
+                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
+            });
+            setPusherListener();
+        }
+
+        return () => {
+            ref.current = true;
+            pusherChannels.current?.unsubscribe('chat-app');
+        };
+    }, []);
+
+    const setPusherListener = () => {
+        const pusherChan = pusherChannels.current?.subscribe('chat-app');
+
+        pusherChan?.bind(`message-sent`, (data: any) => {
+            if (data.channel !== channel.id || data.message.author.id === auth.user.id) return;
+            setMessages((messages) => [...messages, data.message]);
+        });
+
+        pusherChan?.bind(`message-edited`, (data: any) => {
+            if (data.channel !== channel.id) return;
+            setMessages((messages) =>
+                messages.map((message) => (message.id === data.message.id ? data.message : message))
+            );
+        });
+
+        pusherChan?.bind(`message-deleted`, (data: any) => {
+            console.log('Mess del: ', data.channel, data.messageId);
+            if (data.channel !== channel.id) return;
+            setMessages((messages) => messages.filter((message) => message.id !== data.messageId));
+        });
+    };
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
@@ -52,7 +95,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
     }, [channel]);
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
-        const diff = Math.abs(firstDate.getTime() - secondDate.getTime());
+        const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
 
         return diff / (1000 * 60) >= 5;
     };
@@ -117,7 +160,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                         {auth.user.friendIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={async () => await removeFriend(token, friend.id)}
+                                onClick={async () => await removeFriend(token, friend.username)}
                             >
                                 Remove Friend
                             </button>
@@ -126,7 +169,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                         ) : auth.user.requestReceivedIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={async () => await addFriend(token, friend.id)}
+                                onClick={async () => await addFriend(token, friend.username)}
                             >
                                 Accept Friend Request
                             </button>
@@ -134,7 +177,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                             !auth.user.blockedUserIds.includes(friend.id) && (
                                 <button
                                     className='blue'
-                                    onClick={async () => await addFriend(token, friend.id)}
+                                    onClick={async () => await addFriend(token, friend.username)}
                                 >
                                     Add Friend
                                 </button>
@@ -223,6 +266,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                         friend={friend}
                         reply={reply}
                         setReply={setReply}
+                        setMessages={setMessages}
                     />
                 </main>
 

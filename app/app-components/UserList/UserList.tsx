@@ -7,7 +7,6 @@ import styles from './UserList.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Image from 'next/image';
-import { getBlockedUsers, getFriends, getRequests } from '@/lib/api-functions/users';
 
 const contentData: contentType = {
     all: {
@@ -78,7 +77,7 @@ const UserLists = ({ content }: Props): ReactNode => {
     useEffect(() => {
         const getList = async () => {
             if (content === 'all' || content === 'online') {
-                let friends = (await getFriends(token)) || [];
+                let friends = auth.user.friends || [];
 
                 if (content === 'online') {
                     if (friends.length) {
@@ -92,8 +91,8 @@ const UserLists = ({ content }: Props): ReactNode => {
 
                 setList(friends);
             } else if (content === 'pending') {
-                const sent = await getRequests(token, 'sent');
-                const received = await getRequests(token, 'received');
+                const sent = auth.user.sentRequests || [];
+                const received = auth.user.receivedRequests || [];
 
                 let sentReq = [];
                 if (sent.length) {
@@ -117,7 +116,7 @@ const UserLists = ({ content }: Props): ReactNode => {
                     )
                 );
             } else if (content === 'blocked') {
-                const blockedUsers = await getBlockedUsers(token);
+                const blockedUsers = auth.user.blockedUsers || [];
                 setList(blockedUsers);
             }
         };

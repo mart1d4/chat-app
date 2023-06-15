@@ -12,9 +12,10 @@ type Props = {
     link: string;
     src?: string;
     svg?: ReactNode;
+    count?: number;
 };
 
-const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
+const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
@@ -23,7 +24,7 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
 
     const pathname = usePathname();
     const router = useRouter();
-    const requests = auth.user.requestReceivedIds.length;
+    const badgeCount = count ?? auth.user.requestReceivedIds.length;
 
     useEffect(() => {
         if (pathname.includes(link)) {
@@ -31,9 +32,9 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
             setMarkHeight(40);
         } else {
             setActive(false);
-            setMarkHeight(0);
+            setMarkHeight(count ? 7 : 0);
         }
-    }, [pathname]);
+    }, [pathname, count]);
 
     return (
         <div className={styles.navIcon}>
@@ -47,7 +48,7 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
             </Tooltip>
 
             <div className={styles.marker}>
-                {(showTooltip || active) && (
+                {(showTooltip || active || count) && (
                     <motion.span
                         initial={{
                             opacity: 0,
@@ -77,7 +78,7 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
                 onMouseLeave={() => {
                     setShowTooltip(false);
                     if (!active) {
-                        setMarkHeight(0);
+                        setMarkHeight(count ? 7 : 0);
                     }
                 }}
                 onClick={() => {
@@ -92,15 +93,19 @@ const NavIcon = ({ name, link, src, svg }: Props): ReactElement => {
                 whileTap={{
                     transform: 'translateY(1px)',
                 }}
+                style={{
+                    backgroundColor: src ? 'transparent' : '',
+                }}
             >
-                {requests.length > 0 && (
+                {badgeCount > 0 && (
                     <div className={styles.badgeContainer}>
-                        <div>{requests.length}</div>
+                        <div>{badgeCount}</div>
                     </div>
                 )}
 
                 {src ? (
                     <img
+                        style={{ borderRadius: active ? '33%' : '50%' }}
                         src={src}
                         alt={name}
                     />

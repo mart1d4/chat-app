@@ -10,7 +10,7 @@ import styles from './TextArea.module.css';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 
-const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
+const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
     const [files, setFiles] = useState([]);
     const [usersTyping, setUsersTyping] = useState<
@@ -35,7 +35,6 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
 
     const pasteText = async () => {
         const text = await navigator.clipboard.readText();
-        // textAreaRef?.current.innerText += text;
         setMessage((message) => message + text);
         moveCursorToEnd();
     };
@@ -103,7 +102,6 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
     };
 
     const sendMessage = async () => {
-        console.log('send message');
         if (message.length === 0 && files.length === 0) {
             return;
         }
@@ -117,6 +115,20 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
         while (messageContent.endsWith('\n')) {
             messageContent = messageContent.substring(0, messageContent.length - 1);
         }
+
+        const tempId = uuidv4();
+        const tempMessage = {
+            id: tempId,
+            content: messageContent,
+            attachments: files,
+            author: auth.user,
+            messageReference: reply ?? null,
+            createdAt: new Date(),
+            error: false,
+            waiting: true,
+        };
+
+        setMessages((messages) => [...messages, tempMessage]);
 
         try {
             await fetch(`/api/users/me/channels/${channel.id}/messages`, {
@@ -147,8 +159,21 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply }: any) => {
                     })
                 );
             }
+
+            // Make message not waiting
+            setMessages((messages) =>
+                messages.map((message) =>
+                    message.id === tempId ? { ...message, waiting: false } : message
+                )
+            );
         } catch (err) {
             console.error(err);
+            // Edit temp message to add error: true
+            setMessages((messages) =>
+                messages.map((message) =>
+                    message.id === tempId ? { ...message, error: true, waiting: false } : message
+                )
+            );
         }
     };
 

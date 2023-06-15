@@ -18,6 +18,7 @@ import MemberList from './MemberList/MemberList';
 import AddFriend from './AddFriend/AddFriend';
 import UserList from './UserList/UserList';
 import AppHeader from './AppHeader/AppHeader';
+import LoadingDots from './LoadingDots/LoadingDots';
 
 export {
     AppNav,
@@ -40,4 +41,5 @@ export {
     AddFriend,
     UserList,
     AppHeader,
+    LoadingDots,
 };

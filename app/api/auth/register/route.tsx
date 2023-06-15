@@ -72,6 +72,12 @@ export async function POST(req: Request): Promise<NextResponse> {
             data: {
                 username: username,
                 password: hash,
+                notifications: [
+                    {
+                        type: 'welcome',
+                        message: 'Welcome to Chat App!',
+                    },
+                ],
             },
         });
 

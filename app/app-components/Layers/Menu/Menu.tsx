@@ -19,12 +19,8 @@ const content = ({ content }: any): ReactElement => {
     const [incoming, setIncoming] = useState(false);
 
     const { auth }: any = useContextHook({ context: 'auth' });
-    const { userSettings, setUserSettings }: any = useContextHook({
-        context: 'settings',
-    });
-    const { setFixedLayer, setUserProfile }: any = useContextHook({
-        context: 'layer',
-    });
+    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
 
     const user = content?.user || null;
     const message = content?.message || null;

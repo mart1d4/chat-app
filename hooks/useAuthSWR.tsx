@@ -32,12 +32,7 @@ const useAuthSWR = (url: string, body?: {}) => {
     }, [token, body]);
 
     const { data, error, isLoading } = useSWR(url, (url: string) => {
-        console.log('[useAuthSWR] Fetching: ', url);
-        console.log('[useAuthSWR] Body: ', JSON.stringify(config));
-
         return fetch(`${baseURL}${url}`, config).then((res) => {
-            console.log('[useAuthSWR] Response: ', res);
-
             if (!res.ok) console.error(res);
             return res.json();
         });

@@ -4,40 +4,11 @@ import { headers } from 'next/headers';
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: { username: string } }
 ): Promise<NextResponse> {
-    const userId = params.userId;
+    const username = params.username;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
-
-    if (
-        typeof userId !== 'string' ||
-        typeof senderId !== 'string' ||
-        userId.length !== 24 ||
-        senderId.length !== 24
-    ) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
-    if (senderId === userId) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'You cannot add yourself as a friend.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
 
     try {
         const sender = await prisma.user.findUnique({
@@ -48,7 +19,7 @@ export async function POST(
 
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
+                username: username,
             },
         });
 
@@ -64,9 +35,23 @@ export async function POST(
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find((blocked) => blocked === user.id);
+        if (sender.id === user.id) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You cannot add yourself as a friend.',
+                },
+                {
+                    status: 400,
+                }
+            );
+        }
 
+        const isBlocked = sender.blockedUserIds.find((blocked) => blocked === user.id);
         const isBlockedBy = user.blockedUserIds.find((blocked) => blocked === sender.id);
+        const isFriend = sender.friendIds.find((friend) => friend === user.id);
+        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
+        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
 
         if (isBlocked || isBlockedBy) {
             return NextResponse.json(
@@ -80,8 +65,6 @@ export async function POST(
             );
         }
 
-        const isFriend = sender.friendIds.find((friend) => friend === user.id);
-
         if (isFriend) {
             return NextResponse.json(
                 {
@@ -93,8 +76,6 @@ export async function POST(
                 }
             );
         }
-
-        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
 
         if (sentRequest) {
             return NextResponse.json(
@@ -108,8 +89,6 @@ export async function POST(
             );
         }
 
-        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
-
         if (receivedRequest) {
             await prisma.user.update({
                 where: {
@@ -117,24 +96,24 @@ export async function POST(
                 },
                 data: {
                     friends: {
-                        connect: { id: userId },
+                        connect: { id: user.id },
                     },
                     requestsReceived: {
-                        disconnect: { id: userId },
+                        disconnect: { id: user.id },
                     },
                 },
             });
 
             await prisma.user.update({
                 where: {
-                    id: userId,
+                    id: user.id,
                 },
                 data: {
                     friends: {
-                        connect: { id: senderId },
+                        connect: { id: sender.id },
                     },
                     requestsSent: {
-                        disconnect: { id: senderId },
+                        disconnect: { id: sender.id },
                     },
                 },
             });
@@ -156,18 +135,18 @@ export async function POST(
             },
             data: {
                 requestsSent: {
-                    connect: { id: userId },
+                    connect: { id: user.id },
                 },
             },
         });
 
         await prisma.user.update({
             where: {
-                id: userId,
+                id: user.id,
             },
             data: {
                 requestsReceived: {
-                    connect: { id: senderId },
+                    connect: { id: sender.id },
                 },
             },
         });
@@ -197,40 +176,11 @@ export async function POST(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: { username: string } }
 ): Promise<NextResponse> {
-    const userId = params.userId;
+    const username = params.username;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
-
-    if (
-        typeof userId !== 'string' ||
-        typeof senderId !== 'string' ||
-        userId.length !== 24 ||
-        senderId.length !== 24
-    ) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
-    if (senderId === userId) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'You cannot remove yourself as a friend.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
 
     try {
         const sender = await prisma.user.findUnique({
@@ -239,11 +189,9 @@ export async function DELETE(
             },
         });
 
-        console.log(sender);
-
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
+                username: username,
             },
         });
 
@@ -259,10 +207,20 @@ export async function DELETE(
             );
         }
 
+        if (sender.id === user.id) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You cannot remove yourself as a friend.',
+                },
+                {
+                    status: 400,
+                }
+            );
+        }
+
         const isFriend = sender.friendIds.find((friend) => friend === user.id);
-
         const sentRequest = sender.requestSentIds.find((request) => request === user.id);
-
         const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
 
         if (!isFriend && !sentRequest && !receivedRequest) {
@@ -279,34 +237,34 @@ export async function DELETE(
 
         await prisma.user.update({
             where: {
-                id: senderId,
+                id: sender.id,
             },
             data: {
                 friends: {
-                    disconnect: { id: userId },
+                    disconnect: { id: user.id },
                 },
                 requestsSent: {
-                    disconnect: { id: userId },
+                    disconnect: { id: user.id },
                 },
                 requestsReceived: {
-                    disconnect: { id: userId },
+                    disconnect: { id: user.id },
                 },
             },
         });
 
         await prisma.user.update({
             where: {
-                id: userId,
+                id: user.id,
             },
             data: {
                 friends: {
-                    disconnect: { id: senderId },
+                    disconnect: { id: sender.id },
                 },
                 requestsSent: {
-                    disconnect: { id: senderId },
+                    disconnect: { id: sender.id },
                 },
                 requestsReceived: {
-                    disconnect: { id: senderId },
+                    disconnect: { id: sender.id },
                 },
             },
         });

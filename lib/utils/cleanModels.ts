@@ -11,6 +11,7 @@ const cleanUser = (user: UserType): CleanUserType => {
         status: user.status,
         system: user.system,
         verified: user.verified,
+        notifications: user.notifications,
 
         guildIds: user.guildIds,
         guilds: user.guilds,

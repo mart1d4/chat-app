@@ -28,11 +28,8 @@ const AddFriend = () => {
     }, []);
 
     useEffect(() => {
-        if (error.length > 0) {
-            setValid('');
-        } else if (valid.length > 0) {
-            setError('');
-        }
+        if (error.length > 0) setValid('');
+        if (valid.length > 0) setError('');
     }, [error, valid]);
 
     return (
@@ -42,7 +39,7 @@ const AddFriend = () => {
 
                 <form autoComplete='off'>
                     <div className={styles.description}>
-                        You can add a friend with their user ID. It's case sensitive.
+                        You can add friends with their Chat App username.
                     </div>
 
                     <div
@@ -61,8 +58,9 @@ const AddFriend = () => {
                                 ref={inputRef}
                                 type='text'
                                 autoComplete='off'
-                                placeholder='Enter username or user ID'
-                                aria-label='Enter username or user ID'
+                                placeholder='You can add friends with their Chat App username.'
+                                aria-label='username'
+                                minLength={2}
                                 maxLength={32}
                                 value={input}
                                 onChange={(e) => {
@@ -76,16 +74,11 @@ const AddFriend = () => {
                                             inputRef.current?.focus();
                                             return;
                                         }
-                                        if (input.length !== 24) {
-                                            setError('Invalid user ID.');
-                                            return;
-                                        }
+
                                         const res = await addFriend(token, input);
-                                        if (!res.success) {
-                                            setError(res.message);
-                                        } else {
-                                            setValid('Friend request sent!');
-                                        }
+
+                                        if (!res.success) setError(res.message);
+                                        else setValid('Friend request sent!');
                                     }
                                 }}
                                 onContextMenu={(e) => {
@@ -108,16 +101,11 @@ const AddFriend = () => {
                                     inputRef.current?.focus();
                                     return;
                                 }
-                                if (input.length !== 24) {
-                                    setError('Invalid user ID.');
-                                    return;
-                                }
+
                                 const res = await addFriend(token, input);
-                                if (!res.success) {
-                                    setError(res.message);
-                                } else {
-                                    setValid('Friend request sent!');
-                                }
+
+                                if (!res.success) setError(res.message);
+                                else setValid('Friend request sent!');
                             }}
                         >
                             Send Friend Request

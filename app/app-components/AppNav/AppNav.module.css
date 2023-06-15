@@ -50,6 +50,13 @@
     background-color: var(--accent-1);
 }
 
+.navIconWrapper img,
+.navIconWrapperActive img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
 .navIconWrapper path,
 .navIconWrapperActive path {
     fill: var(--foreground-2);

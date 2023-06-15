@@ -137,7 +137,10 @@ const UserProfile = (): ReactElement => {
                                                         <button
                                                             className='green'
                                                             onClick={async () =>
-                                                                await addFriend(token, user.id)
+                                                                await addFriend(
+                                                                    token,
+                                                                    user.username
+                                                                )
                                                             }
                                                         >
                                                             Accept
@@ -146,7 +149,10 @@ const UserProfile = (): ReactElement => {
                                                         <button
                                                             className='grey'
                                                             onClick={async () =>
-                                                                await removeFriend(token, user.id)
+                                                                await removeFriend(
+                                                                    token,
+                                                                    user.username
+                                                                )
                                                             }
                                                         >
                                                             Ignore
@@ -179,7 +185,10 @@ const UserProfile = (): ReactElement => {
                                                                 ) {
                                                                     return;
                                                                 }
-                                                                await addFriend(token, user.id);
+                                                                await addFriend(
+                                                                    token,
+                                                                    user.username
+                                                                );
                                                             }}
                                                             onMouseEnter={() =>
                                                                 setShowTooltip(true)

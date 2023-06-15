@@ -17,6 +17,13 @@ type UserType = {
     status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
+    notifications: {
+        type?: string;
+        message?: string;
+        channel?: string;
+        count?: number;
+        new?: boolean;
+    }[];
 
     guildIds: string[];
     guilds?: GuildType[];
@@ -67,6 +74,13 @@ type CleanUserType = {
     status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
+    notifications: {
+        type?: string;
+        message?: string;
+        channel?: string;
+        count?: number;
+        new?: boolean;
+    }[];
 
     guildIds: string[];
     guilds?: GuildType[];

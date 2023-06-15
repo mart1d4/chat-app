@@ -143,7 +143,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                                     <button
                                         onClick={async (e) => {
                                             e.stopPropagation();
-                                            await addFriend(token, user.id);
+                                            await addFriend(token, user.username);
                                         }}
                                         onMouseEnter={() => setShowTooltip(1)}
                                         onMouseLeave={() => setShowTooltip(0)}
@@ -166,7 +166,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                                 <button
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        await removeFriend(token, user.id);
+                                        await removeFriend(token, user.username);
                                     }}
                                     onMouseEnter={() => setShowTooltip(2)}
                                     onMouseLeave={() => setShowTooltip(0)}

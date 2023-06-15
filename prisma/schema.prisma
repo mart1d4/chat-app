@@ -9,6 +9,14 @@ datasource db {
 
 // Types
 
+type Notification {
+  type String?
+  message String?
+  channelId String?
+  count   Int?
+  new      Boolean?
+}
+
 type Button {
   label String
   url   String
@@ -69,10 +77,11 @@ model User {
   description  String?
   customStatus String?
   password     String
-  refreshToken String?
+  refreshToken String?    @unique
   status       UserStatus @default(Offline)
   system       Boolean    @default(false)
   verified     Boolean    @default(false)
+  notifications Notification[]
 
   guildIds String[] @db.ObjectId
   guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
@@ -157,7 +166,7 @@ model Role {
 model Channel {
   id          String      @id @default(auto()) @map("_id") @db.ObjectId
   type        ChannelType
-  name        String
+  name        String?
   description String?
   icon        String?
   nsfw        Boolean?    @default(false)
@@ -189,7 +198,6 @@ model Message {
   content           String
   attachments       String[]
   embeds            String[]
-  messageReference  String?
   edited            Boolean     @default(false)
   pinned            Boolean     @default(false)
   reactions         String[]    @default([])
@@ -203,6 +211,12 @@ model Message {
 
   channelId String[]  @db.ObjectId
   channel   Channel[] @relation("ChannelMessage", fields: [channelId], references: [id])
+
+  messageReferenceId String? @db.ObjectId
+  messageReference   Message? @relation("MessageReference", fields: [messageReferenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  referencedByIds String[]  @db.ObjectId
+  referencedBy   Message[] @relation("MessageReference")
 
   createdAt DateTime @default(now()) @db.Date
   updatedAt DateTime @default(now()) @updatedAt @db.Date

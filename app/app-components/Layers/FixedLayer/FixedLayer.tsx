@@ -157,7 +157,9 @@ const FixedLayer = (): ReactElement => {
         }
 
         const handleClickOutside = (e) => {
-            return;
+            // setPositions({});
+            // setContainer(null);
+            // setFixedLayer(null);
         };
 
         const handleKeyDown = (e) => {
@@ -200,7 +202,9 @@ const FixedLayer = (): ReactElement => {
             }}
         >
             {type === 'menu' && <Menu content={fixedLayer} />}
+
             {type === 'popout' && <Popout content={fixedLayer} />}
+
             {type === 'usercard' && (
                 <UserCard
                     content={fixedLayer}

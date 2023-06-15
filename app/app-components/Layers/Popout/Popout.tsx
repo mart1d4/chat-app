@@ -33,8 +33,8 @@ const Popout = ({ content }: any) => {
 
             fetchPinned();
         } else {
-            const getFriendList = async () => {
-                const friendList = await getFriends(token);
+            const getFriendList = () => {
+                const friendList = auth.user.friends || [];
                 setFriends(friendList);
 
                 if (content?.channel) {

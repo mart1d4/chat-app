@@ -1,6 +1,6 @@
 'use client';
 
-import useAuthSWR from '@/hooks/useAuthSWR';
+import useContextHook from '@/hooks/useContextHook';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
 import { ReactElement } from 'react';
@@ -9,7 +9,8 @@ import UserItem from './UserItem';
 import Title from './Title';
 
 const Channels = (): ReactElement => {
-    const { data, isLoading } = useAuthSWR('/users/me/channels');
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const channels = auth.user.channels;
 
     return (
         <div className={styles.nav}>
@@ -26,8 +27,8 @@ const Channels = (): ReactElement => {
 
                         <Title />
 
-                        {data?.channels?.length > 0 && !isLoading ? (
-                            data.channels.map((channel: any) => (
+                        {channels?.length > 0 ? (
+                            channels.map((channel: any) => (
                                 <UserItem
                                     key={uuidv4()}
                                     channel={channel}

@@ -2,6 +2,7 @@ import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import Channels from 'pusher';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
@@ -25,12 +26,13 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             include: {
                 messages: {
                     orderBy: {
-                        createdAt: 'desc',
+                        createdAt: 'asc',
                     },
                     take: limit || 50,
                     skip: skip || 0,
                     include: {
                         author: true,
+                        messageReference: true,
                     },
                 },
             },
@@ -164,7 +166,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 content: String(message.content),
                 attachments: message.attachments || [],
                 embeds: message.embeds || [],
-                messageReference: message.messageReference || null,
+                messageReference: message.messageReference || undefined,
                 mentionEveryone: message.mentionEveryone || false,
                 mentionChannelIds: message.mentionChannelIds || [],
                 mentionRoleIds: message.mentionRoleIds || [],
@@ -194,6 +196,29 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 },
             },
         });
+
+        const messageToSend = await prisma.message.findUnique({
+            where: {
+                id: newMessage.id,
+            },
+            include: {
+                author: true,
+                messageReference: true,
+            },
+        });
+
+        const channels = new Channels({
+            appId: process.env.PUSHER_APP_ID as string,
+            key: process.env.PUSHER_KEY as string,
+            secret: process.env.PUSHER_SECRET as string,
+            cluster: process.env.PUSHER_CLUSTER as string,
+        });
+
+        channels &&
+            channels.trigger('chat-app', `message-sent`, {
+                channel: channelId,
+                message: messageToSend,
+            });
 
         return NextResponse.json(
             {

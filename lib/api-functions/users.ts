@@ -30,11 +30,7 @@ export const blockUser = async (token: string, userId: string) => {
         return res.json();
     });
 
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    return response;
 };
 
 export const unblockUser = async (token: string, userId: string) => {
@@ -48,15 +44,11 @@ export const unblockUser = async (token: string, userId: string) => {
         return res.json();
     });
 
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    return response;
 };
 
-export const addFriend = async (token: string, userId: string) => {
-    const response = await fetch(`${url}/users/me/friends/${userId}`, {
+export const addFriend = async (token: string, username: string) => {
+    const response = await fetch(`${url}/users/me/friends/${username}`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -66,15 +58,11 @@ export const addFriend = async (token: string, userId: string) => {
         return res.json();
     });
 
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    return response;
 };
 
-export const removeFriend = async (token: string, userId: string) => {
-    const response = await fetch(`${url}/users/me/friends/${userId}`, {
+export const removeFriend = async (token: string, username: string) => {
+    const response = await fetch(`${url}/users/me/friends/${username}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -84,11 +72,7 @@ export const removeFriend = async (token: string, userId: string) => {
         return res.json();
     });
 
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    return response;
 };
 
 export const getFriends = async (token: string) => {

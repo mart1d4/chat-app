@@ -4,8 +4,47 @@
     min-width: 360px;
     max-width: 420px;
     height: 100%;
-    padding: 16px;
+    padding: 16px 8px 16px 16px;
     margin-left: 2px;
     border-left: 1px solid var(--border-light);
     background-color: var(--background-4);
+    overflow: hidden scroll;
+}
+
+.aside::-webkit-scrollbar {
+    width: 0;
+}
+
+.aside > h2 {
+    margin: 8px 0 16px;
+    font-weight: 800;
+    color: var(--foreground-1);
+    font-size: 20px;
+    line-height: 24px;
+}
+
+.aside > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.aside > div > h3 {
+    margin-bottom: 4px;
+    color: var(--foreground-1);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+}
+
+.aside > div > div {
+    color: var(--foreground-3);
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    user-select: none;
 }

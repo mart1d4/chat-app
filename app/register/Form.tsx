@@ -3,6 +3,7 @@
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import { LoadingDots } from '../app-components';
 import { useRouter } from 'next/navigation';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
@@ -214,7 +215,7 @@ const Register = (): ReactElement => {
                 className={styles.buttonSubmit}
                 onClick={(e) => handleSubmit(e)}
             >
-                <div className={isLoading ? styles.loading : ''}>{!isLoading && 'Register'}</div>
+                {isLoading ? <LoadingDots /> : 'Register'}
             </button>
 
             <div className={styles.bottomText}>
