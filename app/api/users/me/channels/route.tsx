@@ -160,7 +160,6 @@ export async function POST(req: Request) {
         if (recipients.length === 0) {
             // Create channel with just user
             const channel = await prisma.channel.create({
-                // @ts-ignore
                 data: {
                     type: 'GROUP_DM',
                     recipients: {
@@ -169,7 +168,6 @@ export async function POST(req: Request) {
                         },
                     },
                     icon: '/assets/channel-avatars/blue.png',
-                    name: 'Unnamed',
                     owner: {
                         connect: {
                             id: user.id,
@@ -316,17 +314,6 @@ export async function POST(req: Request) {
                 }
             }
 
-            const channelName = recipientObjects.map((recipient) => recipient.username).join(', ');
-
-            await prisma.channel.update({
-                where: {
-                    id: channel.id,
-                },
-                data: {
-                    name: channelName,
-                },
-            });
-
             return NextResponse.json(
                 {
                     success: true,
@@ -338,10 +325,14 @@ export async function POST(req: Request) {
             );
         }
 
+        console.log([...recipients, user.id]);
+
         const sameChannel = await prisma.channel.findFirst({
             where: {
                 recipientIds: {
-                    equals: [...recipients, user.id],
+                    every: {
+                        id: [...recipients, user.id],
+                    },
                 },
             },
             include: {
@@ -395,8 +386,6 @@ export async function POST(req: Request) {
             );
         }
 
-        const channelName = recipientObjects.map((recipient) => recipient.username).join(', ');
-
         const channel = await prisma.channel.create({
             // @ts-ignore
             data: {
@@ -405,7 +394,6 @@ export async function POST(req: Request) {
                     connect: [...recipients, user.id].map((id) => ({ id })),
                 },
                 icon: '/assets/channel-avatars/blue.png',
-                name: recipients.length > 1 ? channelName : 'Unnamed',
                 owner:
                     recipients.length > 1
                         ? {
