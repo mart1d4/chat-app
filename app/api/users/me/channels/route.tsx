@@ -330,9 +330,7 @@ export async function POST(req: Request) {
         const sameChannel = await prisma.channel.findFirst({
             where: {
                 recipientIds: {
-                    every: {
-                        id: [...recipients, user.id],
-                    },
+                    equals: [...recipients, user.id],
                 },
             },
             include: {
