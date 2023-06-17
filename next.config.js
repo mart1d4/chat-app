@@ -5,6 +5,14 @@ const nextConfig = {
     experimental: {
         appDir: true,
     },
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'ucarecdn.com',
+            },
+        ],
+    },
 };
 
 module.exports = nextConfig;

@@ -27,9 +27,19 @@
 .icon {
     position: relative;
     height: 24px;
-    width: auto;
+    width: 24px;
     flex: 0 0 auto;
     margin: 0 8px;
+}
+
+.icon > img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.icon > div {
+    position: absolute;
 }
 
 .title,

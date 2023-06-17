@@ -2,9 +2,10 @@
 
 import { Tooltip, TextArea, Icon } from '@/app/app-components';
 import { useEffect, useRef, useState } from 'react';
+import useContextHook from '@/hooks/useContextHook';
+import useOnScreen from '@/hooks/useOnScreen';
 import styles from './Message.module.css';
 import Image from 'next/image';
-import useContextHook from '@/hooks/useContextHook';
 
 const Message = ({
     params,
@@ -16,6 +17,7 @@ const Message = ({
     reply,
     setReply,
     noInt,
+    lastMessage,
 }: any) => {
     const [showTooltip, setShowTooltip] = useState<number | boolean>(false);
     const [hover, setHover] = useState<boolean>(false);
@@ -25,9 +27,27 @@ const Message = ({
     let noInteraction = noInt || false;
 
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
     const userImageRef = useRef(null);
     const userImageReplyRef = useRef(null);
+
+    // useEffect(() => {
+    //     const notifications = auth.user.notifications.map((notification: any) => {
+    //         if (notification.channel === message.channelId[0]) {
+    //             return { ...notification, count: 0 };
+    //         }
+
+    //         return notification;
+    //     });
+
+    //     setAuth({
+    //         ...auth,
+    //         user: {
+    //             ...auth.user,
+    //             notifications,
+    //         },
+    //     });
+    // }, []);
 
     useEffect(() => {
         if (!editedMessage) return;
@@ -111,7 +131,7 @@ const Message = ({
         }
 
         try {
-            await fetch(`/api/users/me/channels/${params.channelId}/messages/${message.id}`, {
+            await fetch(`/api/users/me/channels/${message.channelId[0]}/messages/${message.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -356,7 +376,7 @@ const Message = ({
                     {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
                             <Image
-                                src={`/assets/avatars/${message.messageReference.author.avatar}.png`}
+                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${message.messageReference.author.avatar}/`}
                                 alt='Avatar'
                                 width={16}
                                 height={16}
@@ -406,7 +426,7 @@ const Message = ({
                     >
                         <Image
                             ref={userImageRef}
-                            src={`/assets/avatars/${message.author.avatar}.png`}
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${message.author.avatar}/`}
                             alt='Avatar'
                             width={40}
                             height={40}

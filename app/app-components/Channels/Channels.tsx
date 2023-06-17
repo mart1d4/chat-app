@@ -1,16 +1,28 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
+import { ReactElement, useMemo } from 'react';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
-import { ReactElement } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Title from './Title';
 
 const Channels = (): ReactElement => {
     const { auth }: any = useContextHook({ context: 'auth' });
-    const channels = auth.user.channels;
+    const channels = auth.user.channels.map((channel: any) => {
+        let name = channel.name;
+        if (channel.type === 'DM') {
+            const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
+            name = user.username;
+        } else if (channel.type === 'GROUP_DM' && !channel.name) {
+            const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
+            const fullName = filtered.map((recipient: any) => recipient.username).join(', ');
+            name = fullName;
+        }
+
+        return { ...channel, name };
+    });
 
     return (
         <div className={styles.nav}>
@@ -28,12 +40,7 @@ const Channels = (): ReactElement => {
                         <Title />
 
                         {channels?.length > 0 ? (
-                            channels.map((channel: any) => (
-                                <UserItem
-                                    key={uuidv4()}
-                                    channel={channel}
-                                />
-                            ))
+                            <ChannelList channels={channels} />
                         ) : (
                             <img
                                 src='/assets/app/no-channels.svg'
@@ -47,6 +54,17 @@ const Channels = (): ReactElement => {
             <UserSection />
         </div>
     );
+};
+
+const ChannelList = ({ channels }: any): ReactElement => {
+    return useMemo(() => {
+        return channels.map((channel: any) => (
+            <UserItem
+                key={uuidv4()}
+                channel={channel}
+            />
+        ));
+    }, [channels]);
 };
 
 export default Channels;

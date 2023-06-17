@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prismadb';
 
+const avatars = [
+    '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
+    '9a5bf989-b884-4f81-b26c-ca1995cdce5e',
+    '7cb3f75d-4cad-4023-a643-18c329b5b469',
+    '220b2392-c4c5-4226-8b91-2b60c5a13d0f',
+    '51073721-c1b9-4d47-a2f3-34f0fbb1c0a8',
+];
+const banners = ['#5865F2', '#57F287', '#50555E', '#ED4245', '#FEE75C'];
+
+const getRandomAvatar = (): { avatar: string; banner: string } => {
+    const index = Math.floor(Math.random() * avatars.length);
+
+    return { avatar: avatars[index], banner: banners[index] };
+};
+
 export async function POST(req: Request): Promise<NextResponse> {
     const { username, password }: { username: string; password: string } = await req.json();
 
@@ -67,11 +82,14 @@ export async function POST(req: Request): Promise<NextResponse> {
         }
 
         const hash = await bcrypt.hash(password, 10);
+        const { avatar, banner } = getRandomAvatar();
 
         await prisma.user.create({
             data: {
                 username: username,
                 password: hash,
+                avatar: avatar,
+                banner: banner,
                 notifications: [
                     {
                         type: 'welcome',

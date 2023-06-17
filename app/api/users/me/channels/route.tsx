@@ -2,6 +2,21 @@ import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import Channels from 'pusher';
+
+const channelIcons = [
+    '3d035ad7-d7e0-4d8d-8efd-3ac56c9bdc88',
+    '43c097c9-8748-42aa-b829-9f43c5971f44',
+    '2e40ea3b-fd2a-408f-8c60-8c87e8500814',
+    'db343e4f-5873-48a3-86c7-16c05230300a',
+    '43f72250-ea5d-42e7-962c-dc082257ccc9',
+    'ea338819-493f-4f9f-ac87-f108d1923713',
+    'b173e5fb-eeee-410d-a257-27af06d7a4ba',
+];
+
+const getRandomIcon = () => {
+    return channelIcons[Math.floor(Math.random() * channelIcons.length)];
+};
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
@@ -157,6 +172,13 @@ export async function POST(req: Request) {
             );
         }
 
+        const channels = new Channels({
+            appId: process.env.PUSHER_APP_ID as string,
+            key: process.env.PUSHER_KEY as string,
+            secret: process.env.PUSHER_SECRET as string,
+            cluster: process.env.PUSHER_CLUSTER as string,
+        });
+
         if (recipients.length === 0) {
             // Create channel with just user
             const channel = await prisma.channel.create({
@@ -167,12 +189,12 @@ export async function POST(req: Request) {
                             id: user.id,
                         },
                     },
-                    icon: '/assets/channel-avatars/blue.png',
                     owner: {
                         connect: {
                             id: user.id,
                         },
                     },
+                    icon: getRandomIcon(),
                 },
             });
 
@@ -188,6 +210,11 @@ export async function POST(req: Request) {
                     },
                 },
             });
+
+            channels &&
+                channels.trigger('chat-app', `channel-created`, {
+                    channel: channel,
+                });
 
             return NextResponse.json(
                 {
@@ -314,6 +341,12 @@ export async function POST(req: Request) {
                 }
             }
 
+            channels &&
+                channels.trigger('chat-app', `channel-added-users`, {
+                    channel: channel,
+                    recipients: [...channel.recipients, ...usersToAdd],
+                });
+
             return NextResponse.json(
                 {
                     success: true,
@@ -373,6 +406,11 @@ export async function POST(req: Request) {
                 }
             }
 
+            channels &&
+                channels.trigger('chat-app', `channel-added-users`, {
+                    channel: sameChannel,
+                });
+
             return NextResponse.json(
                 {
                     success: true,
@@ -385,13 +423,12 @@ export async function POST(req: Request) {
         }
 
         const channel = await prisma.channel.create({
-            // @ts-ignore
             data: {
                 type: recipients.length === 1 ? 'DM' : 'GROUP_DM',
                 recipients: {
                     connect: [...recipients, user.id].map((id) => ({ id })),
                 },
-                icon: '/assets/channel-avatars/blue.png',
+                icon: getRandomIcon(),
                 owner:
                     recipients.length > 1
                         ? {
@@ -415,6 +452,11 @@ export async function POST(req: Request) {
                 },
             },
         });
+
+        channels &&
+            channels.trigger('chat-app', `channel-created`, {
+                channel: channel,
+            });
 
         return NextResponse.json(
             {

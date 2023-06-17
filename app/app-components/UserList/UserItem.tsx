@@ -52,7 +52,7 @@ const UserItem = ({ content, user }: Props): ReactNode => {
                     <div className={styles.userInfo}>
                         <div className={styles.avatarWrapper}>
                             <Image
-                                src={`/assets/avatars/${user.avatar}.png`}
+                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
                                 width={32}
                                 height={32}
                                 alt='Avatar'

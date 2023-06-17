@@ -30,10 +30,11 @@ const UserSection = (): ReactElement => {
                 >
                     <div>
                         <Image
-                            src={`/assets/avatars/${auth?.user?.avatar || 'blue'}.png`}
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`}
                             width={32}
                             height={32}
                             alt='Avatar'
+                            draggable={false}
                         />
                         <AvatarStatus
                             status={auth?.user?.status}

@@ -148,7 +148,7 @@
 
 .content {
     position: relative;
-    padding: 60px 40px 80px;
+    padding: 60px 10px 80px 40px;
     flex: 1 1 auto;
     max-width: 740px;
     min-width: 460px;
@@ -291,6 +291,7 @@
     position: absolute;
     top: 77px;
     left: 17px;
+    cursor: pointer;
 }
 
 .userAvatar > img {
@@ -374,4 +375,42 @@
 
 .buttonsContainer {
     display: flex;
+}
+
+.avatarInput {
+    position: fixed;
+    opacity: 0;
+    left: -1000px;
+}
+
+.saveAlert {
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 20px;
+    margin-left: -20px;
+    width: calc(100% - 40px);
+    max-width: 740px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 10px 10px 16px;
+    border-radius: 5px;
+    background-color: var(--background-dark);
+    color: var(--foreground-2);
+    box-shadow: var(--elevation-high);
+}
+
+.saveAlert > p {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    user-select: none;
+}
+
+.saveAlert > div {
+    display: flex;
+    gap: 10px;
 }

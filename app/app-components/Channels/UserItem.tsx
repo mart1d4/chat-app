@@ -105,7 +105,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                 <div className={styles.layoutAvatar}>
                                     {channel.type === 'GROUP_DM' ? (
                                         <Image
-                                            src={channel.icon || '/assets/channel-avatars/blue.png'}
+                                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${channel.icon}/`}
                                             width={32}
                                             height={32}
                                             alt='Avatar'
@@ -114,9 +114,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                     ) : (
                                         <>
                                             <Image
-                                                src={`/assets/avatars/${
-                                                    user?.avatar || 'blue'
-                                                }.png`}
+                                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user?.avatar}/`}
                                                 width={32}
                                                 height={32}
                                                 alt='Avatar'

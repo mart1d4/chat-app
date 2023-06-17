@@ -2,15 +2,11 @@
 
 import { useState, useRef, useMemo, useEffect, ReactElement } from 'react';
 import { Tooltip, Icon, AvatarStatus } from '@/app/app-components';
+import useContextHook from '@/hooks/useContextHook';
 import styles from './AppHeader.module.css';
 import { v4 as uuidv4 } from 'uuid';
-import useContextHook from '@/hooks/useContextHook';
 
-type Props = {
-    channel?: ChannelType;
-};
-
-const AppHeader = ({ channel }: Props): ReactElement => {
+const AppHeader = ({ channel }: { channel: ChannelType }): ReactElement => {
     const [showTooltip, setShowTooltip] = useState<null | string>(null);
     const [friend, setFriend] = useState<undefined | CleanOtherUserType>();
 
@@ -21,7 +17,9 @@ const AppHeader = ({ channel }: Props): ReactElement => {
     const requestNumber: number = auth.user.requestReceivedIds.length;
 
     useEffect(() => {
-        if (channel?.type === 'DM') {
+        if (!channel) return;
+
+        if (channel.type === 'DM') {
             setFriend(
                 channel.recipients.find((user: CleanOtherUserType) => user.id !== auth.user.id)
             );
@@ -143,34 +141,28 @@ const AppHeader = ({ channel }: Props): ReactElement => {
                     ) : (
                         <>
                             <div className={styles.icon}>
-                                <Icon
-                                    name={channel?.type === 'DM' ? 'at' : 'memberList'}
-                                    fill='var(--foreground-4)'
+                                <img
+                                    src={channel.icon}
+                                    alt={channel.name}
                                 />
+
+                                <div>
+                                    {channel?.type === 'DM' && (
+                                        <AvatarStatus
+                                            status={friend?.status || 'Offline'}
+                                            background='var(--background-4)'
+                                            onlyStatus
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             <h1
                                 className={styles.titleFriend}
                                 onClick={() => setUserProfile({ user: friend })}
                             >
-                                {(channel?.type === 'DM' ? friend?.username : channel?.name) || ''}
+                                {channel.name}
                             </h1>
-
-                            {channel?.type === 'DM' && (
-                                <div
-                                    className={styles.status}
-                                    onMouseEnter={() => setShowTooltip('status')}
-                                    onMouseLeave={() => setShowTooltip(null)}
-                                >
-                                    <AvatarStatus
-                                        status={friend?.status || 'offline'}
-                                        background='var(--background-4)'
-                                        tooltip
-                                        tooltipPos='bottom'
-                                        onlyStatus
-                                    />
-                                </div>
-                            )}
                         </>
                     )}
                 </div>

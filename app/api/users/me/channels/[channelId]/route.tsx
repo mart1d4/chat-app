@@ -2,6 +2,7 @@ import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import Channels from 'pusher';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
@@ -155,6 +156,13 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 );
             }
 
+            const channels = new Channels({
+                appId: process.env.PUSHER_APP_ID as string,
+                key: process.env.PUSHER_KEY as string,
+                secret: process.env.PUSHER_SECRET as string,
+                cluster: process.env.PUSHER_CLUSTER as string,
+            });
+
             await prisma.user.update({
                 where: {
                     id: senderId,
@@ -175,6 +183,11 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                             id: channel.id,
                         },
                     });
+
+                    channels &&
+                        channels.trigger('chat-app', `channel-deleted`, {
+                            channelId: channel.id,
+                        });
 
                     return NextResponse.json(
                         {
@@ -252,6 +265,12 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                     });
                 }
             }
+
+            channels &&
+                channels.trigger('chat-app', `channel-left`, {
+                    channelId: channel.id,
+                    userId: user.id,
+                });
 
             return NextResponse.json(
                 {

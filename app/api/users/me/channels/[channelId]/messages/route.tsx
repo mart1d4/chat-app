@@ -194,6 +194,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         id: newMessage.id,
                     },
                 },
+                updatedAt: new Date(),
             },
         });
 

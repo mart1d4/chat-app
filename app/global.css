@@ -204,7 +204,7 @@ h6 {
 }
 
 button {
-    color: var(--foreground-2);
+    color: var(--foreground-1);
     position: relative;
     display: flex;
     align-items: center;

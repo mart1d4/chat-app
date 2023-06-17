@@ -1,13 +1,14 @@
 'use client';
 
-import { AvatarStatus, Tooltip, Icon } from '@/app/app-components';
+import { AvatarStatus, Tooltip, Icon, LoadingDots } from '@/app/app-components';
+import { ReactElement, useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ReactElement, useEffect, useState } from 'react';
+import useContextHook from '@/hooks/useContextHook';
+import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
 import useLogout from '@/hooks/useLogout';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
-import useContextHook from '@/hooks/useContextHook';
 
 const Settings = ({ tab }: any): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>(tab ?? 'My Account');
@@ -196,9 +197,13 @@ const MyAccount = () => {
         text: 'Copy user ID',
         success: false,
     });
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [avatar, setAvatar] = useState<any>(null);
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
+
+    const avatarInputRef = useRef<HTMLInputElement>(null);
 
     const copyToClipboard = async () => {
         try {
@@ -252,9 +257,61 @@ const MyAccount = () => {
         { title: 'Phone Number', value: auth?.user?.phone || 'Not set' },
     ];
 
+    const handleAvatarSubmit = async () => {
+        if (!avatar || isLoading) return;
+        setIsLoading(true);
+
+        const result = await base(avatar, {
+            publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+            store: 'auto',
+        });
+
+        if (!result.file) {
+            console.error(result);
+        } else {
+            await fetch('/api/users/me', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    avatar: result.file,
+                }),
+            });
+        }
+
+        setIsLoading(false);
+        setAvatar(null);
+    };
+
     return (
         <>
             <div>
+                {avatar && (
+                    <div className={styles.saveAlert}>
+                        <p>Careful — you have unsaved changes!</p>
+
+                        <div>
+                            <button
+                                className='button underline'
+                                onClick={() => {
+                                    setAvatar(null);
+                                }}
+                            >
+                                Reset
+                            </button>
+
+                            <button
+                                className='button green'
+                                onClick={() => handleAvatarSubmit()}
+                            >
+                                {isLoading ? <LoadingDots /> : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className={styles.sectionTitle}>
                     <h2 className={styles.titleBig}>My Account</h2>
                 </div>
@@ -268,12 +325,34 @@ const MyAccount = () => {
                     />
 
                     <div className={styles.userCardInfo}>
-                        <div className={styles.userAvatar}>
+                        <input
+                            ref={avatarInputRef}
+                            className={styles.avatarInput}
+                            type='file'
+                            accept='image/*'
+                            onChange={(e) => {
+                                const newFile = e.target.files ? e.target.files[0] : null;
+                                if (!newFile) return;
+                                setAvatar(newFile);
+                            }}
+                        />
+
+                        <div
+                            className={styles.userAvatar}
+                            onClick={() => {
+                                avatarInputRef.current?.click();
+                            }}
+                        >
                             <Image
-                                src={`/assets/avatars/${auth?.user.avatar || 'blue '}.png`}
+                                src={
+                                    avatar
+                                        ? URL.createObjectURL(avatar)
+                                        : `${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`
+                                }
                                 alt='User Avatar'
                                 width={80}
                                 height={80}
+                                draggable={false}
                             />
 
                             <AvatarStatus

@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import Channels from 'pusher';
 
 export async function POST(
     req: NextRequest,
@@ -89,6 +90,13 @@ export async function POST(
             );
         }
 
+        const channels = new Channels({
+            appId: process.env.PUSHER_APP_ID as string,
+            key: process.env.PUSHER_KEY as string,
+            secret: process.env.PUSHER_SECRET as string,
+            cluster: process.env.PUSHER_CLUSTER as string,
+        });
+
         if (receivedRequest) {
             await prisma.user.update({
                 where: {
@@ -117,6 +125,12 @@ export async function POST(
                     },
                 },
             });
+
+            channels &&
+                channels.trigger('chat-app', `user-friend`, {
+                    sender: sender,
+                    user: user,
+                });
 
             return NextResponse.json(
                 {
@@ -150,6 +164,12 @@ export async function POST(
                 },
             },
         });
+
+        channels &&
+            channels.trigger('chat-app', `user-request`, {
+                sender: sender,
+                user: user,
+            });
 
         return NextResponse.json(
             {
@@ -219,6 +239,13 @@ export async function DELETE(
             );
         }
 
+        const channels = new Channels({
+            appId: process.env.PUSHER_APP_ID as string,
+            key: process.env.PUSHER_KEY as string,
+            secret: process.env.PUSHER_SECRET as string,
+            cluster: process.env.PUSHER_CLUSTER as string,
+        });
+
         const isFriend = sender.friendIds.find((friend) => friend === user.id);
         const sentRequest = sender.requestSentIds.find((request) => request === user.id);
         const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
@@ -270,6 +297,12 @@ export async function DELETE(
         });
 
         const message = isFriend ? 'Friend removed' : 'Request cancelled';
+
+        channels &&
+            channels.trigger('chat-app', 'user-removed', {
+                sender: sender,
+                user: user,
+            });
 
         return NextResponse.json(
             {

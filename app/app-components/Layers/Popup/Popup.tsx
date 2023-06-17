@@ -2,9 +2,9 @@
 
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import styles from './Popup.module.css';
 import useContextHook from '@/hooks/useContextHook';
 import { Message } from '@/app/app-components';
+import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
     const [isLoading, setIsLoading] = useState(false);
@@ -51,79 +51,46 @@ const Popup = (): ReactElement => {
         if (isLoading) return;
         setIsLoading(true);
 
-        // Modify username
+        const response = await fetch('/api/users/me', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${auth.accessToken}`,
+            },
+            body: JSON.stringify({
+                username: uid,
+            }),
+        });
 
-        // const response = await axiosPrivate.patch(
-        //     '/users/@me',
-        //     {
-        //         username: uid,
-        //         password,
-        //     },
-        //     {
-        //         headers: { 'Content-Type': 'application/json' },
-        //         withCredentials: true,
-        //     }
-        // );
+        if (!response.ok) {
+            setUsernameError("Couldn't update username.");
+            setPasswordError("Couldn't update username.");
+        }
 
-        // if (!response.data.success) {
-        //     const err = response?.data?.message?.toLowerCase();
-        //     if (err.includes('username')) {
-        //         setUsernameError(response.data.message);
-        //     } else if (err.includes('password')) {
-        //         setPasswordError(response.data.message);
-        //     }
-        //     setIsLoading(false);
-        // } else {
-        //     setAuth({
-        //         ...auth,
-        //         user: response.data.user,
-        //     });
-
-        //     setUID('');
-        //     setPassword('');
-        //     setIsLoading(false);
-        //     setPopup(null);
-        // }
+        setIsLoading(false);
     };
 
     const handlePasswordSubmit = async () => {
         if (isLoading) return;
         setIsLoading(true);
 
-        // Modify password
+        const response = await fetch('/api/users/me', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${auth.accessToken}`,
+            },
+            body: JSON.stringify({
+                password: password1,
+                newPassword: password,
+            }),
+        });
 
-        // const response = await axiosPrivate.patch(
-        //     '/users/@me',
-        //     {
-        //         password: password1,
-        //         newPassword,
-        //     },
-        //     {
-        //         headers: { 'Content-Type': 'application/json' },
-        //         withCredentials: true,
-        //     }
-        // );
+        if (!response.ok) {
+            setNewPasswordError("Couldn't update password.");
+        }
 
-        // if (!response.data.success) {
-        //     const err = response?.data?.message?.toLowerCase();
-        //     if (err.includes('password')) {
-        //         setPassword1Error(response.data.message);
-        //     } else if (err.includes('new')) {
-        //         setNewPasswordError(response.data.message);
-        //     }
-        //     setIsLoading(false);
-        // } else {
-        //     setAuth({
-        //         accessToken: response.data.accessToken,
-        //         user: response.data.user,
-        //     });
-
-        //     setPassword1('');
-        //     setNewPassword('');
-        //     setConfirmPassword('');
-        //     setIsLoading(false);
-        //     setPopup(null);
-        // }
+        setIsLoading(false);
     };
 
     return (

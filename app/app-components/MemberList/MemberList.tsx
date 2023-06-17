@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactNode, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, ReactElement } from 'react';
 import { AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './MemberList.module.css';
@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Image from 'next/image';
 
-const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
+const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
     const [note, setNote] = useState<string>('');
@@ -44,7 +44,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
     }, []);
 
     return useMemo(() => {
-        if (!userSettings?.showUsers || !widthLimitPassed) return null;
+        if (!userSettings?.showUsers || !widthLimitPassed) return <></>;
 
         if (channel?.type === 'DM' && friend) {
             return (
@@ -55,7 +55,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactNode => {
                     >
                         <div className={styles.userAvatar}>
                             <Image
-                                src={`/assets/avatars/${friend.avatar}.png`}
+                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
                                 alt='User Avatar'
                                 width={80}
                                 height={80}

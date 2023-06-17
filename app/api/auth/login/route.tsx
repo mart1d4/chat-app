@@ -45,6 +45,9 @@ export async function POST(req: Request): Promise<NextResponse> {
                             },
                         },
                     },
+                    orderBy: {
+                        updatedAt: 'desc',
+                    },
                 },
                 guilds: true,
                 friends: {

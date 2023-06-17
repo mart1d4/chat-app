@@ -38,7 +38,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                     >
                         <div>
                             <Image
-                                src={`/assets/avatars/${user.avatar}.png`}
+                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
                                 alt='User Avatar'
                                 width={80}
                                 height={80}

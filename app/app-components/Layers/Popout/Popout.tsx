@@ -1,10 +1,10 @@
 'use client';
 
-import { Message, AvatarStatus, Icon } from '@/app/app-components';
 import { createChannel, getPinnedMessages } from '@/lib/api-functions/channels';
-import { getFriends } from '@/lib/api-functions/users';
+import { Message, AvatarStatus, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
@@ -24,6 +24,7 @@ const Popout = ({ content }: any) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
     const inputLinkRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (content?.pinned) {
@@ -33,24 +34,21 @@ const Popout = ({ content }: any) => {
 
             fetchPinned();
         } else {
-            const getFriendList = () => {
-                const friendList = auth.user.friends || [];
-                setFriends(friendList);
+            const friendList = auth.user.friends || [];
+            setFriends(friendList);
 
-                if (content?.channel) {
-                    const filteredFriends = friendList.filter((friend: any) => {
-                        return !content.channel.recipientIds.includes(friend.id);
-                    });
+            if (content?.channel) {
+                const filteredFriends = friendList.filter((friend: any) => {
+                    return !content.channel.recipientIds.includes(friend.id);
+                });
 
-                    setFilteredList(filteredFriends);
-                    setPlacesLeft(10 - content.channel.recipientIds.length);
-                } else {
-                    setFilteredList(friendList);
-                    setPlacesLeft(9);
-                }
-            };
-
-            getFriendList();
+                setFilteredList(filteredFriends);
+                setPlacesLeft(10 - content.channel.recipientIds.length);
+            } else {
+                console.log(friendList);
+                setFilteredList(friendList);
+                setPlacesLeft(9);
+            }
         }
     }, [content]);
 
@@ -111,6 +109,24 @@ const Popout = ({ content }: any) => {
         }
 
         const recipientIds = allRecipients?.map((recipient) => recipient.id);
+
+        if (!content?.channel) {
+            const sameChannel = auth.user.channels.find((channel: any) => {
+                return (
+                    channel.recipientIds.length === recipientIds.length + 1 &&
+                    channel.recipientIds.every((recipientId: string) =>
+                        [...recipientIds, auth.user.id].includes(recipientId)
+                    )
+                );
+            });
+
+            if (sameChannel) {
+                setFixedLayer(null);
+                router.push(`/channels/me/${sameChannel.id}`);
+                return;
+            }
+        }
+
         await createChannel(token, recipientIds, channelId);
     };
 
@@ -263,9 +279,7 @@ const Popout = ({ content }: any) => {
                                     <div>
                                         <div className={styles.friendAvatar}>
                                             <Image
-                                                src={`/assets/avatars/${
-                                                    friend.avatar || 'blue'
-                                                }.png`}
+                                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
                                                 alt={friend?.username}
                                                 width={32}
                                                 height={32}

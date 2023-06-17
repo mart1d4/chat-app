@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { prisma } from '@/lib/prismadb';
+import { headers } from 'next/headers';
+import Channels from 'pusher';
 
 export async function POST(
     req: NextRequest,
@@ -91,6 +92,19 @@ export async function POST(
                     },
                 },
             });
+
+            const channels = new Channels({
+                appId: process.env.PUSHER_APP_ID as string,
+                key: process.env.PUSHER_KEY as string,
+                secret: process.env.PUSHER_SECRET as string,
+                cluster: process.env.PUSHER_CLUSTER as string,
+            });
+
+            channels &&
+                channels.trigger('chat-app', `user-blocked`, {
+                    senderId: sender.id,
+                    userId: user.id,
+                });
 
             return NextResponse.json(
                 {
@@ -190,6 +204,19 @@ export async function DELETE(
                     },
                 },
             });
+
+            const channels = new Channels({
+                appId: process.env.PUSHER_APP_ID as string,
+                key: process.env.PUSHER_KEY as string,
+                secret: process.env.PUSHER_SECRET as string,
+                cluster: process.env.PUSHER_CLUSTER as string,
+            });
+
+            channels &&
+                channels.trigger('chat-app', `user-unblocked`, {
+                    senderId: sender.id,
+                    userId: user.id,
+                });
 
             return NextResponse.json(
                 {

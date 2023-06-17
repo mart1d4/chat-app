@@ -36,7 +36,7 @@ const UserProfile = (): ReactElement => {
 
         if (!isSameUser()) {
             const getMutuals = async () => {
-                const friends = await getFriends(token);
+                const friends = auth.user.friends || [];
                 const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
                 setMutualFriends(mutuals);
             };
@@ -107,7 +107,7 @@ const UserProfile = (): ReactElement => {
                         >
                             <div>
                                 <Image
-                                    src={`/assets/avatars/${user.avatar || 'blue'}.png`}
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
                                     alt='User Avatar'
                                     width={120}
                                     height={120}
@@ -383,7 +383,7 @@ const FriendItem = ({ friend }: any): ReactElement => {
         >
             <div>
                 <Image
-                    src={`/assets/avatars/${friend.avatar || 'blue'}.png`}
+                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
                     alt='User Avatar'
                     width={40}
                     height={40}

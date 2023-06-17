@@ -10,11 +10,9 @@ import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
 import Pusher from 'pusher-js';
 
-type Props = {
-    channel: ChannelType;
-};
+const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => {
+    if (!channel) return <></>;
 
-const ChannelContent = ({ channel }: Props): ReactElement => {
     const [reply, setReply] = useState(null);
     const [edit, setEdit] = useState(null);
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
@@ -132,21 +130,20 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
                 <Image
-                    // @ts-ignore
-                    src={friend ? `/assets/avatars/${friend.avatar}.png` : channel.icon}
-                    alt={friend ? 'User Avatar' : 'Channel Icon'}
+                    src={channel.icon as string}
+                    alt={channel.name}
                     width={80}
                     height={80}
                 />
             </div>
 
-            <h3 className={styles.friendUsername}>{friend ? friend.username : channel.name}</h3>
+            <h3 className={styles.friendUsername}>{channel.name}</h3>
 
             <div className={styles.descriptionContainer}>
                 {friend ? (
                     <>
                         This is the beginning of your direct message history with
-                        <strong> @{friend.username}</strong>.
+                        <strong> @{channel.name}</strong>.
                     </>
                 ) : (
                     <>
@@ -249,6 +246,7 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                                                         setEdit={setEdit}
                                                         reply={reply}
                                                         setReply={setReply}
+                                                        lastMessage={index === messages.length - 1}
                                                     />
                                                 </div>
                                             ))}
@@ -270,7 +268,6 @@ const ChannelContent = ({ channel }: Props): ReactElement => {
                     />
                 </main>
 
-                {/* @ts-expect-error */}
                 <MemberList channel={channel} />
             </div>
         </div>

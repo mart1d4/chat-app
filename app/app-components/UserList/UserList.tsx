@@ -91,8 +91,8 @@ const UserLists = ({ content }: Props): ReactNode => {
 
                 setList(friends);
             } else if (content === 'pending') {
-                const sent = auth.user.sentRequests || [];
-                const received = auth.user.receivedRequests || [];
+                const sent = auth.user.requestsSent || [];
+                const received = auth.user.requestsReceived || [];
 
                 let sentReq = [];
                 if (sent.length) {

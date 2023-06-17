@@ -47,7 +47,7 @@ const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
                     <div className={styles.layout}>
                         <div className={styles.layoutAvatar}>
                             <Image
-                                src={`/assets/avatars/${user.avatar}.png`}
+                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
                                 width={32}
                                 height={32}
                                 alt='Avatar'
