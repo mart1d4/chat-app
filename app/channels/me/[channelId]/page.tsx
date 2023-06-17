@@ -2,14 +2,8 @@
 
 import { ReactElement, useState, useEffect } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { Channels } from '@/app/app-components';
-import { useRouter } from 'next/navigation';
-import { Metadata } from 'next';
 import ChannelContent from './ChannelContent';
-
-export const metadata: Metadata = {
-    title: 'Chat App | @me',
-};
+import { useRouter } from 'next/navigation';
 
 const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true);

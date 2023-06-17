@@ -6,7 +6,7 @@ import useContextHook from '@/hooks/useContextHook';
 import styles from './AppHeader.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
-const AppHeader = ({ channel }: { channel: ChannelType }): ReactElement => {
+const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
     const [showTooltip, setShowTooltip] = useState<null | string>(null);
     const [friend, setFriend] = useState<undefined | CleanOtherUserType>();
 
