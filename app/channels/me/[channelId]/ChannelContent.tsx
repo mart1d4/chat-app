@@ -1,13 +1,19 @@
 'use client';
 
-import { AppHeader, Message, TextArea, MemberList, MessageSkeleton } from '@/app/app-components';
+import {
+    AppHeader,
+    Message,
+    TextArea,
+    MemberList,
+    MessageSkeleton,
+    Avatar,
+} from '@/app/app-components';
 import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
 import React, { useState, useEffect, useCallback, ReactElement, useRef } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useAuthSWR from '@/hooks/useAuthSWR';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
-import Image from 'next/image';
 import Pusher from 'pusher-js';
 
 const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => {
@@ -129,11 +135,10 @@ const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => 
     const FirstMessage = (
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
-                <Image
+                <Avatar
                     src={channel.icon as string}
                     alt={channel.name}
-                    width={80}
-                    height={80}
+                    size={80}
                 />
             </div>
 

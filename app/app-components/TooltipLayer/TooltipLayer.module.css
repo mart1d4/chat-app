@@ -1,0 +1,35 @@
+.container {
+    position: fixed;
+    z-index: 10000000;
+    pointer-events: none;
+    user-select: none;
+}
+
+.tooltip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 16px;
+    font-weight: 500;
+    text-transform: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    color: var(--foreground-2);
+    box-shadow: var(--elevation-high);
+}
+
+.big {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+}
+
+.tooltip > span {
+    position: absolute;
+    overflow: hidden;
+    border: 5px solid transparent;
+    width: 0;
+    height: 0;
+}

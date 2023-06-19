@@ -51,23 +51,21 @@
     text-indent: 0;
 }
 
-.messageContent img {
-    pointer-events: auto;
-    position: absolute;
+.userAvatar {
+    width: 40px;
+    height: 40px;
     left: 16px;
+    position: absolute;
     margin-top: calc(4px - 0.125rem);
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-    user-select: none;
     z-index: 1;
+    cursor: pointer;
 }
 
-.messageContent img:active {
+.userAvatar:active {
     transform: translateY(0.5px);
 }
 
-.messageContent img:hover {
+.userAvatar:hover {
     filter: drop-shadow(0 4px 4px hsla(0, 0%, 0%, 0.16));
 }
 
@@ -108,7 +106,7 @@
     user-select: text;
 }
 
-.messageContent > div:not(.editHint, .specialIcon) {
+.messageContent > div:not(.editHint, .specialIcon, .userAvatar) {
     font-weight: 300;
     font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     user-select: text;

@@ -3,7 +3,6 @@
 import { useState, useEffect, ReactElement, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useContextHook from '@/hooks/useContextHook';
-import { Tooltip } from '@/app/app-components';
 import styles from './AppNav.module.css';
 import { motion } from 'framer-motion';
 
@@ -16,10 +15,10 @@ type Props = {
 };
 
 const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
-    const [showTooltip, setShowTooltip] = useState<boolean>(false);
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const pathname = usePathname();
@@ -38,17 +37,8 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
 
     return (
         <div className={styles.navIcon}>
-            <Tooltip
-                show={showTooltip}
-                pos='right'
-                dist={5}
-                sizeBig
-            >
-                {name}
-            </Tooltip>
-
             <div className={styles.marker}>
-                {(showTooltip || active || count) && (
+                {(active || count) && (
                     <motion.span
                         initial={{
                             opacity: 0,
@@ -69,20 +59,22 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
 
             <motion.div
                 className={active ? styles.navIconWrapperActive : styles.navIconWrapper}
-                onMouseEnter={() => {
-                    setShowTooltip(true);
-                    if (!active) {
-                        setMarkHeight(20);
-                    }
+                onMouseEnter={(e) => {
+                    setTooltip({
+                        text: name,
+                        element: e.target,
+                        position: 'right',
+                        gap: 15,
+                        big: true,
+                    });
+                    if (!active) setMarkHeight(20);
                 }}
                 onMouseLeave={() => {
-                    setShowTooltip(false);
-                    if (!active) {
-                        setMarkHeight(count ? 7 : 0);
-                    }
+                    setTooltip(null);
+                    if (!active) setMarkHeight(count ? 7 : 0);
                 }}
                 onClick={() => {
-                    setShowTooltip(false);
+                    setTooltip(null);
                     router.push(link);
                 }}
                 transition={{

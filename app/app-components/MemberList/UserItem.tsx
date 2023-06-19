@@ -1,16 +1,12 @@
 'use client';
 
-import { AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { Avatar } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
-import Image from 'next/image';
 
 const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
-    const { fixedLayer, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
-
+    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const listItemRef = useRef<HTMLLIElement>(null);
 
     return (
@@ -46,20 +42,12 @@ const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
                 <div className={styles.link}>
                     <div className={styles.layout}>
                         <div className={styles.layoutAvatar}>
-                            <Image
-                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
-                                width={32}
-                                height={32}
-                                alt='Avatar'
+                            <Avatar
+                                src={user.avatar}
+                                alt={user.username}
+                                size={32}
+                                status={user.status}
                             />
-
-                            {user.status !== 'Offline' && (
-                                <AvatarStatus
-                                    status={user.status}
-                                    background='var(--background-3)'
-                                    tooltip={true}
-                                />
-                            )}
                         </div>
 
                         <div className={styles.layoutContent}>

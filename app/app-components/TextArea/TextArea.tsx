@@ -1,11 +1,8 @@
-// @ts-nocheck
-
 'use client';
 
 import { useState, useRef, useMemo, useEffect } from 'react';
-import { Icon, Tooltip } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
-import { useRouter } from 'next/navigation';
+import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,39 +14,31 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
         {
             [key: string]: boolean;
         }[]
-    >(false);
+    >([]);
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
-
-    const router = useRouter();
-    const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const textAreaRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (reply) {
             textAreaRef?.current?.focus();
-            moveCursorToEnd();
         }
     }, [reply]);
 
     const pasteText = async () => {
         const text = await navigator.clipboard.readText();
         setMessage((message) => message + text);
-        moveCursorToEnd();
     };
 
     useEffect(() => {
         if (!channel) return;
 
-        const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}')?.message;
-        if (message) {
-            setMessage(message);
-            textAreaRef.current.innerText = message;
-            moveCursorToEnd();
-        }
+        const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}')?.message;
+        if (message) setMessage(message);
 
-        textAreaRef?.current.focus();
+        textAreaRef.current?.focus();
     }, [channel]);
 
     useEffect(() => {
@@ -58,48 +47,22 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
         localStorage.setItem(
             `channel-${channel.id}`,
             JSON.stringify({
-                ...(JSON.parse(localStorage.getItem(`channel-${channel.id}`)) ?? {}),
+                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
                 message: message,
             })
         );
-
-        if (textAreaRef.current.innerHTML.includes('<span>')) {
-            const cursorPosition = window.getSelection().getRangeAt(0).startOffset;
-            textAreaRef.current.innerText = message;
-            moveCursorToEnd();
-        }
     }, [message]);
 
     useEffect(() => {
         if (!edit) return;
-        const text = textAreaRef.current.innerText;
+        const text = textAreaRef.current?.innerText;
 
         if (text !== edit) {
             setMessage(edit);
-            textAreaRef.current.innerText = edit;
-            moveCursorToEnd();
+            const input = textAreaRef.current as HTMLInputElement;
+            input.innerText = '';
         }
     }, [edit]);
-
-    const moveCursorToEnd = () => {
-        textAreaRef.current.focus();
-        if (
-            typeof window.getSelection != 'undefined' &&
-            typeof document.createRange != 'undefined'
-        ) {
-            const range = document.createRange();
-            range.selectNodeContents(textAreaRef.current);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        } else if (typeof document.body.createTextRange != 'undefined') {
-            const textRange = document.body.createTextRange();
-            textRange.moveToElementText(textAreaRef.current);
-            textRange.collapse(false);
-            textRange.select();
-        }
-    };
 
     const sendMessage = async () => {
         if (message.length === 0 && files.length === 0) {
@@ -128,7 +91,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
             waiting: true,
         };
 
-        setMessages((messages) => [...messages, tempMessage]);
+        setMessages((messages: MessageType[]) => [...messages, tempMessage]);
 
         try {
             await fetch(`/api/users/me/channels/${channel.id}/messages`, {
@@ -146,7 +109,8 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                 }),
             });
 
-            textAreaRef.current.innerText = '';
+            const input = textAreaRef.current as HTMLInputElement;
+            input.innerText = '';
             setFiles([]);
 
             if (reply) {
@@ -154,28 +118,43 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                 localStorage.setItem(
                     `channel-${channel.id}`,
                     JSON.stringify({
-                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}'),
+                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
                         reply: null,
                     })
                 );
             }
 
-            // Make message not waiting
-            setMessages((messages) =>
+            // Stop message from being marked as waiting
+            setMessages((messages: MessageType[]) =>
                 messages.map((message) =>
                     message.id === tempId ? { ...message, waiting: false } : message
                 )
             );
         } catch (err) {
             console.error(err);
-            // Edit temp message to add error: true
-            setMessages((messages) =>
+            // Make message marked as error
+            setMessages((messages: MessageType[]) =>
                 messages.map((message) =>
                     message.id === tempId ? { ...message, error: true, waiting: false } : message
                 )
             );
         }
     };
+
+    const FileList = useMemo(
+        () => (
+            <ul className={styles.filesList + ' scrollbar'}>
+                {files?.map((file) => (
+                    <FilePreview
+                        key={uuidv4()}
+                        file={file}
+                        setFiles={setFiles}
+                    />
+                ))}
+            </ul>
+        ),
+        [files]
+    );
 
     const textContainer = useMemo(
         () => (
@@ -193,49 +172,81 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                     <div
                         ref={textAreaRef}
                         className={styles.textContainerInner}
-                        role='textarea'
+                        role='textbox'
                         spellCheck='true'
-                        autoCorrect='off'
-                        aria-multiline='true'
+                        aria-haspopup='listbox'
+                        aria-invalid='false'
                         aria-label={
                             edit
                                 ? 'Edit Message'
                                 : `Message ${friend ? `@${friend.username}` : channel?.name}`
                         }
+                        aria-multiline='true'
+                        aria-required='true'
                         aria-autocomplete='list'
-                        contentEditable='plaintext-only'
+                        autoCorrect='off'
+                        contentEditable='true'
                         onInput={(e) => {
-                            const text = e.target.innerText.toString();
+                            const input = e.target as HTMLDivElement;
+                            const text = input.innerText.toString();
+
                             if (edit) {
                                 setEdit(text);
                                 localStorage.setItem(
-                                    `channel-${router.query.channelID}`,
+                                    `channel-${channel.id}`,
                                     JSON.stringify({
                                         ...JSON.parse(
-                                            localStorage.getItem(
-                                                `channel-${router.query.channelID}`
-                                            ) ?? '{}'
+                                            localStorage.getItem(`channel-${channel.id}`) || '{}'
                                         ),
                                         edit: {
                                             ...JSON.parse(
-                                                localStorage.getItem(
-                                                    `channel-${router.query.channelID}`
-                                                ) ?? '{}'
+                                                localStorage.getItem(`channel-${channel.id}`) ||
+                                                    '{}'
                                             ).edit,
                                             content: text,
                                         },
                                     })
                                 );
+                            } else {
+                                setMessage(text);
                             }
+                        }}
+                        onPaste={(e) => {
+                            e.preventDefault();
+
+                            // Get where the cursor is to insert the text at the right place
+                            const selection = window.getSelection();
+                            const range = selection?.getRangeAt(0);
+                            const start = range?.startOffset;
+                            const end = range?.endOffset;
+
+                            // Convert HTML to plain text
+                            const text = e.clipboardData.getData('text/plain');
+
+                            // Add text to the div at the right place
+                            const input = e.target as HTMLDivElement;
+                            const currentText = input.innerText.toString();
+                            const newText =
+                                currentText.slice(0, start) + text + currentText.slice(end);
+                            input.innerText = newText;
+
+                            // Set the cursor back to the right place
+                            const newRange = document.createRange();
+                            newRange.setStart(input.childNodes[0], start || 0 + text.length);
+                            newRange.collapse(true);
+                            selection?.removeAllRanges();
+                            selection?.addRange(newRange);
+
+                            // Finally, update the state
                             setMessage(text);
                         }}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
+                            if (e.key === 'Enter' && !e.shiftKey && !edit) {
                                 e.preventDefault();
-                                if (edit) return;
                                 sendMessage();
                                 setMessage('');
-                                e.target.innerText = '';
+                                const input = textAreaRef.current as HTMLInputElement;
+                                input.innerText = '';
                             }
                         }}
                         onContextMenu={(e) => {
@@ -326,15 +337,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                     <div className={styles.scrollableContainer + ' scrollbar'}>
                         {files.length > 0 && (
                             <>
-                                <ul className={styles.filesList}>
-                                    {files?.map((file) => (
-                                        <FilePreview
-                                            key={uuidv4()}
-                                            file={file}
-                                            setFiles={setFiles}
-                                        />
-                                    ))}
-                                </ul>
+                                {FileList}
                                 <div className={styles.formDivider} />
                             </>
                         )}
@@ -347,10 +350,12 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                                     accept='image/*'
                                     multiple
                                     onChange={(e) => {
+                                        // @ts-expect-error
                                         const newFiles = Array.from(e.target.files);
                                         if (files.length + newFiles.length > 10) {
                                             return;
                                         }
+                                        // @ts-expect-error
                                         setFiles(files.concat(newFiles).slice(0, 10));
                                     }}
                                     style={{ display: 'none' }}
@@ -397,10 +402,11 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                                             if (edit) return;
                                             sendMessage();
                                             setMessage('');
+                                            // @ts-expect-error
                                             e.target.innerText = '';
                                         }}
+                                        disabled={message.length === 0}
                                         style={{
-                                            disabled: message.length === 0,
                                             cursor:
                                                 message.length === 0 ? 'not-allowed' : 'pointer',
                                             opacity: message.length === 0 ? 0.5 : 1,
@@ -576,7 +582,7 @@ const EmojiPicker = () => {
 };
 
 const FilePreview = ({ file, setFiles }: any) => {
-    const [showTooltip, setShowTooltip] = useState(null);
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
     return useMemo(
         () => (
@@ -599,49 +605,55 @@ const FilePreview = ({ file, setFiles }: any) => {
                         <div>
                             <div
                                 className={styles.fileMenuButton}
-                                onMouseEnter={() => setShowTooltip(1)}
-                                onMouseLeave={() => setShowTooltip(null)}
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Spoiler Attachment',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon
                                     name='eye'
                                     size={20}
                                 />
                             </div>
-                            <Tooltip
-                                show={showTooltip === 1}
-                                pos='top'
-                                dist={5}
-                            >
-                                Spoiler Attachment
-                            </Tooltip>
                         </div>
 
                         <div>
                             <div
                                 className={styles.fileMenuButton}
-                                onMouseEnter={() => setShowTooltip(2)}
-                                onMouseLeave={() => setShowTooltip(null)}
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Modify Attachment',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon
                                     name='edit'
                                     size={20}
                                 />
                             </div>
-                            <Tooltip
-                                show={showTooltip === 2}
-                                pos='top'
-                                dist={5}
-                            >
-                                Modify Attachment
-                            </Tooltip>
                         </div>
 
                         <div>
                             <div
                                 className={styles.fileMenuButton + ' ' + styles.danger}
-                                onMouseEnter={() => setShowTooltip(3)}
-                                onMouseLeave={() => setShowTooltip(null)}
-                                onClick={() => setFiles((files) => files.filter((f) => f !== file))}
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Remove Attachment',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
+                                onClick={() =>
+                                    setFiles((files: any) => files.filter((f: any) => f !== file))
+                                }
                             >
                                 <Icon
                                     name='delete'
@@ -649,19 +661,12 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     fill='var(--error-1)'
                                 />
                             </div>
-                            <Tooltip
-                                show={showTooltip === 3}
-                                pos='top'
-                                dist={5}
-                            >
-                                Remove Attachment
-                            </Tooltip>
                         </div>
                     </div>
                 </div>
             </li>
         ),
-        [showTooltip]
+        [file]
     );
 };
 

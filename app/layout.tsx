@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import SettingsProvider from '@/context/SettingsProvider';
+import TooltipProvider from '@/context/TooltipProvider';
 import { Analytics } from '@vercel/analytics/react';
 import LayerProvider from '@/context/LayerProvider';
 import PersistLogin from '@/hooks/usePersistLogin';
@@ -25,7 +26,9 @@ const RootLayout = ({ children }: { children: ReactElement }): ReactElement => {
                 <AuthProvider>
                     <PersistLogin>
                         <LayerProvider>
-                            <SettingsProvider>{children}</SettingsProvider>
+                            <TooltipProvider>
+                                <SettingsProvider>{children}</SettingsProvider>
+                            </TooltipProvider>
                         </LayerProvider>
                     </PersistLogin>
                 </AuthProvider>

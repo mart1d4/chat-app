@@ -1,23 +1,15 @@
 'use client';
 
-import { AvatarStatus, Tooltip, Icon } from '@/app/app-components';
-import { useState, useRef, ReactElement } from 'react';
+import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { useRef, ReactElement } from 'react';
 import styles from './Channels.module.css';
-import Image from 'next/image';
 
 const UserSection = (): ReactElement => {
-    const [showTooltip, setShowTooltip] = useState<boolean | number>(false);
-
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { setShowSettings }: any = useContextHook({
-        context: 'layer',
-    });
-    const { userSettings, setUserSettings }: any = useContextHook({
-        context: 'settings',
-    });
+    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const { setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     const userSection = useRef<HTMLDivElement>(null);
 
@@ -29,16 +21,11 @@ const UserSection = (): ReactElement => {
                     className={styles.avatarWrapper}
                 >
                     <div>
-                        <Image
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`}
-                            width={32}
-                            height={32}
-                            alt='Avatar'
-                            draggable={false}
-                        />
-                        <AvatarStatus
-                            status={auth?.user?.status}
-                            background={'var(--background-2)'}
+                        <Avatar
+                            src={auth.user.avatar}
+                            alt={auth.user.username}
+                            size={32}
+                            status={auth.user.status}
                         />
                     </div>
 
@@ -50,9 +37,19 @@ const UserSection = (): ReactElement => {
 
                 <div className={styles.toolbar}>
                     <button
-                        onMouseEnter={() => setShowTooltip(1)}
-                        onMouseLeave={() => setShowTooltip(false)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: userSettings.microphone ? 'Mute' : 'Unmute',
+                                element: e.target,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                         onClick={() => {
+                            setTooltip((prev: any) => ({
+                                ...prev,
+                                text: !userSettings.microphone ? 'Mute' : 'Unmute',
+                            }));
+
                             if (!userSettings?.microphone && !userSettings?.sound) {
                                 setUserSettings({
                                     ...userSettings,
@@ -78,9 +75,6 @@ const UserSection = (): ReactElement => {
                         }}
                         className={userSettings?.microphone ? '' : styles.cut}
                     >
-                        <Tooltip show={showTooltip === 1}>
-                            {userSettings?.microphone ? 'Mute' : 'Unmute'}
-                        </Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
                                 name={userSettings?.microphone ? 'mic' : 'micCut'}
@@ -90,9 +84,19 @@ const UserSection = (): ReactElement => {
                     </button>
 
                     <button
-                        onMouseEnter={() => setShowTooltip(2)}
-                        onMouseLeave={() => setShowTooltip(false)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: userSettings.sound ? 'Deafen' : 'Undeafen',
+                                element: e.target,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                         onClick={() => {
+                            setTooltip((prev: any) => ({
+                                ...prev,
+                                text: !userSettings.sound ? 'Deafen' : 'Undeafen',
+                            }));
+
                             if (userSettings?.microphone && userSettings?.sound) {
                                 setUserSettings({
                                     ...userSettings,
@@ -116,9 +120,6 @@ const UserSection = (): ReactElement => {
                         }}
                         className={userSettings?.sound ? '' : styles.cut}
                     >
-                        <Tooltip show={showTooltip === 2}>
-                            {userSettings?.sound ? 'Deafen' : 'Undeafen'}
-                        </Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
                                 name={userSettings?.sound ? 'headset' : 'headsetCut'}
@@ -128,11 +129,15 @@ const UserSection = (): ReactElement => {
                     </button>
 
                     <button
-                        onMouseEnter={() => setShowTooltip(3)}
-                        onMouseLeave={() => setShowTooltip(false)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: 'User Settings',
+                                element: e.target,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                         onClick={() => setShowSettings(true)}
                     >
-                        <Tooltip show={showTooltip === 3}>User Settings</Tooltip>
                         <div className={styles.toolbar}>
                             <Icon
                                 name='settings'

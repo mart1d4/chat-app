@@ -114,7 +114,7 @@ const UserProfile = (): ReactElement => {
                                 />
                                 <AvatarStatus
                                     status={
-                                        user.friendIds.includes(auth.user.id) || isSameUser()
+                                        user.friendIds?.includes(auth.user.id) || isSameUser()
                                             ? user.status
                                             : 'Offline'
                                     }

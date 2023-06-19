@@ -37,12 +37,12 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
             name = filteredMembers.map((user: any) => user.username).join(', ');
         }
 
-        let src = `${process.env.NEXT_PUBLIC_CDN_URL}${channel?.icon}/`;
+        let src = channel?.icon;
         if (channel.type === 'DM') {
             const user = channel.recipients.find(
                 (user: any) => user.id !== auth.user.id
             ) as CleanOtherUserType;
-            src = `${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`;
+            src = user.avatar;
         }
 
         setChannel({

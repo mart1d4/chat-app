@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useRef, useMemo, useEffect, ReactElement } from 'react';
-import { Tooltip, Icon, AvatarStatus } from '@/app/app-components';
+import { Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './AppHeader.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
 const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
-    const [showTooltip, setShowTooltip] = useState<null | string>(null);
     const [friend, setFriend] = useState<undefined | CleanOtherUserType>();
 
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
     const { setUserProfile, fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
@@ -141,25 +141,30 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
                     ) : (
                         <>
                             <div className={styles.icon}>
-                                <img
-                                    src={channel.icon}
+                                <Avatar
+                                    src={channel.icon as string}
                                     alt={channel.name}
+                                    size={24}
+                                    status={channel.type === 'DM' ? friend?.status : undefined}
                                 />
-
-                                <div>
-                                    {channel?.type === 'DM' && (
-                                        <AvatarStatus
-                                            status={friend?.status || 'Offline'}
-                                            background='var(--background-4)'
-                                            onlyStatus
-                                        />
-                                    )}
-                                </div>
                             </div>
 
                             <h1
                                 className={styles.titleFriend}
-                                onClick={() => setUserProfile({ user: friend })}
+                                onMouseEnter={(e) => {
+                                    if (channel.type !== 'DM') return;
+                                    setTooltip({
+                                        text: channel.name,
+                                        element: e.currentTarget,
+                                        position: 'bottom',
+                                        gap: 5,
+                                    });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                                onClick={() => {
+                                    if (channel.type !== 'DM') return;
+                                    setUserProfile({ user: friend });
+                                }}
                             >
                                 {channel.name}
                             </h1>
@@ -201,61 +206,46 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
 
                     <div
                         className={styles.toolbarIcon}
-                        onMouseEnter={() => setShowTooltip('inbox')}
-                        onMouseLeave={() => setShowTooltip(null)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: 'Inbox',
+                                element: e.currentTarget,
+                                position: 'bottom',
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                     >
                         <Icon name='inbox' />
-
-                        <Tooltip
-                            show={showTooltip === 'inbox'}
-                            pos='bottom'
-                            dist={5}
-                        >
-                            Inbox
-                        </Tooltip>
                     </div>
                 </div>
             </div>
         ),
-        [channel, userSettings, showTooltip]
+        [channel, userSettings]
     );
 };
 
 const ToolbarIcon = ({ item }: any) => {
-    const [showTooltip, setShowTooltip] = useState(false);
-
-    const { fixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const element = useRef(null);
 
     return (
         <div
             ref={element}
             className={styles.toolbarIcon}
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-            onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                item.func(e, element.current);
-            }}
+            onMouseEnter={(e) =>
+                setTooltip({
+                    text: item.name,
+                    element: e.currentTarget,
+                    position: 'bottom',
+                })
+            }
+            onMouseLeave={() => setTooltip(null)}
+            onClick={(e) => item.func(e, element.current)}
         >
             <Icon
                 name={item.icon}
                 fill={item?.iconFill && item.iconFill}
             />
-
-            <Tooltip
-                show={
-                    showTooltip &&
-                    (item.name === 'Pinned Messages' || item.name === 'Add Friends to DM'
-                        ? fixedLayer?.element !== element.current
-                        : true)
-                }
-                pos='bottom'
-                dist={5}
-            >
-                {item.name}
-            </Tooltip>
         </div>
     );
 };

@@ -14,7 +14,7 @@ type UserType = {
     customStatus?: string;
     password: string;
     refreshToken?: string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
     notifications: {
@@ -71,7 +71,7 @@ type CleanUserType = {
     accentColor?: string;
     description?: string;
     customStatus?: string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
     notifications: {
@@ -119,7 +119,7 @@ type CleanOtherUserType = {
     accentColor?: string;
     description?: string;
     customStatus?: string;
-    status: 'Online' | 'Offline' | 'Idle' | 'Do_Not_Disturb' | 'Invisible';
+    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb' | 'Invisible';
     system: boolean;
 
     guildIds: string[];

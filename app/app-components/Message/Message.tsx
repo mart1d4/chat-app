@@ -1,25 +1,12 @@
 'use client';
 
-import { Tooltip, TextArea, Icon } from '@/app/app-components';
+import { TextArea, Icon, Avatar } from '@/app/app-components';
 import { useEffect, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import useOnScreen from '@/hooks/useOnScreen';
 import styles from './Message.module.css';
 import Image from 'next/image';
 
-const Message = ({
-    params,
-    message,
-    setMessages,
-    start,
-    edit,
-    setEdit,
-    reply,
-    setReply,
-    noInt,
-    lastMessage,
-}: any) => {
-    const [showTooltip, setShowTooltip] = useState<number | boolean>(false);
+const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) => {
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
     const [editedMessage, setEditedMessage] = useState<string>(edit?.content ?? message.content);
@@ -27,9 +14,10 @@ const Message = ({
     let noInteraction = noInt || false;
 
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-    const userImageRef = useRef(null);
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { auth }: any = useContextHook({ context: 'auth' });
     const userImageReplyRef = useRef(null);
+    const userImageRef = useRef(null);
 
     // useEffect(() => {
     //     const notifications = auth.user.notifications.map((notification: any) => {
@@ -56,9 +44,11 @@ const Message = ({
             if (e.key === 'Escape') {
                 setEdit(null);
                 localStorage.setItem(
-                    `channel-${params.channelId}`,
+                    `channel-${message.channel[0].id}`,
                     JSON.stringify({
-                        ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
+                        ...JSON.parse(
+                            localStorage.getItem(`channel-${message.channel[0].id}`) || ''
+                        ),
                         edit: null,
                     })
                 );
@@ -75,15 +65,11 @@ const Message = ({
 
     useEffect(() => {
         const handleShift = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') {
-                setShift(true);
-            }
+            if (e.key === 'Shift') setShift(true);
         };
 
         const handleShiftUp = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') {
-                setShift(false);
-            }
+            if (e.key === 'Shift') setShift(false);
         };
 
         document.addEventListener('keydown', handleShift);
@@ -105,11 +91,9 @@ const Message = ({
                 },
             });
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     };
-
-    const olderThan2Days = (date: Date) => {};
 
     const sendEditedMessage = async () => {
         if (
@@ -120,9 +104,9 @@ const Message = ({
             setEdit(null);
 
             localStorage.setItem(
-                `channel-${params.channelId}`,
+                `channel-${message.channel[0].id}`,
                 JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
+                    ...JSON.parse(localStorage.getItem(`channel-${message.channel[0].id}`) || ''),
                     edit: null,
                 })
             );
@@ -144,14 +128,14 @@ const Message = ({
 
             setEdit(null);
             localStorage.setItem(
-                `channel-${params.channelId}`,
+                `channel-${message.channel[0].id}`,
                 JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${params.channelId}`) || '{}'),
+                    ...JSON.parse(localStorage.getItem(`channel-${message.channel[0].id}`) || ''),
                     edit: null,
                 })
             );
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     };
 
@@ -277,8 +261,22 @@ const Message = ({
 
                             <span
                                 className={styles.contentTimestamp}
-                                onMouseEnter={() => setShowTooltip(0)}
-                                onMouseLeave={() => setShowTooltip(false)}
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: new Intl.DateTimeFormat('en-US', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: 'numeric',
+                                            minute: 'numeric',
+                                            second: 'numeric',
+                                        }).format(new Date(message.createdAt)),
+                                        element: e.currentTarget,
+                                        delay: 1000,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
                             >
                                 <span style={{ userSelect: 'text' }}>
                                     {new Intl.DateTimeFormat('en-US', {
@@ -290,22 +288,6 @@ const Message = ({
                                         minute: 'numeric',
                                         second: 'numeric',
                                     }).format(new Date(message.createdAt))}
-
-                                    <Tooltip
-                                        show={showTooltip === 0}
-                                        dist={3}
-                                        delay={1}
-                                    >
-                                        {new Intl.DateTimeFormat('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                            second: 'numeric',
-                                        }).format(new Date(message.createdAt))}
-                                    </Tooltip>
                                 </span>
                             </span>
                         </div>
@@ -375,26 +357,22 @@ const Message = ({
                 <div className={styles.messageStart}>
                     {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
-                            <Image
-                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${message.messageReference.author.avatar}/`}
-                                alt='Avatar'
-                                width={16}
-                                height={16}
+                            <div
+                                className={styles.userAvatar}
                                 onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
                                     if (fixedLayer?.element === userImageReplyRef.current) {
                                         setFixedLayer(null);
-                                    } else {
-                                        setFixedLayer({
-                                            type: 'usercard',
-                                            event: e,
-                                            user: message.messageReference?.author,
-                                            element: userImageReplyRef.current,
-                                            firstSide: 'right',
-                                            gap: 10,
-                                        });
+                                        return;
                                     }
+
+                                    setFixedLayer({
+                                        type: 'usercard',
+                                        event: e,
+                                        user: message.messageReference?.author,
+                                        element: userImageReplyRef.current,
+                                        firstSide: 'right',
+                                        gap: 10,
+                                    });
                                 }}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
@@ -405,7 +383,13 @@ const Message = ({
                                         user: message.messageReference?.author,
                                     });
                                 }}
-                            />
+                            >
+                                <Avatar
+                                    src={message.author.avatar}
+                                    alt={message.author.username}
+                                    size={16}
+                                />
+                            </div>
 
                             <span>{message.messageReference?.author?.username}</span>
 
@@ -424,25 +408,23 @@ const Message = ({
                             }
                         }}
                     >
-                        <Image
+                        <div
                             ref={userImageRef}
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${message.author.avatar}/`}
-                            alt='Avatar'
-                            width={40}
-                            height={40}
+                            className={styles.userAvatar}
                             onClick={(e) => {
                                 if (fixedLayer?.element === userImageRef.current) {
                                     setFixedLayer(null);
-                                } else {
-                                    setFixedLayer({
-                                        type: 'usercard',
-                                        event: e,
-                                        user: message?.author,
-                                        element: userImageRef.current,
-                                        firstSide: 'right',
-                                        gap: 10,
-                                    });
+                                    return;
                                 }
+
+                                setFixedLayer({
+                                    type: 'usercard',
+                                    event: e,
+                                    user: message?.author,
+                                    element: userImageRef.current,
+                                    firstSide: 'right',
+                                    gap: 10,
+                                });
                             }}
                             onDoubleClick={(e) => e.stopPropagation()}
                             onContextMenu={(e) => {
@@ -454,13 +436,34 @@ const Message = ({
                                     user: message.author,
                                 });
                             }}
-                        />
+                        >
+                            <Avatar
+                                src={message.author.avatar}
+                                alt={message.author.username}
+                                size={40}
+                            />
+                        </div>
+
                         <h3>
                             <span className={styles.titleUsername}>{message.author?.username}</span>
                             <span
                                 className={styles.titleTimestamp}
-                                onMouseEnter={() => setShowTooltip(1)}
-                                onMouseLeave={() => setShowTooltip(false)}
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: new Intl.DateTimeFormat('en-US', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: 'numeric',
+                                            minute: 'numeric',
+                                            second: 'numeric',
+                                        }).format(new Date(message.createdAt)),
+                                        element: e.currentTarget,
+                                        delay: 1000,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
                             >
                                 {new Intl.DateTimeFormat('en-US', {
                                     month: 'numeric',
@@ -469,20 +472,6 @@ const Message = ({
                                     hour: 'numeric',
                                     minute: 'numeric',
                                 }).format(new Date(message.createdAt))}
-                                <Tooltip
-                                    show={showTooltip === 1}
-                                    delay={1}
-                                >
-                                    {new Intl.DateTimeFormat('en-US', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        second: 'numeric',
-                                    }).format(new Date(message.createdAt))}
-                                </Tooltip>
                             </span>
                         </h3>
                         {edit?.messageId === message.id ? (
@@ -497,11 +486,11 @@ const Message = ({
                                         onClick={() => {
                                             setEdit(null);
                                             localStorage.setItem(
-                                                `channel-${params.channelId}`,
+                                                `channel-${message.channel[0].id}`,
                                                 JSON.stringify({
                                                     ...JSON.parse(
                                                         localStorage.getItem(
-                                                            `channel-${params.channelId}`
+                                                            `channel-${message.channel[0].id}`
                                                         ) || '{}'
                                                     ),
                                                     edit: null,
@@ -527,26 +516,25 @@ const Message = ({
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
-                                            onMouseEnter={() => setShowTooltip(2)}
-                                            onMouseLeave={() => setShowTooltip(false)}
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: new Intl.DateTimeFormat('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: 'numeric',
+                                                        second: 'numeric',
+                                                    }).format(new Date(message.createdAt)),
+                                                    element: e.currentTarget,
+                                                    delay: 1000,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
                                         >
                                             (edited)
                                         </span>
-
-                                        <Tooltip
-                                            show={showTooltip === 2}
-                                            delay={1}
-                                        >
-                                            {new Intl.DateTimeFormat('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: 'numeric',
-                                                minute: 'numeric',
-                                                second: 'numeric',
-                                            }).format(new Date(message.createdAt))}
-                                        </Tooltip>
                                     </div>
                                 )}
                             </div>
@@ -565,31 +553,30 @@ const Message = ({
                     >
                         {(hover || menu?.message === message?.id) &&
                             message?.type !== 'RECIPIENT_ADD' && (
-                                <span
-                                    className={styles.messageTimestamp}
-                                    onMouseEnter={() => setShowTooltip(3)}
-                                    onMouseLeave={() => setShowTooltip(false)}
-                                >
-                                    <span>
+                                <span className={styles.messageTimestamp}>
+                                    <span
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: new Intl.DateTimeFormat('en-US', {
+                                                    weekday: 'long',
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    hour: 'numeric',
+                                                    minute: 'numeric',
+                                                    second: 'numeric',
+                                                }).format(new Date(message.createdAt)),
+                                                element: e.currentTarget,
+                                                gap: 2,
+                                                delay: 1000,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                    >
                                         {new Intl.DateTimeFormat('en-US', {
                                             hour: 'numeric',
                                             minute: 'numeric',
                                         }).format(new Date(message.createdAt))}
-                                        <Tooltip
-                                            show={showTooltip === 3}
-                                            dist={3}
-                                            delay={1}
-                                        >
-                                            {new Intl.DateTimeFormat('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: 'numeric',
-                                                minute: 'numeric',
-                                                second: 'numeric',
-                                            }).format(new Date(message.createdAt))}
-                                        </Tooltip>
                                     </span>
                                 </span>
                             )}
@@ -605,11 +592,11 @@ const Message = ({
                                         onClick={() => {
                                             setEdit(null);
                                             localStorage.setItem(
-                                                `channel-${params.channelId}`,
+                                                `channel-${message.channel[0].id}`,
                                                 JSON.stringify({
                                                     ...JSON.parse(
                                                         localStorage.getItem(
-                                                            `channel-${params.channelId}`
+                                                            `channel-${message.channel[0].id}`
                                                         ) || '{}'
                                                     ),
                                                     edit: null,
@@ -635,38 +622,51 @@ const Message = ({
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
-                                            onMouseEnter={() => setShowTooltip(2)}
-                                            onMouseLeave={() => setShowTooltip(false)}
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: new Intl.DateTimeFormat('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: 'numeric',
+                                                        second: 'numeric',
+                                                    }).format(new Date(message.updateddAt)),
+                                                    element: e.currentTarget,
+                                                    delay: 1000,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
                                         >
                                             (edited)
                                         </span>
-
-                                        <Tooltip
-                                            show={showTooltip === 2}
-                                            delay={1}
-                                        >
-                                            {new Intl.DateTimeFormat('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: 'numeric',
-                                                minute: 'numeric',
-                                                second: 'numeric',
-                                            }).format(new Date(message.updateddAt))}
-                                        </Tooltip>
                                     </div>
                                 )}
                                 {message?.type === 'RECIPIENT_ADD' && (
                                     <span
                                         className={styles.contentTimestamp}
-                                        onMouseEnter={() => setShowTooltip(3)}
-                                        onMouseLeave={() => setShowTooltip(false)}
-                                        style={{
-                                            userSelect: 'text',
-                                        }}
+                                        style={{ userSelect: 'text' }}
                                     >
-                                        <span>
+                                        <span
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: new Intl.DateTimeFormat('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: 'numeric',
+                                                        second: 'numeric',
+                                                    }).format(new Date(message.createdAt)),
+                                                    element: e.currentTarget,
+                                                    gap: 2,
+                                                    delay: 1000,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                        >
                                             {new Intl.DateTimeFormat('en-US', {
                                                 month: 'numeric',
                                                 day: 'numeric',
@@ -674,21 +674,6 @@ const Message = ({
                                                 hour: 'numeric',
                                                 minute: 'numeric',
                                             }).format(new Date(message.createdAt))}
-                                            <Tooltip
-                                                show={showTooltip === 3}
-                                                dist={3}
-                                                delay={1}
-                                            >
-                                                {new Intl.DateTimeFormat('en-US', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                    hour: 'numeric',
-                                                    minute: 'numeric',
-                                                    second: 'numeric',
-                                                }).format(new Date(message.createdAt))}
-                                            </Tooltip>
                                         </span>
                                     </span>
                                 )}
@@ -702,11 +687,11 @@ const Message = ({
 };
 
 const MessageMenu = ({ message, start, functions }: any) => {
-    const [showTooltip, setShowTooltip] = useState<0 | 1 | 2 | 3>(0);
     const [menuSender, setMenuSender] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { setFixedLayer, fixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { auth }: any = useContextHook({ context: 'auth' });
     const menuButtonRef = useRef(null);
 
     useEffect(() => {
@@ -723,46 +708,46 @@ const MessageMenu = ({ message, start, functions }: any) => {
                 <div className={styles.buttons}>
                     <div
                         role='button'
-                        onMouseEnter={() => setShowTooltip(1)}
-                        onMouseLeave={() => setShowTooltip(0)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: 'Add Reaction',
+                                element: e.currentTarget,
+                                gap: 3,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                     >
-                        <Tooltip
-                            show={showTooltip === 1}
-                            dist={5}
-                        >
-                            Add Reaction
-                        </Tooltip>
                         <Icon name='addReaction' />
                     </div>
 
                     {menuSender ? (
                         <div
                             role='button'
-                            onMouseEnter={() => setShowTooltip(2)}
-                            onMouseLeave={() => setShowTooltip(0)}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: 'Edit',
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
                             onClick={() => functions.editMessage()}
                         >
-                            <Tooltip
-                                show={showTooltip === 2}
-                                dist={5}
-                            >
-                                Edit
-                            </Tooltip>
                             <Icon name='edit' />
                         </div>
                     ) : (
                         <div
                             role='button'
-                            onMouseEnter={() => setShowTooltip(2)}
-                            onMouseLeave={() => setShowTooltip(0)}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: 'Reply',
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
                             onClick={() => functions.replyToMessage()}
                         >
-                            <Tooltip
-                                show={showTooltip === 2}
-                                dist={5}
-                            >
-                                Reply
-                            </Tooltip>
                             <Icon name='reply' />
                         </div>
                     )}
@@ -770,8 +755,14 @@ const MessageMenu = ({ message, start, functions }: any) => {
                     <div
                         ref={menuButtonRef}
                         role='button'
-                        onMouseEnter={() => setShowTooltip(3)}
-                        onMouseLeave={() => setShowTooltip(0)}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: 'More',
+                                element: e.currentTarget,
+                                gap: 3,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
                         onClick={(e) => {
                             e.stopPropagation();
                             if (fixedLayer?.element === menuButtonRef.current) {
@@ -793,16 +784,10 @@ const MessageMenu = ({ message, start, functions }: any) => {
                                     editMessage: functions.editMessage,
                                     replyToMessage: functions.replyToMessage,
                                 });
-                                setShowTooltip(0);
+                                setTooltip(null);
                             }
                         }}
                     >
-                        <Tooltip
-                            show={showTooltip === 3}
-                            dist={5}
-                        >
-                            More
-                        </Tooltip>
                         <Icon name='dots' />
                     </div>
                 </div>

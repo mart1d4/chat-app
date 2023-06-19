@@ -19,6 +19,8 @@ import AddFriend from './AddFriend/AddFriend';
 import UserList from './UserList/UserList';
 import AppHeader from './AppHeader/AppHeader';
 import LoadingDots from './LoadingDots/LoadingDots';
+import Avatar from './Avatar/Avatar';
+import TooltipLayer from './TooltipLayer/TooltipLayer';
 
 export {
     AppNav,
@@ -42,4 +44,6 @@ export {
     UserList,
     AppHeader,
     LoadingDots,
+    Avatar,
+    TooltipLayer,
 };

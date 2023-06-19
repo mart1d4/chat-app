@@ -2,19 +2,12 @@
 
 'use client';
 
+import { useEffect, useCallback, useState, useMemo, ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './Tooltip.module.css';
-import {
-    useEffect,
-    useCallback,
-    useState,
-    useMemo,
-    ReactElement,
-    ReactNode,
-} from 'react';
 
 type Props = {
-    children: ReactNode;
+    children: ReactElement | string;
     show: boolean;
     pos?: 'top' | 'bottom' | 'left' | 'right';
     dist?: number;
@@ -70,36 +63,24 @@ const Tooltip = ({
             case 'top':
                 setTooltipPos({
                     top: parentRect?.top - containerRect?.height - distance,
-                    left:
-                        parentRect?.left -
-                        containerRect?.width / 2 +
-                        parentRect?.width / 2,
+                    left: parentRect?.left - containerRect?.width / 2 + parentRect?.width / 2,
                 });
                 break;
             case 'bottom':
                 setTooltipPos({
                     top: parentRect.bottom + distance,
-                    left:
-                        parentRect.left -
-                        containerRect.width / 2 +
-                        parentRect.width / 2,
+                    left: parentRect.left - containerRect.width / 2 + parentRect.width / 2,
                 });
                 break;
             case 'left':
                 setTooltipPos({
-                    top:
-                        parentRect.top -
-                        containerRect.height +
-                        parentRect.height / 2,
+                    top: parentRect.top - containerRect.height + parentRect.height / 2,
                     left: parentRect.left - containerRect.width - distance,
                 });
                 break;
             case 'right':
                 setTooltipPos({
-                    top:
-                        parentRect.top +
-                        containerRect.height -
-                        parentRect.height / 2,
+                    top: parentRect.top + containerRect.height - parentRect.height / 2,
                     left: parentRect.left + parentRect.width + distance,
                 });
                 break;
@@ -152,9 +133,7 @@ const Tooltip = ({
                         onClick={(e) => e.preventDefault()}
                     >
                         <motion.span
-                            className={
-                                sizeBig ? styles.tooltipBig : styles.tooltip
-                            }
+                            className={sizeBig ? styles.tooltipBig : styles.tooltip}
                             initial={{
                                 opacity: 0,
                                 scale: 0.95,
@@ -179,8 +158,7 @@ const Tooltip = ({
                             }}
                             style={{
                                 maxWidth: big ? '190px' : '',
-                                backgroundColor:
-                                    background ?? 'var(--background-dark)',
+                                backgroundColor: background ?? 'var(--background-dark)',
                             }}
                         >
                             {children}
@@ -196,16 +174,7 @@ const Tooltip = ({
                 )}
             </AnimatePresence>
         ),
-        [
-            show,
-            children,
-            position,
-            tooltipPos,
-            showArrow,
-            big,
-            sizeBig,
-            background,
-        ]
+        [show, children, position, tooltipPos, showArrow, big, sizeBig, background]
     );
 };
 

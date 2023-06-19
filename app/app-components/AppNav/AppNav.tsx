@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { usePathname } from 'next/navigation';
 import styles from './AppNav.module.css';
@@ -440,19 +440,16 @@ const AppNav = (): ReactElement => {
     const chatappIcon = (
         <svg
             xmlns='http://www.w3.org/2000/svg'
-            width='32'
-            height='32'
+            width='24'
+            height='24'
             viewBox='0 0 24 24'
-            strokeWidth='1.5'
-            stroke='currentColor'
-            fill='currentColor'
+            strokeWidth='2'
             strokeLinecap='round'
             strokeLinejoin='round'
         >
-            <path d='M5 11h14v-3h-14z' />
-            <path d='M17.5 11l-1.5 10h-8l-1.5 -10' />
-            <path d='M6 8v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1' />
-            <path d='M15 5v-2' />
+            <path d='M8 9h8' />
+            <path d='M8 13h6' />
+            <path d='M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z' />
         </svg>
     );
 
@@ -470,7 +467,7 @@ const AppNav = (): ReactElement => {
                 ))}
 
                 <NavIcon
-                    name='Friends'
+                    name='Direct Messages'
                     link='/channels/me'
                     svg={chatappIcon}
                 />

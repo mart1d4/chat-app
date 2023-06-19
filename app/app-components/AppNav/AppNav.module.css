@@ -59,8 +59,8 @@
 
 .navIconWrapper path,
 .navIconWrapperActive path {
-    fill: var(--foreground-2);
-    stroke: var(--background-dark);
+    fill: var(--foreground-1);
+    stroke: var(--foreground-1);
 }
 
 .marker {

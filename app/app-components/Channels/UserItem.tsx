@@ -2,8 +2,8 @@
 
 import { ReactElement, useMemo, useEffect, useState } from 'react';
 import { leaveChannel } from '@/lib/api-functions/channels';
-import { Icon, AvatarStatus } from '@/app/app-components';
 import { useRouter, usePathname } from 'next/navigation';
+import { Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserItem.module.css';
 import Image from 'next/image';
@@ -104,33 +104,19 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                             <div className={styles.layout}>
                                 <div className={styles.layoutAvatar}>
                                     {channel.type === 'GROUP_DM' ? (
-                                        <Image
-                                            src={`${process.env.NEXT_PUBLIC_CDN_URL}${channel.icon}/`}
-                                            width={32}
-                                            height={32}
-                                            alt='Avatar'
-                                            draggable={false}
+                                        <Avatar
+                                            src={channel.icon || ''}
+                                            alt={channel.name}
+                                            size={32}
                                         />
                                     ) : (
-                                        <>
-                                            <Image
-                                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user?.avatar}/`}
-                                                width={32}
-                                                height={32}
-                                                alt='Avatar'
-                                            />
-                                            {user?.status && user.status !== 'Offline' && (
-                                                <AvatarStatus
-                                                    status={user.status}
-                                                    background={
-                                                        pathname === `/channels/me/${channel.id}`
-                                                            ? 'var(--background-5)'
-                                                            : 'var(--background-3)'
-                                                    }
-                                                    tooltip={true}
-                                                />
-                                            )}
-                                        </>
+                                        <Avatar
+                                            src={user?.avatar || ''}
+                                            alt={user?.username || ''}
+                                            size={32}
+                                            status={user?.status}
+                                            tooltip={true}
+                                        />
                                     )}
                                 </div>
 

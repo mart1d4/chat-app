@@ -331,8 +331,12 @@ const MyAccount = () => {
                             type='file'
                             accept='image/*'
                             onChange={(e) => {
-                                const newFile = e.target.files ? e.target.files[0] : null;
-                                if (!newFile) return;
+                                const file = e.target.files ? e.target.files[0] : null;
+                                if (!file) return;
+                                // Change newfile name to 'image'
+                                const newFile = new File([file], 'image', {
+                                    type: file.type,
+                                });
                                 setAvatar(newFile);
                             }}
                         />

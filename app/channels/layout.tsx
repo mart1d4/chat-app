@@ -6,6 +6,7 @@ import {
     Popup,
     FixedLayer,
     Loading,
+    TooltipLayer,
 } from '@/app/app-components';
 import { ReactElement, ReactNode } from 'react';
 import styles from './Layout.module.css';
@@ -25,6 +26,7 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
                 <Settings />
                 <FixedLayer />
                 <UserProfile />
+                <TooltipLayer />
 
                 <div className={styles.appWrapper}>
                     <div className={styles.channelsContainer}>

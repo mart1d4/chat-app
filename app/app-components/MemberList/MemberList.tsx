@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, ReactElement } from 'react';
-import { AvatarStatus } from '@/app/app-components';
+import { Avatar, AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './MemberList.module.css';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,7 +39,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
     useEffect(() => {
         if (channel?.type === 'DM') {
             // @ts-ignore
-            setFriend(channel?.recipients.find((recipient) => recipient.id !== auth?.user.id));
+            setFriend(channel?.recipients.find((recipient) => recipient.id !== auth.user.id));
         }
     }, []);
 
@@ -54,23 +54,17 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                         style={{ backgroundColor: friend.primaryColor }}
                     >
                         <div className={styles.userAvatar}>
-                            <Image
-                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
-                                alt='User Avatar'
-                                width={80}
-                                height={80}
-                            />
-
-                            <AvatarStatus
+                            <Avatar
+                                src={friend.avatar}
+                                alt={friend.username}
+                                size={80}
                                 status={
-                                    auth?.user.friendIds.includes(friend.id)
+                                    auth.user.friendIds?.includes(friend.id)
                                         ? friend.status
                                         : 'Offline'
                                 }
-                                background='var(--background-2)'
-                                tooltipDist={2}
-                                tooltip
-                                mid
+                                statusSize={64}
+                                tooltip={true}
                             />
                         </div>
                     </div>

@@ -9,12 +9,12 @@ const avatars = [
     '220b2392-c4c5-4226-8b91-2b60c5a13d0f',
     '51073721-c1b9-4d47-a2f3-34f0fbb1c0a8',
 ];
-const banners = ['#5865F2', '#57F287', '#50555E', '#ED4245', '#FEE75C'];
+const colors = ['#5865F2', '#3BA45C', '#737C89', '#ED4245', '#FAA51A'];
 
-const getRandomAvatar = (): { avatar: string; banner: string } => {
+const getRandomAvatar = (): { avatar: string; color: string } => {
     const index = Math.floor(Math.random() * avatars.length);
 
-    return { avatar: avatars[index], banner: banners[index] };
+    return { avatar: avatars[index], color: colors[index] };
 };
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -82,14 +82,14 @@ export async function POST(req: Request): Promise<NextResponse> {
         }
 
         const hash = await bcrypt.hash(password, 10);
-        const { avatar, banner } = getRandomAvatar();
+        const { avatar, color } = getRandomAvatar();
 
         await prisma.user.create({
             data: {
                 username: username,
                 password: hash,
                 avatar: avatar,
-                banner: banner,
+                primaryColor: color,
                 notifications: [
                     {
                         type: 'welcome',
