@@ -60,12 +60,7 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
               {
                   name: 'Pinned Messages',
                   icon: 'pin',
-                  //   @ts-ignore
-                  func: (e, element) => {
-                      if (fixedLayer.element === element) {
-                          setFixedLayer(null);
-                          return;
-                      }
+                  func: (e: MouseEvent, element: Node) => {
                       setFixedLayer({
                           type: 'popout',
                           event: e,
@@ -81,21 +76,16 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
               {
                   name: 'Add Friends to DM',
                   icon: 'addUser',
-                  //   @ts-ignore
-                  func: (e, element) => {
-                      if (fixedLayer.element === element) {
-                          setFixedLayer(null);
-                      } else {
-                          setFixedLayer({
-                              type: 'popout',
-                              event: e,
-                              gap: 10,
-                              element: element,
-                              firstSide: 'bottom',
-                              secondSide: 'right',
-                              channel: channel,
-                          });
-                      }
+                  func: (e: MouseEvent, element: Node) => {
+                      setFixedLayer({
+                          type: 'popout',
+                          event: e,
+                          gap: 10,
+                          element: element,
+                          firstSide: 'bottom',
+                          secondSide: 'right',
+                          channel: channel,
+                      });
                   },
               },
               {
@@ -257,27 +247,38 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
 };
 
 const ToolbarIcon = ({ item }: any) => {
+    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const element = useRef(null);
 
     return (
         <div
-            ref={element}
             className={
                 item.disabled ? styles.toolbarIcon + ' ' + styles.disabled : styles.toolbarIcon
             }
-            onMouseEnter={(e) =>
+            onMouseEnter={(e) => {
+                if (fixedLayer?.element === e.currentTarget) return;
                 setTooltip({
                     text: item.disabled ? item.name + ' (Unavailable)' : item.name,
                     element: e.currentTarget,
                     position: 'bottom',
                     gap: 5,
-                })
-            }
+                });
+            }}
             onMouseLeave={() => setTooltip(null)}
             onClick={(e) => {
                 if (item.disabled) return;
-                item.func(e, element.current);
+                if (fixedLayer?.element !== e.currentTarget) {
+                    setTooltip(null);
+                    item.func(e, e.currentTarget);
+                } else {
+                    setTooltip({
+                        text: item.disabled ? item.name + ' (Unavailable)' : item.name,
+                        element: e.currentTarget,
+                        position: 'bottom',
+                        gap: 5,
+                    });
+                    setFixedLayer(null);
+                }
             }}
         >
             <Icon

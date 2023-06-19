@@ -10,10 +10,9 @@ const FixedLayer = (): ReactElement => {
     const [positions, setPositions] = useState({});
     const [container, setContainer] = useState({});
     const [resetPosition, setResetPosition] = useState(false);
+    const [node, setNode] = useState(null);
 
-    const { fixedLayer, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const type = fixedLayer?.type;
     const event = fixedLayer?.event;
     const element = fixedLayer?.element;
@@ -26,6 +25,7 @@ const FixedLayer = (): ReactElement => {
             if (!fixedLayer) return;
 
             if (node !== null) {
+                setNode(node);
                 setTimeout(() => {
                     setContainer({
                         width: node.children[0]?.offsetWidth,
@@ -150,16 +150,14 @@ const FixedLayer = (): ReactElement => {
     }, [container, fixedLayer]);
 
     useEffect(() => {
-        if (!fixedLayer) {
-            setPositions({});
-            setContainer(null);
-            return;
-        }
+        if (!fixedLayer) return;
 
-        const handleClickOutside = (e) => {
-            // setPositions({});
-            // setContainer(null);
-            // setFixedLayer(null);
+        const handleClick = (e) => {
+            if (!node?.contains(e.target)) {
+                setPositions({});
+                setContainer(null);
+                setFixedLayer(null);
+            }
         };
 
         const handleKeyDown = (e) => {
@@ -168,14 +166,14 @@ const FixedLayer = (): ReactElement => {
             }
         };
 
-        document.addEventListener('click', handleClickOutside);
+        document.addEventListener('click', handleClick);
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.removeEventListener('click', handleClickOutside);
+            document.removeEventListener('click', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [fixedLayer]);
+    }, [fixedLayer, node]);
 
     return (
         <div
