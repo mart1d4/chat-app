@@ -14,7 +14,7 @@ const HomePage = () => {
         >
             <Avatar
                 src={'https://ucarecdn.com/47e3b152-66e4-457f-a3ad-f9728f02fade/'}
-                size={256}
+                size={120}
                 alt={'Avatar'}
                 status='Offline'
                 tooltip={true}
