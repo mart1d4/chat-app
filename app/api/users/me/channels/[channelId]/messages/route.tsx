@@ -10,10 +10,10 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
     //     skip: 0,
     //     limit: 50,
     // };
-    const skip = 0;
-    const limit = 50;
-
-    console.log(skip, limit);
+    const { skip, limit } = {
+        skip: 0,
+        limit: 50,
+    };
 
     const headersList = headers();
     const senderId = headersList.get('userId') || '';

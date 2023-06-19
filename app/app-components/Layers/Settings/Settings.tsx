@@ -1,14 +1,13 @@
 'use client';
 
-import { AvatarStatus, Tooltip, Icon, LoadingDots } from '@/app/app-components';
 import { ReactElement, useEffect, useState, useRef } from 'react';
+import { Avatar, Icon, LoadingDots } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
 import useLogout from '@/hooks/useLogout';
 import { v4 as uuidv4 } from 'uuid';
-import Image from 'next/image';
 
 const Settings = ({ tab }: any): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>(tab ?? 'My Account');
@@ -192,55 +191,42 @@ const Settings = ({ tab }: any): ReactElement => {
 export default Settings;
 
 const MyAccount = () => {
-    const [tooltip, setTooltip] = useState({
-        show: false,
-        text: 'Copy user ID',
-        success: false,
-    });
+    const [showTooltip, setShowTooltip] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [avatar, setAvatar] = useState<any>(null);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
+    const usernameRef = useRef<HTMLDivElement>(null);
 
     const copyToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(auth.user.id);
 
+            setShowTooltip(true);
             setTooltip({
-                ...tooltip,
-                text: 'Copied!',
-                success: true,
+                text: 'Copied to clipboard',
+                element: usernameRef.current,
+                color: 'var(--success-1)',
             });
-
-            setTimeout(() => {
-                setTooltip({
-                    ...tooltip,
-                    show: false,
-                    text: 'Copy user ID',
-                    success: false,
-                });
-            }, 2000);
         } catch (err) {
             console.error(err);
 
+            setShowTooltip(true);
             setTooltip({
-                ...tooltip,
-                text: 'Failed to copy',
-                success: false,
+                text: 'Failed to copy to clipboard',
+                element: usernameRef.current,
+                color: 'var(--error-1)',
             });
-
-            setTimeout(() => {
-                setTooltip({
-                    ...tooltip,
-                    show: false,
-                    text: 'Copy user ID',
-                    success: false,
-                });
-            }, 2000);
         }
+
+        setTimeout(() => {
+            setTooltip(null);
+            setShowTooltip(false);
+        }, 5000);
     };
 
     const fields = [
@@ -288,29 +274,45 @@ const MyAccount = () => {
     return (
         <>
             <div>
-                {avatar && (
-                    <div className={styles.saveAlert}>
-                        <p>Careful — you have unsaved changes!</p>
+                <AnimatePresence>
+                    {avatar && (
+                        <motion.div
+                            className={styles.saveAlert}
+                            initial={{
+                                transform: 'translateY(80px)',
+                            }}
+                            animate={{
+                                transform: 'translateY(0)',
+                            }}
+                            exit={{
+                                transform: 'translateY(80px)',
+                            }}
+                            transition={{
+                                duration: 0.1,
+                            }}
+                        >
+                            <p>Careful — you have unsaved changes!</p>
 
-                        <div>
-                            <button
-                                className='button underline'
-                                onClick={() => {
-                                    setAvatar(null);
-                                }}
-                            >
-                                Reset
-                            </button>
+                            <div>
+                                <button
+                                    className='button underline'
+                                    onClick={() => {
+                                        setAvatar(null);
+                                    }}
+                                >
+                                    Reset
+                                </button>
 
-                            <button
-                                className='button green'
-                                onClick={() => handleAvatarSubmit()}
-                            >
-                                {isLoading ? <LoadingDots /> : 'Save Changes'}
-                            </button>
-                        </div>
-                    </div>
-                )}
+                                <button
+                                    className='button green'
+                                    onClick={() => handleAvatarSubmit()}
+                                >
+                                    {isLoading ? <LoadingDots /> : 'Save Changes'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className={styles.sectionTitle}>
                     <h2 className={styles.titleBig}>My Account</h2>
@@ -329,14 +331,25 @@ const MyAccount = () => {
                             ref={avatarInputRef}
                             className={styles.avatarInput}
                             type='file'
-                            accept='image/*'
+                            accept='image/png, image/jpeg, image/jpg, image/gif, image/webp'
                             onChange={(e) => {
                                 const file = e.target.files ? e.target.files[0] : null;
                                 if (!file) return;
-                                // Change newfile name to 'image'
+
+                                // Run checks
+                                const maxFileSize = 1024 * 1024 * 1; // 10MB
+                                if (file.size > maxFileSize) {
+                                    return alert('File size is too large. Max 10MB');
+                                }
+
+                                if (!file.type.includes('image')) {
+                                    return alert('File type is not supported');
+                                }
+
                                 const newFile = new File([file], 'image', {
                                     type: file.type,
                                 });
+
                                 setAvatar(newFile);
                             }}
                         />
@@ -347,51 +360,32 @@ const MyAccount = () => {
                                 avatarInputRef.current?.click();
                             }}
                         >
-                            <Image
-                                src={
-                                    avatar
-                                        ? URL.createObjectURL(avatar)
-                                        : `${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`
-                                }
-                                alt='User Avatar'
-                                width={80}
-                                height={80}
-                                draggable={false}
-                            />
-
-                            <AvatarStatus
-                                status={auth?.user.status}
-                                background='var(--background-2)'
-                                mid
+                            <Avatar
+                                src={avatar ? URL.createObjectURL(avatar) : auth.user.avatar}
+                                relativeSrc={avatar !== null}
+                                alt={auth.user.username}
+                                size={80}
+                                status={auth.user.status}
                             />
                         </div>
 
                         <div
+                            ref={usernameRef}
                             className={styles.username}
-                            onMouseEnter={() =>
+                            onMouseEnter={(e) => {
+                                if (showTooltip) return;
                                 setTooltip({
-                                    ...tooltip,
-                                    show: true,
-                                })
-                            }
-                            onMouseLeave={() =>
-                                setTooltip({
-                                    ...tooltip,
-                                    show: false,
-                                })
-                            }
+                                    text: 'Copy user ID',
+                                    element: e.currentTarget,
+                                });
+                            }}
+                            onMouseLeave={() => {
+                                if (showTooltip) return;
+                                setTooltip(null);
+                            }}
                             onClick={() => copyToClipboard()}
                         >
                             {auth?.user?.username}
-
-                            <Tooltip
-                                show={tooltip?.show}
-                                pos='top'
-                                background={tooltip?.success ? 'var(--success-light)' : ''}
-                                arrow
-                            >
-                                {tooltip?.text}
-                            </Tooltip>
                         </div>
 
                         <button className='blue'>Edit User Profile</button>

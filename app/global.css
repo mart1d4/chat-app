@@ -59,6 +59,8 @@
         --background-hover-2: hsl(228, 6%, 32.5%, 0.6);
         --background-hover-3: hsl(218, 7%, 29%);
         --background-hover-4: hsla(0, 0%, 1%, 0.06);
+        --background-hover-dark-1: hsla(0, 0%, 0%, 0.3);
+        --background-hover-dark-2: hsla(0, 0%, 0%, 0.6);
         --background-active: hsl(218, 8%, 28%);
         --background-message-highlight: hsl(235, 86.1%, 77.5%, 0.08);
         --background-message-highlight-hover: hsl(235, 85.6%, 64.7%, 0.1);
@@ -107,6 +109,8 @@
         --background-hover-2: hsl(220, 7%, 25%);
         --background-hover-3: hsl(218, 7%, 29%);
         --background-hover-4: hsl(220, 8%, 21%);
+        --background-hover-dark-1: hsla(0, 0%, 0%, 0.3);
+        --background-hover-dark-2: hsla(0, 0%, 0%, 0.6);
         --background-active: hsl(218, 8%, 28%);
         --foreground-1: hsl(0, 0%, 100%);
         --foreground-2: hsl(210, 3%, 87%);

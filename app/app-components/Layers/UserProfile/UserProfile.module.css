@@ -31,7 +31,7 @@
     position: relative;
 }
 
-.topSection > div:first-child {
+.topSection > .avatar {
     position: absolute;
     top: 30px;
     left: 15px;
@@ -39,17 +39,28 @@
     height: 120px;
     border-radius: 50%;
     border: 7px solid var(--background-2);
+    background-color: var(--background-3);
     box-sizing: content-box;
     user-select: none;
 }
 
-.topSection > div:first-child > img {
+.editProfileButton {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 5px;
     border-radius: 50%;
-    object-fit: cover;
-    background-color: var(--background-2);
+    background-color: var(--background-hover-dark-1);
+    transition: background-color 0.2s ease;
+    color: var(--foreground-2);
+}
+
+.editProfileButton:hover {
+    background-color: var(--background-hover-dark-2);
 }
 
 .contentSection {
@@ -291,21 +302,22 @@
     margin-left: 8px;
 }
 
-.topSectionToolbar > div:last-child > .moreButton {
+.topSectionToolbar .moreButton {
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: 8px;
     cursor: pointer;
     padding: 4px;
+    color: var(--foreground-3);
 }
 
-.topSectionToolbar svg:hover path:last-child {
-    fill: var(--foreground-2);
+.topSectionToolbar .moreButton:hover {
+    color: var(--foreground-2);
 }
 
-.topSectionToolbar svg:active path:last-child {
-    fill: var(--foreground-1);
+.topSectionToolbar .moreButton:active {
+    color: var(--foreground-1);
 }
 
 .contentUserFriend {

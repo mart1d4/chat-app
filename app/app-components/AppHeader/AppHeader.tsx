@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
     const [friend, setFriend] = useState<undefined | CleanOtherUserType>();
+    const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
@@ -26,6 +27,24 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
         }
     }, [channel]);
 
+    useEffect(() => {
+        const width: number = window.innerWidth;
+
+        if (width >= 1200) setWidthLimitPassed(true);
+        else setWidthLimitPassed(false);
+
+        const handleResize = () => {
+            const width: number = window.innerWidth;
+
+            if (width >= 1200) setWidthLimitPassed(true);
+            else setWidthLimitPassed(false);
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const tabs = [
         { name: 'Online', func: 'online' },
         { name: 'All', func: 'all' },
@@ -43,7 +62,7 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
                   icon: 'pin',
                   //   @ts-ignore
                   func: (e, element) => {
-                      if (fixedLayer?.element === element) {
+                      if (fixedLayer.element === element) {
                           setFixedLayer(null);
                           return;
                       }
@@ -64,7 +83,7 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
                   icon: 'addUser',
                   //   @ts-ignore
                   func: (e, element) => {
-                      if (fixedLayer?.element === element) {
+                      if (fixedLayer.element === element) {
                           setFixedLayer(null);
                       } else {
                           setFixedLayer({
@@ -81,15 +100,12 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
               },
               {
                   name:
-                      channel?.type === 'DM'
-                          ? userSettings?.showUsers
-                              ? 'Hide User Profile'
-                              : 'Show User Profile'
-                          : userSettings?.showUsers
-                          ? 'Hide Member List'
-                          : 'Show Member List',
+                      userSettings.showUsers && widthLimitPassed
+                          ? 'Hide User Profile'
+                          : `Show ${channel.type === 'DM' ? ' User Profile' : 'Member List'}`,
                   icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
-                  iconFill: userSettings?.showUsers && 'var(--foreground-1)',
+                  active: userSettings.showUsers,
+                  disabled: widthLimitPassed === false,
                   func: () =>
                       setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers }),
               },
@@ -198,7 +214,6 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
                                 <Icon
                                     name='search'
                                     size={16}
-                                    fill='var(--foreground-4)'
                                 />
                             </div>
                         </div>
@@ -211,16 +226,33 @@ const AppHeader = ({ channel }: { channel?: ChannelType }): ReactElement => {
                                 text: 'Inbox',
                                 element: e.currentTarget,
                                 position: 'bottom',
+                                gap: 5,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
                     >
                         <Icon name='inbox' />
                     </div>
+
+                    <a
+                        href='/en-US/support'
+                        className={styles.toolbarIcon}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text: 'Help',
+                                element: e.currentTarget,
+                                position: 'bottom',
+                                gap: 5,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
+                    >
+                        <Icon name='help' />
+                    </a>
                 </div>
             </div>
         ),
-        [channel, userSettings]
+        [channel, friend, userSettings, widthLimitPassed]
     );
 };
 
@@ -231,20 +263,26 @@ const ToolbarIcon = ({ item }: any) => {
     return (
         <div
             ref={element}
-            className={styles.toolbarIcon}
+            className={
+                item.disabled ? styles.toolbarIcon + ' ' + styles.disabled : styles.toolbarIcon
+            }
             onMouseEnter={(e) =>
                 setTooltip({
-                    text: item.name,
+                    text: item.disabled ? item.name + ' (Unavailable)' : item.name,
                     element: e.currentTarget,
                     position: 'bottom',
+                    gap: 5,
                 })
             }
             onMouseLeave={() => setTooltip(null)}
-            onClick={(e) => item.func(e, element.current)}
+            onClick={(e) => {
+                if (item.disabled) return;
+                item.func(e, element.current);
+            }}
         >
             <Icon
                 name={item.icon}
-                fill={item?.iconFill && item.iconFill}
+                fill={item.active && !item.disabled && 'var(--foreground-2)'}
             />
         </div>
     );

@@ -1,5 +1,4 @@
-.liContainer,
-.liContainerActive {
+.liContainer {
     position: relative;
     height: 62px;
     opacity: 1;
@@ -13,8 +12,7 @@
     cursor: pointer;
 }
 
-.liContainer:hover,
-.liContainerActive {
+.liContainer:hover {
     border-radius: 8px;
     margin: 0 10px 0 20px;
     padding: 16px 10px;
@@ -22,14 +20,8 @@
     border-color: transparent;
 }
 
-.liContainer:hover + .liContainer,
-.liContainerActive + .liContainer {
+.liContainer:hover + .liContainer {
     border-color: transparent;
-}
-
-.liContainer:hover .actions > button,
-.liContainerActive .actions > button {
-    background-color: var(--background-1);
 }
 
 .li {
@@ -50,31 +42,6 @@
     height: 32px;
     margin-right: 12px;
     position: relative;
-    border-radius: 50%;
-}
-
-.avatarWrapper img {
-    border-radius: 50%;
-    user-select: none;
-}
-
-.avatarStatus {
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: var(--background-4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatarStatus > div {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
 }
 
 .text {
@@ -118,10 +85,19 @@
     height: 36px;
     padding: 0;
     border-radius: 50%;
+    color: var(--foreground-3);
     background-color: var(--background-3);
     transition: none;
 }
 
+.liContainer:hover .actions > button {
+    background-color: var(--background-1);
+}
+
+.actions > button:hover {
+    color: var(--foreground-1);
+}
+
 .actions > button:active {
-    background-color: var(--background-dark) !important;
+    background-color: var(--background-dark);
 }

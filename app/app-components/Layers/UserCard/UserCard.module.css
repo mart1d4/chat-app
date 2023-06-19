@@ -25,17 +25,8 @@
     height: 80px;
     border-radius: 50%;
     border: 6px solid var(--background-2);
-    box-sizing: content-box;
-    user-select: none;
-}
-
-.topSection > div > img {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    object-fit: cover;
     background-color: var(--background-2);
+    box-sizing: content-box;
     cursor: pointer;
 }
 

@@ -1,25 +1,24 @@
 'use client';
 
-import { addFriend, getFriends, removeFriend } from '@/lib/api-functions/users';
-import { AvatarStatus, Icon, Tooltip } from '@/app/app-components';
+import { addFriend, removeFriend } from '@/lib/api-functions/users';
 import { useEffect, useRef, useState, ReactElement } from 'react';
 import { createChannel } from '@/lib/api-functions/channels';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserProfile.module.css';
 import { v4 as uuidv4 } from 'uuid';
-import Image from 'next/image';
 
 const UserProfile = (): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
     const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
     const [note, setNote] = useState<string>('');
-    const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { userProfile, setUserProfile, setFixedLayer }: any = useContextHook({
         context: 'layer',
     });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { auth }: any = useContextHook({ context: 'auth' });
     const token = auth.accessToken;
 
     const cardRef = useRef<HTMLDivElement>(null);
@@ -27,24 +26,26 @@ const UserProfile = (): ReactElement => {
 
     const user: null | CleanOtherUserType = userProfile?.user;
 
-    const isSameUser = () => {
-        return user?.id === auth.user.id;
+    const isSameUser = () => user?.id === auth.user.id;
+
+    const shouldShowContent = () => {
+        return (
+            auth.user.friendIds?.includes(user?.id) ||
+            auth.user.requestsReceivedIds?.includes(user?.id) ||
+            isSameUser()
+        );
     };
 
     useEffect(() => {
         if (!user) return;
 
         if (!isSameUser()) {
-            const getMutuals = async () => {
-                const friends = auth.user.friends || [];
-                const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
-                setMutualFriends(mutuals);
-            };
-
-            getMutuals();
+            const friends = auth.user.friends || [];
+            const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
+            setMutualFriends(mutuals);
         }
 
-        if (userProfile?.focusNote) noteRef.current?.focus();
+        if (userProfile.focusNote) noteRef.current?.focus();
 
         setActiveNavItem(0);
         setNote('');
@@ -52,16 +53,12 @@ const UserProfile = (): ReactElement => {
 
     useEffect(() => {
         const handleClick = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setUserProfile(null);
-            }
+            if (e.key === 'Escape') setUserProfile(null);
         };
 
         window.addEventListener('keydown', handleClick);
 
-        return () => {
-            window.removeEventListener('keydown', handleClick);
-        };
+        return () => window.removeEventListener('keydown', handleClick);
     }, [userProfile]);
 
     const sectionNavItems = isSameUser()
@@ -105,23 +102,31 @@ const UserProfile = (): ReactElement => {
                             className={styles.topSection}
                             style={{ backgroundColor: user.primaryColor }}
                         >
-                            <div>
-                                <Image
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
-                                    alt='User Avatar'
-                                    width={120}
-                                    height={120}
-                                />
-                                <AvatarStatus
-                                    status={
-                                        user.friendIds?.includes(auth.user.id) || isSameUser()
-                                            ? user.status
-                                            : 'Offline'
-                                    }
-                                    background='var(--background-2)'
-                                    size
+                            {isSameUser() && (
+                                <div
+                                    className={styles.editProfileButton}
+                                    aria-label='Edit Profile'
+                                    role='button'
+                                    onMouseEnter={(e) => {
+                                        setTooltip({
+                                            text: 'Edit Profile',
+                                            element: e.currentTarget,
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    <Icon name='edit' />
+                                </div>
+                            )}
+
+                            <div className={styles.avatar}>
+                                <Avatar
+                                    src={user.avatar}
+                                    alt={user.username}
+                                    size={120}
+                                    status={shouldShowContent() ? user.status : 'Offline'}
                                     tooltip={true}
-                                    tooltipDist={5}
+                                    tooltipGap={5}
                                 />
                             </div>
 
@@ -179,7 +184,7 @@ const UserProfile = (): ReactElement => {
                                                             }
                                                             onClick={async () => {
                                                                 if (
-                                                                    auth.user.requestSentIds.includes(
+                                                                    auth.user.requestSentIds?.includes(
                                                                         user.id
                                                                     )
                                                                 ) {
@@ -190,36 +195,30 @@ const UserProfile = (): ReactElement => {
                                                                     user.username
                                                                 );
                                                             }}
-                                                            onMouseEnter={() =>
-                                                                setShowTooltip(true)
-                                                            }
-                                                            onMouseLeave={() =>
-                                                                setShowTooltip(false)
-                                                            }
+                                                            onMouseEnter={(e) => {
+                                                                if (
+                                                                    !auth.user.requestSentIds?.includes(
+                                                                        user.id
+                                                                    )
+                                                                )
+                                                                    return;
+                                                                setTooltip({
+                                                                    text: 'You sent a friend request to this user.',
+                                                                    element: e.currentTarget,
+                                                                    gap: 5,
+                                                                });
+                                                            }}
+                                                            onMouseLeave={() => setTooltip(null)}
                                                         >
                                                             Send Friend Request
                                                         </button>
-
-                                                        {auth.user.requestSentIds.includes(
-                                                            user.id
-                                                        ) && (
-                                                            <Tooltip
-                                                                show={showTooltip}
-                                                                // @ts-expect-error
-                                                                position='top'
-                                                                dist={5}
-                                                                big
-                                                            >
-                                                                You sent a friend request to this
-                                                                user.
-                                                            </Tooltip>
-                                                        )}
                                                     </div>
                                                 )}
                                             </>
                                         )}
 
                                         <div
+                                            className={styles.moreButton}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setFixedLayer({
@@ -229,7 +228,6 @@ const UserProfile = (): ReactElement => {
                                                     userprofile: true,
                                                 });
                                             }}
-                                            className={styles.moreButton}
                                         >
                                             <Icon name='more' />
                                         </div>
@@ -241,8 +239,7 @@ const UserProfile = (): ReactElement => {
                         <div className={styles.contentSection}>
                             <div className={styles.contentHeader}>
                                 <div className={styles.username}>{user.username}</div>
-                                {((user.customStatus && auth.user.friendIds.includes(user.id)) ||
-                                    (user.customStatus && isSameUser())) && (
+                                {user.customStatus && shouldShowContent() && (
                                     <div className={styles.customStatus}>{user.customStatus}</div>
                                 )}
                             </div>
@@ -284,9 +281,7 @@ const UserProfile = (): ReactElement => {
                             >
                                 {activeNavItem === 0 && (
                                     <div>
-                                        {((user.description &&
-                                            auth.user.friendIds.includes(user.id)) ||
-                                            (user.description && isSameUser())) && (
+                                        {user.description && shouldShowContent() && (
                                             <>
                                                 <h1>About Me</h1>
                                                 <div className={styles.contentUserDescription}>
@@ -307,12 +302,7 @@ const UserProfile = (): ReactElement => {
                                         </div>
 
                                         <h1>Note</h1>
-                                        <div
-                                            className={styles.contentNote}
-                                            // style={{
-                                            //     height: noteRef.current?.scrollHeight || 44,
-                                            // }}
-                                        >
+                                        <div className={styles.contentNote}>
                                             <textarea
                                                 ref={noteRef}
                                                 value={note}
@@ -357,21 +347,13 @@ const UserProfile = (): ReactElement => {
     );
 };
 
-const FriendItem = ({ friend }: any): ReactElement => {
-    const [hover, setHover] = useState<boolean>(false);
-
-    const { setUserProfile, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+const FriendItem = ({ friend }: { friend: CleanOtherUserType }): ReactElement => {
+    const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     return (
         <div
             className={styles.contentUserFriend}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            onClick={() => {
-                setUserProfile({ user: friend });
-            }}
+            onClick={() => setUserProfile({ user: friend })}
             onContextMenu={(e) => {
                 e.preventDefault();
                 setFixedLayer({
@@ -382,16 +364,11 @@ const FriendItem = ({ friend }: any): ReactElement => {
             }}
         >
             <div>
-                <Image
-                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
-                    alt='User Avatar'
-                    width={40}
-                    height={40}
-                />
-
-                <AvatarStatus
-                    status={friend?.status}
-                    background={hover ? 'var(--background-3)' : 'var(--background-dark)'}
+                <Avatar
+                    src={friend.avatar}
+                    alt={friend.username}
+                    size={40}
+                    status={friend.status}
                 />
             </div>
 

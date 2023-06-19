@@ -16,23 +16,16 @@
     min-height: 120px;
 }
 
-.userAvatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    border: 7px solid var(--background-2);
-    background-color: var(--background-2);
+.asideHeader > div {
     position: absolute;
     top: 65px;
     left: 15px;
-}
-
-.userAvatar > img {
-    width: 102%;
-    height: 102%;
-    transform: translate(-1%, -1%);
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    user-select: none;
+    border: 6px solid var(--background-2);
+    background-color: var(--background-2);
+    box-sizing: content-box;
 }
 
 .asideContent {

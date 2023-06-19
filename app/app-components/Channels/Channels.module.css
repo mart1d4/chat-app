@@ -127,11 +127,12 @@
     margin-left: 0;
     margin-right: 2px;
     display: block;
+    color: var(--foreground-3);
     cursor: pointer;
 }
 
 .title svg:hover polygon {
-    fill: var(--foreground-2);
+    color: var(--foreground-1);
 }
 
 .userSectionContainer {

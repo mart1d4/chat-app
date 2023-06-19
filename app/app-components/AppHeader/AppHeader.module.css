@@ -159,10 +159,16 @@
     margin: 0 8px;
     cursor: pointer;
     border-radius: 4px;
+    color: var(--foreground-3);
 }
 
-.toolbarIcon:hover path {
-    fill: var(--foreground-2);
+.toolbarIcon.disabled {
+    cursor: default;
+    color: var(--foreground-5);
+}
+
+.toolbarIcon:not(.disabled):hover path {
+    color: var(--foreground-2);
 }
 
 .search {

@@ -22,9 +22,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
 
     return (
         <li
-            className={
-                fixedLayer?.user === user || liHover ? styles.liContainerActive : styles.liContainer
-            }
+            className={styles.liContainer}
             onClick={async () => {
                 if (content !== 'online' && content !== 'all') return;
                 await createChannel(token, [user.id]);
@@ -85,7 +83,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     setTooltip({
                                         text: 'Message',
                                         position: 'top',
-                                        element: e.target,
+                                        element: e.currentTarget,
                                         gap: 3,
                                     })
                                 }
@@ -110,7 +108,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseEnter={(e) =>
                                     setTooltip({
                                         text: 'More',
-                                        element: e.target,
+                                        element: e.currentTarget,
                                         gap: 3,
                                     })
                                 }
@@ -135,7 +133,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     onMouseEnter={(e) =>
                                         setTooltip({
                                             text: 'Accept',
-                                            element: e.target,
+                                            element: e.currentTarget,
                                             gap: 3,
                                         })
                                     }
@@ -156,7 +154,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseEnter={(e) =>
                                     setTooltip({
                                         text: user.req === 'Sent' ? 'Cancel' : 'Ignore',
-                                        element: e.target,
+                                        element: e.currentTarget,
                                         gap: 3,
                                     })
                                 }
@@ -179,7 +177,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                             onMouseEnter={(e) =>
                                 setTooltip({
                                     text: 'Unblock',
-                                    element: e.target,
+                                    element: e.currentTarget,
                                     gap: 3,
                                 })
                             }

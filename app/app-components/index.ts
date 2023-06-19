@@ -16,7 +16,7 @@ import TextArea from './TextArea/TextArea';
 import MessageSkeleton from './MessageSkeleton/MessageSkeleton';
 import MemberList from './MemberList/MemberList';
 import AddFriend from './AddFriend/AddFriend';
-import UserList from './UserList/UserList';
+import UserLists from './UserLists/UserLists';
 import AppHeader from './AppHeader/AppHeader';
 import LoadingDots from './LoadingDots/LoadingDots';
 import Avatar from './Avatar/Avatar';
@@ -41,7 +41,7 @@ export {
     MessageSkeleton,
     MemberList,
     AddFriend,
-    UserList,
+    UserLists,
     AppHeader,
     LoadingDots,
     Avatar,

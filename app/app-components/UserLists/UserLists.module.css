@@ -6,7 +6,7 @@
     position: relative;
 }
 
-.searchBarContainer {
+.searchBar {
     margin: 16px 20px 8px 30px;
     border-radius: 4px;
     overflow: hidden;
@@ -15,7 +15,7 @@
     flex: none;
 }
 
-.searchBarInner {
+.searchBar > div {
     position: relative;
     display: flex;
     flex-wrap: wrap;
@@ -24,7 +24,7 @@
     flex: 1 1 auto;
 }
 
-.searchBarInner input {
+.searchBar > div > input {
     line-height: 32px;
     height: 30px;
     padding: 0 8px;
@@ -35,11 +35,11 @@
     min-width: 48px;
     margin: 1px;
     outline: none;
-    color: var(--foreground-3);
+    color: var(--foreground-2);
 }
 
-.searchBarInner input::placeholder {
-    user-select: none;
+.searchBar > div > input::placeholder {
+    color: var(--foreground-4);
 }
 
 .inputButton {
@@ -48,6 +48,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--foreground-3);
 }
 
 .title {
@@ -100,6 +101,7 @@
     flex: 0 1 auto;
     line-height: 20px;
     text-align: center;
+    font-weight: 500;
     color: var(--foreground-5);
     margin-top: 8px;
 }

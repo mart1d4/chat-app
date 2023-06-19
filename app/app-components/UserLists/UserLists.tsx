@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
-import styles from './UserList.module.css';
+import styles from './UserLists.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Image from 'next/image';
@@ -13,7 +13,7 @@ const contentData: contentType = {
         src: '/assets/add-friend.svg',
         width: 376,
         height: 162,
-        description: "Wumpus is waiting on friends. You don't have to though!",
+        description: "We are waiting on friends. You don't have to though!",
         match: 'friends',
         title: 'All Friends',
     },
@@ -21,7 +21,7 @@ const contentData: contentType = {
         src: '/assets/no-online.svg',
         width: 421,
         height: 218,
-        description: "No one's around to play with Wumpus.",
+        description: "No one's around to play with us.",
         match: 'online friends',
         title: 'Online',
     },
@@ -29,7 +29,7 @@ const contentData: contentType = {
         src: '/assets/no-pending.svg',
         width: 415,
         height: 200,
-        description: "There are no pending requests. Here's Wumpus for now.",
+        description: "There are no pending requests. Here's us for now.",
         match: 'pending requests',
         title: 'Pending',
     },
@@ -37,9 +37,17 @@ const contentData: contentType = {
         src: '/assets/no-blocked.svg',
         width: 433,
         height: 232,
-        description: "You can't unblock the Wumpus.",
+        description: "You can't unblock us.",
         match: 'blocked users',
         title: 'Blocked',
+    },
+    noSearch: {
+        src: '/assets/no-online.svg',
+        width: 421,
+        height: 218,
+        description: "We looked, but couldn't find anyone with that name.",
+        match: 'friends',
+        title: 'All Friends',
     },
 };
 
@@ -58,14 +66,13 @@ type Props = {
     content: string;
 };
 
-const UserLists = ({ content }: Props): ReactNode => {
+const UserLists = ({ content }: Props): ReactElement => {
     const [search, setSearch] = useState<string>('');
     const [list, setList] = useState<CleanOtherUserType[]>([]);
     const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const token = auth.accessToken;
+    const { auth }: any = useContextHook({ context: 'auth' });
     const searchBar = useRef<HTMLInputElement>(null);
 
     const pasteText = async () => {
@@ -135,11 +142,11 @@ const UserLists = ({ content }: Props): ReactNode => {
         }
     }, [list, search]);
 
-    const contentComponent = useMemo(
+    const UserItems = useMemo(
         () => (
             <div className={styles.content}>
-                <div className={styles.searchBarContainer}>
-                    <div className={styles.searchBarInner}>
+                <div className={styles.searchBar}>
+                    <div>
                         <input
                             ref={searchBar}
                             placeholder='Search'
@@ -181,7 +188,6 @@ const UserLists = ({ content }: Props): ReactNode => {
                 <ul className={styles.listContainer + ' scrollbar'}>
                     {filteredList.length &&
                         filteredList?.map((user) => (
-                            // @ts-ignore
                             <UserItem
                                 key={uuidv4()}
                                 user={user}
@@ -194,59 +200,75 @@ const UserLists = ({ content }: Props): ReactNode => {
         [filteredList]
     );
 
-    if (!content) return null;
-
-    return !list?.length ? (
-        <div className={styles.content}>
-            <div className={styles.noData}>
-                <Image
-                    src={contentData[content].src}
-                    alt='No Data'
-                    width={contentData[content].width}
-                    height={contentData[content].height}
-                    priority
-                />
-
-                <div>{contentData[content].description}</div>
-            </div>
-        </div>
-    ) : !filteredList?.length && search?.length ? (
-        <div className={styles.content}>
-            <div className={styles.searchBarContainer}>
-                <div className={styles.searchBarInner}>
-                    <input
-                        ref={searchBar}
-                        placeholder='Search'
-                        aria-label='Search'
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+    if (list.length === 0) {
+        return (
+            <div className={styles.content}>
+                <div className={styles.noData}>
+                    <Image
+                        src={contentData[content].src}
+                        alt='No Users'
+                        width={contentData[content].width}
+                        height={contentData[content].height}
+                        priority
                     />
 
-                    <div
-                        className={styles.inputButton}
-                        role='button'
-                        style={{ cursor: search.length ? 'pointer' : 'text' }}
-                        onClick={() => {
-                            setSearch('');
-                            searchBar.current?.focus();
-                        }}
-                        tabIndex={0}
-                    >
-                        <Icon
-                            name={search.length ? 'cross' : 'search'}
-                            size={20}
-                        />
-                    </div>
+                    <div>{contentData[content].description}</div>
                 </div>
             </div>
+        );
+    }
 
-            <h2 className={styles.title}>
-                Your search for "{search}" did not match any {contentData[content].match}.
-            </h2>
-        </div>
-    ) : (
-        contentComponent
-    );
+    if (filteredList.length === 0 && search.length > 0) {
+        return (
+            <div className={styles.content}>
+                <div className={styles.searchBar}>
+                    <div>
+                        <input
+                            ref={searchBar}
+                            placeholder='Search'
+                            aria-label='Search'
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+
+                        <div
+                            className={styles.inputButton}
+                            role='button'
+                            style={{ cursor: search.length ? 'pointer' : 'text' }}
+                            onClick={() => {
+                                setSearch('');
+                                searchBar.current?.focus();
+                            }}
+                            tabIndex={0}
+                        >
+                            <Icon
+                                name={search.length ? 'cross' : 'search'}
+                                size={20}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <h2 className={styles.title}>
+                    {contentData[content]?.title} — {filteredList.length}
+                </h2>
+
+                <div className={styles.noData}>
+                    <Image
+                        src={contentData.noSearch.src}
+                        alt='Nobody found with that username'
+                        width={contentData.noSearch.width}
+                        height={contentData.noSearch.height}
+                        priority
+                    />
+
+                    <div>{contentData.noSearch.description}</div>
+                </div>
+            </div>
+        );
+    }
+
+    return UserItems;
 };
 
 export default UserLists;

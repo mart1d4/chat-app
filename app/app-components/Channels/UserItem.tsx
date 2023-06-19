@@ -33,17 +33,13 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
 
     if (special) {
         return (
-            <li
+            <Link
+                href={`/channels/me`}
                 className={styles.liContainer}
-                onClick={() => router.push('/channels/me')}
-                style={
-                    pathname === '/channels/me'
-                        ? {
-                              backgroundColor: 'var(--background-5)',
-                              color: 'var(--foreground-1)',
-                          }
-                        : {}
-                }
+                style={{
+                    backgroundColor: pathname === '/channels/me' ? 'var(--background-5)' : '',
+                    color: pathname === '/channels/me' ? 'var(--foreground-1)' : '',
+                }}
             >
                 <div className={styles.liWrapper}>
                     <div className={styles.linkFriends}>
@@ -73,7 +69,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                         )}
                     </div>
                 </div>
-            </li>
+            </Link>
         );
     } else if (channel) {
         return useMemo(

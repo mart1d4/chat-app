@@ -153,6 +153,7 @@
     max-width: 740px;
     min-width: 460px;
     min-height: 100%;
+    overflow: hidden;
 }
 
 .closeButton {
@@ -288,17 +289,11 @@
     height: 90px;
     border-radius: 50%;
     border: 5px solid var(--background-2);
+    background-color: var(--background-1);
     position: absolute;
     top: 77px;
     left: 17px;
     cursor: pointer;
-}
-
-.userAvatar > img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    user-select: none;
 }
 
 .username {
@@ -413,4 +408,8 @@
 .saveAlert > div {
     display: flex;
     gap: 10px;
+}
+
+.saveAlert > div > button:last-child {
+    width: 115px;
 }

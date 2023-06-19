@@ -59,7 +59,6 @@
 
 .navIconWrapper path,
 .navIconWrapperActive path {
-    fill: var(--foreground-1);
     stroke: var(--foreground-1);
 }
 

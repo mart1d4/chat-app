@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, ReactElement } from 'react';
-import { Avatar, AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { Avatar } from '@/app/app-components';
 import styles from './MemberList.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
-import Image from 'next/image';
 
 const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
@@ -53,7 +52,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                         className={styles.asideHeader}
                         style={{ backgroundColor: friend.primaryColor }}
                     >
-                        <div className={styles.userAvatar}>
+                        <div>
                             <Avatar
                                 src={friend.avatar}
                                 alt={friend.username}
@@ -63,7 +62,6 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                                         ? friend.status
                                         : 'Offline'
                                 }
-                                statusSize={64}
                                 tooltip={true}
                             />
                         </div>

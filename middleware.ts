@@ -15,66 +15,35 @@ export const config = {
 
 export async function middleware(req: NextRequest) {
     const authorization = req.headers.get('Authorization');
+    const accessToken = authorization?.replace('Bearer ', '');
     const { pathname } = req.nextUrl;
 
     if (nonProtectedRoutes.includes(pathname) || pathname.startsWith('/_next')) {
         return NextResponse.next();
     }
 
-    if (!authorization) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'No authorization header',
-            },
-            {
-                status: 401,
-            }
-        );
+    if (!accessToken) {
+        return NextResponse.rewrite('/login');
     } else {
-        const token = authorization.split(' ')[1];
+        try {
+            const accessTokenSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
 
-        if (!token) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'No token provided',
+            const { payload } = await jwtVerify(accessToken, accessTokenSecret, {
+                issuer: process.env.ISSUER,
+                audience: process.env.AUDIENCE,
+            });
+
+            const requestHeaders = new Headers(req.headers);
+            requestHeaders.set('userId', payload.id as string);
+
+            return NextResponse.next({
+                request: {
+                    headers: requestHeaders,
                 },
-                {
-                    status: 401,
-                }
-            );
-        } else {
-            try {
-                const { payload } = await jwtVerify(
-                    token,
-                    new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET),
-                    {
-                        issuer: process.env.ISSUER,
-                        audience: process.env.ISSUER,
-                    }
-                );
-
-                const requestHeaders = new Headers(req.headers);
-                requestHeaders.set('userId', payload?.id as string);
-
-                return NextResponse.next({
-                    request: {
-                        headers: requestHeaders,
-                    },
-                });
-            } catch (error) {
-                console.error('[MIDDLEWARE] Error: ', error);
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: 'Invalid token',
-                    },
-                    {
-                        status: 401,
-                    }
-                );
-            }
+            });
+        } catch (error) {
+            console.error('[MIDDLEWARE] Error: ', error);
+            return NextResponse.rewrite('/api/auth/refresh');
         }
     }
 }

@@ -30,23 +30,25 @@ const UserCard = ({ content, side }: any): ReactElement => {
                     <div
                         className={styles.topSection}
                         style={{ backgroundColor: user.primaryColor }}
-                        onClick={() => {
-                            setFixedLayer(false);
-                            setUserProfile(null);
-
-                            setTimeout(() => {
-                                setUserProfile({ user });
-                            }, 10);
-                        }}
                     >
-                        <Avatar
-                            src={user.avatar}
-                            alt={user.username}
-                            size={80}
-                            status={user.status}
-                            statusSize={20}
-                            tooltip={false}
-                        />
+                        <div
+                            onClick={() => {
+                                setFixedLayer(false);
+                                setUserProfile(null);
+
+                                setTimeout(() => {
+                                    setUserProfile({ user });
+                                }, 10);
+                            }}
+                        >
+                            <Avatar
+                                src={user.avatar}
+                                alt={user.username}
+                                size={80}
+                                status={user.status}
+                                tooltip={true}
+                            />
+                        </div>
                     </div>
 
                     <div className={styles.badges}></div>
