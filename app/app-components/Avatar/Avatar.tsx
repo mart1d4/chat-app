@@ -39,20 +39,11 @@ const rectPlacements = {
     120: 90,
 };
 
-const maskSizes = {
-    24: 0.275,
-    32: 0.25,
-    40: 0.5,
-    80: 0.175,
-    120: 0.16,
-};
-
 const Avatar = (props: Props) => {
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
     const rectSize = rectSizes[props.size];
     const rectPlacement = rectPlacements[props.size];
-    const maskSize = maskSizes[props.size];
 
     useEffect(() => {
         return () => setTooltip(null);
@@ -67,35 +58,13 @@ const Avatar = (props: Props) => {
                 aria-hidden='true'
                 className={styles.svg}
             >
-                <svg className={styles.mask}>
-                    <mask
-                        id='svg-mask-status-online'
-                        maskContentUnits='objectBoundingBox'
-                        viewBox='0 0 1 1'
-                    >
-                        <circle
-                            fill='white'
-                            cx='0.5'
-                            cy='0.5'
-                            r='0.5'
-                        />
-
-                        <circle
-                            fill='black'
-                            cx='0.85'
-                            cy='0.85'
-                            r={maskSize}
-                        />
-                    </mask>
-                </svg>
-
                 <foreignObject
                     x={0}
                     y={0}
                     width={props.size}
                     height={props.size}
                     style={{
-                        mask: `url(#svg-mask-status-online)`,
+                        mask: `url(#status-mask-${props.size})`,
                         // WebkitMask: `url(#svg-mask-status-online)`,
                     }}
                 >

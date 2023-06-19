@@ -126,7 +126,7 @@ const UserProfile = (): ReactElement => {
                                     size={120}
                                     status={shouldShowContent() ? user.status : 'Offline'}
                                     tooltip={true}
-                                    tooltipGap={5}
+                                    tooltipGap={8}
                                 />
                             </div>
 

@@ -13,8 +13,6 @@ type Props = {
 };
 
 const UserItem = ({ content, user }: Props): ReactElement => {
-    const [liHover, setLiHover] = useState<boolean>(false);
-
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
@@ -36,11 +34,9 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                 });
             }}
             onMouseEnter={() => {
-                setLiHover(true);
                 if (!fixedLayer?.user || fixedLayer?.user === user) return;
                 setFixedLayer(null);
             }}
-            onMouseLeave={() => setLiHover(false)}
         >
             <div className={styles.li}>
                 <div className={styles.userInfo}>

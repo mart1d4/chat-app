@@ -2,7 +2,6 @@ import AvatarStatus from './AvatarStatus/AvatarStatus';
 import AppNav from './AppNav/AppNav';
 import Channels from './Channels/Channels';
 import UserProfile from './Layers/UserProfile/UserProfile';
-import Tooltip from './Tooltip/Tooltip';
 import Icon from './Icon/Icon';
 import Settings from './Layers/Settings/Settings';
 import Popup from './Layers/Popup/Popup';
@@ -25,7 +24,6 @@ import TooltipLayer from './TooltipLayer/TooltipLayer';
 export {
     AppNav,
     Channels,
-    Tooltip,
     Icon,
     AvatarStatus,
     Settings,

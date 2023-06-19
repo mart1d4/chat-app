@@ -7,7 +7,10 @@ import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
 import useLogout from '@/hooks/useLogout';
+import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
+
+const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/apng', 'image/webp'];
 
 const Settings = ({ tab }: any): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>(tab ?? 'My Account');
@@ -331,19 +334,27 @@ const MyAccount = () => {
                             ref={avatarInputRef}
                             className={styles.avatarInput}
                             type='file'
-                            accept='image/png, image/jpeg, image/jpg, image/gif, image/webp'
-                            onChange={(e) => {
+                            accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
+                            onChange={async (e) => {
                                 const file = e.target.files ? e.target.files[0] : null;
                                 if (!file) return;
 
                                 // Run checks
-                                const maxFileSize = 1024 * 1024 * 1; // 10MB
+                                const maxFileSize = 1024 * 1024 * 10; // 10MB
                                 if (file.size > maxFileSize) {
                                     return alert('File size is too large. Max 10MB');
                                 }
 
-                                if (!file.type.includes('image')) {
-                                    return alert('File type is not supported');
+                                const fileBytes = new Uint8Array(await file.arrayBuffer());
+                                const fileType = filetypeinfo(fileBytes);
+
+                                if (
+                                    !fileType ||
+                                    !allowedFileTypes.includes(fileType[0].mime as string)
+                                ) {
+                                    return alert(
+                                        'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
+                                    );
                                 }
 
                                 const newFile = new File([file], 'image', {

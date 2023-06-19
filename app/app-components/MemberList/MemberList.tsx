@@ -63,6 +63,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                                         : 'Offline'
                                 }
                                 tooltip={true}
+                                tooltipGap={8}
                             />
                         </div>
                     </div>

@@ -47,6 +47,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
                                 size={80}
                                 status={user.status}
                                 tooltip={true}
+                                tooltipGap={8}
                             />
                         </div>
                     </div>
