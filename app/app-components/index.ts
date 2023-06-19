@@ -1,4 +1,3 @@
-import AvatarStatus from './AvatarStatus/AvatarStatus';
 import AppNav from './AppNav/AppNav';
 import Channels from './Channels/Channels';
 import UserProfile from './Layers/UserProfile/UserProfile';
@@ -25,7 +24,6 @@ export {
     AppNav,
     Channels,
     Icon,
-    AvatarStatus,
     Settings,
     Popup,
     UserProfile,

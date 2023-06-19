@@ -8,7 +8,7 @@ import Image from 'next/image';
 type Props = {
     src: string;
     alt: string;
-    size: 24 | 32 | 40 | 80 | 120;
+    size: 16 | 24 | 32 | 40 | 80 | 120;
     status?: 'Online' | 'Idle' | 'Do Not Disturb' | 'Invisible' | 'Offline' | undefined;
     tooltip?: boolean;
     tooltipGap?: number;
@@ -24,6 +24,7 @@ const colors = {
 };
 
 const rectSizes = {
+    16: 6,
     24: 8,
     32: 10,
     40: 12,
@@ -32,6 +33,7 @@ const rectSizes = {
 };
 
 const rectPlacements = {
+    16: 5.5,
     24: 16.5,
     32: 22,
     40: 28,

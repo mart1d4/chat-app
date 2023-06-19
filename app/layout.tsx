@@ -59,6 +59,28 @@ const RootLayout = ({ children }: { children: ReactElement }): ReactElement => {
                             fill='black'
                             cx='0.85'
                             cy='0.85'
+                            r='0.300'
+                        />
+                    </mask>
+                </svg>
+
+                <svg style={maskStyle}>
+                    <mask
+                        id='status-mask-24'
+                        maskContentUnits='objectBoundingBox'
+                        viewBox='0 0 1 1'
+                    >
+                        <circle
+                            fill='white'
+                            cx='0.5'
+                            cy='0.5'
+                            r='0.5'
+                        />
+
+                        <circle
+                            fill='black'
+                            cx='0.85'
+                            cy='0.85'
                             r='0.275'
                         />
                     </mask>
