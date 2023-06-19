@@ -2,21 +2,16 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, ReactElement, useRef } from 'react';
-import { AvatarStatus } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { Avatar } from '@/app/app-components';
 import styles from './UserCard.module.css';
-import Image from 'next/image';
 
-const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
+const UserCard = ({ content, side }: any): ReactElement => {
     const [note, setNote] = useState('');
     const [message, setMessage] = useState('');
 
-    const { auth }: any = useContextHook({
-        context: 'auth',
-    });
-    const { setUserProfile, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const user = content?.user;
@@ -35,33 +30,23 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                     <div
                         className={styles.topSection}
                         style={{ backgroundColor: user.primaryColor }}
+                        onClick={() => {
+                            setFixedLayer(false);
+                            setUserProfile(null);
+
+                            setTimeout(() => {
+                                setUserProfile({ user });
+                            }, 10);
+                        }}
                     >
-                        <div>
-                            <Image
-                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`}
-                                alt='User Avatar'
-                                width={80}
-                                height={80}
-                                onClick={() => {
-                                    setFixedLayer(false);
-                                    setUserProfile(null);
-
-                                    setTimeout(() => {
-                                        setUserProfile({ user });
-                                    }, 10);
-                                }}
-                            />
-
-                            <div className={styles.layer}>View Profile</div>
-
-                            <AvatarStatus
-                                status={user.status}
-                                background='var(--background-2)'
-                                mid
-                                tooltip
-                                tooltipDist={5}
-                            />
-                        </div>
+                        <Avatar
+                            src={user.avatar}
+                            alt={user.username}
+                            size={80}
+                            status={user.status}
+                            statusSize={20}
+                            tooltip={false}
+                        />
                     </div>
 
                     <div className={styles.badges}></div>
