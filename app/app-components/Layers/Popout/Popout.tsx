@@ -1,13 +1,12 @@
 'use client';
 
 import { createChannel, getPinnedMessages } from '@/lib/api-functions/channels';
-import { Message, AvatarStatus, Icon } from '@/app/app-components';
+import { Message, Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
-import Image from 'next/image';
 
 const Popout = ({ content }: any) => {
     const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
@@ -278,16 +277,11 @@ const Popout = ({ content }: any) => {
                                 >
                                     <div>
                                         <div className={styles.friendAvatar}>
-                                            <Image
-                                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`}
-                                                alt={friend?.username}
-                                                width={32}
-                                                height={32}
-                                            />
-
-                                            <AvatarStatus
-                                                status={friend?.status}
-                                                background='var(--background-4)'
+                                            <Avatar
+                                                src={friend.avatar}
+                                                alt={friend.username}
+                                                size={32}
+                                                status={friend.status}
                                             />
                                         </div>
 
