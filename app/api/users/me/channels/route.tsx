@@ -212,9 +212,9 @@ export async function POST(req: Request) {
             });
 
             channels &&
-                channels.trigger('chat-app', `channel-created`, {
+                (await channels.trigger('chat-app', `channel-created`, {
                     channel: channel,
-                });
+                }));
 
             return NextResponse.json(
                 {
@@ -342,10 +342,10 @@ export async function POST(req: Request) {
             }
 
             channels &&
-                channels.trigger('chat-app', `channel-added-users`, {
+                (await channels.trigger('chat-app', `channel-added-users`, {
                     channel: channel,
                     recipients: [...channel.recipients, ...usersToAdd],
-                });
+                }));
 
             return NextResponse.json(
                 {
@@ -407,9 +407,9 @@ export async function POST(req: Request) {
             }
 
             channels &&
-                channels.trigger('chat-app', `channel-added-users`, {
+                (await channels.trigger('chat-app', `channel-added-users`, {
                     channel: sameChannel,
-                });
+                }));
 
             return NextResponse.json(
                 {
@@ -454,9 +454,9 @@ export async function POST(req: Request) {
         });
 
         channels &&
-            channels.trigger('chat-app', `channel-created`, {
+            (await channels.trigger('chat-app', `channel-created`, {
                 channel: channel,
-            });
+            }));
 
         return NextResponse.json(
             {

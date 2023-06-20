@@ -101,10 +101,10 @@ export async function POST(
             });
 
             channels &&
-                channels.trigger('chat-app', `user-blocked`, {
+                (await channels.trigger('chat-app', `user-blocked`, {
                     senderId: sender.id,
                     userId: user.id,
-                });
+                }));
 
             return NextResponse.json(
                 {
@@ -213,10 +213,10 @@ export async function DELETE(
             });
 
             channels &&
-                channels.trigger('chat-app', `user-unblocked`, {
+                (await channels.trigger('chat-app', `user-unblocked`, {
                     senderId: sender.id,
                     userId: user.id,
-                });
+                }));
 
             return NextResponse.json(
                 {

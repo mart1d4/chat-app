@@ -93,10 +93,10 @@ export async function PUT(
         });
 
         channels &&
-            channels.trigger('chat-app', `message-edited`, {
+            (await channels.trigger('chat-app', `message-edited`, {
                 channel: channelId,
                 message: messageToSend,
-            });
+            }));
 
         return NextResponse.json(
             {
@@ -170,10 +170,10 @@ export async function DELETE(
         });
 
         channels &&
-            channels.trigger('chat-app', `message-deleted`, {
+            (await channels.trigger('chat-app', `message-deleted`, {
                 channel: channelId,
                 messageId: messageId,
-            });
+            }));
 
         return NextResponse.json(
             {

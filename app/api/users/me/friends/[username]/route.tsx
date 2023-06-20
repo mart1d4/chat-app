@@ -127,10 +127,10 @@ export async function POST(
             });
 
             channels &&
-                channels.trigger('chat-app', `user-friend`, {
+                (await channels.trigger('chat-app', `user-friend`, {
                     sender: sender,
                     user: user,
-                });
+                }));
 
             return NextResponse.json(
                 {
@@ -166,10 +166,10 @@ export async function POST(
         });
 
         channels &&
-            channels.trigger('chat-app', `user-request`, {
+            (await channels.trigger('chat-app', `user-request`, {
                 sender: sender,
                 user: user,
-            });
+            }));
 
         return NextResponse.json(
             {
@@ -299,10 +299,10 @@ export async function DELETE(
         const message = isFriend ? 'Friend removed' : 'Request cancelled';
 
         channels &&
-            channels.trigger('chat-app', 'user-removed', {
+            (await channels.trigger('chat-app', 'user-removed', {
                 sender: sender,
                 user: user,
-            });
+            }));
 
         return NextResponse.json(
             {

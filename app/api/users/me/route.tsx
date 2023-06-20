@@ -91,12 +91,12 @@ export async function PATCH(
         });
 
         channels &&
-            channels.trigger('chat-app', `user-updated`, {
+            (await channels.trigger('chat-app', `user-updated`, {
                 userId: senderId,
                 connected: status,
                 username: username,
                 avatar: avatar,
-            });
+            }));
 
         return NextResponse.json(
             {

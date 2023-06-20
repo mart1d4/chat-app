@@ -98,6 +98,14 @@
     color: var(--foreground-1);
 }
 
+.actions > button.buttonAccept:hover {
+    color: var(--success-light);
+}
+
+.actions > button.buttonCancel:hover {
+    color: var(--error-1);
+}
+
 .liContainer:hover .actions > button:active {
     background-color: var(--background-dark);
 }

@@ -59,10 +59,10 @@ export async function POST(req: Request): Promise<NextResponse> {
         });
 
         channels &&
-            channels.trigger('chat-app', `user-status`, {
+            (await channels.trigger('chat-app', `user-status`, {
                 userId: user.id,
                 connected: false,
-            });
+            }));
 
         return NextResponse.json(
             {

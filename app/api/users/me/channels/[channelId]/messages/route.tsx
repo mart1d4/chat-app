@@ -250,10 +250,10 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         });
 
         channels &&
-            channels.trigger('chat-app', `message-sent`, {
+            (await channels.trigger('chat-app', `message-sent`, {
                 channel: channelId,
                 message: messageToSend,
-            });
+            }));
 
         return NextResponse.json(
             {

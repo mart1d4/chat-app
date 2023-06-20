@@ -185,9 +185,9 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                     });
 
                     channels &&
-                        channels.trigger('chat-app', `channel-deleted`, {
+                        (await channels.trigger('chat-app', `channel-deleted`, {
                             channelId: channel.id,
-                        });
+                        }));
 
                     return NextResponse.json(
                         {
@@ -267,10 +267,10 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             }
 
             channels &&
-                channels.trigger('chat-app', `channel-left`, {
+                (await channels.trigger('chat-app', `channel-left`, {
                     channelId: channel.id,
                     userId: user.id,
-                });
+                }));
 
             return NextResponse.json(
                 {

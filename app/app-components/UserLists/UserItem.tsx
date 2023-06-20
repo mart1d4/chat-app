@@ -152,6 +152,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                         <>
                             {user.req === 'Received' && (
                                 <button
+                                    className={styles.buttonAccept}
                                     onClick={async (e) => {
                                         e.stopPropagation();
                                         await addFriend(auth.accessToken, user.username);
@@ -173,6 +174,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                             )}
 
                             <button
+                                className={styles.buttonCancel}
                                 onClick={async (e) => {
                                     e.stopPropagation();
                                     await removeFriend(auth.accessToken, user.username);
