@@ -19,6 +19,7 @@ import AppHeader from './AppHeader/AppHeader';
 import LoadingDots from './LoadingDots/LoadingDots';
 import Avatar from './Avatar/Avatar';
 import TooltipLayer from './TooltipLayer/TooltipLayer';
+import { EmojiPicker } from './TextArea/TextArea';
 
 export {
     AppNav,
@@ -42,4 +43,5 @@ export {
     LoadingDots,
     Avatar,
     TooltipLayer,
+    EmojiPicker,
 };

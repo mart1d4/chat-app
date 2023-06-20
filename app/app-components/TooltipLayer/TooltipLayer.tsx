@@ -33,6 +33,8 @@ const TooltipLayer = (): ReactElement => {
         const screenX = window.innerWidth;
         const screenY = window.innerHeight;
 
+        if (!container) return;
+
         if (position === 'top') {
             pos = {
                 bottom: screenY - container.top + gap + 6,

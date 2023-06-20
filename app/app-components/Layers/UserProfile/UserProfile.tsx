@@ -14,7 +14,7 @@ const UserProfile = (): ReactElement => {
     const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
     const [note, setNote] = useState<string>('');
 
-    const { userProfile, setUserProfile, setFixedLayer }: any = useContextHook({
+    const { userProfile, setUserProfile, fixedLayer, setFixedLayer }: any = useContextHook({
         context: 'layer',
     });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
@@ -53,13 +53,14 @@ const UserProfile = (): ReactElement => {
 
     useEffect(() => {
         const handleClick = (e: KeyboardEvent) => {
+            if (fixedLayer) return;
             if (e.key === 'Escape') setUserProfile(null);
         };
 
         window.addEventListener('keydown', handleClick);
 
         return () => window.removeEventListener('keydown', handleClick);
-    }, [userProfile]);
+    }, [userProfile, fixedLayer]);
 
     const sectionNavItems = isSameUser()
         ? ['User Info']

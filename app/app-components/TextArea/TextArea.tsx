@@ -596,7 +596,7 @@ const scale = {
     },
 };
 
-const EmojiPicker = () => {
+export const EmojiPicker = () => {
     const [emojisPosIndex, setEmojisPosIndex] = useState(
         Math.floor(Math.random() * emojisPos.length)
     );

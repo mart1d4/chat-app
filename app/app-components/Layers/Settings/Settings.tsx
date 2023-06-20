@@ -1,7 +1,7 @@
 'use client';
 
+import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
 import { ReactElement, useEffect, useState, useRef } from 'react';
-import { Avatar, Icon, LoadingDots } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
@@ -41,6 +41,7 @@ const Settings = ({ tab }: any): ReactElement => {
         },
         {
             name: 'Profiles',
+            component: <Profiles />,
         },
         {
             name: 'Privacy & Safety',
@@ -56,6 +57,7 @@ const Settings = ({ tab }: any): ReactElement => {
         },
         {
             name: 'Friend Requests',
+            component: <FriendRequests />,
         },
         { name: 'separator' },
         {
@@ -318,7 +320,7 @@ const MyAccount = () => {
                 </AnimatePresence>
 
                 <div className={styles.sectionTitle}>
-                    <h2 className={styles.titleBig}>My Account</h2>
+                    <h2>My Account</h2>
                 </div>
 
                 <div className={styles.userCard}>
@@ -429,7 +431,7 @@ const MyAccount = () => {
 
             <div className={styles.section}>
                 <div className={styles.sectionTitle}>
-                    <h2 className={styles.titleBig}>Password and Authentication</h2>
+                    <h2>Password and Authentication</h2>
                 </div>
 
                 <button
@@ -444,7 +446,7 @@ const MyAccount = () => {
                     Change Password
                 </button>
 
-                <h2 className={styles.titleSmall}>SMS Backup Authentication</h2>
+                <h3>SMS Backup Authentication</h3>
                 <div className={styles.accountRemoval}>
                     <div>
                         Add your phone as a backup 2FA method in case you lose your authentication
@@ -463,7 +465,7 @@ const MyAccount = () => {
 
             <div className={styles.section}>
                 <div className={styles.sectionTitle}>
-                    <h2 className={styles.titleSmall}>Account Removal</h2>
+                    <h3>Account Removal</h3>
                 </div>
 
                 <div className={styles.accountRemoval}>
@@ -474,6 +476,179 @@ const MyAccount = () => {
 
                     <button className='red'>Delete Account</button>
                 </div>
+            </div>
+        </>
+    );
+};
+
+const Profiles = () => {
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const tabs = ['User Profile', 'Server Profiles'];
+
+    const [activeTab, setActiveTab] = useState<0 | 1>(0);
+    const [displayName, setDisplayName] = useState<string>(auth.user.username);
+    const [primaryColor, setPrimaryColor] = useState<string>(auth.user.primaryColor);
+    const [accentColor, setAccentColor] = useState<string>(auth.user.secondaryColor);
+    const [description, setDescription] = useState<string>(auth.user.description || '');
+
+    return (
+        <>
+            <div>
+                <h2>Profiles</h2>
+
+                <div className={styles.contentNav}>
+                    {tabs.map((tab: string, index: number) => (
+                        <div
+                            key={uuidv4()}
+                            onClick={() => setActiveTab(index as 0 | 1)}
+                            style={{
+                                color: activeTab === index ? 'var(--foreground-1)' : '',
+                                cursor: activeTab === index ? 'default' : '',
+                                borderBottom:
+                                    activeTab === index ? '2px solid var(--accent-2)' : '',
+                            }}
+                        >
+                            {tab}
+                        </div>
+                    ))}
+                </div>
+
+                <div className={styles.contentContainer}>
+                    <div>
+                        <div className={styles.customSection}>
+                            <h3>Display Name</h3>
+
+                            <input
+                                className={styles.input}
+                                type='text'
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                aria-label='Display Name'
+                                placeholder={auth.user.username}
+                                minLength={2}
+                                maxLength={32}
+                            />
+                        </div>
+
+                        <div className={styles.customSection}>
+                            <h3>Avatar</h3>
+
+                            <div className={styles.buttonContainer}>
+                                <button className='blue'>Change Avatar</button>
+                                <button className='underline'>Remove Avatar</button>
+                            </div>
+                        </div>
+
+                        <div className={styles.customSection}>
+                            <h3>Profile Banner</h3>
+
+                            <div className={styles.buttonContainer}>
+                                <button className='blue'>Change Banner</button>
+                            </div>
+                        </div>
+
+                        <div className={styles.customSection}>
+                            <h3>Profile Theme</h3>
+
+                            <div className={styles.sectionContainer}>
+                                <div className={styles.colorSwatch}>
+                                    <div
+                                        style={{
+                                            backgroundColor: primaryColor,
+                                            borderColor: primaryColor,
+                                        }}
+                                    >
+                                        <Icon
+                                            name='edit'
+                                            size={14}
+                                        />
+                                    </div>
+
+                                    <div>Primary</div>
+                                </div>
+
+                                <div className={styles.colorSwatch}>
+                                    <div
+                                        style={{
+                                            backgroundColor: accentColor,
+                                            borderColor: accentColor,
+                                        }}
+                                    >
+                                        <Icon
+                                            name='edit'
+                                            size={14}
+                                        />
+                                    </div>
+
+                                    <div>Accent</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={styles.customSection}>
+                            <h3>About me</h3>
+
+                            <div className={styles.description}>
+                                You can use markdown and links if you'd like
+                            </div>
+
+                            <div className={styles.inputLarge}>
+                                <div>
+                                    <div>
+                                        <div>
+                                            <div
+                                                role='textbox'
+                                                spellCheck='true'
+                                                aria-haspopup='listbox'
+                                                aria-invalid='false'
+                                                aria-label='Description'
+                                                aria-multiline='true'
+                                                aria-required='true'
+                                                aria-autocomplete='list'
+                                                autoCorrect='off'
+                                                contentEditable='true'
+                                                onDragStart={() => false}
+                                                onDrop={() => false}
+                                                onInput={(e) => {
+                                                    const input = e.target as HTMLDivElement;
+                                                    const text = input.innerText.toString();
+
+                                                    setDescription(text);
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <EmojiPicker />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>{190 - description.length}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3>Preview</h3>
+
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+const FriendRequests = () => {
+    return (
+        <>
+            <div>
+                <div className={styles.sectionTitle}>
+                    <h2>Friend Requests</h2>
+                </div>
+
+                <h2>Who can send you a friend request</h2>
             </div>
         </>
     );

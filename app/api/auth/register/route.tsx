@@ -90,6 +90,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 password: hash,
                 avatar: avatar,
                 primaryColor: color,
+                accentColor: color,
                 notifications: [
                     {
                         type: 'welcome',
