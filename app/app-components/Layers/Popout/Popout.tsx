@@ -154,7 +154,7 @@ const Popout = ({ content }: any) => {
                             >
                                 <Message
                                     message={message}
-                                    noInt={true}
+                                    noInteraction={true}
                                 />
                             </div>
                         ))

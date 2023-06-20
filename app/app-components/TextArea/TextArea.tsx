@@ -199,6 +199,8 @@ const TextArea = ({
                         aria-autocomplete='list'
                         autoCorrect='off'
                         contentEditable='true'
+                        onDragStart={() => false}
+                        onDrop={() => false}
                         onInput={(e) => {
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
