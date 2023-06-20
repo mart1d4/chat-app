@@ -195,7 +195,7 @@ const Popup = (): ReactElement => {
                                                 ? popup.unpin.message
                                                 : null
                                         }
-                                        noInt={true}
+                                        noInteraction={true}
                                     />
                                 </div>
                             )}
