@@ -32,14 +32,18 @@ const FixedLayer = (): ReactElement => {
                         height: node.children[0]?.offsetHeight,
                     });
                 }, 10);
-            } else {
-                setNode(null);
-                setContainer({});
-                setPositions({});
             }
         },
         [fixedLayer, resetPosition]
     );
+
+    useEffect(() => {
+        if (!fixedLayer) {
+            setNode(null);
+            setContainer({});
+            setPositions({});
+        }
+    }, [fixedLayer]);
 
     useEffect(() => {
         if (!container || !fixedLayer) return;
@@ -158,6 +162,7 @@ const FixedLayer = (): ReactElement => {
 
         const handleClick = (e) => {
             if (!node?.contains(e.target)) {
+                console.log('click outside');
                 setPositions({});
                 setContainer(null);
                 setFixedLayer(null);

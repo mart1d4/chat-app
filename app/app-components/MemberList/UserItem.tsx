@@ -42,12 +42,14 @@ const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
                 <div className={styles.link}>
                     <div className={styles.layout}>
                         <div className={styles.layoutAvatar}>
-                            <Avatar
-                                src={user.avatar}
-                                alt={user.username}
-                                size={32}
-                                status={user.status}
-                            />
+                            <div>
+                                <Avatar
+                                    src={user.avatar}
+                                    alt={user.username}
+                                    size={32}
+                                    status={user.status}
+                                />
+                            </div>
                         </div>
 
                         <div className={styles.layoutContent}>

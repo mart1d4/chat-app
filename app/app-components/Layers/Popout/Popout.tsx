@@ -44,7 +44,6 @@ const Popout = ({ content }: any) => {
                 setFilteredList(filteredFriends);
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
-                console.log(friendList);
                 setFilteredList(friendList);
                 setPlacesLeft(9);
             }
@@ -52,23 +51,22 @@ const Popout = ({ content }: any) => {
     }, [content]);
 
     useEffect(() => {
-        if (!content?.pinned && content?.channel) {
+        if (content?.pinned) return;
+
+        if (content?.channel) {
             if (chosen?.length === 0) {
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
                 setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
             }
-        } else if (!content?.pinned) {
-            if (chosen?.length === 0) {
-                setPlacesLeft(9);
-            } else {
-                setPlacesLeft(9 - chosen.length);
-            }
+        } else {
+            if (chosen?.length === 0) setPlacesLeft(9);
+            else setPlacesLeft(9 - chosen.length);
         }
     }, [chosen]);
 
     useEffect(() => {
-        if (content?.pinned) return;
+        if (content?.pinned || !friends) return;
 
         if (content?.channel) {
             const filteredFriends = friends?.filter((friend: any) => {
@@ -95,7 +93,7 @@ const Popout = ({ content }: any) => {
                 setFilteredList(friends);
             }
         }
-    }, [search]);
+    }, [search, friends]);
 
     const createChan = async (channelId?: string) => {
         let allRecipients = [...chosen];
@@ -194,13 +192,13 @@ const Popout = ({ content }: any) => {
                                             <div
                                                 key={uuidv4()}
                                                 className={styles.friendChip}
-                                                onClick={() =>
+                                                onClick={() => {
                                                     setChosen(
                                                         chosen?.filter(
                                                             (user) => user.id !== friend.id
                                                         )
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                             >
                                                 {friend.username}
                                                 <Icon
@@ -262,13 +260,16 @@ const Popout = ({ content }: any) => {
                                 <div
                                     key={uuidv4()}
                                     className={styles.friend}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         if (chosen.includes(friend)) {
                                             setChosen(
                                                 chosen?.filter((user) => user.id !== friend.id)
                                             );
                                         } else {
                                             if (placesLeft > 0) {
+                                                console.log('here');
                                                 setChosen([...chosen, friend]);
                                                 setSearch('');
                                             }
@@ -442,6 +443,7 @@ const Popout = ({ content }: any) => {
                             onClick={() => {
                                 setFixedLayer(null);
                                 localStorage.setItem('friends-tab', 'add');
+                                router.push('/channels/me');
                             }}
                         >
                             Add Friend

@@ -56,8 +56,9 @@
     position: relative;
 }
 
-.layoutAvatar img {
-    border-radius: 50%;
+.layoutAvatar > div {
+    width: 32px;
+    height: 32px;
 }
 
 .layoutContent {

@@ -1,13 +1,11 @@
 'use client';
 
-import { ReactElement, useState, useRef } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
 import styles from './Channels.module.css';
+import { ReactElement } from 'react';
 
 const Title = (): ReactElement => {
-    const showButton = useRef<HTMLDivElement>(null);
-
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
@@ -15,23 +13,30 @@ const Title = (): ReactElement => {
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <div
-                ref={showButton}
-                onMouseEnter={(e) =>
+                onMouseEnter={(e) => {
+                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
+                        return;
+                    }
                     setTooltip({
                         text: 'Create DM',
                         element: e.currentTarget,
-                    })
-                }
+                    });
+                }}
                 onMouseLeave={() => setTooltip(null)}
                 onClick={(e) => {
-                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
+                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                        setTooltip({
+                            text: 'Create DM',
+                            element: e.currentTarget,
+                        });
                         setFixedLayer(null);
                     } else {
+                        setTooltip(null);
                         setFixedLayer({
                             type: 'popout',
                             event: e,
+                            element: e.currentTarget,
                             gap: 5,
-                            element: showButton?.current,
                             firstSide: 'bottom',
                             secondSide: 'right',
                         });
