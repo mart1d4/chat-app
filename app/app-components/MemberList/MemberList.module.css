@@ -1,6 +1,6 @@
 .aside {
     position: relative;
-    width: 340px;
+    min-width: 340px;
     overflow: hidden scroll;
     padding-right: 0px;
     height: 100%;

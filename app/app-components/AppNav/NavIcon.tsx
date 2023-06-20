@@ -26,7 +26,7 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
     const badgeCount = count ?? auth.user.requestReceivedIds.length;
 
     useEffect(() => {
-        if (pathname.includes(link)) {
+        if (link.includes(pathname)) {
             setActive(true);
             setMarkHeight(40);
         } else {

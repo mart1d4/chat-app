@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, ReactElement, useRef } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { Avatar } from '@/app/app-components';
+import { Avatar, Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
 const UserCard = ({ content, side }: any): ReactElement => {
@@ -11,6 +11,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
     const [message, setMessage] = useState('');
 
     const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -31,7 +32,28 @@ const UserCard = ({ content, side }: any): ReactElement => {
                         className={styles.topSection}
                         style={{ backgroundColor: user.primaryColor }}
                     >
+                        {auth.user.id === user.id && (
+                            <div
+                                className={styles.editProfileButton}
+                                aria-label='Edit Profile'
+                                role='button'
+                                onMouseEnter={(e) => {
+                                    setTooltip({
+                                        text: 'Edit Profile',
+                                        element: e.currentTarget,
+                                    });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                            >
+                                <Icon
+                                    name='edit'
+                                    size={18}
+                                />
+                            </div>
+                        )}
+
                         <div
+                            className={styles.avatarContainer}
                             onClick={() => {
                                 setFixedLayer(false);
                                 setUserProfile(null);

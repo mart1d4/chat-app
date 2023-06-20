@@ -212,14 +212,15 @@
     margin: 0 4px;
     height: 44px;
     width: 38px;
+    color: var(--foreground-3);
 }
 
 .toolsContainer > button:first-child:not(.sendButton) {
     width: 38px;
 }
 
-.toolsContainer > button:not(:last-child):hover path {
-    fill: var(--foreground-2);
+.toolsContainer > button:not(:last-child):hover {
+    color: var(--foreground-2);
 }
 
 .toolsContainer > button:focus-visible {
@@ -289,11 +290,16 @@
 }
 
 .replyClose > div {
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
     line-height: 0;
     cursor: pointer;
     color: var(--foreground-3);
-    padding: 8px 18px 8px 16px;
+    padding: 8px 0px 8px 0px;
+    margin-right: 8px;
 }
 
 .buttonContainer {
@@ -378,22 +384,20 @@
     flex: 0 0 auto;
     cursor: pointer;
     position: relative;
-}
-
-.fileMenuButton:active svg {
-    transform: translateY(1px);
+    color: var(--foreground-3);
 }
 
 .fileMenuButton:hover {
     background-color: var(--background-4);
-}
-
-.fileMenuButton:not(.danger):hover path {
-    fill: var(--foreground-2);
+    color: var(--foreground-2);
 }
 
 .fileMenuButton:active {
     background-color: var(--background-5);
+}
+
+.fileMenuButton:active svg {
+    transform: translateY(1px);
 }
 
 .fileItemContainer {

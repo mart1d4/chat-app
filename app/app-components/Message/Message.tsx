@@ -1,21 +1,61 @@
 'use client';
 
 import { TextArea, Icon, Avatar } from '@/app/app-components';
+import { editMessage } from '@/lib/api-functions/messages';
 import { useEffect, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './Message.module.css';
-import Image from 'next/image';
+import { trimMessage } from '@/lib/strings/checks';
 
-const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) => {
+type MessageProps = {
+    message: MessageType;
+    large?: boolean;
+    last?: boolean;
+    edit?: {
+        messageId: string;
+        content: string;
+    } | null;
+    setEdit?: React.Dispatch<
+        React.SetStateAction<{
+            messageId: string;
+            content: string;
+        } | null>
+    >;
+    reply?: {
+        channelId: string;
+        messageId: string;
+        author: CleanOtherUserType;
+    } | null;
+    setReply?: React.Dispatch<
+        React.SetStateAction<{
+            channelId: string;
+            messageId: string;
+            author: CleanOtherUserType;
+        } | null>
+    >;
+    noInteraction?: boolean;
+};
+
+const Message = ({
+    message,
+    large,
+    edit,
+    setEdit,
+    reply,
+    setReply,
+    noInteraction,
+}: MessageProps) => {
+    // States
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
-    const [editedMessage, setEditedMessage] = useState<string>(edit?.content ?? message.content);
+    const [editContent, setEditContent] = useState<string>(edit?.content ?? message.content);
 
-    let noInteraction = noInt || false;
-
+    // Hooks
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
+
+    // Refs
     const userImageReplyRef = useRef(null);
     const userImageRef = useRef(null);
 
@@ -37,21 +77,23 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
     //     });
     // }, []);
 
+    // Effects
+
     useEffect(() => {
-        if (!editedMessage) return;
+        if (!setEdit || !setReply) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                setEdit(null);
-                localStorage.setItem(
-                    `channel-${message.channel[0].id}`,
-                    JSON.stringify({
-                        ...JSON.parse(
-                            localStorage.getItem(`channel-${message.channel[0].id}`) || ''
-                        ),
-                        edit: null,
-                    })
-                );
+                console.log('esc');
+                if (edit) {
+                    setEdit(null);
+                    setLocalStorage({ edit: null });
+                }
+
+                if (reply) {
+                    setReply(null);
+                    setLocalStorage({ reply: null });
+                }
             } else if (e.key === 'Enter' && e.shiftKey === false) {
                 if (!edit || edit?.messageId !== message.id) return;
                 sendEditedMessage();
@@ -61,7 +103,7 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [editedMessage]);
+    }, [edit, editContent]);
 
     useEffect(() => {
         const handleShift = (e: KeyboardEvent) => {
@@ -81,157 +123,181 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
         };
     }, []);
 
-    const deleteMessage = async () => {
-        try {
-            await fetch(`/api/users/me/channels/${message.channelId[0]}/messages/${message.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.accessToken}`,
-                },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    // Functions
 
-    const sendEditedMessage = async () => {
-        if (
-            editedMessage.length === 0 ||
-            editedMessage.length > 4000 ||
-            editedMessage === message.content
-        ) {
-            setEdit(null);
-
-            localStorage.setItem(
-                `channel-${message.channel[0].id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${message.channel[0].id}`) || ''),
-                    edit: null,
-                })
-            );
-
-            return;
-        }
-
-        try {
-            await fetch(`/api/users/me/channels/${message.channelId[0]}/messages/${message.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.accessToken}`,
-                },
-                body: JSON.stringify({
-                    content: editedMessage,
-                }),
-            });
-
-            setEdit(null);
-            localStorage.setItem(
-                `channel-${message.channel[0].id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${message.channel[0].id}`) || ''),
-                    edit: null,
-                })
-            );
-        } catch (error) {
-            console.error(error);
-        }
+    const setLocalStorage = (data: {}) => {
+        localStorage.setItem(
+            `channel-${message.channelId[0]}`,
+            JSON.stringify({
+                ...JSON.parse(localStorage.getItem(`channel-${message.channelId[0]}`) || '{}'),
+                ...data,
+            })
+        );
     };
 
     const deletePopup = () => {
         setPopup({
             delete: {
-                channelId: message.channel,
+                channelId: message.channelId[0],
                 message: message,
-                func: () => deleteMessage(),
             },
         });
     };
 
-    const editMessage = async () => {
+    const pinPopup = () => {
+        setPopup({
+            pin: {
+                channelId: message.channelId[0],
+                message: message,
+            },
+        });
+    };
+
+    const unpinPopup = () => {
+        setPopup({
+            unpin: {
+                channelId: message.channelId[0],
+                message: message,
+            },
+        });
+    };
+
+    const editMessageState = async () => {
+        if (!setEdit || noInteraction) return;
+
         setEdit({
             messageId: message.id,
             content: message.content,
         });
 
-        localStorage.setItem(
-            `channel-${message.channel}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${message?.channel}`) || '{}'),
-                edit: {
-                    messageId: message.id,
-                    content: message.content,
-                },
-            })
-        );
-    };
-
-    const pinPopup = async () => {
-        setPopup({
-            pin: {
-                channelId: message.channel,
-                message: message,
-                // func: () => pinMessage(),
+        setLocalStorage({
+            edit: {
+                messageId: message.id,
+                content: message.content,
             },
         });
     };
 
-    const unpinPopup = async () => {
-        setPopup({
-            unpin: {
-                channelId: message.channel,
-                message: message,
-                // func: () => unpinMessage(),
+    const sendEditedMessage = async () => {
+        if (!setEdit || !edit || noInteraction) return;
+
+        const content = trimMessage(editContent);
+
+        if (content.length === 0 || content.length > 4000 || content === message.content) {
+            setEdit(null);
+            setLocalStorage({ edit: null });
+            return;
+        }
+
+        try {
+            await editMessage(auth.accessToken, message, content);
+
+            setEdit(null);
+            setLocalStorage({ edit: null });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const replyToMessageState = () => {
+        if (!setReply || noInteraction) return;
+
+        setReply({
+            channelId: message.channelId[0],
+            messageId: message.id,
+            author: message.author,
+        });
+
+        setLocalStorage({
+            reply: {
+                channelId: message.channelId[0],
+                messageId: message.id,
+                author: message.author,
             },
         });
     };
 
-    if (message.type === 'RECIPIENT_ADD') {
+    const getLongDate = (date: Date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+        }).format(new Date(date));
+    };
+
+    const getMidDate = (date: Date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+        }).format(new Date(date));
+    };
+
+    const getShortDate = (date: Date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            hour: 'numeric',
+            minute: 'numeric',
+        }).format(new Date(date));
+    };
+
+    const shouldDisplayInlined = () => {
+        const inlineTypes = [
+            'RECIPIENT_ADD',
+            'RECIPIENT_REMOVE',
+            'CALL',
+            'CHANNEL_NAME_CHANGE',
+            'CHANNEL_ICON_CHANGE',
+            'CHANNEL_PINNED_MESSAGE',
+            'GUILD_MEMBER_JOIN',
+            'OWNER_CHANGE',
+        ];
+
+        return inlineTypes.includes(message.type);
+    };
+
+    if (shouldDisplayInlined()) {
         return (
-            <div
-                className={styles.li + ' ' + styles.noInt}
-                onMouseEnter={() => {
-                    if (noInteraction) return;
-                    setHover(true);
-                }}
+            <li
+                className={
+                    styles.messageContainer +
+                    ' ' +
+                    styles.inlined +
+                    ' ' +
+                    (reply?.messageId === message.id ? styles.reply : '')
+                }
+                onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
                 onContextMenu={(e) => {
                     e.preventDefault();
-                    if (noInteraction) return;
                     setFixedLayer({
                         type: 'menu',
                         event: e,
-                        message: message,
+                        message: {
+                            ...message,
+                            inline: true,
+                        },
                         deletePopup,
-                        deleteMessage,
-                        pinPopup,
-                        // pinMessage,
-                        unpinPopup,
-                        // unpinMessage,
-                        editMessage,
-                        // replyToMessage,
+                        replyToMessageState,
                     });
                 }}
-                style={
-                    hover || fixedLayer?.message?.id === message?.id
-                        ? { backgroundColor: 'var(--background-hover-4)' }
-                        : {}
-                }
+                style={{
+                    backgroundColor:
+                        fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                }}
             >
                 {(hover || fixedLayer?.message?.id === message?.id) && (
                     <MessageMenu
                         message={message}
-                        start={start}
+                        large={large}
                         functions={{
                             deletePopup,
-                            deleteMessage,
-                            pinPopup,
-                            // pinMessage,
-                            unpinPopup,
-                            // unpinMessage,
-                            editMessage,
-                            // replyToMessage,
+                            replyToMessageState,
                         }}
                     />
                 )}
@@ -263,15 +329,7 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                                 className={styles.contentTimestamp}
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: new Intl.DateTimeFormat('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                            second: 'numeric',
-                                        }).format(new Date(message.createdAt)),
+                                        text: getLongDate(message.createdAt),
                                         element: e.currentTarget,
                                         delay: 1000,
                                     })
@@ -279,30 +337,24 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                                 onMouseLeave={() => setTooltip(null)}
                             >
                                 <span style={{ userSelect: 'text' }}>
-                                    {new Intl.DateTimeFormat('en-US', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        second: 'numeric',
-                                    }).format(new Date(message.createdAt))}
+                                    {getMidDate(message.createdAt)}
                                 </span>
                             </span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </li>
         );
     }
 
     return (
-        <div
+        <li
             className={
-                reply?.id === message.id
-                    ? styles.liReply + ' ' + styles.noInt
-                    : styles.li + ' ' + styles.noInt
+                styles.messageContainer +
+                ' ' +
+                (large || message.type === 'REPLY' ? styles.large : '') +
+                ' ' +
+                (reply?.messageId === message.id ? styles.reply : '')
             }
             onMouseEnter={() => {
                 if (noInteraction) return;
@@ -317,82 +369,113 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                     event: e,
                     message: message,
                     deletePopup,
-                    deleteMessage,
                     pinPopup,
-                    // pinMessage,
                     unpinPopup,
-                    // unpinMessage,
-                    editMessage,
-                    // replyToMessage,
+                    editMessageState,
+                    replyToMessageState,
                 });
             }}
-            style={
-                hover || fixedLayer?.message?.id === message?.id || edit?.messageId === message.id
-                    ? {
-                          backgroundColor:
-                              reply?.id === message.id ? '' : 'var(--background-hover-4)',
-                      }
-                    : {}
-            }
+            style={{
+                backgroundColor:
+                    (fixedLayer?.message?.id === message?.id || edit?.messageId === message.id) &&
+                    reply?.messageId !== message.id
+                        ? 'var(--background-hover-4)'
+                        : '',
+            }}
         >
             {(hover || fixedLayer?.message?.id === message?.id) &&
                 edit?.messageId !== message.id && (
                     <MessageMenu
                         message={message}
-                        start={start}
+                        large={large}
                         functions={{
                             deletePopup,
-                            deleteMessage,
                             pinPopup,
-                            // pinMessage,
                             unpinPopup,
-                            // unpinMessage,
-                            editMessage,
-                            // replyToMessage,
+                            editMessageState,
+                            replyToMessageState,
                         }}
                     />
                 )}
 
-            {start || message.type === 'REPLY' || noInteraction ? (
-                <div className={styles.messageStart}>
+            {large || message.type === 'REPLY' || noInteraction ? (
+                <div className={styles.messagelarge}>
                     {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
                             <div
-                                className={styles.userAvatar}
+                                className={styles.userAvatarReply}
+                                onDoubleClick={(e) => e.stopPropagation()}
                                 onClick={(e) => {
-                                    if (fixedLayer?.element === userImageReplyRef.current) {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
-                                        return;
+                                    } else {
+                                        setFixedLayer({
+                                            type: 'usercard',
+                                            event: e,
+                                            // @ts-ignore
+                                            user: message.messageReference?.author,
+                                            element: e.currentTarget,
+                                            firstSide: 'right',
+                                            gap: 10,
+                                        });
                                     }
-
-                                    setFixedLayer({
-                                        type: 'usercard',
-                                        event: e,
-                                        user: message.messageReference?.author,
-                                        element: userImageReplyRef.current,
-                                        firstSide: 'right',
-                                        gap: 10,
-                                    });
                                 }}
                                 onContextMenu={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
+                                    e.preventDefault();
                                     setFixedLayer({
                                         type: 'menu',
                                         event: e,
+                                        //  @ts-ignore
                                         user: message.messageReference?.author,
                                     });
                                 }}
                             >
                                 <Avatar
-                                    src={message.author.avatar}
-                                    alt={message.author.username}
+                                    // @ts-ignore
+                                    src={message.messageReference?.author?.avatar}
+                                    // @ts-ignore
+                                    alt={message.messageReference?.author?.username}
                                     size={16}
                                 />
                             </div>
 
-                            <span>{message.messageReference?.author?.username}</span>
-
+                            <span
+                                onDoubleClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                                        setFixedLayer(null);
+                                    } else {
+                                        setFixedLayer({
+                                            type: 'usercard',
+                                            event: e,
+                                            // @ts-ignore
+                                            user: message.messageReference?.author,
+                                            element: e.currentTarget,
+                                            firstSide: 'right',
+                                            gap: 10,
+                                        });
+                                    }
+                                }}
+                                onContextMenu={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setFixedLayer({
+                                        type: 'menu',
+                                        event: e,
+                                        //  @ts-ignore
+                                        user: message.messageReference?.author,
+                                    });
+                                }}
+                            >
+                                {/* @ts-ignore */}
+                                {message.messageReference?.author?.username}
+                            </span>
+                            {/* @ts-ignore */}
                             <div>{message.messageReference?.content}</div>
                         </div>
                     )}
@@ -400,11 +483,12 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (noInteraction || edit?.messageId === message.id) return;
-                            if (message.author.id === auth?.user?.id) {
-                                editMessage();
+                            if (message.author.id === auth.user.id) {
+                                if (noInteraction || edit?.messageId === message.id) return;
+                                editMessageState();
                             } else {
-                                // replyToMessage();
+                                if (noInteraction || reply?.messageId === message.id) return;
+                                replyToMessageState();
                             }
                         }}
                     >
@@ -445,57 +529,65 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                         </div>
 
                         <h3>
-                            <span className={styles.titleUsername}>{message.author?.username}</span>
+                            <span
+                                className={styles.titleUsername}
+                                onDoubleClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                                        setFixedLayer(null);
+                                    } else {
+                                        setFixedLayer({
+                                            type: 'usercard',
+                                            event: e,
+                                            user: message.author,
+                                            element: e.currentTarget,
+                                            firstSide: 'right',
+                                            gap: 10,
+                                        });
+                                    }
+                                }}
+                                onContextMenu={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setFixedLayer({
+                                        type: 'menu',
+                                        event: e,
+                                        user: message.author,
+                                    });
+                                }}
+                            >
+                                {message.author?.username}
+                            </span>
                             <span
                                 className={styles.titleTimestamp}
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: new Intl.DateTimeFormat('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                            second: 'numeric',
-                                        }).format(new Date(message.createdAt)),
+                                        text: getLongDate(message.createdAt),
                                         element: e.currentTarget,
                                         delay: 1000,
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                {new Intl.DateTimeFormat('en-US', {
-                                    month: 'numeric',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    hour: 'numeric',
-                                    minute: 'numeric',
-                                }).format(new Date(message.createdAt))}
+                                {getMidDate(message.createdAt)}
                             </span>
                         </h3>
                         {edit?.messageId === message.id ? (
                             <>
                                 <TextArea
-                                    editedMessage={editedMessage || ' '}
-                                    setEditedMessage={setEditedMessage}
+                                    channel={message.channelId[0]}
+                                    editContent={editContent}
+                                    setEditContent={setEditContent}
                                 />
                                 <div className={styles.editHint}>
                                     escape to{' '}
                                     <span
                                         onClick={() => {
+                                            if (!setEdit) return;
                                             setEdit(null);
-                                            localStorage.setItem(
-                                                `channel-${message.channel[0].id}`,
-                                                JSON.stringify({
-                                                    ...JSON.parse(
-                                                        localStorage.getItem(
-                                                            `channel-${message.channel[0].id}`
-                                                        ) || '{}'
-                                                    ),
-                                                    edit: null,
-                                                })
-                                            );
+                                            setLocalStorage({ edit: null });
                                         }}
                                     >
                                         cancel{' '}
@@ -518,15 +610,7 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                                         <span
                                             onMouseEnter={(e) =>
                                                 setTooltip({
-                                                    text: new Intl.DateTimeFormat('en-US', {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: 'numeric',
-                                                        second: 'numeric',
-                                                    }).format(new Date(message.createdAt)),
+                                                    text: getLongDate(message.updatedAt),
                                                     element: e.currentTarget,
                                                     delay: 1000,
                                                 })
@@ -546,62 +630,41 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
-                            if (message?.type === 'RECIPIENT_ADD') return;
-                            if (message.author?.id === auth?.user?.id) editMessage();
-                            // else replyToMessage();
+                            if (message.author?.id === auth?.user?.id) editMessageState();
+                            else replyToMessageState();
                         }}
                     >
-                        {(hover || menu?.message === message?.id) &&
-                            message?.type !== 'RECIPIENT_ADD' && (
-                                <span className={styles.messageTimestamp}>
-                                    <span
-                                        onMouseEnter={(e) =>
-                                            setTooltip({
-                                                text: new Intl.DateTimeFormat('en-US', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                    hour: 'numeric',
-                                                    minute: 'numeric',
-                                                    second: 'numeric',
-                                                }).format(new Date(message.createdAt)),
-                                                element: e.currentTarget,
-                                                gap: 2,
-                                                delay: 1000,
-                                            })
-                                        }
-                                        onMouseLeave={() => setTooltip(null)}
-                                    >
-                                        {new Intl.DateTimeFormat('en-US', {
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                        }).format(new Date(message.createdAt))}
-                                    </span>
+                        {(hover || menu?.message === message?.id) && (
+                            <span className={styles.messageTimestamp}>
+                                <span
+                                    onMouseEnter={(e) =>
+                                        setTooltip({
+                                            text: getLongDate(message.createdAt),
+                                            element: e.currentTarget,
+                                            gap: 2,
+                                            delay: 1000,
+                                        })
+                                    }
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    {getShortDate(message.createdAt)}
                                 </span>
-                            )}
+                            </span>
+                        )}
                         {edit?.messageId === message.id ? (
                             <>
                                 <TextArea
-                                    editedMessage={editedMessage || message.content}
-                                    setEditedMessage={setEditedMessage}
+                                    channel={message.channelId[0]}
+                                    editContent={editContent}
+                                    setEditContent={setEditContent}
                                 />
                                 <div className={styles.editHint}>
                                     escape to{' '}
                                     <span
                                         onClick={() => {
+                                            if (!setEdit) return;
                                             setEdit(null);
-                                            localStorage.setItem(
-                                                `channel-${message.channel[0].id}`,
-                                                JSON.stringify({
-                                                    ...JSON.parse(
-                                                        localStorage.getItem(
-                                                            `channel-${message.channel[0].id}`
-                                                        ) || '{}'
-                                                    ),
-                                                    edit: null,
-                                                })
-                                            );
+                                            setLocalStorage({ edit: null });
                                         }}
                                     >
                                         cancel{' '}
@@ -624,15 +687,7 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                                         <span
                                             onMouseEnter={(e) =>
                                                 setTooltip({
-                                                    text: new Intl.DateTimeFormat('en-US', {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: 'numeric',
-                                                        second: 'numeric',
-                                                    }).format(new Date(message.updateddAt)),
+                                                    text: getLongDate(message.updatedAt),
                                                     element: e.currentTarget,
                                                     delay: 1000,
                                                 })
@@ -643,50 +698,16 @@ const Message = ({ params, message, start, edit, setEdit, reply, noInt }: any) =
                                         </span>
                                     </div>
                                 )}
-                                {message?.type === 'RECIPIENT_ADD' && (
-                                    <span
-                                        className={styles.contentTimestamp}
-                                        style={{ userSelect: 'text' }}
-                                    >
-                                        <span
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: new Intl.DateTimeFormat('en-US', {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: 'numeric',
-                                                        second: 'numeric',
-                                                    }).format(new Date(message.createdAt)),
-                                                    element: e.currentTarget,
-                                                    gap: 2,
-                                                    delay: 1000,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                        >
-                                            {new Intl.DateTimeFormat('en-US', {
-                                                month: 'numeric',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                                hour: 'numeric',
-                                                minute: 'numeric',
-                                            }).format(new Date(message.createdAt))}
-                                        </span>
-                                    </span>
-                                )}
                             </div>
                         )}
                     </div>
                 </div>
             )}
-        </div>
+        </li>
     );
 };
 
-const MessageMenu = ({ message, start, functions }: any) => {
+const MessageMenu = ({ message, large, functions }: any) => {
     const [menuSender, setMenuSender] = useState<boolean>(false);
 
     const { setFixedLayer, fixedLayer }: any = useContextHook({ context: 'layer' });
@@ -703,7 +724,7 @@ const MessageMenu = ({ message, start, functions }: any) => {
         <div className={styles.buttonContainer}>
             <div
                 className={styles.buttonWrapper}
-                style={{ top: start ? '-16px' : '-25px' }}
+                style={{ top: large ? '-16px' : '-25px' }}
             >
                 <div className={styles.buttons}>
                     <div
@@ -731,7 +752,7 @@ const MessageMenu = ({ message, start, functions }: any) => {
                                 })
                             }
                             onMouseLeave={() => setTooltip(null)}
-                            onClick={() => functions.editMessage()}
+                            onClick={() => functions.editMessageState()}
                         >
                             <Icon name='edit' />
                         </div>
@@ -746,7 +767,7 @@ const MessageMenu = ({ message, start, functions }: any) => {
                                 })
                             }
                             onMouseLeave={() => setTooltip(null)}
-                            onClick={() => functions.replyToMessage()}
+                            onClick={() => functions.replyToMessageState()}
                         >
                             <Icon name='reply' />
                         </div>
@@ -776,13 +797,10 @@ const MessageMenu = ({ message, start, functions }: any) => {
                                     gap: 5,
                                     message: message,
                                     deletePopup: functions.deletePopup,
-                                    deleteMessage: functions.deleteMessage,
                                     pinPopup: functions.pinPopup,
-                                    pinMessage: functions.pinMessage,
                                     unpinPopup: functions.unpinPopup,
-                                    unpinMessage: functions.unpinMessage,
-                                    editMessage: functions.editMessage,
-                                    replyToMessage: functions.replyToMessage,
+                                    editMessageState: functions.editMessageState,
+                                    replyToMessageState: functions.replyToMessageState,
                                 });
                                 setTooltip(null);
                             }

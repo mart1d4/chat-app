@@ -2,29 +2,39 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import { trimMessage } from '@/lib/strings/checks';
 import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
+import filetypeinfo from 'magic-bytes.js';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 
-const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages }: any) => {
+const TextArea = ({
+    channel,
+    friend,
+    editContent,
+    setEditContent,
+    reply,
+    setReply,
+    setMessages,
+}: any) => {
     const [message, setMessage] = useState<string>('');
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState<File[]>([]);
     const [usersTyping, setUsersTyping] = useState<
         {
             [key: string]: boolean;
         }[]
     >([]);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (reply) {
-            textAreaRef?.current?.focus();
-        }
+        if (reply?.messageId) textAreaRef?.current?.focus();
     }, [reply]);
 
     const pasteText = async () => {
@@ -54,29 +64,21 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
     }, [message]);
 
     useEffect(() => {
-        if (!edit) return;
+        if (!editContent) return;
         const text = textAreaRef.current?.innerText;
 
-        if (text !== edit) {
-            setMessage(edit);
+        if (text !== editContent) {
+            setMessage(editContent);
             const input = textAreaRef.current as HTMLInputElement;
             input.innerText = '';
         }
-    }, [edit]);
+    }, [editContent]);
 
     const sendMessage = async () => {
+        let messageContent = trimMessage(message);
+
         if (message.length === 0 && files.length === 0) {
             return;
-        }
-
-        let messageContent = message;
-
-        while (messageContent.startsWith('\n')) {
-            messageContent = messageContent.substring(1);
-        }
-
-        while (messageContent.endsWith('\n')) {
-            messageContent = messageContent.substring(0, messageContent.length - 1);
         }
 
         const tempId = uuidv4();
@@ -85,7 +87,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
             content: messageContent,
             attachments: files,
             author: auth.user,
-            messageReference: reply ?? null,
+            messageReference: reply?.messageId ?? null,
             createdAt: new Date(),
             error: false,
             waiting: true,
@@ -94,7 +96,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
         setMessages((messages: MessageType[]) => [...messages, tempMessage]);
 
         try {
-            await fetch(`/api/users/me/channels/${channel.id}/messages`, {
+            const response = await fetch(`/api/users/me/channels/${channel.id}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,16 +106,27 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                     message: {
                         content: messageContent,
                         attachments: files,
-                        messageReference: reply?.id ?? null,
+                        messageReference: reply?.messageId ?? null,
                     },
                 }),
             });
+
+            if (!response.ok) {
+                setMessages((messages: MessageType[]) =>
+                    messages.map((message) =>
+                        message.id === tempId
+                            ? { ...message, error: true, waiting: false }
+                            : message
+                    )
+                );
+                return;
+            }
 
             const input = textAreaRef.current as HTMLInputElement;
             input.innerText = '';
             setFiles([]);
 
-            if (reply) {
+            if (reply?.messageId) {
                 setReply(null);
                 localStorage.setItem(
                     `channel-${channel.id}`,
@@ -163,7 +176,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                 style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
             >
                 <div>
-                    {message.length === 0 && !edit && (
+                    {message.length === 0 && !editContent && (
                         <div className={styles.textContainerPlaceholder}>
                             Message {friend ? `@${friend.username}` : channel?.name}
                         </div>
@@ -177,7 +190,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                         aria-haspopup='listbox'
                         aria-invalid='false'
                         aria-label={
-                            edit
+                            editContent
                                 ? 'Edit Message'
                                 : `Message ${friend ? `@${friend.username}` : channel?.name}`
                         }
@@ -190,19 +203,19 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
 
-                            if (edit) {
-                                setEdit(text);
+                            if (editContent) {
+                                setEditContent(text);
                                 localStorage.setItem(
                                     `channel-${channel.id}`,
                                     JSON.stringify({
                                         ...JSON.parse(
                                             localStorage.getItem(`channel-${channel.id}`) || '{}'
                                         ),
-                                        edit: {
+                                        editContent: {
                                             ...JSON.parse(
                                                 localStorage.getItem(`channel-${channel.id}`) ||
                                                     '{}'
-                                            ).edit,
+                                            ).editContent,
                                             content: text,
                                         },
                                     })
@@ -241,7 +254,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                             setMessage(text);
                         }}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey && !edit) {
+                            if (e.key === 'Enter' && !e.shiftKey && !editContent) {
                                 e.preventDefault();
                                 sendMessage();
                                 setMessage('');
@@ -263,10 +276,10 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                 </div>
             </div>
         ),
-        [message, friend, channel, edit, reply]
+        [message, friend, channel, editContent, reply]
     );
 
-    if (edit)
+    if (editContent)
         return (
             <form
                 className={styles.form}
@@ -296,7 +309,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
     else if (!auth.user.blockedUserIds.includes(friend?.id)) {
         return (
             <form className={styles.form}>
-                {reply?.channel === channel?.id && (
+                {reply?.channelId === channel.id && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
                             Replying to <span>{reply?.author.username}</span>
@@ -331,7 +344,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                 <div
                     className={styles.textArea}
                     style={{
-                        borderRadius: reply?.channel === channel?.id ? '0 0 8px 8px' : '8px',
+                        borderRadius: reply?.channelId === channel.id ? '0 0 8px 8px' : '8px',
                     }}
                 >
                     <div className={styles.scrollableContainer + ' scrollbar'}>
@@ -345,18 +358,33 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                         <div className={styles.input}>
                             <div className={styles.attachWrapper}>
                                 <input
+                                    ref={fileInputRef}
                                     type='file'
-                                    id='file'
-                                    accept='image/*'
+                                    accept='*'
                                     multiple
-                                    onChange={(e) => {
-                                        // @ts-expect-error
-                                        const newFiles = Array.from(e.target.files);
+                                    onChange={async (e) => {
+                                        const newFiles = Array.from(e.target.files as FileList);
                                         if (files.length + newFiles.length > 10) {
+                                            alert('You can only upload 10 files at a time');
                                             return;
                                         }
-                                        // @ts-expect-error
-                                        setFiles(files.concat(newFiles).slice(0, 10));
+
+                                        let checkedFiles = [];
+
+                                        // Run checks
+                                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                                        for (const file of newFiles) {
+                                            if (file.size > maxFileSize) {
+                                                alert(
+                                                    `File ${file.name} is too big and was skipped`
+                                                );
+                                            } else {
+                                                checkedFiles.push(file);
+                                            }
+                                        }
+
+                                        // Add files to state
+                                        setFiles([...files, ...checkedFiles]);
                                     }}
                                     style={{ display: 'none' }}
                                 />
@@ -365,7 +393,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                                     onClick={(e) => e.preventDefault()}
                                     onDoubleClick={(e) => {
                                         e.preventDefault();
-                                        document.getElementById('file')?.click();
+                                        fileInputRef.current?.click();
                                     }}
                                 >
                                     <div>
@@ -399,7 +427,7 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (edit) return;
+                                            if (editContent) return;
                                             sendMessage();
                                             setMessage('');
                                             // @ts-expect-error
@@ -409,14 +437,22 @@ const TextArea = ({ channel, friend, edit, setEdit, reply, setReply, setMessages
                                         style={{
                                             cursor:
                                                 message.length === 0 ? 'not-allowed' : 'pointer',
-                                            opacity: message.length === 0 ? 0.5 : 1,
+                                            opacity: message.length === 0 ? 0.3 : 1,
+                                            color:
+                                                message.length === 0 ? 'var(--foreground-5)' : '',
                                         }}
                                     >
                                         <div>
-                                            <Icon
-                                                name='sendButton'
-                                                size={20}
-                                            />
+                                            <svg
+                                                width='16'
+                                                height='16'
+                                                viewBox='0 0 16 16'
+                                            >
+                                                <path
+                                                    d='M8.2738 8.49222L1.99997 9.09877L0.349029 14.3788C0.250591 14.691 0.347154 15.0322 0.595581 15.246C0.843069 15.4597 1.19464 15.5047 1.48903 15.3613L15.2384 8.7032C15.5075 8.57195 15.6781 8.29914 15.6781 8.00007C15.6781 7.70101 15.5074 7.4282 15.2384 7.29694L1.49839 0.634063C1.20401 0.490625 0.852453 0.535625 0.604941 0.749376C0.356493 0.963128 0.259941 1.30344 0.358389 1.61563L2.00932 6.89563L8.27093 7.50312C8.52405 7.52843 8.71718 7.74125 8.71718 7.99531C8.71718 8.24938 8.52406 8.46218 8.27093 8.4875L8.2738 8.49222Z'
+                                                    fill='currentColor'
+                                                ></path>
+                                            </svg>
                                         </div>
                                     </button>
                                 )}

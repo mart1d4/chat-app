@@ -2,6 +2,7 @@
 
 'use client';
 
+import { pinMessage, unpinMessage, deleteMessage } from '@/lib/api-functions/messages';
 import { useEffect, useState, ReactElement } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
@@ -25,6 +26,21 @@ const content = ({ content }: any): ReactElement => {
     const user = content?.user || null;
     const message = content?.message || null;
     let menuItems: any;
+
+    const shouldDisplayInlined = (type: string) => {
+        const inlineTypes = [
+            'RECIPIENT_ADD',
+            'RECIPIENT_REMOVE',
+            'CALL',
+            'CHANNEL_NAME_CHANGE',
+            'CHANNEL_ICON_CHANGE',
+            'CHANNEL_PINNED_MESSAGE',
+            'GUILD_MEMBER_JOIN',
+            'OWNER_CHANGE',
+        ];
+
+        return inlineTypes.includes(type);
+    };
 
     useEffect(() => {
         const handleShift = (e) => {
@@ -137,7 +153,7 @@ const content = ({ content }: any): ReactElement => {
                 },
             ]);
         } else if (message) {
-            if (message?.type === 2) {
+            if (shouldDisplayInlined(message.type)) {
                 setItems([
                     {
                         name: 'Add Reaction',
@@ -172,7 +188,7 @@ const content = ({ content }: any): ReactElement => {
                     {
                         name: self && 'Edit Message',
                         icon: 'edit',
-                        func: () => content?.editMessage(),
+                        func: () => content?.editMessageState(),
                     },
                     {
                         name: message.pinned ? 'Unpin Message' : 'Pin Message',
@@ -181,13 +197,18 @@ const content = ({ content }: any): ReactElement => {
                             ? () => content?.unpinPopup()
                             : () => content?.pinPopup(),
                         funcShift: message.pinned
-                            ? () => content?.unpinMessage()
-                            : () => content?.pinMessage(),
+                            ? () => unpinMessage(auth.accessToken, message.id)
+                            : () => pinMessage(auth.accessToken, message.id),
                     },
                     {
                         name: 'Reply',
                         icon: 'reply',
-                        func: () => content?.replyToMessage(),
+                        func: () => content?.replyToMessageState(),
+                    },
+                    {
+                        name: 'Copy Text',
+                        icon: 'copy',
+                        func: () => navigator.clipboard.writeText(message.content),
                     },
                     { name: 'Mark Unread', icon: 'mark', func: () => {} },
                     {
@@ -203,7 +224,7 @@ const content = ({ content }: any): ReactElement => {
                         name: self && 'Delete Message',
                         icon: 'delete',
                         func: () => content?.deletePopup(),
-                        funcShift: () => content?.deleteMessage(),
+                        funcShift: () => deleteMessage(auth.accessToken, message.id),
                         danger: true,
                     },
                     {

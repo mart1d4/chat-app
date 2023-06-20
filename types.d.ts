@@ -168,7 +168,7 @@ type MessageType = {
     content: string;
     attachments: string[];
     embeds: string[];
-    messageReference?: string;
+    messageReference?: string | MessageType;
     edited: boolean;
     pinned: boolean;
     reactions: string[];
@@ -185,6 +185,10 @@ type MessageType = {
 
     createdAt: Date;
     updatedAt: Date;
+
+    // Not in database
+    waiting?: boolean;
+    error?: boolean;
 };
 
 //#//#//#//#//#//#//

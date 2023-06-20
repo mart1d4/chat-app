@@ -1,21 +1,20 @@
-.li,
-.liReply {
+.messageContainer {
     position: relative;
 }
 
-.li:not(.noInt):hover {
+.messageContainer:not(.noInteraction):hover {
     background-color: var(--background-hover-4);
 }
 
-.liReply {
+.messageContainer.reply:not(.noInteraction) {
     background-color: var(--background-message-highlight);
 }
 
-.liReply:not(.noInt):hover {
+.messageContainer.reply:not(.noInteraction):hover {
     background-color: var(--background-message-highlight-hover);
 }
 
-.liReply::before {
+.messageContainer.reply::before {
     content: '';
     position: absolute;
     left: 0;
@@ -27,7 +26,7 @@
     background-color: var(--accent-1);
 }
 
-.messageStart {
+.messageContainer.large > div:not(.buttonContainer, .messageReply) {
     margin-top: 1.0625rem;
     min-height: 2.75rem;
     padding: 0.125rem 48px 0.125rem 72px;
@@ -208,7 +207,7 @@
     border-top-left-radius: 6px;
 }
 
-.messageReply > img {
+.userAvatarReply {
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
@@ -298,7 +297,7 @@
     width: 32px;
     cursor: pointer;
     position: relative;
-    color: var(--foreground-2);
+    color: var(--foreground-3);
 }
 
 .buttons > div:active > svg {
@@ -315,6 +314,7 @@
 
 .buttons > div:hover {
     background-color: var(--background-hover-1);
+    color: var(--foreground-2);
 }
 
 .buttons > div > svg {

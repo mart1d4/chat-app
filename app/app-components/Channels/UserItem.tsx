@@ -99,21 +99,23 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                         <div className={styles.link}>
                             <div className={styles.layout}>
                                 <div className={styles.layoutAvatar}>
-                                    {channel.type === 'GROUP_DM' ? (
-                                        <Avatar
-                                            src={channel.icon || ''}
-                                            alt={channel.name}
-                                            size={32}
-                                        />
-                                    ) : (
-                                        <Avatar
-                                            src={user?.avatar || ''}
-                                            alt={user?.username || ''}
-                                            size={32}
-                                            status={user?.status}
-                                            tooltip={true}
-                                        />
-                                    )}
+                                    <div>
+                                        {channel.type === 'GROUP_DM' ? (
+                                            <Avatar
+                                                src={channel.icon || ''}
+                                                alt={channel.name}
+                                                size={32}
+                                            />
+                                        ) : (
+                                            <Avatar
+                                                src={user?.avatar || ''}
+                                                alt={user?.username || ''}
+                                                size={32}
+                                                status={user?.status}
+                                                tooltip={true}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className={styles.layoutContent}>

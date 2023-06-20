@@ -4,8 +4,9 @@ import { addFriend, removeFriend, unblockUser } from '@/lib/api-functions/users'
 import { createChannel } from '@/lib/api-functions/channels';
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
-import { useState, ReactElement } from 'react';
 import styles from './UserItem.module.css';
+import { useRouter } from 'next/navigation';
+import { ReactElement } from 'react';
 
 type Props = {
     content: string;
@@ -16,14 +17,36 @@ const UserItem = ({ content, user }: Props): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
-    const token = auth.accessToken;
+
+    const router = useRouter();
+
+    const channelExists = (userId: string) => {
+        const channel = auth.user.channels.find((channel: any) => {
+            return (
+                channel.recipients.length === 2 &&
+                ((channel.recipientIds[0] === userId && channel.recipientIds[1] === auth.user.id) ||
+                    (channel.recipientIds[0] === auth.user.id &&
+                        channel.recipientIds[1] === userId))
+            );
+        });
+
+        if (channel) return channel.id;
+        else return false;
+    };
 
     return (
         <li
             className={styles.liContainer}
             onClick={async () => {
                 if (content !== 'online' && content !== 'all') return;
-                await createChannel(token, [user.id]);
+
+                const channelId = channelExists(user.id);
+                if (channelId) {
+                    router.push(`/channels/me/${channelId}`);
+                    return;
+                }
+
+                await createChannel(auth.accessToken, [user.id]);
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
@@ -73,7 +96,14 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation();
-                                    await createChannel(token, [user.id]);
+
+                                    const channelId = channelExists(user.id);
+                                    if (channelId) {
+                                        router.push(`/channels/me/${channelId}`);
+                                        return;
+                                    }
+
+                                    await createChannel(auth.accessToken, [user.id]);
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
@@ -124,7 +154,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                 <button
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        await addFriend(token, user.username);
+                                        await addFriend(auth.accessToken, user.username);
                                     }}
                                     onMouseEnter={(e) =>
                                         setTooltip({
@@ -145,7 +175,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation();
-                                    await removeFriend(token, user.username);
+                                    await removeFriend(auth.accessToken, user.username);
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
@@ -168,7 +198,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                await unblockUser(token, user.id);
+                                await unblockUser(auth.accessToken, user.id);
                             }}
                             onMouseEnter={(e) =>
                                 setTooltip({

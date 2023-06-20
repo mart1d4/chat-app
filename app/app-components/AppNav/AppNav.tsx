@@ -8,6 +8,7 @@ import NavIcon from './NavIcon';
 import Pusher from 'pusher-js';
 
 const AppNav = (): ReactElement => {
+    const [url, setUrl] = useState<string>('/channels/me');
     const [trigger, setTrigger] = useState<any>(null);
     const [notifDM, setNotifDM] = useState<
         {
@@ -20,6 +21,15 @@ const AppNav = (): ReactElement => {
     const ref = useRef<boolean>(false);
     const pusher = useRef<Pusher | null>(null);
     const pathname = usePathname();
+
+    useEffect(() => {
+        localStorage.setItem('channel-url', pathname);
+
+        const url = localStorage.getItem('channel-url');
+        if (url) {
+            setUrl(url);
+        }
+    }, [pathname]);
 
     useEffect(() => {
         if (auth.user.notifications.length) {
@@ -469,7 +479,7 @@ const AppNav = (): ReactElement => {
 
                 <NavIcon
                     name='Direct Messages'
-                    link='/channels/me'
+                    link={url}
                     svg={chatappIcon}
                 />
 

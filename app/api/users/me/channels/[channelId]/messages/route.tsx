@@ -32,7 +32,11 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     skip: skip || 0,
                     include: {
                         author: true,
-                        messageReference: true,
+                        messageReference: {
+                            include: {
+                                author: true,
+                            },
+                        },
                     },
                 },
             },
@@ -160,29 +164,59 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             }
         }
 
-        const newMessage = await prisma.message.create({
-            data: {
-                type: message.messageReference ? 'REPLY' : 'DEFAULT',
-                content: String(message.content),
-                attachments: message.attachments || [],
-                embeds: message.embeds || [],
-                messageReference: message.messageReference || undefined,
-                mentionEveryone: message.mentionEveryone || false,
-                mentionChannelIds: message.mentionChannelIds || [],
-                mentionRoleIds: message.mentionRoleIds || [],
-                mentionUserIds: message.mentionUserIds || [],
-                author: {
-                    connect: {
-                        id: senderId,
+        let newMessage;
+        if (message.messageReference !== null) {
+            newMessage = await prisma.message.create({
+                data: {
+                    type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                    content: String(message.content),
+                    attachments: message.attachments || [],
+                    embeds: message.embeds || [],
+                    mentionEveryone: message.mentionEveryone || false,
+                    mentionChannelIds: message.mentionChannelIds || [],
+                    mentionRoleIds: message.mentionRoleIds || [],
+                    mentionUserIds: message.mentionUserIds || [],
+                    author: {
+                        connect: {
+                            id: senderId,
+                        },
+                    },
+                    channel: {
+                        connect: {
+                            id: channelId,
+                        },
+                    },
+                    messageReference: {
+                        connect: {
+                            id: message.messageReference || '',
+                        },
                     },
                 },
-                channel: {
-                    connect: {
-                        id: channelId,
+            });
+        } else {
+            newMessage = await prisma.message.create({
+                data: {
+                    type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                    content: String(message.content),
+                    attachments: message.attachments || [],
+                    embeds: message.embeds || [],
+                    mentionEveryone: message.mentionEveryone || false,
+                    mentionChannelIds: message.mentionChannelIds || [],
+                    mentionRoleIds: message.mentionRoleIds || [],
+                    mentionUserIds: message.mentionUserIds || [],
+                    author: {
+                        connect: {
+                            id: senderId,
+                        },
+                    },
+                    channel: {
+                        connect: {
+                            id: channelId,
+                        },
                     },
                 },
-            },
-        });
+            });
+        }
 
         await prisma.channel.update({
             where: {

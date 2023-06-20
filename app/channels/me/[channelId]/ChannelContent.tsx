@@ -17,10 +17,12 @@ import { v4 as uuidv4 } from 'uuid';
 import Pusher from 'pusher-js';
 
 const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => {
-    if (!channel) return <></>;
-
-    const [reply, setReply] = useState(null);
-    const [edit, setEdit] = useState(null);
+    const [reply, setReply] = useState<null | {
+        channelId: string;
+        messageId: string;
+        author: CleanOtherUserType;
+    }>(null);
+    const [edit, setEdit] = useState<null | { messageId: string; content: string }>(null);
     const [friend, setFriend] = useState<null | CleanOtherUserType>(null);
     const [messages, setMessages] = useState<MessageType[]>([]);
 
@@ -104,7 +106,7 @@ const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => 
         return diff / (1000 * 60) >= 5;
     };
 
-    const isBigMessage = (index: number) => {
+    const shouldBeLarge = (index: number) => {
         if (index === 0 || !['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) {
             return true;
         }
@@ -244,14 +246,13 @@ const ChannelContent = ({ channel }: { channel: ChannelType }): ReactElement => 
                                                     )}
 
                                                     <Message
-                                                        channel={channel}
                                                         message={message}
-                                                        start={isBigMessage(index)}
+                                                        large={shouldBeLarge(index)}
+                                                        last={index === messages.length - 1}
                                                         edit={edit}
                                                         setEdit={setEdit}
                                                         reply={reply}
                                                         setReply={setReply}
-                                                        lastMessage={index === messages.length - 1}
                                                     />
                                                 </div>
                                             ))}

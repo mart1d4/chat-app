@@ -32,6 +32,10 @@ const FixedLayer = (): ReactElement => {
                         height: node.children[0]?.offsetHeight,
                     });
                 }, 10);
+            } else {
+                setNode(null);
+                setContainer({});
+                setPositions({});
             }
         },
         [fixedLayer, resetPosition]
