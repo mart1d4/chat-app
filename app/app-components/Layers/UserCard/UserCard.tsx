@@ -10,7 +10,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
     const [note, setNote] = useState('');
     const [message, setMessage] = useState('');
 
-    const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -26,10 +26,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >
-                    <div
-                        className={styles.topSection}
-                        style={{ backgroundColor: user.primaryColor }}
-                    >
+                    <div className={styles.topSection} style={{ backgroundColor: user.primaryColor }}>
                         {auth.user.id === user.id && (
                             <div
                                 className={styles.editProfileButton}
@@ -42,11 +39,14 @@ const UserCard = ({ content, side }: any): ReactElement => {
                                     });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
+                                onClick={() => {
+                                    setFixedLayer(null);
+                                    setShowSettings({
+                                        type: 'Profiles',
+                                    });
+                                }}
                             >
-                                <Icon
-                                    name='edit'
-                                    size={18}
-                                />
+                                <Icon name='edit' size={18} />
                             </div>
                         )}
 
@@ -77,9 +77,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
                     <div className={styles.contentSection}>
                         <div className={styles.username}>{user?.username}</div>
 
-                        {user?.customStatus && (
-                            <div className={styles.customStatus}>{user.customStatus}</div>
-                        )}
+                        {user?.customStatus && <div className={styles.customStatus}>{user.customStatus}</div>}
 
                         <div className={styles.contentSeparator} />
 
@@ -87,9 +85,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
                             {user?.description && (
                                 <div>
                                     <h1>About Me</h1>
-                                    <div className={styles.contentUserDescription}>
-                                        {user.description}
-                                    </div>
+                                    <div className={styles.contentUserDescription}>{user.description}</div>
                                 </div>
                             )}
 

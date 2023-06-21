@@ -13,8 +13,21 @@ import { v4 as uuidv4 } from 'uuid';
 
 const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/apng', 'image/webp'];
 
-const Settings = ({ tab }: any): ReactElement => {
-    const [activeTab, setActiveTab] = useState<string>(tab ?? 'My Account');
+const avatars = [
+    '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
+    '9a5bf989-b884-4f81-b26c-ca1995cdce5e',
+    '7cb3f75d-4cad-4023-a643-18c329b5b469',
+    '220b2392-c4c5-4226-8b91-2b60c5a13d0f',
+    '51073721-c1b9-4d47-a2f3-34f0fbb1c0a8',
+];
+
+const getRandomAvatar = (): string => {
+    const index = Math.floor(Math.random() * avatars.length);
+    return avatars[index];
+};
+
+const Settings = (): ReactElement => {
+    const [activeTab, setActiveTab] = useState<string>('My Account');
 
     const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { logout } = useLogout();
@@ -29,11 +42,11 @@ const Settings = ({ tab }: any): ReactElement => {
         window.addEventListener('keydown', handleEsc);
 
         if (typeof showSettings !== 'boolean') {
-            setActiveTab(showSettings.tab);
+            setActiveTab(showSettings.type);
         }
 
         return () => window.removeEventListener('keydown', handleEsc);
-    }, []);
+    }, [showSettings]);
 
     const tabs = [
         {
@@ -150,8 +163,7 @@ const Settings = ({ tab }: any): ReactElement => {
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (tab.name === 'separator' || tab.type === 'title')
-                                                return;
+                                            if (tab.name === 'separator' || tab.type === 'title') return;
                                             if (tab.name === 'Log Out') {
                                                 logout();
                                                 setShowSettings(false);
@@ -161,12 +173,7 @@ const Settings = ({ tab }: any): ReactElement => {
                                     >
                                         {tab.name !== 'separator' && tab.name}
 
-                                        {tab?.icon && (
-                                            <Icon
-                                                name={tab.icon}
-                                                size={16}
-                                            />
-                                        )}
+                                        {tab?.icon && <Icon name={tab.icon} size={16} />}
                                     </div>
                                 ))}
                             </nav>
@@ -182,10 +189,7 @@ const Settings = ({ tab }: any): ReactElement => {
                             <div className={styles.closeButton}>
                                 <div>
                                     <div onClick={() => setShowSettings(false)}>
-                                        <Icon
-                                            name='close'
-                                            size={18}
-                                        />
+                                        <Icon name='close' size={18} />
                                     </div>
 
                                     <div>ESC</div>
@@ -220,7 +224,7 @@ const MyAccount = ({ setActiveTab }: any) => {
             setTooltip({
                 text: 'Copied to clipboard',
                 element: usernameRef.current,
-                color: 'var(--success-1)',
+                color: 'var(--success-light)',
             });
         } catch (err) {
             console.error(err);
@@ -289,10 +293,7 @@ const MyAccount = ({ setActiveTab }: any) => {
                 </div>
 
                 <div className={styles.userCard}>
-                    <div
-                        className={styles.userCardHeader}
-                        style={{ backgroundColor: auth?.user.primaryColor }}
-                    />
+                    <div className={styles.userCardHeader} style={{ backgroundColor: auth?.user.primaryColor }} />
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
@@ -323,29 +324,20 @@ const MyAccount = ({ setActiveTab }: any) => {
                             {auth?.user?.username}
                         </div>
 
-                        <button
-                            className='blue'
-                            onClick={() => setActiveTab('Profiles')}
-                        >
+                        <button className='blue' onClick={() => setActiveTab('Profiles')}>
                             Edit User Profile
                         </button>
                     </div>
 
                     <div>
                         {fields.map((field) => (
-                            <div
-                                className={styles.field}
-                                key={uuidv4()}
-                            >
+                            <div className={styles.field} key={uuidv4()}>
                                 <div>
                                     <h3>{field.title}</h3>
                                     <div>{field.value}</div>
                                 </div>
 
-                                <button
-                                    className='grey'
-                                    onClick={() => field.func && field.func()}
-                                >
+                                <button className='grey' onClick={() => field.func && field.func()}>
                                     Edit
                                 </button>
                             </div>
@@ -376,8 +368,8 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <h3>SMS Backup Authentication</h3>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose your authentication
-                        app or backup codes. Your current phone number is 0001.
+                        Add your phone as a backup 2FA method in case you lose your authentication app or backup codes.
+                        Your current phone number is 0001.
                     </div>
 
                     <div className={styles.buttonsContainer}>
@@ -397,8 +389,8 @@ const MyAccount = ({ setActiveTab }: any) => {
 
                 <div className={styles.accountRemoval}>
                     <div>
-                        Deleting your account will remove all of your data from our servers. This
-                        action is irreversible.
+                        Deleting your account will remove all of your data from our servers. This action is
+                        irreversible.
                     </div>
 
                     <button className='red'>Delete Account</button>
@@ -422,7 +414,7 @@ const Profiles = () => {
         minutes: 0,
         seconds: 0,
     });
-    const [avatar, setAvatar] = useState<File | null>(null);
+    const [avatar, setAvatar] = useState<File | string | null>(null);
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
     const [displayName, setDisplayName] = useState<string>(auth.user.displayName);
     const [primaryColor, setPrimaryColor] = useState<string>(auth.user.primaryColor);
@@ -512,10 +504,7 @@ const Profiles = () => {
                                     Reset
                                 </button>
 
-                                <button
-                                    className='button green'
-                                    onClick={() => saveUser()}
-                                >
+                                <button className='button green' onClick={() => saveUser()}>
                                     {isLoading ? <LoadingDots /> : 'Save Changes'}
                                 </button>
                             </div>
@@ -542,9 +531,7 @@ const Profiles = () => {
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert(
-                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
-                            );
+                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
                         }
 
                         const newFile = new File([file], 'image', {
@@ -565,8 +552,7 @@ const Profiles = () => {
                             style={{
                                 color: activeTab === index ? 'var(--foreground-1)' : '',
                                 cursor: activeTab === index ? 'default' : '',
-                                borderBottom:
-                                    activeTab === index ? '2px solid var(--accent-2)' : '',
+                                borderBottom: activeTab === index ? '2px solid var(--accent-2)' : '',
                             }}
                         >
                             {tab}
@@ -595,8 +581,17 @@ const Profiles = () => {
                             <h3>Avatar</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button className='blue'>Change Avatar</button>
-                                <button className='underline'>Remove Avatar</button>
+                                <button onClick={() => avatarInputRef.current?.click()} className='blue'>
+                                    Change Avatar
+                                </button>
+                                <button
+                                    className='underline'
+                                    onClick={() => {
+                                        setAvatar(getRandomAvatar());
+                                    }}
+                                >
+                                    Remove Avatar
+                                </button>
                             </div>
                         </div>
 
@@ -604,7 +599,9 @@ const Profiles = () => {
                             <h3>Profile Banner</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button className='blue'>Change Banner</button>
+                                <button className='blue' onClick={() => avatarInputRef.current?.click()}>
+                                    Change Banner
+                                </button>
                             </div>
                         </div>
 
@@ -619,10 +616,7 @@ const Profiles = () => {
                                             borderColor: primaryColor,
                                         }}
                                     >
-                                        <Icon
-                                            name='edit'
-                                            size={14}
-                                        />
+                                        <Icon name='edit' size={14} />
                                     </div>
 
                                     <div>Primary</div>
@@ -635,10 +629,7 @@ const Profiles = () => {
                                             borderColor: accentColor,
                                         }}
                                     >
-                                        <Icon
-                                            name='edit'
-                                            size={14}
-                                        />
+                                        <Icon name='edit' size={14} />
                                     </div>
 
                                     <div>Accent</div>
@@ -649,9 +640,7 @@ const Profiles = () => {
                         <div className={styles.customSection}>
                             <h3>About me</h3>
 
-                            <div className={styles.description}>
-                                You can use markdown and links if you'd like
-                            </div>
+                            <div className={styles.description}>You can use markdown and links if you'd like</div>
 
                             <div className={styles.inputLarge}>
                                 <div className='scrollbar'>
@@ -692,9 +681,7 @@ const Profiles = () => {
                                             text:
                                                 description.length > 190
                                                     ? 'Message is too long'
-                                                    : `${
-                                                          190 - description.length
-                                                      } characters remaining`,
+                                                    : `${190 - description.length} characters remaining`,
                                             element: e.currentTarget,
                                         });
                                     }}
@@ -727,24 +714,10 @@ const Profiles = () => {
                             }
                         >
                             <div>
-                                <svg
-                                    className={styles.cardBanner}
-                                    viewBox='0 0 340 90'
-                                >
+                                <svg className={styles.cardBanner} viewBox='0 0 340 90'>
                                     <mask id='card-banner-mask'>
-                                        <rect
-                                            fill='white'
-                                            x='0'
-                                            y='0'
-                                            width='100%'
-                                            height='100%'
-                                        />
-                                        <circle
-                                            fill='black'
-                                            cx='58'
-                                            cy='82'
-                                            r='46'
-                                        />
+                                        <rect fill='white' x='0' y='0' width='100%' height='100%' />
+                                        <circle fill='black' cx='58' cy='82' r='46' />
                                     </mask>
 
                                     <foreignObject
@@ -758,14 +731,13 @@ const Profiles = () => {
                                         <div>
                                             <div
                                                 className={styles.cardBannerBackground}
-                                                style={{ backgroundColor: primaryColor }}
+                                                style={{
+                                                    backgroundColor: primaryColor,
+                                                }}
                                                 onClick={() => avatarInputRef.current?.click()}
                                             />
 
-                                            <div
-                                                className={styles.cardBannerButton}
-                                                aria-hidden='true'
-                                            >
+                                            <div className={styles.cardBannerButton} aria-hidden='true'>
                                                 Change Banner
                                             </div>
                                         </div>
@@ -777,9 +749,9 @@ const Profiles = () => {
                                         className={styles.avatarImage}
                                         style={{
                                             backgroundImage: `url(${
-                                                avatar
+                                                avatar !== null && typeof avatar !== 'string'
                                                     ? URL.createObjectURL(avatar)
-                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`
+                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? auth.user.avatar}/`
                                             })`,
                                         }}
                                         onClick={() => avatarInputRef.current?.click()}
@@ -824,9 +796,7 @@ const Profiles = () => {
                                                 <div>User Profile</div>
                                                 <div>
                                                     <span>
-                                                        {`${
-                                                            time.hours > 0 ? time.hours + ':' : ''
-                                                        }${
+                                                        {`${time.hours > 0 ? time.hours + ':' : ''}${
                                                             time.minutes
                                                                 ? time.minutes < 10
                                                                     ? '0' + time.minutes + ':'
@@ -865,7 +835,7 @@ const FriendRequests = () => {
                     <h2>Friend Requests</h2>
                 </div>
 
-                <h2>Who can send you a friend request</h2>
+                <h3>Who can send you a friend request</h3>
             </div>
         </>
     );
