@@ -2,6 +2,7 @@ const cleanUser = (user: UserType): CleanUserType => {
     return {
         id: user.id,
         username: user.username,
+        displayName: user.displayName,
         avatar: user.avatar,
         banner: user.banner,
         primaryColor: user.primaryColor,
@@ -46,6 +47,7 @@ const cleanOtherUser = (user: UserType): CleanOtherUserType => {
     return {
         id: user.id,
         username: user.username,
+        displayName: user.displayName,
         avatar: user.avatar,
         banner: user.banner,
         primaryColor: user.primaryColor,

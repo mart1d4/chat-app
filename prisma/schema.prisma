@@ -69,6 +69,7 @@ enum MessageType {
 model User {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   username     String     @unique
+  displayName  String
   email        String?
   avatar       String     @default("blue")
   banner       String?

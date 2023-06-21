@@ -65,10 +65,8 @@ const Avatar = (props: Props) => {
                     y={0}
                     width={props.size}
                     height={props.size}
-                    style={{
-                        mask: `url(#status-mask-${props.size})`,
-                        // WebkitMask: `url(#svg-mask-status-online)`,
-                    }}
+                    overflow='visible'
+                    mask={`url(#status-mask-${props.size})`}
                 >
                     <div className={styles.container}>
                         <Image

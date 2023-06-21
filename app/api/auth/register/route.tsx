@@ -87,6 +87,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         await prisma.user.create({
             data: {
                 username: username,
+                displayName: username,
                 password: hash,
                 avatar: avatar,
                 primaryColor: color,

@@ -22,9 +22,7 @@ const UserCard = ({ content, side }: any): ReactElement => {
             {content?.user && (
                 <motion.div
                     className={styles.cardContainer}
-                    initial={{
-                        transform: `translateX(${side === 'left' && '-'}20px)`,
-                    }}
+                    initial={{ transform: `translateX(${side === 'left' && '-'}20px)` }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >

@@ -14,9 +14,10 @@ const UserProfile = (): ReactElement => {
     const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
     const [note, setNote] = useState<string>('');
 
-    const { userProfile, setUserProfile, fixedLayer, setFixedLayer }: any = useContextHook({
-        context: 'layer',
-    });
+    const { userProfile, setUserProfile, fixedLayer, setFixedLayer, setShowSettings }: any =
+        useContextHook({
+            context: 'layer',
+        });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const token = auth.accessToken;
@@ -115,6 +116,12 @@ const UserProfile = (): ReactElement => {
                                         });
                                     }}
                                     onMouseLeave={() => setTooltip(null)}
+                                    onClick={() => {
+                                        setUserProfile(null);
+                                        setShowSettings({
+                                            type: 'Profiles',
+                                        });
+                                    }}
                                 >
                                     <Icon name='edit' />
                                 </div>

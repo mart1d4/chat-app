@@ -24,21 +24,29 @@ const Loading = ({ children }: Props): ReactElement => {
         }
     }, [auth, loading]);
 
-    if (auth?.accessToken && !loading) {
-        return children;
-    }
-
     return (
-        <div className={styles.container}>
-            <video
-                autoPlay
-                loop
-            >
-                <source
-                    src='/assets/app/spinner.webm'
-                    type='video/webm'
-                />
-            </video>
+        <div
+            onDrag={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            onDragEnd={(e) => e.preventDefault()}
+            onDragOver={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+        >
+            {auth?.accessToken && !loading ? (
+                children
+            ) : (
+                <div className={styles.container}>
+                    <video
+                        autoPlay
+                        loop
+                    >
+                        <source
+                            src='/assets/app/spinner.webm'
+                            type='video/webm'
+                        />
+                    </video>
+                </div>
+            )}
         </div>
     );
 };

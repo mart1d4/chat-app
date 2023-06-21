@@ -294,7 +294,6 @@
     position: absolute;
     top: 77px;
     left: 17px;
-    cursor: pointer;
 }
 
 .username {
@@ -446,7 +445,7 @@
     border-bottom: 2px solid var(--accent-1);
 }
 
-.contentContainer {
+.contentInner {
     position: relative;
     display: flex;
     gap: 35px;
@@ -522,4 +521,404 @@
     line-height: 16px;
     text-align: center;
     user-select: none;
+}
+
+.inputLarge {
+    position: relative;
+    width: 100%;
+    text-indent: 0;
+    border-radius: 8px;
+}
+
+.inputLarge > div:first-child {
+    background-color: var(--background-1);
+    border-radius: 3px;
+    height: 136px;
+    transition: border-color 0.2s ease-in-out;
+    overflow: hidden scroll;
+    max-height: 50vh;
+}
+
+.inputLarge > div:first-child::-webkit-scrollbar {
+    width: 12px;
+}
+
+.inputLarge > div:first-child::-webkit-scrollbar-thumb {
+    background-color: var(--background-dark);
+    border-width: 4px;
+}
+
+.inputLarge > div:first-child::-webkit-scrollbar-track {
+    background-color: var(--background-1);
+    border-color: var(--background-1);
+}
+
+.inputLarge > div:last-child {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    color: var(--foreground-3);
+    user-select: none;
+    cursor: default;
+}
+
+.inputLargeInner {
+    height: 100%;
+    display: flex;
+    position: relative;
+}
+
+.inputLargeInner > div:first-child {
+    height: 66px;
+    min-height: 100%;
+    padding: 0;
+    resize: none;
+    border: none;
+    width: 100%;
+}
+
+.inputLargeInner > div:first-child > div {
+    position: relative;
+    outline: none;
+    overflow-wrap: break-word;
+    padding-bottom: 11px;
+    padding-top: 11px;
+    padding-left: 16px;
+    padding-right: 10px;
+    left: 0;
+    right: 10px;
+    text-align: left;
+    word-break: break-word;
+    white-space: break-spaces;
+    user-select: text;
+    line-height: 1.375rem;
+    color: var(--foreground-3);
+}
+
+.inputLargeInner > div:last-child {
+    margin-right: -6px;
+    display: flex;
+    height: 44px;
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contentInner > div:first-child {
+    flex: 1;
+}
+
+.contentInner > div:last-child {
+    max-width: 348px;
+}
+
+/* USER CARD */
+
+.cardContainer {
+    padding: 4px;
+    width: 348px;
+    position: relative;
+    min-height: 280px;
+    background: linear-gradient(
+        var(--card-primary-color),
+        var(--card-primary-color) 90px,
+        var(--card-accent-color)
+    );
+    border-radius: 8px;
+}
+
+.cardContainer > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px 8px 0 0;
+    max-height: calc(100vh - 28px);
+}
+
+.cardContainer > div::before {
+    content: '';
+    border-radius: 4px;
+    height: calc(100% - 8px);
+    width: calc(100% - 8px);
+    pointer-events: none;
+    position: absolute;
+    background-color: var(--card-overlay-color);
+}
+
+.cardBanner {
+    min-width: 340px;
+    min-height: 90px;
+    z-index: 0;
+    contain: paint;
+    overflow: hidden;
+}
+
+.cardBanner foreignObject > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    font-size: 12px;
+}
+
+.cardBannerBackground {
+    position: inherit;
+    height: 90px;
+    border-radius: 3px 3px 0 0;
+    width: 100%;
+    display: inline-block;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.cardBannerBackground:hover {
+    box-shadow: inset 0 0 120px hsla(0, 0%, 0%, 0.75);
+}
+
+.cardBannerButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: 0;
+    bottom: 0;
+    pointer-events: none;
+    color: var(--foreground-1);
+    visibility: hidden;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 12px;
+    white-space: pre;
+}
+
+.cardBannerBackground:hover + .cardBannerButton {
+    visibility: visible;
+}
+
+.cardAvatar {
+    position: absolute;
+    top: 46px;
+    left: 22px;
+    z-index: 1;
+}
+
+.avatarImage {
+    width: 80px;
+    height: 80px;
+    display: inline-block;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    position: relative;
+    cursor: pointer;
+}
+
+.avatarImage:hover {
+    box-shadow: inset 0 0 120px hsla(0, 0%, 0%, 0.75);
+}
+
+.cardAvatar > .avatarOverlay {
+    width: 80px;
+    height: 80px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: 0;
+    bottom: 0;
+    pointer-events: none;
+    color: var(--foreground-1);
+    visibility: hidden;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 12px;
+    white-space: pre;
+    text-align: center;
+}
+
+.avatarImage:hover + .avatarOverlay {
+    visibility: visible;
+}
+
+.cardAvatar > .imageUpload {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: auto;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    box-shadow: 0 2px 4px 0 hsl(0, 0, 0%, 0.2);
+    background-color: var(--foreground-1);
+    background-image: url('/assets/app/image-upload.svg');
+}
+
+.cardBadges {
+    position: relative;
+    top: 12px;
+    right: 16px;
+    width: fit-content;
+    align-self: flex-end;
+    border-radius: 8px;
+    max-width: 190px;
+    padding: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+    height: 30px;
+    width: 102px;
+    background-color: var(--card-background-color);
+}
+
+.cardBody {
+    padding: 0 12px;
+    margin: 28px 16px 16px;
+    max-height: calc(100dvh - 128px);
+    position: relative;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--card-background-color);
+}
+
+.cardBody > .cardSection {
+    padding-top: 12px;
+}
+
+.cardBody > div:first-child > h4 {
+    word-break: break-word;
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    user-select: text;
+    cursor: auto;
+    color: var(--foreground-1);
+}
+
+.cardBody > div:first-child > div {
+    line-height: 18px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--foreground-1);
+}
+
+.cardBody > .cardSection:not(:first-child) > h4 {
+    display: flex;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--foreground-1);
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.cardBody > .cardSection:not(:first-child) > div {
+    line-height: 1.375rem;
+    white-space: break-spaces;
+    word-wrap: break-word;
+    user-select: text;
+    display: -webkit-box;
+    line-clamp: 6;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    font-size: 14px;
+    line-height: 18px;
+    overflow: hidden;
+    color: var(--foreground-2);
+}
+
+.cardBody > .cardDivider {
+    margin-top: 12px;
+    height: 1px;
+    position: sticky;
+    top: 0;
+    background-color: var(--card-divider-color);
+}
+
+.cardBody > .cardSectionLarge {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.cardBody > .cardSectionLarge > h4 {
+    font-weight: 700;
+    color: var(--foreground-1);
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.cardBody > .cardSectionLarge > div {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    user-select: none;
+}
+
+.cardBody > .cardSectionLarge > div > div:first-child {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    width: 64px;
+    flex: 0 0 auto;
+    justify-content: center;
+    border-radius: 8px;
+    margin-right: 16px;
+    background-color: var(--accent-3);
+}
+
+.cardTime {
+    flex: 1 1 auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.cardTime > div:first-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child > span {
+    font-family: var(--font-code);
+}
+
+.cardBody > .cardSectionLarge > button {
+    width: 100%;
+    margin-top: 12px;
+    background-color: var(--card-button-color);
 }

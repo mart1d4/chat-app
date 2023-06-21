@@ -5,6 +5,7 @@
 type UserType = {
     id: string;
     username: string;
+    displayName: string;
     email?: string;
     avatar: string;
     banner?: string;
@@ -64,6 +65,7 @@ type UserType = {
 type CleanUserType = {
     id: string;
     username: string;
+    displayName: string;
     email?: string;
     avatar: string;
     banner?: string;
@@ -113,6 +115,7 @@ type CleanUserType = {
 type CleanOtherUserType = {
     id: string;
     username: string;
+    displayName: string;
     avatar: string;
     banner?: string;
     primaryColor: string;
@@ -229,8 +232,8 @@ type FixedLayerObjectType = {
 };
 
 type LayerContextValueType = null | {
-    showSettings: boolean;
-    setShowSettings: Dispatch<SetStateAction<boolean>>;
+    showSettings: boolean | {};
+    setShowSettings: Dispatch<SetStateAction<boolean | {}>>;
     userProfile: UserProfileObjectType;
     setUserProfile: Dispatch<SetStateAction<UserProfileObjectType>>;
     popup: PopupObjectType;

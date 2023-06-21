@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
+import Image from 'next/dist/client/image';
 import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,6 +28,10 @@ const Settings = ({ tab }: any): ReactElement => {
 
         window.addEventListener('keydown', handleEsc);
 
+        if (typeof showSettings !== 'boolean') {
+            setActiveTab(showSettings.tab);
+        }
+
         return () => window.removeEventListener('keydown', handleEsc);
     }, []);
 
@@ -37,7 +42,8 @@ const Settings = ({ tab }: any): ReactElement => {
         },
         {
             name: 'My Account',
-            component: <MyAccount />,
+            // @ts-ignore
+            component: <MyAccount setActiveTab={setActiveTab} />,
         },
         {
             name: 'Profiles',
@@ -195,16 +201,15 @@ const Settings = ({ tab }: any): ReactElement => {
 
 export default Settings;
 
-const MyAccount = () => {
+const MyAccount = ({ setActiveTab }: any) => {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [avatar, setAvatar] = useState<any>(null);
+    const [avatar, setAvatar] = useState<File | null>(null);
 
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
-    const avatarInputRef = useRef<HTMLInputElement>(null);
     const usernameRef = useRef<HTMLDivElement>(null);
 
     const copyToClipboard = async () => {
@@ -279,46 +284,6 @@ const MyAccount = () => {
     return (
         <>
             <div>
-                <AnimatePresence>
-                    {avatar && (
-                        <motion.div
-                            className={styles.saveAlert}
-                            initial={{
-                                transform: 'translateY(80px)',
-                            }}
-                            animate={{
-                                transform: 'translateY(0)',
-                            }}
-                            exit={{
-                                transform: 'translateY(80px)',
-                            }}
-                            transition={{
-                                duration: 0.1,
-                            }}
-                        >
-                            <p>Careful — you have unsaved changes!</p>
-
-                            <div>
-                                <button
-                                    className='button underline'
-                                    onClick={() => {
-                                        setAvatar(null);
-                                    }}
-                                >
-                                    Reset
-                                </button>
-
-                                <button
-                                    className='button green'
-                                    onClick={() => handleAvatarSubmit()}
-                                >
-                                    {isLoading ? <LoadingDots /> : 'Save Changes'}
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
                 <div className={styles.sectionTitle}>
                     <h2>My Account</h2>
                 </div>
@@ -326,56 +291,13 @@ const MyAccount = () => {
                 <div className={styles.userCard}>
                     <div
                         className={styles.userCardHeader}
-                        style={{
-                            backgroundColor: auth?.user.primaryColor,
-                        }}
+                        style={{ backgroundColor: auth?.user.primaryColor }}
                     />
 
                     <div className={styles.userCardInfo}>
-                        <input
-                            ref={avatarInputRef}
-                            className={styles.avatarInput}
-                            type='file'
-                            accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
-                            onChange={async (e) => {
-                                const file = e.target.files ? e.target.files[0] : null;
-                                if (!file) return;
-
-                                // Run checks
-                                const maxFileSize = 1024 * 1024 * 10; // 10MB
-                                if (file.size > maxFileSize) {
-                                    return alert('File size is too large. Max 10MB');
-                                }
-
-                                const fileBytes = new Uint8Array(await file.arrayBuffer());
-                                const fileType = filetypeinfo(fileBytes);
-
-                                if (
-                                    !fileType ||
-                                    !allowedFileTypes.includes(fileType[0].mime as string)
-                                ) {
-                                    return alert(
-                                        'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
-                                    );
-                                }
-
-                                const newFile = new File([file], 'image', {
-                                    type: file.type,
-                                });
-
-                                setAvatar(newFile);
-                            }}
-                        />
-
-                        <div
-                            className={styles.userAvatar}
-                            onClick={() => {
-                                avatarInputRef.current?.click();
-                            }}
-                        >
+                        <div className={styles.userAvatar}>
                             <Avatar
-                                src={avatar ? URL.createObjectURL(avatar) : auth.user.avatar}
-                                relativeSrc={avatar !== null}
+                                src={auth.user.avatar}
                                 alt={auth.user.username}
                                 size={80}
                                 status={auth.user.status}
@@ -401,7 +323,12 @@ const MyAccount = () => {
                             {auth?.user?.username}
                         </div>
 
-                        <button className='blue'>Edit User Profile</button>
+                        <button
+                            className='blue'
+                            onClick={() => setActiveTab('Profiles')}
+                        >
+                            Edit User Profile
+                        </button>
                     </div>
 
                     <div>
@@ -482,18 +409,152 @@ const MyAccount = () => {
 };
 
 const Profiles = () => {
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const tabs = ['User Profile', 'Server Profiles'];
 
+    const [time, setTime] = useState<{
+        hours: number;
+        minutes: number;
+        seconds: number;
+    }>({
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+    });
+    const [avatar, setAvatar] = useState<File | null>(null);
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
-    const [displayName, setDisplayName] = useState<string>(auth.user.username);
+    const [displayName, setDisplayName] = useState<string>(auth.user.displayName);
     const [primaryColor, setPrimaryColor] = useState<string>(auth.user.primaryColor);
-    const [accentColor, setAccentColor] = useState<string>(auth.user.secondaryColor);
+    const [accentColor, setAccentColor] = useState<string>(auth.user.accentColor);
     const [description, setDescription] = useState<string>(auth.user.description || '');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const descriptionRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            let hour = time.hours;
+            let minute = time.minutes;
+            let second = time.seconds;
+
+            if (second === 59) {
+                second = 0;
+                minute++;
+            } else {
+                second++;
+            }
+
+            if (minute === 59) {
+                minute = 0;
+                hour++;
+            }
+
+            setTime({
+                hours: hour,
+                minutes: minute,
+                seconds: second,
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [time]);
+
+    const saveUser = async () => {
+        console.log('Saving user...');
+    };
+
+    const needsSaving = () => {
+        return (
+            avatar ||
+            displayName !== auth.user.displayName ||
+            primaryColor !== auth.user.primaryColor ||
+            accentColor !== auth.user.accentColor ||
+            (description !== auth.user.description && description !== '')
+        );
+    };
 
     return (
         <>
             <div>
+                <AnimatePresence>
+                    {needsSaving() && (
+                        <motion.div
+                            className={styles.saveAlert}
+                            initial={{
+                                transform: 'translateY(80px)',
+                            }}
+                            animate={{
+                                transform: 'translateY(0)',
+                            }}
+                            exit={{
+                                transform: 'translateY(80px)',
+                            }}
+                            transition={{
+                                duration: 0.1,
+                            }}
+                        >
+                            <p>Careful — you have unsaved changes!</p>
+
+                            <div>
+                                <button
+                                    className='button underline'
+                                    onClick={() => {
+                                        setAvatar(null);
+                                        setDisplayName(auth.user.displayName);
+                                        setPrimaryColor(auth.user.primaryColor);
+                                        setAccentColor(auth.user.accentColor);
+                                        setDescription(auth.user.description || '');
+                                        descriptionRef.current!.value = auth.user.description || '';
+                                    }}
+                                >
+                                    Reset
+                                </button>
+
+                                <button
+                                    className='button green'
+                                    onClick={() => saveUser()}
+                                >
+                                    {isLoading ? <LoadingDots /> : 'Save Changes'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <input
+                    ref={avatarInputRef}
+                    className={styles.avatarInput}
+                    type='file'
+                    accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
+                    onChange={async (e) => {
+                        const file = e.target.files ? e.target.files[0] : null;
+                        if (!file) return;
+
+                        // Run checks
+                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                        if (file.size > maxFileSize) {
+                            return alert('File size is too large. Max 10MB');
+                        }
+
+                        const fileBytes = new Uint8Array(await file.arrayBuffer());
+                        const fileType = filetypeinfo(fileBytes);
+
+                        if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
+                            return alert(
+                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
+                            );
+                        }
+
+                        const newFile = new File([file], 'image', {
+                            type: file.type,
+                        });
+
+                        setAvatar(newFile);
+                    }}
+                />
+
                 <h2>Profiles</h2>
 
                 <div className={styles.contentNav}>
@@ -513,7 +574,7 @@ const Profiles = () => {
                     ))}
                 </div>
 
-                <div className={styles.contentContainer}>
+                <div className={styles.contentInner}>
                     <div>
                         <div className={styles.customSection}>
                             <h3>Display Name</h3>
@@ -593,10 +654,11 @@ const Profiles = () => {
                             </div>
 
                             <div className={styles.inputLarge}>
-                                <div>
-                                    <div>
+                                <div className='scrollbar'>
+                                    <div className={styles.inputLargeInner}>
                                         <div>
                                             <div
+                                                ref={descriptionRef}
                                                 role='textbox'
                                                 spellCheck='true'
                                                 aria-haspopup='listbox'
@@ -624,7 +686,25 @@ const Profiles = () => {
                                     </div>
                                 </div>
 
-                                <div>{190 - description.length}</div>
+                                <div
+                                    onMouseEnter={(e) => {
+                                        setTooltip({
+                                            text:
+                                                description.length > 190
+                                                    ? 'Message is too long'
+                                                    : `${
+                                                          190 - description.length
+                                                      } characters remaining`,
+                                            element: e.currentTarget,
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                    style={{
+                                        color: description.length > 190 ? 'var(--error-1)' : '',
+                                    }}
+                                >
+                                    {190 - description.length}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -632,7 +712,144 @@ const Profiles = () => {
                     <div>
                         <h3>Preview</h3>
 
-                        <div></div>
+                        <div
+                            className={styles.cardContainer}
+                            style={
+                                {
+                                    '--card-primary-color': primaryColor,
+                                    '--card-accent-color': accentColor,
+                                    '--card-overlay-color': 'hsla(0, 0%, 0%, 0.6)',
+                                    '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
+                                    '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
+                                    '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
+                                    '--card-button-color': primaryColor,
+                                } as React.CSSProperties
+                            }
+                        >
+                            <div>
+                                <svg
+                                    className={styles.cardBanner}
+                                    viewBox='0 0 340 90'
+                                >
+                                    <mask id='card-banner-mask'>
+                                        <rect
+                                            fill='white'
+                                            x='0'
+                                            y='0'
+                                            width='100%'
+                                            height='100%'
+                                        />
+                                        <circle
+                                            fill='black'
+                                            cx='58'
+                                            cy='82'
+                                            r='46'
+                                        />
+                                    </mask>
+
+                                    <foreignObject
+                                        x='0'
+                                        y='0'
+                                        width='100%'
+                                        height='100%'
+                                        overflow='visible'
+                                        mask='url(#card-banner-mask)'
+                                    >
+                                        <div>
+                                            <div
+                                                className={styles.cardBannerBackground}
+                                                style={{ backgroundColor: primaryColor }}
+                                                onClick={() => avatarInputRef.current?.click()}
+                                            />
+
+                                            <div
+                                                className={styles.cardBannerButton}
+                                                aria-hidden='true'
+                                            >
+                                                Change Banner
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                </svg>
+
+                                <div className={styles.cardAvatar}>
+                                    <div
+                                        className={styles.avatarImage}
+                                        style={{
+                                            backgroundImage: `url(${
+                                                avatar
+                                                    ? URL.createObjectURL(avatar)
+                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.avatar}/`
+                                            })`,
+                                        }}
+                                        onClick={() => avatarInputRef.current?.click()}
+                                    />
+
+                                    <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
+                                    <div className={styles.avatarStatus}></div>
+                                </div>
+
+                                <div className={styles.cardBadges}></div>
+
+                                <div className={styles.cardBody}>
+                                    <div className={styles.cardSection}>
+                                        <h4>{displayName || auth.user.displayName}</h4>
+                                        <div>{auth.user.username}</div>
+                                    </div>
+
+                                    <div className={styles.cardDivider} />
+
+                                    {description && (
+                                        <div className={styles.cardSection}>
+                                            <h4>About me</h4>
+                                            <div>{description}</div>
+                                        </div>
+                                    )}
+
+                                    <div className={styles.cardSectionLarge}>
+                                        <h4>Customizing my profile</h4>
+
+                                        <div>
+                                            <div>
+                                                <Image
+                                                    alt='Fake Activity'
+                                                    src='/assets/app/fake-activity.png'
+                                                    width={48}
+                                                    height={48}
+                                                    draggable={false}
+                                                />
+                                            </div>
+
+                                            <div className={styles.cardTime}>
+                                                <div>User Profile</div>
+                                                <div>
+                                                    <span>
+                                                        {`${
+                                                            time.hours > 0 ? time.hours + ':' : ''
+                                                        }${
+                                                            time.minutes
+                                                                ? time.minutes < 10
+                                                                    ? '0' + time.minutes + ':'
+                                                                    : time.minutes + ':'
+                                                                : '00:'
+                                                        }${
+                                                            time.seconds
+                                                                ? time.seconds < 10
+                                                                    ? '0' + time.seconds
+                                                                    : time.seconds
+                                                                : '00'
+                                                        }`}
+                                                    </span>
+                                                    {' elapsed'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button>Example Button</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
