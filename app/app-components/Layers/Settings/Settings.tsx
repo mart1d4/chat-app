@@ -26,6 +26,46 @@ const getRandomAvatar = (): string => {
     return avatars[index];
 };
 
+function hexToRGB(hex: string) {
+    // Remove the # symbol if present
+    hex = hex.replace('#', '');
+
+    // Split the hex value into RGB components
+    const redHex = hex.substring(0, 2);
+    const greenHex = hex.substring(2, 4);
+    const blueHex = hex.substring(4, 6);
+
+    // Convert the hex values to decimal values
+    const red = parseInt(redHex, 16);
+    const green = parseInt(greenHex, 16);
+    const blue = parseInt(blueHex, 16);
+
+    return [red, green, blue];
+}
+
+function calculateBrightness(rgb: number[]) {
+    const [red, green, blue] = rgb;
+
+    // Calculate the perceived brightness using the ITU-R BT.709 formula
+    const brightness = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+
+    return brightness;
+}
+
+function isLightColor(hex1: string, hex2: string) {
+    const brightnessThreshold = 0.5; // Adjust this threshold as desired
+
+    const rgb1 = hexToRGB(hex1);
+    const rgb2 = hexToRGB(hex2);
+
+    const brightness1 = calculateBrightness(rgb1);
+    const brightness2 = calculateBrightness(rgb2);
+
+    const averageBrightness = (brightness1 + brightness2) / 2;
+
+    return averageBrightness >= brightnessThreshold;
+}
+
 const Settings = (): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>('My Account');
 
@@ -163,7 +203,8 @@ const Settings = (): ReactElement => {
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (tab.name === 'separator' || tab.type === 'title') return;
+                                            if (tab.name === 'separator' || tab.type === 'title')
+                                                return;
                                             if (tab.name === 'Log Out') {
                                                 logout();
                                                 setShowSettings(false);
@@ -173,7 +214,12 @@ const Settings = (): ReactElement => {
                                     >
                                         {tab.name !== 'separator' && tab.name}
 
-                                        {tab?.icon && <Icon name={tab.icon} size={16} />}
+                                        {tab?.icon && (
+                                            <Icon
+                                                name={tab.icon}
+                                                size={16}
+                                            />
+                                        )}
                                     </div>
                                 ))}
                             </nav>
@@ -189,7 +235,10 @@ const Settings = (): ReactElement => {
                             <div className={styles.closeButton}>
                                 <div>
                                     <div onClick={() => setShowSettings(false)}>
-                                        <Icon name='close' size={18} />
+                                        <Icon
+                                            name='close'
+                                            size={18}
+                                        />
                                     </div>
 
                                     <div>ESC</div>
@@ -207,8 +256,6 @@ export default Settings;
 
 const MyAccount = ({ setActiveTab }: any) => {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [avatar, setAvatar] = useState<File | null>(null);
 
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
@@ -257,34 +304,6 @@ const MyAccount = ({ setActiveTab }: any) => {
         { title: 'Phone Number', value: auth?.user?.phone || 'Not set' },
     ];
 
-    const handleAvatarSubmit = async () => {
-        if (!avatar || isLoading) return;
-        setIsLoading(true);
-
-        const result = await base(avatar, {
-            publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-            store: 'auto',
-        });
-
-        if (!result.file) {
-            console.error(result);
-        } else {
-            await fetch('/api/users/me', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.accessToken}`,
-                },
-                body: JSON.stringify({
-                    avatar: result.file,
-                }),
-            });
-        }
-
-        setIsLoading(false);
-        setAvatar(null);
-    };
-
     return (
         <>
             <div>
@@ -293,7 +312,10 @@ const MyAccount = ({ setActiveTab }: any) => {
                 </div>
 
                 <div className={styles.userCard}>
-                    <div className={styles.userCardHeader} style={{ backgroundColor: auth?.user.primaryColor }} />
+                    <div
+                        className={styles.userCardHeader}
+                        style={{ backgroundColor: auth?.user.primaryColor }}
+                    />
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
@@ -324,20 +346,29 @@ const MyAccount = ({ setActiveTab }: any) => {
                             {auth?.user?.username}
                         </div>
 
-                        <button className='blue' onClick={() => setActiveTab('Profiles')}>
+                        <button
+                            className='blue'
+                            onClick={() => setActiveTab('Profiles')}
+                        >
                             Edit User Profile
                         </button>
                     </div>
 
                     <div>
                         {fields.map((field) => (
-                            <div className={styles.field} key={uuidv4()}>
+                            <div
+                                className={styles.field}
+                                key={uuidv4()}
+                            >
                                 <div>
                                     <h3>{field.title}</h3>
                                     <div>{field.value}</div>
                                 </div>
 
-                                <button className='grey' onClick={() => field.func && field.func()}>
+                                <button
+                                    className='grey'
+                                    onClick={() => field.func && field.func()}
+                                >
                                     Edit
                                 </button>
                             </div>
@@ -368,8 +399,8 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <h3>SMS Backup Authentication</h3>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose your authentication app or backup codes.
-                        Your current phone number is 0001.
+                        Add your phone as a backup 2FA method in case you lose your authentication
+                        app or backup codes. Your current phone number is 0001.
                     </div>
 
                     <div className={styles.buttonsContainer}>
@@ -389,8 +420,8 @@ const MyAccount = ({ setActiveTab }: any) => {
 
                 <div className={styles.accountRemoval}>
                     <div>
-                        Deleting your account will remove all of your data from our servers. This action is
-                        irreversible.
+                        Deleting your account will remove all of your data from our servers. This
+                        action is irreversible.
                     </div>
 
                     <button className='red'>Delete Account</button>
@@ -405,16 +436,8 @@ const Profiles = () => {
     const { auth }: any = useContextHook({ context: 'auth' });
     const tabs = ['User Profile', 'Server Profiles'];
 
-    const [time, setTime] = useState<{
-        hours: number;
-        minutes: number;
-        seconds: number;
-    }>({
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-    });
     const [avatar, setAvatar] = useState<File | string | null>(null);
+    const [banner, setBanner] = useState<File | null>(null);
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
     const [displayName, setDisplayName] = useState<string>(auth.user.displayName);
     const [primaryColor, setPrimaryColor] = useState<string>(auth.user.primaryColor);
@@ -423,43 +446,92 @@ const Profiles = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
+    const bannerInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLInputElement>(null);
+    const primaryColorInputRef = useRef<HTMLInputElement>(null);
+    const accentColorInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            let hour = time.hours;
-            let minute = time.minutes;
-            let second = time.seconds;
+        descriptionRef.current!.innerText = description;
+    }, []);
 
-            if (second === 59) {
-                second = 0;
-                minute++;
-            } else {
-                second++;
-            }
-
-            if (minute === 59) {
-                minute = 0;
-                hour++;
-            }
-
-            setTime({
-                hours: hour,
-                minutes: minute,
-                seconds: second,
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [time]);
+    const resetState = () => {
+        setAvatar(null);
+        setBanner(null);
+        setDisplayName(auth.user.displayName);
+        setPrimaryColor(auth.user.primaryColor);
+        setAccentColor(auth.user.accentColor);
+        setDescription(auth.user.description || '');
+        const descRef = descriptionRef.current as HTMLInputElement;
+        descRef.innerText = auth.user.description || '';
+    };
 
     const saveUser = async () => {
-        console.log('Saving user...');
+        setIsLoading(true);
+        let avatarUrl, bannerUrl;
+
+        try {
+            if (avatar || banner) {
+                if (avatar && typeof avatar !== 'string') {
+                    const result = await base(avatar as File, {
+                        publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                        store: 'auto',
+                    });
+
+                    if (!result.file) {
+                        console.error(result);
+                    } else {
+                        avatarUrl = result.file;
+                    }
+                }
+
+                if (banner && typeof banner !== 'string') {
+                    const result = await base(banner as File, {
+                        publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                        store: 'auto',
+                    });
+
+                    if (!result.file) {
+                        console.error(result);
+                    } else {
+                        bannerUrl = result.file;
+                    }
+                }
+            }
+
+            const response = await fetch('/api/users/me', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    avatar: avatarUrl ? avatarUrl : typeof avatar === 'string' ? avatar : undefined,
+                    banner: bannerUrl ? bannerUrl : typeof banner === 'string' ? banner : undefined,
+                    displayName: displayName !== auth.user.displayName ? displayName : undefined,
+                    primaryColor:
+                        primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
+                    accentColor: accentColor !== auth.user.accentColor ? accentColor : undefined,
+                    description: description !== auth.user.description ? description : undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                console.error(response);
+            }
+
+            resetState();
+        } catch (err) {
+            console.error(err);
+        }
+
+        setIsLoading(false);
     };
 
     const needsSaving = () => {
         return (
             avatar ||
+            banner ||
             displayName !== auth.user.displayName ||
             primaryColor !== auth.user.primaryColor ||
             accentColor !== auth.user.accentColor ||
@@ -492,19 +564,38 @@ const Profiles = () => {
                             <div>
                                 <button
                                     className='button underline'
-                                    onClick={() => {
-                                        setAvatar(null);
-                                        setDisplayName(auth.user.displayName);
-                                        setPrimaryColor(auth.user.primaryColor);
-                                        setAccentColor(auth.user.accentColor);
-                                        setDescription(auth.user.description || '');
-                                        descriptionRef.current!.value = auth.user.description || '';
-                                    }}
+                                    onClick={() => resetState()}
                                 >
                                     Reset
                                 </button>
 
-                                <button className='button green' onClick={() => saveUser()}>
+                                <button
+                                    className={
+                                        description.length > 190
+                                            ? 'button green disabled'
+                                            : 'button green'
+                                    }
+                                    onMouseEnter={(e) => {
+                                        if (description.length > 190) {
+                                            setTooltip({
+                                                text: 'About me is too long',
+                                                element: e.currentTarget,
+                                                gap: 12,
+                                            });
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (description.length > 190) {
+                                            setTooltip(null);
+                                        }
+                                    }}
+                                    onClick={() => {
+                                        if (description.length > 190) {
+                                            return;
+                                        }
+                                        saveUser();
+                                    }}
+                                >
                                     {isLoading ? <LoadingDots /> : 'Save Changes'}
                                 </button>
                             </div>
@@ -514,7 +605,7 @@ const Profiles = () => {
 
                 <input
                     ref={avatarInputRef}
-                    className={styles.avatarInput}
+                    className={styles.hiddenInput}
                     type='file'
                     accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
                     onChange={async (e) => {
@@ -531,7 +622,9 @@ const Profiles = () => {
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
+                            return alert(
+                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
+                            );
                         }
 
                         const newFile = new File([file], 'image', {
@@ -539,6 +632,56 @@ const Profiles = () => {
                         });
 
                         setAvatar(newFile);
+                    }}
+                />
+
+                <input
+                    ref={bannerInputRef}
+                    className={styles.hiddenInput}
+                    type='file'
+                    accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
+                    onChange={async (e) => {
+                        const file = e.target.files ? e.target.files[0] : null;
+                        if (!file) return;
+
+                        // Run checks
+                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                        if (file.size > maxFileSize) {
+                            return alert('File size is too large. Max 10MB');
+                        }
+
+                        const fileBytes = new Uint8Array(await file.arrayBuffer());
+                        const fileType = filetypeinfo(fileBytes);
+
+                        if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
+                            return alert(
+                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
+                            );
+                        }
+
+                        const newFile = new File([file], 'image', {
+                            type: file.type,
+                        });
+
+                        setBanner(newFile);
+                    }}
+                />
+
+                <input
+                    ref={primaryColorInputRef}
+                    className={styles.hiddenInput}
+                    type='color'
+                    onChange={async (e) => {
+                        setPrimaryColor(e.target.value);
+                    }}
+                />
+
+                <input
+                    ref={accentColorInputRef}
+                    className={styles.hiddenInput}
+                    type='color'
+                    onChange={async (e) => {
+                        setAccentColor(e.target.value);
                     }}
                 />
 
@@ -552,7 +695,8 @@ const Profiles = () => {
                             style={{
                                 color: activeTab === index ? 'var(--foreground-1)' : '',
                                 cursor: activeTab === index ? 'default' : '',
-                                borderBottom: activeTab === index ? '2px solid var(--accent-2)' : '',
+                                borderBottom:
+                                    activeTab === index ? '2px solid var(--accent-2)' : '',
                             }}
                         >
                             {tab}
@@ -581,7 +725,10 @@ const Profiles = () => {
                             <h3>Avatar</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button onClick={() => avatarInputRef.current?.click()} className='blue'>
+                                <button
+                                    onClick={() => avatarInputRef.current?.click()}
+                                    className='blue'
+                                >
                                     Change Avatar
                                 </button>
                                 <button
@@ -599,7 +746,10 @@ const Profiles = () => {
                             <h3>Profile Banner</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button className='blue' onClick={() => avatarInputRef.current?.click()}>
+                                <button
+                                    className='blue'
+                                    onClick={() => bannerInputRef.current?.click()}
+                                >
                                     Change Banner
                                 </button>
                             </div>
@@ -615,8 +765,12 @@ const Profiles = () => {
                                             backgroundColor: primaryColor,
                                             borderColor: primaryColor,
                                         }}
+                                        onClick={() => primaryColorInputRef.current?.click()}
                                     >
-                                        <Icon name='edit' size={14} />
+                                        <Icon
+                                            name='edit'
+                                            size={14}
+                                        />
                                     </div>
 
                                     <div>Primary</div>
@@ -628,8 +782,12 @@ const Profiles = () => {
                                             backgroundColor: accentColor,
                                             borderColor: accentColor,
                                         }}
+                                        onClick={() => accentColorInputRef.current?.click()}
                                     >
-                                        <Icon name='edit' size={14} />
+                                        <Icon
+                                            name='edit'
+                                            size={14}
+                                        />
                                     </div>
 
                                     <div>Accent</div>
@@ -640,7 +798,9 @@ const Profiles = () => {
                         <div className={styles.customSection}>
                             <h3>About me</h3>
 
-                            <div className={styles.description}>You can use markdown and links if you'd like</div>
+                            <div className={styles.description}>
+                                You can use markdown and links if you'd like
+                            </div>
 
                             <div className={styles.inputLarge}>
                                 <div className='scrollbar'>
@@ -681,7 +841,9 @@ const Profiles = () => {
                                             text:
                                                 description.length > 190
                                                     ? 'Message is too long'
-                                                    : `${190 - description.length} characters remaining`,
+                                                    : `${
+                                                          190 - description.length
+                                                      } characters remaining`,
                                             element: e.currentTarget,
                                         });
                                     }}
@@ -710,14 +872,29 @@ const Profiles = () => {
                                     '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                                     '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
                                     '--card-button-color': primaryColor,
+                                    '--card-border-color': primaryColor,
                                 } as React.CSSProperties
                             }
                         >
                             <div>
-                                <svg className={styles.cardBanner} viewBox='0 0 340 90'>
+                                <svg
+                                    className={styles.cardBanner}
+                                    viewBox={`0 0 340 ${banner || auth.user.banner ? '120' : '90'}`}
+                                >
                                     <mask id='card-banner-mask'>
-                                        <rect fill='white' x='0' y='0' width='100%' height='100%' />
-                                        <circle fill='black' cx='58' cy='82' r='46' />
+                                        <rect
+                                            fill='white'
+                                            x='0'
+                                            y='0'
+                                            width='100%'
+                                            height='100%'
+                                        />
+                                        <circle
+                                            fill='black'
+                                            cx='58'
+                                            cy={banner || auth.user.banner ? 112 : 82}
+                                            r='46'
+                                        />
                                     </mask>
 
                                     <foreignObject
@@ -732,33 +909,89 @@ const Profiles = () => {
                                             <div
                                                 className={styles.cardBannerBackground}
                                                 style={{
-                                                    backgroundColor: primaryColor,
+                                                    backgroundColor:
+                                                        !auth.user.banner && !banner
+                                                            ? primaryColor
+                                                            : '',
+                                                    backgroundImage:
+                                                        auth.user.banner || banner
+                                                            ? `url(${
+                                                                  banner !== null &&
+                                                                  typeof banner !== 'string'
+                                                                      ? URL.createObjectURL(banner)
+                                                                      : `${
+                                                                            process.env
+                                                                                .NEXT_PUBLIC_CDN_URL
+                                                                        }${
+                                                                            banner ??
+                                                                            auth.user.banner
+                                                                        }/`
+                                                              })`
+                                                            : '',
+                                                    height:
+                                                        banner || auth.user.banner
+                                                            ? '120px'
+                                                            : '90px',
                                                 }}
-                                                onClick={() => avatarInputRef.current?.click()}
+                                                onClick={() => bannerInputRef.current?.click()}
                                             />
 
-                                            <div className={styles.cardBannerButton} aria-hidden='true'>
+                                            <div
+                                                className={styles.cardBannerButton}
+                                                aria-hidden='true'
+                                            >
                                                 Change Banner
                                             </div>
                                         </div>
                                     </foreignObject>
                                 </svg>
 
-                                <div className={styles.cardAvatar}>
+                                <div
+                                    className={styles.cardAvatar}
+                                    style={{
+                                        top: banner || auth.user.banner ? '76px' : '46px',
+                                    }}
+                                >
                                     <div
                                         className={styles.avatarImage}
                                         style={{
                                             backgroundImage: `url(${
                                                 avatar !== null && typeof avatar !== 'string'
                                                     ? URL.createObjectURL(avatar)
-                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? auth.user.avatar}/`
+                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${
+                                                          avatar ?? auth.user.avatar
+                                                      }/`
                                             })`,
                                         }}
                                         onClick={() => avatarInputRef.current?.click()}
                                     />
 
                                     <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
-                                    <div className={styles.avatarStatus}></div>
+                                    <div className={styles.imageUpload}></div>
+
+                                    <div className={styles.cardAvatarStatus}>
+                                        <div
+                                            style={{
+                                                backgroundColor: isLightColor(
+                                                    primaryColor,
+                                                    accentColor
+                                                )
+                                                    ? 'white'
+                                                    : 'black',
+                                            }}
+                                        />
+
+                                        <svg>
+                                            <rect
+                                                height='100%'
+                                                width='100%'
+                                                rx={8}
+                                                ry={8}
+                                                fill='var(--success-1)'
+                                                mask='url(#svg-mask-status-online)'
+                                            />
+                                        </svg>
+                                    </div>
                                 </div>
 
                                 <div className={styles.cardBadges}></div>
@@ -794,24 +1027,7 @@ const Profiles = () => {
 
                                             <div className={styles.cardTime}>
                                                 <div>User Profile</div>
-                                                <div>
-                                                    <span>
-                                                        {`${time.hours > 0 ? time.hours + ':' : ''}${
-                                                            time.minutes
-                                                                ? time.minutes < 10
-                                                                    ? '0' + time.minutes + ':'
-                                                                    : time.minutes + ':'
-                                                                : '00:'
-                                                        }${
-                                                            time.seconds
-                                                                ? time.seconds < 10
-                                                                    ? '0' + time.seconds
-                                                                    : time.seconds
-                                                                : '00'
-                                                        }`}
-                                                    </span>
-                                                    {' elapsed'}
-                                                </div>
+                                                <StopWatch />
                                             </div>
                                         </div>
 
@@ -824,6 +1040,61 @@ const Profiles = () => {
                 </div>
             </div>
         </>
+    );
+};
+
+const StopWatch = () => {
+    const [time, setTime] = useState<{
+        hours: number;
+        minutes: number;
+        seconds: number;
+    }>({
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+    });
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            let hour = time.hours;
+            let minute = time.minutes;
+            let second = time.seconds;
+
+            if (second === 59) {
+                second = 0;
+                minute++;
+            } else {
+                second++;
+            }
+
+            if (minute === 59) {
+                minute = 0;
+                hour++;
+            }
+
+            setTime({
+                hours: hour,
+                minutes: minute,
+                seconds: second,
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [time]);
+
+    return (
+        <div>
+            <span>
+                {`${time.hours > 0 ? time.hours + ':' : ''}${
+                    time.minutes
+                        ? time.minutes < 10
+                            ? '0' + time.minutes + ':'
+                            : time.minutes + ':'
+                        : '00:'
+                }${time.seconds ? (time.seconds < 10 ? '0' + time.seconds : time.seconds) : '00'}`}
+            </span>
+            {' elapsed'}
+        </div>
     );
 };
 

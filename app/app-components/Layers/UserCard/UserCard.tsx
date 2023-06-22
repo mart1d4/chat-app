@@ -1,32 +1,101 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, ReactElement, useRef } from 'react';
+import { useState, ReactElement, useRef, useEffect } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { Avatar, Icon } from '@/app/app-components';
+import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
-const UserCard = ({ content, side }: any): ReactElement => {
+function hexToRGB(hex: string) {
+    // Remove the # symbol if present
+    hex = hex.replace('#', '');
+
+    // Split the hex value into RGB components
+    const redHex = hex.substring(0, 2);
+    const greenHex = hex.substring(2, 4);
+    const blueHex = hex.substring(4, 6);
+
+    // Convert the hex values to decimal values
+    const red = parseInt(redHex, 16);
+    const green = parseInt(greenHex, 16);
+    const blue = parseInt(blueHex, 16);
+
+    return [red, green, blue];
+}
+
+function calculateBrightness(rgb: number[]) {
+    const [red, green, blue] = rgb;
+
+    // Calculate the perceived brightness using the ITU-R BT.709 formula
+    const brightness = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+
+    return brightness;
+}
+
+function isLightColor(hex1: string, hex2: string) {
+    const brightnessThreshold = 0.5; // Adjust this threshold as desired
+
+    const rgb1 = hexToRGB(hex1);
+    const rgb2 = hexToRGB(hex2);
+
+    const brightness1 = calculateBrightness(rgb1);
+    const brightness2 = calculateBrightness(rgb2);
+
+    const averageBrightness = (brightness1 + brightness2) / 2;
+
+    return averageBrightness >= brightnessThreshold;
+}
+
+const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState('');
     const [message, setMessage] = useState('');
 
-    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({
+        context: 'layer',
+    });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const user = content?.user;
 
+    useEffect(() => {
+        if (!noteRef.current) return;
+
+        if (noteRef.current.scrollHeight > noteRef.current.clientHeight) {
+            noteRef.current.style.height = `${noteRef.current.scrollHeight}px`;
+            resetPosition((prev: any) => !prev);
+        }
+
+        // If the note is less big than the textarea, reset the height
+        if (noteRef.current.scrollHeight < noteRef.current.clientHeight) {
+            noteRef.current.style.height = 'auto';
+        }
+    }, [noteRef, note]);
+
     return (
         <AnimatePresence>
             {content?.user && (
                 <motion.div
                     className={styles.cardContainer}
+                    style={
+                        {
+                            '--card-primary-color': user.primaryColor,
+                            '--card-accent-color': user.accentColor,
+                            '--card-overlay-color': 'hsla(0, 0%, 0%, 0.6)',
+                            '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
+                            '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
+                            '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
+                            '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
+                            '--card-button-color': user.primaryColor,
+                            '--card-border-color': user.primaryColor,
+                        } as React.CSSProperties
+                    }
                     initial={{ transform: `translateX(${side === 'left' && '-'}20px)` }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >
-                    <div className={styles.topSection} style={{ backgroundColor: user.primaryColor }}>
+                    <div>
                         {auth.user.id === user.id && (
                             <div
                                 className={styles.editProfileButton}
@@ -46,86 +115,158 @@ const UserCard = ({ content, side }: any): ReactElement => {
                                     });
                                 }}
                             >
-                                <Icon name='edit' size={18} />
+                                <Icon
+                                    name='edit'
+                                    size={18}
+                                />
                             </div>
                         )}
 
-                        <div
-                            className={styles.avatarContainer}
-                            onClick={() => {
-                                setFixedLayer(false);
-                                setUserProfile(null);
+                        <svg
+                            className={styles.cardBanner}
+                            viewBox={`0 0 340 ${user.banner ? '120' : '90'}`}
+                        >
+                            <mask id='card-banner-mask'>
+                                <rect
+                                    fill='white'
+                                    x='0'
+                                    y='0'
+                                    width='100%'
+                                    height='100%'
+                                />
+                                <circle
+                                    fill='black'
+                                    cx='58'
+                                    cy={user.banner ? 112 : 82}
+                                    r='46'
+                                />
+                            </mask>
 
-                                setTimeout(() => {
-                                    setUserProfile({ user });
-                                }, 10);
+                            <foreignObject
+                                x='0'
+                                y='0'
+                                width='100%'
+                                height='100%'
+                                overflow='visible'
+                                mask='url(#card-banner-mask)'
+                            >
+                                <div>
+                                    <div
+                                        className={styles.cardBannerBackground}
+                                        style={{
+                                            backgroundColor: !user.banner ? user.primaryColor : '',
+                                            backgroundImage: user.banner
+                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
+                                                : '',
+                                            height: user.banner ? '120px' : '90px',
+                                        }}
+                                    />
+                                </div>
+                            </foreignObject>
+                        </svg>
+
+                        <div
+                            className={styles.cardAvatar}
+                            style={{
+                                top: user.banner ? '76px' : '46px',
                             }}
                         >
-                            <Avatar
-                                src={user.avatar}
-                                alt={user.username}
-                                size={80}
-                                status={user.status}
-                                tooltip={true}
-                                tooltipGap={8}
+                            <div
+                                className={styles.avatarImage}
+                                style={{
+                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
+                                }}
+                                onClick={() => {
+                                    setFixedLayer(null);
+                                    setUserProfile({ user: user });
+                                }}
                             />
+
+                            <div className={styles.avatarOverlay}>{`View Profile`}</div>
+
+                            <div
+                                className={styles.cardAvatarStatus}
+                                onMouseEnter={(e) => {
+                                    setTooltip({
+                                        text: user.status,
+                                        element: e.currentTarget,
+                                        gap: 5,
+                                    });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                            >
+                                <div
+                                    style={{
+                                        backgroundColor: isLightColor(
+                                            user.primaryColor,
+                                            user.accentColor
+                                        )
+                                            ? 'white'
+                                            : 'black',
+                                    }}
+                                />
+
+                                <svg>
+                                    <rect
+                                        height='100%'
+                                        width='100%'
+                                        rx={8}
+                                        ry={8}
+                                        fill='var(--success-1)'
+                                        mask='url(#svg-mask-status-online)'
+                                    />
+                                </svg>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className={styles.badges}></div>
+                        <div className={styles.cardBadges}></div>
 
-                    <div className={styles.contentSection}>
-                        <div className={styles.username}>{user?.username}</div>
+                        <div className={styles.cardBody}>
+                            <div className={styles.cardSection}>
+                                <h4>{user.displayName}</h4>
+                                <div>{user.username}</div>
+                            </div>
 
-                        {user?.customStatus && <div className={styles.customStatus}>{user.customStatus}</div>}
+                            <div className={styles.cardDivider} />
 
-                        <div className={styles.contentSeparator} />
-
-                        <div className={styles.contentUser + ' scrollbar'}>
-                            {user?.description && (
-                                <div>
-                                    <h1>About Me</h1>
-                                    <div className={styles.contentUserDescription}>{user.description}</div>
+                            {user.description && (
+                                <div className={styles.cardSection}>
+                                    <h4>About me</h4>
+                                    <div>{user.description}</div>
                                 </div>
                             )}
 
-                            <div>
-                                <h1>Chat App Member Since</h1>
+                            <div className={styles.cardSection}>
+                                <h4>Chat App Member Since</h4>
                                 <div>
                                     {new Intl.DateTimeFormat('en-US', {
                                         year: 'numeric',
-                                        month: 'long',
-                                        day: '2-digit',
+                                        month: 'short',
+                                        day: 'numeric',
                                     }).format(new Date(user.createdAt))}
                                 </div>
                             </div>
 
-                            <div>
-                                <h1>Note</h1>
-                                <div className={styles.note}>
+                            <div className={styles.cardSection}>
+                                <h4>Note</h4>
+                                <div>
                                     <textarea
-                                        className='scrollbar'
+                                        className={styles.cardInput + ' scrollbar'}
                                         ref={noteRef}
                                         value={note}
-                                        onChange={(e) => setNote(e.target.value)}
                                         placeholder='Click to add a note'
+                                        aria-label='Note'
                                         maxLength={256}
+                                        autoCorrect='off'
+                                        onInput={(e) => {
+                                            setNote(e.currentTarget.value);
+                                        }}
+                                        // style={{
+                                        //     height: `${noteRef.current?.scrollHeight}px`,
+                                        // }}
                                     />
                                 </div>
                             </div>
-
-                            {auth.user.id !== user.id && (
-                                <div>
-                                    <div className={styles.message}>
-                                        <input
-                                            value={message}
-                                            onChange={(e) => setMessage(e.target.value)}
-                                            placeholder={`Message @${user.username}`}
-                                            maxLength={4000}
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </motion.div>

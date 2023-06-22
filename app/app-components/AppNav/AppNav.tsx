@@ -385,35 +385,25 @@ const AppNav = (): ReactElement => {
 
     const setData = async (data: any) => {
         if (data.userId === auth.user.id) {
-            if (data.connected) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        status: data.connected ? 'Online' : 'Offline',
-                    },
-                });
-            }
-
-            if (data.username) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        username: data.username,
-                    },
-                });
-            }
-
-            if (data.avatar) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        avatar: data.avatar,
-                    },
-                });
-            }
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    username: data.username || auth.user.username,
+                    displayName: data.displayName || auth.user.displayName,
+                    description: data.description || auth.user.description,
+                    avatar: data.avatar || auth.user.avatar,
+                    banner: data.banner || auth.user.banner,
+                    primaryColor: data.primaryColor || auth.user.primaryColor,
+                    accentColor: data.accentColor || auth.user.accentColor,
+                    status:
+                        typeof data.status === 'boolean'
+                            ? data.status
+                                ? 'Online'
+                                : 'Offline'
+                            : auth.user.status,
+                },
+            });
         } else if (auth.user.friendIds.includes(data.userId)) {
             if (data.connected) {
                 auth.user.friends.map((friend: any) => {

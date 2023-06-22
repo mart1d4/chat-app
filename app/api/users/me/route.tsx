@@ -19,7 +19,17 @@ export async function PATCH(
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    const { status, username, avatar } = await req.json();
+    const {
+        username,
+        password,
+        displayName,
+        description,
+        avatar,
+        banner,
+        primaryColor,
+        accentColor,
+        status,
+    } = await req.json();
 
     try {
         const sender = await prisma.user.findUnique({
@@ -40,17 +50,6 @@ export async function PATCH(
             );
         }
 
-        if (status) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    status: status ? 'Online' : 'Offline',
-                },
-            });
-        }
-
         if (username) {
             await prisma.user.update({
                 where: {
@@ -58,6 +57,28 @@ export async function PATCH(
                 },
                 data: {
                     username: username,
+                },
+            });
+        }
+
+        if (displayName) {
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    displayName: displayName,
+                },
+            });
+        }
+
+        if (description) {
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    description: description,
                 },
             });
         }
@@ -83,6 +104,60 @@ export async function PATCH(
             });
         }
 
+        if (banner) {
+            if (sender.banner) {
+                await fetch(`https://api.uploadcare.com/files/${sender.banner}/storage/`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
+                        Accept: 'application/vnd.uploadcare-v0.7+json',
+                    },
+                });
+            }
+
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    banner: banner,
+                },
+            });
+        }
+
+        if (primaryColor) {
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    primaryColor: primaryColor,
+                },
+            });
+        }
+
+        if (accentColor) {
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    accentColor: accentColor,
+                },
+            });
+        }
+
+        if (status) {
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    status: status ? 'Online' : 'Offline',
+                },
+            });
+        }
+
         const channels = new Channels({
             appId: process.env.PUSHER_APP_ID as string,
             key: process.env.PUSHER_KEY as string,
@@ -93,9 +168,14 @@ export async function PATCH(
         channels &&
             (await channels.trigger('chat-app', `user-updated`, {
                 userId: senderId,
-                connected: status,
                 username: username,
+                displayName: displayName,
+                description: description,
                 avatar: avatar,
+                banner: banner,
+                primaryColor: primaryColor,
+                accentColor: accentColor,
+                status: status,
             }));
 
         return NextResponse.json(
