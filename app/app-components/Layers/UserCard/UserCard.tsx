@@ -1,7 +1,8 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { useState, ReactElement, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
@@ -87,11 +88,18 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                             '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
                             '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                            '--card-button-color': user.primaryColor,
+                            '--card-button-color': getButtonColor(
+                                user.primaryColor,
+                                user.accentColor
+                            ),
                             '--card-border-color': user.primaryColor,
                         } as React.CSSProperties
                     }
-                    initial={{ transform: `translateX(${side === 'left' && '-'}20px)` }}
+                    initial={{
+                        transform: `translateX(${
+                            side === 'left' ? '-' : side === 'right' && '+'
+                        }20px)`,
+                    }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >
@@ -212,7 +220,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                         width='100%'
                                         rx={8}
                                         ry={8}
-                                        fill='var(--success-1)'
+                                        fill='var(--success-light)'
                                         mask='url(#svg-mask-status-online)'
                                     />
                                 </svg>
@@ -267,6 +275,25 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                     />
                                 </div>
                             </div>
+
+                            {auth.user.id !== user.id && (
+                                <div className={styles.cardSection}>
+                                    <input
+                                        className={styles.cardMessage}
+                                        value={message}
+                                        placeholder={`Message @${user.username}`}
+                                        aria-label={`Message @${user.username}`}
+                                        maxLength={4000}
+                                        autoCorrect='off'
+                                        style={{
+                                            borderColor: user.primaryColor,
+                                        }}
+                                        onChange={(e) => {
+                                            setMessage(e.currentTarget.value);
+                                        }}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>

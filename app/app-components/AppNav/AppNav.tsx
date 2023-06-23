@@ -24,11 +24,7 @@ const AppNav = (): ReactElement => {
 
     useEffect(() => {
         localStorage.setItem('channel-url', pathname);
-
-        const url = localStorage.getItem('channel-url');
-        if (url) {
-            setUrl(url);
-        }
+        setUrl(pathname);
     }, [pathname]);
 
     useEffect(() => {

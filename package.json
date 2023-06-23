@@ -13,11 +13,8 @@
     },
     "dependencies": {
         "@prisma/client": "^4.16.0",
-        "@uploadcare/blocks": "^0.23.0",
         "@uploadcare/upload-client": "^6.6.1",
-        "@uploadthing/react": "^4.1.3",
         "@vercel/analytics": "^1.0.1",
-        "axios": "^1.3.5",
         "bcryptjs": "^2.4.3",
         "bufferutil": "^4.0.7",
         "debug": "^4.3.4",
@@ -25,7 +22,7 @@
         "framer-motion": "^10.12.2",
         "jose": "^4.14.0",
         "magic-bytes.js": "^1.0.14",
-        "next": "^13.4.6",
+        "next": "^13.4.7",
         "pusher": "^5.1.3",
         "pusher-js": "^8.1.0",
         "react": "^18.2.0",
@@ -34,7 +31,6 @@
         "react-router-dom": "^6.10.0",
         "supports-color": "^8.1.1",
         "swr": "^2.1.5",
-        "uploadthing": "^4.1.3",
         "utf-8-validate": "^6.0.3",
         "uuid": "^9.0.0"
     },
@@ -50,12 +46,15 @@
         "app",
         "next",
         "react",
+        "tauri",
+        "rust",
         "socket",
-        "socket.io",
+        "pusher",
         "websocket",
         "mongodb",
-        "mongoose",
-        "aws"
+        "prisma",
+        "typescript",
+        "uploadcare"
     ],
     "license": "MIT",
     "bugs": {

@@ -1,54 +1,59 @@
-// @ts-nocheck
-
 'use client';
 
 import { useEffect, useState, useCallback, ReactElement } from 'react';
 import { Menu, Popout, UserCard } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 
+type PosType = {
+    top: number | string;
+    left?: number | string;
+    right?: number | string;
+    bottom?: number | string;
+};
+
+type ConType = {
+    width: number;
+    height: number;
+};
+
 const FixedLayer = (): ReactElement => {
-    const [positions, setPositions] = useState({});
-    const [container, setContainer] = useState({});
-    const [resetPosition, setResetPosition] = useState(false);
-    const [node, setNode] = useState(null);
+    const [resetPosition, setResetPosition] = useState<boolean>(false);
+    const [positions, setPositions] = useState<null | PosType>(null);
+    const [container, setContainer] = useState<null | ConType>(null);
+    const [node, setNode] = useState<null | Node>(null);
 
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
+
     const type = fixedLayer?.type;
     const event = fixedLayer?.event;
     const element = fixedLayer?.element;
+
     const firstSide = fixedLayer?.firstSide;
     const secondSide = fixedLayer?.secondSide;
     const gap = fixedLayer?.gap || 10;
 
     const layerRef = useCallback(
         (node: any) => {
-            if (!fixedLayer) return;
-
-            if (node !== null) {
-                setNode(node);
-                setTimeout(() => {
-                    setContainer({
-                        width: node.children[0]?.offsetWidth,
-                        height: node.children[0]?.offsetHeight,
-                    });
-                }, 10);
+            if (!fixedLayer || !(node !== null)) {
+                setPositions(null);
+                setContainer(null);
+                setNode(null);
+                return;
             }
+
+            setNode(node);
+            setContainer({
+                width: node.children[0]?.offsetWidth,
+                height: node.children[0]?.offsetHeight,
+            });
         },
         [fixedLayer, resetPosition]
     );
 
     useEffect(() => {
-        if (!fixedLayer) {
-            setNode(null);
-            setContainer({});
-            setPositions({});
-        }
-    }, [fixedLayer]);
+        if (!container) return;
 
-    useEffect(() => {
-        if (!container || !fixedLayer) return;
-
-        let pos = {};
+        let pos: PosType = {} as PosType;
 
         if (!firstSide && !element) {
             // If there's not enough space to the right, open to the left
@@ -127,7 +132,7 @@ const FixedLayer = (): ReactElement => {
             }
 
             // If there's not enough space to the bottom, move the menu up
-            if (window.innerHeight - 10 - pos.top < container.height) {
+            if (window.innerHeight - 10 - (pos.top as number) < container.height) {
                 pos = {
                     ...pos,
                     bottom: 10,
@@ -141,7 +146,7 @@ const FixedLayer = (): ReactElement => {
             }
 
             // If there's not enough space to the right, move the menu to the left
-            if (window.innerWidth - 10 - pos.left < container.width) {
+            if (window.innerWidth - 10 - (pos.left as number) < container.width) {
                 pos = {
                     ...pos,
                     left: elementRect.right - container.width,
@@ -155,24 +160,17 @@ const FixedLayer = (): ReactElement => {
         }
 
         setPositions(pos);
-    }, [container, fixedLayer]);
+    }, [container]);
 
     useEffect(() => {
-        if (!fixedLayer) return;
+        if (!fixedLayer || !node) return;
 
-        const handleClick = (e) => {
-            if (!node?.contains(e.target)) {
-                console.log('click outside');
-                setPositions({});
-                setContainer(null);
-                setFixedLayer(null);
-            }
+        const handleClick = (e: MouseEvent) => {
+            if (!node?.contains(e.target as Node)) setFixedLayer(null);
         };
 
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                setFixedLayer(null);
-            }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setFixedLayer(null);
         };
 
         document.addEventListener('click', handleClick);
@@ -182,31 +180,22 @@ const FixedLayer = (): ReactElement => {
             document.removeEventListener('click', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [fixedLayer, node]);
+    }, [node]);
 
     return (
         <div
             ref={layerRef}
             style={{
                 ...positions,
+                zIndex: 1000,
                 position: 'fixed',
-                height: container?.height || 'auto',
                 width: container?.width || 'auto',
-                zIndex: 10000,
-                opacity: container && positions.top ? 1 : 0,
+                height: container?.height || 'auto',
+                visibility: positions ? 'visible' : 'hidden',
             }}
-            onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-            onContextMenu={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-            onMouseEnter={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.stopPropagation()}
         >
             {type === 'menu' && <Menu content={fixedLayer} />}
 
@@ -214,8 +203,8 @@ const FixedLayer = (): ReactElement => {
 
             {type === 'usercard' && (
                 <UserCard
-                    content={fixedLayer}
                     side={firstSide}
+                    content={fixedLayer}
                     resetPosition={setResetPosition}
                 />
             )}

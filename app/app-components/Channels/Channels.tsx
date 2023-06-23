@@ -16,9 +16,12 @@ const Channels = (): ReactElement => {
             const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
             name = user.username;
         } else if (channel.type === 'GROUP_DM' && !channel.name) {
-            const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
-            const fullName = filtered.map((recipient: any) => recipient.username).join(', ');
-            name = fullName;
+            if (channel.recipients.length > 1) {
+                const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
+                name = filtered.map((recipient: any) => recipient.username).join(', ');
+            } else {
+                name = `${channel.recipients[0].username}'s Group`;
+            }
         }
 
         return { ...channel, name };

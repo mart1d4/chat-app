@@ -3,6 +3,7 @@
 import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
 import { ReactElement, useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
@@ -25,46 +26,6 @@ const getRandomAvatar = (): string => {
     const index = Math.floor(Math.random() * avatars.length);
     return avatars[index];
 };
-
-function hexToRGB(hex: string) {
-    // Remove the # symbol if present
-    hex = hex.replace('#', '');
-
-    // Split the hex value into RGB components
-    const redHex = hex.substring(0, 2);
-    const greenHex = hex.substring(2, 4);
-    const blueHex = hex.substring(4, 6);
-
-    // Convert the hex values to decimal values
-    const red = parseInt(redHex, 16);
-    const green = parseInt(greenHex, 16);
-    const blue = parseInt(blueHex, 16);
-
-    return [red, green, blue];
-}
-
-function calculateBrightness(rgb: number[]) {
-    const [red, green, blue] = rgb;
-
-    // Calculate the perceived brightness using the ITU-R BT.709 formula
-    const brightness = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
-
-    return brightness;
-}
-
-function isLightColor(hex1: string, hex2: string) {
-    const brightnessThreshold = 0.5; // Adjust this threshold as desired
-
-    const rgb1 = hexToRGB(hex1);
-    const rgb2 = hexToRGB(hex2);
-
-    const brightness1 = calculateBrightness(rgb1);
-    const brightness2 = calculateBrightness(rgb2);
-
-    const averageBrightness = (brightness1 + brightness2) / 2;
-
-    return averageBrightness >= brightnessThreshold;
-}
 
 const Settings = (): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>('My Account');
@@ -453,6 +414,7 @@ const Profiles = () => {
 
     useEffect(() => {
         descriptionRef.current!.innerText = description;
+        console.log(getButtonColor(primaryColor, accentColor));
     }, []);
 
     const resetState = () => {
@@ -871,7 +833,10 @@ const Profiles = () => {
                                     '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
                                     '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                                     '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                                    '--card-button-color': primaryColor,
+                                    '--card-button-color': getButtonColor(
+                                        primaryColor,
+                                        accentColor
+                                    ),
                                     '--card-border-color': primaryColor,
                                 } as React.CSSProperties
                             }
@@ -972,12 +937,7 @@ const Profiles = () => {
                                     <div className={styles.cardAvatarStatus}>
                                         <div
                                             style={{
-                                                backgroundColor: isLightColor(
-                                                    primaryColor,
-                                                    accentColor
-                                                )
-                                                    ? 'white'
-                                                    : 'black',
+                                                backgroundColor: 'black',
                                             }}
                                         />
 
@@ -987,7 +947,7 @@ const Profiles = () => {
                                                 width='100%'
                                                 rx={8}
                                                 ry={8}
-                                                fill='var(--success-1)'
+                                                fill='var(--success-light)'
                                                 mask='url(#svg-mask-status-online)'
                                             />
                                         </svg>

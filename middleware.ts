@@ -18,6 +18,13 @@ export async function middleware(req: NextRequest) {
     const accessToken = authorization?.replace('Bearer ', '');
     const { pathname } = req.nextUrl;
 
+    // If request is OPTIONS, return early with 200
+    if (req.method === 'OPTIONS') {
+        return new NextResponse(null, {
+            status: 200,
+        });
+    }
+
     if (nonProtectedRoutes.includes(pathname) || pathname.startsWith('/_next')) {
         return NextResponse.next();
     }

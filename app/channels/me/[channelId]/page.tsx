@@ -31,10 +31,12 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
             ) as CleanOtherUserType;
             name = user.username;
         } else if (channel.type === 'GROUP_DM' && !channel.name) {
-            const filteredMembers = channel.recipients.filter(
-                (user: any) => user.id !== auth.user.id
-            );
-            name = filteredMembers.map((user: any) => user.username).join(', ');
+            if (channel.recipients.length > 1) {
+                const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
+                name = filtered.map((recipient: any) => recipient.username).join(', ');
+            } else {
+                name = `${channel.recipients[0].username}'s Group`;
+            }
         }
 
         let src = channel?.icon;

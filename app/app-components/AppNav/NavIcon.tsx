@@ -33,7 +33,7 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
             setActive(false);
             setMarkHeight(count ? 7 : 0);
         }
-    }, [pathname, count]);
+    }, [pathname, link, count]);
 
     return (
         <div className={styles.navIcon}>
