@@ -73,8 +73,8 @@ model User {
   email        String?
   avatar       String     @default("blue")
   banner       String?
-  primaryColor String     @default("#5a63f2")
-  accentColor  String     @default("#5a63f2")
+  primaryColor String
+  accentColor  String
   description  String?
   customStatus String?
   password     String

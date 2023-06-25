@@ -6,14 +6,8 @@ import Channels from 'pusher';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
-    // const { skip, limit } = (await req.json()) || {
-    //     skip: 0,
-    //     limit: 50,
-    // };
-    const { skip, limit } = {
-        skip: 0,
-        limit: 50,
-    };
+    const skip = 0;
+    const limit = 50;
 
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
@@ -28,8 +22,8 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     orderBy: {
                         createdAt: 'asc',
                     },
-                    take: limit || 50,
-                    skip: skip || 0,
+                    skip: skip,
+                    take: limit,
                     include: {
                         author: true,
                         messageReference: {

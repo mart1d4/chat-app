@@ -340,6 +340,19 @@
     background-color: transparent;
 }
 
+.cardMessage {
+    background-color: transparent;
+    font-size: 14px;
+    padding: 10px;
+    height: 40px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    border: none;
+    outline: none;
+    border: 1px solid transparent;
+}
+
 .editProfileButton {
     position: absolute;
     top: 10px;

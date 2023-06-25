@@ -7,49 +7,9 @@ import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
-function hexToRGB(hex: string) {
-    // Remove the # symbol if present
-    hex = hex.replace('#', '');
-
-    // Split the hex value into RGB components
-    const redHex = hex.substring(0, 2);
-    const greenHex = hex.substring(2, 4);
-    const blueHex = hex.substring(4, 6);
-
-    // Convert the hex values to decimal values
-    const red = parseInt(redHex, 16);
-    const green = parseInt(greenHex, 16);
-    const blue = parseInt(blueHex, 16);
-
-    return [red, green, blue];
-}
-
-function calculateBrightness(rgb: number[]) {
-    const [red, green, blue] = rgb;
-
-    // Calculate the perceived brightness using the ITU-R BT.709 formula
-    const brightness = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
-
-    return brightness;
-}
-
-function isLightColor(hex1: string, hex2: string) {
-    const brightnessThreshold = 0.5; // Adjust this threshold as desired
-
-    const rgb1 = hexToRGB(hex1);
-    const rgb2 = hexToRGB(hex2);
-
-    const brightness1 = calculateBrightness(rgb1);
-    const brightness2 = calculateBrightness(rgb2);
-
-    const averageBrightness = (brightness1 + brightness2) / 2;
-
-    return averageBrightness >= brightnessThreshold;
-}
-
 const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
-    const [note, setNote] = useState('');
-    const [message, setMessage] = useState('');
+    const [note, setNote] = useState<string>('');
+    const [message, setMessage] = useState<string>('');
 
     const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({
         context: 'layer',
@@ -175,9 +135,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
 
                         <div
                             className={styles.cardAvatar}
-                            style={{
-                                top: user.banner ? '76px' : '46px',
-                            }}
+                            style={{ top: user.banner ? '76px' : '46px' }}
                         >
                             <div
                                 className={styles.avatarImage}
@@ -203,16 +161,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <div
-                                    style={{
-                                        backgroundColor: isLightColor(
-                                            user.primaryColor,
-                                            user.accentColor
-                                        )
-                                            ? 'white'
-                                            : 'black',
-                                    }}
-                                />
+                                <div style={{ backgroundColor: 'black' }} />
 
                                 <svg>
                                     <rect
@@ -234,6 +183,12 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                 <h4>{user.displayName}</h4>
                                 <div>{user.username}</div>
                             </div>
+
+                            {user.customStatus && (
+                                <div className={styles.cardSection}>
+                                    <div>{user.customStatus}</div>
+                                </div>
+                            )}
 
                             <div className={styles.cardDivider} />
 
@@ -269,9 +224,6 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                         onInput={(e) => {
                                             setNote(e.currentTarget.value);
                                         }}
-                                        // style={{
-                                        //     height: `${noteRef.current?.scrollHeight}px`,
-                                        // }}
                                     />
                                 </div>
                             </div>

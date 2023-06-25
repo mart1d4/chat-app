@@ -962,6 +962,12 @@ const Profiles = () => {
                                         <div>{auth.user.username}</div>
                                     </div>
 
+                                    {auth.user.customStatus && (
+                                        <div className={styles.cardSection}>
+                                            <div>{auth.user.customStatus}</div>
+                                        </div>
+                                    )}
+
                                     <div className={styles.cardDivider} />
 
                                     {description && (

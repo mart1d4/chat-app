@@ -7,9 +7,10 @@ type Props = {
     fill2?: string;
     size?: number;
     viewbox?: string;
+    style?: React.CSSProperties;
 };
 
-const Icon = ({ name, fill, fill2, size, viewbox }: Props): ReactElement => {
+const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement => {
     const iconName = name || 'default';
     const fillColor = fill || 'currentColor';
     const fillColor2 = fill2 || 'currentColor';
@@ -17,6 +18,19 @@ const Icon = ({ name, fill, fill2, size, viewbox }: Props): ReactElement => {
     const viewBox = viewbox || '0 0 24 24';
 
     const icons = {
+        chevron: (
+            <g>
+                <path
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M7 10L12 15 17 10'
+                    aria-hidden='true'
+                />
+            </g>
+        ),
         copy: (
             <g fill={fillColor}>
                 <path d='M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1z' />
@@ -459,10 +473,12 @@ const Icon = ({ name, fill, fill2, size, viewbox }: Props): ReactElement => {
 
     return (
         <svg
+            className={styles.svg}
             xmlns='http://www.w3.org/2000/svg'
             height={iconSize}
             width={iconSize}
             viewBox={viewBox}
+            style={style || {}}
         >
             {icons[iconName as keyof typeof icons]}
         </svg>

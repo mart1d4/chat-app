@@ -37,6 +37,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                             select: {
                                 id: true,
                                 username: true,
+                                displayName: true,
                                 avatar: true,
                                 banner: true,
                                 primaryColor: true,
@@ -133,7 +134,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             const accessToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime('1h')
+                .setExpirationTime(client === 'app' ? '365d' : '1h')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
@@ -141,7 +142,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             const refreshToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime(client === 'app' ? 0 : '1d')
+                .setExpirationTime(client === 'app' ? '365d' : '1d')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));

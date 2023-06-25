@@ -152,7 +152,15 @@ type ChannelType = {
 };
 
 type GuildType = {
-    _id: string;
+    id: string;
+    name: string;
+    icon: string;
+    banner?: string;
+    members: CleanOtherUserType[];
+    channels: ChannelType[];
+    ownerId: string;
+    createdAt: DateTime;
+    updatedAt: DateTime;
 };
 
 type MessageType = {

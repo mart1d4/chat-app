@@ -252,12 +252,14 @@
     border: 0;
     padding: 0;
     margin: 0;
+    color: var(--foreground-3);
 }
 
 .toolbar > button:hover {
+    color: var(--foreground-2);
     background-color: var(--background-hover-1);
 }
 
-.toolbar > button:hover path {
-    fill: var(--foreground-1);
+.toolbar > button:active {
+    color: var(--foreground-1);
 }

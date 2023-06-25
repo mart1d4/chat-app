@@ -2,12 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const nonProtectedRoutes = [
-    '/api/auth/login',
-    '/api/auth/register',
-    '/api/auth/logout',
-    '/api/auth/refresh',
-];
+const nonProtectedRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/auth/refresh'];
 
 export const config = {
     matcher: '/api/:path*',
@@ -30,7 +25,15 @@ export async function middleware(req: NextRequest) {
     }
 
     if (!accessToken) {
-        return NextResponse.rewrite('/login');
+        return new NextResponse(
+            JSON.stringify({
+                success: false,
+                message: 'No access token provided',
+            }),
+            {
+                status: 401,
+            }
+        );
     } else {
         try {
             const accessTokenSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
@@ -50,7 +53,15 @@ export async function middleware(req: NextRequest) {
             });
         } catch (error) {
             console.error('[MIDDLEWARE] Error: ', error);
-            return NextResponse.rewrite('/api/auth/refresh');
+            return new NextResponse(
+                JSON.stringify({
+                    success: false,
+                    message: 'Invalid access token',
+                }),
+                {
+                    status: 401,
+                }
+            );
         }
     }
 }

@@ -32,6 +32,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                             select: {
                                 id: true,
                                 username: true,
+                                displayName: true,
                                 avatar: true,
                                 banner: true,
                                 primaryColor: true,
