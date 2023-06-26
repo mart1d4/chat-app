@@ -628,11 +628,7 @@
     width: 348px;
     position: relative;
     min-height: 280px;
-    background: linear-gradient(
-        var(--card-primary-color),
-        var(--card-primary-color) 90px,
-        var(--card-accent-color)
-    );
+    background: linear-gradient(var(--card-primary-color), var(--card-primary-color) 90px, var(--card-accent-color));
     border-radius: 8px;
 }
 

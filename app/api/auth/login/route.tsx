@@ -61,6 +61,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     select: {
                         id: true,
                         username: true,
+                        displayName: true,
                         avatar: true,
                         banner: true,
                         primaryColor: true,
@@ -78,6 +79,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     select: {
                         id: true,
                         username: true,
+                        displayName: true,
                         avatar: true,
                         banner: true,
                         primaryColor: true,
@@ -95,6 +97,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     select: {
                         id: true,
                         username: true,
+                        displayName: true,
                         avatar: true,
                         banner: true,
                         primaryColor: true,
@@ -106,6 +109,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     select: {
                         id: true,
                         username: true,
+                        displayName: true,
                         avatar: true,
                         banner: true,
                         primaryColor: true,

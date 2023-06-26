@@ -7,6 +7,8 @@ import styles from './AppNav.module.css';
 import { motion } from 'framer-motion';
 
 type Props = {
+    green?: boolean;
+    special?: boolean;
     name: string;
     link: string;
     src?: string;
@@ -14,7 +16,7 @@ type Props = {
     count?: number;
 };
 
-const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
+const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactElement => {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
@@ -26,7 +28,7 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
     const badgeCount = count ?? auth.user.requestReceivedIds.length;
 
     useEffect(() => {
-        if (link.includes(pathname)) {
+        if (special ? pathname.startsWith('/channels/me') : pathname === link) {
             setActive(true);
             setMarkHeight(40);
         } else {
@@ -36,9 +38,9 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
     }, [pathname, link, count]);
 
     return (
-        <div className={styles.navIcon}>
+        <div className={green ? styles.navIcon + ' ' + styles.green : styles.navIcon}>
             <div className={styles.marker}>
-                {(active || count) && (
+                {markHeight > 0 && (
                     <motion.span
                         initial={{
                             opacity: 0,
@@ -58,11 +60,11 @@ const NavIcon = ({ name, link, src, svg, count }: Props): ReactElement => {
             </div>
 
             <motion.div
-                className={active ? styles.navIconWrapperActive : styles.navIconWrapper}
+                className={active ? styles.wrapperActive : styles.wrapper}
                 onMouseEnter={(e) => {
                     setTooltip({
                         text: name,
-                        element: e.target,
+                        element: e.currentTarget,
                         position: 'right',
                         gap: 15,
                         big: true,

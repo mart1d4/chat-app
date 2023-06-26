@@ -15,7 +15,7 @@ type Props = {
 };
 
 const UserItem = ({ special, channel }: Props): ReactElement => {
-    const [user, setUser] = useState<CleanOtherUserType | null>(null);
+    const [user, setUser] = useState<UserType | null>(null);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
@@ -32,44 +32,43 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
     }, [channel]);
 
     if (special) {
-        return (
-            <Link
-                href={`/channels/me`}
-                className={styles.liContainer}
-                style={{
-                    backgroundColor: pathname === '/channels/me' ? 'var(--background-5)' : '',
-                    color: pathname === '/channels/me' ? 'var(--foreground-1)' : '',
-                }}
-            >
-                <div className={styles.liWrapper}>
-                    <div className={styles.linkFriends}>
-                        <div className={styles.layoutFriends}>
-                            <div className={styles.layoutAvatar}>
-                                <Icon
-                                    name='friends'
-                                    fill={
-                                        pathname === '/channels/@me'
-                                            ? 'var(--foreground-1)'
-                                            : 'var(--foreground-3)'
-                                    }
-                                />
-                            </div>
+        return useMemo(
+            () => (
+                <Link
+                    href={`/channels/me`}
+                    className={styles.liContainer}
+                    style={{
+                        backgroundColor: pathname === '/channels/me' ? 'var(--background-4)' : '',
+                        color: pathname === '/channels/me' ? 'var(--foreground-1)' : '',
+                    }}
+                >
+                    <div className={styles.liWrapper}>
+                        <div className={styles.linkFriends}>
+                            <div className={styles.layoutFriends}>
+                                <div className={styles.layoutAvatar}>
+                                    <Icon
+                                        name='friends'
+                                        fill={
+                                            pathname === '/channels/@me' ? 'var(--foreground-1)' : 'var(--foreground-3)'
+                                        }
+                                    />
+                                </div>
 
-                            <div className={styles.layoutContent}>
-                                <div className={styles.contentName}>
-                                    <div className={styles.nameWrapper}>Friends</div>
+                                <div className={styles.layoutContent}>
+                                    <div className={styles.contentName}>
+                                        <div className={styles.nameWrapper}>Friends</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {auth.user.requestReceivedIds.length > 0 && (
-                            <div className={styles.friendsPending}>
-                                {auth.user.requestReceivedIds.length}
-                            </div>
-                        )}
+                            {auth.user.requestReceivedIds.length > 0 && (
+                                <div className={styles.friendsPending}>{auth.user.requestReceivedIds.length}</div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </Link>
+                </Link>
+            ),
+            [auth.user.requestReceivedIds, pathname]
         );
     } else if (channel) {
         return useMemo(
@@ -81,19 +80,18 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                         e.preventDefault();
                         setFixedLayer({
                             type: 'menu',
-                            event: e,
+                            event: {
+                                mouseX: e.clientX,
+                                mouseY: e.clientY,
+                            },
                             user: user,
                             channel: channel || null,
                         });
                     }}
-                    style={
-                        pathname === `/channels/me/${channel.id}`
-                            ? {
-                                  backgroundColor: 'var(--background-5)',
-                                  color: 'var(--foreground-1)',
-                              }
-                            : {}
-                    }
+                    style={{
+                        backgroundColor: pathname.includes(channel.id) ? 'var(--background-4)' : '',
+                        color: pathname.includes(channel.id) ? 'var(--foreground-1)' : '',
+                    }}
                 >
                     <div className={styles.liWrapper}>
                         <div className={styles.link}>
@@ -103,7 +101,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                         {channel.type === 'GROUP_DM' ? (
                                             <Avatar
                                                 src={channel.icon || ''}
-                                                alt={channel.name}
+                                                alt={channel.name || ''}
                                                 size={32}
                                             />
                                         ) : (
@@ -121,9 +119,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                 <div className={styles.layoutContent}>
                                     <div className={styles.contentName}>
                                         <div className={styles.nameWrapper}>
-                                            {channel.type === 'GROUP_DM'
-                                                ? channel.name
-                                                : user?.username}
+                                            {channel.type === 'GROUP_DM' ? channel.name : user?.username}
                                         </div>
                                     </div>
 

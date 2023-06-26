@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 'use client';
 
 import { pinMessage, unpinMessage, deleteMessage } from '@/lib/api-functions/messages';
@@ -9,23 +7,39 @@ import { Icon } from '@/app/app-components';
 import styles from './Menu.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
-const content = ({ content }: any): ReactElement => {
-    const [active, setActive] = useState(null);
-    const [items, setItems] = useState([]);
-    const [shift, setShift] = useState(false);
-    const [self, setSelf] = useState(false);
-    const [friend, setFriend] = useState(false);
-    const [block, setBlock] = useState(false);
-    const [outgoing, setOutgoing] = useState(false);
-    const [incoming, setIncoming] = useState(false);
+type UserProps = {
+    isSelf: boolean;
+    isFriend?: boolean;
+    isBlocked?: boolean;
+    sentRequest?: boolean;
+    receivedRequest?: boolean;
+};
 
-    const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
+type ItemType = {
+    name: string | null;
+    icon?: string;
+    iconSize?: number;
+    iconInverted?: boolean;
+    textTip?: string;
+    func?: () => void;
+    funcShift?: () => void;
+    danger?: boolean;
+    disabled?: boolean;
+};
+
+const content = ({ content }: { content: any }): ReactElement => {
+    const [active, setActive] = useState<string>('');
+    const [items, setItems] = useState<ItemType[]>([]);
+    const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
+    const [shift, setShift] = useState<boolean>(false);
+    const [userProps, setUserProps] = useState<UserProps | null>(null);
+
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
-    const user = content?.user || null;
-    const message = content?.message || null;
-    let menuItems: any;
+    const user: UserType = content.user;
+    const message: MessageType = content.message;
 
     const shouldDisplayInlined = (type: string) => {
         const inlineTypes = [
@@ -42,12 +56,21 @@ const content = ({ content }: any): ReactElement => {
         return inlineTypes.includes(type);
     };
 
+    const writeText = async (text: string) => {
+        await navigator.clipboard.writeText(text);
+    };
+
+    const pasteText = async (element: HTMLElement) => {
+        const text = await navigator.clipboard.readText();
+        element.innerText += text;
+    };
+
     useEffect(() => {
-        const handleShift = (e) => {
+        const handleShift = (e: KeyboardEvent) => {
             if (e.key === 'Shift') setShift(true);
         };
 
-        const handleShiftUp = (e) => {
+        const handleShiftUp = (e: KeyboardEvent) => {
             if (e.key === 'Shift') setShift(false);
         };
 
@@ -61,50 +84,56 @@ const content = ({ content }: any): ReactElement => {
     }, []);
 
     useEffect(() => {
-        menuItems = items?.filter(
-            (item) =>
-                item.name !== 'Divider' &&
-                item.name !== null &&
-                item.name !== false &&
-                !item?.disabled
+        setFilteredItems(
+            items?.filter((item) => item.name !== 'Divider' && item.name !== null && !item.disabled) || []
         );
+    }, [items]);
 
-        const handlekeyDown = (e) => {
+    useEffect(() => {
+        const handlekeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
                 setFixedLayer(null);
             } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+
                 if (active === null) {
-                    setActive(menuItems[0].name);
+                    setActive(filteredItems[0].name as string);
                 } else {
-                    const index = menuItems.findIndex((item) => item.name === active);
-                    if (index < menuItems.length - 1) {
-                        setActive(menuItems[index + 1].name);
+                    const index = filteredItems.findIndex((item) => item.name === active);
+                    if (index < filteredItems.length - 1) {
+                        setActive(filteredItems[index + 1].name as string);
                     } else {
-                        setActive(menuItems[0].name);
+                        setActive(filteredItems[0].name as string);
                     }
                 }
             } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+
                 if (active === null) {
-                    setActive(menuItems[menuItems.length - 1].name);
+                    setActive(filteredItems[filteredItems.length - 1].name as string);
                 } else {
-                    const index = menuItems.findIndex((item) => item.name === active);
+                    const index = filteredItems.findIndex((item) => item.name === active);
                     if (index > 0) {
-                        setActive(menuItems[index - 1].name);
+                        setActive(filteredItems[index - 1].name as string);
                     } else {
-                        setActive(menuItems[menuItems.length - 1].name);
+                        setActive(filteredItems[filteredItems.length - 1].name as string);
                     }
                 }
             } else if (e.key === 'Enter') {
-                const func = menuItems.find((item) => item.name === active)?.func();
-                const funcShift = menuItems.find((item) => item.name === active)?.funcShift();
+                e.preventDefault();
+                e.stopPropagation();
+
+                const func = filteredItems.find((item) => item.name === active)?.func;
+                const funcShift = filteredItems.find((item) => item.name === active)?.funcShift;
 
                 if (active) {
                     setFixedLayer(null);
-                    if (shift && funcShift) {
-                        funcShift();
-                        return;
-                    }
-                    func();
+                    if (shift && funcShift) funcShift();
+                    else if (func) func();
                 }
             }
         };
@@ -112,32 +141,44 @@ const content = ({ content }: any): ReactElement => {
         document.addEventListener('keydown', handlekeyDown);
 
         return () => document.removeEventListener('keydown', handlekeyDown);
-    }, [active, items]);
+    }, [filteredItems, active]);
 
     useEffect(() => {
         if (content?.user) {
-            setSelf(content.user.id === auth.user.id);
+            setUserProps({
+                isSelf: content.user.id === auth.user.id,
+                isFriend: auth.user.friendIds?.includes(content.user.id),
+                isBlocked: auth.user.blockedIds?.includes(content.user.id),
+                sentRequest: auth.user.requestSentIds?.includes(content.user.id),
+                receivedRequest: auth.user.requestReceivedIds?.includes(content.user.id),
+            });
         } else if (content?.message) {
-            setSelf(content.message.author.id === auth.user.id);
+            setUserProps({
+                isSelf: content.message.author.id === auth.user.id,
+            });
+        } else {
+            setUserProps(null);
         }
     }, [content]);
 
     useEffect(() => {
-        if (content?.input) {
+        if (user && typeof userProps?.isFriend !== 'boolean') {
+            return;
+        } else if (message && typeof userProps?.isSelf !== 'boolean') {
+            return;
+        } else if (content?.input) {
             setItems([
                 {
                     name: content?.sendButton && 'Send Message Button',
                     icon: userSettings?.sendButton ? 'boxFilled' : 'box',
                     iconSize: 18,
-                    iconFill: userSettings?.sendButton && 'var(--accent-1)',
-                    iconFill2: userSettings?.sendButton && 'var(--foreground-1)',
-                    iconFill2Hover: 'var(--accent-1)',
-                    func: () =>
+                    iconInverted: true,
+                    func: () => {
                         setUserSettings({
                             ...userSettings,
                             sendButton: !userSettings?.sendButton,
-                        }),
-                    menuOpen: true,
+                        });
+                    },
                 },
                 { name: content?.sendButton && 'Divider' },
                 {
@@ -148,7 +189,7 @@ const content = ({ content }: any): ReactElement => {
                 { name: 'Divider' },
                 {
                     name: 'Paste',
-                    text: 'Ctrl+V',
+                    textTip: 'Ctrl+V',
                     func: () => content?.pasteText(),
                 },
             ]);
@@ -165,16 +206,13 @@ const content = ({ content }: any): ReactElement => {
                     {
                         name: 'Copy Message Link',
                         icon: 'link',
-                        func: () =>
-                            navigator.clipboard.writeText(
-                                `/channels/@me/${message.channel}/${message.id}`
-                            ),
+                        func: () => writeText(`/channels/@me/${message.channelId[0]}/${message.id}`),
                     },
                     { name: 'Divider' },
                     {
                         name: 'Copy Message ID',
                         icon: 'id',
-                        func: () => navigator.clipboard.writeText(message.id),
+                        func: () => writeText(message.id),
                     },
                 ]);
             } else {
@@ -186,16 +224,14 @@ const content = ({ content }: any): ReactElement => {
                         func: () => {},
                     },
                     {
-                        name: self && 'Edit Message',
+                        name: userProps.isSelf ? 'Edit Message' : null,
                         icon: 'edit',
                         func: () => content?.editMessageState(),
                     },
                     {
                         name: message.pinned ? 'Unpin Message' : 'Pin Message',
                         icon: 'pin',
-                        func: message?.pinned
-                            ? () => content?.unpinPopup()
-                            : () => content?.pinPopup(),
+                        func: message?.pinned ? () => content?.unpinPopup() : () => content?.pinPopup(),
                         funcShift: message.pinned
                             ? () => unpinMessage(auth.accessToken, message.id)
                             : () => pinMessage(auth.accessToken, message.id),
@@ -214,21 +250,27 @@ const content = ({ content }: any): ReactElement => {
                     {
                         name: 'Copy Message Link',
                         icon: 'link',
-                        func: () =>
-                            navigator.clipboard.writeText(
-                                `/channels/@me/${message.channel}/${message.id}`
-                            ),
+                        func: () => navigator.clipboard.writeText(`/channels/@me/${message.channel}/${message.id}`),
                     },
-                    { name: 'Speak Message', icon: 'speak', func: () => {} },
                     {
-                        name: self && 'Delete Message',
+                        name: 'Speak Message',
+                        icon: 'speak',
+                        func: () => {
+                            const msg = new SpeechSynthesisUtterance();
+                            msg.lang = 'fr';
+                            msg.text = `${message.author.username} said ${message.content}`;
+                            window.speechSynthesis.speak(msg);
+                        },
+                    },
+                    {
+                        name: userProps.isSelf && 'Delete Message',
                         icon: 'delete',
                         func: () => content?.deletePopup(),
                         funcShift: () => deleteMessage(auth.accessToken, message.id),
                         danger: true,
                     },
                     {
-                        name: !self && 'Report Message',
+                        name: !userProps.isSelf && 'Report Message',
                         icon: 'report',
                         func: () => {},
                         danger: true,
@@ -277,8 +319,8 @@ const content = ({ content }: any): ReactElement => {
                     icon: 'id',
                 },
             ]);
-        } else if (content?.user) {
-            if (self) {
+        } else if (user) {
+            if (userProps.isSelf) {
                 setItems([
                     {
                         name: 'Profile',
@@ -318,24 +360,24 @@ const content = ({ content }: any): ReactElement => {
                 setItems([
                     {
                         name:
-                            !block &&
-                            (incoming
+                            !userProps.isBlocked &&
+                            (userProps.receivedRequest
                                 ? 'Accept Friend Request'
-                                : outgoing
+                                : userProps.sentRequest
                                 ? 'Cancel Friend Request'
-                                : friend
+                                : userProps.isFriend
                                 ? 'Remove Friend'
                                 : 'Add Friend'),
-                        func: () => (outgoing || friend ? removeFriend() : addFriend()),
-                        danger: outgoing || friend,
+                        func: () => (userProps.sentRequest || userProps.isFriend ? removeFriend() : addFriend()),
+                        danger: userProps.sentRequest || userProps.isFriend,
                     },
                     {
-                        name: block ? 'Unblock' : 'Block',
-                        func: () => (block ? unblockUser() : blockUser()),
-                        danger: !block,
+                        name: userProps.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
+                        func: () => (userProps.isBlocked ? unuserProps.isBlockedUser() : userProps.isBlockedUser()),
+                        danger: !userProps.isBlocked,
                     },
                     {
-                        name: !block && 'Message',
+                        name: !userProps.isBlocked && 'Message',
                         func: () => createChannel(),
                     },
                     { name: 'Divider' },
@@ -345,7 +387,7 @@ const content = ({ content }: any): ReactElement => {
                         icon: 'id',
                     },
                 ]);
-            } else if (block) {
+            } else if (userProps.isBlocked) {
                 setItems([
                     {
                         name: 'Profile',
@@ -367,8 +409,8 @@ const content = ({ content }: any): ReactElement => {
                     },
                     { name: 'Divider' },
                     {
-                        name: 'Unblock',
-                        func: () => unblockUser(),
+                        name: 'UnuserProps.isBlocked',
+                        func: () => unuserProps.isBlockedUser(),
                     },
                     { name: 'Divider' },
                     {
@@ -397,7 +439,7 @@ const content = ({ content }: any): ReactElement => {
                         func: () => createChannel(),
                     },
                     {
-                        name: !outgoing && 'Call',
+                        name: !userProps.sentRequest && 'Call',
                         func: () => {},
                     },
                     {
@@ -408,7 +450,9 @@ const content = ({ content }: any): ReactElement => {
                         },
                     },
                     {
-                        name: !(incoming || outgoing || !friend) && 'Add Friend Nickname',
+                        name:
+                            !(userProps.receivedRequest || userProps.sentRequest || !userProps.isFriend) &&
+                            'Add Friend Nickname',
                         func: () => {},
                     },
                     {
@@ -417,25 +461,25 @@ const content = ({ content }: any): ReactElement => {
                     },
                     { name: 'Divider' },
                     {
-                        name: !outgoing && 'Invite to Server',
+                        name: !userProps.sentRequest && 'Invite to Server',
                         func: () => {},
                         icon: 'arrow',
                         iconSize: 10,
                     },
                     {
-                        name: incoming
+                        name: userProps.receivedRequest
                             ? 'Accept Friend Request'
-                            : outgoing
+                            : userProps.sentRequest
                             ? 'Cancel Friend Request'
-                            : friend
+                            : userProps.isFriend
                             ? 'Remove Friend'
                             : 'Add Friend',
-                        func: () => (outgoing || friend ? removeFriend() : addFriend()),
+                        func: () => (userProps.sentRequest || userProps.isFriend ? removeFriend() : addFriend()),
                     },
                     {
-                        name: block ? 'Unblock' : 'Block',
-                        func: () => (block ? unblockUser() : blockUser()),
-                        danger: !block,
+                        name: userProps.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
+                        func: () => (userProps.isBlocked ? unuserProps.isBlockedUser() : userProps.isBlockedUser()),
+                        danger: !userProps.isBlocked,
                     },
                     { name: 'Divider' },
                     {
@@ -458,12 +502,12 @@ const content = ({ content }: any): ReactElement => {
                 ]);
             }
         }
-    }, [self, friend, block, incoming, outgoing, userSettings, content]);
+    }, [userProps, userSettings]);
 
     return (
         <div
             className={styles.menuContainer}
-            onMouseLeave={() => setActive(null)}
+            onMouseLeave={() => setActive('')}
         >
             <div>
                 {items?.map((item) => {
@@ -492,16 +536,11 @@ const content = ({ content }: any): ReactElement => {
                                 }
                                 onClick={() => {
                                     if (item.disabled) return;
-                                    if (!item.menuOpen) {
-                                        setFixedLayer(null);
-                                    }
-                                    if (shift && item.funcShift) {
-                                        item.funcShift();
-                                        return;
-                                    }
-                                    item.func();
+                                    setFixedLayer(null);
+                                    if (shift && item.funcShift) item.funcShift();
+                                    else if (item.func) item.func();
                                 }}
-                                onMouseEnter={() => setActive(item.name)}
+                                onMouseEnter={() => setActive(item.name as string)}
                             >
                                 <div className={styles.label}>{item.name}</div>
 
@@ -510,24 +549,11 @@ const content = ({ content }: any): ReactElement => {
                                         <Icon
                                             name={item.icon}
                                             size={item.iconSize ?? 16}
-                                            fill={
-                                                item.iconFill
-                                                    ? item.iconFill
-                                                    : active === item.name
-                                                    ? 'var(--foreground-1)'
-                                                    : ''
-                                            }
-                                            fill2={
-                                                item.iconFill2 &&
-                                                (active === item.name
-                                                    ? item.iconFill2Hover
-                                                    : item.iconFill2)
-                                            }
                                         />
                                     </div>
                                 )}
 
-                                {item.text && <div className={styles.text}>{item.text}</div>}
+                                {item.textTip && <div className={styles.text}>{item.textTip}</div>}
                             </div>
                         );
                 })}

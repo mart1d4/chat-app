@@ -77,7 +77,7 @@
         --success-1: hsl(139, 47%, 33%);
         --success-2: hsl(138, 47%, 24%);
         --success-3: hsl(138, 47%, 22%);
-        --success-light: hsl(139, 52%, 52%);
+        --success-light: hsla(145, 65%, 39.2%, 1);
         --error-1: hsl(359, 67%, 54%);
         --error-2: hsl(359, 56%, 40%);
         --error-3: hsl(359, 56%, 35%);
@@ -94,9 +94,9 @@
         --elevation-high-dark: 0 2px 10px hsla(0, 0%, 0%, 0.2);
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console',
-            'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono',
-            'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
+        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter',
+            'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New',
+            Courier, monospace;
     }
 }
 
@@ -146,9 +146,9 @@
         --elevation-high-dark: 0 2px 10px hsla(0, 0%, 0%, 0.2);
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console',
-            'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono',
-            'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
+        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter',
+            'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New',
+            Courier, monospace;
     }
 }
 
@@ -173,6 +173,20 @@
     background-clip: padding-box;
 }
 
+.splashScreenPlayer {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-1);
+}
+
+.splashScreenPlayer > video {
+    width: 200px;
+    height: 200px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -192,17 +206,13 @@
 
 html,
 body {
-    min-width: 100%;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--background-1);
-    overflow-x: hidden;
+    width: 100dvw;
+    height: 100dvh;
+    overflow: hidden;
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;
     scroll-behavior: smooth;
+    background-color: var(--background-1);
 }
 
 h1,

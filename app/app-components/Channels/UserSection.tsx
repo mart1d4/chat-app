@@ -6,8 +6,10 @@ import { useRef, ReactElement } from 'react';
 import styles from './Channels.module.css';
 
 const UserSection = (): ReactElement => {
+    const { setShowSettings, fixedLayer, setFixedLayer }: any = useContextHook({
+        context: 'layer',
+    });
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
-    const { setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -19,6 +21,22 @@ const UserSection = (): ReactElement => {
                 <div
                     ref={userSection}
                     className={styles.avatarWrapper}
+                    onClick={(e) => {
+                        if (fixedLayer?.element === e.currentTarget) {
+                            return;
+                        }
+                        setFixedLayer({
+                            type: 'usercard',
+                            user: auth.user,
+                            element: e.currentTarget,
+                            firstSide: 'top',
+                            secondSide: 'right',
+                            gap: 14,
+                        });
+                    }}
+                    style={{
+                        backgroundColor: fixedLayer?.element === userSection.current ? 'var(--background-hover-1)' : '',
+                    }}
                 >
                     <div>
                         <Avatar
@@ -40,7 +58,8 @@ const UserSection = (): ReactElement => {
                         onMouseEnter={(e) =>
                             setTooltip({
                                 text: userSettings.microphone ? 'Mute' : 'Unmute',
-                                element: e.target,
+                                element: e.currentTarget,
+                                gap: 3,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
@@ -48,6 +67,7 @@ const UserSection = (): ReactElement => {
                             setTooltip((prev: any) => ({
                                 ...prev,
                                 text: !userSettings.microphone ? 'Mute' : 'Unmute',
+                                gap: 3,
                             }));
 
                             if (!userSettings?.microphone && !userSettings?.sound) {
@@ -65,9 +85,7 @@ const UserSection = (): ReactElement => {
                                     microphone: !userSettings?.microphone,
                                 });
                                 const audio = new Audio(`
-                                    /assets/sounds/${
-                                        userSettings?.microphone ? 'mute' : 'unmute'
-                                    }.mp3
+                                    /assets/sounds/${userSettings?.microphone ? 'mute' : 'unmute'}.mp3
                                 `);
                                 audio.volume = 0.5;
                                 audio.play();
@@ -87,7 +105,8 @@ const UserSection = (): ReactElement => {
                         onMouseEnter={(e) =>
                             setTooltip({
                                 text: userSettings.sound ? 'Deafen' : 'Undeafen',
-                                element: e.target,
+                                element: e.currentTarget,
+                                gap: 3,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
@@ -95,6 +114,7 @@ const UserSection = (): ReactElement => {
                             setTooltip((prev: any) => ({
                                 ...prev,
                                 text: !userSettings.sound ? 'Deafen' : 'Undeafen',
+                                gap: 3,
                             }));
 
                             if (userSettings?.microphone && userSettings?.sound) {
@@ -111,9 +131,7 @@ const UserSection = (): ReactElement => {
                             }
 
                             const audio = new Audio(`
-                                    /assets/sounds/${
-                                        userSettings?.sound ? 'deafen' : 'undeafen'
-                                    }.mp3
+                                    /assets/sounds/${userSettings?.sound ? 'deafen' : 'undeafen'}.mp3
                                 `);
                             audio.volume = 0.5;
                             audio.play();
@@ -132,7 +150,8 @@ const UserSection = (): ReactElement => {
                         onMouseEnter={(e) =>
                             setTooltip({
                                 text: 'User Settings',
-                                element: e.target,
+                                element: e.currentTarget,
+                                gap: 3,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}

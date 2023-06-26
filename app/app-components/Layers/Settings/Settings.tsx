@@ -2,8 +2,8 @@
 
 import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
 import { ReactElement, useEffect, useState, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { getButtonColor } from '@/lib/colors/getColors';
+import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
@@ -31,6 +31,7 @@ const Settings = (): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>('My Account');
 
     const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { logout } = useLogout();
 
     useEffect(() => {
@@ -130,21 +131,17 @@ const Settings = (): ReactElement => {
                 <motion.div
                     className={styles.container}
                     initial={{
-                        scale: 1.2,
+                        transform: 'translateY(100%)',
                     }}
                     animate={{
-                        opacity: 1,
-                        scale: 1,
-                        transition: {
-                            duration: 0.2,
-                        },
+                        transform: 'translateY(0%)',
                     }}
                     exit={{
-                        opacity: 0,
-                        scale: 1.2,
-                        transition: {
-                            duration: 0.05,
-                        },
+                        transform: 'translateY(100%)',
+                    }}
+                    transition={{
+                        duration: 0.5,
+                        ease: 'backOut',
                     }}
                 >
                     <div className={styles.sidebar}>
@@ -164,8 +161,7 @@ const Settings = (): ReactElement => {
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (tab.name === 'separator' || tab.type === 'title')
-                                                return;
+                                            if (tab.name === 'separator' || tab.type === 'title') return;
                                             if (tab.name === 'Log Out') {
                                                 logout();
                                                 setShowSettings(false);
@@ -195,7 +191,12 @@ const Settings = (): ReactElement => {
 
                             <div className={styles.closeButton}>
                                 <div>
-                                    <div onClick={() => setShowSettings(false)}>
+                                    <div
+                                        onClick={() => {
+                                            setTooltip(null);
+                                            setShowSettings(false);
+                                        }}
+                                    >
                                         <Icon
                                             name='close'
                                             size={18}
@@ -360,8 +361,8 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <h3>SMS Backup Authentication</h3>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose your authentication
-                        app or backup codes. Your current phone number is 0001.
+                        Add your phone as a backup 2FA method in case you lose your authentication app or backup codes.
+                        Your current phone number is 0001.
                     </div>
 
                     <div className={styles.buttonsContainer}>
@@ -381,8 +382,8 @@ const MyAccount = ({ setActiveTab }: any) => {
 
                 <div className={styles.accountRemoval}>
                     <div>
-                        Deleting your account will remove all of your data from our servers. This
-                        action is irreversible.
+                        Deleting your account will remove all of your data from our servers. This action is
+                        irreversible.
                     </div>
 
                     <button className='red'>Delete Account</button>
@@ -414,7 +415,6 @@ const Profiles = () => {
 
     useEffect(() => {
         descriptionRef.current!.innerText = description;
-        console.log(getButtonColor(primaryColor, accentColor));
     }, []);
 
     const resetState = () => {
@@ -461,7 +461,7 @@ const Profiles = () => {
                 }
             }
 
-            const response = await fetch('/api/users/me', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/me`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -471,8 +471,7 @@ const Profiles = () => {
                     avatar: avatarUrl ? avatarUrl : typeof avatar === 'string' ? avatar : undefined,
                     banner: bannerUrl ? bannerUrl : typeof banner === 'string' ? banner : undefined,
                     displayName: displayName !== auth.user.displayName ? displayName : undefined,
-                    primaryColor:
-                        primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
+                    primaryColor: primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== auth.user.accentColor ? accentColor : undefined,
                     description: description !== auth.user.description ? description : undefined,
                 }),
@@ -532,11 +531,7 @@ const Profiles = () => {
                                 </button>
 
                                 <button
-                                    className={
-                                        description.length > 190
-                                            ? 'button green disabled'
-                                            : 'button green'
-                                    }
+                                    className={description.length > 190 ? 'button green disabled' : 'button green'}
                                     onMouseEnter={(e) => {
                                         if (description.length > 190) {
                                             setTooltip({
@@ -584,9 +579,7 @@ const Profiles = () => {
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert(
-                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
-                            );
+                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
                         }
 
                         const newFile = new File([file], 'image', {
@@ -616,9 +609,7 @@ const Profiles = () => {
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert(
-                                'File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP'
-                            );
+                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
                         }
 
                         const newFile = new File([file], 'image', {
@@ -657,8 +648,7 @@ const Profiles = () => {
                             style={{
                                 color: activeTab === index ? 'var(--foreground-1)' : '',
                                 cursor: activeTab === index ? 'default' : '',
-                                borderBottom:
-                                    activeTab === index ? '2px solid var(--accent-2)' : '',
+                                borderBottom: activeTab === index ? '2px solid var(--accent-2)' : '',
                             }}
                         >
                             {tab}
@@ -760,9 +750,7 @@ const Profiles = () => {
                         <div className={styles.customSection}>
                             <h3>About me</h3>
 
-                            <div className={styles.description}>
-                                You can use markdown and links if you'd like
-                            </div>
+                            <div className={styles.description}>You can use markdown and links if you'd like</div>
 
                             <div className={styles.inputLarge}>
                                 <div className='scrollbar'>
@@ -803,9 +791,7 @@ const Profiles = () => {
                                             text:
                                                 description.length > 190
                                                     ? 'Message is too long'
-                                                    : `${
-                                                          190 - description.length
-                                                      } characters remaining`,
+                                                    : `${190 - description.length} characters remaining`,
                                             element: e.currentTarget,
                                         });
                                     }}
@@ -833,10 +819,7 @@ const Profiles = () => {
                                     '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
                                     '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                                     '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                                    '--card-button-color': getButtonColor(
-                                        primaryColor,
-                                        accentColor
-                                    ),
+                                    '--card-button-color': getButtonColor(primaryColor, accentColor),
                                     '--card-border-color': primaryColor,
                                 } as React.CSSProperties
                             }
@@ -874,29 +857,18 @@ const Profiles = () => {
                                             <div
                                                 className={styles.cardBannerBackground}
                                                 style={{
-                                                    backgroundColor:
-                                                        !auth.user.banner && !banner
-                                                            ? primaryColor
-                                                            : '',
+                                                    backgroundColor: !auth.user.banner && !banner ? primaryColor : '',
                                                     backgroundImage:
                                                         auth.user.banner || banner
                                                             ? `url(${
-                                                                  banner !== null &&
-                                                                  typeof banner !== 'string'
+                                                                  banner !== null && typeof banner !== 'string'
                                                                       ? URL.createObjectURL(banner)
-                                                                      : `${
-                                                                            process.env
-                                                                                .NEXT_PUBLIC_CDN_URL
-                                                                        }${
-                                                                            banner ??
-                                                                            auth.user.banner
+                                                                      : `${process.env.NEXT_PUBLIC_CDN_URL}${
+                                                                            banner ?? auth.user.banner
                                                                         }/`
                                                               })`
                                                             : '',
-                                                    height:
-                                                        banner || auth.user.banner
-                                                            ? '120px'
-                                                            : '90px',
+                                                    height: banner || auth.user.banner ? '120px' : '90px',
                                                 }}
                                                 onClick={() => bannerInputRef.current?.click()}
                                             />
@@ -923,9 +895,7 @@ const Profiles = () => {
                                             backgroundImage: `url(${
                                                 avatar !== null && typeof avatar !== 'string'
                                                     ? URL.createObjectURL(avatar)
-                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${
-                                                          avatar ?? auth.user.avatar
-                                                      }/`
+                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? auth.user.avatar}/`
                                             })`,
                                         }}
                                         onClick={() => avatarInputRef.current?.click()}
@@ -1052,11 +1022,7 @@ const StopWatch = () => {
         <div>
             <span>
                 {`${time.hours > 0 ? time.hours + ':' : ''}${
-                    time.minutes
-                        ? time.minutes < 10
-                            ? '0' + time.minutes + ':'
-                            : time.minutes + ':'
-                        : '00:'
+                    time.minutes ? (time.minutes < 10 ? '0' + time.minutes + ':' : time.minutes + ':') : '00:'
                 }${time.seconds ? (time.seconds < 10 ? '0' + time.seconds : time.seconds) : '00'}`}
             </span>
             {' elapsed'}

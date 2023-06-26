@@ -24,17 +24,16 @@ const Title = (): ReactElement => {
                 }}
                 onMouseLeave={() => setTooltip(null)}
                 onClick={(e) => {
-                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
+                        setFixedLayer(null);
                         setTooltip({
                             text: 'Create DM',
                             element: e.currentTarget,
                         });
-                        setFixedLayer(null);
                     } else {
                         setTooltip(null);
                         setFixedLayer({
                             type: 'popout',
-                            event: e,
                             element: e.currentTarget,
                             gap: 5,
                             firstSide: 'bottom',

@@ -30,8 +30,8 @@
     width: 72px;
 }
 
-.navIconWrapper,
-.navIconWrapperActive {
+.wrapper,
+.wrapperActive {
     position: relative;
     display: flex;
     align-items: center;
@@ -44,22 +44,38 @@
     transition: all 0.2s ease-in-out;
 }
 
-.navIconWrapperActive,
-.navIconWrapper:hover {
+.wrapperActive,
+.wrapper:hover {
     border-radius: 33%;
     background-color: var(--accent-1);
 }
 
-.navIconWrapper img,
-.navIconWrapperActive img {
+.green > .wrapperActive,
+.green > .wrapper:hover {
+    background-color: var(--success-light);
+}
+
+.wrapper img,
+.wrapperActive img {
     width: 48px;
     height: 48px;
     border-radius: 50%;
 }
 
-.navIconWrapper path,
-.navIconWrapperActive path {
-    stroke: var(--foreground-1);
+.wrapper svg,
+.wrapperActive svg {
+    color: var(--foreground-1);
+    transition: color 0.2s ease-in-out;
+}
+
+.green > .wrapper svg {
+    color: var(--success-light);
+}
+
+.green > .wrapper:hover svg,
+.green > .wrapperActive svg,
+.green > .wrapperActive:hover svg {
+    color: var(--foreground-1);
 }
 
 .marker {
@@ -79,7 +95,7 @@
     display: block;
     width: 8px;
     border-radius: 0 4px 4px 0;
-    margin-left: -4px;
+    margin-left: -5px;
     background-color: var(--foreground-1);
 }
 
@@ -87,7 +103,7 @@
     height: 2px;
     width: 32px;
     border-radius: 4px;
-    margin: 0 auto;
+    margin: 0 auto 8px auto;
     background-color: var(--background-4);
 }
 

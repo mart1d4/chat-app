@@ -9,7 +9,7 @@ import UserItem from './UserItem';
 import Icon from '../Icon/Icon';
 import Avatar from '../Avatar/Avatar';
 
-const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
+const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement => {
     const [user, setUser] = useState<null | CleanOtherUserType>(null);
 
     const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
@@ -17,7 +17,9 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
 
-    const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
+    const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(
+        typeof window !== 'undefined' ? window.innerWidth >= 1200 : false
+    );
     const [note, setNote] = useState<string>('');
 
     const { userSettings }: any = useContextHook({ context: 'settings' });
@@ -48,25 +50,24 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
         if (channel?.type === 'DM') {
             // @ts-ignore
             setUser(channel?.recipients.find((recipient) => recipient.id !== auth.user.id));
+        } else {
+            setUser(null);
         }
-    }, []);
+    }, [channel]);
 
     useEffect(() => {
         if (!user) return;
 
-        const friends = auth.user.friends?.filter((friend: UserType) =>
-            user.friendIds?.includes(friend.id)
-        );
-        console.log(friends);
+        const friends = auth.user.friends?.filter((friend: UserType) => user.friendIds?.includes(friend.id));
         setMutualFriends(friends);
-        const guilds = auth.user.guilds?.filter((guild: GuildType) =>
-            user.guildIds?.includes(guild.id)
-        );
+        const guilds = auth.user.guilds?.filter((guild: GuildType) => user.guildIds?.includes(guild.id));
         setMutualGuilds(guilds);
     }, [user]);
 
     return useMemo(() => {
-        if (!userSettings?.showUsers || !widthLimitPassed) return <></>;
+        if (!userSettings.showUsers || !widthLimitPassed) return <></>;
+
+        if (!channel) return <aside className={styles.aside} />;
 
         if (channel?.type === 'DM' && user) {
             return (
@@ -81,10 +82,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                             '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                             '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
                             '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                            '--card-button-color': getButtonColor(
-                                user.primaryColor,
-                                user.accentColor as string
-                            ),
+                            '--card-button-color': getButtonColor(user.primaryColor, user.accentColor as string),
                             '--card-border-color': user.primaryColor,
                         } as React.CSSProperties
                     }
@@ -239,9 +237,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                                                 name='chevron'
                                                 size={24}
                                                 style={{
-                                                    transform: `rotate(${
-                                                        !showGuilds ? '-90deg' : '0deg'
-                                                    })`,
+                                                    transform: `rotate(${!showGuilds ? '-90deg' : '0deg'})`,
                                                 }}
                                             />
                                         </div>
@@ -276,9 +272,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                                                 name='chevron'
                                                 size={24}
                                                 style={{
-                                                    transform: `rotate(${
-                                                        !showFriends ? '-90deg' : '0deg'
-                                                    })`,
+                                                    transform: `rotate(${!showFriends ? '-90deg' : '0deg'})`,
                                                 }}
                                             />
                                         </div>
@@ -305,9 +299,7 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
                 ['Online', 'Idle', 'Do_Not_Disturb'].includes(recipient.status)
             );
 
-            const offlineMembers: any = channel.recipients.filter(
-                (recipient: any) => recipient.status === 'Offline'
-            );
+            const offlineMembers: any = channel.recipients.filter((recipient: any) => recipient.status === 'Offline');
 
             return (
                 <aside className={styles.memberList}>
@@ -334,8 +326,11 @@ const MemberList = ({ channel }: { channel: ChannelType }): ReactElement => {
             );
         }
     }, [
-        userSettings?.showUsers,
+        userSettings.showUsers,
         widthLimitPassed,
+        channel,
+        user,
+        note,
         mutualFriends,
         mutualGuilds,
         showFriends,
@@ -359,7 +354,10 @@ const MutualItem = ({ user, guild }: { user?: CleanOtherUserType; guild?: GuildT
                 if (!user) return;
                 setFixedLayer({
                     type: 'menu',
-                    event: e,
+                    event: {
+                        mouseX: e.clientX,
+                        mouseY: e.clientY,
+                    },
                     user: user,
                 });
             }}

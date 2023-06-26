@@ -19,14 +19,12 @@ type ConType = {
 const FixedLayer = (): ReactElement => {
     const [resetPosition, setResetPosition] = useState<boolean>(false);
     const [positions, setPositions] = useState<null | PosType>(null);
-    const [container, setContainer] = useState<null | ConType>(null);
-    const [node, setNode] = useState<null | Node>(null);
+    const [contentContainer, setContentContainer] = useState<null | ConType>(null);
+    const [currentNode, setCurrentNode] = useState<null | Node>(null);
 
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     const type = fixedLayer?.type;
-    const event = fixedLayer?.event;
-    const element = fixedLayer?.element;
 
     const firstSide = fixedLayer?.firstSide;
     const secondSide = fixedLayer?.secondSide;
@@ -36,103 +34,106 @@ const FixedLayer = (): ReactElement => {
         (node: any) => {
             if (!fixedLayer || !(node !== null)) {
                 setPositions(null);
-                setContainer(null);
-                setNode(null);
+                setContentContainer(null);
+                setCurrentNode(null);
                 return;
             }
 
-            setNode(node);
-            setContainer({
-                width: node.children[0]?.offsetWidth,
-                height: node.children[0]?.offsetHeight,
-            });
+            setCurrentNode(node);
         },
         [fixedLayer, resetPosition]
     );
 
     useEffect(() => {
-        if (!container) return;
+        if (!contentContainer) return;
+
+        const mouseX = fixedLayer?.event?.mouseX;
+        const mouseY = fixedLayer?.event?.mouseY;
+        const element = fixedLayer?.element;
 
         let pos: PosType = {} as PosType;
+        const screenX = window.innerWidth;
+        const screenY = window.innerHeight;
 
-        if (!firstSide && !element) {
+        if (mouseX && mouseY) {
             // If there's not enough space to the right, open to the left
-            if (window.innerWidth - 10 - event.clientX < container.width) {
+            if (screenX - 12 - mouseX < contentContainer.width) {
                 pos = {
-                    top: event.clientY,
-                    left: event.clientX - container.width,
+                    top: mouseY,
+                    left: mouseX - contentContainer.width,
                 };
             } else {
                 pos = {
-                    top: event.clientY,
-                    left: event.clientX,
+                    top: mouseY,
+                    left: mouseX,
                 };
             }
 
-            // If there's not enough space to the bottom, move the menu up
-            if (window.innerHeight - 10 - event.clientY < container.height) {
+            // If there's not enough space at the bottom, move the menu up
+            if (screenY - 12 - mouseY < contentContainer.height) {
                 pos = {
                     ...pos,
-                    bottom: 10,
                     top: 'unset',
+                    bottom: 12,
                 };
             }
         } else {
             // If a firstSide is specified, open the menu to that firstSide of the element
-            const elementRect = element?.getBoundingClientRect();
+            const container = element?.getBoundingClientRect();
+            console.log(container);
 
             if (firstSide === 'left') {
                 pos = {
-                    top: elementRect.top,
-                    left: elementRect.left - container.width - gap,
+                    top: container.top,
+                    left: container.left - contentContainer.width - gap,
                 };
 
                 if (secondSide === 'top') {
                     pos = {
                         ...pos,
-                        top: elementRect.bottom - container.height,
+                        top: container.bottom - contentContainer.height,
                     };
                 }
             } else if (firstSide === 'right') {
                 pos = {
-                    top: elementRect.top,
-                    left: elementRect.right + gap,
+                    top: container.top,
+                    left: container.right + gap,
                 };
 
                 if (secondSide === 'top') {
                     pos = {
                         ...pos,
-                        top: elementRect.bottom - container.height,
+                        top: container.bottom - contentContainer.height,
                     };
                 }
             } else if (firstSide === 'top') {
                 pos = {
-                    top: elementRect.top - container.height - gap,
-                    left: elementRect.left,
+                    top: container.top - contentContainer.height - gap,
+                    left: container.left,
                 };
 
                 if (secondSide === 'left') {
                     pos = {
                         ...pos,
-                        left: elementRect.right - container.width,
+                        left: container.right - contentContainer.width,
                     };
                 }
             } else if (firstSide === 'bottom') {
                 pos = {
-                    top: elementRect.bottom + gap,
-                    left: elementRect.left,
+                    top: container.bottom + gap,
+                    left: container.left,
                 };
 
                 if (secondSide === 'left') {
                     pos = {
                         ...pos,
-                        left: elementRect.right - container.width,
+                        left: container.right - contentContainer.width,
                     };
                 }
             }
 
             // If there's not enough space to the bottom, move the menu up
-            if (window.innerHeight - 10 - (pos.top as number) < container.height) {
+            if (window.innerHeight - 10 - (pos.top as number) < contentContainer.height) {
                 pos = {
                     ...pos,
                     bottom: 10,
@@ -146,10 +147,10 @@ const FixedLayer = (): ReactElement => {
             }
 
             // If there's not enough space to the right, move the menu to the left
-            if (window.innerWidth - 10 - (pos.left as number) < container.width) {
+            if (window.innerWidth - 10 - (pos.left as number) < contentContainer.width) {
                 pos = {
                     ...pos,
-                    left: elementRect.right - container.width,
+                    left: container.right - contentContainer.width,
                 };
             } else {
                 pos = {
@@ -160,13 +161,18 @@ const FixedLayer = (): ReactElement => {
         }
 
         setPositions(pos);
-    }, [container]);
+    }, [contentContainer]);
 
     useEffect(() => {
-        if (!fixedLayer || !node) return;
+        if (!fixedLayer || !currentNode) return;
+
+        setContentContainer({
+            width: (currentNode.firstChild as HTMLElement)?.offsetWidth,
+            height: (currentNode.firstChild as HTMLElement)?.offsetHeight,
+        });
 
         const handleClick = (e: MouseEvent) => {
-            if (!node?.contains(e.target as Node)) setFixedLayer(null);
+            if (!currentNode?.contains(e.target as Node)) setFixedLayer(null);
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -180,7 +186,7 @@ const FixedLayer = (): ReactElement => {
             document.removeEventListener('click', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [node]);
+    }, [currentNode]);
 
     return (
         <div
@@ -189,8 +195,8 @@ const FixedLayer = (): ReactElement => {
                 ...positions,
                 zIndex: 1000,
                 position: 'fixed',
-                width: container?.width || 'auto',
-                height: container?.height || 'auto',
+                width: contentContainer?.width || 'auto',
+                height: contentContainer?.height || 'auto',
                 visibility: positions ? 'visible' : 'hidden',
             }}
             onClick={(e) => e.stopPropagation()}

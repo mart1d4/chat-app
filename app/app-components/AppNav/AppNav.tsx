@@ -1,11 +1,11 @@
 'use client';
 
-import { ReactElement, useEffect, useRef, useState } from 'react';
+import { ReactElement, useEffect, useState, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { usePathname } from 'next/navigation';
+import pusher from '@/lib/pusher/connection';
 import styles from './AppNav.module.css';
 import NavIcon from './NavIcon';
-import Pusher from 'pusher-js';
 
 const AppNav = (): ReactElement => {
     const [url, setUrl] = useState<string>('/channels/me');
@@ -18,13 +18,13 @@ const AppNav = (): ReactElement => {
     >([]);
 
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-    const ref = useRef<boolean>(false);
-    const pusher = useRef<Pusher | null>(null);
     const pathname = usePathname();
 
     useEffect(() => {
-        localStorage.setItem('channel-url', pathname);
-        setUrl(pathname);
+        if (pathname.startsWith('/channels/me')) {
+            localStorage.setItem('channel-url', pathname);
+            setUrl(pathname);
+        }
     }, [pathname]);
 
     useEffect(() => {
@@ -34,18 +34,14 @@ const AppNav = (): ReactElement => {
             );
 
             const notifications = filtered.map((notification: any) => {
-                const channel = auth.user.channels.find(
-                    (channel: any) => channel.id === notification?.channel
-                );
+                const channel = auth.user.channels.find((channel: any) => channel.id === notification?.channel);
 
                 let name = channel?.name;
                 if (channel.type === 'DM') {
                     const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
                     name = user?.username;
                 } else if (channel.type === 'GROUP_DM' && !channel.name) {
-                    const filteredMembers = channel.recipients.filter(
-                        (user: any) => user.id !== auth.user.id
-                    );
+                    const filteredMembers = channel.recipients.filter((user: any) => user.id !== auth.user.id);
                     name = filteredMembers.map((user: any) => user.username).join(', ');
                 }
 
@@ -70,101 +66,58 @@ const AppNav = (): ReactElement => {
     }, [auth.user.notifications]);
 
     useEffect(() => {
-        notifDM.forEach((notification: any) => {
-            if (pathname.includes(notification.channel.id)) {
-                setNotifDM((prev: any) =>
-                    prev.filter((notif: any) => notif.channel.id !== notification.channel.id)
-                );
-            }
-        });
-    }, [pathname]);
+        const setPusherListener = () => {
+            pusher.bind(`user-updated`, (data: any) => setData(data));
+            pusher.bind(`message-sent`, (data: any) => setTrigger(data));
 
-    useEffect(() => {
-        if (ref.current) {
-            pusher.current = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
-                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
+            pusher.bind(`user-friend`, (data: any) => {
+                setUserData({
+                    data: data,
+                    type: 'friend',
+                });
             });
-            setPusherListener();
-        }
 
-        const windowUnload = () => {
-            sendData(false);
+            pusher.bind(`user-request`, (data: any) => {
+                setUserData({
+                    data: data,
+                    type: 'request',
+                });
+            });
+
+            pusher.bind(`user-blocked`, (data: any) => {
+                setUserData({
+                    data: data,
+                    type: 'blocked',
+                });
+            });
+
+            pusher.bind(`user-unblocked`, (data: any) => {
+                setUserData({
+                    data: data,
+                    type: 'unblocked',
+                });
+            });
+
+            pusher.bind(`user-removed`, (data: any) => {
+                setUserData({
+                    data: data,
+                    type: 'removed',
+                });
+            });
         };
 
-        window.addEventListener('beforeunload', windowUnload);
+        setPusherListener();
 
         return () => {
-            ref.current = true;
-            pusher.current?.unsubscribe('chat-app');
+            pusher.unbind('user-updated');
+            pusher.unbind('message-sent');
+            pusher.unbind('user-friend');
+            pusher.unbind('user-request');
+            pusher.unbind('user-blocked');
+            pusher.unbind('user-unblocked');
+            pusher.unbind('user-removed');
         };
     }, []);
-
-    const setPusherListener = () => {
-        const channel = pusher.current?.subscribe('chat-app');
-
-        pusher.current?.connection.bind('connected', () => {
-            sendData(true);
-        });
-
-        pusher.current?.connection.bind('disconnected', () => {
-            sendData(false);
-        });
-
-        pusher.current?.connection.bind('error', () => {
-            sendData(false);
-        });
-
-        pusher.current?.connection.bind('unavailable', () => {
-            sendData(false);
-        });
-
-        pusher.current?.connection.bind('failed', () => {
-            sendData(false);
-        });
-
-        channel?.bind('user-updated', (data: any) => {
-            setData(data);
-        });
-
-        channel?.bind(`message-sent`, (data: any) => {
-            setTrigger(data);
-        });
-
-        channel?.bind(`user-friend`, (data: any) => {
-            setUserData({
-                data: data,
-                type: 'friend',
-            });
-        });
-
-        channel?.bind(`user-request`, (data: any) => {
-            setUserData({
-                data: data,
-                type: 'request',
-            });
-        });
-
-        channel?.bind(`user-blocked`, (data: any) => {
-            setUserData({
-                data: data,
-                type: 'blocked',
-            });
-        });
-
-        channel?.bind(`user-unblocked`, (data: any) => {
-            setUserData({
-                data: data,
-                type: 'unblocked',
-            });
-        });
-
-        channel?.bind(`user-removed`, (data: any) => {
-            setUserData({
-                data: data,
-                type: 'removed',
-            });
-        });
-    };
 
     const setUserData = ({ data, type }: any) => {
         if (![data.sender.id, data.user.id].includes(auth.user.id)) return;
@@ -184,12 +137,8 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter(
-                        (request: any) => request.id !== data.sender.id
-                    ),
-                    requestsSentIds: auth.user.requestsSentIds?.filter(
-                        (request: any) => request !== data.sender.id
-                    ),
+                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.sender.id),
+                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.sender.id),
                     requestsReceived: auth.user.requestsReceived?.filter(
                         (request: any) => request.id !== data.sender.id
                     ),
@@ -206,24 +155,16 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter(
-                        (request: any) => request.id !== data.sender.id
-                    ),
-                    requestsSentIds: auth.user.requestsSentIds?.filter(
-                        (request: any) => request !== data.sender.id
-                    ),
+                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.sender.id),
+                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.sender.id),
                     requestsReceived: auth.user.requestsReceived?.filter(
                         (request: any) => request.id !== data.sender.id
                     ),
                     requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
                         (request: any) => request !== data.sender.id
                     ),
-                    friends: auth.user.friends?.filter(
-                        (friend: any) => friend.id !== data.sender.id
-                    ),
-                    friendIds: auth.user.friendIds?.filter(
-                        (friend: any) => friend !== data.sender.id
-                    ),
+                    friends: auth.user.friends?.filter((friend: any) => friend.id !== data.sender.id),
+                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.sender.id),
                 },
             });
             return;
@@ -234,12 +175,8 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter(
-                        (request: any) => request.id !== data.user.id
-                    ),
-                    requestsSentIds: auth.user.requestsSentIds?.filter(
-                        (request: any) => request !== data.user.id
-                    ),
+                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
+                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
                     friends: [...(auth.user.friends || []), data.user],
                     friendIds: [...(auth.user.friendIds || []), data.user.id],
                 },
@@ -260,22 +197,14 @@ const AppNav = (): ReactElement => {
                     ...auth.user,
                     blocked: [...(auth.user.blocked || []), data.user],
                     blockedIds: [...(auth.user.blockedIds || []), data.user.id],
-                    requestsReceived: auth.user.requestsReceived?.filter(
-                        (request: any) => request.id !== data.user.id
-                    ),
+                    requestsReceived: auth.user.requestsReceived?.filter((request: any) => request.id !== data.user.id),
                     requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
                         (request: any) => request !== data.user.id
                     ),
-                    requestsSent: auth.user.requestsSent?.filter(
-                        (request: any) => request.id !== data.user.id
-                    ),
-                    requestsSentIds: auth.user.requestsSentIds?.filter(
-                        (request: any) => request !== data.user.id
-                    ),
+                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
+                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
                     friends: auth.user.friends?.filter((friend: any) => friend.id !== data.user.id),
-                    friendIds: auth.user.friendIds?.filter(
-                        (friend: any) => friend !== data.user.id
-                    ),
+                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.user.id),
                 },
             });
         } else if (type === 'unblocked') {
@@ -283,12 +212,8 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    blocked: auth.user.blocked?.filter(
-                        (blocked: any) => blocked.id !== data.user.id
-                    ),
-                    blockedIds: auth.user.blockedIds?.filter(
-                        (blocked: any) => blocked !== data.user.id
-                    ),
+                    blocked: auth.user.blocked?.filter((blocked: any) => blocked.id !== data.user.id),
+                    blockedIds: auth.user.blockedIds?.filter((blocked: any) => blocked !== data.user.id),
                 },
             });
         } else if (type === 'removed') {
@@ -296,22 +221,14 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsReceived: auth.user.requestsReceived?.filter(
-                        (request: any) => request.id !== data.user.id
-                    ),
+                    requestsReceived: auth.user.requestsReceived?.filter((request: any) => request.id !== data.user.id),
                     requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
                         (request: any) => request !== data.user.id
                     ),
-                    requestsSent: auth.user.requestsSent?.filter(
-                        (request: any) => request.id !== data.user.id
-                    ),
-                    requestsSentIds: auth.user.requestsSentIds?.filter(
-                        (request: any) => request !== data.user.id
-                    ),
+                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
+                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
                     friends: auth.user.friends?.filter((friend: any) => friend.id !== data.user.id),
-                    friendIds: auth.user.friendIds?.filter(
-                        (friend: any) => friend !== data.user.id
-                    ),
+                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.user.id),
                 },
             });
         }
@@ -324,60 +241,35 @@ const AppNav = (): ReactElement => {
             return;
         }
 
-        const notification = notifDM.find(
-            (notification: any) => notification?.channel.id === trigger.channel
-        );
+        const notification = notifDM.find((notif: any) => notif?.channel.id === trigger.channel);
 
-        if (notification) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    notifications: auth.user.notifications.map((notification: any) => {
-                        if (notification?.channel === trigger.channel) {
-                            return {
-                                ...notification,
-                                count: notification?.count + 1,
-                            };
-                        }
-
-                        return notification;
-                    }),
-                },
-            });
-        } else {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    notifications: [
-                        {
-                            channel: trigger.channel,
-                            count: 1,
-                        },
-                        ...auth.user.notifications,
-                    ],
-                },
-            });
-        }
+        setAuth({
+            ...auth,
+            user: {
+                ...auth.user,
+                notifications: notification
+                    ? auth.user.notifications.map((notification: any) => {
+                          notification?.channel === trigger.channel
+                              ? {
+                                    ...notification,
+                                    count: notification?.count + 1,
+                                }
+                              : notification;
+                      })
+                    : [
+                          {
+                              channel: trigger.channel,
+                              count: 1,
+                          },
+                          ...auth.user.notifications,
+                      ],
+            },
+        });
 
         const audio = new Audio('/assets/sounds/ping.mp3');
         audio.volume = 0.5;
         audio.play();
     }, [trigger]);
-
-    const sendData = async (connected: boolean) => {
-        await fetch('/api/users/me', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${auth.accessToken}`,
-            },
-            body: JSON.stringify({
-                status: connected ? 'Online' : 'Offline',
-            }),
-        });
-    };
 
     const setData = async (data: any) => {
         if (data.userId === auth.user.id) {
@@ -392,12 +284,7 @@ const AppNav = (): ReactElement => {
                     banner: data.banner || auth.user.banner,
                     primaryColor: data.primaryColor || auth.user.primaryColor,
                     accentColor: data.accentColor || auth.user.accentColor,
-                    status:
-                        typeof data.status === 'boolean'
-                            ? data.status
-                                ? 'Online'
-                                : 'Offline'
-                            : auth.user.status,
+                    status: typeof data.status === 'boolean' ? (data.status ? 'Online' : 'Offline') : auth.user.status,
                 },
             });
         } else if (auth.user.friendIds.includes(data.userId)) {
@@ -433,13 +320,14 @@ const AppNav = (): ReactElement => {
         }
     };
 
-    const chatappIcon = (
+    const chatAppIcon = (
         <svg
             xmlns='http://www.w3.org/2000/svg'
             width='24'
             height='24'
             viewBox='0 0 24 24'
             fill='none'
+            stroke='currentColor'
             strokeWidth='2'
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -450,30 +338,74 @@ const AppNav = (): ReactElement => {
         </svg>
     );
 
-    return (
-        <nav className={styles.nav}>
-            <ul className={styles.list}>
-                {notifDM.map((notification: any) => (
+    const addServerIcon = (
+        <svg
+            width='24'
+            height='24'
+            viewBox='0 0 24 24'
+        >
+            <path
+                fill='currentColor'
+                d='M20 11.1111H12.8889V4H11.1111V11.1111H4V12.8889H11.1111V20H12.8889V12.8889H20V11.1111Z'
+            />
+        </svg>
+    );
+
+    const discoverIcon = (
+        <svg
+            viewBox='0 0 24 24'
+            width='24'
+            height='24'
+        >
+            <path
+                fill='currentColor'
+                d='M12 10.9C11.39 10.9 10.9 11.39 10.9 12C10.9 12.61 11.39 13.1 12 13.1C12.61 13.1 13.1 12.61 13.1 12C13.1 11.39 12.61 10.9 12 10.9ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.19 14.19L6 18L9.81 9.81L18 6L14.19 14.19Z'
+            />
+        </svg>
+    );
+
+    return useMemo(
+        () => (
+            <nav className={styles.nav}>
+                <ul className={styles.list}>
+                    {notifDM.map((notification: any) => (
+                        <NavIcon
+                            key={notification.channel.id}
+                            name={notification.channel.name}
+                            link={`/channels/me/${notification.channel.id}`}
+                            src={notification.channel.icon}
+                            count={notification.count}
+                        />
+                    ))}
+
                     <NavIcon
-                        key={notification.channel.id}
-                        name={notification.channel.name}
-                        link={`/channels/me/${notification.channel.id}`}
-                        src={notification.channel.icon}
-                        count={notification.count}
+                        special={true}
+                        name='Direct Messages'
+                        link={url}
+                        svg={chatAppIcon}
                     />
-                ))}
 
-                <NavIcon
-                    name='Direct Messages'
-                    link={url}
-                    svg={chatappIcon}
-                />
+                    <div className={styles.listItem}>
+                        <div className={styles.separator} />
+                    </div>
 
-                <div className={styles.listItem}>
-                    <div className={styles.separator} />
-                </div>
-            </ul>
-        </nav>
+                    <NavIcon
+                        green={true}
+                        name='Add a Server'
+                        link={'/channels/add'}
+                        svg={addServerIcon}
+                    />
+
+                    <NavIcon
+                        green={true}
+                        name='Discover Servers'
+                        link={'/channels/discover'}
+                        svg={discoverIcon}
+                    />
+                </ul>
+            </nav>
+        ),
+        [notifDM, url]
     );
 };
 

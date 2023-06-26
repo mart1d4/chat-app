@@ -7,22 +7,21 @@ import styles from './UserItem.module.css';
 
 const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const listItemRef = useRef<HTMLLIElement>(null);
+
+    const liRef = useRef(null);
 
     return (
         <li
-            ref={listItemRef}
+            ref={liRef}
             className={styles.liContainer}
             onClick={(e) => {
-                e.preventDefault();
-                if (fixedLayer?.element === listItemRef.current) {
+                if (fixedLayer?.element === e.currentTarget) {
                     setFixedLayer(null);
                 } else {
                     setFixedLayer({
                         type: 'usercard',
-                        event: e,
+                        element: e.currentTarget,
                         user: user,
-                        element: listItemRef.current,
                         firstSide: 'left',
                         gap: 16,
                     });
@@ -32,11 +31,18 @@ const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
                 e.preventDefault();
                 setFixedLayer({
                     type: 'menu',
-                    event: e,
+                    event: {
+                        mouseX: e.clientX,
+                        mouseY: e.clientY,
+                    },
                     user: user,
                 });
             }}
-            style={user.status === 'Offline' ? { opacity: 0.3 } : {}}
+            style={{
+                opacity: user.status === 'Offline' && !fixedLayer?.element === liRef.current ? 0.3 : 1,
+                backgroundColor: fixedLayer?.element === liRef.current ? 'var(--background-5)' : '',
+                color: fixedLayer?.element === liRef.current ? 'var(--foreground-2)' : '',
+            }}
         >
             <div className={styles.liWrapper}>
                 <div className={styles.link}>
@@ -57,9 +63,7 @@ const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
                                 <div className={styles.nameWrapper}>{user.username}</div>
                             </div>
 
-                            {user?.customStatus && (
-                                <div className={styles.contentStatus}>{user.customStatus}</div>
-                            )}
+                            {user?.customStatus && <div className={styles.contentStatus}>{user.customStatus}</div>}
                         </div>
                     </div>
                 </div>
