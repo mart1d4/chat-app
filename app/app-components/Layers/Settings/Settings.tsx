@@ -479,9 +479,9 @@ const Profiles = () => {
 
             if (!response.ok) {
                 console.error(response);
+            } else {
+                resetState();
             }
-
-            resetState();
         } catch (err) {
             console.error(err);
         }

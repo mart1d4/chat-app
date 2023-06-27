@@ -147,7 +147,6 @@
 }
 
 .content {
-    position: relative;
     padding: 60px 10px 80px 40px;
     flex: 1 1 auto;
     max-width: 740px;
@@ -384,7 +383,7 @@
 
 .saveAlert {
     position: absolute;
-    bottom: 0;
+    bottom: 20px;
     margin-bottom: 20px;
     margin-left: -20px;
     width: calc(100% - 40px);
@@ -397,6 +396,7 @@
     background-color: var(--background-dark);
     color: var(--foreground-2);
     box-shadow: var(--elevation-high);
+    z-index: 1;
 }
 
 .saveAlert > p {
