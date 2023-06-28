@@ -2,6 +2,52 @@
 // Database Types //
 //#//#//#//#//#//#//
 
+type NotificationType = {
+    type: 'REQUEST' | 'MESSAGE' | 'MENTION' | 'CALL' | 'OTHER';
+    senderId: UserType.id;
+    channelId?: ChannelType.id;
+    content?: string;
+    count: number;
+    createdAt: Date;
+};
+
+type UncleanUserType = {
+    id: string;
+    username: string;
+    displayName: string;
+    email?: string;
+    avatar: string;
+    banner?: string;
+    primaryColor: string;
+    accentColor: string;
+    description?: string;
+    customStatus?: string;
+    status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb' | 'Invisible';
+    system: boolean;
+    verified: boolean;
+    notifications: NotificationType[];
+
+    guildIds: string[];
+    guilds?: GuildType[];
+
+    channelIds: string[];
+    channels?: ChannelType[];
+
+    friendIds: string[];
+    friends?: User[];
+
+    requestReceivedIds: string[];
+    requestsReceived?: User[];
+
+    requestSentIds: string[];
+    requestsSent?: User[];
+
+    blockedUserIds: string[];
+    blockedUsers?: User[];
+
+    createdAt: DateTime;
+};
+
 type UserType = {
     id: string;
     username: string;
@@ -16,13 +62,7 @@ type UserType = {
     status: 'Online' | 'Offline' | 'Idle' | 'Do Not Disturb' | 'Invisible';
     system: boolean;
     verified: boolean;
-    notifications: {
-        type?: string;
-        message?: string;
-        channel?: string;
-        count?: number;
-        new?: boolean;
-    }[];
+    notifications: NotificationType[];
 
     guildIds: string[];
     guilds?: GuildType[];

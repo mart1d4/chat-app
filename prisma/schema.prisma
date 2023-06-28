@@ -1,225 +1,237 @@
+// Initial Setup
+
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("MONGODB_URI")
+    provider = "mongodb"
+    url      = env("MONGODB_URI")
 }
 
 // Types
 
-type Notification {
-  type String?
-  message String?
-  channelId String?
-  count   Int?
-  new      Boolean?
+type NotificationType {
+    type      NotificationEnum
+    senderId  String
+    channelId String?
+    content   String?
+    count     Int              @default(1)
+    createdAt DateTime         @default(now()) @db.Date
 }
 
-type Button {
-  label String
-  url   String
+type ButtonType {
+    label String
+    url   String
 }
 
-type WelcomeScreen {
-  title         String
-  subtitle      String
-  content       String[]
-  links         String[]
-  buttons       Button[]
-  primaryColor  String
-  accentColor   String
-  backgroundUrl String
+type WelcomeScreenType {
+    title         String
+    subtitle      String
+    content       String[]
+    links         String[]
+    buttons       Button[]
+    primaryColor  String
+    accentColor   String
+    backgroundUrl String
 }
 
 // Enums
 
-enum UserStatus {
-  Online
-  Idle
-  Do_Not_Disturb
-  Invisible
-  Offline
+enum NotificationEnum {
+    REQUEST
+    MESSAGE
+    MENTION
+    CALL
+    SYSTEM
 }
 
-enum ChannelType {
-  DM
-  GROUP_DM
-  GUILD_TEXT
-  GUILD_VOICE
-  GUILD_CATEGORY
+enum UserStatusEnum {
+    ONLINE
+    IDLE
+    DO_NOT_DISTURB
+    INVISIBLE
+    OFFLINE
 }
 
-enum MessageType {
-  DEFAULT
-  REPLY
-  RECIPIENT_ADD
-  RECIPIENT_REMOVE
-  CALL
-  CHANNEL_NAME_CHANGE
-  CHANNEL_ICON_CHANGE
-  CHANNEL_PINNED_MESSAGE
-  GUILD_MEMBER_JOIN
-  OWNER_CHANGE
+enum ChannelTypeEnum {
+    DM
+    GROUP_DM
+    GUILD_TEXT
+    GUILD_VOICE
+    GUILD_CATEGORY
+    FORUM
+}
+
+enum MessageTypeEnum {
+    DEFAULT
+    REPLY
+    RECIPIENT_ADD
+    RECIPIENT_REMOVE
+    CALL
+    CHANNEL_NAME_CHANGE
+    CHANNEL_ICON_CHANGE
+    CHANNEL_PINNED_MESSAGE
+    GUILD_MEMBER_JOIN
+    OWNER_CHANGE
 }
 
 // Models
 
 model User {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  username     String     @unique
-  displayName  String
-  email        String?
-  avatar       String     @default("blue")
-  banner       String?
-  primaryColor String
-  accentColor  String
-  description  String?
-  customStatus String?
-  password     String
-  refreshToken String?    @unique
-  status       UserStatus @default(Offline)
-  system       Boolean    @default(false)
-  verified     Boolean    @default(false)
-  notifications Notification[]
+    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    username      String         @unique
+    displayName   String
+    email         String?
+    avatar        String         @default("blue")
+    banner        String?
+    primaryColor  String
+    accentColor   String
+    description   String?
+    customStatus  String?
+    password      String
+    refreshToken  String?        @unique
+    status        UserStatus     @default(Offline)
+    system        Boolean        @default(false)
+    verified      Boolean        @default(false)
+    notifications Notification[]
 
-  guildIds String[] @db.ObjectId
-  guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
+    guildIds String[] @db.ObjectId
+    guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
 
-  ownedGuildIds String[] @db.ObjectId
-  ownedGuilds   Guild[]  @relation("Owner")
+    ownedGuildIds String[] @db.ObjectId
+    ownedGuilds   Guild[]  @relation("Owner")
 
-  channelIds String[]  @db.ObjectId
-  channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
+    channelIds String[]  @db.ObjectId
+    channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
 
-  ownedChannelIds String[]  @db.ObjectId
-  ownedChannels   Channel[] @relation("Owner")
+    ownedChannelIds String[]  @db.ObjectId
+    ownedChannels   Channel[] @relation("Owner")
 
-  messages Message[]
+    messages Message[]
 
-  friendIds String[] @db.ObjectId
-  friends   User[]   @relation("Friend", fields: [friendIds], references: [id])
+    friendIds String[] @db.ObjectId
+    friends   User[]   @relation("Friend", fields: [friendIds], references: [id])
 
-  friendOfIds String[] @db.ObjectId
-  friendOf    User[]   @relation("Friend", fields: [friendOfIds], references: [id])
+    friendOfIds String[] @db.ObjectId
+    friendOf    User[]   @relation("Friend", fields: [friendOfIds], references: [id])
 
-  requestReceivedIds String[] @db.ObjectId
-  requestsReceived   User[]   @relation("Request", fields: [requestReceivedIds], references: [id])
+    requestReceivedIds String[] @db.ObjectId
+    requestsReceived   User[]   @relation("Request", fields: [requestReceivedIds], references: [id])
 
-  requestSentIds String[] @db.ObjectId
-  requestsSent   User[]   @relation("Request", fields: [requestSentIds], references: [id])
+    requestSentIds String[] @db.ObjectId
+    requestsSent   User[]   @relation("Request", fields: [requestSentIds], references: [id])
 
-  blockedUserIds String[] @db.ObjectId
-  blockedUsers   User[]   @relation("Blocked", fields: [blockedUserIds], references: [id])
+    blockedUserIds String[] @db.ObjectId
+    blockedUsers   User[]   @relation("Blocked", fields: [blockedUserIds], references: [id])
 
-  blockedByUserIds String[] @db.ObjectId
-  blockedByUsers   User[]   @relation("Blocked", fields: [blockedByUserIds], references: [id])
+    blockedByUserIds String[] @db.ObjectId
+    blockedByUsers   User[]   @relation("Blocked", fields: [blockedByUserIds], references: [id])
 
-  createdAt DateTime @default(now()) @db.Date
-  updatedAt DateTime @default(now()) @updatedAt @db.Date
-  v         Int      @default(0) @map("__v") @ignore
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
 }
 
 model Guild {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  icon          String         @default("blue")
-  banner        String?
-  description   String?
-  welcomeScreen WelcomeScreen?
-  vanityUrlCode String?
-  vanityUrlUses Int?
-  invites       String[]
-  afkChannelId  String?
-  afkTimeout    Int?
+    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    name          String
+    icon          String         @default("blue")
+    banner        String?
+    description   String?
+    welcomeScreen WelcomeScreen?
+    vanityUrlCode String?
+    vanityUrlUses Int?
+    invites       String[]
+    afkChannelId  String?
+    afkTimeout    Int?
 
-  ownerId String @db.ObjectId
-  owner   User   @relation("Owner", fields: [ownerId], references: [id])
+    ownerId String @db.ObjectId
+    owner   User   @relation("Owner", fields: [ownerId], references: [id])
 
-  memberIds String[] @db.ObjectId
-  members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
+    memberIds String[] @db.ObjectId
+    members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
 
-  channels Channel[]
-  roles    Role[]
+    channels Channel[]
+    roles    Role[]
 
-  createdAt DateTime @default(now()) @db.Date
-  updatedAt DateTime @default(now()) @updatedAt @db.Date
-  v         Int      @default(0) @map("__v") @ignore
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
 }
 
 model Role {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  color       String
-  permissions String[]
-  position    Int
-  mentionable Boolean
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    name        String
+    color       String
+    permissions String[]
+    position    Int
+    mentionable Boolean
 
-  guildId String @db.ObjectId
-  guild   Guild  @relation(fields: [guildId], references: [id])
+    guildId String @db.ObjectId
+    guild   Guild  @relation(fields: [guildId], references: [id])
 
-  createdAt DateTime @default(now()) @db.Date
-  updatedAt DateTime @default(now()) @updatedAt @db.Date
-  v         Int      @default(0) @map("__v") @ignore
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
 }
 
 model Channel {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  type        ChannelType
-  name        String?
-  description String?
-  icon        String?
-  nsfw        Boolean?    @default(false)
-  position    Int?
-  parentId    String?
-  rateLimit   Int?
-  permissions String[]
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    type        ChannelType
+    name        String?
+    description String?
+    icon        String?
+    nsfw        Boolean?    @default(false)
+    position    Int?
+    parentId    String?
+    rateLimit   Int?
+    permissions String[]
 
-  guildId String? @db.ObjectId
-  guild   Guild?  @relation(fields: [guildId], references: [id])
+    guildId String? @db.ObjectId
+    guild   Guild?  @relation(fields: [guildId], references: [id])
 
-  ownerId String? @db.ObjectId
-  owner   User?   @relation("Owner", fields: [ownerId], references: [id])
+    ownerId String? @db.ObjectId
+    owner   User?   @relation("Owner", fields: [ownerId], references: [id])
 
-  recipientIds String[] @db.ObjectId
-  recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
+    recipientIds String[] @db.ObjectId
+    recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
 
-  messageIds String[]  @db.ObjectId
-  messages   Message[] @relation("ChannelMessage", fields: [messageIds], references: [id])
+    messageIds String[]  @db.ObjectId
+    messages   Message[] @relation("ChannelMessage", fields: [messageIds], references: [id])
 
-  createdAt DateTime @default(now()) @db.Date
-  updatedAt DateTime @default(now()) @updatedAt @db.Date
-  v         Int      @default(0) @map("__v") @ignore
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
 }
 
 model Message {
-  id                String      @id @default(auto()) @map("_id") @db.ObjectId
-  type              MessageType
-  content           String
-  attachments       String[]
-  embeds            String[]
-  edited            Boolean     @default(false)
-  pinned            Boolean     @default(false)
-  reactions         String[]    @default([])
-  mentionEveryone   Boolean
-  mentionChannelIds String[]
-  mentionRoleIds    String[]
-  mentionUserIds    String[]
+    id                String      @id @default(auto()) @map("_id") @db.ObjectId
+    type              MessageType
+    content           String
+    attachments       String[]
+    embeds            String[]
+    edited            Boolean     @default(false)
+    pinned            Boolean     @default(false)
+    reactions         String[]    @default([])
+    mentionEveryone   Boolean
+    mentionChannelIds String[]
+    mentionRoleIds    String[]
+    mentionUserIds    String[]
 
-  authorId String @db.ObjectId
-  author   User   @relation(fields: [authorId], references: [id])
+    authorId String @db.ObjectId
+    author   User   @relation(fields: [authorId], references: [id])
 
-  channelId String[]  @db.ObjectId
-  channel   Channel[] @relation("ChannelMessage", fields: [channelId], references: [id])
+    channelId String[]  @db.ObjectId
+    channel   Channel[] @relation("ChannelMessage", fields: [channelId], references: [id])
 
-  messageReferenceId String? @db.ObjectId
-  messageReference   Message? @relation("MessageReference", fields: [messageReferenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    messageReferenceId String?  @db.ObjectId
+    messageReference   Message? @relation("MessageReference", fields: [messageReferenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  referencedByIds String[]  @db.ObjectId
-  referencedBy   Message[] @relation("MessageReference")
+    referencedByIds String[]  @db.ObjectId
+    referencedBy    Message[] @relation("MessageReference")
 
-  createdAt DateTime @default(now()) @db.Date
-  updatedAt DateTime @default(now()) @updatedAt @db.Date
-  v         Int      @default(0) @map("__v") @ignore
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
 }
