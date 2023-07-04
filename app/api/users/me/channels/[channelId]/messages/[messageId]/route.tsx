@@ -110,7 +110,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
     }
 }
 
-export async function DELETE({ params }: { params: { channelId: string; messageId: string } }) {
+export async function DELETE(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 

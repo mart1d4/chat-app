@@ -17,7 +17,7 @@ const getRandomIcon = () => {
     return channelIcons[Math.floor(Math.random() * channelIcons.length)];
 };
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(req: Request): Promise<NextResponse> {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 

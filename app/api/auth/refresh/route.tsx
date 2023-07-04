@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(req: Request): Promise<NextResponse> {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
 

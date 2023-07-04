@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 
-export async function GET({ params }: { params: { userId: string } }): Promise<NextResponse> {
+export async function GET(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
 
     if (typeof userId !== 'string' || userId.length !== 24) {

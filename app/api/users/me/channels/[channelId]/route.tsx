@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
-export async function GET({ params }: { params: { channelId: string } }) {
+export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
@@ -103,7 +103,7 @@ export async function GET({ params }: { params: { channelId: string } }) {
     }
 }
 
-export async function DELETE({ params }: { params: { channelId: string } }) {
+export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';

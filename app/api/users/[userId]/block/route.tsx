@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
-export async function POST({ params }: { params: { userId: string } }): Promise<NextResponse> {
+export async function POST(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';

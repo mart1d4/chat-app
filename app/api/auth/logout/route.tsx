@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { cookies } from 'next/headers';
 
-export async function POST(): Promise<NextResponse> {
+export async function POST(req: Request): Promise<NextResponse> {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
 
