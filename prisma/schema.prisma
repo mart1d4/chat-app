@@ -270,7 +270,7 @@ model Message {
     attachments       String[]
     embeds            TEmbed[]
     edited            Boolean     @default(false)
-    pinned            Boolean     @default(false)
+    pinned            DateTime?
     reactions         TReaction[]
     mentionEveryone   Boolean
     mentionChannelIds String[]

@@ -4,7 +4,7 @@ import Form from './Form';
 
 const Register = (): ReactElement => {
     return (
-        <div className={styles.wrapper + ' ' + styles.wrapperRegister}>
+        <div className={styles.wrapper}>
             <img
                 src='/assets/auth-background.svg'
                 alt=''

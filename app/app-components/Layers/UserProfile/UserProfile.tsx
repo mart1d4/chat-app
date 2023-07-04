@@ -6,6 +6,7 @@ import { getButtonColor } from '@/lib/colors/getColors';
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserProfile.module.css';
+import { translateCap } from '@/lib/strings';
 import { v4 as uuidv4 } from 'uuid';
 
 const UserProfile = (): ReactElement => {
@@ -200,7 +201,7 @@ const UserProfile = (): ReactElement => {
                                     className={styles.cardAvatarStatus}
                                     onMouseEnter={(e) => {
                                         setTooltip({
-                                            text: user.status,
+                                            text: translateCap(user.status),
                                             element: e.currentTarget,
                                             gap: 5,
                                         });

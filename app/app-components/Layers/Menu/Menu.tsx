@@ -510,6 +510,10 @@ const content = ({ content }: { content: any }): ReactElement => {
         <div
             className={styles.menuContainer}
             onMouseLeave={() => setActive('')}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
         >
             <div>
                 {items?.map((item) => {

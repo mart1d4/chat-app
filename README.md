@@ -26,6 +26,7 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] Some menus not opening in the correct position
 -   [ ] User profile content isn't scrolling and expanding instead
 -   [ ] Pusher triggers not properly configured
+-   [ ] Message improperly displayed when pinning or deleting a message
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

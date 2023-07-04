@@ -7,10 +7,6 @@
     background-color: var(--accent-1);
 }
 
-.wrapperRegister {
-    width: 100%;
-}
-
 .wrapper > img {
     position: fixed;
     top: 0;
@@ -206,10 +202,6 @@
         height: fit-content;
         padding: 32px;
         border-radius: 5px;
-    }
-
-    .wrapperRegister {
-        width: 480px;
     }
 }
 

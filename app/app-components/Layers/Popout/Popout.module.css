@@ -1,5 +1,5 @@
 .pinContainer {
-    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 60px);
     background-color: var(--background-3);
     width: 420px;
     overflow: hidden;

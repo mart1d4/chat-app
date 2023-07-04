@@ -4,6 +4,7 @@ import { useState, ReactElement, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
+import { translateCap } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
@@ -149,7 +150,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                                 className={styles.cardAvatarStatus}
                                 onMouseEnter={(e) => {
                                     setTooltip({
-                                        text: user.status,
+                                        text: translateCap(user.status),
                                         element: e.currentTarget,
                                         gap: 5,
                                     });

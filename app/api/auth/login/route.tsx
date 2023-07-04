@@ -160,6 +160,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                         createdAt: true,
                     },
                 },
+                createdAt: true,
             },
         });
 

@@ -2,8 +2,8 @@
 
 import { ReactElement, useEffect, useState, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import pusher from '@/lib/pusher/client-connection';
 import { usePathname } from 'next/navigation';
-import pusher from '@/lib/pusher/connection';
 import styles from './AppNav.module.css';
 import NavIcon from './NavIcon';
 

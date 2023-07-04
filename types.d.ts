@@ -207,7 +207,7 @@ type TMessage = readonly {
     attachments: File[];
     embeds: TEmbed[];
     edited: boolean;
-    pinned: boolean;
+    pinned?: DateTime;
     reactions: TReaction[];
     mentionEveryone: boolean;
     mentionChannelIds: TChannel.id[];

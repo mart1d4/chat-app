@@ -154,6 +154,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                         createdAt: true,
                     },
                 },
+                createdAt: true,
             },
         });
 

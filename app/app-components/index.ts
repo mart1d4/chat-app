@@ -20,6 +20,7 @@ import LoadingDots from './LoadingDots/LoadingDots';
 import Avatar from './Avatar/Avatar';
 import TooltipLayer from './TooltipLayer/TooltipLayer';
 import { EmojiPicker } from './TextArea/TextArea';
+import FixedMessage from './Message/FixedMessage';
 
 export {
     AppNav,
@@ -34,6 +35,7 @@ export {
     UserCard,
     Loading,
     Message,
+    FixedMessage,
     TextArea,
     MessageSkeleton,
     MemberList,

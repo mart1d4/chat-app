@@ -5,6 +5,7 @@ import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
 import { Avatar, Icon } from '@/app/app-components';
 import styles from './MemberList.module.css';
+import { translateCap } from '@/lib/strings';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 
@@ -142,7 +143,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                 className={styles.cardAvatarStatus}
                                 onMouseEnter={(e) => {
                                     setTooltip({
-                                        text: user.status,
+                                        text: translateCap(user.status),
                                         element: e.currentTarget,
                                         gap: 5,
                                     });

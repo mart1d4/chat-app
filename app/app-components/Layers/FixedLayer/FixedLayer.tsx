@@ -80,7 +80,6 @@ const FixedLayer = (): ReactElement => {
         } else {
             // If a firstSide is specified, open the menu to that firstSide of the element
             const container = element?.getBoundingClientRect();
-            console.log(container);
 
             if (firstSide === 'left') {
                 pos = {

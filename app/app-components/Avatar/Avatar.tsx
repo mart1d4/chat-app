@@ -1,6 +1,7 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
+import { translateCap } from '@/lib/strings';
 import styles from './Avatar.module.css';
 import { useEffect } from 'react';
 import Image from 'next/image';
@@ -89,7 +90,7 @@ const Avatar = (props: Props) => {
                     onMouseEnter={(e) => {
                         if (!props.tooltip) return;
                         setTooltip({
-                            text: props.status,
+                            text: translateCap(props.status),
                             element: e.target,
                             position: 'top',
                             gap: props.tooltipGap || 0,

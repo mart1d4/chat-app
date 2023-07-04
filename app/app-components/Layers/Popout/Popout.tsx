@@ -1,7 +1,7 @@
 'use client';
 
-import { createChannel, getPinnedMessages } from '@/lib/api-functions/channels';
-import { Message, Icon, Avatar } from '@/app/app-components';
+import { FixedMessage, Icon, Avatar } from '@/app/app-components';
+import { createChannel } from '@/lib/api-functions/channels';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -28,7 +28,14 @@ const Popout = ({ content }: any) => {
     useEffect(() => {
         if (content?.pinned) {
             const fetchPinned = async () => {
-                setPinned(await getPinnedMessages(token, content.channel.id));
+                const response = await fetch(`/api/users/me/channels/${content.channel.id}/messages/pinned`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }).then((res) => res.json());
+
+                setPinned(response.pinned);
             };
 
             fetchPinned();
@@ -129,7 +136,10 @@ const Popout = ({ content }: any) => {
 
     if (content?.pinned) {
         return (
-            <div className={styles.pinContainer}>
+            <div
+                className={styles.pinContainer}
+                onContextMenu={(e) => e.preventDefault()}
+            >
                 <div>
                     <h1>Pinned Messages</h1>
                 </div>
@@ -150,9 +160,9 @@ const Popout = ({ content }: any) => {
                                 key={uuidv4()}
                                 className={styles.messageContainer}
                             >
-                                <Message
+                                <FixedMessage
                                     message={message}
-                                    noInteraction={true}
+                                    pinned={true}
                                 />
                             </div>
                         ))

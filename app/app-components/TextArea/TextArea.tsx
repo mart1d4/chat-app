@@ -2,7 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { trimMessage } from '@/lib/strings/checks';
+import { trimMessage } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
 import { motion } from 'framer-motion';

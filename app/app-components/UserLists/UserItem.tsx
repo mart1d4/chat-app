@@ -4,8 +4,9 @@ import { addFriend, removeFriend, unblockUser } from '@/lib/api-functions/users'
 import { createChannel } from '@/lib/api-functions/channels';
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
-import styles from './UserItem.module.css';
+import { translateCap } from '@/lib/strings';
 import { useRouter } from 'next/navigation';
+import styles from './UserItem.module.css';
 import { ReactElement } from 'react';
 
 type Props = {
@@ -51,7 +52,10 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                 e.preventDefault();
                 setFixedLayer({
                     type: 'menu',
-                    event: e,
+                    event: {
+                        mouseX: e.clientX,
+                        mouseY: e.clientY,
+                    },
                     user: user,
                 });
             }}
@@ -83,7 +87,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     ? 'Blocked'
                                     : user.customStatus
                                     ? user.customStatus
-                                    : user.status}
+                                    : translateCap(user.status)}
                             </span>
                         </p>
                     </div>
@@ -125,7 +129,10 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     e.stopPropagation();
                                     setFixedLayer({
                                         type: 'menu',
-                                        event: e,
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
                                         user: user,
                                         userlist: true,
                                     });

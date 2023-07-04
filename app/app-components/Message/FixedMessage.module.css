@@ -1,36 +1,12 @@
 .messageContainer {
     position: relative;
     list-style: none;
+    background-color: var(--background-4);
 }
 
-.messageContainer:hover {
-    background-color: var(--background-hover-4);
-}
-
-.messageContainer.reply {
-    background-color: var(--background-message-highlight);
-}
-
-.messageContainer.reply:hover {
-    background-color: var(--background-message-highlight-hover);
-}
-
-.messageContainer.reply::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    pointer-events: none;
-    display: block;
-    background-color: var(--accent-1);
-}
-
-.messageContainer.large > div:not(.buttonContainer, .messageReply) {
-    margin-top: 1.0625rem;
+.messageContainer > div:last-child {
     min-height: 2.75rem;
-    padding: 0.125rem 48px 0.125rem 72px;
+    padding: 12px 48px 12px 72px;
     position: relative;
     word-wrap: break-word;
     user-select: text;
@@ -60,15 +36,6 @@
     z-index: 1;
 }
 
-.userAvatar:active {
-    transform: translateY(0.5px);
-}
-
-.userAvatar:hover {
-    filter: drop-shadow(0 4px 4px hsla(0, 0%, 0%, 0.16));
-    cursor: pointer;
-}
-
 .messageContent h3 {
     display: block;
     position: relative;
@@ -84,13 +51,9 @@
     display: inline;
     position: relative;
     overflow: hidden;
-    cursor: pointer;
+    cursor: text;
     color: var(--foreground-1);
     user-select: text;
-}
-
-.titleUsername:hover {
-    text-decoration: underline;
 }
 
 .titleTimestamp {
@@ -255,73 +218,51 @@
     margin-right: -72px;
 }
 
-/* Message menu */
+/* Pinned hover tools */
 
-.buttonContainer {
+.hoverContainer {
+    visibility: hidden;
+    display: flex;
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
 }
 
-.buttonWrapper {
-    pointer-events: auto;
-    position: absolute;
-    right: 0;
-    z-index: 1;
-    padding: 0 14px 0 32px;
+.messageContainer:hover .hoverContainer {
+    visibility: visible;
 }
 
-.buttons {
-    background-color: var(--background-4);
-    display: grid;
-    grid-auto-flow: column;
-    height: 32px;
-    border-radius: 4px;
-    align-items: center;
-    justify-content: flex-start;
-    user-select: none;
+.hoverContainer > div:first-child {
     position: relative;
-    box-shadow: var(--elevation-low);
-    transition: box-shadow 0.2s ease-in-out;
-}
-
-.buttons:hover {
-    box-shadow: var(--elevation-low), var(--elevation-medium);
-}
-
-.buttons > div {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 32px;
-    padding: 4px;
-    width: 32px;
     cursor: pointer;
-    position: relative;
+    user-select: none;
+    font-weight: 500;
+    line-height: 16px;
+    font-size: 11px;
+    height: 16px;
+    border-radius: 3px;
+    text-align: center;
+    padding: 2px 8px;
+    margin-right: 4px;
+    margin-right: 6px;
     color: var(--foreground-3);
+    background-color: var(--background-3);
 }
 
-.buttons > div:active > svg {
-    transform: translateY(0.5px);
-}
-
-.buttons > div:first-child {
-    border-radius: 4px 0 0 4px;
-}
-
-.buttons > div:last-child {
-    border-radius: 0 4px 4px 0;
-}
-
-.buttons > div:hover {
-    background-color: var(--background-hover-1);
+.hoverContainer > div:first-child:hover {
     color: var(--foreground-2);
 }
 
-.buttons > div > svg {
-    width: 20px;
-    height: 20px;
-    display: block;
-    object-fit: contain;
-    pointer-events: none;
+.hoverContainer > svg {
+    width: 16px;
+    height: 16px;
+    color: var(--foreground-3);
+    cursor: pointer;
+}
+
+.hoverContainer > svg:hover {
+    color: var(--foreground-2);
 }

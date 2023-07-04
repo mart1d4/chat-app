@@ -4,7 +4,7 @@ import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } fro
 import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import pusher from '@/lib/pusher/connection';
+import pusher from '@/lib/pusher/client-connection';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -138,7 +138,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                                             <>
                                                 {hasMore ? <MessageSkeleton /> : <FirstMessage channel={channel} />}
 
-                                                {messages.map((message: TMessage, index: number) => (
+                                                {messages?.map((message: TMessage, index: number) => (
                                                     <div key={uuidv4()}>
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>

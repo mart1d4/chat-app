@@ -1,3 +1,13 @@
+export const translateCap = (str?: string) => {
+    if (!str) {
+        return '';
+    }
+
+    return str.replace(/_/g, ' ').replace(/\w\S*/g, (txt) => {
+        return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
+    });
+};
+
 export const trimMessage = (message: string) => {
     const notAllowedUnicode: string[] = [];
 

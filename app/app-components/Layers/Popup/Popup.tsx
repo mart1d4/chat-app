@@ -1,9 +1,10 @@
 'use client';
 
+import { deleteMessage, pinMessage, unpinMessage } from '@/lib/api-functions/messages';
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
-import { Message } from '@/app/app-components';
+import { FixedMessage } from '@/app/app-components';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
@@ -108,6 +109,9 @@ const Popup = (): ReactElement => {
                             setPopup(null);
                         }
                     }}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                    }}
                 >
                     <motion.div
                         ref={popupRef}
@@ -179,17 +183,9 @@ const Popup = (): ReactElement => {
 
                             {!popup?.username && !popup?.password && (
                                 <div className={styles.messagesContainer}>
-                                    <Message
-                                        message={
-                                            popup?.delete
-                                                ? popup.delete.message
-                                                : popup?.pin
-                                                ? popup.pin.message
-                                                : popup?.unpin
-                                                ? popup.unpin.message
-                                                : null
-                                        }
-                                        noInteraction={true}
+                                    <FixedMessage
+                                        message={popup.message}
+                                        pinned={false}
                                     />
                                 </div>
                             )}
@@ -398,11 +394,11 @@ const Popup = (): ReactElement => {
                                 }
                                 onClick={() => {
                                     if (popup?.delete) {
-                                        popup.delete.func();
+                                        deleteMessage(auth.accessToken, popup.message);
                                     } else if (popup?.pin) {
-                                        popup.pin.func();
+                                        pinMessage(auth.accessToken, popup.message);
                                     } else if (popup?.unpin) {
-                                        popup.unpin.func();
+                                        unpinMessage(auth.accessToken, popup.message);
                                     } else if (popup?.username) {
                                         if (uid.length < 2) {
                                             setUsernameError('Must be between 2 and 32 in length.');

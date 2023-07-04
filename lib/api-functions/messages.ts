@@ -38,7 +38,7 @@ export const deleteMessage = async (token: string, message: TMessage) => {
 
 export const editMessage = async (token: string, message: TMessage, content: string) => {
     const response = await fetch(`${url}/users/me/channels/${message.channelId[0]}/messages/${message.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,

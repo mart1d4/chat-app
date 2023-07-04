@@ -3,6 +3,7 @@
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useRef, ReactElement } from 'react';
+import { translateCap } from '@/lib/strings';
 import styles from './Channels.module.css';
 
 const UserSection = (): ReactElement => {
@@ -49,7 +50,7 @@ const UserSection = (): ReactElement => {
 
                     <div className={styles.contentWrapper}>
                         <div>{auth?.user?.username}</div>
-                        <div>{auth?.user?.status || 'INVISIBLE'}</div>
+                        <div>{translateCap(auth?.user?.status)}</div>
                     </div>
                 </div>
 

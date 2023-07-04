@@ -2,9 +2,9 @@
 
 import { TextArea, Icon, Avatar } from '@/app/app-components';
 import { editMessage } from '@/lib/api-functions/messages';
-import { useEffect, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { trimMessage } from '@/lib/strings/checks';
+import { useEffect, useState } from 'react';
+import { trimMessage } from '@/lib/strings';
 import styles from './Message.module.css';
 
 type MessageProps = {
@@ -28,28 +28,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
-
-    // Refs
-    const userImageReplyRef = useRef(null);
-    const userImageRef = useRef(null);
-
-    // useEffect(() => {
-    //     const notifications = auth.user.notifications.map((notification: any) => {
-    //         if (notification.channel === message.channelId[0]) {
-    //             return { ...notification, count: 0 };
-    //         }
-
-    //         return notification;
-    //     });
-
-    //     setAuth({
-    //         ...auth,
-    //         user: {
-    //             ...auth.user,
-    //             notifications,
-    //         },
-    //     });
-    // }, []);
 
     // Effects
 
@@ -113,8 +91,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
         setPopup({
             delete: {
                 channelId: message.channelId[0],
-                message: message,
             },
+            message: message,
         });
     };
 
@@ -122,8 +100,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
         setPopup({
             pin: {
                 channelId: message.channelId[0],
-                message: message,
             },
+            message: message,
         });
     };
 
@@ -131,8 +109,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
         setPopup({
             unpin: {
                 channelId: message.channelId[0],
-                message: message,
             },
+            message: message,
         });
     };
 
@@ -249,9 +227,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                 onMouseLeave={() => setHover(false)}
                 onContextMenu={(e) => {
                     e.preventDefault();
+                    if (noInteraction) return;
                     setFixedLayer({
                         type: 'menu',
-                        event: e,
+                        event: {
+                            mouseX: e.clientX,
+                            mouseY: e.clientY,
+                        },
                         message: {
                             ...message,
                             inline: true,
@@ -323,12 +305,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
             className={
                 styles.messageContainer +
                 ' ' +
-                (large || message.type === 'REPLY' ? styles.large : '') +
+                (large || message.type === 'REPLY' || noInteraction ? styles.large : '') +
                 ' ' +
-                (reply?.messageId === message.id ? styles.reply : '')
+                (reply?.messageId === message.id ? styles.reply : '') +
+                ' ' +
+                (noInteraction ? styles.noInteraction : '')
             }
             onMouseEnter={() => {
-                if (noInteraction) return;
                 setHover(true);
             }}
             onMouseLeave={() => setHover(false)}
@@ -337,7 +320,10 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                 if (noInteraction || edit?.messageId === message.id) return;
                 setFixedLayer({
                     type: 'menu',
-                    event: e,
+                    event: {
+                        mouseX: e.clientX,
+                        mouseY: e.clientY,
+                    },
                     message: message,
                     deletePopup,
                     pinPopup,
@@ -354,7 +340,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                         : '',
             }}
         >
-            {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && (
+            {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && !noInteraction && (
                 <MessageMenu
                     message={message}
                     large={large}
@@ -368,6 +354,27 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                 />
             )}
 
+            {hover && noInteraction && (
+                <div className={styles.pinnedHover}>
+                    <div role='button'>
+                        <div>Jump</div>
+                    </div>
+
+                    <svg
+                        aria-hidden='true'
+                        role='img'
+                        width='24'
+                        height='24'
+                        viewBox='0 0 24 24'
+                    >
+                        <path
+                            fill='currentColor'
+                            d='M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z'
+                        />
+                    </svg>
+                </div>
+            )}
+
             {large || message.type === 'REPLY' || noInteraction ? (
                 <div className={styles.messagelarge}>
                     {message.type === 'REPLY' && (
@@ -378,12 +385,16 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
                                         setFixedLayer({
                                             type: 'usercard',
-                                            event: e,
+                                            event: {
+                                                mouseX: e.clientX,
+                                                mouseY: e.clientY,
+                                            },
                                             // @ts-ignore
                                             user: message.messageReference?.author,
                                             element: e.currentTarget,
@@ -395,9 +406,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
-                                        event: e,
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
                                         //  @ts-ignore
                                         user: message.messageReference?.author,
                                     });
@@ -417,12 +432,12 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
                                         setFixedLayer({
                                             type: 'usercard',
-                                            event: e,
                                             // @ts-ignore
                                             user: message.messageReference?.author,
                                             element: e.currentTarget,
@@ -434,9 +449,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
-                                        event: e,
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
                                         //  @ts-ignore
                                         user: message.messageReference?.author,
                                     });
@@ -463,19 +482,19 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                         }}
                     >
                         <div
-                            ref={userImageRef}
                             className={styles.userAvatar}
                             onClick={(e) => {
-                                if (fixedLayer?.element === userImageRef.current) {
+                                if (noInteraction) return;
+
+                                if (fixedLayer?.element === e.currentTarget) {
                                     setFixedLayer(null);
                                     return;
                                 }
 
                                 setFixedLayer({
                                     type: 'usercard',
-                                    event: e,
                                     user: message?.author,
-                                    element: userImageRef.current,
+                                    element: e.currentTarget,
                                     firstSide: 'right',
                                     gap: 10,
                                 });
@@ -484,9 +503,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                             onContextMenu={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
+                                if (noInteraction) return;
                                 setFixedLayer({
                                     type: 'menu',
-                                    event: e,
+                                    event: {
+                                        mouseX: e.clientX,
+                                        mouseY: e.clientY,
+                                    },
                                     user: message.author,
                                 });
                             }}
@@ -505,12 +528,12 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
                                         setFixedLayer({
                                             type: 'usercard',
-                                            event: e,
                                             user: message.author,
                                             element: e.currentTarget,
                                             firstSide: 'right',
@@ -521,9 +544,13 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
+                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
-                                        event: e,
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
                                         user: message.author,
                                     });
                                 }}
@@ -620,6 +647,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 </span>
                             </span>
                         )}
+
                         {edit?.messageId === message.id ? (
                             <>
                                 <TextArea
@@ -681,7 +709,6 @@ const MessageMenu = ({ message, large, functions }: any) => {
     const { setFixedLayer, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
-    const menuButtonRef = useRef(null);
 
     useEffect(() => {
         if (message.author.id === auth.user.id) setMenuSender(true);
@@ -742,7 +769,6 @@ const MessageMenu = ({ message, large, functions }: any) => {
                     )}
 
                     <div
-                        ref={menuButtonRef}
                         role='button'
                         onMouseEnter={(e) =>
                             setTooltip({
@@ -754,14 +780,13 @@ const MessageMenu = ({ message, large, functions }: any) => {
                         onMouseLeave={() => setTooltip(null)}
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (fixedLayer?.element === menuButtonRef.current) {
+                            if (fixedLayer?.element === e.currentTarget) {
                                 setFixedLayer(null);
                             } else {
                                 setFixedLayer({
                                     type: 'menu',
-                                    event: e,
                                     firstSide: 'left',
-                                    element: menuButtonRef.current,
+                                    element: e.currentTarget,
                                     gap: 5,
                                     message: message,
                                     deletePopup: functions.deletePopup,
