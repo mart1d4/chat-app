@@ -139,11 +139,7 @@ const Popup = (): ReactElement => {
                             </div>
                         ) : (
                             <div className={styles.titleBlockCentered}>
-                                <div>
-                                    {popup?.username
-                                        ? 'Change your username'
-                                        : 'Update your password'}
-                                </div>
+                                <div>{popup?.username ? 'Change your username' : 'Update your password'}</div>
 
                                 <div>
                                     {popup?.username
@@ -174,12 +170,10 @@ const Popup = (): ReactElement => {
                         <div className={styles.popupContent + ' scrollbar'}>
                             {!popup?.username && !popup?.password && (
                                 <div>
-                                    {popup?.delete &&
-                                        'Are you sure you want to delete this message?'}
+                                    {popup?.delete && 'Are you sure you want to delete this message?'}
                                     {popup?.pin &&
                                         'Hey, just double checking that you want to pin this message to the current channel for posterity and greatness?'}
-                                    {popup?.unpin &&
-                                        'You sure you want to remove this pinned message?'}
+                                    {popup?.unpin && 'You sure you want to remove this pinned message?'}
                                 </div>
                             )}
 
@@ -206,12 +200,7 @@ const Popup = (): ReactElement => {
 
                                     <div>
                                         You can hold down shift when clicking
-                                        <strong>
-                                            {' '}
-                                            {popup?.delete
-                                                ? 'delete message'
-                                                : 'unpin message'}{' '}
-                                        </strong>
+                                        <strong> {popup?.delete ? 'delete message' : 'unpin message'} </strong>
                                         to bypass this confirmation entirely.
                                     </div>
                                 </div>
@@ -230,9 +219,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Username
                                             {usernameError.length > 0 && (
-                                                <span className={styles.errorLabel}>
-                                                    - {usernameError}
-                                                </span>
+                                                <span className={styles.errorLabel}>- {usernameError}</span>
                                             )}
                                         </label>
                                         <div className={styles.inputContainer}>
@@ -265,9 +252,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Current Password
                                             {passwordError.length > 0 && (
-                                                <span className={styles.errorLabel}>
-                                                    - {passwordError}
-                                                </span>
+                                                <span className={styles.errorLabel}>- {passwordError}</span>
                                             )}
                                         </label>
                                         <div className={styles.inputContainer}>
@@ -303,9 +288,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Current Password
                                             {password1Error.length > 0 && (
-                                                <span className={styles.errorLabel}>
-                                                    - {password1Error}
-                                                </span>
+                                                <span className={styles.errorLabel}>- {password1Error}</span>
                                             )}
                                         </label>
                                         <div className={styles.inputContainer}>
@@ -341,9 +324,7 @@ const Popup = (): ReactElement => {
                                         >
                                             New Password
                                             {newPasswordError.length > 0 && (
-                                                <span className={styles.errorLabel}>
-                                                    - {newPasswordError}
-                                                </span>
+                                                <span className={styles.errorLabel}>- {newPasswordError}</span>
                                             )}
                                         </label>
                                         <div className={styles.inputContainer}>
@@ -375,9 +356,7 @@ const Popup = (): ReactElement => {
                                         >
                                             Confirm New Password
                                             {newPasswordError.length > 0 && (
-                                                <span className={styles.errorLabel}>
-                                                    - {newPasswordError}
-                                                </span>
+                                                <span className={styles.errorLabel}>- {newPasswordError}</span>
                                             )}
                                         </label>
                                         <div className={styles.inputContainer}>

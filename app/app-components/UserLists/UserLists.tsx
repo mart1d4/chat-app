@@ -88,7 +88,7 @@ const UserLists = ({ content }: Props): ReactElement => {
 
                 if (content === 'online') {
                     if (friends.length) {
-                        friends = friends.filter((user: TCleanUser) => user.status === 'Online');
+                        friends = friends.filter((user: TCleanUser) => user.status === 'ONLINE');
                     }
                     setList(friends);
                     return;

@@ -31,8 +31,7 @@ const Aside = () => {
             <div>
                 <h3>It's quiet for now...</h3>
                 <div>
-                    When a friend starts an activity—like playing a game or hanging out on
-                    voice—we’ll show it here!
+                    When a friend starts an activity—like playing a game or hanging out on voice—we’ll show it here!
                 </div>
             </div>
         </aside>

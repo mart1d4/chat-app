@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 'use client';
 
 import styles from './Popover.module.css';
@@ -60,15 +58,14 @@ const PopoverButton = ({ links }: { links: Link }) => {
                     className={styles.popup}
                     ref={popoverRef}
                 >
-                    {Object.keys(links).map((key) => {
-                        return (
-                            <div key={key}>
-                                <a href={links[key]}>
-                                    <div>{key}</div>
-                                </a>
-                            </div>
-                        );
-                    })}
+                    {Object.keys(links).map((key) => (
+                        <div key={key}>
+                            {/* @ts-expect-error */}
+                            <a href={links[key]}>
+                                <div>{key}</div>
+                            </a>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

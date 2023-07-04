@@ -1,6 +1,5 @@
 'use client';
 
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { LoadingDots } from '../app-components';
@@ -22,7 +21,7 @@ const Register = (): ReactElement => {
     const [passwordError, setPasswordError] = useState<string>('');
 
     const uidInputRef = useRef<HTMLInputElement>(null);
-    const router: AppRouterInstance = useRouter();
+    const router = useRouter();
     const { auth, loading }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
@@ -123,9 +122,7 @@ const Register = (): ReactElement => {
                     }}
                 >
                     Username
-                    {usernameError.length > 0 && (
-                        <span className={styles.errorLabel}>- {usernameError}</span>
-                    )}
+                    {usernameError.length > 0 && <span className={styles.errorLabel}>- {usernameError}</span>}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -156,9 +153,7 @@ const Register = (): ReactElement => {
                     }}
                 >
                     Password
-                    {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>- {passwordError}</span>
-                    )}
+                    {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -187,9 +182,7 @@ const Register = (): ReactElement => {
                     }}
                 >
                     Password Match
-                    {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>- {passwordError}</span>
-                    )}
+                    {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
                 </label>
                 <div className={styles.inputContainer}>
                     <input

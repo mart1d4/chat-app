@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef, useMemo, ReactElement } from 'react';
 import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
+import { Avatar, Icon } from '@/app/app-components';
 import styles from './MemberList.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
-import Icon from '../Icon/Icon';
-import Avatar from '../Avatar/Avatar';
 
 const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => {
     const [user, setUser] = useState<null | TCleanUser>(null);

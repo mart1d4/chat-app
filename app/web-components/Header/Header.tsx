@@ -19,8 +19,8 @@ const Header = () => {
     return (
         <>
             <div className={styles.disclaimer}>
-                Notice: This is not Discord and is not affiliated with Discord in any way. This is a
-                chat application which follows Discord's design. All passwords are encrypted.
+                Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat application
+                which follows Discord's design. All passwords are encrypted.
             </div>
 
             <header className={styles.header}>

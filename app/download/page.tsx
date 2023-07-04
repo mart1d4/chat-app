@@ -9,13 +9,7 @@ export const metadata: Metadata = {
     title: 'Download Chat App to Talk, Chat and Hang Out',
 };
 
-const cardItems: string[] = [
-    'iOS',
-    'Android',
-    'Linux',
-    'Mac',
-    'Feeling experimental?',
-];
+const cardItems: string[] = ['iOS', 'Android', 'Linux', 'Mac', 'Feeling experimental?'];
 
 const links: (
     | string
@@ -50,9 +44,8 @@ const DownloadPage = (): ReactElement => {
                             <h1>Get Chat App for any device</h1>
 
                             <div>
-                                An adventure awaits. Hang out with your friends
-                                on our desktop app and keep the conversation
-                                going on mobile.
+                                An adventure awaits. Hang out with your friends on our desktop app and keep the
+                                conversation going on mobile.
                             </div>
                         </div>
 
@@ -93,10 +86,7 @@ const DownloadPage = (): ReactElement => {
                                     <>
                                         <h3>Feeling experimental?</h3>
 
-                                        <div>
-                                            Try our Public Test Build and test
-                                            new features before they launch.
-                                        </div>
+                                        <div>Try our Public Test Build and test new features before they launch.</div>
 
                                         <PopoverButton links={links[index]} />
                                     </>
@@ -105,23 +95,13 @@ const DownloadPage = (): ReactElement => {
                                         <div>
                                             <h3>{item}</h3>
                                             {index === 2 ? (
-                                                <PopoverButton
-                                                    links={links[index]}
-                                                />
+                                                <PopoverButton links={links[index]} />
                                             ) : (
-                                                <a
-                                                    href={links[
-                                                        index
-                                                    ].toString()}
-                                                >
-                                                    Download
-                                                </a>
+                                                <a href={links[index].toString()}>Download</a>
                                             )}
                                         </div>
 
-                                        <img
-                                            src={`/assets/homepages/${item}.svg`}
-                                        />
+                                        <img src={`/assets/homepages/${item}.svg`} />
                                     </>
                                 )}
                             </div>

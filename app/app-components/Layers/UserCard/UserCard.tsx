@@ -48,17 +48,12 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                             '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
                             '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                            '--card-button-color': getButtonColor(
-                                user.primaryColor,
-                                user.accentColor
-                            ),
+                            '--card-button-color': getButtonColor(user.primaryColor, user.accentColor),
                             '--card-border-color': user.primaryColor,
                         } as React.CSSProperties
                     }
                     initial={{
-                        transform: `translateX(${
-                            side === 'left' ? '-' : side === 'right' && '+'
-                        }20px)`,
+                        transform: `translateX(${side === 'left' ? '-' : side === 'right' && '+'}20px)`,
                     }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}

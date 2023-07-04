@@ -25,8 +25,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
             return (
                 channel.recipients.length === 2 &&
                 ((channel.recipientIds[0] === userId && channel.recipientIds[1] === auth.user.id) ||
-                    (channel.recipientIds[0] === auth.user.id &&
-                        channel.recipientIds[1] === userId))
+                    (channel.recipientIds[0] === auth.user.id && channel.recipientIds[1] === userId))
             );
         });
 

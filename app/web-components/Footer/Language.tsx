@@ -50,10 +50,7 @@ const Language = () => {
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
-            if (
-                langMenu.current?.contains(e.target as Node) ||
-                langButton.current?.contains(e.target as Node)
-            ) {
+            if (langMenu.current?.contains(e.target as Node) || langButton.current?.contains(e.target as Node)) {
                 return;
             }
 
@@ -84,9 +81,7 @@ const Language = () => {
                                     }}
                                 >
                                     <div>
-                                        <img
-                                            src={`/assets/flags/${language.flag}.png`}
-                                        />
+                                        <img src={`/assets/flags/${language.flag}.png`} />
                                         <div>{language.name}</div>
                                     </div>
                                 </div>

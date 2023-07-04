@@ -1,8 +1,6 @@
 'use client';
 
-import { addFriend, removeFriend } from '@/lib/api-functions/users';
 import { useEffect, useRef, useState, ReactElement } from 'react';
-import { createChannel } from '@/lib/api-functions/channels';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getButtonColor } from '@/lib/colors/getColors';
 import { Avatar, Icon } from '@/app/app-components';
@@ -450,7 +448,7 @@ const UserProfile = (): ReactElement => {
                             </div> */
 }
 
-const FriendItem = ({ friend }: { friend: TUser }): ReactElement => {
+const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
     const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     return (

@@ -88,11 +88,7 @@ const Form = (): ReactElement => {
                     }}
                 >
                     Username
-                    {error.length ? (
-                        <span className={styles.errorLabel}> - {error}</span>
-                    ) : (
-                        <span> *</span>
-                    )}
+                    {error.length ? <span className={styles.errorLabel}> - {error}</span> : <span> *</span>}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -121,11 +117,7 @@ const Form = (): ReactElement => {
                     }}
                 >
                     Password
-                    {error.length ? (
-                        <span className={styles.errorLabel}>- {error}</span>
-                    ) : (
-                        <span>*</span>
-                    )}
+                    {error.length ? <span className={styles.errorLabel}>- {error}</span> : <span>*</span>}
                 </label>
                 <div className={styles.inputContainer}>
                     <input

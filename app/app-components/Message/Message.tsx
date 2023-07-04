@@ -4,8 +4,8 @@ import { TextArea, Icon, Avatar } from '@/app/app-components';
 import { editMessage } from '@/lib/api-functions/messages';
 import { useEffect, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import styles from './Message.module.css';
 import { trimMessage } from '@/lib/strings/checks';
+import styles from './Message.module.css';
 
 type MessageProps = {
     message: TMessage;
