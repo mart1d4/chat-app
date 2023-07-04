@@ -49,7 +49,7 @@ const UserSection = (): ReactElement => {
 
                     <div className={styles.contentWrapper}>
                         <div>{auth?.user?.username}</div>
-                        <div>{auth?.user?.status || 'Invisible'}</div>
+                        <div>{auth?.user?.status || 'INVISIBLE'}</div>
                     </div>
                 </div>
 

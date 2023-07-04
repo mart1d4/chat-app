@@ -284,14 +284,14 @@ const AppNav = (): ReactElement => {
                     banner: data.banner || auth.user.banner,
                     primaryColor: data.primaryColor || auth.user.primaryColor,
                     accentColor: data.accentColor || auth.user.accentColor,
-                    status: typeof data.status === 'boolean' ? (data.status ? 'Online' : 'Offline') : auth.user.status,
+                    status: typeof data.status === 'boolean' ? (data.status ? 'ONLINE' : 'OFFLINE') : auth.user.status,
                 },
             });
         } else if (auth.user.friendIds.includes(data.userId)) {
             if (data.connected) {
                 auth.user.friends.map((friend: any) => {
                     if (friend.id === data.userId) {
-                        friend.status = data.connected ? 'Online' : 'Offline';
+                        friend.status = data.connected ? 'ONLINE' : 'OFFLINE';
                     }
 
                     return friend;

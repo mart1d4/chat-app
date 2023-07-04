@@ -39,7 +39,7 @@ const UserItem = ({ user }: { user: TCleanUser }): ReactElement => {
                 });
             }}
             style={{
-                opacity: user.status === 'Offline' && !fixedLayer?.element === liRef.current ? 0.3 : 1,
+                opacity: user.status === 'OFFLINE' && !fixedLayer?.element === liRef.current ? 0.3 : 1,
                 backgroundColor: fixedLayer?.element === liRef.current ? 'var(--background-5)' : '',
                 color: fixedLayer?.element === liRef.current ? 'var(--foreground-2)' : '',
             }}

@@ -295,10 +295,10 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
             );
         } else {
             const onlineMembers: any = channel.recipients.filter((recipient: any) =>
-                ['Online', 'Idle', 'Do_Not_Disturb'].includes(recipient.status)
+                ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
             );
 
-            const offlineMembers: any = channel.recipients.filter((recipient: any) => recipient.status === 'Offline');
+            const offlineMembers: any = channel.recipients.filter((recipient: any) => recipient.status === 'OFFLINE');
 
             return (
                 <aside className={styles.memberList}>
