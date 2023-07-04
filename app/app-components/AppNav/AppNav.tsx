@@ -12,7 +12,7 @@ const AppNav = (): ReactElement => {
     const [trigger, setTrigger] = useState<any>(null);
     const [notifDM, setNotifDM] = useState<
         {
-            channel: ChannelType;
+            channel: TChannel;
             count: number;
         }[]
     >([]);

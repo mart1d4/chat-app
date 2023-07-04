@@ -95,7 +95,7 @@ enum EUserStatus {
     OFFLINE
 }
 
-enum EChannelType {
+enum ETChannel {
     DM
     GROUP_DM
     GUILD_TEXT
@@ -104,7 +104,7 @@ enum EChannelType {
     FORUM
 }
 
-enum EMessageType {
+enum ETMessage {
     DEFAULT
     REPLY
     RECIPIENT_ADD
@@ -235,12 +235,12 @@ model Role {
 }
 
 model Channel {
-    id          String       @id @default(auto()) @map("_id") @db.ObjectId
-    type        EChannelType
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    type        ETChannel
     name        String?
     description String?
     icon        String?
-    nsfw        Boolean      @default(false)
+    nsfw        Boolean   @default(false)
     position    Int?
     parentId    String?
     rateLimit   Int?
@@ -264,13 +264,13 @@ model Channel {
 }
 
 model Message {
-    id                String       @id @default(auto()) @map("_id") @db.ObjectId
-    type              EMessageType
+    id                String      @id @default(auto()) @map("_id") @db.ObjectId
+    type              ETMessage
     content           String
     attachments       String[]
     embeds            TEmbed[]
-    edited            Boolean      @default(false)
-    pinned            Boolean      @default(false)
+    edited            Boolean     @default(false)
+    pinned            Boolean     @default(false)
     reactions         TReaction[]
     mentionEveryone   Boolean
     mentionChannelIds String[]

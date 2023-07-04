@@ -5,7 +5,7 @@ import { Avatar } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 
-const UserItem = ({ user }: { user: CleanOtherUserType }): ReactElement => {
+const UserItem = ({ user }: { user: TCleanUser }): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     const liRef = useRef(null);

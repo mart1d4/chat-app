@@ -68,8 +68,8 @@ type Props = {
 
 const UserLists = ({ content }: Props): ReactElement => {
     const [search, setSearch] = useState<string>('');
-    const [list, setList] = useState<CleanOtherUserType[]>([]);
-    const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
+    const [list, setList] = useState<TCleanUser[]>([]);
+    const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
@@ -88,9 +88,7 @@ const UserLists = ({ content }: Props): ReactElement => {
 
                 if (content === 'online') {
                     if (friends.length) {
-                        friends = friends.filter(
-                            (user: CleanOtherUserType) => user.status === 'Online'
-                        );
+                        friends = friends.filter((user: TCleanUser) => user.status === 'Online');
                     }
                     setList(friends);
                     return;
@@ -104,7 +102,7 @@ const UserLists = ({ content }: Props): ReactElement => {
                 let sentReq = [];
                 if (sent.length) {
                     sentReq =
-                        sent?.map((user: CleanOtherUserType) => {
+                        sent?.map((user: TCleanUser) => {
                             return { ...user, req: 'Sent' };
                         }) || [];
                 }
@@ -112,16 +110,12 @@ const UserLists = ({ content }: Props): ReactElement => {
                 let receivedReq = [];
                 if (received.length) {
                     receivedReq =
-                        received?.map((user: CleanOtherUserType) => {
+                        received?.map((user: TCleanUser) => {
                             return { ...user, req: 'Received' };
                         }) || [];
                 }
 
-                setList(
-                    [...sentReq, ...receivedReq].sort((a, b) =>
-                        a.username.localeCompare(b.username)
-                    )
-                );
+                setList([...sentReq, ...receivedReq].sort((a, b) => a.username.localeCompare(b.username)));
             } else if (content === 'blocked') {
                 const blockedUsers = auth.user.blockedUsers || [];
                 setList(blockedUsers);

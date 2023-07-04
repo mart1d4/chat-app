@@ -11,11 +11,11 @@ import Link from 'next/link';
 
 type Props = {
     special?: boolean;
-    channel?: ChannelType;
+    channel?: TChannel;
 };
 
 const UserItem = ({ special, channel }: Props): ReactElement => {
-    const [user, setUser] = useState<UserType | null>(null);
+    const [user, setUser] = useState<TUser | null>(null);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });

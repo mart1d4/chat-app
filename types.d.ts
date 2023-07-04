@@ -8,7 +8,7 @@ enum EUserStatus {
     OFFLINE = 'OFFLINE',
 }
 
-enum EChannelType {
+enum ETChannel {
     DM = 'DM',
     GROUP_DM = 'GROUP_DM',
     GUILD_TEXT = 'GUILD_TEXT',
@@ -17,7 +17,7 @@ enum EChannelType {
     FORUM = 'FORUM',
 }
 
-enum EMessageType {
+enum ETMessage {
     DEFAULT = 'DEFAULT',
     REPLY = 'REPLY',
     RECIPIENT_ADD = 'RECIPIENT_ADD',
@@ -174,7 +174,7 @@ type TGuild = readonly {
 
 type TChannel = readonly {
     id: string;
-    type: EChannelType;
+    type: ETChannel;
     name?: string;
     description?: string;
     icon?: string;
@@ -202,7 +202,7 @@ type TChannel = readonly {
 
 type TMessage = readonly {
     id: string;
-    type: EMessageType;
+    type: ETMessage;
     content: string;
     attachments: File[];
     embeds: TEmbed[];

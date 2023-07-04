@@ -6,14 +6,14 @@ import ChannelContent from './ChannelContent';
 import { useRouter } from 'next/navigation';
 
 const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElement => {
-    const [channel, setChannel] = useState<ChannelType | null>(null);
+    const [channel, setChannel] = useState<TChannel | null>(null);
 
     const { auth }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 
     useEffect(() => {
-        const channel: ChannelType | undefined = auth.user.channels?.find(
-            (channel: ChannelType) => channel.id === params.channelId
+        const channel: TChannel | undefined = auth.user.channels?.find(
+            (channel: TChannel) => channel.id === params.channelId
         );
 
         if (!channel) {
@@ -23,7 +23,7 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
 
         let name = channel?.name;
         if (channel.type === 'DM') {
-            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as UserType;
+            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as TUser;
             name = user.username;
         } else if (channel.type === 'GROUP_DM' && !channel.name) {
             if (channel.recipients.length > 1) {
@@ -36,7 +36,7 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
 
         let src = channel?.icon;
         if (channel.type === 'DM') {
-            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as UserType;
+            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as TUser;
             src = user.avatar;
         }
 

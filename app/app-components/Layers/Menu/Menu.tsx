@@ -38,8 +38,8 @@ const content = ({ content }: { content: any }): ReactElement => {
     const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
-    const user: UserType = content.user;
-    const message: MessageType = content.message;
+    const user: TUser = content.user;
+    const message: TMessage = content.message;
 
     const shouldDisplayInlined = (type: string) => {
         const inlineTypes = [

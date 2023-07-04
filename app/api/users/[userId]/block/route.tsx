@@ -125,7 +125,7 @@ export async function POST(req: Request, { params }: { params: { userId: string 
     // }
 }
 
-export async function DELETE({ params }: { params: { userId: string } }): Promise<NextResponse> {
+export async function DELETE(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';

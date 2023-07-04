@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const UserProfile = (): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
-    const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
+    const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [note, setNote] = useState<string>('');
 
     const { userProfile, setUserProfile, fixedLayer, setFixedLayer, setShowSettings }: any = useContextHook({
@@ -24,7 +24,7 @@ const UserProfile = (): ReactElement => {
     const cardRef = useRef<HTMLDivElement>(null);
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
-    const user: null | CleanOtherUserType = userProfile?.user;
+    const user: null | TCleanUser = userProfile?.user;
 
     const isSameUser = () => user?.id === auth.user.id;
 
@@ -450,7 +450,7 @@ const UserProfile = (): ReactElement => {
                             </div> */
 }
 
-const FriendItem = ({ friend }: { friend: UserType }): ReactElement => {
+const FriendItem = ({ friend }: { friend: TUser }): ReactElement => {
     const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     return (

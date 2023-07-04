@@ -84,7 +84,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             waiting: true,
         };
 
-        setMessages((messages: MessageType[]) => [...messages, tempMessage]);
+        setMessages((messages: TMessage[]) => [...messages, tempMessage]);
 
         try {
             const response = await fetch(
@@ -106,7 +106,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             );
 
             if (!response.ok) {
-                setMessages((messages: MessageType[]) =>
+                setMessages((messages: TMessage[]) =>
                     messages.map((message) =>
                         message.id === tempId ? { ...message, error: true, waiting: false } : message
                     )
@@ -130,13 +130,13 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             }
 
             // Stop message from being marked as waiting
-            setMessages((messages: MessageType[]) =>
+            setMessages((messages: TMessage[]) =>
                 messages.map((message) => (message.id === tempId ? { ...message, waiting: false } : message))
             );
         } catch (err) {
             console.error(err);
             // Make message marked as error
-            setMessages((messages: MessageType[]) =>
+            setMessages((messages: TMessage[]) =>
                 messages.map((message) =>
                     message.id === tempId ? { ...message, error: true, waiting: false } : message
                 )

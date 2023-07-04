@@ -6,8 +6,8 @@ import useContextHook from '@/hooks/useContextHook';
 import styles from './AppHeader.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
-const AppHeader = ({ channel }: { channel?: ChannelType | null }): ReactElement => {
-    const [friend, setFriend] = useState<undefined | UserType>();
+const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => {
+    const [friend, setFriend] = useState<undefined | TUser>();
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
     const { setUserProfile, setFixedLayer }: any = useContextHook({ context: 'layer' });
@@ -19,7 +19,7 @@ const AppHeader = ({ channel }: { channel?: ChannelType | null }): ReactElement 
         if (!channel) return;
 
         if (channel.type === 'DM') {
-            setFriend(channel.recipients.find((user: UserType) => user.id !== auth.user.id));
+            setFriend(channel.recipients.find((user: TUser) => user.id !== auth.user.id));
         }
     }, [channel]);
 

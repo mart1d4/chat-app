@@ -9,13 +9,13 @@ import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
 const Popout = ({ content }: any) => {
-    const [filteredList, setFilteredList] = useState<CleanOtherUserType[]>([]);
+    const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
     const [search, setSearch] = useState<string>('');
-    const [chosen, setChosen] = useState<CleanOtherUserType[]>([]);
+    const [chosen, setChosen] = useState<TCleanUser[]>([]);
     const [copied, setCopied] = useState<boolean>(false);
     const [placesLeft, setPlacesLeft] = useState<number>(9);
-    const [friends, setFriends] = useState<CleanOtherUserType[]>([]);
-    const [pinned, setPinned] = useState<MessageType[]>([]);
+    const [friends, setFriends] = useState<TCleanUser[]>([]);
+    const [pinned, setPinned] = useState<TMessage[]>([]);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
@@ -179,9 +179,7 @@ const Popout = ({ content }: any) => {
                         <>
                             <div>
                                 {placesLeft > 0
-                                    ? `You can add ${placesLeft} more friend${
-                                          placesLeft > 1 ? 's' : ''
-                                      }.`
+                                    ? `You can add ${placesLeft} more friend${placesLeft > 1 ? 's' : ''}.`
                                     : 'This group has a 10 member limit.'}
                             </div>
 
@@ -193,11 +191,7 @@ const Popout = ({ content }: any) => {
                                                 key={uuidv4()}
                                                 className={styles.friendChip}
                                                 onClick={() => {
-                                                    setChosen(
-                                                        chosen?.filter(
-                                                            (user) => user.id !== friend.id
-                                                        )
-                                                    );
+                                                    setChosen(chosen?.filter((user) => user.id !== friend.id));
                                                 }}
                                             >
                                                 {friend.username}
@@ -264,9 +258,7 @@ const Popout = ({ content }: any) => {
                                         e.preventDefault();
                                         e.stopPropagation();
                                         if (chosen.includes(friend)) {
-                                            setChosen(
-                                                chosen?.filter((user) => user.id !== friend.id)
-                                            );
+                                            setChosen(chosen?.filter((user) => user.id !== friend.id));
                                         } else {
                                             if (placesLeft > 0) {
                                                 console.log('here');
@@ -286,9 +278,7 @@ const Popout = ({ content }: any) => {
                                             />
                                         </div>
 
-                                        <div className={styles.friendUsername}>
-                                            {friend.username}
-                                        </div>
+                                        <div className={styles.friendUsername}>{friend.username}</div>
 
                                         <div className={styles.friendCheck}>
                                             <div>

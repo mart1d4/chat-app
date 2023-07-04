@@ -9,11 +9,11 @@ import UserItem from './UserItem';
 import Icon from '../Icon/Icon';
 import Avatar from '../Avatar/Avatar';
 
-const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement => {
-    const [user, setUser] = useState<null | CleanOtherUserType>(null);
+const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => {
+    const [user, setUser] = useState<null | TCleanUser>(null);
 
-    const [mutualFriends, setMutualFriends] = useState<CleanOtherUserType[]>([]);
-    const [mutualGuilds, setMutualGuilds] = useState<GuildType[]>([]);
+    const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
+    const [mutualGuilds, setMutualGuilds] = useState<TGuild[]>([]);
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
 
@@ -58,9 +58,9 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
     useEffect(() => {
         if (!user) return;
 
-        const friends = auth.user.friends?.filter((friend: UserType) => user.friendIds?.includes(friend.id));
+        const friends = auth.user.friends?.filter((friend: TCleanUser) => user.friendIds?.includes(friend.id));
         setMutualFriends(friends);
-        const guilds = auth.user.guilds?.filter((guild: GuildType) => user.guildIds?.includes(guild.id));
+        const guilds = auth.user.guilds?.filter((guild: TGuild) => user.guildIds?.includes(guild.id));
         setMutualGuilds(guilds);
     }, [user]);
 
@@ -245,7 +245,7 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
 
                                     {showGuilds && (
                                         <ul className={styles.mutualItems}>
-                                            {mutualGuilds.map((guild: GuildType) => (
+                                            {mutualGuilds.map((guild: TGuild) => (
                                                 <MutualItem
                                                     key={uuidv4()}
                                                     guild={guild}
@@ -280,7 +280,7 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
 
                                     {showFriends && (
                                         <ul className={styles.mutualItems}>
-                                            {mutualFriends.map((friend: CleanOtherUserType) => (
+                                            {mutualFriends.map((friend: TCleanUser) => (
                                                 <MutualItem
                                                     key={uuidv4()}
                                                     user={friend}
@@ -307,7 +307,7 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
                         <h2>Members—{channel.recipients.length}</h2>
 
                         {onlineMembers?.length > 0 &&
-                            onlineMembers.map((user: CleanOtherUserType) => (
+                            onlineMembers.map((user: TCleanUser) => (
                                 <UserItem
                                     key={uuidv4()}
                                     user={user}
@@ -315,7 +315,7 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
                             ))}
 
                         {offlineMembers?.length > 0 &&
-                            offlineMembers.map((user: CleanOtherUserType) => (
+                            offlineMembers.map((user: TCleanUser) => (
                                 <UserItem
                                     key={uuidv4()}
                                     user={user}
@@ -338,7 +338,7 @@ const MemberList = ({ channel }: { channel: ChannelType | null }): ReactElement 
     ]);
 };
 
-const MutualItem = ({ user, guild }: { user?: CleanOtherUserType; guild?: GuildType }) => {
+const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
     if (!user && !guild) return <></>;
 
     const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
