@@ -1,4 +1,3 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
@@ -29,6 +28,22 @@ export async function GET(): Promise<NextResponse> {
                     orderBy: {
                         username: 'asc',
                     },
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
                 },
             },
         });
@@ -44,13 +59,11 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const friends = sender.friends.map((user: any) => cleanOtherUser(user));
-
             return NextResponse.json(
                 {
                     success: true,
                     message: 'Successfully retrieved friends.',
-                    friends: friends,
+                    friends: sender.friends,
                 },
                 {
                     status: 200,

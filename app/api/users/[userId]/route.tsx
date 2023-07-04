@@ -1,11 +1,7 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { userId: string } }
-): Promise<NextResponse> {
+export async function GET({ params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
 
     if (typeof userId !== 'string' || userId.length !== 24) {
@@ -25,6 +21,22 @@ export async function GET(
             where: {
                 id: userId,
             },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                createdAt: true,
+            },
         });
 
         if (!user) {
@@ -42,8 +54,7 @@ export async function GET(
                 {
                     success: true,
                     message: 'User found.',
-                    // @ts-ignore
-                    user: cleanOtherUser(user),
+                    user: user,
                 },
                 {
                     status: 200,

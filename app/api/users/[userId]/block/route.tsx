@@ -1,22 +1,14 @@
-import { NextResponse, NextRequest } from 'next/server';
+import pusher from '@/lib/pusher/api-connection';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import Channels from 'pusher';
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: { userId: string } }
-): Promise<NextResponse> {
+export async function POST({ params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (
-        typeof userId !== 'string' ||
-        typeof senderId !== 'string' ||
-        userId.length !== 24 ||
-        senderId.length !== 24
-    ) {
+    if (typeof userId !== 'string' || typeof senderId !== 'string' || userId.length !== 24 || senderId.length !== 24) {
         return NextResponse.json(
             {
                 success: false,
@@ -93,18 +85,10 @@ export async function POST(
                 },
             });
 
-            const channels = new Channels({
-                appId: process.env.PUSHER_APP_ID as string,
-                key: process.env.PUSHER_KEY as string,
-                secret: process.env.PUSHER_SECRET as string,
-                cluster: process.env.PUSHER_CLUSTER as string,
+            await pusher.trigger('chat-app', 'user-blocked', {
+                senderId: sender.id,
+                userId: user.id,
             });
-
-            channels &&
-                (await channels.trigger('chat-app', `user-blocked`, {
-                    senderId: sender.id,
-                    userId: user.id,
-                }));
 
             return NextResponse.json(
                 {
@@ -141,20 +125,12 @@ export async function POST(
     // }
 }
 
-export async function DELETE(
-    req: NextRequest,
-    { params }: { params: { userId: string } }
-): Promise<NextResponse> {
+export async function DELETE({ params }: { params: { userId: string } }): Promise<NextResponse> {
     const userId = params.userId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (
-        typeof userId !== 'string' ||
-        typeof senderId !== 'string' ||
-        userId.length !== 24 ||
-        senderId.length !== 24
-    ) {
+    if (typeof userId !== 'string' || typeof senderId !== 'string' || userId.length !== 24 || senderId.length !== 24) {
         return NextResponse.json(
             {
                 success: false,
@@ -205,18 +181,10 @@ export async function DELETE(
                 },
             });
 
-            const channels = new Channels({
-                appId: process.env.PUSHER_APP_ID as string,
-                key: process.env.PUSHER_KEY as string,
-                secret: process.env.PUSHER_SECRET as string,
-                cluster: process.env.PUSHER_CLUSTER as string,
+            await pusher.trigger('chat-app', 'user-unblocked', {
+                senderId: sender.id,
+                userId: user.id,
             });
-
-            channels &&
-                (await channels.trigger('chat-app', `user-unblocked`, {
-                    senderId: sender.id,
-                    userId: user.id,
-                }));
 
             return NextResponse.json(
                 {

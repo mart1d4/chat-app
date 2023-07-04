@@ -1,4 +1,3 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
@@ -25,7 +24,24 @@ export async function GET(): Promise<NextResponse> {
                 id: senderId,
             },
             include: {
-                requestsReceived: true,
+                requestsReceived: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
@@ -40,16 +56,11 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const requests = sender.requestsReceived.map((request) =>
-                // @ts-ignore
-                cleanOtherUser(request)
-            );
-
             return NextResponse.json(
                 {
                     success: true,
                     message: 'Successfully retrieved requests.',
-                    requests: requests,
+                    requests: sender.requestsReceived,
                 },
                 {
                     status: 200,

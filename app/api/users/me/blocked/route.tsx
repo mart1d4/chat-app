@@ -1,7 +1,6 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { prisma } from '@/lib/prismadb';
+import { headers } from 'next/headers';
 
 export async function GET(): Promise<NextResponse> {
     const headersList = headers();
@@ -25,7 +24,18 @@ export async function GET(): Promise<NextResponse> {
                 id: senderId,
             },
             include: {
-                blockedUsers: true,
+                blockedUsers: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
@@ -40,13 +50,11 @@ export async function GET(): Promise<NextResponse> {
                 }
             );
         } else {
-            const blockedUsers = sender.blockedUsers.map((user: any) => cleanOtherUser(user));
-
             return NextResponse.json(
                 {
                     success: true,
                     message: 'Successfully retrieved blocked users.',
-                    blockedUsers: blockedUsers,
+                    blockedUsers: sender.blockedUsers,
                 },
                 {
                     status: 200,

@@ -9,18 +9,18 @@ type Props = {
     src: string;
     alt: string;
     size: 16 | 24 | 32 | 40 | 80 | 120;
-    status?: 'Online' | 'Idle' | 'Do Not Disturb' | 'Invisible' | 'Offline' | undefined;
+    status?: EUserStatus | undefined;
     tooltip?: boolean;
     tooltipGap?: number;
     relativeSrc?: boolean;
 };
 
 const colors = {
-    Online: '#22A559',
-    Idle: '#F0B232',
-    'Do Not Disturb': '#F23F43',
-    Invisible: '#80848E',
-    Offline: '#80848E',
+    ONLINE: '#22A559',
+    IDLE: '#F0B232',
+    DO_NOT_DISTURB: '#F23F43',
+    INVISIBLE: '#80848E',
+    OFFLINE: '#80848E',
 };
 
 const rectSizes = {

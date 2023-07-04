@@ -1,8 +1,7 @@
-import { uploadDirect } from '@uploadcare/upload-client';
+import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import Channels from 'pusher';
 
 const avatars = [
     '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
@@ -12,24 +11,12 @@ const avatars = [
     '51073721-c1b9-4d47-a2f3-34f0fbb1c0a8',
 ];
 
-export async function PATCH(
-    req: Request,
-    { params }: { params: { channelId: string; messageId: string } }
-) {
+export async function PATCH(req: Request) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    const {
-        username,
-        password,
-        displayName,
-        description,
-        avatar,
-        banner,
-        primaryColor,
-        accentColor,
-        status,
-    } = await req.json();
+    const { username, password, displayName, description, avatar, banner, primaryColor, accentColor, status } =
+        await req.json();
 
     try {
         const sender = await prisma.user.findUnique({
@@ -50,7 +37,7 @@ export async function PATCH(
             );
         }
 
-        if (username) {
+        if (username && password) {
             await prisma.user.update({
                 where: {
                     id: senderId,
@@ -59,32 +46,8 @@ export async function PATCH(
                     username: username,
                 },
             });
-        }
-
-        if (displayName) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    displayName: displayName,
-                },
-            });
-        }
-
-        if (description) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    description: description,
-                },
-            });
-        }
-
-        if (avatar) {
-            if (!avatars.includes(sender.avatar)) {
+        } else {
+            if (avatar && !avatars.includes(sender.avatar)) {
                 await fetch(`https://api.uploadcare.com/files/${sender.avatar}/storage/`, {
                     method: 'DELETE',
                     headers: {
@@ -94,18 +57,7 @@ export async function PATCH(
                 });
             }
 
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    avatar: avatar,
-                },
-            });
-        }
-
-        if (banner) {
-            if (sender.banner) {
+            if (banner && sender.banner) {
                 await fetch(`https://api.uploadcare.com/files/${sender.banner}/storage/`, {
                     method: 'DELETE',
                     headers: {
@@ -120,63 +72,28 @@ export async function PATCH(
                     id: senderId,
                 },
                 data: {
-                    banner: banner,
+                    displayName: displayName ? displayName : sender.displayName,
+                    description: description ? description : sender.description,
+                    avatar: avatar ? avatar : sender.avatar,
+                    banner: banner ? banner : sender.banner,
+                    primaryColor: primaryColor ? primaryColor : sender.primaryColor,
+                    accentColor: accentColor ? accentColor : sender.accentColor,
+                    status: status ? status : sender.status,
                 },
             });
         }
 
-        if (primaryColor) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    primaryColor: primaryColor,
-                },
-            });
-        }
-
-        if (accentColor) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    accentColor: accentColor,
-                },
-            });
-        }
-
-        if (status) {
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    status: status ? 'Online' : 'Offline',
-                },
-            });
-        }
-
-        const channels = new Channels({
-            appId: process.env.PUSHER_APP_ID as string,
-            key: process.env.PUSHER_KEY as string,
-            secret: process.env.PUSHER_SECRET as string,
-            cluster: process.env.PUSHER_CLUSTER as string,
+        await pusher.trigger('chat-app', 'user-updated', {
+            userId: sender.id,
+            username: username ? username : sender.username,
+            displayName: displayName ? displayName : sender.displayName,
+            description: description ? description : sender.description,
+            avatar: avatar ? avatar : sender.avatar,
+            banner: banner ? banner : sender.banner,
+            primaryColor: primaryColor ? primaryColor : sender.primaryColor,
+            accentColor: accentColor ? accentColor : sender.accentColor,
+            status: status ? status : sender.status,
         });
-
-        channels &&
-            (await channels.trigger('chat-app', `user-updated`, {
-                userId: senderId,
-                username: username,
-                displayName: displayName,
-                description: description,
-                avatar: avatar,
-                banner: banner,
-                primaryColor: primaryColor,
-                accentColor: accentColor,
-                status: status,
-            }));
 
         return NextResponse.json(
             {

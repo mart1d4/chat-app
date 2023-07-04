@@ -1,10 +1,9 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
+import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import Channels from 'pusher';
 
-export async function GET(req: Request, { params }: { params: { channelId: string } }) {
+export async function GET({ params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
@@ -36,6 +35,22 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     orderBy: {
                         username: 'asc',
                     },
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
                 },
             },
         });
@@ -64,18 +79,11 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             );
         }
 
-        const recipients = channel.recipients.map((recipient) => {
-            return cleanOtherUser(recipient as UserType);
-        });
-
         return NextResponse.json(
             {
                 success: true,
                 message: 'Successfully retrieved channel',
-                channel: {
-                    ...channel,
-                    recipients,
-                },
+                channel: channel,
             },
             {
                 status: 200,
@@ -95,7 +103,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
+export async function DELETE({ params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
@@ -156,13 +164,6 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 );
             }
 
-            const channels = new Channels({
-                appId: process.env.PUSHER_APP_ID as string,
-                key: process.env.PUSHER_KEY as string,
-                secret: process.env.PUSHER_SECRET as string,
-                cluster: process.env.PUSHER_CLUSTER as string,
-            });
-
             await prisma.user.update({
                 where: {
                     id: senderId,
@@ -184,10 +185,9 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                         },
                     });
 
-                    channels &&
-                        (await channels.trigger('chat-app', `channel-deleted`, {
-                            channelId: channel.id,
-                        }));
+                    await pusher.trigger('chat-app', 'channel-deleted', {
+                        channelId: channel.id,
+                    });
 
                     return NextResponse.json(
                         {
@@ -204,7 +204,6 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                     const newOwner = channel.recipientIds[randomIndex];
 
                     // Create new message
-
                     const ownerMessage = await prisma.message.create({
                         data: {
                             type: 'OWNER_CHANGE',
@@ -266,11 +265,10 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 }
             }
 
-            channels &&
-                (await channels.trigger('chat-app', `channel-left`, {
-                    channelId: channel.id,
-                    userId: user.id,
-                }));
+            await pusher.trigger('chat-app', 'channel-left', {
+                channelId: channel.id,
+                userId: user.id,
+            });
 
             return NextResponse.json(
                 {

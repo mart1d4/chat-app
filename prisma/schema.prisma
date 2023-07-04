@@ -11,42 +11,83 @@ datasource db {
 
 // Types
 
-type NotificationType {
-    type      NotificationEnum
+type TNotification {
+    type      ENotificationType
     senderId  String
     channelId String?
     content   String?
-    count     Int              @default(1)
-    createdAt DateTime         @default(now()) @db.Date
+    count     Int               @default(1)
+    createdAt DateTime          @default(now()) @db.Date
 }
 
-type ButtonType {
-    label String
-    url   String
+type TButton {
+    text  String
+    color String  @default("blue")
+    url   String?
 }
 
-type WelcomeScreenType {
+type TWelcomeScreen {
     title         String
     subtitle      String
     content       String[]
     links         String[]
-    buttons       Button[]
-    primaryColor  String
-    accentColor   String
-    backgroundUrl String
+    buttons       TButton[]
+    primaryColor  String?
+    accentColor   String?
+    backgroundUrl String?
+}
+
+type TInvite {
+    code      String
+    uses      Int
+    maxUses   Int
+    expiresAt DateTime
+    createdAt DateTime @default(now()) @db.Date
+}
+
+type TEmbed {
+    author      TEmbedAuthor?
+    title       String?
+    url         String?
+    thumbnail   String?
+    description String
+    fields      TEmbedField[]
+    footer      TEmbedFooter?
+    color       String?
+    timestamp   DateTime?
+}
+
+type TEmbedAuthor {
+    name    String
+    url     String?
+    iconUrl String?
+}
+
+type TEmbedField {
+    name   String
+    value  String
+    inline Boolean @default(false)
+}
+
+type TEmbedFooter {
+    text    String
+    iconUrl String?
+}
+
+type TReaction {
+    count Int
+
+    messageId String   @db.ObjectId
+    emoteId   String   @db.ObjectId
+    userIds   String[] @db.ObjectId
+
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @db.Date
 }
 
 // Enums
 
-enum NotificationEnum {
-    REQUEST
-    MESSAGE
-    MENTION
-    CALL
-    SYSTEM
-}
-
-enum UserStatusEnum {
+enum EUserStatus {
     ONLINE
     IDLE
     DO_NOT_DISTURB
@@ -54,7 +95,7 @@ enum UserStatusEnum {
     OFFLINE
 }
 
-enum ChannelTypeEnum {
+enum EChannelType {
     DM
     GROUP_DM
     GUILD_TEXT
@@ -63,7 +104,7 @@ enum ChannelTypeEnum {
     FORUM
 }
 
-enum MessageTypeEnum {
+enum EMessageType {
     DEFAULT
     REPLY
     RECIPIENT_ADD
@@ -76,25 +117,33 @@ enum MessageTypeEnum {
     OWNER_CHANGE
 }
 
+enum ENotificationType {
+    REQUEST
+    MESSAGE
+    MENTION
+    CALL
+    SYSTEM
+}
+
 // Models
 
 model User {
-    id            String         @id @default(auto()) @map("_id") @db.ObjectId
-    username      String         @unique
+    id            String          @id @default(auto()) @map("_id") @db.ObjectId
+    username      String          @unique
     displayName   String
     email         String?
-    avatar        String         @default("blue")
+    avatar        String
     banner        String?
     primaryColor  String
     accentColor   String
     description   String?
     customStatus  String?
     password      String
-    refreshToken  String?        @unique
-    status        UserStatus     @default(Offline)
-    system        Boolean        @default(false)
-    verified      Boolean        @default(false)
-    notifications Notification[]
+    refreshToken  String?         @unique
+    status        EUserStatus     @default(OFFLINE)
+    system        Boolean         @default(false)
+    verified      Boolean         @default(false)
+    notifications TNotification[]
 
     guildIds String[] @db.ObjectId
     guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
@@ -107,6 +156,9 @@ model User {
 
     ownedChannelIds String[]  @db.ObjectId
     ownedChannels   Channel[] @relation("Owner")
+
+    ownedRoleIds String[] @db.ObjectId
+    ownedRoles   Role[]   @relation("UserRole", fields: [ownedRoleIds], references: [id])
 
     messages Message[]
 
@@ -134,15 +186,15 @@ model User {
 }
 
 model Guild {
-    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    id            String          @id @default(auto()) @map("_id") @db.ObjectId
     name          String
-    icon          String         @default("blue")
+    icon          String          @default("blue")
     banner        String?
     description   String?
-    welcomeScreen WelcomeScreen?
-    vanityUrlCode String?
+    welcomeScreen TWelcomeScreen?
+    vanityUrl     String?
     vanityUrlUses Int?
-    invites       String[]
+    invites       TInvite[]
     afkChannelId  String?
     afkTimeout    Int?
 
@@ -154,6 +206,9 @@ model Guild {
 
     channels Channel[]
     roles    Role[]
+
+    emoteIds String[] @db.ObjectId
+    emotes   Emote[]  @relation("GuildEmote")
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
@@ -171,18 +226,21 @@ model Role {
     guildId String @db.ObjectId
     guild   Guild  @relation(fields: [guildId], references: [id])
 
+    memberIds String[] @db.ObjectId
+    members   User[]   @relation("UserRole", fields: [memberIds], references: [id])
+
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
     v         Int      @default(0) @map("__v") @ignore
 }
 
 model Channel {
-    id          String      @id @default(auto()) @map("_id") @db.ObjectId
-    type        ChannelType
+    id          String       @id @default(auto()) @map("_id") @db.ObjectId
+    type        EChannelType
     name        String?
     description String?
     icon        String?
-    nsfw        Boolean?    @default(false)
+    nsfw        Boolean      @default(false)
     position    Int?
     parentId    String?
     rateLimit   Int?
@@ -206,14 +264,14 @@ model Channel {
 }
 
 model Message {
-    id                String      @id @default(auto()) @map("_id") @db.ObjectId
-    type              MessageType
+    id                String       @id @default(auto()) @map("_id") @db.ObjectId
+    type              EMessageType
     content           String
     attachments       String[]
-    embeds            String[]
-    edited            Boolean     @default(false)
-    pinned            Boolean     @default(false)
-    reactions         String[]    @default([])
+    embeds            TEmbed[]
+    edited            Boolean      @default(false)
+    pinned            Boolean      @default(false)
+    reactions         TReaction[]
     mentionEveryone   Boolean
     mentionChannelIds String[]
     mentionRoleIds    String[]
@@ -230,6 +288,20 @@ model Message {
 
     referencedByIds String[]  @db.ObjectId
     referencedBy    Message[] @relation("MessageReference")
+
+    createdAt DateTime @default(now()) @db.Date
+    updatedAt DateTime @default(now()) @updatedAt @db.Date
+    v         Int      @default(0) @map("__v") @ignore
+}
+
+model Emote {
+    id       String  @id @default(auto()) @map("_id") @db.ObjectId
+    name     String
+    url      String
+    animated Boolean @default(false)
+
+    guildId String @db.ObjectId
+    guild   Guild  @relation("GuildEmote", fields: [guildId], references: [id])
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date

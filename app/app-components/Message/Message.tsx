@@ -8,43 +8,17 @@ import styles from './Message.module.css';
 import { trimMessage } from '@/lib/strings/checks';
 
 type MessageProps = {
-    message: MessageType;
+    message: TMessage;
     large?: boolean;
     last?: boolean;
-    edit?: {
-        messageId: string;
-        content: string;
-    } | null;
-    setEdit?: React.Dispatch<
-        React.SetStateAction<{
-            messageId: string;
-            content: string;
-        } | null>
-    >;
-    reply?: {
-        channelId: string;
-        messageId: string;
-        author: CleanOtherUserType;
-    } | null;
-    setReply?: React.Dispatch<
-        React.SetStateAction<{
-            channelId: string;
-            messageId: string;
-            author: CleanOtherUserType;
-        } | null>
-    >;
+    edit?: MessageEditObject | null;
+    setEdit?: React.Dispatch<React.SetStateAction<MessageEditObject | null>>;
+    reply?: MessageReplyObject | null;
+    setReply?: React.Dispatch<React.SetStateAction<MessageReplyObject | null>>;
     noInteraction?: boolean;
 };
 
-const Message = ({
-    message,
-    large,
-    edit,
-    setEdit,
-    reply,
-    setReply,
-    noInteraction,
-}: MessageProps) => {
+const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction }: MessageProps) => {
     // States
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
@@ -287,8 +261,7 @@ const Message = ({
                     });
                 }}
                 style={{
-                    backgroundColor:
-                        fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                    backgroundColor: fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
                 }}
             >
                 {(hover || fixedLayer?.message?.id === message?.id) && (
@@ -336,9 +309,7 @@ const Message = ({
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <span style={{ userSelect: 'text' }}>
-                                    {getMidDate(message.createdAt)}
-                                </span>
+                                <span style={{ userSelect: 'text' }}>{getMidDate(message.createdAt)}</span>
                             </span>
                         </div>
                     </div>
@@ -383,20 +354,19 @@ const Message = ({
                         : '',
             }}
         >
-            {(hover || fixedLayer?.message?.id === message?.id) &&
-                edit?.messageId !== message.id && (
-                    <MessageMenu
-                        message={message}
-                        large={large}
-                        functions={{
-                            deletePopup,
-                            pinPopup,
-                            unpinPopup,
-                            editMessageState,
-                            replyToMessageState,
-                        }}
-                    />
-                )}
+            {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && (
+                <MessageMenu
+                    message={message}
+                    large={large}
+                    functions={{
+                        deletePopup,
+                        pinPopup,
+                        unpinPopup,
+                        editMessageState,
+                        replyToMessageState,
+                    }}
+                />
+            )}
 
             {large || message.type === 'REPLY' || noInteraction ? (
                 <div className={styles.messagelarge}>
@@ -592,8 +562,7 @@ const Message = ({
                                     >
                                         cancel{' '}
                                     </span>
-                                    • enter to{' '}
-                                    <span onClick={() => sendEditedMessage()}>save </span>
+                                    • enter to <span onClick={() => sendEditedMessage()}>save </span>
                                 </div>
                             </>
                         ) : (
@@ -669,8 +638,7 @@ const Message = ({
                                     >
                                         cancel{' '}
                                     </span>
-                                    • enter to{' '}
-                                    <span onClick={() => sendEditedMessage()}>save </span>
+                                    • enter to <span onClick={() => sendEditedMessage()}>save </span>
                                 </div>
                             </>
                         ) : (

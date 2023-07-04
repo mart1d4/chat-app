@@ -1,12 +1,9 @@
+import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import Channels from 'pusher';
 
-export async function PUT(
-    req: Request,
-    { params }: { params: { channelId: string; messageId: string } }
-) {
+export async function PUT(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
@@ -85,18 +82,10 @@ export async function PUT(
             edited: true,
         };
 
-        const channels = new Channels({
-            appId: process.env.PUSHER_APP_ID as string,
-            key: process.env.PUSHER_KEY as string,
-            secret: process.env.PUSHER_SECRET as string,
-            cluster: process.env.PUSHER_CLUSTER as string,
+        await pusher.trigger('chat-app', 'message-edited', {
+            channel: channelId,
+            message: messageToSend,
         });
-
-        channels &&
-            (await channels.trigger('chat-app', `message-edited`, {
-                channel: channelId,
-                message: messageToSend,
-            }));
 
         return NextResponse.json(
             {
@@ -121,10 +110,7 @@ export async function PUT(
     }
 }
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { channelId: string; messageId: string } }
-) {
+export async function DELETE({ params }: { params: { channelId: string; messageId: string } }) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
@@ -162,18 +148,10 @@ export async function DELETE(
             },
         });
 
-        const channels = new Channels({
-            appId: process.env.PUSHER_APP_ID as string,
-            key: process.env.PUSHER_KEY as string,
-            secret: process.env.PUSHER_SECRET as string,
-            cluster: process.env.PUSHER_CLUSTER as string,
+        await pusher.trigger('chat-app', 'message-deleted', {
+            channel: channelId,
+            messageId: messageId,
         });
-
-        channels &&
-            (await channels.trigger('chat-app', `message-deleted`, {
-                channel: channelId,
-                messageId: messageId,
-            }));
 
         return NextResponse.json(
             {

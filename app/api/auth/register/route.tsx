@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prismadb';
+import bcrypt from 'bcryptjs';
 
 const avatars = [
     '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
@@ -13,7 +13,6 @@ const colors = ['#5865F2', '#3BA45C', '#737C89', '#ED4245', '#FAA51A'];
 
 const getRandomAvatar = (): { avatar: string; color: string } => {
     const index = Math.floor(Math.random() * avatars.length);
-
     return { avatar: avatars[index], color: colors[index] };
 };
 
@@ -92,12 +91,6 @@ export async function POST(req: Request): Promise<NextResponse> {
                 avatar: avatar,
                 primaryColor: color,
                 accentColor: color,
-                notifications: [
-                    {
-                        type: 'welcome',
-                        message: 'Welcome to Chat App!',
-                    },
-                ],
             },
         });
 

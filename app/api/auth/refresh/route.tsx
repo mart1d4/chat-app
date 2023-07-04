@@ -1,10 +1,9 @@
-import { cleanUser } from '@/lib/utils/cleanModels';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 
-export async function GET(req: Request): Promise<NextResponse> {
+export async function GET(): Promise<NextResponse> {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
 
@@ -25,7 +24,47 @@ export async function GET(req: Request): Promise<NextResponse> {
             where: {
                 refreshToken: token,
             },
-            include: {
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                system: true,
+                verified: true,
+                notifications: true,
+                guildIds: true,
+                guilds: {
+                    include: {
+                        channels: true,
+                        roles: true,
+                        emotes: true,
+                        members: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
+                channelIds: true,
                 channels: {
                     include: {
                         recipients: {
@@ -40,9 +79,9 @@ export async function GET(req: Request): Promise<NextResponse> {
                                 description: true,
                                 customStatus: true,
                                 status: true,
-                                friendIds: true,
-                                channelIds: true,
                                 guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
                                 createdAt: true,
                             },
                         },
@@ -51,7 +90,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                         updatedAt: 'desc',
                     },
                 },
-                guilds: true,
+                friendIds: true,
                 friends: {
                     select: {
                         id: true,
@@ -64,12 +103,13 @@ export async function GET(req: Request): Promise<NextResponse> {
                         description: true,
                         customStatus: true,
                         status: true,
-                        friendIds: true,
-                        channelIds: true,
                         guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
                         createdAt: true,
                     },
                 },
+                requestReceivedIds: true,
                 requestsReceived: {
                     select: {
                         id: true,
@@ -82,12 +122,13 @@ export async function GET(req: Request): Promise<NextResponse> {
                         description: true,
                         customStatus: true,
                         status: true,
-                        friendIds: true,
-                        channelIds: true,
                         guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
                         createdAt: true,
                     },
                 },
+                requestSentIds: true,
                 requestsSent: {
                     select: {
                         id: true,
@@ -100,6 +141,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                         createdAt: true,
                     },
                 },
+                blockedUserIds: true,
                 blockedUsers: {
                     select: {
                         id: true,
@@ -152,7 +194,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: true,
                 message: 'Successfully refreshed token.',
                 accessToken: accessToken,
-                user: cleanUser(user as any),
+                user: user,
             },
             {
                 status: 200,

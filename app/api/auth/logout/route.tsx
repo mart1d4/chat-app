@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { cookies } from 'next/headers';
-import Channels from 'pusher';
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(): Promise<NextResponse> {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
 
@@ -20,9 +19,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findUnique({
             where: {
-                // @ts-ignore
                 refreshToken: token,
             },
         });
@@ -50,19 +48,6 @@ export async function POST(req: Request): Promise<NextResponse> {
                 refreshToken: '',
             },
         });
-
-        const channels = new Channels({
-            appId: process.env.PUSHER_APP_ID as string,
-            key: process.env.PUSHER_KEY as string,
-            secret: process.env.PUSHER_SECRET as string,
-            cluster: process.env.PUSHER_CLUSTER as string,
-        });
-
-        channels &&
-            (await channels.trigger('chat-app', `user-status`, {
-                userId: user.id,
-                connected: false,
-            }));
 
         return NextResponse.json(
             {

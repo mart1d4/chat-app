@@ -1,10 +1,9 @@
-import { cleanOtherUser } from '@/lib/utils/cleanModels';
+import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import Channels from 'pusher';
 
-export async function GET(req: Request, { params }: { params: { channelId: string } }) {
+export async function GET({ params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const skip = 0;
     const limit = 50;
@@ -25,10 +24,44 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     skip: skip,
                     take: limit,
                     include: {
-                        author: true,
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
                         messageReference: {
                             include: {
-                                author: true,
+                                author: {
+                                    select: {
+                                        id: true,
+                                        username: true,
+                                        displayName: true,
+                                        avatar: true,
+                                        banner: true,
+                                        primaryColor: true,
+                                        accentColor: true,
+                                        description: true,
+                                        customStatus: true,
+                                        status: true,
+                                        guildIds: true,
+                                        channelIds: true,
+                                        friendIds: true,
+                                        createdAt: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -60,21 +93,12 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             );
         }
 
-        const messages = channel.messages.map((message) => {
-            return {
-                ...message,
-                author: cleanOtherUser(message.author as UserType),
-            };
-        });
-
-        const hasMoreMessages = channel.messages.length - skip > limit;
-
         return NextResponse.json(
             {
                 success: true,
                 message: 'Successfully retrieved messages',
-                messages: messages,
-                hasMore: hasMoreMessages,
+                messages: channel.messages,
+                hasMore: channel.messages.length - skip > limit,
             },
             {
                 status: 200,
@@ -236,18 +260,10 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
-        const channels = new Channels({
-            appId: process.env.PUSHER_APP_ID as string,
-            key: process.env.PUSHER_KEY as string,
-            secret: process.env.PUSHER_SECRET as string,
-            cluster: process.env.PUSHER_CLUSTER as string,
+        await pusher.trigger('chat-app', 'message-sent', {
+            channel: channelId,
+            message: messageToSend,
         });
-
-        channels &&
-            (await channels.trigger('chat-app', `message-sent`, {
-                channel: channelId,
-                message: messageToSend,
-            }));
 
         return NextResponse.json(
             {

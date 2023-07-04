@@ -23,6 +23,9 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 
 -   [ ] Add Friends' popup closing when clicking on user to add them
 -   [ ] Some tooltips not reappearing when closing a popup
+-   [ ] Some menus not opening in the correct position
+-   [ ] User profile content isn't scrolling and expanding instead
+-   [ ] Pusher triggers not properly configured
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

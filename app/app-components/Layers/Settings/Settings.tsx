@@ -7,10 +7,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
-import Image from 'next/dist/client/image';
 import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
+import Image from 'next/image';
 
 const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/apng', 'image/webp'];
 
