@@ -111,49 +111,19 @@ export async function GET(req: Request): Promise<NextResponse> {
 export async function POST(req: Request) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
-
     const { recipients, channelId } = await req.json();
-    let recipientObjects = [];
-
-    recipients.forEach((recipient: string) => {
-        if (typeof recipient !== 'string' || recipient.length !== 24) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'Invalid user ID.',
-                },
-                {
-                    status: 400,
-                }
-            );
-        }
-    });
 
     if (recipients.includes(senderId)) {
         recipients.splice(recipients.indexOf(senderId), 1);
     }
 
-    if (recipients?.length > 10 && recipients?.length < 1) {
+    if (recipients.length > 10 || recipients.length < 0) {
         return NextResponse.json(
             {
                 success: false,
                 message: 'Invalid recipients.',
             },
-            {
-                status: 400,
-            }
-        );
-    }
-
-    if (typeof senderId !== 'string' || senderId.length !== 24) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
@@ -161,6 +131,22 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({
             where: {
                 id: senderId,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                createdAt: true,
             },
         });
 
@@ -170,9 +156,7 @@ export async function POST(req: Request) {
                     success: false,
                     message: 'User not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -182,16 +166,32 @@ export async function POST(req: Request) {
                 data: {
                     type: 'GROUP_DM',
                     recipients: {
-                        connect: {
-                            id: user.id,
-                        },
+                        connect: { id: user.id },
                     },
                     owner: {
-                        connect: {
-                            id: user.id,
-                        },
+                        connect: { id: user.id },
                     },
                     icon: getRandomIcon(),
+                },
+                include: {
+                    recipients: {
+                        select: {
+                            id: true,
+                            username: true,
+                            displayName: true,
+                            avatar: true,
+                            banner: true,
+                            primaryColor: true,
+                            accentColor: true,
+                            description: true,
+                            customStatus: true,
+                            status: true,
+                            guildIds: true,
+                            channelIds: true,
+                            friendIds: true,
+                            createdAt: true,
+                        },
+                    },
                 },
             });
 
@@ -201,15 +201,13 @@ export async function POST(req: Request) {
                 },
                 data: {
                     channels: {
-                        connect: {
-                            id: channel.id,
-                        },
+                        connect: { id: channel.id },
                     },
                 },
             });
 
             await pusher.trigger('chat-app', 'channel-created', {
-                userId: user.id,
+                senderId: user.id,
                 channel: channel,
             });
 
@@ -218,33 +216,33 @@ export async function POST(req: Request) {
                     success: true,
                     message: 'Successfully created channel',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
 
-        for (const recipient of recipients) {
-            const recipientUser = await prisma.user.findUnique({
-                where: {
-                    id: recipient,
+        const recipientObjects = await prisma.user.findMany({
+            where: {
+                id: {
+                    in: recipients,
                 },
-            });
-
-            if (!recipientUser) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: 'Recipient not found.',
-                    },
-                    {
-                        status: 404,
-                    }
-                );
-            }
-
-            recipientObjects.push(recipientUser);
-        }
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                createdAt: true,
+            },
+        });
 
         if (channelId) {
             // Add users to existing channel
@@ -253,7 +251,24 @@ export async function POST(req: Request) {
                     id: channelId,
                 },
                 include: {
-                    recipients: true,
+                    recipients: {
+                        select: {
+                            id: true,
+                            username: true,
+                            displayName: true,
+                            avatar: true,
+                            banner: true,
+                            primaryColor: true,
+                            accentColor: true,
+                            description: true,
+                            customStatus: true,
+                            status: true,
+                            guildIds: true,
+                            channelIds: true,
+                            friendIds: true,
+                            createdAt: true,
+                        },
+                    },
                 },
             });
 
@@ -263,9 +278,7 @@ export async function POST(req: Request) {
                         success: false,
                         message: 'Channel not found.',
                     },
-                    {
-                        status: 404,
-                    }
+                    { status: 404 }
                 );
             }
 
@@ -279,9 +292,17 @@ export async function POST(req: Request) {
                         success: false,
                         message: 'No users to add.',
                     },
+                    { status: 400 }
+                );
+            }
+
+            if (usersToAdd.length + channel.recipientIds.length > 10) {
+                return NextResponse.json(
                     {
-                        status: 400,
-                    }
+                        success: false,
+                        message: 'Too many users.',
+                    },
+                    { status: 400 }
                 );
             }
 
@@ -292,14 +313,10 @@ export async function POST(req: Request) {
                         content: `<@${user.id}> added <@${newUser.id}> to the group.`,
                         mentionEveryone: false,
                         channel: {
-                            connect: {
-                                id: channel.id,
-                            },
+                            connect: { id: channel.id },
                         },
                         author: {
-                            connect: {
-                                id: user.id,
-                            },
+                            connect: { id: user.id },
                         },
                     },
                 });
@@ -310,14 +327,10 @@ export async function POST(req: Request) {
                     },
                     data: {
                         messages: {
-                            connect: {
-                                id: message.id,
-                            },
+                            connect: { id: message.id },
                         },
                         recipients: {
-                            connect: {
-                                id: newUser.id,
-                            },
+                            connect: { id: newUser.id },
                         },
                     },
                 });
@@ -329,18 +342,17 @@ export async function POST(req: Request) {
                         },
                         data: {
                             channels: {
-                                connect: {
-                                    id: channel.id,
-                                },
+                                connect: { id: channel.id },
                             },
                         },
                     });
                 }
             }
 
-            await pusher.trigger('chat-app', 'channel-added-users', {
-                channel: channel,
-                recipients: [...channel.recipients, ...usersToAdd],
+            await pusher.trigger('chat-app', 'channel-users-added', {
+                senderId: user.id,
+                channelId: channel.id,
+                recipients: [...channel.recipients, ...usersToAdd, user],
             });
 
             return NextResponse.json(
@@ -348,20 +360,35 @@ export async function POST(req: Request) {
                     success: true,
                     message: 'Successfully added users to channel.',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
 
         const sameChannel = await prisma.channel.findFirst({
             where: {
                 recipientIds: {
-                    equals: [...recipients, user.id],
+                    hasEvery: [...recipients, user.id],
                 },
             },
             include: {
-                recipients: true,
+                recipients: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
@@ -375,9 +402,7 @@ export async function POST(req: Request) {
                             },
                             data: {
                                 channels: {
-                                    connect: {
-                                        id: sameChannel.id,
-                                    },
+                                    connect: { id: sameChannel.id },
                                 },
                             },
                         });
@@ -391,17 +416,17 @@ export async function POST(req: Request) {
                         },
                         data: {
                             channels: {
-                                connect: {
-                                    id: sameChannel.id,
-                                },
+                                connect: { id: sameChannel.id },
                             },
                         },
                     });
                 }
             }
 
-            await pusher.trigger('chat-app', 'channel-added-users', {
-                channel: sameChannel,
+            await pusher.trigger('chat-app', 'channel-users-added', {
+                senderId: user.id,
+                channelId: sameChannel.id,
+                recipients: [...sameChannel.recipients, user],
             });
 
             return NextResponse.json(
@@ -409,9 +434,7 @@ export async function POST(req: Request) {
                     success: true,
                     message: 'Successfully added users to channel.',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
 
@@ -422,14 +445,27 @@ export async function POST(req: Request) {
                     connect: [...recipients, user.id].map((id) => ({ id })),
                 },
                 icon: getRandomIcon(),
-                owner:
-                    recipients.length > 1
-                        ? {
-                              connect: {
-                                  id: user.id,
-                              },
-                          }
-                        : undefined,
+                owner: recipients.length > 1 ? { connect: { id: user.id } } : undefined,
+            },
+            include: {
+                recipients: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
@@ -439,16 +475,14 @@ export async function POST(req: Request) {
             },
             data: {
                 channels: {
-                    connect: {
-                        id: channel.id,
-                    },
+                    connect: { id: channel.id },
                 },
             },
         });
 
         await pusher.trigger('chat-app', 'channel-created', {
-            userIds: [...recipients, user.id],
-            channel: channel,
+            senderId: user.id,
+            channel,
         });
 
         return NextResponse.json(
@@ -456,9 +490,7 @@ export async function POST(req: Request) {
                 success: true,
                 message: 'Successfully created channel.',
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -467,9 +499,7 @@ export async function POST(req: Request) {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

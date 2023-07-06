@@ -31,9 +31,7 @@ export async function PATCH(req: Request) {
                     success: false,
                     message: 'User not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -100,9 +98,7 @@ export async function PATCH(req: Request) {
                 success: true,
                 message: 'Successfully updated user.',
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -111,9 +107,7 @@ export async function PATCH(req: Request) {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

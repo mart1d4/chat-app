@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactElement, useEffect, useState, useMemo } from 'react';
+import { ReactElement, useEffect, useState, useMemo, useCallback } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
 import { usePathname } from 'next/navigation';
@@ -10,12 +10,7 @@ import NavIcon from './NavIcon';
 const AppNav = (): ReactElement => {
     const [url, setUrl] = useState<string>('/channels/me');
     const [trigger, setTrigger] = useState<any>(null);
-    const [notifDM, setNotifDM] = useState<
-        {
-            channel: TChannel;
-            count: number;
-        }[]
-    >([]);
+    const [notifDM, setNotifDM] = useState<TNotification[]>([]);
 
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
     const pathname = usePathname();
@@ -66,171 +61,152 @@ const AppNav = (): ReactElement => {
     }, [auth.user.notifications]);
 
     useEffect(() => {
-        const setPusherListener = () => {
-            pusher.bind(`user-updated`, (data: any) => setData(data));
-            pusher.bind(`message-sent`, (data: any) => setTrigger(data));
-
-            pusher.bind(`user-friend`, (data: any) => {
-                setUserData({
-                    data: data,
-                    type: 'friend',
-                });
-            });
-
-            pusher.bind(`user-request`, (data: any) => {
-                setUserData({
-                    data: data,
-                    type: 'request',
-                });
-            });
-
-            pusher.bind(`user-blocked`, (data: any) => {
-                setUserData({
-                    data: data,
-                    type: 'blocked',
-                });
-            });
-
-            pusher.bind(`user-unblocked`, (data: any) => {
-                setUserData({
-                    data: data,
-                    type: 'unblocked',
-                });
-            });
-
-            pusher.bind(`user-removed`, (data: any) => {
-                setUserData({
-                    data: data,
-                    type: 'removed',
-                });
-            });
-        };
-
-        setPusherListener();
+        pusher.bind('user-updated', (data: any) => updateUserData(data));
+        pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
+        pusher.bind('message-sent', (data: any) => setTrigger(data));
 
         return () => {
             pusher.unbind('user-updated');
             pusher.unbind('message-sent');
-            pusher.unbind('user-friend');
-            pusher.unbind('user-request');
-            pusher.unbind('user-blocked');
-            pusher.unbind('user-unblocked');
-            pusher.unbind('user-removed');
+            pusher.unbind('relationship-updated');
         };
     }, []);
 
-    const setUserData = ({ data, type }: any) => {
-        if (![data.sender.id, data.user.id].includes(auth.user.id)) return;
+    const addFriend = useCallback(
+        (user: TCleanUser) => {
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    friendIds: [...auth.user.friendIds, user.id],
+                    friends: [...auth.user.friends, user],
+                    requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
+                    requestReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
+                    requestSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
+                },
+            });
+        },
+        [auth.user]
+    );
 
-        if (type === 'request' && data.user.id === auth.user.id) {
+    const removeFriend = useCallback(
+        (user: TCleanUser) => {
             setAuth({
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsReceived: [...(auth.user.requestsReceived || []), data.sender],
-                    requestsReceivedIds: [...(auth.user.requestsReceivedIds || []), data.sender.id],
+                    friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
+                    friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
+                    requestReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
+                    requestSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
                 },
             });
-            return;
-        } else if (type === 'friend' && data.user.id === auth.user.id) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.sender.id),
-                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.sender.id),
-                    requestsReceived: auth.user.requestsReceived?.filter(
-                        (request: any) => request.id !== data.sender.id
-                    ),
-                    requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
-                        (request: any) => request !== data.sender.id
-                    ),
-                    friends: [...(auth.user.friends || []), data.sender],
-                    friendIds: [...(auth.user.friendIds || []), data.sender.id],
-                },
-            });
-            return;
-        } else if ((type === 'blocked' || type === 'removed') && data.user.id === auth.user.id) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.sender.id),
-                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.sender.id),
-                    requestsReceived: auth.user.requestsReceived?.filter(
-                        (request: any) => request.id !== data.sender.id
-                    ),
-                    requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
-                        (request: any) => request !== data.sender.id
-                    ),
-                    friends: auth.user.friends?.filter((friend: any) => friend.id !== data.sender.id),
-                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.sender.id),
-                },
-            });
-            return;
-        }
+        },
+        [auth.user]
+    );
 
-        if (type === 'friend' && data.sender.id === auth.user.id) {
+    const addFriendRequest = useCallback(
+        (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
+            if (type === 'SENT') {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        requestSentIds: [...auth.user.requestSentIds, user.id],
+                        requestSent: [...auth.user.requestSent, user],
+                    },
+                });
+            } else {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        requestReceivedIds: [...auth.user.requestReceivedIds, user.id],
+                        requestReceived: [...auth.user.requestReceived, user],
+                    },
+                });
+            }
+        },
+        [auth.user]
+    );
+
+    const blockUser = useCallback(
+        (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
+            if (type === 'SENT') {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
+                        friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
+                        requestReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
+                        requestSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
+                        blockedIds: [...auth.user.blockedIds, user.id],
+                        blocked: [...auth.user.blocked, user],
+                    },
+                });
+            } else {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
+                        friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
+                        requestReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
+                        requestSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
+                        blockedByIds: [...auth.user.blockedByIds, user.id],
+                        blockedBy: [...auth.user.blockedBy, user],
+                    },
+                });
+            }
+        },
+        [auth.user]
+    );
+
+    const unblockUser = useCallback(
+        (user: TCleanUser) => {
             setAuth({
                 ...auth,
                 user: {
                     ...auth.user,
-                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
-                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
-                    friends: [...(auth.user.friends || []), data.user],
-                    friendIds: [...(auth.user.friendIds || []), data.user.id],
+                    blockedIds: auth.user.blockedIds.filter((id: string) => id !== user.id),
+                    blocked: auth.user.blocked.filter((user2: TCleanUser) => user2.id !== user.id),
+                    blockedByIds: auth.user.blockedByIds.filter((id: string) => id !== user.id),
+                    blockedBy: auth.user.blockedBy.filter((user2: TCleanUser) => user2.id !== user.id),
                 },
             });
-        } else if (type === 'request' && data.sender.id === auth.user.id) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    requestsSent: [...(auth.user.requestsSent || []), data.user],
-                    requestsSentIds: [...(auth.user.requestsSentIds || []), data.user.id],
-                },
-            });
-        } else if (type === 'blocked') {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    blocked: [...(auth.user.blocked || []), data.user],
-                    blockedIds: [...(auth.user.blockedIds || []), data.user.id],
-                    requestsReceived: auth.user.requestsReceived?.filter((request: any) => request.id !== data.user.id),
-                    requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
-                        (request: any) => request !== data.user.id
-                    ),
-                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
-                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
-                    friends: auth.user.friends?.filter((friend: any) => friend.id !== data.user.id),
-                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.user.id),
-                },
-            });
-        } else if (type === 'unblocked') {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    blocked: auth.user.blocked?.filter((blocked: any) => blocked.id !== data.user.id),
-                    blockedIds: auth.user.blockedIds?.filter((blocked: any) => blocked !== data.user.id),
-                },
-            });
-        } else if (type === 'removed') {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    requestsReceived: auth.user.requestsReceived?.filter((request: any) => request.id !== data.user.id),
-                    requestsReceivedIds: auth.user.requestsReceivedIds?.filter(
-                        (request: any) => request !== data.user.id
-                    ),
-                    requestsSent: auth.user.requestsSent?.filter((request: any) => request.id !== data.user.id),
-                    requestsSentIds: auth.user.requestsSentIds?.filter((request: any) => request !== data.user.id),
-                    friends: auth.user.friends?.filter((friend: any) => friend.id !== data.user.id),
-                    friendIds: auth.user.friendIds?.filter((friend: any) => friend !== data.user.id),
-                },
-            });
+        },
+        [auth.user]
+    );
+
+    const updateRelationship = (data: any) => {
+        if (data.sender.id === auth.user.id || data.receiver.id === auth.user.id) {
+            const isSender = data.sender.id === auth.user.id;
+
+            switch (data.type) {
+                case 'FRIEND_ADDED':
+                    addFriend(isSender ? data.receiver : data.sender);
+                    break;
+                case 'FRIEND_REMOVED':
+                    removeFriend(isSender ? data.receiver : data.sender);
+                    break;
+                case 'FRIEND_REQUEST':
+                    addFriendRequest(isSender ? data.receiver : data.sender, isSender ? 'SENT' : 'RECEIVED');
+                    break;
+                case 'USER_BLOCKED':
+                    blockUser(isSender ? data.receiver : data.sender, isSender ? 'SENT' : 'RECEIVED');
+                    break;
+                case 'USER_UNBLOCKED':
+                    unblockUser(isSender ? data.receiver : data.sender);
+                    break;
+            }
         }
     };
 
@@ -269,56 +245,50 @@ const AppNav = (): ReactElement => {
         const audio = new Audio('/assets/sounds/ping.mp3');
         audio.volume = 0.5;
         audio.play();
-    }, [trigger]);
+    }, [trigger, auth.user]);
 
-    const setData = async (data: any) => {
-        if (data.userId === auth.user.id) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    username: data.username || auth.user.username,
-                    displayName: data.displayName || auth.user.displayName,
-                    description: data.description || auth.user.description,
-                    avatar: data.avatar || auth.user.avatar,
-                    banner: data.banner || auth.user.banner,
-                    primaryColor: data.primaryColor || auth.user.primaryColor,
-                    accentColor: data.accentColor || auth.user.accentColor,
-                    status: typeof data.status === 'boolean' ? (data.status ? 'ONLINE' : 'OFFLINE') : auth.user.status,
-                },
-            });
-        } else if (auth.user.friendIds.includes(data.userId)) {
-            if (data.connected) {
-                auth.user.friends.map((friend: any) => {
-                    if (friend.id === data.userId) {
-                        friend.status = data.connected ? 'ONLINE' : 'OFFLINE';
-                    }
+    const updateUserData = useCallback(
+        (data: any) => {
+            const object = {
+                username: data.username,
+                displayName: data.displayName,
+                description: data.description,
+                avatar: data.avatar,
+                banner: data.banner,
+                primaryColor: data.primaryColor,
+                accentColor: data.accentColor,
+                status: data.status,
+            };
 
-                    return friend;
+            if (data.userId === auth.user.id) {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        ...object,
+                    },
+                });
+            } else if (auth.user.friendIds?.includes(data.userId)) {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        friends: auth.user.friends.map((friend: TCleanUser) => {
+                            return friend.id === data.userId ? { ...friend, ...object } : friend;
+                        }),
+                        channels: auth.user.channels.map((channel: TChannel) => {
+                            const recipients = channel.recipients.map((recipient: TCleanUser) => {
+                                return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
+                            });
+
+                            return { ...channel, recipients };
+                        }),
+                    },
                 });
             }
-
-            if (data.username) {
-                auth.user.friends.map((friend: any) => {
-                    if (friend.id === data.userId) {
-                        friend.username = data.username;
-                    }
-
-                    return friend;
-                });
-            }
-
-            if (data.avatar) {
-                auth.user.friends.map((friend: any) => {
-                    if (friend.id === data.userId) {
-                        friend.avatar = data.avatar;
-                    }
-
-                    return friend;
-                });
-            }
-        }
-    };
+        },
+        [auth.user]
+    );
 
     const chatAppIcon = (
         <svg

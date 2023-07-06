@@ -8,28 +8,54 @@ export async function POST(req: Request, { params }: { params: { userId: string 
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (typeof userId !== 'string' || typeof senderId !== 'string' || userId.length !== 24 || senderId.length !== 24) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
     try {
         const sender = await prisma.user.findUnique({
             where: {
                 id: senderId,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
         const user = await prisma.user.findUnique({
             where: {
                 id: userId,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
@@ -39,13 +65,11 @@ export async function POST(req: Request, { params }: { params: { userId: string 
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find((blocked: string) => blocked === user.id);
+        const isBlocked = sender.blockedUserIds.find((id: string) => id === user.id);
 
         if (!isBlocked) {
             await prisma.user.update({
@@ -82,12 +106,16 @@ export async function POST(req: Request, { params }: { params: { userId: string 
                     requestsSent: {
                         disconnect: { id: sender.id },
                     },
+                    blockedByUsers: {
+                        connect: { id: sender.id },
+                    },
                 },
             });
 
-            await pusher.trigger('chat-app', 'user-blocked', {
-                senderId: sender.id,
-                userId: user.id,
+            await pusher.trigger('chat-app', 'relationship-updated', {
+                type: 'USER_BLOCKED',
+                sender: sender,
+                receiver: user,
             });
 
             return NextResponse.json(
@@ -95,9 +123,7 @@ export async function POST(req: Request, { params }: { params: { userId: string 
                     success: true,
                     message: 'Successfuly blocked this user',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         } else {
             return NextResponse.json(
@@ -105,9 +131,7 @@ export async function POST(req: Request, { params }: { params: { userId: string 
                     success: false,
                     message: "You haven't blocked this user.",
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
     } catch (error) {
@@ -117,12 +141,9 @@ export async function POST(req: Request, { params }: { params: { userId: string 
                 success: false,
                 message: 'Internal server error.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
-    // }
 }
 
 export async function DELETE(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
@@ -130,28 +151,54 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (typeof userId !== 'string' || typeof senderId !== 'string' || userId.length !== 24 || senderId.length !== 24) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
     try {
         const sender = await prisma.user.findUnique({
             where: {
                 id: senderId,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
         const user = await prisma.user.findUnique({
             where: {
                 id: userId,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
@@ -161,18 +208,16 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find((blocked: string) => blocked === user.id);
+        const isBlocked = sender.blockedUserIds.find((id: string) => id === user.id);
 
         if (isBlocked) {
             await prisma.user.update({
                 where: {
-                    id: senderId,
+                    id: sender.id,
                 },
                 data: {
                     blockedUsers: {
@@ -181,9 +226,21 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
                 },
             });
 
-            await pusher.trigger('chat-app', 'user-unblocked', {
-                senderId: sender.id,
-                userId: user.id,
+            await prisma.user.update({
+                where: {
+                    id: user.id,
+                },
+                data: {
+                    blockedByUsers: {
+                        disconnect: { id: sender.id },
+                    },
+                },
+            });
+
+            await pusher.trigger('chat-app', 'relationship-updated', {
+                type: 'USER_UNBLOCKED',
+                sender: sender,
+                receiver: user,
             });
 
             return NextResponse.json(
@@ -191,9 +248,7 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
                     success: true,
                     message: 'Successfuly unblocked this user.',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         } else {
             return NextResponse.json(
@@ -201,9 +256,7 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
                     success: false,
                     message: "You haven't blocked this user.",
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
     } catch (error) {
@@ -213,10 +266,7 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
-    // }
 }

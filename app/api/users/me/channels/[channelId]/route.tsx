@@ -8,23 +8,6 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (
-        typeof senderId !== 'string' ||
-        senderId.length !== 24 ||
-        typeof channelId !== 'string' ||
-        channelId.length !== 24
-    ) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
     try {
         const channel = await prisma.channel.findUnique({
             where: {
@@ -61,9 +44,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'Channel not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -73,9 +54,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'You are not in this channel',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
@@ -85,9 +64,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                 message: 'Successfully retrieved channel',
                 channel: channel,
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -96,9 +73,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }
@@ -107,23 +82,6 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
     const channelId = params.channelId;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
-
-    if (
-        typeof senderId !== 'string' ||
-        senderId.length !== 24 ||
-        typeof channelId !== 'string' ||
-        channelId.length !== 24
-    ) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
 
     try {
         const channel = await prisma.channel.findUnique({
@@ -138,9 +96,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                     success: false,
                     message: 'Channel not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -158,9 +114,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                         success: false,
                         message: 'User not found',
                     },
-                    {
-                        status: 404,
-                    }
+                    { status: 404 }
                 );
             }
 
@@ -170,23 +124,15 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 },
                 data: {
                     channels: {
-                        disconnect: {
-                            id: channel.id,
-                        },
+                        disconnect: { id: channel.id },
                     },
                 },
             });
 
             if (channel.type === 'GROUP_DM') {
-                if (channel.recipientIds.length === 0) {
+                if (channel.recipientIds.length === 1) {
                     await prisma.channel.delete({
-                        where: {
-                            id: channel.id,
-                        },
-                    });
-
-                    await pusher.trigger('chat-app', 'channel-deleted', {
-                        channelId: channel.id,
+                        where: { id: channel.id },
                     });
 
                     return NextResponse.json(
@@ -194,13 +140,10 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                             success: true,
                             message: 'Channel deleted',
                         },
-                        {
-                            status: 200,
-                        }
+                        { status: 200 }
                     );
                 } else {
                     const randomIndex = Math.floor(Math.random() * channel.recipientIds.length);
-
                     const newOwner = channel.recipientIds[randomIndex];
 
                     // Create new message
@@ -210,13 +153,51 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                             content: `<@${user.id}> has made <@${newOwner}> the owner of this group DM`,
                             mentionEveryone: false,
                             channel: {
-                                connect: {
-                                    id: channel.id,
-                                },
+                                connect: { id: channel.id },
                             },
                             author: {
-                                connect: {
-                                    id: user.id,
+                                connect: { id: user.id },
+                            },
+                        },
+                        include: {
+                            author: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    displayName: true,
+                                    avatar: true,
+                                    banner: true,
+                                    primaryColor: true,
+                                    accentColor: true,
+                                    description: true,
+                                    customStatus: true,
+                                    status: true,
+                                    guildIds: true,
+                                    channelIds: true,
+                                    friendIds: true,
+                                    createdAt: true,
+                                },
+                            },
+                            messageReference: {
+                                include: {
+                                    author: {
+                                        select: {
+                                            id: true,
+                                            username: true,
+                                            displayName: true,
+                                            avatar: true,
+                                            banner: true,
+                                            primaryColor: true,
+                                            accentColor: true,
+                                            description: true,
+                                            customStatus: true,
+                                            status: true,
+                                            guildIds: true,
+                                            channelIds: true,
+                                            friendIds: true,
+                                            createdAt: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -228,13 +209,51 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                             content: `<@${user.id}> has left this group DM`,
                             mentionEveryone: false,
                             channel: {
-                                connect: {
-                                    id: channel.id,
-                                },
+                                connect: { id: channel.id },
                             },
                             author: {
-                                connect: {
-                                    id: user.id,
+                                connect: { id: user.id },
+                            },
+                        },
+                        include: {
+                            author: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    displayName: true,
+                                    avatar: true,
+                                    banner: true,
+                                    primaryColor: true,
+                                    accentColor: true,
+                                    description: true,
+                                    customStatus: true,
+                                    status: true,
+                                    guildIds: true,
+                                    channelIds: true,
+                                    friendIds: true,
+                                    createdAt: true,
+                                },
+                            },
+                            messageReference: {
+                                include: {
+                                    author: {
+                                        select: {
+                                            id: true,
+                                            username: true,
+                                            displayName: true,
+                                            avatar: true,
+                                            banner: true,
+                                            primaryColor: true,
+                                            accentColor: true,
+                                            description: true,
+                                            customStatus: true,
+                                            status: true,
+                                            guildIds: true,
+                                            channelIds: true,
+                                            friendIds: true,
+                                            createdAt: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -246,28 +265,29 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                         },
                         data: {
                             owner: {
-                                connect: {
-                                    id: newOwner,
-                                },
+                                connect: { id: newOwner },
                             },
                             messages: {
-                                connect: [
-                                    {
-                                        id: ownerMessage.id,
-                                    },
-                                    {
-                                        id: leaveMessage.id,
-                                    },
-                                ],
+                                connect: [{ id: ownerMessage.id }, { id: leaveMessage.id }],
                             },
                         },
+                    });
+
+                    await pusher.trigger('chat-app', 'message-sent', {
+                        channelId: channel.id,
+                        message: ownerMessage,
+                    });
+
+                    await pusher.trigger('chat-app', 'message-sent', {
+                        channelId: channel.id,
+                        message: leaveMessage,
                     });
                 }
             }
 
             await pusher.trigger('chat-app', 'channel-left', {
+                senderId: senderId,
                 channelId: channel.id,
-                userId: user.id,
             });
 
             return NextResponse.json(
