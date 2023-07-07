@@ -153,6 +153,21 @@
     z-index: 2;
 }
 
+.header > button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    color: var(--foreground-3);
+    visibility: hidden;
+}
+
+.header > button:hover {
+    color: var(--foreground-1);
+}
+
 .header > h1 {
     color: var(--foreground-1);
     font-size: 20px;
@@ -455,4 +470,19 @@
     width: 100%;
     font-weight: 500;
     color: var(--foreground-1);
+}
+
+@media screen and (max-width: 487px) {
+    .popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100dvw;
+        min-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .header > button {
+        visibility: visible;
+    }
 }

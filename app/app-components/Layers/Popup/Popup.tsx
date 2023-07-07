@@ -151,11 +151,7 @@ const Popup = (): ReactElement => {
                                         : 'Enter your current password and a new password.'}
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        setPopup(null);
-                                    }}
-                                >
+                                <button onClick={() => setPopup(null)}>
                                     <svg
                                         viewBox='0 0 24 24'
                                         width='24'

@@ -29,10 +29,25 @@ const getRandomAvatar = (): string => {
 
 const Settings = (): ReactElement => {
     const [activeTab, setActiveTab] = useState<string>('My Account');
+    const [minified, setMinified] = useState<boolean>(false);
+    const [hideNav, setHideNav] = useState<boolean>(false);
 
     const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { logout } = useLogout();
+
+    useEffect(() => {
+        setMinified(window.innerWidth < 1024);
+
+        const handleWindowResize = () => {
+            if (window.innerWidth < 1024) setMinified(true);
+            else setMinified(false);
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -144,70 +159,92 @@ const Settings = (): ReactElement => {
                         ease: 'backOut',
                     }}
                 >
-                    <div className={styles.sidebar}>
-                        <div className={styles.sidebarWrapper}>
-                            <nav>
-                                {tabs.map((tab) => (
-                                    <div
-                                        key={uuidv4()}
-                                        className={
-                                            tab.type === 'title'
-                                                ? styles.title
-                                                : tab.name === 'separator'
-                                                ? styles.separator
-                                                : activeTab === tab.name
-                                                ? styles.tabActive
-                                                : styles.tab
-                                        }
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (tab.name === 'separator' || tab.type === 'title') return;
-                                            if (tab.name === 'Log Out') {
-                                                logout();
-                                                setShowSettings(false);
+                    {(!minified || !hideNav) && (
+                        <div className={styles.sidebar}>
+                            <div className={styles.sidebarWrapper}>
+                                <nav>
+                                    <div className={styles.closeButton}>
+                                        <div>
+                                            <div
+                                                onClick={() => {
+                                                    setTooltip(null);
+                                                    setShowSettings(false);
+                                                }}
+                                            >
+                                                <Icon
+                                                    name='close'
+                                                    size={16}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {tabs.map((tab) => (
+                                        <div
+                                            key={uuidv4()}
+                                            className={
+                                                tab.type === 'title'
+                                                    ? styles.title
+                                                    : tab.name === 'separator'
+                                                    ? styles.separator
+                                                    : activeTab === tab.name
+                                                    ? styles.tabActive
+                                                    : styles.tab
                                             }
-                                            setActiveTab(tab.name);
-                                        }}
-                                    >
-                                        {tab.name !== 'separator' && tab.name}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (tab.name === 'separator' || tab.type === 'title') return;
+                                                if (tab.name === 'Log Out') {
+                                                    logout();
+                                                    setShowSettings(false);
+                                                    return;
+                                                }
+                                                setActiveTab(tab.name);
+                                                if (minified) setHideNav(true);
+                                            }}
+                                        >
+                                            {tab.name !== 'separator' && tab.name}
 
-                                        {tab?.icon && (
-                                            <Icon
-                                                name={tab.icon}
-                                                size={16}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-                            </nav>
-                        </div>
-                    </div>
-
-                    <div className={styles.contentContainer}>
-                        <div className={styles.contentWrapper}>
-                            <div className={styles.content}>
-                                {tabs.find((tab) => tab.name === activeTab)?.component}
+                                            {tab?.icon && (
+                                                <Icon
+                                                    name={tab.icon}
+                                                    size={16}
+                                                />
+                                            )}
+                                        </div>
+                                    ))}
+                                </nav>
                             </div>
+                        </div>
+                    )}
 
-                            <div className={styles.closeButton}>
-                                <div>
-                                    <div
-                                        onClick={() => {
-                                            setTooltip(null);
-                                            setShowSettings(false);
-                                        }}
-                                    >
-                                        <Icon
-                                            name='close'
-                                            size={18}
-                                        />
+                    {(!minified || hideNav) && (
+                        <div className={styles.contentContainer}>
+                            <div className={styles.contentWrapper}>
+                                <div className={styles.content}>
+                                    {tabs.find((tab) => tab.name === activeTab)?.component}
+                                </div>
+
+                                <div className={styles.closeButton}>
+                                    <div>
+                                        <div
+                                            onClick={() => {
+                                                setTooltip(null);
+                                                if (!minified) setShowSettings(false);
+                                                else setHideNav(false);
+                                            }}
+                                        >
+                                            <Icon
+                                                name='close'
+                                                size={18}
+                                            />
+                                        </div>
+
+                                        <div>ESC</div>
                                     </div>
-
-                                    <div>ESC</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>
