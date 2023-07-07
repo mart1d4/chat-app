@@ -174,7 +174,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
             >
                 <div>
-                    {message.length === 0 && !editContent && (
+                    {message.length === 0 && typeof editContent !== 'string' && (
                         <div className={styles.textContainerPlaceholder}>
                             Message {!channel ? '' : friend ? `@${friend.username}` : channel?.name}
                         </div>
@@ -283,7 +283,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         [message, friend, channel, editContent, reply]
     );
 
-    if (editContent)
+    if (typeof editContent === 'string')
         return (
             <form
                 className={styles.form}

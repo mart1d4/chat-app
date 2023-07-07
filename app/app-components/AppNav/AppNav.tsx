@@ -5,12 +5,12 @@ import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
 import { usePathname } from 'next/navigation';
 import styles from './AppNav.module.css';
+import { v4 as uuidv4 } from 'uuid';
 import NavIcon from './NavIcon';
 
 const AppNav = (): ReactElement => {
     const [url, setUrl] = useState<string>('/channels/me');
-    const [trigger, setTrigger] = useState<any>(null);
-    const [notifDM, setNotifDM] = useState<TNotification[]>([]);
+    const [dmNotifications, setDmNotifications] = useState<TNotification[]>([]);
 
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
     const pathname = usePathname();
@@ -24,20 +24,20 @@ const AppNav = (): ReactElement => {
 
     useEffect(() => {
         if (auth.user.notifications.length) {
-            const filtered = auth.user.notifications.filter((notification: any) =>
-                auth.user.channelIds.includes(notification?.channel)
+            const filtered = auth.user.notifications.filter((notif: TNotification) =>
+                auth.user.channelIds.includes(notif?.channelId)
             );
 
-            const notifications = filtered.map((notification: any) => {
-                const channel = auth.user.channels.find((channel: any) => channel.id === notification?.channel);
+            const notifications = filtered.map((notif: TNotification) => {
+                const channel = auth.user.channels.find((channel: TChannel) => channel.id === notif?.channelId);
 
                 let name = channel?.name;
                 if (channel.type === 'DM') {
-                    const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
+                    const user = channel.recipients.find((user: TCleanUser) => user.id !== auth.user.id);
                     name = user?.username;
                 } else if (channel.type === 'GROUP_DM' && !channel.name) {
-                    const filteredMembers = channel.recipients.filter((user: any) => user.id !== auth.user.id);
-                    name = filteredMembers.map((user: any) => user.username).join(', ');
+                    const filteredMembers = channel.recipients.filter((user: TCleanUser) => user.id !== auth.user.id);
+                    name = filteredMembers.map((user: TCleanUser) => user.username).join(', ');
                 }
 
                 let src = `${process.env.NEXT_PUBLIC_CDN_URL}${channel?.icon}/`;
@@ -47,23 +47,23 @@ const AppNav = (): ReactElement => {
                 }
 
                 return {
+                    ...notif,
                     channel: {
                         ...channel,
-                        name: name,
-                        icon: src,
+                        name,
+                        src,
                     },
-                    count: notification?.count,
                 };
             });
 
-            setNotifDM(notifications);
+            setDmNotifications(notifications);
         }
     }, [auth.user.notifications]);
 
     useEffect(() => {
         pusher.bind('user-updated', (data: any) => updateUserData(data));
         pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
-        pusher.bind('message-sent', (data: any) => setTrigger(data));
+        pusher.bind('message-sent', (data: any) => updateNotifications(data));
 
         return () => {
             pusher.unbind('user-updated');
@@ -210,42 +210,48 @@ const AppNav = (): ReactElement => {
         }
     };
 
-    useEffect(() => {
-        if (!trigger) return;
+    const updateNotifications = useCallback(
+        (data: any) => {
+            if (pathname.includes(data.channelId) || !auth.user.channelIds.includes(data.channelId)) {
+                return;
+            }
 
-        if (pathname.includes(trigger.channel) || !auth.user.channelIds.includes(trigger.channel)) {
-            return;
-        }
+            const notification = dmNotifications.find(
+                (notif: TNotification) => notif?.channelId === data.channelId && notif?.type === 'MESSAGE'
+            );
 
-        const notification = notifDM.find((notif: any) => notif?.channel.id === trigger.channel);
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    notifications: notification
+                        ? auth.user.notifications.map((notif: TNotification) => {
+                              notif?.channelId === data.channelId
+                                  ? {
+                                        ...notif,
+                                        count: notif?.count + 1,
+                                    }
+                                  : notif;
+                          })
+                        : [
+                              {
+                                  type: 'MESSAGE',
+                                  senderId: data.senderId,
+                                  channelId: data.channelId,
+                                  count: 1,
+                                  createdAt: new Date().toISOString(),
+                              },
+                              ...auth.user.notifications,
+                          ],
+                },
+            });
 
-        setAuth({
-            ...auth,
-            user: {
-                ...auth.user,
-                notifications: notification
-                    ? auth.user.notifications.map((notification: any) => {
-                          notification?.channel === trigger.channel
-                              ? {
-                                    ...notification,
-                                    count: notification?.count + 1,
-                                }
-                              : notification;
-                      })
-                    : [
-                          {
-                              channel: trigger.channel,
-                              count: 1,
-                          },
-                          ...auth.user.notifications,
-                      ],
-            },
-        });
-
-        const audio = new Audio('/assets/sounds/ping.mp3');
-        audio.volume = 0.5;
-        audio.play();
-    }, [trigger, auth.user]);
+            const audio = new Audio('/assets/sounds/ping.mp3');
+            audio.volume = 0.5;
+            audio.play();
+        },
+        [auth.user]
+    );
 
     const updateUserData = useCallback(
         (data: any) => {
@@ -338,9 +344,9 @@ const AppNav = (): ReactElement => {
         () => (
             <nav className={styles.nav}>
                 <ul className={styles.list}>
-                    {notifDM.map((notification: any) => (
+                    {dmNotifications.map((notification: any) => (
                         <NavIcon
-                            key={notification.channel.id}
+                            key={uuidv4()}
                             name={notification.channel.name}
                             link={`/channels/me/${notification.channel.id}`}
                             src={notification.channel.icon}
@@ -375,7 +381,7 @@ const AppNav = (): ReactElement => {
                 </ul>
             </nav>
         ),
-        [notifDM, url]
+        [dmNotifications, url]
     );
 };
 

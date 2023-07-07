@@ -35,7 +35,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                console.log('esc');
                 if (edit) {
                     setEdit(null);
                     setLocalStorage({ edit: null });
@@ -427,11 +426,29 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                     });
                                 }}
                             >
-                                {/* @ts-ignore */}
                                 {message.messageReference?.author?.username}
                             </span>
-                            {/* @ts-ignore */}
-                            <div>{message.messageReference?.content}</div>
+
+                            <div>
+                                {message.messageReference?.content}{' '}
+                                {message.messageReference?.edited && (
+                                    <div className={styles.contentTimestamp}>
+                                        <span
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: getLongDate(message.messageReference?.updatedAt),
+                                                    element: e.currentTarget,
+                                                    delay: 1000,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            style={{ fontSize: '10px', opacity: 0.75 }}
+                                        >
+                                            (edited)
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 

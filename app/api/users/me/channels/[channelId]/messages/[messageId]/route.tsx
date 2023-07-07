@@ -183,7 +183,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         });
 
         await pusher.trigger('chat-app', 'message-deleted', {
-            channel: channelId,
+            channelId: channelId,
             messageId: messageId,
         });
 
