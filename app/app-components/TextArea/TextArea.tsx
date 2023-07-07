@@ -56,12 +56,20 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     useEffect(() => {
         if (!editContent) return;
-        const text = textAreaRef.current?.innerText;
+        const input = textAreaRef.current as HTMLInputElement;
 
-        if (text !== editContent) {
+        if (input?.innerText !== editContent) {
             setMessage(editContent);
-            const input = textAreaRef.current as HTMLInputElement;
-            input.innerText = '';
+            input.innerText = editContent;
+            // set cursor to end of text
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.setStart(input.childNodes[0], input.innerText.length);
+            range.collapse(true);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+
+            input.focus();
         }
     }, [editContent]);
 
@@ -286,9 +294,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             >
                 <div
                     className={styles.textArea}
-                    style={{
-                        marginBottom: '0',
-                    }}
+                    style={{ marginBottom: '0' }}
                 >
                     <div className={styles.scrollableContainer + ' scrollbar'}>
                         <div className={styles.input}>

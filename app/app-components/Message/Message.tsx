@@ -15,14 +15,13 @@ type MessageProps = {
     setEdit?: React.Dispatch<React.SetStateAction<MessageEditObject | null>>;
     reply?: MessageReplyObject | null;
     setReply?: React.Dispatch<React.SetStateAction<MessageReplyObject | null>>;
-    noInteraction?: boolean;
 };
 
-const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction }: MessageProps) => {
+const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProps) => {
     // States
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
-    const [editContent, setEditContent] = useState<string>(edit?.content ?? message.content);
+    const [editContent, setEditContent] = useState<string>(message.content);
 
     // Hooks
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
@@ -115,7 +114,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
     };
 
     const editMessageState = async () => {
-        if (!setEdit || noInteraction) return;
+        if (!setEdit) return;
 
         setEdit({
             messageId: message.id,
@@ -131,8 +130,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
     };
 
     const sendEditedMessage = async () => {
-        if (!setEdit || !edit || noInteraction) return;
-
+        if (!setEdit) return;
         const content = trimMessage(editContent);
 
         if (content.length === 0 || content.length > 4000 || content === message.content) {
@@ -152,7 +150,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
     };
 
     const replyToMessageState = () => {
-        if (!setReply || noInteraction) return;
+        if (!setReply) return;
 
         setReply({
             channelId: message.channelId[0],
@@ -227,7 +225,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                 onMouseLeave={() => setHover(false)}
                 onContextMenu={(e) => {
                     e.preventDefault();
-                    if (noInteraction) return;
                     setFixedLayer({
                         type: 'menu',
                         event: {
@@ -305,11 +302,9 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
             className={
                 styles.messageContainer +
                 ' ' +
-                (large || message.type === 'REPLY' || noInteraction ? styles.large : '') +
+                (large || message.type === 'REPLY' ? styles.large : '') +
                 ' ' +
-                (reply?.messageId === message.id ? styles.reply : '') +
-                ' ' +
-                (noInteraction ? styles.noInteraction : '')
+                (reply?.messageId === message.id ? styles.reply : '')
             }
             onMouseEnter={() => {
                 setHover(true);
@@ -317,7 +312,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
             onMouseLeave={() => setHover(false)}
             onContextMenu={(e) => {
                 e.preventDefault();
-                if (noInteraction || edit?.messageId === message.id) return;
+                if (edit?.messageId === message.id) return;
                 setFixedLayer({
                     type: 'menu',
                     event: {
@@ -340,7 +335,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                         : '',
             }}
         >
-            {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && !noInteraction && (
+            {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && (
                 <MessageMenu
                     message={message}
                     large={large}
@@ -354,28 +349,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                 />
             )}
 
-            {hover && noInteraction && (
-                <div className={styles.pinnedHover}>
-                    <div role='button'>
-                        <div>Jump</div>
-                    </div>
-
-                    <svg
-                        aria-hidden='true'
-                        role='img'
-                        width='24'
-                        height='24'
-                        viewBox='0 0 24 24'
-                    >
-                        <path
-                            fill='currentColor'
-                            d='M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z'
-                        />
-                    </svg>
-                </div>
-            )}
-
-            {large || message.type === 'REPLY' || noInteraction ? (
+            {large || message.type === 'REPLY' ? (
                 <div className={styles.messagelarge}>
                     {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
@@ -384,8 +358,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onDoubleClick={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
@@ -405,8 +377,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 }}
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
                                         event: {
@@ -431,8 +401,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onDoubleClick={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
@@ -448,8 +416,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 }}
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
                                         event: {
@@ -473,10 +439,9 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                         className={styles.messageContent}
                         onDoubleClick={() => {
                             if (message.author.id === auth.user.id) {
-                                if (noInteraction || edit?.messageId === message.id) return;
                                 editMessageState();
                             } else {
-                                if (noInteraction || reply?.messageId === message.id) return;
+                                if (reply?.messageId === message.id) return;
                                 replyToMessageState();
                             }
                         }}
@@ -484,8 +449,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                         <div
                             className={styles.userAvatar}
                             onClick={(e) => {
-                                if (noInteraction) return;
-
                                 if (fixedLayer?.element === e.currentTarget) {
                                     setFixedLayer(null);
                                     return;
@@ -502,8 +465,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                             onDoubleClick={(e) => e.stopPropagation()}
                             onContextMenu={(e) => {
                                 e.stopPropagation();
-                                e.preventDefault();
-                                if (noInteraction) return;
                                 setFixedLayer({
                                     type: 'menu',
                                     event: {
@@ -527,8 +488,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 onDoubleClick={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     if (fixedLayer?.e?.currentTarget === e.currentTarget) {
                                         setFixedLayer(null);
                                     } else {
@@ -543,8 +502,6 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 }}
                                 onContextMenu={(e) => {
                                     e.stopPropagation();
-                                    e.preventDefault();
-                                    if (noInteraction) return;
                                     setFixedLayer({
                                         type: 'menu',
                                         event: {
@@ -571,6 +528,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply, noInteraction
                                 {getMidDate(message.createdAt)}
                             </span>
                         </h3>
+
                         {edit?.messageId === message.id ? (
                             <>
                                 <TextArea

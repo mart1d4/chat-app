@@ -259,7 +259,6 @@ const content = ({ content }: { content: any }): ReactElement => {
                         icon: 'speak',
                         func: () => {
                             const msg = new SpeechSynthesisUtterance();
-                            msg.lang = 'fr';
                             msg.text = `${message.author.username} said ${message.content}`;
                             window.speechSynthesis.speak(msg);
                         },
