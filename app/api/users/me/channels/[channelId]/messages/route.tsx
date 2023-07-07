@@ -231,8 +231,46 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 id: newMessage.id,
             },
             include: {
-                author: true,
-                messageReference: true,
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                messageReference: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 
@@ -245,6 +283,9 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             {
                 success: true,
                 message: 'Successfully sent message',
+                data: {
+                    message: messageToSend,
+                },
             },
             { status: 200 }
         );

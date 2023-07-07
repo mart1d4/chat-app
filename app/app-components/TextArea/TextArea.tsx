@@ -84,6 +84,9 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             waiting: true,
         };
 
+        const input = textAreaRef.current as HTMLInputElement;
+        input.innerText = '';
+        setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
 
         try {
@@ -114,9 +117,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 return;
             }
 
-            const input = textAreaRef.current as HTMLInputElement;
-            input.innerText = '';
-            setFiles([]);
+            const message = await response.json().then((data) => data.data.message);
 
             if (reply?.messageId) {
                 setReply(null);
@@ -130,9 +131,8 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             }
 
             // Stop message from being marked as waiting
-            setMessages((messages: TMessage[]) =>
-                messages.map((message) => (message.id === tempId ? { ...message, waiting: false } : message))
-            );
+            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempId));
+            setMessages((messages: TMessage[]) => [...messages, message]);
         } catch (err) {
             console.error(err);
             // Make message marked as error
@@ -242,6 +242,10 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                         }}
                         onKeyDown={(e) => {
                             if (!channel) return;
+                            if (e.key === 'Enter' && !e.shiftKey && editContent) {
+                                e.preventDefault();
+                                return;
+                            }
                             if (e.key === 'Enter' && !e.shiftKey && !editContent) {
                                 e.preventDefault();
                                 sendMessage();

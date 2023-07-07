@@ -2,66 +2,50 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const nonProtectedRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/auth/refresh'];
-
 export const config = {
-    matcher: '/api/:path*',
+    matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };
 
+const allowedPaths = ['/', '/download', '/login', '/register', '/reset-password'];
+
 export async function middleware(req: NextRequest) {
-    const authorization = req.headers.get('Authorization');
-    const accessToken = authorization?.replace('Bearer ', '');
+    const token = req.cookies.get('token')?.value;
     const { pathname } = req.nextUrl;
 
     // If request is OPTIONS, return early with 200
+    // (CORS preflight for external domains)
     if (req.method === 'OPTIONS') {
         return new NextResponse(null, {
             status: 200,
         });
     }
 
-    if (nonProtectedRoutes.includes(pathname) || pathname.startsWith('/_next')) {
+    if (pathname.startsWith('/api/auth') || allowedPaths.includes(pathname)) {
         return NextResponse.next();
     }
 
-    if (!accessToken) {
-        return new NextResponse(
-            JSON.stringify({
-                success: false,
-                message: 'No access token provided',
-            }),
-            {
-                status: 401,
-            }
-        );
-    } else {
-        try {
-            const accessTokenSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
+    if (!token) {
+        return NextResponse.redirect(new URL('/login', req.url));
+    }
 
-            const { payload } = await jwtVerify(accessToken, accessTokenSecret, {
-                issuer: process.env.ISSUER,
-                audience: process.env.AUDIENCE,
-            });
+    try {
+        const tokenSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
 
-            const requestHeaders = new Headers(req.headers);
-            requestHeaders.set('userId', payload.id as string);
+        const { payload } = await jwtVerify(token, tokenSecret, {
+            issuer: process.env.ISSUER,
+            audience: process.env.AUDIENCE,
+        });
 
-            return NextResponse.next({
-                request: {
-                    headers: requestHeaders,
-                },
-            });
-        } catch (error) {
-            console.error('[MIDDLEWARE] Error: ', error);
-            return new NextResponse(
-                JSON.stringify({
-                    success: false,
-                    message: 'Invalid access token',
-                }),
-                {
-                    status: 401,
-                }
-            );
-        }
+        const requestHeaders = new Headers(req.headers);
+        requestHeaders.set('userId', payload.id as string);
+
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
+    } catch (error) {
+        console.error('[MIDDLEWARE] Error: ', error);
+        return NextResponse.redirect(new URL('/login', req.url));
     }
 }

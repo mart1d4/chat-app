@@ -42,9 +42,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'Channel or sender not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -60,9 +58,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'Message not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -76,14 +72,56 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        const messageToSend = {
-            ...message,
-            content: String(content),
-            edited: true,
-        };
+        const messageToSend = await prisma.message.findUnique({
+            where: {
+                id: messageId,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                messageReference: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
 
         await pusher.trigger('chat-app', 'message-edited', {
-            channel: channelId,
+            channelId: channelId,
             message: messageToSend,
         });
 
@@ -92,9 +130,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                 success: true,
                 message: 'Successfully sent message',
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -103,9 +139,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }
