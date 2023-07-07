@@ -82,47 +82,44 @@ const UserLists = ({ content }: Props): ReactElement => {
     };
 
     useEffect(() => {
-        const getList = async () => {
-            if (content === 'all' || content === 'online') {
-                let friends = auth.user.friends || [];
+        if (content === 'all' || content === 'online') {
+            let friends = auth.user.friends || [];
 
-                if (content === 'online') {
-                    if (friends.length) {
-                        friends = friends.filter((user: TCleanUser) => user.status === 'ONLINE');
-                    }
-                    setList(friends);
-                    return;
+            if (content === 'online') {
+                if (friends.length) {
+                    friends = friends.filter((user: TCleanUser) => user.status === 'ONLINE');
                 }
-
                 setList(friends);
-            } else if (content === 'pending') {
-                const sent = auth.user.requestsSent || [];
-                const received = auth.user.requestsReceived || [];
-
-                let sentReq = [];
-                if (sent.length) {
-                    sentReq =
-                        sent?.map((user: TCleanUser) => {
-                            return { ...user, req: 'Sent' };
-                        }) || [];
-                }
-
-                let receivedReq = [];
-                if (received.length) {
-                    receivedReq =
-                        received?.map((user: TCleanUser) => {
-                            return { ...user, req: 'Received' };
-                        }) || [];
-                }
-
-                setList([...sentReq, ...receivedReq].sort((a, b) => a.username.localeCompare(b.username)));
-            } else if (content === 'blocked') {
-                const blockedUsers = auth.user.blockedUsers || [];
-                setList(blockedUsers);
+                return;
             }
-        };
-        getList();
-    }, [content]);
+
+            setList(friends);
+        } else if (content === 'pending') {
+            const sent = auth.user.requestsSent || [];
+            const received = auth.user.requestsReceived || [];
+
+            let sentReq = [];
+            if (sent.length) {
+                sentReq =
+                    sent?.map((user: TCleanUser) => {
+                        return { ...user, req: 'Sent' };
+                    }) || [];
+            }
+
+            let receivedReq = [];
+            if (received.length) {
+                receivedReq =
+                    received?.map((user: TCleanUser) => {
+                        return { ...user, req: 'Received' };
+                    }) || [];
+            }
+
+            setList([...sentReq, ...receivedReq].sort((a, b) => a.username.localeCompare(b.username)));
+        } else if (content === 'blocked') {
+            const blockedUsers = auth.user.blockedUsers || [];
+            setList(blockedUsers);
+        }
+    }, [content, auth.user]);
 
     useEffect(() => {
         if (search) {

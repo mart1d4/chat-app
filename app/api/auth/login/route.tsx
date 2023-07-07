@@ -18,9 +18,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Login or password is invalid',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
@@ -170,9 +168,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'Login or password is invalid',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
@@ -224,9 +220,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'Login or password is invalid',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
     } catch (error) {
@@ -236,9 +230,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

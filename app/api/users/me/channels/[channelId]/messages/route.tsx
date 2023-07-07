@@ -75,9 +75,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'Channel not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -87,9 +85,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                     success: false,
                     message: 'You are not in this channel',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
@@ -100,9 +96,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                 messages: channel.messages,
                 hasMore: channel.messages.length - skip > limit,
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -111,9 +105,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }
@@ -131,9 +123,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 success: false,
                 message: 'Message is required',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
@@ -156,9 +146,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     success: false,
                     message: 'Channel or sender not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -175,9 +163,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         success: false,
                         message: 'Referenced message not found',
                     },
-                    {
-                        status: 404,
-                    }
+                    { status: 404 }
                 );
             }
         }
@@ -195,19 +181,13 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     mentionRoleIds: message.mentionRoleIds || [],
                     mentionUserIds: message.mentionUserIds || [],
                     author: {
-                        connect: {
-                            id: senderId,
-                        },
+                        connect: { id: senderId },
                     },
                     channel: {
-                        connect: {
-                            id: channelId,
-                        },
+                        connect: { id: channelId },
                     },
                     messageReference: {
-                        connect: {
-                            id: message.messageReference || '',
-                        },
+                        connect: { id: message.messageReference || '' },
                     },
                 },
             });
@@ -228,9 +208,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         },
                     },
                     channel: {
-                        connect: {
-                            id: channelId,
-                        },
+                        connect: { id: channelId },
                     },
                 },
             });
@@ -242,9 +220,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
             data: {
                 messages: {
-                    connect: {
-                        id: newMessage.id,
-                    },
+                    connect: { id: newMessage.id },
                 },
                 updatedAt: new Date(),
             },
@@ -255,13 +231,51 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 id: newMessage.id,
             },
             include: {
-                author: true,
-                messageReference: true,
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                messageReference: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 
         await pusher.trigger('chat-app', 'message-sent', {
-            channel: channelId,
+            channelId: channelId,
             message: messageToSend,
         });
 
@@ -269,10 +283,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             {
                 success: true,
                 message: 'Successfully sent message',
+                data: {
+                    message: messageToSend,
+                },
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -281,9 +296,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

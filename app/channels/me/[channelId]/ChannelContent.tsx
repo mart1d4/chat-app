@@ -49,19 +49,19 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         };
 
         const listenSockets = () => {
-            pusher.bind(`message-sent`, (data: any) => {
+            pusher.bind('message-sent', (data: any) => {
                 if (data.channel !== channel.id || data.message.author.id === auth.user.id) return;
                 setMessages((messages) => [...messages, data.message]);
             });
 
-            pusher.bind(`message-edited`, (data: any) => {
-                if (data.channel !== channel.id) return;
+            pusher.bind('message-edited', (data: any) => {
+                if (data.channelId !== channel.id) return;
                 setMessages((messages) =>
                     messages.map((message) => (message.id === data.message.id ? data.message : message))
                 );
             });
 
-            pusher.bind(`message-deleted`, (data: any) => {
+            pusher.bind('message-deleted', (data: any) => {
                 if (data.channel !== channel.id) return;
                 setMessages((messages) => messages.filter((message) => message.id !== data.messageId));
             });

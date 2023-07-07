@@ -206,9 +206,6 @@
 
 html,
 body {
-    width: 100dvw;
-    height: 100dvh;
-    overflow: hidden;
     font-size: 16px;
     font-family: 'gg sans', 'Noto sans', sans-serif;
     scroll-behavior: smooth;

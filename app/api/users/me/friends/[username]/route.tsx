@@ -13,11 +13,49 @@ export async function POST(req: Request, { params }: { params: { username: strin
             where: {
                 id: senderId,
             },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
+            },
         });
 
         const user = await prisma.user.findUnique({
             where: {
                 username: username,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
@@ -27,9 +65,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -39,9 +75,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: false,
                     message: 'You cannot add yourself as a friend.',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -57,9 +91,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: false,
                     message: 'You cannot add this user as a friend.',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -69,9 +101,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: false,
                     message: 'You are already friends with this user.',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -81,16 +111,14 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: false,
                     message: 'You have already sent a friend request to this user.',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
         if (receivedRequest) {
             await prisma.user.update({
                 where: {
-                    id: senderId,
+                    id: sender.id,
                 },
                 data: {
                     friends: {
@@ -116,9 +144,10 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 },
             });
 
-            await pusher.trigger('chat-app', 'user-friend', {
+            await pusher.trigger('chat-app', 'relationship-updated', {
+                type: 'FRIEND_ADDED',
                 sender: sender,
-                user: user,
+                receiver: user,
             });
 
             return NextResponse.json(
@@ -126,9 +155,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                     success: true,
                     message: 'You are now friends with this user.',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
 
@@ -154,9 +181,10 @@ export async function POST(req: Request, { params }: { params: { username: strin
             },
         });
 
-        await pusher.trigger('chat-app', `user-request`, {
+        await pusher.trigger('chat-app', 'relationship-updated', {
+            type: 'FRIEND_REQUEST',
             sender: sender,
-            user: user,
+            receiver: user,
         });
 
         return NextResponse.json(
@@ -164,9 +192,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 success: true,
                 message: 'Friend request sent.',
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -175,9 +201,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }
@@ -192,11 +216,49 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             where: {
                 id: senderId,
             },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
+            },
         });
 
         const user = await prisma.user.findUnique({
             where: {
                 username: username,
+            },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                banner: true,
+                primaryColor: true,
+                accentColor: true,
+                description: true,
+                customStatus: true,
+                status: true,
+                guildIds: true,
+                channelIds: true,
+                friendIds: true,
+                requestReceivedIds: true,
+                requestSentIds: true,
+                blockedUserIds: true,
+                createdAt: true,
             },
         });
 
@@ -206,9 +268,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
 
@@ -218,9 +278,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                     success: false,
                     message: 'You cannot remove yourself as a friend.',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -234,9 +292,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                     success: false,
                     message: 'You are not friends with this user.',
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
 
@@ -276,9 +332,10 @@ export async function DELETE(req: Request, { params }: { params: { username: str
 
         const message = isFriend ? 'Friend removed' : 'Request cancelled';
 
-        await pusher.trigger('chat-app', 'user-removed', {
+        await pusher.trigger('chat-app', 'relationship-updated', {
+            type: 'FRIEND_REMOVED',
             sender: sender,
-            user: user,
+            receiver: user,
         });
 
         return NextResponse.json(
@@ -286,9 +343,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                 success: true,
                 message: message,
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -297,9 +352,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

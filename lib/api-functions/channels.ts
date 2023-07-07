@@ -1,45 +1,27 @@
 const url = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const getChannels = async (token: string) => {
-    const response = await fetch(`${url}/users/me/channels`, {
+    return await fetch(`${url}/users/me/channels`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
         },
         next: { revalidate: 10 },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to fetch channels');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response.channels;
-    }
+    }).then((res) => res.json());
 };
 
 export const getSingleChannel = async (token: string, channelId: string) => {
-    const response = await fetch(`${url}/users/me/channels/${channelId}`, {
+    return await fetch(`${url}/users/me/channels/${channelId}`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
         },
         next: { revalidate: 30 },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to fetch channel');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response.channel;
-    }
+    }).then((res) => res.json());
 };
 
 export const createChannel = async (token: string, recipients: string[], channelId?: string) => {
-    const response = await fetch(`${url}/users/me/channels`, {
+    return await fetch(`${url}/users/me/channels`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -49,80 +31,39 @@ export const createChannel = async (token: string, recipients: string[], channel
             recipients,
             channelId,
         }),
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to create channel');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    }).then((res) => res.json());
 };
 
 export const leaveChannel = async (token: string, channelId: string) => {
-    const response = await fetch(`${url}/users/me/channels/${channelId}`, {
+    return await fetch(`${url}/users/me/channels/${channelId}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${token}`,
         },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to leave channel');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    }).then((res) => res.json());
 };
 
 export const getPinnedMessages = async (token: string, channelId: string) => {
-    const response = await fetch(`${url}/users/me/channels/${channelId}/pins`, {
+    return await fetch(`${url}/users/me/channels/${channelId}/pins`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
         },
         next: { revalidate: 10 },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to fetch pinned messages');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    }).then((res) => res.json());
 };
 
 export const pinMessage = async (token: string, channelId: string, messageId: string) => {
-    const response = await fetch(`${url}/users/me/channels/${channelId}/pins/${messageId}`, {
+    return await fetch(`${url}/users/me/channels/${channelId}/pins/${messageId}`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
         },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to pin message');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return response;
-    }
+    }).then((res) => res.json());
 };
 
-export const getMessages = async (
-    token: string,
-    channelId: string,
-    skip?: number,
-    limit?: number
-) => {
-    const response = await fetch(`${url}/users/me/channels/${channelId}/messages`, {
+export const getMessages = async (token: string, channelId: string, skip?: number, limit?: number) => {
+    return await fetch(`${url}/users/me/channels/${channelId}/messages`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -133,17 +74,5 @@ export const getMessages = async (
             limit: limit || 50,
         }),
         next: { revalidate: 120 },
-    }).then((res) => {
-        if (!res.ok) console.error('Failed to fetch messages');
-        return res.json();
-    });
-
-    if (!response.success) {
-        return response;
-    } else {
-        return {
-            messages: response.messages,
-            hasMore: response.hasMore,
-        };
-    }
+    }).then((res) => res.json());
 };

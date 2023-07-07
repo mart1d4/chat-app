@@ -2,11 +2,10 @@
 
 import { ReactElement, useMemo, useEffect, useState } from 'react';
 import { leaveChannel } from '@/lib/api-functions/channels';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserItem.module.css';
-import Image from 'next/image';
 import Link from 'next/link';
 
 type Props = {
@@ -23,11 +22,11 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
 
     const token = auth?.accessToken;
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         if (channel?.type === 'DM') {
-            // @ts-ignore
-            setUser(channel.recipients.find((user) => user.id !== auth.user.id));
+            setUser(channel.recipients.find((user) => user.id !== auth.user.id) as TUser);
         }
     }, [channel]);
 
@@ -155,6 +154,9 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
+                                if (pathname.includes(channel.id)) {
+                                    router.push('/channels/me');
+                                }
                                 await leaveChannel(token, channel.id);
                             }}
                         >

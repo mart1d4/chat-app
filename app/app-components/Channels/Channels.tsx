@@ -1,7 +1,10 @@
 'use client';
 
+import { ReactElement, useEffect, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import { ReactElement, useMemo } from 'react';
+import pusher from '@/lib/pusher/client-connection';
+import { getChannelName } from '@/lib/strings';
+import { useRouter } from 'next/navigation';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,23 +12,77 @@ import UserItem from './UserItem';
 import Title from './Title';
 
 const Channels = (): ReactElement => {
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const channels = auth.user.channels.map((channel: any) => {
-        let name = channel.name;
-        if (channel.type === 'DM') {
-            const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
-            name = user.username;
-        } else if (channel.type === 'GROUP_DM' && !channel.name) {
-            if (channel.recipients.length > 1) {
-                const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
-                name = filtered.map((recipient: any) => recipient.username).join(', ');
-            } else {
-                name = `${channel.recipients[0].username}'s Group`;
-            }
-        }
+    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
+    const router = useRouter();
 
-        return { ...channel, name };
-    });
+    const channels = useMemo(() => {
+        return (
+            auth.user.channels?.map((channel: TChannel) => ({
+                ...channel,
+                name: getChannelName(channel, auth.user.id),
+            })) || []
+        );
+    }, [auth.user.channels, auth.user.id]);
+
+    useEffect(() => {
+        pusher.bind('channel-created', (data: any) => {
+            console.log(data);
+            if (!data.channel.recipientIds.includes(auth.user.id)) return;
+
+            setAuth((prev: any) => ({
+                ...prev,
+                user: {
+                    ...prev.user,
+                    channels: [data.channel, ...prev.user.channels],
+                },
+            }));
+
+            if (data.senderId === auth.user.id) {
+                router.push(`/channels/me/${data.channel.id}`);
+            }
+        });
+
+        pusher.bind('channel-users-added', (data: any) => {
+            console.log(data);
+            const recipientIds = data.recipients.map((recipient: TUser) => recipient.id);
+            if (!recipientIds.includes(auth.user.id)) return;
+
+            setAuth((prev: any) => ({
+                ...prev,
+                user: {
+                    ...prev.user,
+                    channels: prev.user.channels.map((channel: TChannel) => {
+                        if (channel.id === data.channelId) {
+                            return {
+                                ...channel,
+                                recipients: [data.recipients],
+                            };
+                        }
+
+                        return channel;
+                    }),
+                },
+            }));
+        });
+
+        pusher.bind('channel-left', (data: any) => {
+            console.log(data);
+            if (data.senderId !== auth.user.id) return;
+            setAuth((prev: any) => ({
+                ...prev,
+                user: {
+                    ...prev.user,
+                    channels: prev.user.channels.filter((channel: TChannel) => channel.id !== data.channelId),
+                },
+            }));
+        });
+
+        return () => {
+            pusher.unbind('channel-created');
+            pusher.unbind('channel-users-added');
+            pusher.unbind('channel-left');
+        };
+    }, []);
 
     return (
         <div className={styles.nav}>
@@ -42,7 +99,7 @@ const Channels = (): ReactElement => {
 
                         <Title />
 
-                        {channels?.length > 0 ? (
+                        {channels.length > 0 ? (
                             <ChannelList channels={channels} />
                         ) : (
                             <img

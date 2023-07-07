@@ -6,18 +6,6 @@ export async function GET(req: Request): Promise<NextResponse> {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    if (typeof senderId !== 'string' || senderId.length !== 24) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
-
     try {
         const sender = await prisma.user.findUnique({
             where: {
@@ -45,9 +33,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         } else {
             return NextResponse.json(
@@ -56,9 +42,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                     message: 'Successfully retrieved blocked users.',
                     blockedUsers: sender.blockedUsers,
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
     } catch (error) {
@@ -68,9 +52,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

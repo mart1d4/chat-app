@@ -27,6 +27,8 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] User profile content isn't scrolling and expanding instead
 -   [ ] Pusher triggers not properly configured
 -   [ ] Message improperly displayed when pinning or deleting a message
+-   [ ] Prisma Relations: disconnecting a channel from a user removes the user from the channel
+-   [ ] Need to recreate dm notification implementation in AppNav
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 
