@@ -191,10 +191,6 @@ const UserProfile = (): ReactElement => {
                                     style={{
                                         backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
                                     }}
-                                    onClick={() => {
-                                        setFixedLayer(null);
-                                        setUserProfile({ user: user });
-                                    }}
                                 />
 
                                 <div

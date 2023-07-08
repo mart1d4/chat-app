@@ -131,8 +131,9 @@
     position: relative;
     border-radius: 8px;
     display: flex;
-    flex-direction: column;
     flex: 0 1 385px;
+    max-height: 385px;
+    flex-direction: column;
     background-color: var(--card-background-color);
 }
 
@@ -140,6 +141,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden scroll;
+    flex: 1 1 auto;
 }
 
 .cardBody > .scrollContainer.margin {
@@ -148,6 +150,10 @@
 
 .cardBody > .scrollContainer::-webkit-scrollbar {
     width: 0;
+}
+
+.cardBody > .scrollContainer > :last-child:not(.userItem) {
+    padding-bottom: 16px;
 }
 
 .cardSection {

@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
                 });
             }
 
-            if (banner && sender.banner) {
+            if ((banner && sender.banner) || (banner === null && sender.banner)) {
                 await fetch(`https://api.uploadcare.com/files/${sender.banner}/storage/`, {
                     method: 'DELETE',
                     headers: {
@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
                     displayName: displayName ? displayName : sender.displayName,
                     description: description ? description : sender.description,
                     avatar: avatar ? avatar : sender.avatar,
-                    banner: banner ? banner : sender.banner,
+                    banner: banner || banner === null ? banner : sender.banner,
                     primaryColor: primaryColor ? primaryColor : sender.primaryColor,
                     accentColor: accentColor ? accentColor : sender.accentColor,
                     status: status ? status : sender.status,
@@ -87,7 +87,7 @@ export async function PATCH(req: Request) {
             displayName: displayName ? displayName : sender.displayName,
             description: description ? description : sender.description,
             avatar: avatar ? avatar : sender.avatar,
-            banner: banner ? banner : sender.banner,
+            banner: banner || banner === null ? banner : sender.banner,
             primaryColor: primaryColor ? primaryColor : sender.primaryColor,
             accentColor: accentColor ? accentColor : sender.accentColor,
             status: status ? status : sender.status,

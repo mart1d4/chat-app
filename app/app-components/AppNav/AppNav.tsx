@@ -50,8 +50,8 @@ const AppNav = (): ReactElement => {
                     ...notif,
                     channel: {
                         ...channel,
-                        name,
-                        src,
+                        name: name,
+                        icon: src,
                     },
                 };
             });
@@ -80,10 +80,10 @@ const AppNav = (): ReactElement => {
                     ...auth.user,
                     friendIds: [...auth.user.friendIds, user.id],
                     friends: [...auth.user.friends, user],
-                    requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
-                    requestsReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
-                    requestsSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                    requestsReceived: auth.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
+                    requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
                 },
             });
         },
@@ -96,12 +96,12 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
-                    friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
-                    requestsReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
-                    requestsSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
+                    friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
+                    friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                    requestsReceived: auth.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
+                    requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
                 },
             });
         },
@@ -116,7 +116,7 @@ const AppNav = (): ReactElement => {
                     user: {
                         ...auth.user,
                         requestSentIds: [...auth.user.requestSentIds, user.id],
-                        requestsSent: [...auth.user.requestSent, user],
+                        requestsSent: [...auth.user.requestsSent, user],
                     },
                 });
             } else {
@@ -125,7 +125,7 @@ const AppNav = (): ReactElement => {
                     user: {
                         ...auth.user,
                         requestReceivedIds: [...auth.user.requestReceivedIds, user.id],
-                        requestsReceived: [...auth.user.requestReceived, user],
+                        requestsReceived: [...auth.user.requestsReceived, user],
                     },
                 });
             }
@@ -140,14 +140,16 @@ const AppNav = (): ReactElement => {
                     ...auth,
                     user: {
                         ...auth.user,
-                        friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
-                        friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
-                        requestsReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
-                        requestsSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
-                        blockedUserIds: [...auth.user.blockedIds, user.id],
-                        blockedUsers: [...auth.user.blocked, user],
+                        friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
+                        friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                        requestsReceived: auth.user.requestsReceived?.filter(
+                            (user2: TCleanUser) => user2.id !== user.id
+                        ),
+                        requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
+                        requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                        blockedUserIds: [...auth.user.blockedUserIds, user.id],
+                        blockedUsers: [...auth.user.blockedUsers, user],
                     },
                 });
             } else {
@@ -155,14 +157,16 @@ const AppNav = (): ReactElement => {
                     ...auth,
                     user: {
                         ...auth.user,
-                        friendIds: auth.user.friendIds.filter((id: string) => id !== user.id),
-                        friends: auth.user.friends.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestReceivedIds: auth.user.requestReceivedIds.filter((id: string) => id !== user.id),
-                        requestsReceived: auth.user.requestReceived.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestSentIds: auth.user.requestSentIds.filter((id: string) => id !== user.id),
-                        requestsSent: auth.user.requestSent.filter((user2: TCleanUser) => user2.id !== user.id),
-                        blockedByUserIds: [...auth.user.blockedByIds, user.id],
-                        blockedByUsers: [...auth.user.blockedBy, user],
+                        friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
+                        friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                        requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                        requestsReceived: auth.user.requestsReceived?.filter(
+                            (user2: TCleanUser) => user2.id !== user.id
+                        ),
+                        requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
+                        requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                        blockedByUserIds: [...auth.user.blockedByUserIds, user.id],
+                        blockedByUsers: [...auth.user.blockedByUsers, user],
                     },
                 });
             }
@@ -176,10 +180,10 @@ const AppNav = (): ReactElement => {
                 ...auth,
                 user: {
                     ...auth.user,
-                    blockedUserIds: auth.user.blockedIds.filter((id: string) => id !== user.id),
-                    blockedUsers: auth.user.blocked.filter((user2: TCleanUser) => user2.id !== user.id),
-                    blockedByUserIds: auth.user.blockedByIds.filter((id: string) => id !== user.id),
-                    blockedByUsers: auth.user.blockedBy.filter((user2: TCleanUser) => user2.id !== user.id),
+                    blockedUserIds: auth.user.blockedUserIds?.filter((id: string) => id !== user.id),
+                    blockedUsers: auth.user.blockedUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    blockedByUserIds: auth.user.blockedByUserIds?.filter((id: string) => id !== user.id),
+                    blockedByUsers: auth.user.blockedByUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
                 },
             });
         },
@@ -250,7 +254,7 @@ const AppNav = (): ReactElement => {
             audio.volume = 0.5;
             audio.play();
         },
-        [auth.user]
+        [auth.user.notifications]
     );
 
     const updateUserData = useCallback(
@@ -370,6 +374,7 @@ const AppNav = (): ReactElement => {
                         name='Add a Server'
                         link={'/channels/add'}
                         svg={addServerIcon}
+                        count={0}
                     />
 
                     <NavIcon
@@ -377,6 +382,7 @@ const AppNav = (): ReactElement => {
                         name='Discover Servers'
                         link={'/channels/discover'}
                         svg={discoverIcon}
+                        count={0}
                     />
                 </ul>
             </nav>

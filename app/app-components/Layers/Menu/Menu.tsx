@@ -2,7 +2,9 @@
 
 'use client';
 
+import { addFriend, removeFriend, blockUser, unblockUser } from '@/lib/api-functions/users';
 import { pinMessage, unpinMessage, deleteMessage } from '@/lib/api-functions/messages';
+import { createChannel } from '@/lib/api-functions/channels';
 import { useEffect, useState, ReactElement } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
@@ -353,7 +355,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Remove Friend',
-                        func: () => removeFriend(),
+                        func: () => removeFriend(auth.accessToken, user.username),
                         danger: true,
                     },
                 ]);
@@ -369,17 +371,23 @@ const content = ({ content }: { content: any }): ReactElement => {
                                 : userProps.isFriend
                                 ? 'Remove Friend'
                                 : 'Add Friend'),
-                        func: () => (userProps.sentRequest || userProps.isFriend ? removeFriend() : addFriend()),
+                        func: () =>
+                            userProps.sentRequest || userProps.isFriend
+                                ? removeFriend(auth.accessToken, user.username)
+                                : addFriend(auth.accessToken, user.username),
                         danger: userProps.sentRequest || userProps.isFriend,
                     },
                     {
-                        name: userProps.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
-                        func: () => (userProps.isBlocked ? unuserProps.isBlockedUser() : userProps.isBlockedUser()),
+                        name: userProps.isBlocked ? 'Unblock' : 'Block',
+                        func: () =>
+                            userProps.isBlocked
+                                ? unblockUser(auth.accessToken, user.id)
+                                : blockUser(auth.accessToken, user.id),
                         danger: !userProps.isBlocked,
                     },
                     {
                         name: !userProps.isBlocked && 'Message',
-                        func: () => createChannel(),
+                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
                     },
                     { name: 'Divider' },
                     {
@@ -399,7 +407,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Message',
-                        func: () => createChannel(),
+                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
                     },
                     {
                         name: 'Add Note',
@@ -437,7 +445,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Message',
-                        func: () => createChannel(),
+                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
                     },
                     {
                         name: !userProps.sentRequest && 'Call',
@@ -475,7 +483,10 @@ const content = ({ content }: { content: any }): ReactElement => {
                             : userProps.isFriend
                             ? 'Remove Friend'
                             : 'Add Friend',
-                        func: () => (userProps.sentRequest || userProps.isFriend ? removeFriend() : addFriend()),
+                        func: () =>
+                            userProps.sentRequest || userProps.isFriend
+                                ? removeFriend(auth.accessToken, user.username)
+                                : addFriend(auth.accessToken, user.username),
                     },
                     {
                         name: userProps.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
@@ -503,7 +514,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                 ]);
             }
         }
-    }, [userProps, userSettings]);
+    }, [
+        userProps,
+        userSettings,
+        auth.user.friendIds,
+        auth.user.requestReceivedIds,
+        auth.user.requestSentIds,
+        auth.user.blockedUserIds,
+        auth.user.blockedByUserIds,
+    ]);
 
     return (
         <div

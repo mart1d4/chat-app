@@ -4,10 +4,10 @@ import { addFriend, removeFriend, unblockUser } from '@/lib/api-functions/users'
 import { createChannel } from '@/lib/api-functions/channels';
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { ReactElement, useRef } from 'react';
 import { translateCap } from '@/lib/strings';
 import { useRouter } from 'next/navigation';
 import styles from './UserItem.module.css';
-import { ReactElement } from 'react';
 
 type Props = {
     content: string;
@@ -20,6 +20,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const router = useRouter();
+    const liRef = useRef(null);
 
     const channelExists = (userId: string) => {
         const channel = auth.user.channels.find((channel: any) => {
@@ -36,9 +37,12 @@ const UserItem = ({ content, user }: Props): ReactElement => {
 
     return (
         <li
-            className={styles.liContainer}
+            ref={liRef}
+            className={
+                fixedLayer?.refElement === liRef.current ? styles.liContainer + ' ' + styles.active : styles.liContainer
+            }
             onClick={async () => {
-                if (content !== 'online' && content !== 'all') return;
+                if (!['all', 'online'].includes(content)) return;
 
                 const channelId = channelExists(user.id);
                 if (channelId) {
@@ -57,11 +61,13 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                         mouseY: e.clientY,
                     },
                     user: user,
+                    refElement: liRef.current,
                 });
             }}
             onMouseEnter={() => {
-                if (!fixedLayer?.user || fixedLayer?.user === user) return;
-                setFixedLayer(null);
+                if (fixedLayer?.refElement && fixedLayer?.user !== user) {
+                    setFixedLayer(null);
+                }
             }}
         >
             <div className={styles.li}>
@@ -135,6 +141,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                         },
                                         user: user,
                                         userlist: true,
+                                        refElement: liRef.current,
                                     });
                                 }}
                                 onMouseEnter={(e) =>

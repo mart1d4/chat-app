@@ -3,11 +3,7 @@
     width: 348px;
     position: relative;
     min-height: 280px;
-    background: linear-gradient(
-        var(--card-primary-color),
-        var(--card-primary-color) 90px,
-        var(--card-accent-color)
-    );
+    background: linear-gradient(var(--card-primary-color), var(--card-primary-color) 90px, var(--card-accent-color));
     border-radius: 8px;
 }
 
@@ -366,6 +362,7 @@
     background-color: var(--background-hover-dark-1);
     transition: background-color 0.2s ease;
     color: var(--foreground-2);
+    z-index: 1;
 }
 
 .editProfileButton:hover {

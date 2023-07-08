@@ -15,7 +15,7 @@ const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
         if (content) {
             setTimeout(() => {
                 setFixedLayer2(content);
-            }, 100);
+            }, 10);
         }
     };
 
@@ -24,7 +24,7 @@ const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
         if (content) {
             setTimeout(() => {
                 setUserProfile2(content);
-            }, 100);
+            }, 50);
         }
     };
 

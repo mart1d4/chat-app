@@ -154,6 +154,10 @@
 
 /* Change scrollbar */
 
+.scrollbar {
+    scrollbar-color: var(--background-dark) var(--background-3);
+}
+
 .scrollbar::-webkit-scrollbar {
     width: 16px;
 }

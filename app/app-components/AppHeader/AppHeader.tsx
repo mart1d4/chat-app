@@ -49,6 +49,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
         { name: 'Add Friend', func: 'add' },
     ];
 
+    const badgeCount = useMemo(() => auth.user.requestReceivedIds.length, [auth.user.requestReceivedIds]);
+
     const toolbarItems =
         typeof channel !== 'undefined'
             ? [
@@ -136,8 +138,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                                         }
                                     >
                                         {tab.name}
-                                        {tab.name === 'Pending' && auth.user.requestsReceivedIds?.length > 0 && (
-                                            <div className={styles.badge}>{auth.user.requestsReceivedIds.length}</div>
+                                        {tab.name === 'Pending' && badgeCount > 0 && (
+                                            <div className={styles.badge}>{badgeCount}</div>
                                         )}
                                     </li>
                                 ))}
@@ -241,7 +243,7 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                 </div>
             </div>
         ),
-        [channel, friend, userSettings, widthLimitPassed, auth.user.requestsReceivedIds]
+        [channel, friend, userSettings, widthLimitPassed, badgeCount]
     );
 };
 

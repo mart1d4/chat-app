@@ -31,6 +31,10 @@ export const trimMessage = (message: string) => {
 export const getChannelName = (channel: TChannel, userId: TUser['id']): string => {
     let name;
 
+    if (!channel) {
+        return '';
+    }
+
     if (channel.type === 'DM') {
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
         name = user.username;

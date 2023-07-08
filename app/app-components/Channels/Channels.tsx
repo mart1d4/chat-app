@@ -26,13 +26,13 @@ const Channels = (): ReactElement => {
 
     useEffect(() => {
         pusher.bind('channel-created', (data: any) => {
-            console.log(data);
             if (!data.channel.recipientIds.includes(auth.user.id)) return;
 
             setAuth((prev: any) => ({
                 ...prev,
                 user: {
                     ...prev.user,
+                    channelIds: [data.channel.id, ...prev.user.channelIds],
                     channels: [data.channel, ...prev.user.channels],
                 },
             }));
@@ -43,7 +43,6 @@ const Channels = (): ReactElement => {
         });
 
         pusher.bind('channel-users-added', (data: any) => {
-            console.log(data);
             const recipientIds = data.recipients.map((recipient: TUser) => recipient.id);
             if (!recipientIds.includes(auth.user.id)) return;
 
@@ -66,7 +65,6 @@ const Channels = (): ReactElement => {
         });
 
         pusher.bind('channel-left', (data: any) => {
-            console.log(data);
             if (data.senderId !== auth.user.id) return;
             setAuth((prev: any) => ({
                 ...prev,
@@ -75,6 +73,23 @@ const Channels = (): ReactElement => {
                     channels: prev.user.channels.filter((channel: TChannel) => channel.id !== data.channelId),
                 },
             }));
+        });
+
+        pusher.bind('message-sent', (data: any) => {
+            console.log(data);
+            if (!auth.user.channelIds.includes(data.channelId)) return;
+
+            const filteredChannels = auth.user.channels.filter((channel: TChannel) => channel.id !== data.channelId);
+            const channel = auth.user.channels.find((channel: TChannel) => channel.id === data.channelId);
+
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    channelIds: [channel.id, ...filteredChannels.map((channel: TChannel) => channel.id)],
+                    channels: [channel, ...filteredChannels],
+                },
+            });
         });
 
         return () => {

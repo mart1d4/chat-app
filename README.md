@@ -23,12 +23,14 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 
 -   [ ] Add Friends' popup closing when clicking on user to add them
 -   [ ] Some tooltips not reappearing when closing a popup
--   [ ] Some menus not opening in the correct position
--   [ ] User profile content isn't scrolling and expanding instead
--   [ ] Pusher triggers not properly configured
--   [ ] Message improperly displayed when pinning or deleting a message
+-   [x] Some menus not opening in the correct position
+-   [x] User profile content isn't scrolling and expanding instead
+-   [x] Pusher triggers not properly configured
+-   [x] Message improperly displayed when pinning or deleting a message
 -   [ ] Prisma Relations: disconnecting a channel from a user removes the user from the channel
--   [ ] Need to recreate dm notification implementation in AppNav
+-   [x] Need to recreate dm notification implementation in AppNav
+-   [ ] Not receiving websocket when sending message in channel to move channel to top
+-   [ ] Channel that receives new message websocket need to display channel item as active
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

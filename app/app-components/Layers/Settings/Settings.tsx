@@ -1,7 +1,7 @@
 'use client';
 
+import { ReactElement, useEffect, useState, useRef, useCallback } from 'react';
 import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
-import { ReactElement, useEffect, useState, useRef } from 'react';
 import { getButtonColor } from '@/lib/colors/getColors';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
@@ -60,6 +60,7 @@ const Settings = (): ReactElement => {
 
         if (typeof showSettings !== 'boolean') {
             setActiveTab(showSettings.type);
+            if (minified) setHideNav(true);
         }
 
         return () => window.removeEventListener('keydown', handleEsc);
@@ -72,7 +73,6 @@ const Settings = (): ReactElement => {
         },
         {
             name: 'My Account',
-            // @ts-ignore
             component: <MyAccount setActiveTab={setActiveTab} />,
         },
         {
@@ -165,12 +165,7 @@ const Settings = (): ReactElement => {
                                 <nav>
                                     <div className={styles.closeButton}>
                                         <div>
-                                            <div
-                                                onClick={() => {
-                                                    setTooltip(null);
-                                                    setShowSettings(false);
-                                                }}
-                                            >
+                                            <div onClick={() => setShowSettings(false)}>
                                                 <Icon
                                                     name='close'
                                                     size={16}
@@ -178,6 +173,7 @@ const Settings = (): ReactElement => {
                                             </div>
                                         </div>
                                     </div>
+
                                     {tabs.map((tab) => (
                                         <div
                                             key={uuidv4()}
@@ -221,27 +217,46 @@ const Settings = (): ReactElement => {
                         <div className={styles.contentContainer}>
                             <div className={styles.contentWrapper}>
                                 <div className={styles.content}>
+                                    {!!minified && (
+                                        <div className={styles.closeButton}>
+                                            <div>
+                                                <div
+                                                    onClick={() => {
+                                                        setTooltip(null);
+                                                        setHideNav(false);
+                                                    }}
+                                                >
+                                                    <Icon
+                                                        name='close'
+                                                        size={16}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {tabs.find((tab) => tab.name === activeTab)?.component}
                                 </div>
 
-                                <div className={styles.closeButton}>
-                                    <div>
-                                        <div
-                                            onClick={() => {
-                                                setTooltip(null);
-                                                if (!minified) setShowSettings(false);
-                                                else setHideNav(false);
-                                            }}
-                                        >
-                                            <Icon
-                                                name='close'
-                                                size={18}
-                                            />
-                                        </div>
+                                {!minified && (
+                                    <div className={styles.closeButton}>
+                                        <div>
+                                            <div
+                                                onClick={() => {
+                                                    setTooltip(null);
+                                                    setShowSettings(false);
+                                                }}
+                                            >
+                                                <Icon
+                                                    name='close'
+                                                    size={18}
+                                                />
+                                            </div>
 
-                                        <div>ESC</div>
+                                            <div>ESC</div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -292,15 +307,20 @@ const MyAccount = ({ setActiveTab }: any) => {
     const fields = [
         {
             title: 'Username',
-            value: auth?.user?.username,
-            func: () => {
-                setPopup({
-                    username: {},
-                });
-            },
+            value: auth.user.username,
+            edit: true,
+            func: () => setPopup({ username: {} }),
         },
-        { title: 'Email', value: auth?.user?.email || 'Not set' },
-        { title: 'Phone Number', value: auth?.user?.phone || 'Not set' },
+        {
+            title: 'Email',
+            value: auth.user.email ?? 'Not set',
+            edit: auth.user.email,
+        },
+        {
+            title: 'Phone Number',
+            value: auth.user.phone ?? 'Not set',
+            edit: auth.user.phone,
+        },
     ];
 
     return (
@@ -313,7 +333,12 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <div className={styles.userCard}>
                     <div
                         className={styles.userCardHeader}
-                        style={{ backgroundColor: auth?.user.primaryColor }}
+                        style={{
+                            backgroundColor: !auth.user.banner ? auth.user.primaryColor : '',
+                            backgroundImage: auth.user.banner
+                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.banner}/)`
+                                : '',
+                        }}
                     />
 
                     <div className={styles.userCardInfo}>
@@ -342,7 +367,7 @@ const MyAccount = ({ setActiveTab }: any) => {
                             }}
                             onClick={() => copyToClipboard()}
                         >
-                            {auth?.user?.username}
+                            {auth.user.username}
                         </div>
 
                         <button
@@ -368,7 +393,7 @@ const MyAccount = ({ setActiveTab }: any) => {
                                     className='grey'
                                     onClick={() => field.func && field.func()}
                                 >
-                                    Edit
+                                    {field.edit ? 'Edit' : 'Add'}
                                 </button>
                             </div>
                         ))}
@@ -435,14 +460,15 @@ const Profiles = () => {
     const { auth }: any = useContextHook({ context: 'auth' });
     const tabs = ['User Profile', 'Server Profiles'];
 
-    const [avatar, setAvatar] = useState<File | string | null>(null);
-    const [banner, setBanner] = useState<File | null>(null);
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const [avatar, setAvatar] = useState<string | File>(auth.user.avatar);
+    const [banner, setBanner] = useState<string | File | null>(auth.user.banner);
     const [displayName, setDisplayName] = useState<string>(auth.user.displayName);
     const [primaryColor, setPrimaryColor] = useState<string>(auth.user.primaryColor);
     const [accentColor, setAccentColor] = useState<string>(auth.user.accentColor);
-    const [description, setDescription] = useState<string>(auth.user.description || '');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [description, setDescription] = useState<string>(auth.user.description ?? '');
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -455,8 +481,8 @@ const Profiles = () => {
     }, []);
 
     const resetState = () => {
-        setAvatar(null);
-        setBanner(null);
+        setAvatar(auth.user.avatar);
+        setBanner(auth.user.banner);
         setDisplayName(auth.user.displayName);
         setPrimaryColor(auth.user.primaryColor);
         setAccentColor(auth.user.accentColor);
@@ -477,11 +503,8 @@ const Profiles = () => {
                         store: 'auto',
                     });
 
-                    if (!result.file) {
-                        console.error(result);
-                    } else {
-                        avatarUrl = result.file;
-                    }
+                    if (!result.file) console.error(result);
+                    else avatarUrl = result.file;
                 }
 
                 if (banner && typeof banner !== 'string') {
@@ -490,11 +513,8 @@ const Profiles = () => {
                         store: 'auto',
                     });
 
-                    if (!result.file) {
-                        console.error(result);
-                    } else {
-                        bannerUrl = result.file;
-                    }
+                    if (!result.file) console.error(result);
+                    else bannerUrl = result.file;
                 }
             }
 
@@ -505,8 +525,8 @@ const Profiles = () => {
                     Authorization: `Bearer ${auth.accessToken}`,
                 },
                 body: JSON.stringify({
-                    avatar: avatarUrl ? avatarUrl : typeof avatar === 'string' ? avatar : undefined,
-                    banner: bannerUrl ? bannerUrl : typeof banner === 'string' ? banner : undefined,
+                    avatar: avatarUrl ? avatarUrl : avatar,
+                    banner: bannerUrl ? bannerUrl : banner,
                     displayName: displayName !== auth.user.displayName ? displayName : undefined,
                     primaryColor: primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== auth.user.accentColor ? accentColor : undefined,
@@ -516,8 +536,7 @@ const Profiles = () => {
 
             if (!response.ok) {
                 console.error(response);
-            } else {
-                resetState();
+                return resetState();
             }
         } catch (err) {
             console.error(err);
@@ -526,16 +545,16 @@ const Profiles = () => {
         setIsLoading(false);
     };
 
-    const needsSaving = () => {
+    const needsSaving = useCallback(() => {
         return (
-            avatar ||
-            banner ||
+            avatar !== auth.user.avatar ||
+            banner !== auth.user.banner ||
             displayName !== auth.user.displayName ||
             primaryColor !== auth.user.primaryColor ||
             accentColor !== auth.user.accentColor ||
             (description !== auth.user.description && description !== '')
         );
-    };
+    }, [avatar, banner, displayName, primaryColor, accentColor, description, auth.user]);
 
     return (
         <>
@@ -544,18 +563,10 @@ const Profiles = () => {
                     {needsSaving() && (
                         <motion.div
                             className={styles.saveAlert}
-                            initial={{
-                                transform: 'translateY(80px)',
-                            }}
-                            animate={{
-                                transform: 'translateY(0)',
-                            }}
-                            exit={{
-                                transform: 'translateY(80px)',
-                            }}
-                            transition={{
-                                duration: 0.1,
-                            }}
+                            initial={{ transform: 'translateY(80px)' }}
+                            animate={{ transform: 'translateY(0)' }}
+                            exit={{ transform: 'translateY(80px)' }}
+                            transition={{ duration: 0.1 }}
                         >
                             <p>Careful — you have unsaved changes!</p>
 
@@ -578,17 +589,8 @@ const Profiles = () => {
                                             });
                                         }
                                     }}
-                                    onMouseLeave={() => {
-                                        if (description.length > 190) {
-                                            setTooltip(null);
-                                        }
-                                    }}
-                                    onClick={() => {
-                                        if (description.length > 190) {
-                                            return;
-                                        }
-                                        saveUser();
-                                    }}
+                                    onMouseLeave={() => description.length > 190 && setTooltip(null)}
+                                    onClick={() => description.length <= 190 && saveUser()}
                                 >
                                     {isLoading ? <LoadingDots /> : 'Save Changes'}
                                 </button>
@@ -661,18 +663,14 @@ const Profiles = () => {
                     ref={primaryColorInputRef}
                     className={styles.hiddenInput}
                     type='color'
-                    onChange={async (e) => {
-                        setPrimaryColor(e.target.value);
-                    }}
+                    onChange={async (e) => setPrimaryColor(e.target.value)}
                 />
 
                 <input
                     ref={accentColorInputRef}
                     className={styles.hiddenInput}
                     type='color'
-                    onChange={async (e) => {
-                        setAccentColor(e.target.value);
-                    }}
+                    onChange={async (e) => setAccentColor(e.target.value)}
                 />
 
                 <h2>Profiles</h2>
@@ -720,14 +718,15 @@ const Profiles = () => {
                                 >
                                     Change Avatar
                                 </button>
-                                <button
-                                    className='underline'
-                                    onClick={() => {
-                                        setAvatar(getRandomAvatar());
-                                    }}
-                                >
-                                    Remove Avatar
-                                </button>
+
+                                {!avatars.includes(typeof avatar === 'string' ? avatar : '') && (
+                                    <button
+                                        className='underline'
+                                        onClick={() => setAvatar(getRandomAvatar())}
+                                    >
+                                        Remove Avatar
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -741,6 +740,15 @@ const Profiles = () => {
                                 >
                                     Change Banner
                                 </button>
+
+                                {banner && (
+                                    <button
+                                        className='underline'
+                                        onClick={() => setBanner(null)}
+                                    >
+                                        Remove Banner
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -810,7 +818,6 @@ const Profiles = () => {
                                                 onInput={(e) => {
                                                     const input = e.target as HTMLDivElement;
                                                     const text = input.innerText.toString();
-
                                                     setDescription(text);
                                                 }}
                                             />
@@ -864,7 +871,7 @@ const Profiles = () => {
                             <div>
                                 <svg
                                     className={styles.cardBanner}
-                                    viewBox={`0 0 340 ${banner || auth.user.banner ? '120' : '90'}`}
+                                    viewBox={`0 0 340 ${banner || banner ? '120' : '90'}`}
                                 >
                                     <mask id='card-banner-mask'>
                                         <rect
@@ -877,7 +884,7 @@ const Profiles = () => {
                                         <circle
                                             fill='black'
                                             cx='58'
-                                            cy={banner || auth.user.banner ? 112 : 82}
+                                            cy={banner || banner ? 112 : 82}
                                             r='46'
                                         />
                                     </mask>
@@ -894,18 +901,15 @@ const Profiles = () => {
                                             <div
                                                 className={styles.cardBannerBackground}
                                                 style={{
-                                                    backgroundColor: !auth.user.banner && !banner ? primaryColor : '',
-                                                    backgroundImage:
-                                                        auth.user.banner || banner
-                                                            ? `url(${
-                                                                  banner !== null && typeof banner !== 'string'
-                                                                      ? URL.createObjectURL(banner)
-                                                                      : `${process.env.NEXT_PUBLIC_CDN_URL}${
-                                                                            banner ?? auth.user.banner
-                                                                        }/`
-                                                              })`
-                                                            : '',
-                                                    height: banner || auth.user.banner ? '120px' : '90px',
+                                                    backgroundColor: !banner ? primaryColor : '',
+                                                    backgroundImage: banner
+                                                        ? `url(${
+                                                              typeof banner === 'string'
+                                                                  ? `${process.env.NEXT_PUBLIC_CDN_URL}${banner}/`
+                                                                  : URL.createObjectURL(banner as File)
+                                                          })`
+                                                        : '',
+                                                    height: banner ? '120px' : '90px',
                                                 }}
                                                 onClick={() => bannerInputRef.current?.click()}
                                             />
@@ -922,9 +926,7 @@ const Profiles = () => {
 
                                 <div
                                     className={styles.cardAvatar}
-                                    style={{
-                                        top: banner || auth.user.banner ? '76px' : '46px',
-                                    }}
+                                    style={{ top: banner ? '76px' : '46px' }}
                                 >
                                     <div
                                         className={styles.avatarImage}

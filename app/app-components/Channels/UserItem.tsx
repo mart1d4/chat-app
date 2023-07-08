@@ -24,6 +24,8 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
     const pathname = usePathname();
     const router = useRouter();
 
+    const badgeCount = useMemo(() => auth.user.requestReceivedIds.length, [auth.user.requestReceivedIds]);
+
     useEffect(() => {
         if (channel?.type === 'DM') {
             setUser(channel.recipients.find((user) => user.id !== auth.user.id) as TUser);
@@ -60,14 +62,14 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                 </div>
                             </div>
 
-                            {auth.user.requestReceivedIds.length > 0 && (
+                            {badgeCount > 0 && (
                                 <div className={styles.friendsPending}>{auth.user.requestReceivedIds.length}</div>
                             )}
                         </div>
                     </div>
                 </Link>
             ),
-            [auth.user.requestReceivedIds, pathname]
+            [pathname, badgeCount]
         );
     } else if (channel) {
         return useMemo(

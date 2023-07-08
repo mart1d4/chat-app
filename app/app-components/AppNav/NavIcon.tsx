@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactElement, ReactNode } from 'react';
+import { useState, useEffect, ReactElement, ReactNode, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './AppNav.module.css';
@@ -25,7 +25,10 @@ const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactE
 
     const pathname = usePathname();
     const router = useRouter();
-    const badgeCount = count ?? auth.user.requestReceivedIds.length;
+    const badgeCount = useMemo(
+        () => count ?? auth.user.requestReceivedIds.length,
+        [count, auth.user.requestReceivedIds]
+    );
 
     useEffect(() => {
         if (special ? pathname.startsWith('/channels/me') : pathname === link) {

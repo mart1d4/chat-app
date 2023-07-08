@@ -12,7 +12,8 @@
     cursor: pointer;
 }
 
-.liContainer:hover {
+.liContainer:hover,
+.active {
     border-radius: 8px;
     margin: 0 10px 0 20px;
     padding: 16px 10px;
@@ -20,7 +21,8 @@
     border-color: transparent;
 }
 
-.liContainer:hover + .liContainer {
+.liContainer:hover + .liContainer,
+.active + .liContainer {
     border-color: transparent;
 }
 
@@ -90,7 +92,8 @@
     transition: none;
 }
 
-.liContainer:hover .actions > button {
+.liContainer:hover .actions > button,
+.active .actions > button {
     background-color: var(--background-1);
 }
 

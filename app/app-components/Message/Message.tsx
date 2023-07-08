@@ -375,6 +375,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                     }
                                 }}
                                 onContextMenu={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     setFixedLayer({
                                         type: 'menu',
@@ -388,10 +389,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                 }}
                             >
                                 <Avatar
-                                    // @ts-ignore
-                                    src={message.messageReference?.author?.avatar}
-                                    // @ts-ignore
-                                    alt={message.messageReference?.author?.username}
+                                    src={message.messageReference?.author.avatar}
+                                    alt={message.messageReference?.author.username}
                                     size={16}
                                 />
                             </div>
@@ -414,6 +413,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                     }
                                 }}
                                 onContextMenu={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     setFixedLayer({
                                         type: 'menu',
@@ -481,6 +481,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                             }}
                             onDoubleClick={(e) => e.stopPropagation()}
                             onContextMenu={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 setFixedLayer({
                                     type: 'menu',
@@ -518,6 +519,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                     }
                                 }}
                                 onContextMenu={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     setFixedLayer({
                                         type: 'menu',

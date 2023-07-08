@@ -15,6 +15,8 @@ type Props = {
 // If user is logged in, show children
 
 const Loading = ({ children }: Props): ReactElement => {
+    const { showSettings, userProfile, popup, fixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth, loading }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 
@@ -23,6 +25,10 @@ const Loading = ({ children }: Props): ReactElement => {
             router.push('/login');
         }
     }, [auth, loading]);
+
+    useEffect(() => {
+        setTooltip(null);
+    }, [showSettings, userProfile, popup, fixedLayer]);
 
     return (
         <div

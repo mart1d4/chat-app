@@ -13,7 +13,8 @@
     flex: 1 0 220px;
 }
 
-.sidebar .closeButton {
+.sidebar .closeButton,
+.content .closeButton {
     margin: 0;
     padding: 0;
     align-self: flex-end;
@@ -21,11 +22,13 @@
     display: none;
 }
 
-.sidebar .closeButton > div {
+.sidebar .closeButton > div,
+.content .closeButton > div {
     position: static;
 }
 
-.sidebar .closeButton > div > div {
+.sidebar .closeButton > div > div,
+.content .closeButton > div > div {
     width: 24px !important;
     height: 24px !important;
     margin: 0 !important;
@@ -168,6 +171,7 @@
 }
 
 .content {
+    position: relative;
     padding: 60px 10px 80px 40px;
     flex: 1 1 auto;
     max-width: 740px;
@@ -288,6 +292,9 @@
 .userCardHeader {
     min-width: 660px;
     min-height: 100px;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
 }
 
 .userCardInfo {
@@ -988,7 +995,7 @@
 
     .sidebarWrapper > nav {
         width: 325px;
-        padding: 24px 8px 40px 8px;
+        padding: 24px 24px 40px 24px;
     }
 
     .sidebarWrapper::-webkit-scrollbar {
@@ -999,25 +1006,29 @@
         padding: 60px 8px 80px 24px;
     }
 
-    .contentWrapper > .closeButton {
+    .content > .closeButton {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        margin: 0;
-        padding: 0;
-        width: 36px;
-        height: 36px;
+        top: 24px;
+        right: 8px;
         max-width: none;
         min-width: fit-content;
+        display: block;
     }
 
-    .contentWrapper > .closeButton > div {
-        width: 36px;
-        height: 36px;
+    .saveAlert {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: calc(100% - 48px);
+        margin: 0 24px 20px 24px;
     }
 }
 
 @media (max-width: 768px) {
+    .sidebarWrapper > nav {
+        width: 100%;
+    }
+
     .contentWrapper {
         width: 100%;
     }
@@ -1037,12 +1048,6 @@
     }
 
     .contentInner {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 467px) {
-    .sidebarWrapper > nav {
-        width: 100%;
+        flex-direction: column-reverse;
     }
 }
