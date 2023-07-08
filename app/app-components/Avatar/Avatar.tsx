@@ -8,6 +8,7 @@ import Image from 'next/image';
 
 type Props = {
     src: string;
+    srcAs?: 'png' | 'jpeg' | 'gif' | 'webp';
     alt: string;
     size: 16 | 24 | 32 | 40 | 80 | 120;
     status?: EUserStatus | undefined;
@@ -74,7 +75,9 @@ const Avatar = (props: Props) => {
                             src={
                                 props.relativeSrc
                                     ? props.src
-                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${props.size}/-/format/webp/`
+                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${
+                                          props.size
+                                      }/-/format/${props.srcAs ?? 'webp'}/`
                             }
                             alt={props.alt}
                             width={props.size}
@@ -115,7 +118,9 @@ const Avatar = (props: Props) => {
                 src={
                     props.relativeSrc
                         ? props.src
-                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${props.size}/-/format/webp/`
+                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${
+                              props.size
+                          }/-/format/${props.srcAs ?? 'webp'}/`
                 }
                 alt={props.alt}
                 width={props.size}

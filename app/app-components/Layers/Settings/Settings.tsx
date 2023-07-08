@@ -336,7 +336,7 @@ const MyAccount = ({ setActiveTab }: any) => {
                         style={{
                             backgroundColor: !auth.user.banner ? auth.user.primaryColor : '',
                             backgroundImage: auth.user.banner
-                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.banner}/)`
+                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${auth.user.banner}/-/format/webp/)`
                                 : '',
                         }}
                     />
@@ -536,8 +536,8 @@ const Profiles = () => {
 
             if (!response.ok) {
                 console.error(response);
-                return resetState();
             }
+            return resetState();
         } catch (err) {
             console.error(err);
         }
