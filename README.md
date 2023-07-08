@@ -11,19 +11,20 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 ## Features
 
 -   Real-time chat
--   Voice calling
--   Video calling
+-   Voice calling (coming soon)
+-   Video calling (coming soon)
 -   Add friends
 -   Block users
 -   Create channels
 -   Create groups
--   Create guilds
+-   Create guilds (coming soon)
 
 ## Issue Tracker
 
 -   [ ] Add Friends' popup closing when clicking on user to add them
 -   [ ] Some tooltips not reappearing when closing a popup
 -   [x] Some menus not opening in the correct position
+-   [ ] Menus going off screen when opening if too close to the edge
 -   [x] User profile content isn't scrolling and expanding instead
 -   [x] Pusher triggers not properly configured
 -   [x] Message improperly displayed when pinning or deleting a message

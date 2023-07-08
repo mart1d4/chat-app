@@ -6,7 +6,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Chat App | Your Place to Talk and to Hang Out',
+    title: 'Chat App | Your Inviting Place to Connect and Chat.',
     description:
         'Chat App is the easiest way to talk over voice, video, and text. Chat, hang out, and stay close with your friends and communities.',
     keywords:
@@ -56,11 +56,11 @@ const HomePage = (): ReactNode => {
                         draggable='false'
                     />
                     <img
-                        src='/assets/homepages/background2.svg'
+                        src=''
                         draggable='false'
                     />
                     <img
-                        src='/assets/homepages/background3.svg'
+                        src=''
                         draggable='false'
                     />
                 </div>
@@ -145,13 +145,6 @@ const HomePage = (): ReactNode => {
 
                 <div className={styles.contentGrid}>
                     <div>
-                        <div>
-                            <img
-                                src='/assets/homepages/content5.svg'
-                                draggable='false'
-                            />
-                        </div>
-
                         <h4>Ready to begin on your journey?</h4>
 
                         <a href=''>

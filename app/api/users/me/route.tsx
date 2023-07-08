@@ -71,7 +71,7 @@ export async function PATCH(req: Request) {
                 },
                 data: {
                     displayName: displayName ? displayName : sender.displayName,
-                    description: description ? description : sender.description,
+                    description: typeof description === 'string' ? description : sender.description,
                     avatar: avatar ? avatar : sender.avatar,
                     banner: banner || banner === null ? banner : sender.banner,
                     primaryColor: primaryColor ? primaryColor : sender.primaryColor,
@@ -85,7 +85,7 @@ export async function PATCH(req: Request) {
             userId: sender.id,
             username: username ? username : sender.username,
             displayName: displayName ? displayName : sender.displayName,
-            description: description ? description : sender.description,
+            description: typeof description === 'string' ? description : sender.description,
             avatar: avatar ? avatar : sender.avatar,
             banner: banner || banner === null ? banner : sender.banner,
             primaryColor: primaryColor ? primaryColor : sender.primaryColor,

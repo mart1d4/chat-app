@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactElement, useEffect, useState, useRef, useCallback } from 'react';
+import { ReactElement, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
 import { getButtonColor } from '@/lib/colors/getColors';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -525,8 +525,8 @@ const Profiles = () => {
                     Authorization: `Bearer ${auth.accessToken}`,
                 },
                 body: JSON.stringify({
-                    avatar: avatarUrl ? avatarUrl : avatar,
-                    banner: bannerUrl ? bannerUrl : banner,
+                    avatar: avatarUrl ? avatarUrl : avatar !== auth.user.avatar ? avatar : undefined,
+                    banner: bannerUrl ? bannerUrl : banner !== auth.user.banner ? banner : undefined,
                     displayName: displayName !== auth.user.displayName ? displayName : undefined,
                     primaryColor: primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== auth.user.accentColor ? accentColor : undefined,
@@ -536,8 +536,11 @@ const Profiles = () => {
 
             if (!response.ok) {
                 console.error(response);
+                return resetState();
             }
-            return resetState();
+
+            if (bannerUrl) setBanner(bannerUrl);
+            if (avatarUrl) setAvatar(avatarUrl);
         } catch (err) {
             console.error(err);
         }
@@ -552,9 +555,109 @@ const Profiles = () => {
             displayName !== auth.user.displayName ||
             primaryColor !== auth.user.primaryColor ||
             accentColor !== auth.user.accentColor ||
-            (description !== auth.user.description && description !== '')
+            description !== auth.user.description
         );
     }, [avatar, banner, displayName, primaryColor, accentColor, description, auth.user]);
+
+    const CardBanner = useMemo(
+        () => (
+            <svg
+                className={styles.cardBanner}
+                viewBox={`0 0 340 ${banner || banner ? '120' : '90'}`}
+            >
+                <mask id='card-banner-mask'>
+                    <rect
+                        fill='white'
+                        x='0'
+                        y='0'
+                        width='100%'
+                        height='100%'
+                    />
+                    <circle
+                        fill='black'
+                        cx='58'
+                        cy={banner || banner ? 112 : 82}
+                        r='46'
+                    />
+                </mask>
+
+                <foreignObject
+                    x='0'
+                    y='0'
+                    width='100%'
+                    height='100%'
+                    overflow='visible'
+                    mask='url(#card-banner-mask)'
+                >
+                    <div>
+                        <div
+                            className={styles.cardBannerBackground}
+                            style={{
+                                backgroundColor: !banner ? primaryColor : '',
+                                backgroundImage: banner
+                                    ? `url(${
+                                          typeof banner === 'string'
+                                              ? `${process.env.NEXT_PUBLIC_CDN_URL}${banner}/`
+                                              : URL.createObjectURL(banner as File)
+                                      })`
+                                    : '',
+                                height: banner ? '120px' : '90px',
+                            }}
+                            onClick={() => bannerInputRef.current?.click()}
+                        />
+
+                        <div
+                            className={styles.cardBannerButton}
+                            aria-hidden='true'
+                        >
+                            Change Banner
+                        </div>
+                    </div>
+                </foreignObject>
+            </svg>
+        ),
+        [banner, primaryColor]
+    );
+
+    const CardAvatar = useMemo(
+        () => (
+            <div
+                className={styles.cardAvatar}
+                style={{ top: banner ? '76px' : '46px' }}
+            >
+                <div
+                    className={styles.avatarImage}
+                    style={{
+                        backgroundImage: `url(${
+                            avatar !== null && typeof avatar !== 'string'
+                                ? URL.createObjectURL(avatar)
+                                : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? auth.user.avatar}/`
+                        })`,
+                    }}
+                    onClick={() => avatarInputRef.current?.click()}
+                />
+
+                <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
+                <div className={styles.imageUpload}></div>
+
+                <div className={styles.cardAvatarStatus}>
+                    <div style={{ backgroundColor: 'black' }} />
+
+                    <svg>
+                        <rect
+                            height='100%'
+                            width='100%'
+                            rx={8}
+                            ry={8}
+                            fill='var(--success-light)'
+                            mask='url(#svg-mask-status-online)'
+                        />
+                    </svg>
+                </div>
+            </div>
+        ),
+        [avatar, auth.user.avatar, banner]
+    );
 
     return (
         <>
@@ -869,99 +972,8 @@ const Profiles = () => {
                             }
                         >
                             <div>
-                                <svg
-                                    className={styles.cardBanner}
-                                    viewBox={`0 0 340 ${banner || banner ? '120' : '90'}`}
-                                >
-                                    <mask id='card-banner-mask'>
-                                        <rect
-                                            fill='white'
-                                            x='0'
-                                            y='0'
-                                            width='100%'
-                                            height='100%'
-                                        />
-                                        <circle
-                                            fill='black'
-                                            cx='58'
-                                            cy={banner || banner ? 112 : 82}
-                                            r='46'
-                                        />
-                                    </mask>
-
-                                    <foreignObject
-                                        x='0'
-                                        y='0'
-                                        width='100%'
-                                        height='100%'
-                                        overflow='visible'
-                                        mask='url(#card-banner-mask)'
-                                    >
-                                        <div>
-                                            <div
-                                                className={styles.cardBannerBackground}
-                                                style={{
-                                                    backgroundColor: !banner ? primaryColor : '',
-                                                    backgroundImage: banner
-                                                        ? `url(${
-                                                              typeof banner === 'string'
-                                                                  ? `${process.env.NEXT_PUBLIC_CDN_URL}${banner}/`
-                                                                  : URL.createObjectURL(banner as File)
-                                                          })`
-                                                        : '',
-                                                    height: banner ? '120px' : '90px',
-                                                }}
-                                                onClick={() => bannerInputRef.current?.click()}
-                                            />
-
-                                            <div
-                                                className={styles.cardBannerButton}
-                                                aria-hidden='true'
-                                            >
-                                                Change Banner
-                                            </div>
-                                        </div>
-                                    </foreignObject>
-                                </svg>
-
-                                <div
-                                    className={styles.cardAvatar}
-                                    style={{ top: banner ? '76px' : '46px' }}
-                                >
-                                    <div
-                                        className={styles.avatarImage}
-                                        style={{
-                                            backgroundImage: `url(${
-                                                avatar !== null && typeof avatar !== 'string'
-                                                    ? URL.createObjectURL(avatar)
-                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? auth.user.avatar}/`
-                                            })`,
-                                        }}
-                                        onClick={() => avatarInputRef.current?.click()}
-                                    />
-
-                                    <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
-                                    <div className={styles.imageUpload}></div>
-
-                                    <div className={styles.cardAvatarStatus}>
-                                        <div
-                                            style={{
-                                                backgroundColor: 'black',
-                                            }}
-                                        />
-
-                                        <svg>
-                                            <rect
-                                                height='100%'
-                                                width='100%'
-                                                rx={8}
-                                                ry={8}
-                                                fill='var(--success-light)'
-                                                mask='url(#svg-mask-status-online)'
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
+                                {CardBanner}
+                                {CardAvatar}
 
                                 <div className={styles.cardBadges}></div>
 

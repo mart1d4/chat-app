@@ -134,6 +134,7 @@
     flex: 0 1 385px;
     max-height: 385px;
     flex-direction: column;
+    overflow: hidden;
     background-color: var(--card-background-color);
 }
 
@@ -142,14 +143,33 @@
     flex-direction: column;
     overflow: hidden scroll;
     flex: 1 1 auto;
+    margin-right: -12px;
 }
 
 .cardBody > .scrollContainer.margin {
-    margin: 0 -4px;
+    margin-left: -4px;
+}
+
+.cardBody > .scrollContainer.padding {
+    padding-right: 4px;
 }
 
 .cardBody > .scrollContainer::-webkit-scrollbar {
-    width: 0;
+    width: 8px;
+}
+
+.cardBody > .scrollContainer::-webkit-scrollbar-track {
+    border: 2px solid transparent;
+    background-color: transparent;
+}
+
+.cardBody > .scrollContainer::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    background-color: transparent;
+}
+
+.cardBody > .scrollContainer:hover::-webkit-scrollbar-thumb {
+    background-color: var(--card-divider-color);
 }
 
 .cardBody > .scrollContainer > :last-child:not(.userItem) {

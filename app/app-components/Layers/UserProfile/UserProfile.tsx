@@ -260,72 +260,82 @@ const UserProfile = (): ReactElement => {
                                     </div>
                                 )}
 
-                                {activeNavItem === 0 && (
-                                    <div className={styles.scrollContainer + ' scrollbar'}>
-                                        {user.description && (
+                                <div
+                                    className={
+                                        styles.scrollContainer +
+                                        ' scrollbar ' +
+                                        (activeNavItem === 2 && mutualFriends.length > 0
+                                            ? styles.margin
+                                            : activeNavItem === 0
+                                            ? styles.padding
+                                            : '')
+                                    }
+                                >
+                                    {activeNavItem === 0 && (
+                                        <>
+                                            {user.description && (
+                                                <div className={styles.cardSection}>
+                                                    <h4>About me</h4>
+                                                    <div>{user.description}</div>
+                                                </div>
+                                            )}
+
                                             <div className={styles.cardSection}>
-                                                <h4>About me</h4>
-                                                <div>{user.description}</div>
+                                                <h4>Chat App Member Since</h4>
+                                                <div>
+                                                    {new Intl.DateTimeFormat('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    }).format(new Date(user.createdAt))}
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div className={styles.cardSection}>
-                                            <h4>Chat App Member Since</h4>
-                                            <div>
-                                                {new Intl.DateTimeFormat('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                }).format(new Date(user.createdAt))}
+                                            <div className={styles.cardSection}>
+                                                <h4>Note</h4>
+                                                <div>
+                                                    <textarea
+                                                        className={styles.cardInput + ' scrollbar'}
+                                                        ref={noteRef}
+                                                        value={note}
+                                                        placeholder='Click to add a note'
+                                                        aria-label='Note'
+                                                        maxLength={256}
+                                                        autoCorrect='off'
+                                                        onInput={(e) => {
+                                                            setNote(e.currentTarget.value);
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
+                                        </>
+                                    )}
+
+                                    {activeNavItem === 1 && (
+                                        <div className={styles.empty}>
+                                            <div />
+                                            <div>No servers in common</div>
                                         </div>
+                                    )}
 
-                                        <div className={styles.cardSection}>
-                                            <h4>Note</h4>
-                                            <div>
-                                                <textarea
-                                                    className={styles.cardInput + ' scrollbar'}
-                                                    ref={noteRef}
-                                                    value={note}
-                                                    placeholder='Click to add a note'
-                                                    aria-label='Note'
-                                                    maxLength={256}
-                                                    autoCorrect='off'
-                                                    onInput={(e) => {
-                                                        setNote(e.currentTarget.value);
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeNavItem === 1 && (
-                                    <div className={styles.empty}>
-                                        <div />
-                                        <div>No servers in common</div>
-                                    </div>
-                                )}
-
-                                {activeNavItem === 2 && (
-                                    <>
-                                        {mutualFriends.length > 0 ? (
-                                            <div className={styles.scrollContainer + ' scrollbar ' + styles.margin}>
-                                                {mutualFriends.map((friend) => (
+                                    {activeNavItem === 2 && (
+                                        <>
+                                            {mutualFriends.length > 0 ? (
+                                                mutualFriends.map((friend) => (
                                                     <FriendItem
                                                         key={uuidv4()}
                                                         friend={friend}
                                                     />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className={styles.empty + ' ' + styles.noFriends}>
-                                                <div />
-                                                <div>No friends in common</div>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                                ))
+                                            ) : (
+                                                <div className={styles.empty + ' ' + styles.noFriends}>
+                                                    <div />
+                                                    <div>No friends in common</div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </motion.div>

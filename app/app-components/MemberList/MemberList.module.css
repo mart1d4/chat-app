@@ -1,6 +1,7 @@
 .aside {
     position: relative;
     min-width: 340px;
+    width: 340px;
     height: 100%;
     background: linear-gradient(var(--card-primary-color), var(--card-accent-color));
 }

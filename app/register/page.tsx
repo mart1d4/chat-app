@@ -5,12 +5,6 @@ import Form from './Form';
 const Register = (): ReactElement => {
     return (
         <div className={styles.wrapper}>
-            <img
-                src='/assets/auth-background.svg'
-                alt=''
-                draggable='false'
-            />
-
             <form>
                 <div className={styles.loginContainer}>
                     <div className={styles.header}>

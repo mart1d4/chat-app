@@ -10,6 +10,7 @@ import useContextHook from '@/hooks/useContextHook';
 import { Icon } from '@/app/app-components';
 import styles from './Menu.module.css';
 import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation';
 
 type UserProps = {
     isSelf: boolean;
@@ -41,6 +42,7 @@ const content = ({ content }: { content: any }): ReactElement => {
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
     const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const router = useRouter();
 
     const user: TUser = content.user;
     const message: TMessage = content.message;
@@ -58,6 +60,19 @@ const content = ({ content }: { content: any }): ReactElement => {
         ];
 
         return inlineTypes.includes(type);
+    };
+
+    const channelExists = (userId: string) => {
+        const channel = auth.user.channels.find((channel: any) => {
+            return (
+                channel.recipients.length === 2 &&
+                ((channel.recipientIds[0] === userId && channel.recipientIds[1] === auth.user.id) ||
+                    (channel.recipientIds[0] === auth.user.id && channel.recipientIds[1] === userId))
+            );
+        });
+
+        if (channel) return channel.id;
+        else return false;
     };
 
     const writeText = async (text: string) => {
@@ -387,7 +402,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: !userProps.isBlocked && 'Message',
-                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
+                        func: () => {
+                            const channelId = channelExists(user.id);
+                            if (channelId) {
+                                router.push(`/channels/me/${channelId}`);
+                                return;
+                            }
+
+                            createChannel(auth.accessToken, [auth.user.id, user.id]);
+                        },
                     },
                     { name: 'Divider' },
                     {
@@ -407,7 +430,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Message',
-                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
+                        func: () => {
+                            const channelId = channelExists(user.id);
+                            if (channelId) {
+                                router.push(`/channels/me/${channelId}`);
+                                return;
+                            }
+
+                            createChannel(auth.accessToken, [auth.user.id, user.id]);
+                        },
                     },
                     {
                         name: 'Add Note',
@@ -445,7 +476,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Message',
-                        func: () => createChannel(auth.accessToken, [auth.user.id, user.id]),
+                        func: () => {
+                            const channelId = channelExists(user.id);
+                            if (channelId) {
+                                router.push(`/channels/me/${channelId}`);
+                                return;
+                            }
+
+                            createChannel(auth.accessToken, [auth.user.id, user.id]);
+                        },
                     },
                     {
                         name: !userProps.sentRequest && 'Call',

@@ -182,7 +182,10 @@ const Popout = ({ content }: any) => {
         );
     } else {
         return (
-            <div className={styles.popup}>
+            <div
+                className={styles.popup}
+                onContextMenu={(e) => e.preventDefault()}
+            >
                 <div className={styles.header}>
                     <h1>Select Friends</h1>
                     {friends.length > 0 && (
@@ -356,8 +359,9 @@ const Popout = ({ content }: any) => {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className='blue'
+                                    className={'blue ' + (content?.channel && !chosen.length ? 'disabled' : '')}
                                     onClick={() => {
+                                        if (content?.channel && !chosen.length) return;
                                         setFixedLayer(null);
                                         createChan();
                                     }}
