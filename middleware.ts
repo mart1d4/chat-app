@@ -6,7 +6,8 @@ export const config = {
     matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };
 
-const allowedPaths = ['/', '/download', '/login', '/register', '/reset-password'];
+const allowedPaths = ['/', '/download'];
+const authPaths = ['/login', '/register', '/reset-password'];
 
 export async function middleware(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
@@ -25,6 +26,9 @@ export async function middleware(req: NextRequest) {
     }
 
     if (!token) {
+        if (authPaths.includes(pathname)) {
+            return NextResponse.next();
+        }
         return NextResponse.redirect(new URL('/login', req.url));
     }
 
@@ -35,6 +39,10 @@ export async function middleware(req: NextRequest) {
             issuer: process.env.ISSUER,
             audience: process.env.AUDIENCE,
         });
+
+        if (!pathname.startsWith('/api') && !pathname.startsWith('/channels/me')) {
+            return NextResponse.redirect(new URL('/channels/me', req.url));
+        }
 
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('userId', payload.id as string);

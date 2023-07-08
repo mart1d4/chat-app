@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import useContextHook from '@/hooks/useContextHook';
 import { LoadingDots } from '../app-components';
 import { useRouter } from 'next/navigation';
 import styles from '../Auth.module.css';
@@ -22,14 +21,6 @@ const Register = (): ReactElement => {
 
     const uidInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
-    const { auth, loading }: any = useContextHook({ context: 'auth' });
-
-    useEffect(() => {
-        if (loading) return;
-        if (auth?.accessToken) {
-            router.push('/channels/me');
-        }
-    }, [loading]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
