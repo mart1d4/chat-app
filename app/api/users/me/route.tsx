@@ -2,6 +2,7 @@ import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
 const avatars = [
     '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
@@ -15,8 +16,20 @@ export async function PATCH(req: Request) {
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
-    const { username, password, displayName, description, avatar, banner, primaryColor, accentColor, status } =
-        await req.json();
+    const {
+        password,
+        username,
+        newPassword,
+        displayName,
+        description,
+        avatar,
+        banner,
+        primaryColor,
+        accentColor,
+        status,
+    } = await req.json();
+
+    let usernameChanged = false;
 
     try {
         const sender = await prisma.user.findUnique({
@@ -35,15 +48,124 @@ export async function PATCH(req: Request) {
             );
         }
 
-        if (username && password) {
+        if (newPassword && password) {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: senderId,
+                },
+                select: {
+                    password: true,
+                },
+            });
+
+            if (!user) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'User not found',
+                    },
+                    { status: 404 }
+                );
+            }
+
+            if (newPassword === password) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'New password cannot be the same as the old password',
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const passwordsMatch = await bcrypt.compare(password, user.password);
+
+            if (!passwordsMatch) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Incorrect password',
+                    },
+                    { status: 401 }
+                );
+            }
+
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
             await prisma.user.update({
                 where: {
                     id: senderId,
                 },
                 data: {
-                    username: username,
+                    password: hashedPassword,
                 },
             });
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Successfully updated user.',
+                },
+                { status: 200 }
+            );
+        } else if (username && password) {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: senderId,
+                },
+                select: {
+                    password: true,
+                },
+            });
+
+            if (!user) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'User not found',
+                    },
+                    { status: 404 }
+                );
+            }
+
+            const usernameExists = await prisma.user.findUnique({
+                where: {
+                    username,
+                },
+            });
+
+            if (usernameExists) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Username already exists',
+                    },
+                    { status: 409 }
+                );
+            }
+
+            const passwordsMatch = await bcrypt.compare(password, user.password);
+
+            if (!passwordsMatch) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Incorrect password',
+                    },
+                    { status: 401 }
+                );
+            }
+
+            await prisma.user.update({
+                where: {
+                    id: senderId,
+                },
+                data: {
+                    username,
+                },
+            });
+
+            usernameChanged = true;
         } else {
             if (avatar && !avatars.includes(sender.avatar)) {
                 await fetch(`https://api.uploadcare.com/files/${sender.avatar}/storage/`, {
@@ -83,7 +205,7 @@ export async function PATCH(req: Request) {
 
         await pusher.trigger('chat-app', 'user-updated', {
             userId: sender.id,
-            username: username ? username : sender.username,
+            username: usernameChanged ? username : sender.username,
             displayName: displayName ? displayName : sender.displayName,
             description: typeof description === 'string' ? description : sender.description,
             avatar: avatar ? avatar : sender.avatar,

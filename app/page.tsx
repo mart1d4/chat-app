@@ -147,7 +147,7 @@ const HomePage = (): ReactNode => {
                     <div>
                         <h4>Ready to begin on your journey?</h4>
 
-                        <a href=''>
+                        <Link href='/download'>
                             <svg
                                 width='24'
                                 height='24'
@@ -159,7 +159,7 @@ const HomePage = (): ReactNode => {
                                 </g>
                             </svg>
                             Download for Windows
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

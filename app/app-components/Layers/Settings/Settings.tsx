@@ -32,7 +32,7 @@ const Settings = (): ReactElement => {
     const [minified, setMinified] = useState<boolean>(false);
     const [hideNav, setHideNav] = useState<boolean>(false);
 
-    const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { popup, showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { logout } = useLogout();
 
@@ -52,6 +52,7 @@ const Settings = (): ReactElement => {
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
+                if (popup) return;
                 setShowSettings(false);
             }
         };
@@ -64,7 +65,7 @@ const Settings = (): ReactElement => {
         }
 
         return () => window.removeEventListener('keydown', handleEsc);
-    }, [showSettings]);
+    }, [showSettings, popup]);
 
     const tabs = [
         {
@@ -145,18 +146,12 @@ const Settings = (): ReactElement => {
             {showSettings && (
                 <motion.div
                     className={styles.container}
-                    initial={{
-                        transform: 'translateY(100%)',
-                    }}
-                    animate={{
-                        transform: 'translateY(0%)',
-                    }}
-                    exit={{
-                        transform: 'translateY(100%)',
-                    }}
+                    initial={{ opacity: 0, y: 20, scale: 1.2 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 1.2 }}
                     transition={{
-                        duration: 0.5,
-                        ease: 'backOut',
+                        ease: 'easeInOut',
+                        duration: 0.2,
                     }}
                 >
                     {(!minified || !hideNav) && (
@@ -189,11 +184,7 @@ const Settings = (): ReactElement => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 if (tab.name === 'separator' || tab.type === 'title') return;
-                                                if (tab.name === 'Log Out') {
-                                                    logout();
-                                                    setShowSettings(false);
-                                                    return;
-                                                }
+                                                if (tab.name === 'Log Out') return logout();
                                                 setActiveTab(tab.name);
                                                 if (minified) setHideNav(true);
                                             }}

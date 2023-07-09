@@ -286,16 +286,32 @@ const AppNav = (): ReactElement => {
                         friends: auth.user.friends.map((friend: TCleanUser) => {
                             return friend.id === data.userId ? { ...friend, ...object } : friend;
                         }),
-                        channels: auth.user.channels.map((channel: TChannel) => {
-                            const recipients = channel.recipients.map((recipient: TCleanUser) => {
-                                return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
-                            });
-
-                            return { ...channel, recipients };
+                        requestsReceived: auth.user.requestsReceived.map((user: TCleanUser) => {
+                            return user.id === data.userId ? { ...user, ...object } : user;
+                        }),
+                        requestsSent: auth.user.requestsSent.map((user: TCleanUser) => {
+                            return user.id === data.userId ? { ...user, ...object } : user;
+                        }),
+                        blockedUsers: auth.user.blockedUsers.map((user: TCleanUser) => {
+                            return user.id === data.userId ? { ...user, ...object } : user;
                         }),
                     },
                 });
             }
+
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    channels: auth.user.channels.map((channel: TChannel) => {
+                        const recipients = channel.recipients.map((recipient: TCleanUser) => {
+                            return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
+                        });
+
+                        return { ...channel, recipients };
+                    }),
+                },
+            });
         },
         [auth.user]
     );

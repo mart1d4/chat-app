@@ -70,6 +70,48 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                 if (data.channelId !== channel.id) return;
                 setMessages((messages) => messages.filter((message) => message.id !== data.messageId));
             });
+
+            pusher.bind('user-updated', (data: any) => {
+                const object = {
+                    username: data.username,
+                    displayName: data.displayName,
+                    description: data.description,
+                    avatar: data.avatar,
+                    banner: data.banner,
+                    primaryColor: data.primaryColor,
+                    accentColor: data.accentColor,
+                    status: data.status,
+                };
+
+                const messagesUpdated = messages.map((message) => {
+                    if (message.author.id === data.userId) {
+                        return { ...message, author: { ...message.author, ...object } };
+                    } else if (message.messageReference?.author.id === data.userId) {
+                        return {
+                            ...message,
+                            messageReference: {
+                                ...message.messageReference,
+                                author: { ...message.messageReference.author, ...object },
+                            },
+                        };
+                    } else if (
+                        message.messageReference?.author.id === data.userId &&
+                        message.author.id === data.userId
+                    ) {
+                        return {
+                            ...message,
+                            author: { ...message.author, ...object },
+                            messageReference: {
+                                ...message.messageReference,
+                                author: { ...message.messageReference.author, ...object },
+                            },
+                        };
+                    }
+                    return message;
+                });
+
+                setMessages(messagesUpdated);
+            });
         };
 
         getMessages();

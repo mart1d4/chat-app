@@ -9,11 +9,6 @@ type Props = {
     children: ReactElement;
 };
 
-// If auth is loading, show loading screen
-// If auth is not loading, check if user is logged in
-// If user is not logged in, redirect to login page
-// If user is logged in, show children
-
 const Loading = ({ children }: Props): ReactElement => {
     const { showSettings, userProfile, popup, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });

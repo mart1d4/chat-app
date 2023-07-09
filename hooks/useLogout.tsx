@@ -1,27 +1,30 @@
 'use client';
 
 import useContextHook from './useContextHook';
-import { useRouter } from 'next/navigation';
 
 const useLogout = () => {
-    const { setAuth }: any = useContextHook({
-        context: 'auth',
-    });
-    const router = useRouter();
+    const { setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
 
     const logout = async () => {
-        setAuth(null);
-        localStorage.removeItem('channel-url');
-        localStorage.removeItem('friends-tab');
-        localStorage.removeItem('user-settings');
+        const channelIds = auth.user.channelIds;
 
         try {
             await fetch('/api/auth/logout', {
                 method: 'POST',
                 credentials: 'include',
-            });
+            }).then(() => {
+                localStorage.removeItem('channel-url');
+                localStorage.removeItem('friends-tab');
+                localStorage.removeItem('user-settings');
 
-            router.push('/login');
+                channelIds.forEach((channelId: string) => {
+                    localStorage.removeItem(`channel-${channelId}`);
+                });
+
+                setAuth(null);
+                setShowSettings(false);
+            });
         } catch (error) {
             console.error(error);
             throw new Error('Error logging out');

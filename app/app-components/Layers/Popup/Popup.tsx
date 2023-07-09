@@ -2,14 +2,17 @@
 
 import { deleteMessage, pinMessage, unpinMessage } from '@/lib/api-functions/messages';
 import { useRef, useEffect, useState, ReactElement } from 'react';
+import { FixedMessage, LoadingDots } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
-import { FixedMessage } from '@/app/app-components';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
+    const { popup, setPopup }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
+
     const [isLoading, setIsLoading] = useState(false);
-    const [uid, setUID] = useState('');
+    const [uid, setUID] = useState(auth.user.username);
     const [usernameError, setUsernameError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [password, setPassword] = useState('');
@@ -20,16 +23,47 @@ const Popup = (): ReactElement => {
     const [password1Error, setPassword1Error] = useState('');
     const [newPasswordError, setNewPasswordError] = useState('');
 
-    const { popup, setPopup }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
-
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                setPopup(null);
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!popup) return;
+
+                if (popup.delete) {
+                    deleteMessage(auth.accessToken, popup.message);
+                } else if (popup.pin) {
+                    pinMessage(auth.accessToken, popup.message);
+                } else if (popup.unpin) {
+                    unpinMessage(auth.accessToken, popup.message);
+                } else if (popup.username) {
+                    handleUsernameSubmit();
+                    return;
+                } else if (popup.password) {
+                    handlePasswordSubmit();
+                    return;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [popup, uid, password, password1, newPassword, confirmPassword, isLoading]);
+
+    useEffect(() => {
         uidInputRef?.current?.focus();
-        setUID((prev) => prev || auth?.user?.username);
     }, [popup]);
 
     useEffect(() => {
@@ -52,20 +86,65 @@ const Popup = (): ReactElement => {
         if (isLoading) return;
         setIsLoading(true);
 
-        const response = await fetch('/api/users/me', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${auth.accessToken}`,
-            },
-            body: JSON.stringify({
-                username: uid,
-            }),
-        });
+        if (!uid) {
+            setUsernameError('Username cannot be empty.');
+            setIsLoading(false);
+            return;
+        }
 
-        if (!response.ok) {
-            setUsernameError("Couldn't update username.");
-            setPasswordError("Couldn't update username.");
+        console.log(uid);
+
+        if (uid.length < 3) {
+            setUsernameError('Username must be at least 3 characters.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (uid.length > 32) {
+            setUsernameError('Username cannot be more than 32 characters.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (auth.user.username === uid) {
+            setUsernameError('Username cannot be the same as your current username.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!password) {
+            setPasswordError('Password cannot be empty.');
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/me`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    username: uid,
+                    password: password,
+                }),
+            }).then((res) => res.json());
+
+            if (!response.success) {
+                if (response.message.toLowerCase().includes('password')) {
+                    setPasswordError(response.message);
+                } else if (response.message.toLowerCase().includes('username')) {
+                    setUsernameError(response.message);
+                } else {
+                    setUsernameError("Couldn't update username.");
+                }
+            } else {
+                setPassword('');
+                setPopup(null);
+            }
+        } catch (err) {
+            console.error(err);
         }
 
         setIsLoading(false);
@@ -75,20 +154,65 @@ const Popup = (): ReactElement => {
         if (isLoading) return;
         setIsLoading(true);
 
-        const response = await fetch('/api/users/me', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${auth.accessToken}`,
-            },
-            body: JSON.stringify({
-                password: password1,
-                newPassword: password,
-            }),
-        });
+        if (!password1) {
+            setPassword1Error('Current password cannot be empty.');
+            setIsLoading(false);
+            return;
+        }
 
-        if (!response.ok) {
-            setNewPasswordError("Couldn't update password.");
+        if (!newPassword) {
+            setNewPasswordError('New password cannot be empty.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            setNewPasswordError('New password must be at least 8 characters.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (newPassword.length > 256) {
+            setNewPasswordError('New password cannot be more than 256 characters.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!confirmPassword) {
+            setNewPasswordError('Confirm password cannot be empty.');
+            setIsLoading(false);
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setNewPasswordError('New password and confirm password must match.');
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/me`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({
+                    password: password1,
+                    newPassword: newPassword,
+                }),
+            }).then((res) => res.json());
+
+            if (!response.success) {
+                setPassword1Error(response.message ?? "Couldn't update password.");
+            } else {
+                setPassword1('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setPopup(null);
+            }
+        } catch (err) {
+            console.error(err);
         }
 
         setIsLoading(false);
@@ -389,38 +513,18 @@ const Popup = (): ReactElement => {
                                         : 'grey'
                                 }
                                 onClick={() => {
-                                    if (popup?.delete) {
+                                    if (popup.delete) {
                                         deleteMessage(auth.accessToken, popup.message);
-                                    } else if (popup?.pin) {
+                                    } else if (popup.pin) {
                                         pinMessage(auth.accessToken, popup.message);
-                                    } else if (popup?.unpin) {
+                                    } else if (popup.unpin) {
                                         unpinMessage(auth.accessToken, popup.message);
-                                    } else if (popup?.username) {
-                                        if (uid.length < 2) {
-                                            setUsernameError('Must be between 2 and 32 in length.');
-                                            return;
-                                        } else if (uid.length > 32) {
-                                            setUsernameError('Must be between 2 and 32 in length.');
-                                            return;
-                                        } else {
-                                            handleUsernameSubmit();
-                                            return;
-                                        }
-                                    } else if (popup?.password) {
-                                        if (password1.length === 0) {
-                                            setPassword1Error('Your password cannot be empty.');
-                                            return;
-                                        }
-                                        if (newPassword.length < 8) {
-                                            setNewPasswordError('Must be 8 or more in length.');
-                                            return;
-                                        } else if (newPassword !== confirmPassword) {
-                                            setNewPasswordError('Passwords do not match.');
-                                            return;
-                                        } else {
-                                            handlePasswordSubmit();
-                                            return;
-                                        }
+                                    } else if (popup.username) {
+                                        handleUsernameSubmit();
+                                        return;
+                                    } else if (popup.password) {
+                                        handlePasswordSubmit();
+                                        return;
                                     }
 
                                     setPopup(null);
@@ -430,7 +534,7 @@ const Popup = (): ReactElement => {
                                 {popup?.pin && 'Oh yeah. Pin it'}
                                 {popup?.unpin && 'Remove it please!'}
                                 {(popup?.username || popup?.password) && !isLoading && 'Done'}
-                                {isLoading && <div className={styles.loader} />}
+                                {isLoading && <LoadingDots />}
                             </button>
                         </div>
                     </motion.div>

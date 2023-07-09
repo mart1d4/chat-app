@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
 
-const USER_REGEX = /^.{2,32}$/;
+const USER_REGEX = /^.{3,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
 
 const Register = (): ReactElement => {
@@ -54,21 +54,23 @@ const Register = (): ReactElement => {
     const handleSubmit = async (e: MouseEvent): Promise<void> => {
         e.preventDefault();
 
-        if (isLoading || !username || !password || !passwordMatch) return;
+        if (isLoading) return;
         setIsLoading(true);
 
         const v1: boolean = USER_REGEX.test(username);
         const v2: boolean = PWD_REGEX.test(password);
 
         if (!v1) {
-            setUsernameError('Invalid Username');
+            setUsernameError('Userame must be between 3 and 32 characters');
             setIsLoading(false);
+            return;
         }
+
         if (!v2) {
-            setPasswordError('Invalid Password');
+            setPasswordError('Password must be between 8 and 256 characters');
             setIsLoading(false);
+            return;
         }
-        if (!v1 || !v2) return;
 
         if (password !== passwordMatch) {
             setPasswordError('Passwords do not match');
