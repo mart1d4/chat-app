@@ -96,6 +96,16 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         input.innerText = '';
         setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
+        if (reply?.messageId) {
+            setReply(null);
+            localStorage.setItem(
+                `channel-${channel.id}`,
+                JSON.stringify({
+                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                    reply: null,
+                })
+            );
+        }
 
         try {
             const response = await fetch(
@@ -126,17 +136,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             }
 
             const message = await response.json().then((data) => data.data.message);
-
-            if (reply?.messageId) {
-                setReply(null);
-                localStorage.setItem(
-                    `channel-${channel.id}`,
-                    JSON.stringify({
-                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
-                        reply: null,
-                    })
-                );
-            }
 
             // Stop message from being marked as waiting
             setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempId));

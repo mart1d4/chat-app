@@ -286,8 +286,7 @@ model Message {
     messageReferenceId String?  @db.ObjectId
     messageReference   Message? @relation("MessageReference", fields: [messageReferenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-    referencedByIds String[]  @db.ObjectId
-    referencedBy    Message[] @relation("MessageReference")
+    referencedBy Message[] @relation("MessageReference")
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date

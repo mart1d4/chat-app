@@ -180,6 +180,10 @@
     margin-right: 0.25rem;
 }
 
+.messageReply .contentTimestamp {
+    height: 18px;
+}
+
 .messageReply > span {
     flex-shrink: 0;
     margin-right: 0.25rem;
@@ -216,6 +220,31 @@
     width: 4.5rem;
     padding-top: 0.25rem;
     margin-right: -72px;
+}
+
+.messageReply > div.noReplyBadge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    background-color: var(--background-2);
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    user-select: none;
+    margin-right: 0.25rem;
+}
+
+.messageReply > div.noReplyBadge > svg {
+    width: 10px;
+    height: 10px;
+}
+
+.italic {
+    font-style: italic;
+    /* Padding right so end of message isn't cropped */
+    padding-right: 5px;
 }
 
 /* Pinned hover tools */

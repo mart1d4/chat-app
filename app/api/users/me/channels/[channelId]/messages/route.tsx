@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const channelId = params.channelId;
     const skip = 0;
-    const limit = 50;
+    const limit = 500;
 
     const headersList = headers();
     const senderId = headersList.get('userId') || '';

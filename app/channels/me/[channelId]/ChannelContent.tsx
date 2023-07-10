@@ -1,10 +1,10 @@
 'use client';
 
 import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } from '@/app/app-components';
-import { addFriend, blockUser, removeFriend, unblockUser } from '@/lib/api-functions/users';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -68,7 +68,16 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
             pusher.bind('message-deleted', (data: any) => {
                 if (data.channelId !== channel.id) return;
-                setMessages((messages) => messages.filter((message) => message.id !== data.messageId));
+                setMessages((messages) => {
+                    return messages
+                        .filter((message) => message.id !== data.messageId)
+                        .map((message) => {
+                            if (message.messageReferenceId === data.messageId) {
+                                return { ...message, messageReference: null };
+                            }
+                            return message;
+                        }) as TMessage[];
+                });
             });
 
             pusher.bind('user-updated', (data: any) => {
@@ -239,6 +248,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
 const FirstMessage = ({ channel }: { channel: TChannel }) => {
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     let friend: any;
 
@@ -276,7 +286,12 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                         {auth.user.friendIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={async () => await removeFriend(auth.accessToken, friend.username)}
+                                onClick={() =>
+                                    sendRequest({
+                                        query: 'REMOVE_FRIEND',
+                                        params: { username: friend.username },
+                                    })
+                                }
                             >
                                 Remove Friend
                             </button>
@@ -285,7 +300,12 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                         ) : auth.user.requestReceivedIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={async () => await addFriend(auth.accessToken, friend.username)}
+                                onClick={() =>
+                                    sendRequest({
+                                        query: 'ADD_FRIEND',
+                                        params: { username: friend.username },
+                                    })
+                                }
                             >
                                 Accept Friend Request
                             </button>
@@ -293,7 +313,12 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                             !auth.user.blockedUserIds.includes(friend.id) && (
                                 <button
                                     className='blue'
-                                    onClick={async () => await addFriend(auth.accessToken, friend.username)}
+                                    onClick={() =>
+                                        sendRequest({
+                                            query: 'ADD_FRIEND',
+                                            params: { username: friend.username },
+                                        })
+                                    }
                                 >
                                     Add Friend
                                 </button>
@@ -303,14 +328,24 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                         {!auth.user.blockedUserIds.includes(friend.id) ? (
                             <button
                                 className='grey'
-                                onClick={async () => await blockUser(auth.accessToken, friend.id)}
+                                onClick={() =>
+                                    sendRequest({
+                                        query: 'BLOCK_USER',
+                                        params: { username: friend.username },
+                                    })
+                                }
                             >
                                 Block
                             </button>
                         ) : (
                             <button
                                 className='grey'
-                                onClick={async () => await unblockUser(auth.accessToken, friend.id)}
+                                onClick={() =>
+                                    sendRequest({
+                                        query: 'UNBLOCK_USER',
+                                        params: { username: friend.username },
+                                    })
+                                }
                             >
                                 Unblock
                             </button>

@@ -1,9 +1,9 @@
 'use client';
 
 import { FixedMessage, Icon, Avatar } from '@/app/app-components';
-import { createChannel } from '@/lib/api-functions/channels';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +19,7 @@ const Popout = ({ content }: any) => {
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
     const token = auth.accessToken;
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +132,13 @@ const Popout = ({ content }: any) => {
             }
         }
 
-        await createChannel(token, recipientIds, channelId);
+        sendRequest({
+            query: 'CREATE_CHANNEL',
+            data: {
+                recipients: recipientIds,
+                channelId: channelId,
+            },
+        });
     };
 
     if (content?.pinned) {

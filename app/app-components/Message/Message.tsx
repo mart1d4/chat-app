@@ -1,8 +1,8 @@
 'use client';
 
 import { TextArea, Icon, Avatar } from '@/app/app-components';
-import { editMessage } from '@/lib/api-functions/messages';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import { useEffect, useState } from 'react';
 import { trimMessage } from '@/lib/strings';
 import styles from './Message.module.css';
@@ -27,6 +27,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     // Effects
 
@@ -139,7 +140,14 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
         }
 
         try {
-            await editMessage(auth.accessToken, message, content);
+            sendRequest({
+                query: 'DELETE_MESSAGE',
+                params: {
+                    channelId: message.channelId[0],
+                    messageId: message.id,
+                },
+                data: { content: content },
+            });
 
             setEdit(null);
             setLocalStorage({ edit: null });
@@ -352,103 +360,126 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                 <div className={styles.messagelarge}>
                     {message.type === 'REPLY' && (
                         <div className={styles.messageReply}>
-                            <div
-                                className={styles.userAvatarReply}
-                                onDoubleClick={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
-                                        setFixedLayer(null);
-                                    } else {
+                            {message.messageReference ? (
+                                <div
+                                    className={styles.userAvatarReply}
+                                    onDoubleClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!message.messageReference) return;
+                                        if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                                            setFixedLayer(null);
+                                        } else {
+                                            setFixedLayer({
+                                                type: 'usercard',
+                                                event: {
+                                                    mouseX: e.clientX,
+                                                    mouseY: e.clientY,
+                                                },
+                                                // @ts-ignore
+                                                user: message.messageReference?.author,
+                                                element: e.currentTarget,
+                                                firstSide: 'right',
+                                                gap: 10,
+                                            });
+                                        }
+                                    }}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!message.messageReference) return;
                                         setFixedLayer({
-                                            type: 'usercard',
+                                            type: 'menu',
                                             event: {
                                                 mouseX: e.clientX,
                                                 mouseY: e.clientY,
                                             },
-                                            // @ts-ignore
+                                            //  @ts-ignore
                                             user: message.messageReference?.author,
-                                            element: e.currentTarget,
-                                            firstSide: 'right',
-                                            gap: 10,
                                         });
-                                    }
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
-                                        },
-                                        //  @ts-ignore
-                                        user: message.messageReference?.author,
-                                    });
-                                }}
-                            >
-                                <Avatar
-                                    src={message.messageReference?.author.avatar}
-                                    alt={message.messageReference?.author.username}
-                                    size={16}
-                                />
-                            </div>
+                                    }}
+                                >
+                                    <Avatar
+                                        src={message.messageReference?.author.avatar}
+                                        alt={message.messageReference?.author.username}
+                                        size={16}
+                                    />
+                                </div>
+                            ) : (
+                                <div className={styles.noReplyBadge}>
+                                    <svg
+                                        width='12'
+                                        height='8'
+                                        viewBox='0 0 12 8'
+                                    >
+                                        <path
+                                            d='M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z'
+                                            fill='currentColor'
+                                        />
+                                    </svg>
+                                </div>
+                            )}
 
-                            <span
-                                onDoubleClick={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (fixedLayer?.e?.currentTarget === e.currentTarget) {
-                                        setFixedLayer(null);
-                                    } else {
+                            {message.messageReference && (
+                                <span
+                                    onDoubleClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (fixedLayer?.e?.currentTarget === e.currentTarget) {
+                                            setFixedLayer(null);
+                                        } else {
+                                            setFixedLayer({
+                                                type: 'usercard',
+                                                // @ts-ignore
+                                                user: message.messageReference?.author,
+                                                element: e.currentTarget,
+                                                firstSide: 'right',
+                                                gap: 10,
+                                            });
+                                        }
+                                    }}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         setFixedLayer({
-                                            type: 'usercard',
-                                            // @ts-ignore
+                                            type: 'menu',
+                                            event: {
+                                                mouseX: e.clientX,
+                                                mouseY: e.clientY,
+                                            },
+                                            //  @ts-ignore
                                             user: message.messageReference?.author,
-                                            element: e.currentTarget,
-                                            firstSide: 'right',
-                                            gap: 10,
                                         });
-                                    }
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
-                                        },
-                                        //  @ts-ignore
-                                        user: message.messageReference?.author,
-                                    });
-                                }}
-                            >
-                                {message.messageReference?.author?.username}
-                            </span>
+                                    }}
+                                >
+                                    {message.messageReference?.author?.username}
+                                </span>
+                            )}
 
-                            <div>
-                                {message.messageReference?.content}{' '}
-                                {message.messageReference?.edited && (
-                                    <div className={styles.contentTimestamp}>
-                                        <span
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: getLongDate(message.messageReference?.updatedAt),
-                                                    element: e.currentTarget,
-                                                    delay: 1000,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                            style={{ fontSize: '10px', opacity: 0.75 }}
-                                        >
-                                            (edited)
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                            {message.messageReference ? (
+                                <div>
+                                    {message.messageReference?.content}{' '}
+                                    {message.messageReference?.edited && (
+                                        <div className={styles.contentTimestamp}>
+                                            <span
+                                                onMouseEnter={(e) =>
+                                                    setTooltip({
+                                                        text: getLongDate(message.messageReference?.updatedAt),
+                                                        element: e.currentTarget,
+                                                        delay: 1000,
+                                                    })
+                                                }
+                                                onMouseLeave={() => setTooltip(null)}
+                                                style={{ fontSize: '10px', opacity: 0.75 }}
+                                            >
+                                                (edited)
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={styles.italic}>Original message was deleted</div>
+                            )}
                         </div>
                     )}
 

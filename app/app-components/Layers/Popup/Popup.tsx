@@ -1,15 +1,16 @@
 'use client';
 
-import { deleteMessage, pinMessage, unpinMessage } from '@/lib/api-functions/messages';
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { FixedMessage, LoadingDots } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
     const { popup, setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     const [isLoading, setIsLoading] = useState(false);
     const [uid, setUID] = useState(auth.user.username);
@@ -42,11 +43,29 @@ const Popup = (): ReactElement => {
                 if (!popup) return;
 
                 if (popup.delete) {
-                    deleteMessage(auth.accessToken, popup.message);
+                    sendRequest({
+                        query: 'DELETE_MESSAGE',
+                        params: {
+                            channelId: popup.message.channelId[0],
+                            messageId: popup.message.id,
+                        },
+                    });
                 } else if (popup.pin) {
-                    pinMessage(auth.accessToken, popup.message);
+                    sendRequest({
+                        query: 'PIN_MESSAGE',
+                        params: {
+                            channelId: popup.message.channelId[0],
+                            messageId: popup.message.id,
+                        },
+                    });
                 } else if (popup.unpin) {
-                    unpinMessage(auth.accessToken, popup.message);
+                    sendRequest({
+                        query: 'UNPIN_MESSAGE',
+                        params: {
+                            channelId: popup.message.channelId[0],
+                            messageId: popup.message.id,
+                        },
+                    });
                 } else if (popup.username) {
                     handleUsernameSubmit();
                     return;
@@ -514,11 +533,29 @@ const Popup = (): ReactElement => {
                                 }
                                 onClick={() => {
                                     if (popup.delete) {
-                                        deleteMessage(auth.accessToken, popup.message);
+                                        sendRequest({
+                                            query: 'DELETE_MESSAGE',
+                                            params: {
+                                                channelId: popup.message.channelId[0],
+                                                messageId: popup.message.id,
+                                            },
+                                        });
                                     } else if (popup.pin) {
-                                        pinMessage(auth.accessToken, popup.message);
+                                        sendRequest({
+                                            query: 'PIN_MESSAGE',
+                                            params: {
+                                                channelId: popup.message.channelId[0],
+                                                messageId: popup.message.id,
+                                            },
+                                        });
                                     } else if (popup.unpin) {
-                                        unpinMessage(auth.accessToken, popup.message);
+                                        sendRequest({
+                                            query: 'UNPIN_MESSAGE',
+                                            params: {
+                                                channelId: popup.message.channelId[0],
+                                                messageId: popup.message.id,
+                                            },
+                                        });
                                     } else if (popup.username) {
                                         handleUsernameSubmit();
                                         return;

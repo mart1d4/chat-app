@@ -170,11 +170,54 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                     success: false,
                     message: 'Channel or sender not found',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         }
+
+        if (!sender.channelIds.includes(channelId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You are not in this channel',
+                },
+                { status: 403 }
+            );
+        }
+
+        const message = await prisma.message.findUnique({
+            where: {
+                id: messageId,
+            },
+        });
+
+        if (!message) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Message not found',
+                },
+                { status: 404 }
+            );
+        }
+
+        if (message.authorId !== senderId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You are not the author of this message',
+                },
+                { status: 403 }
+            );
+        }
+
+        await prisma.message.updateMany({
+            where: {
+                messageReferenceId: messageId,
+            },
+            data: {
+                messageReferenceId: null,
+            },
+        });
 
         await prisma.message.delete({
             where: {
@@ -192,9 +235,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 success: true,
                 message: 'Successfully sent message',
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -203,9 +244,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

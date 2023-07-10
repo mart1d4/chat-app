@@ -1,18 +1,19 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './AddFriend.module.css';
 import Image from 'next/image';
-import useContextHook from '@/hooks/useContextHook';
-import { addFriend } from '@/lib/api-functions/users';
 
 const AddFriend = () => {
     const [input, setInput] = useState<string>('');
     const [error, setError] = useState<string>('');
     const [valid, setValid] = useState<string>('');
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
     const token = auth.accessToken;
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -38,9 +39,7 @@ const AddFriend = () => {
                 <h2>Add Friend</h2>
 
                 <form autoComplete='off'>
-                    <div className={styles.description}>
-                        You can add friends with their Chat App username.
-                    </div>
+                    <div className={styles.description}>You can add friends with their Chat App username.</div>
 
                     <div
                         className={styles.inputWrapper}
@@ -75,7 +74,10 @@ const AddFriend = () => {
                                             return;
                                         }
 
-                                        const res = await addFriend(token, input);
+                                        const res = await sendRequest({
+                                            query: 'ADD_FRIEND',
+                                            params: { username: input },
+                                        });
 
                                         if (!res.success) setError(res.message);
                                         else setValid('Friend request sent!');
@@ -102,7 +104,10 @@ const AddFriend = () => {
                                     return;
                                 }
 
-                                const res = await addFriend(token, input);
+                                const res = await sendRequest({
+                                    query: 'ADD_FRIEND',
+                                    params: { username: input },
+                                });
 
                                 if (!res.success) setError(res.message);
                                 else setValid('Friend request sent!');

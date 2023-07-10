@@ -76,7 +76,6 @@ const Channels = (): ReactElement => {
         });
 
         pusher.bind('message-sent', (data: any) => {
-            console.log(data);
             if (!auth.user.channelIds.includes(data.channelId)) return;
 
             const filteredChannels = auth.user.channels.filter((channel: TChannel) => channel.id !== data.channelId);
@@ -96,6 +95,7 @@ const Channels = (): ReactElement => {
             pusher.unbind('channel-created');
             pusher.unbind('channel-users-added');
             pusher.unbind('channel-left');
+            pusher.unbind('message-sent');
         };
     }, []);
 

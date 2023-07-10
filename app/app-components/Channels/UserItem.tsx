@@ -1,10 +1,10 @@
 'use client';
 
 import { ReactElement, useMemo, useEffect, useState } from 'react';
-import { leaveChannel } from '@/lib/api-functions/channels';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './UserItem.module.css';
 import Link from 'next/link';
 
@@ -19,6 +19,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     const token = auth?.accessToken;
     const pathname = usePathname();
@@ -153,13 +154,18 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
 
                         <div
                             className={styles.closeButton}
-                            onClick={async (e) => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                if (pathname.includes(channel.id)) {
-                                    router.push('/channels/me');
+
+                                if (!pathname.includes(channel.id)) {
+                                    return sendRequest({
+                                        query: 'LEAVE_CHANNEL',
+                                        params: { channelId: channel.id },
+                                    });
                                 }
-                                await leaveChannel(token, channel.id);
+
+                                router.push('/channels/me');
                             }}
                         >
                             <Icon

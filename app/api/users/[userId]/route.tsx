@@ -1,25 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 
-export async function GET(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
-    const userId = params.userId;
-
-    if (typeof userId !== 'string' || userId.length !== 24) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Invalid user ID.',
-            },
-            {
-                status: 400,
-            }
-        );
-    }
+export async function GET(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const username = params.username;
 
     try {
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
+                username: username,
             },
             select: {
                 id: true,
@@ -45,9 +33,7 @@ export async function GET(req: Request, { params }: { params: { userId: string }
                     success: false,
                     message: 'User not found.',
                 },
-                {
-                    status: 404,
-                }
+                { status: 404 }
             );
         } else {
             return NextResponse.json(
@@ -56,9 +42,7 @@ export async function GET(req: Request, { params }: { params: { userId: string }
                     message: 'User found.',
                     user: user,
                 },
-                {
-                    status: 200,
-                }
+                { status: 200 }
             );
         }
     } catch (error) {
@@ -68,10 +52,7 @@ export async function GET(req: Request, { params }: { params: { userId: string }
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
-    // }
 }

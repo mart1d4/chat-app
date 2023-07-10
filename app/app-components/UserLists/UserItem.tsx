@@ -1,9 +1,8 @@
 'use client';
 
-import { addFriend, removeFriend, unblockUser } from '@/lib/api-functions/users';
-import { createChannel } from '@/lib/api-functions/channels';
 import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import { ReactElement, useRef } from 'react';
 import { translateCap } from '@/lib/strings';
 import { useRouter } from 'next/navigation';
@@ -18,6 +17,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     const router = useRouter();
     const liRef = useRef(null);
@@ -44,13 +44,10 @@ const UserItem = ({ content, user }: Props): ReactElement => {
             onClick={async () => {
                 if (!['all', 'online'].includes(content)) return;
 
-                const channelId = channelExists(user.id);
-                if (channelId) {
-                    router.push(`/channels/me/${channelId}`);
-                    return;
-                }
-
-                await createChannel(auth.accessToken, [user.id]);
+                sendRequest({
+                    query: 'CREATE_CHANNEL',
+                    data: { recipients: [user.id] },
+                });
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
@@ -112,7 +109,10 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                         return;
                                     }
 
-                                    await createChannel(auth.accessToken, [user.id]);
+                                    sendRequest({
+                                        query: 'CREATE_CHANNEL',
+                                        data: { recipients: [user.id] },
+                                    });
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
@@ -168,7 +168,12 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     className={styles.buttonAccept}
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        await addFriend(auth.accessToken, user.username);
+                                        sendRequest({
+                                            query: 'ADD_FRIEND',
+                                            params: {
+                                                username: user.username,
+                                            },
+                                        });
                                     }}
                                     onMouseEnter={(e) =>
                                         setTooltip({
@@ -190,7 +195,12 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                 className={styles.buttonCancel}
                                 onClick={async (e) => {
                                     e.stopPropagation();
-                                    await removeFriend(auth.accessToken, user.username);
+                                    sendRequest({
+                                        query: 'REMOVE_FRIEND',
+                                        params: {
+                                            username: user.username,
+                                        },
+                                    });
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
@@ -213,7 +223,12 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                await unblockUser(auth.accessToken, user.id);
+                                sendRequest({
+                                    query: 'UNBLOCK_USER',
+                                    params: {
+                                        username: user.username,
+                                    },
+                                });
                             }}
                             onMouseEnter={(e) =>
                                 setTooltip({

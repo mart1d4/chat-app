@@ -25,7 +25,7 @@ const Header = () => {
 
             <header className={styles.header}>
                 <nav>
-                    <a
+                    <Link
                         href='/'
                         className={styles.brand}
                     >
@@ -45,7 +45,7 @@ const Header = () => {
                             <path d='M6 8v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1' />
                             <path d='M15 5v-2' />
                         </svg>
-                    </a>
+                    </Link>
 
                     <div className={styles.navLinks}>
                         {links.map((link) => (

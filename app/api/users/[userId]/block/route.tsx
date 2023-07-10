@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
-export async function POST(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
-    const userId = params.userId;
+export async function POST(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const username = params.username;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: { params: { userId: string 
 
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
+                username: username,
             },
             select: {
                 id: true,
@@ -94,7 +94,7 @@ export async function POST(req: Request, { params }: { params: { userId: string 
 
             await prisma.user.update({
                 where: {
-                    id: userId,
+                    id: user.id,
                 },
                 data: {
                     friends: {
@@ -146,8 +146,8 @@ export async function POST(req: Request, { params }: { params: { userId: string 
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { userId: string } }): Promise<NextResponse> {
-    const userId = params.userId;
+export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const username = params.username;
     const headersList = headers();
     const senderId = headersList.get('userId') || '';
 
@@ -179,7 +179,7 @@ export async function DELETE(req: Request, { params }: { params: { userId: strin
 
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
+                username: username,
             },
             select: {
                 id: true,
