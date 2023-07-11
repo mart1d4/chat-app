@@ -211,6 +211,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
                                                         <Message
                                                             message={message}
+                                                            setMessages={setMessages}
                                                             large={shouldBeLarge(index)}
                                                             last={index === messages.length - 1}
                                                             edit={edit}

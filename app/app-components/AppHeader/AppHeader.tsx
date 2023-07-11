@@ -64,8 +64,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                           setFixedLayer({
                               type: 'popout',
                               element: e.currentTarget,
-                              firstSide: 'bottom',
-                              secondSide: 'left',
+                              firstSide: 'BOTTOM',
+                              secondSide: 'LEFT',
                               gap: 10,
                               channel: channel,
                               pinned: true,
@@ -81,8 +81,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                               type: 'popout',
                               element: e.currentTarget,
                               gap: 10,
-                              firstSide: 'bottom',
-                              secondSide: 'right',
+                              firstSide: 'BOTTOM',
+                              secondSide: 'RIGHT',
                               channel: channel,
                           });
                       },

@@ -1,5 +1,5 @@
 .container {
-    position: relative;
+    position: inherit;
     display: flex;
     border-radius: 50%;
 }

@@ -12,14 +12,6 @@
     user-select: text;
 }
 
-.message {
-    padding: 0.125rem 48px 0.125rem 72px;
-    position: relative;
-    word-wrap: break-word;
-    user-select: text;
-    min-height: 1.375rem;
-}
-
 .messageContent {
     position: static;
     margin-left: 0;
@@ -51,7 +43,6 @@
     display: inline;
     position: relative;
     overflow: hidden;
-    cursor: text;
     color: var(--foreground-1);
     user-select: text;
 }
@@ -63,7 +54,6 @@
     color: var(--foreground-4);
     margin-left: 0.25rem;
     display: inline-block;
-    cursor: default;
     font-weight: 500;
     height: 1.375rem;
     user-select: text;
@@ -80,6 +70,7 @@
     overflow: hidden;
     position: relative;
     text-indent: 0;
+    cursor: default;
     color: var(--foreground-2);
 }
 
@@ -96,7 +87,6 @@
     margin-right: 0.25rem;
     text-indent: 0;
     font-weight: 500;
-    cursor: default;
     display: inline-block;
     color: var(--foreground-4);
 }
@@ -117,7 +107,6 @@
 
 .editHint > span {
     color: var(--accent-light);
-    cursor: pointer;
 }
 
 .editHint > span:hover {
@@ -133,7 +122,6 @@
     line-height: 1.375rem;
     color: var(--foreground-4);
     height: 1.25rem;
-    cursor: default;
     font-weight: 500;
     user-select: none;
 }
@@ -191,24 +179,14 @@
     font-weight: 500;
     color: var(--foreground-1);
     position: relative;
-    cursor: pointer;
     overflow: hidden;
 }
 
-.messageReply > span:hover {
-    text-decoration: underline;
-}
-
 .messageReply > div {
-    cursor: pointer;
     text-overflow: ellipsis;
     flex: 0 1 auto;
     overflow: hidden;
     white-space: nowrap;
-}
-
-.messageReply > div:hover {
-    color: var(--foreground-1);
 }
 
 .specialIcon {
@@ -266,7 +244,6 @@
     position: relative;
     display: flex;
     align-items: center;
-    cursor: pointer;
     user-select: none;
     font-weight: 500;
     line-height: 16px;
@@ -289,7 +266,6 @@
     width: 16px;
     height: 16px;
     color: var(--foreground-3);
-    cursor: pointer;
 }
 
 .hoverContainer > svg:hover {

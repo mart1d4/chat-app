@@ -1,11 +1,13 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './FixedMessage.module.css';
 import { Avatar } from '@/app/app-components';
 
 const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean }) => {
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { sendRequest } = useFetchHelper();
 
     const getLongDate = (date: Date) => {
         return new Intl.DateTimeFormat('en-US', {
@@ -43,6 +45,15 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                         width='24'
                         height='24'
                         viewBox='0 0 24 24'
+                        onClick={() =>
+                            sendRequest({
+                                query: 'UNPIN_MESSAGE',
+                                params: {
+                                    channelId: message.channelId[0],
+                                    messageId: message.id,
+                                },
+                            })
+                        }
                     >
                         <path
                             fill='currentColor'

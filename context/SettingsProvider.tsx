@@ -1,33 +1,44 @@
 'use client';
 
-import { ReactElement, ReactNode, createContext, useEffect, useState } from 'react';
+import { ReactElement, ReactNode, createContext, useEffect, useState, Dispatch, SetStateAction } from 'react';
 
-export const SettingsContext = createContext<UserSettingsContextValueType>(null);
+type TSettings = {
+    language: string;
+    microphone: boolean;
+    sound: boolean;
+    camera: boolean;
+    appearance: string;
+    font: string;
+    theme: string;
+    friendTab: string;
+    sendButton: boolean;
+    showUsers: boolean;
+};
+
+type ProviderValue = {
+    userSettings: TSettings;
+    setUserSettings: Dispatch<SetStateAction<TSettings>>;
+};
+
+export const SettingsContext = createContext<ProviderValue | null>(null);
 
 const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement => {
-    const [userSettings, setUserSettings] = useState<UserSettingsObjectType>(null);
+    const [userSettings, setUserSettings] = useState<TSettings>({
+        language: 'en-US',
+        microphone: false,
+        sound: true,
+        camera: false,
+        appearance: 'default',
+        font: 'default',
+        theme: 'dark',
+        friendTab: 'add',
+        sendButton: false,
+        showUsers: true,
+    });
 
     useEffect(() => {
         const userSettingsLocal = localStorage.getItem('user-settings');
-
-        if (!userSettingsLocal) {
-            const userSettingsLocal: UserSettingsObjectType = {
-                language: 'en-US',
-                microphone: false,
-                sound: true,
-                camera: false,
-                notifications: true,
-                appearance: 'default',
-                font: 'default',
-                theme: 'dark',
-                friendTab: 'add',
-                sendButton: false,
-                showUsers: true,
-            };
-            setUserSettings(userSettingsLocal);
-        } else {
-            setUserSettings(JSON.parse(userSettingsLocal));
-        }
+        if (userSettingsLocal) setUserSettings(JSON.parse(userSettingsLocal));
     }, []);
 
     useEffect(() => {
@@ -35,7 +46,7 @@ const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement =
         localStorage.setItem('user-settings', JSON.stringify(userSettings));
     }, [userSettings]);
 
-    const value: UserSettingsContextValueType = {
+    const value: ProviderValue = {
         userSettings,
         setUserSettings,
     };

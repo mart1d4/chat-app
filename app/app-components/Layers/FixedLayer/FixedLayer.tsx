@@ -81,7 +81,7 @@ const FixedLayer = (): ReactElement => {
             // If a firstSide is specified, open the menu to that firstSide of the element
             const container = element?.getBoundingClientRect();
 
-            if (firstSide === 'left') {
+            if (firstSide === 'LEFT') {
                 pos = {
                     top: container.top,
                     left: container.left - contentContainer.width - gap,
@@ -93,7 +93,7 @@ const FixedLayer = (): ReactElement => {
                         top: container.bottom - contentContainer.height,
                     };
                 }
-            } else if (firstSide === 'right') {
+            } else if (firstSide === 'RIGHT') {
                 pos = {
                     top: container.top,
                     left: container.right + gap,
@@ -105,7 +105,7 @@ const FixedLayer = (): ReactElement => {
                         top: container.bottom - contentContainer.height,
                     };
                 }
-            } else if (firstSide === 'top') {
+            } else if (firstSide === 'TOP') {
                 pos = {
                     top: container.top - contentContainer.height - gap,
                     left: container.left,
@@ -117,7 +117,7 @@ const FixedLayer = (): ReactElement => {
                         left: container.right - contentContainer.width,
                     };
                 }
-            } else if (firstSide === 'bottom') {
+            } else if (firstSide === 'BOTTOM') {
                 pos = {
                     top: container.bottom + gap,
                     left: container.left,

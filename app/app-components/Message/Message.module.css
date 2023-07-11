@@ -347,6 +347,10 @@
     color: var(--foreground-2);
 }
 
+.buttons > div:active {
+    background-color: var(--background-hover-2);
+}
+
 .buttons > div > svg {
     width: 20px;
     height: 20px;

@@ -22,7 +22,7 @@ const UserItem = ({ user }: { user: TCleanUser }): ReactElement => {
                         type: 'usercard',
                         element: e.currentTarget,
                         user: user,
-                        firstSide: 'left',
+                        firstSide: 'LEFT',
                         gap: 16,
                     });
                 }

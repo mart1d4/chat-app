@@ -62,6 +62,106 @@ const Avatar = (props: Props) => {
                 aria-hidden='true'
                 className={styles.svg}
             >
+                <mask
+                    id='status-mask-24'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+
+                    <circle
+                        fill='black'
+                        cx='0.85'
+                        cy='0.85'
+                        r='0.275'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-32'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+
+                    <circle
+                        fill='black'
+                        cx='0.85'
+                        cy='0.85'
+                        r='0.25'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-40'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+
+                    <circle
+                        fill='black'
+                        cx='0.85'
+                        cy='0.85'
+                        r='0.240'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-80'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+
+                    <circle
+                        fill='black'
+                        cx='0.85'
+                        cy='0.85'
+                        r='0.175'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-120'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+
+                    <circle
+                        fill='black'
+                        cx='0.85'
+                        cy='0.85'
+                        r='0.16'
+                    />
+                </mask>
+
                 <foreignObject
                     x={0}
                     y={0}

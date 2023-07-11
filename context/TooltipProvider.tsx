@@ -2,7 +2,7 @@
 
 import { ReactElement, createContext, useState, Dispatch, SetStateAction } from 'react';
 
-type TooltipType = null | {
+type TTooltip = null | {
     text: string;
     element: HTMLElement;
     position: 'top' | 'bottom' | 'left' | 'right';
@@ -13,22 +13,21 @@ type TooltipType = null | {
     arrow?: boolean;
 };
 
-type TooltipValueType = {
-    tooltip: TooltipType;
-    setTooltip: Dispatch<SetStateAction<TooltipType>>;
+type ProviderValue = {
+    tooltip: TTooltip;
+    setTooltip: Dispatch<SetStateAction<TTooltip>>;
 };
 
-export const TooltipContext = createContext<TooltipType>(null);
+export const TooltipContext = createContext<ProviderValue | null>(null);
 
 const TooltipProvider = ({ children }: { children: ReactElement }): ReactElement => {
-    const [tooltip, setTooltip] = useState<TooltipType>(null);
+    const [tooltip, setTooltip] = useState<TTooltip>(null);
 
-    const value: TooltipValueType = {
+    const value: ProviderValue = {
         tooltip,
         setTooltip,
     };
 
-    // @ts-expect-error
     return <TooltipContext.Provider value={value}>{children}</TooltipContext.Provider>;
 };
 

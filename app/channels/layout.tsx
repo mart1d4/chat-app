@@ -19,22 +19,26 @@ export const metadata: Metadata = {
 const Layout = ({ children }: { children: ReactNode }): ReactElement => {
     return (
         <Loading>
-            <div className={styles.appContainer}>
-                <AppNav />
+            <>
+                <div className={styles.appContainer}>
+                    <AppNav />
 
-                <Popup />
-                <Settings />
-                <FixedLayer />
-                <UserProfile />
-                <TooltipLayer />
-
-                <div className={styles.appWrapper}>
-                    <div className={styles.channelsContainer}>
-                        <Channels />
-                        {children}
+                    <div className={styles.appWrapper}>
+                        <div className={styles.channelsContainer}>
+                            <Channels />
+                            {children}
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <div className={styles.layers}>
+                    <Popup />
+                    <Settings />
+                    <FixedLayer />
+                    <UserProfile />
+                    <TooltipLayer />
+                </div>
+            </>
         </Loading>
     );
 };

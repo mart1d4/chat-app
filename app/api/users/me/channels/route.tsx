@@ -27,9 +27,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Invalid user ID.',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
@@ -90,9 +88,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 message: 'Channels fetched successfully',
                 channels: sender.channels,
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -101,9 +97,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

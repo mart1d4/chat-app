@@ -11,6 +11,7 @@ type TQuery =
     | 'REMOVE_FRIEND'
     | 'BLOCK_USER'
     | 'UNBLOCK_USER'
+    | 'UPDATE_USER'
     | 'CREATE_CHANNEL'
     | 'UPDATE_CHANNEL'
     | 'LEAVE_CHANNEL'
@@ -38,6 +39,7 @@ const urls = {
     ['REMOVE_FRIEND']: '/users/me/friends/:username',
     ['BLOCK_USER']: '/users/:username/block',
     ['UNBLOCK_USER']: '/users/:username/block',
+    ['UPDATE_USER']: '/users/me',
     ['CREATE_CHANNEL']: '/users/me/channels',
     ['UPDATE_CHANNEL']: '/users/me/channels/:channelId',
     ['LEAVE_CHANNEL']: '/users/me/channels/:channelId',
@@ -56,6 +58,7 @@ const methods = {
     ['REMOVE_FRIEND']: 'DELETE',
     ['BLOCK_USER']: 'POST',
     ['UNBLOCK_USER']: 'DELETE',
+    ['UPDATE_USER']: 'PATCH',
     ['CREATE_CHANNEL']: 'POST',
     ['UPDATE_CHANNEL']: 'PATCH',
     ['LEAVE_CHANNEL']: 'DELETE',
@@ -85,7 +88,7 @@ const useFetchHelper = () => {
         }
 
         if (query === 'CREATE_CHANNEL') {
-            const channel = channelExists(data?.recipients);
+            const channel = channelExists([...data?.recipients, auth.user.id]);
 
             if (channel) {
                 router.push(`/channels/me/${channel}`);

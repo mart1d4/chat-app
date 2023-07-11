@@ -11,7 +11,6 @@ import UserItem from './UserItem';
 
 const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => {
     const [user, setUser] = useState<null | TCleanUser>(null);
-    const [hover, setHover] = useState<boolean>(false);
 
     const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<TGuild[]>([]);
@@ -73,8 +72,6 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
         if (channel?.type === 'DM' && user) {
             return (
                 <aside
-                    onMouseEnter={() => setHover(true)}
-                    onMouseLeave={() => setHover(false)}
                     className={styles.aside}
                     style={
                         {
@@ -125,9 +122,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         style={{
                                             backgroundColor: !user.banner ? user.primaryColor : '',
                                             backgroundImage: user.banner
-                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/${
-                                                      !hover && '-/format/webp/'
-                                                  }`
+                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
                                                 : '',
                                             height: '120px',
                                         }}
@@ -140,9 +135,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                             <div
                                 className={styles.avatarImage}
                                 style={{
-                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/${
-                                        !hover && '-/format/webp/'
-                                    }`,
+                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
                                 }}
                             />
 
@@ -342,7 +335,6 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
         mutualGuilds,
         showFriends,
         showGuilds,
-        hover,
     ]);
 };
 

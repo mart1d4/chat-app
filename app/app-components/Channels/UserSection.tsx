@@ -30,8 +30,8 @@ const UserSection = (): ReactElement => {
                             type: 'usercard',
                             user: auth.user,
                             element: e.currentTarget,
-                            firstSide: 'top',
-                            secondSide: 'right',
+                            firstSide: 'TOP',
+                            secondSide: 'RIGHT',
                             gap: 14,
                         });
                     }}

@@ -5,6 +5,7 @@ import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
 import { getButtonColor } from '@/lib/colors/getColors';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
 import useLogout from '@/hooks/useLogout';
@@ -300,7 +301,7 @@ const MyAccount = ({ setActiveTab }: any) => {
             title: 'Username',
             value: auth.user.username,
             edit: true,
-            func: () => setPopup({ username: {} }),
+            func: () => setPopup({ type: 'UPDATE_USERNAME' }),
         },
         {
             title: 'Email',
@@ -402,11 +403,7 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <button
                     className='blue'
                     style={{ marginBottom: '28px' }}
-                    onClick={() =>
-                        setPopup({
-                            password: {},
-                        })
-                    }
+                    onClick={() => setPopup({ type: 'UPDATE_PASSWORD' })}
                 >
                     Change Password
                 </button>
@@ -448,7 +445,9 @@ const MyAccount = ({ setActiveTab }: any) => {
 
 const Profiles = () => {
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
     const tabs = ['User Profile', 'Server Profiles'];
 
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
@@ -509,23 +508,19 @@ const Profiles = () => {
                 }
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/me`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.accessToken}`,
-                },
-                body: JSON.stringify({
+            const response = await sendRequest({
+                query: 'UPDATE_USER',
+                data: {
                     avatar: avatarUrl ? avatarUrl : avatar !== auth.user.avatar ? avatar : undefined,
                     banner: bannerUrl ? bannerUrl : banner !== auth.user.banner ? banner : undefined,
                     displayName: displayName !== auth.user.displayName ? displayName : undefined,
                     primaryColor: primaryColor !== auth.user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== auth.user.accentColor ? accentColor : undefined,
                     description: description !== auth.user.description ? description : undefined,
-                }),
+                },
             });
 
-            if (!response.ok) {
+            if (!response.success) {
                 console.error(response);
                 return resetState();
             }
@@ -700,19 +695,32 @@ const Profiles = () => {
                     accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
                     onChange={async (e) => {
                         const file = e.target.files ? e.target.files[0] : null;
-                        if (!file) return;
+                        if (!file) {
+                            e.target.value = '';
+                            return;
+                        }
 
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            return alert('File size is too large. Max 10MB');
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_SIZE',
+                            });
+                            e.target.value = '';
+                            return;
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_TYPE',
+                            });
+                            e.target.value = '';
+                            return;
                         }
 
                         const newFile = new File([file], 'image', {
@@ -720,6 +728,7 @@ const Profiles = () => {
                         });
 
                         setAvatar(newFile);
+                        e.target.value = '';
                     }}
                 />
 
@@ -730,19 +739,32 @@ const Profiles = () => {
                     accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
                     onChange={async (e) => {
                         const file = e.target.files ? e.target.files[0] : null;
-                        if (!file) return;
+                        if (!file) {
+                            e.target.value = '';
+                            return;
+                        }
 
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            return alert('File size is too large. Max 10MB');
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_SIZE',
+                            });
+                            e.target.value = '';
+                            return;
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            return alert('File type is not supported. Supported file types are: PNG, JPEG, GIF, WEBP');
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_TYPE',
+                            });
+                            e.target.value = '';
+                            return;
                         }
 
                         const newFile = new File([file], 'image', {
@@ -750,6 +772,7 @@ const Profiles = () => {
                         });
 
                         setBanner(newFile);
+                        e.target.value = '';
                     }}
                 />
 

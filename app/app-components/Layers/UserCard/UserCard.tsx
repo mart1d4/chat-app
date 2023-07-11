@@ -12,9 +12,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({
-        context: 'layer',
-    });
+    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -53,9 +51,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             '--card-border-color': user.primaryColor,
                         } as React.CSSProperties
                     }
-                    initial={{
-                        transform: `translateX(${side === 'left' ? '-' : side === 'right' && '+'}20px)`,
-                    }}
+                    initial={{ transform: `translateX(${side === 'LEFT' ? '-' : '+'}20px)` }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >

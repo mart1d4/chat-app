@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react';
 import { trimMessage } from '@/lib/strings';
 import styles from './Message.module.css';
 
-type MessageProps = {
+type Props = {
     message: TMessage;
+    setMessages: React.Dispatch<React.SetStateAction<TMessage[]>>;
     large?: boolean;
     last?: boolean;
     edit?: MessageEditObject | null;
@@ -17,7 +18,7 @@ type MessageProps = {
     setReply?: React.Dispatch<React.SetStateAction<MessageReplyObject | null>>;
 };
 
-const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProps) => {
+const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }: Props) => {
     // States
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
@@ -76,6 +77,64 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
 
     // Functions
 
+    const deleteLocalMessage = () => {
+        setMessages((messages) => messages.filter((m) => m.id !== message.id));
+    };
+
+    const retrySendMessage = async (prevMessage: TMessage) => {
+        const tempMessage = {
+            id: prevMessage.id,
+            content: prevMessage.content,
+            attachments: prevMessage.attachments,
+            author: prevMessage.author,
+            channelId: [prevMessage.channelId[0]],
+            messageReference: prevMessage.messageReference,
+            createdAt: new Date(),
+            error: false,
+            waiting: true,
+        };
+
+        deleteLocalMessage();
+        // @ts-expect-error
+        setMessages((messages: TMessage[]) => [...messages, tempMessage]);
+
+        try {
+            const response = await sendRequest({
+                query: 'SEND_MESSAGE',
+                params: { channelId: prevMessage.channelId[0] },
+                data: {
+                    message: {
+                        content: prevMessage.content,
+                        attachments: prevMessage.attachments,
+                        messageReference: prevMessage.messageReference,
+                    },
+                },
+            });
+
+            if (!response.success) {
+                setMessages((messages: TMessage[]) =>
+                    messages.map((message) =>
+                        message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
+                    )
+                );
+                return;
+            }
+
+            const message = response.data.message;
+
+            // Stop message from being marked as waiting
+            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== prevMessage.id));
+            setMessages((messages: TMessage[]) => [...messages, prevMessage]);
+        } catch (err) {
+            console.error(err);
+            setMessages((messages: TMessage[]) =>
+                messages.map((message) =>
+                    message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
+                )
+            );
+        }
+    };
+
     const setLocalStorage = (data: {}) => {
         localStorage.setItem(
             `channel-${message.channelId[0]}`,
@@ -88,27 +147,24 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
 
     const deletePopup = () => {
         setPopup({
-            delete: {
-                channelId: message.channelId[0],
-            },
+            type: 'DELETE_MESSAGE',
+            channelId: message.channelId[0],
             message: message,
         });
     };
 
     const pinPopup = () => {
         setPopup({
-            pin: {
-                channelId: message.channelId[0],
-            },
+            type: 'PIN_MESSAGE',
+            channelId: message.channelId[0],
             message: message,
         });
     };
 
     const unpinPopup = () => {
         setPopup({
-            unpin: {
-                channelId: message.channelId[0],
-            },
+            type: 'UNPIN_MESSAGE',
+            channelId: message.channelId[0],
             message: message,
         });
     };
@@ -141,7 +197,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
 
         try {
             sendRequest({
-                query: 'DELETE_MESSAGE',
+                query: 'UPDATE_MESSAGE',
                 params: {
                     channelId: message.channelId[0],
                     messageId: message.id,
@@ -257,6 +313,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                         functions={{
                             deletePopup,
                             replyToMessageState,
+                            deleteLocalMessage,
+                            retrySendMessage,
                         }}
                     />
                 )}
@@ -319,7 +377,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
             onMouseLeave={() => setHover(false)}
             onContextMenu={(e) => {
                 e.preventDefault();
-                if (edit?.messageId === message.id) return;
+                if (edit?.messageId === message.id || message.waiting || message.error) return;
                 setFixedLayer({
                     type: 'menu',
                     event: {
@@ -352,6 +410,8 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                         unpinPopup,
                         editMessageState,
                         replyToMessageState,
+                        deleteLocalMessage,
+                        retrySendMessage,
                     }}
                 />
             )}
@@ -376,10 +436,9 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                                     mouseX: e.clientX,
                                                     mouseY: e.clientY,
                                                 },
-                                                // @ts-ignore
                                                 user: message.messageReference?.author,
                                                 element: e.currentTarget,
-                                                firstSide: 'right',
+                                                firstSide: 'RIGHT',
                                                 gap: 10,
                                             });
                                         }
@@ -430,10 +489,9 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                         } else {
                                             setFixedLayer({
                                                 type: 'usercard',
-                                                // @ts-ignore
                                                 user: message.messageReference?.author,
                                                 element: e.currentTarget,
-                                                firstSide: 'right',
+                                                firstSide: 'RIGHT',
                                                 gap: 10,
                                             });
                                         }
@@ -506,7 +564,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                     type: 'usercard',
                                     user: message?.author,
                                     element: e.currentTarget,
-                                    firstSide: 'right',
+                                    firstSide: 'RIGHT',
                                     gap: 10,
                                 });
                             }}
@@ -544,7 +602,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                                             type: 'usercard',
                                             user: message.author,
                                             element: e.currentTarget,
-                                            firstSide: 'right',
+                                            firstSide: 'RIGHT',
                                             gap: 10,
                                         });
                                     }
@@ -634,6 +692,7 @@ const Message = ({ message, large, edit, setEdit, reply, setReply }: MessageProp
                     <div
                         className={styles.messageContent}
                         onDoubleClick={() => {
+                            if (message.waiting || message.error) return;
                             if (message.author?.id === auth?.user?.id) editMessageState();
                             else replyToMessageState();
                         }}
@@ -730,85 +789,123 @@ const MessageMenu = ({ message, large, functions }: any) => {
                 style={{ top: large ? '-16px' : '-25px' }}
             >
                 <div className={styles.buttons}>
-                    <div
-                        role='button'
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text: 'Add Reaction',
-                                element: e.currentTarget,
-                                gap: 3,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        <Icon name='addReaction' />
-                    </div>
+                    {!message.error ? (
+                        <>
+                            <div
+                                role='button'
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Add Reaction',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
+                            >
+                                <Icon name='addReaction' />
+                            </div>
 
-                    {menuSender ? (
-                        <div
-                            role='button'
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: 'Edit',
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
-                            onClick={() => functions.editMessageState()}
-                        >
-                            <Icon name='edit' />
-                        </div>
+                            {menuSender ? (
+                                <div
+                                    role='button'
+                                    onMouseEnter={(e) =>
+                                        setTooltip({
+                                            text: 'Edit',
+                                            element: e.currentTarget,
+                                            gap: 3,
+                                        })
+                                    }
+                                    onMouseLeave={() => setTooltip(null)}
+                                    onClick={() => functions.editMessageState()}
+                                >
+                                    <Icon name='edit' />
+                                </div>
+                            ) : (
+                                <div
+                                    role='button'
+                                    onMouseEnter={(e) =>
+                                        setTooltip({
+                                            text: 'Reply',
+                                            element: e.currentTarget,
+                                            gap: 3,
+                                        })
+                                    }
+                                    onMouseLeave={() => setTooltip(null)}
+                                    onClick={() => functions.replyToMessageState()}
+                                >
+                                    <Icon name='reply' />
+                                </div>
+                            )}
+
+                            <div
+                                role='button'
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'More',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (fixedLayer?.element === e.currentTarget) {
+                                        setFixedLayer(null);
+                                    } else {
+                                        setFixedLayer({
+                                            type: 'menu',
+                                            firstSide: 'LEFT',
+                                            element: e.currentTarget,
+                                            gap: 5,
+                                            message: message,
+                                            deletePopup: functions.deletePopup,
+                                            pinPopup: functions.pinPopup,
+                                            unpinPopup: functions.unpinPopup,
+                                            editMessageState: functions.editMessageState,
+                                            replyToMessageState: functions.replyToMessageState,
+                                        });
+                                        setTooltip(null);
+                                    }
+                                }}
+                            >
+                                <Icon name='dots' />
+                            </div>
+                        </>
+                    ) : message.waiting ? (
+                        <></>
                     ) : (
-                        <div
-                            role='button'
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: 'Reply',
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
-                            onClick={() => functions.replyToMessageState()}
-                        >
-                            <Icon name='reply' />
-                        </div>
-                    )}
+                        <>
+                            <div
+                                role='button'
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Retry',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
+                                onClick={() => functions.retrySendMessage(message)}
+                            >
+                                <Icon name='retry' />
+                            </div>
 
-                    <div
-                        role='button'
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text: 'More',
-                                element: e.currentTarget,
-                                gap: 3,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (fixedLayer?.element === e.currentTarget) {
-                                setFixedLayer(null);
-                            } else {
-                                setFixedLayer({
-                                    type: 'menu',
-                                    firstSide: 'left',
-                                    element: e.currentTarget,
-                                    gap: 5,
-                                    message: message,
-                                    deletePopup: functions.deletePopup,
-                                    pinPopup: functions.pinPopup,
-                                    unpinPopup: functions.unpinPopup,
-                                    editMessageState: functions.editMessageState,
-                                    replyToMessageState: functions.replyToMessageState,
-                                });
-                                setTooltip(null);
-                            }
-                        }}
-                    >
-                        <Icon name='dots' />
-                    </div>
+                            <div
+                                role='button'
+                                onMouseEnter={(e) =>
+                                    setTooltip({
+                                        text: 'Delete',
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    })
+                                }
+                                onMouseLeave={() => setTooltip(null)}
+                                onClick={() => functions.deleteLocalMessage()}
+                            >
+                                <Icon name='delete' />
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

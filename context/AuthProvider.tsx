@@ -1,14 +1,26 @@
 'use client';
 
-import { ReactElement, ReactNode, createContext, useState, useEffect } from 'react';
+import { ReactElement, ReactNode, createContext, useState, Dispatch, SetStateAction } from 'react';
 
-export const AuthContext = createContext<AuthContextValueType>(null);
+type TAuth = null | {
+    user: TCleanUser;
+    accessToken: string;
+};
+
+type ProviderValue = {
+    auth: TAuth;
+    setAuth: Dispatch<SetStateAction<TAuth>>;
+    loading: boolean;
+    setLoading: Dispatch<SetStateAction<boolean>>;
+};
+
+export const AuthContext = createContext<ProviderValue | null>(null);
 
 const AuthProvider = ({ children }: { children: ReactNode }): ReactElement => {
-    const [auth, setAuth] = useState<AuthObjectType>(null);
+    const [auth, setAuth] = useState<TAuth>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const value: AuthContextValueType = {
+    const value: ProviderValue = {
         auth,
         setAuth,
         loading,

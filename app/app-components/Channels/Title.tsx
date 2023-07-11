@@ -36,8 +36,8 @@ const Title = (): ReactElement => {
                             type: 'popout',
                             element: e.currentTarget,
                             gap: 5,
-                            firstSide: 'bottom',
-                            secondSide: 'right',
+                            firstSide: 'BOTTOM',
+                            secondSide: 'RIGHT',
                         });
                     }
                 }}

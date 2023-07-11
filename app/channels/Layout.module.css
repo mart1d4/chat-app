@@ -21,3 +21,17 @@
     min-width: 0;
     flex: 1 1 auto;
 }
+
+.layers {
+    position: fixed;
+    width: 100dvw;
+    height: 100dvh;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.layers > * {
+    pointer-events: auto;
+}

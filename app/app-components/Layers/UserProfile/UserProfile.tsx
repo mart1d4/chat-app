@@ -24,21 +24,14 @@ const UserProfile = (): ReactElement => {
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
     const user: null | TCleanUser = userProfile?.user;
-
     const isSameUser = () => user?.id === auth.user.id;
-
-    const shouldShowContent = () => {
-        return (
-            auth.user.friendIds?.includes(user?.id) || auth.user.requestsReceivedIds?.includes(user?.id) || isSameUser()
-        );
-    };
 
     useEffect(() => {
         if (!user) return;
 
         if (!isSameUser()) {
             const friends = auth.user.friends || [];
-            const mutuals = friends.filter((friend: any) => user.friendIds.includes(friend.id));
+            const mutuals = friends.filter((friend: TCleanUser) => user.friendIds?.includes(friend.id));
             setMutualFriends(mutuals);
         }
 
@@ -197,7 +190,7 @@ const UserProfile = (): ReactElement => {
                                     className={styles.cardAvatarStatus}
                                     onMouseEnter={(e) => {
                                         setTooltip({
-                                            text: translateCap(user.status),
+                                            text: translateCap(user.status ?? 'Offline'),
                                             element: e.currentTarget,
                                             gap: 5,
                                         });
@@ -478,7 +471,7 @@ const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
                     src={friend.avatar}
                     alt={friend.username}
                     size={40}
-                    status={friend.status}
+                    status={friend.status ?? 'Offline'}
                 />
             </div>
 

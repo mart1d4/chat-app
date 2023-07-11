@@ -7,6 +7,7 @@ import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
+import useFetchHelper from '@/hooks/useFetchHelper';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
@@ -20,6 +21,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     const { userSettings }: any = useContextHook({ context: 'settings' });
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { sendRequest } = useFetchHelper();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
@@ -86,6 +88,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             content: messageContent,
             attachments: files,
             author: auth.user,
+            channelId: [channel.id],
             messageReference: reply?.messageId ?? null,
             createdAt: new Date(),
             error: false,
@@ -108,25 +111,19 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         }
 
         try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/users/me/channels/${channel.id}/messages`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${auth.accessToken}`,
+            const response = await sendRequest({
+                query: 'SEND_MESSAGE',
+                params: { channelId: channel.id },
+                data: {
+                    message: {
+                        content: messageContent,
+                        attachments: files,
+                        messageReference: reply?.messageId ?? null,
                     },
-                    body: JSON.stringify({
-                        message: {
-                            content: messageContent,
-                            attachments: files,
-                            messageReference: reply?.messageId ?? null,
-                        },
-                    }),
-                }
-            );
+                },
+            });
 
-            if (!response.ok) {
+            if (!response.success) {
                 setMessages((messages: TMessage[]) =>
                     messages.map((message) =>
                         message.id === tempId ? { ...message, error: true, waiting: false } : message
@@ -135,7 +132,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 return;
             }
 
-            const message = await response.json().then((data) => data.data.message);
+            const message = response.data.message;
 
             // Stop message from being marked as waiting
             setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempId));
