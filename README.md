@@ -34,6 +34,7 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] Channel that receives new message websocket need to display channel item as active
 -   [ ] Fixed layer components are being rerendered when clicking the buttons to open/close them
 -   [ ] Editing the image using `enter` to submit the form doesn't always work
+-   [ ] User card and User profile banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 
