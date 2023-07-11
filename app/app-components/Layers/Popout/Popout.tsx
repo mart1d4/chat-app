@@ -295,7 +295,6 @@ const Popout = ({ content }: any) => {
                                             setChosen(chosen?.filter((user) => user.id !== friend.id));
                                         } else {
                                             if (placesLeft > 0) {
-                                                console.log('here');
                                                 setChosen([...chosen, friend]);
                                                 setSearch('');
                                             }

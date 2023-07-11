@@ -541,7 +541,7 @@ const Profiles = () => {
             displayName !== auth.user.displayName ||
             primaryColor !== auth.user.primaryColor ||
             accentColor !== auth.user.accentColor ||
-            description !== auth.user.description
+            description !== (auth.user.description || '')
         );
     }, [avatar, banner, displayName, primaryColor, accentColor, description, auth.user]);
 

@@ -39,7 +39,10 @@ const FixedLayer = (): ReactElement => {
                 return;
             }
 
-            setCurrentNode(node);
+            // Timeout so that the node is rendered before we try to get it
+            setTimeout(() => {
+                setCurrentNode(node);
+            }, 10);
         },
         [fixedLayer, resetPosition]
     );
@@ -178,11 +181,11 @@ const FixedLayer = (): ReactElement => {
             if (e.key === 'Escape') setFixedLayer(null);
         };
 
-        document.addEventListener('click', handleClick);
+        document.addEventListener('mousedown', handleClick);
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.removeEventListener('click', handleClick);
+            document.removeEventListener('mousedown', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [currentNode]);
@@ -194,8 +197,8 @@ const FixedLayer = (): ReactElement => {
                 ...positions,
                 zIndex: 1000,
                 position: 'fixed',
-                width: contentContainer?.width || 'auto',
-                height: contentContainer?.height || 'auto',
+                width: contentContainer?.width,
+                height: contentContainer?.height,
                 visibility: positions ? 'visible' : 'hidden',
             }}
             onClick={(e) => e.stopPropagation()}

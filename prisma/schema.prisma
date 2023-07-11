@@ -139,7 +139,7 @@ model User {
     description   String?
     customStatus  String?
     password      String
-    refreshToken  String?         @unique
+    refreshToken  String?
     status        EUserStatus     @default(OFFLINE)
     system        Boolean         @default(false)
     verified      Boolean         @default(false)

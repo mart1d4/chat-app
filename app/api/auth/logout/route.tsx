@@ -12,14 +12,12 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'No cookie found',
             },
-            {
-                status: 401,
-            }
+            { status: 401 }
         );
     }
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: {
                 refreshToken: token,
             },
@@ -45,7 +43,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 id: user.id,
             },
             data: {
-                refreshToken: '',
+                refreshToken: null,
             },
         });
 
@@ -68,9 +66,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

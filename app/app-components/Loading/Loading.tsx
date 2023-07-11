@@ -21,10 +21,6 @@ const Loading = ({ children }: Props): ReactElement => {
         }
     }, [auth, loading]);
 
-    useEffect(() => {
-        setTooltip(null);
-    }, [showSettings, userProfile, popup, fixedLayer]);
-
     return (
         <div
             onDrag={(e) => e.preventDefault()}

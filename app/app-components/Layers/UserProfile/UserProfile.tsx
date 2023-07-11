@@ -197,7 +197,7 @@ const UserProfile = (): ReactElement => {
                                     }}
                                     onMouseLeave={() => setTooltip(null)}
                                 >
-                                    <div />
+                                    <div style={{ backgroundColor: 'black' }} />
 
                                     <svg>
                                         <rect
