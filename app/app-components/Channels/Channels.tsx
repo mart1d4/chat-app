@@ -97,7 +97,7 @@ const Channels = (): ReactElement => {
             pusher.unbind('channel-left');
             pusher.unbind('message-sent');
         };
-    }, []);
+    }, [auth.user]);
 
     return (
         <div className={styles.nav}>

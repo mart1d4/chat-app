@@ -70,7 +70,7 @@ const AppNav = (): ReactElement => {
             pusher.unbind('message-sent');
             pusher.unbind('relationship-updated');
         };
-    }, []);
+    }, [auth.user]);
 
     const addFriend = useCallback(
         (user: TCleanUser) => {

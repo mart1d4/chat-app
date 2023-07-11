@@ -12,7 +12,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
-    const [files, setFiles] = useState<File[]>([]);
+    const [files, setFiles] = useState<
+        {
+            file: File;
+            id: string;
+        }[]
+    >([]);
     const [usersTyping, setUsersTyping] = useState<
         {
             [key: string]: boolean;
@@ -336,7 +341,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                 <ul className={styles.filesList + ' scrollbar'}>
                                     {files?.map((file) => (
                                         <FilePreview
-                                            key={file.name + file.lastModified}
+                                            key={file.id}
                                             file={file}
                                             setFiles={setFiles}
                                         />
@@ -380,7 +385,11 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                                 return;
                                             }
 
-                                            checkedFiles.push(file);
+                                            const fileToAdd = {
+                                                file: file,
+                                                id: uuidv4(),
+                                            };
+                                            checkedFiles.push(fileToAdd);
                                         }
 
                                         setFiles([...files, ...checkedFiles]);
@@ -613,44 +622,79 @@ export const EmojiPicker = () => {
 };
 
 const FilePreview = ({ file, setFiles }: any) => {
+    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [isImage, setIsImage] = useState<boolean | null>(null);
+
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setPopup }: any = useContextHook({ context: 'layer' });
 
     useEffect(() => {
         const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];
 
         const isFileImage = async () => {
-            const fileBytes = new Uint8Array(await file.arrayBuffer());
-            const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
+            const fileBytes = new Uint8Array(await file.file.arrayBuffer());
+            const fileType = filetypeinfo(fileBytes)?.[0]?.mime?.toString();
             setIsImage(imageTypes.includes(fileType ?? ''));
         };
 
         isFileImage();
     }, [file]);
 
+    const handleFileChange = (data: any) => {
+        console.log(data);
+        const editedFile = {
+            file: new File([file.file], data.isSpoiler ? `SPOILER_${data.filename}` : data.filename, {
+                type: file.file.type,
+            }),
+            id: file.id,
+            description: data.description,
+        };
+
+        setFiles((files: any) => files.map((f: any) => (f.id === file.id ? editedFile : f)));
+    };
+
+    const isSpoiler = file.file.name.startsWith('SPOILER_');
+
     return useMemo(() => {
         if (typeof isImage !== 'boolean') {
             return <></>;
         }
+
         return (
             <li className={styles.fileItem}>
                 <div className={styles.fileItemContainer}>
-                    <div className={styles.image}>
+                    <div
+                        className={styles.image}
+                        style={{
+                            backgroundColor: isSpoiler && !hideSpoiler ? 'var(--background-dark-2)' : '',
+                            cursor: isSpoiler && !hideSpoiler ? 'pointer' : 'default',
+                        }}
+                        onClick={() => isSpoiler && setHideSpoiler(true)}
+                    >
+                        {isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+
                         {isImage ? (
                             <img
-                                src={URL.createObjectURL(file)}
+                                src={URL.createObjectURL(file.file)}
                                 alt='File Preview'
+                                style={{ filter: isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none' }}
                             />
                         ) : (
                             <img
                                 src='/assets/app/file-text.svg'
                                 alt='File Preview'
+                                style={{ filter: isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none' }}
                             />
                         )}
+
+                        <div className={styles.imageTags}>
+                            {file.description && <span>Alt</span>}
+                            {isSpoiler && hideSpoiler && <span>Spoiler</span>}
+                        </div>
                     </div>
 
                     <div className={styles.fileName}>
-                        <div>{file.name}</div>
+                        <div>{isSpoiler ? file.file.name.slice(8) : file.file.name}</div>
                     </div>
                 </div>
 
@@ -667,9 +711,24 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
+                                onClick={() => {
+                                    const editedFile = {
+                                        file: new File(
+                                            [file.file],
+                                            isSpoiler ? file.file.name.slice(8) : 'SPOILER_' + file.file.name,
+                                            { type: file.file.type }
+                                        ),
+                                        id: file.id,
+                                        description: file.description,
+                                    };
+
+                                    setFiles((files: any) =>
+                                        files.map((f: any) => (f.id === file.id ? editedFile : f))
+                                    );
+                                }}
                             >
                                 <Icon
-                                    name='eye'
+                                    name={isSpoiler ? 'eyeSlash' : 'eye'}
                                     size={20}
                                 />
                             </div>
@@ -686,6 +745,14 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
+                                onClick={() => {
+                                    setTooltip(null);
+                                    setPopup({
+                                        type: 'FILE_EDIT',
+                                        file: file,
+                                        handleFileChange,
+                                    });
+                                }}
                             >
                                 <Icon
                                     name='edit'
@@ -706,7 +773,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    setFiles((files: any) => files.filter((f: any) => f !== file));
+                                    setFiles((files: any) => files.filter((f: any) => f.id !== file.id));
                                     setTooltip(null);
                                 }}
                             >
@@ -721,7 +788,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                 </div>
             </li>
         );
-    }, [file, isImage]);
+    }, [file, isImage, hideSpoiler]);
 };
 
 export default TextArea;

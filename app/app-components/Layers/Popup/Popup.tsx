@@ -1,10 +1,11 @@
 'use client';
 
+import { FixedMessage, LoadingDots, Icon } from '@/app/app-components';
 import { useRef, useEffect, useState, ReactElement } from 'react';
-import { FixedMessage, LoadingDots } from '@/app/app-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
@@ -25,9 +26,28 @@ const Popup = (): ReactElement => {
     const [password1Error, setPassword1Error] = useState('');
     const [newPasswordError, setNewPasswordError] = useState('');
 
+    const [isImage, setIsImage] = useState<boolean>(false);
+    const [filename, setFilename] = useState('');
+    const [description, setDescription] = useState('');
+    const [isSpoiler, setIsSpoiler] = useState(false);
+
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!popup?.file) return;
+
+        const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];
+
+        const isFileImage = async () => {
+            const fileBytes = new Uint8Array(await popup?.file.file.arrayBuffer());
+            const fileType = filetypeinfo(fileBytes)?.[0]?.mime?.toString();
+            setIsImage(imageTypes.includes(fileType ?? ''));
+        };
+
+        isFileImage();
+    }, [popup?.file]);
 
     const handleUsernameSubmit = async () => {
         if (isLoading) return;
@@ -131,6 +151,8 @@ const Popup = (): ReactElement => {
         setIsLoading(false);
     };
 
+    const editFile = () => {};
+
     const props = {
         UPDATE_USERNAME: {
             title: 'Change your username',
@@ -189,7 +211,27 @@ const Popup = (): ReactElement => {
                     },
                 }),
         },
+        FILE_EDIT: {
+            title: popup?.file?.file?.name,
+            description: '',
+            buttonColor: 'blue',
+            buttonText: 'Save',
+            function: () =>
+                popup.handleFileChange({
+                    filename: filename,
+                    description: description,
+                    isSpoiler: isSpoiler,
+                }),
+        },
     };
+
+    useEffect(() => {
+        if (!popup?.file) return;
+        const name = popup?.file.file.name;
+        setFilename(name.startsWith('SPOILER_') ? name.slice(8) : name);
+        setDescription(popup?.file.description ?? '');
+        setIsSpoiler(popup?.file.file.name.startsWith('SPOILER_'));
+    }, [popup?.file]);
 
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
@@ -329,7 +371,26 @@ const Popup = (): ReactElement => {
                         opacity: 0,
                     }}
                     transition={{ ease: 'easeInOut', duration: 0.2 }}
+                    style={{
+                        width: type === 'FILE_EDIT' ? '530px' : '',
+                        padding: type === 'FILE_EDIT' ? '84px 4px 0 4px' : '',
+                    }}
                 >
+                    {type === 'FILE_EDIT' &&
+                        (isImage ? (
+                            <img
+                                className={styles.imagePopup}
+                                src={URL.createObjectURL(popup.file.file)}
+                                alt={popup.file.file.name}
+                            />
+                        ) : (
+                            <img
+                                className={styles.imagePopup}
+                                src='/assets/app/file-text.svg'
+                                alt={popup.file.file.name}
+                            />
+                        ))}
+
                     {type !== 'UPDATE_USERNAME' && type !== 'UPDATE_PASSWORD' ? (
                         <div className={styles.titleBlock}>
                             <h1>{prop.title}</h1>
@@ -356,7 +417,7 @@ const Popup = (): ReactElement => {
                     )}
 
                     <div className={styles.popupContent + ' scrollbar'}>
-                        {type !== 'UPDATE_USERNAME' && type !== 'UPDATE_PASSWORD' && (
+                        {popup?.message && (
                             <>
                                 <div className={styles.description}>{prop.description}</div>
                                 <div className={styles.messagesContainer}>
@@ -378,6 +439,97 @@ const Popup = (): ReactElement => {
                                     to bypass this confirmation entirely.
                                 </div>
                             </div>
+                        )}
+
+                        {type === 'FILE_EDIT' && (
+                            <>
+                                <div className={styles.input}>
+                                    <label
+                                        htmlFor='uid'
+                                        style={{
+                                            color: usernameError.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                                        }}
+                                    >
+                                        Filename
+                                        {usernameError.length > 0 && (
+                                            <span className={styles.errorLabel}>- {usernameError}</span>
+                                        )}
+                                    </label>
+                                    <div className={styles.inputContainer}>
+                                        <input
+                                            id='filename'
+                                            type='text'
+                                            name='filename'
+                                            aria-label='Filename'
+                                            autoCapitalize='off'
+                                            autoComplete='off'
+                                            autoCorrect='off'
+                                            spellCheck='false'
+                                            aria-labelledby='filename'
+                                            aria-describedby='filename'
+                                            value={filename}
+                                            maxLength={999}
+                                            onChange={(e) => setFilename(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles.input}>
+                                    <label
+                                        htmlFor='password'
+                                        style={{
+                                            color: passwordError.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                                        }}
+                                    >
+                                        Description (alt text)
+                                        {passwordError.length > 0 && (
+                                            <span className={styles.errorLabel}>- {passwordError}</span>
+                                        )}
+                                    </label>
+                                    <div className={styles.inputContainer}>
+                                        <input
+                                            id='description'
+                                            type='text'
+                                            name='description'
+                                            placeholder='Add a description'
+                                            aria-label='Description'
+                                            autoCapitalize='off'
+                                            autoComplete='off'
+                                            autoCorrect='off'
+                                            spellCheck='false'
+                                            aria-labelledby='description'
+                                            aria-describedby='description'
+                                            value={description}
+                                            maxLength={999}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <label
+                                    className={styles.spoilerCheckbox}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setIsSpoiler(!isSpoiler);
+                                    }}
+                                >
+                                    <input type='checkbox' />
+
+                                    <div style={{ borderColor: isSpoiler ? 'var(--accent-border)' : '' }}>
+                                        {isSpoiler && (
+                                            <Icon
+                                                name='accept'
+                                                fill='var(--accent-1)'
+                                            />
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <div>Mark as spoiler</div>
+                                    </div>
+                                </label>
+                            </>
                         )}
 
                         {type === 'UPDATE_USERNAME' && (

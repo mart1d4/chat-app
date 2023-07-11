@@ -416,6 +416,9 @@
     width: 100%;
     display: flex;
     justify-content: center;
+    border-radius: 3px;
+    filter: blur(0px);
+    overflow: hidden;
 }
 
 .fileItemContainer > .image > img {
@@ -424,6 +427,49 @@
     max-height: 100%;
     object-fit: contain;
     user-select: none;
+}
+
+.fileItemContainer > .image > .spoilerButton {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    font-size: 15px;
+    user-select: none;
+    color: var(--foreground-2);
+    background-color: var(--background-dark);
+    z-index: 1;
+}
+
+.fileItemContainer > .image:hover > .spoilerButton {
+    background-color: var(--background-dark-1);
+}
+
+.fileItemContainer > .image > .imageTags {
+    position: absolute;
+    left: 3px;
+    bottom: 6px;
+}
+
+.fileItemContainer > .image > .imageTags > span {
+    color: #000000;
+    mix-blend-mode: screen;
+    background-color: var(--foreground-3);
+    margin-right: 4px;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px;
+    border-radius: 3px;
 }
 
 .fileItemContainer > .fileName {

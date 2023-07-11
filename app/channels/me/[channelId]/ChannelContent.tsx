@@ -48,6 +48,12 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             setLoading(false);
         };
 
+        getMessages();
+    }, [channel]);
+
+    useEffect(() => {
+        if (!channel) return;
+
         const listenSockets = () => {
             pusher.bind('message-sent', (data: any) => {
                 if (data.channelId !== channel.id || data.message.author.id === auth.user.id) return;
@@ -123,7 +129,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             });
         };
 
-        getMessages();
         listenSockets();
 
         return () => {
@@ -131,7 +136,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             pusher.unbind('message-edited');
             pusher.unbind('message-deleted');
         };
-    }, [channel]);
+    }, [channel, messages]);
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {

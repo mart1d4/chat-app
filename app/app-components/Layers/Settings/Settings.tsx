@@ -207,7 +207,7 @@ const Settings = (): ReactElement => {
 
                     {(!minified || hideNav) && (
                         <div className={styles.contentContainer}>
-                            <div className={styles.contentWrapper}>
+                            <div className={styles.contentWrapper + ' scrollbar'}>
                                 <div className={styles.content}>
                                     {!!minified && (
                                         <div className={styles.closeButton}>

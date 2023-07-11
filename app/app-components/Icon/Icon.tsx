@@ -91,7 +91,7 @@ const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement 
                 />
             </g>
         ),
-        micCut: (
+        micSlash: (
             <>
                 <path
                     d='M6.7 11H5C5 12.19 5.34 13.3 5.9 14.28L7.13 13.05C6.86 12.43 6.7 11.74 6.7 11Z'
@@ -118,7 +118,7 @@ const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement 
                 fill={fillColor}
             />
         ),
-        headsetCut: (
+        headsetSlash: (
             <>
                 <path
                     d='M6.16204 15.0065C6.10859 15.0022 6.05455 15 6 15H4V12C4 7.588 7.589 4 12 4C13.4809 4 14.8691 4.40439 16.0599 5.10859L17.5102 3.65835C15.9292 2.61064 14.0346 2 12 2C6.486 2 2 6.485 2 12V19.1685L6.16204 15.0065Z'
@@ -356,6 +356,24 @@ const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement 
                 <path
                     fill={fillColor}
                     d='M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z'
+                />
+            </g>
+        ),
+        eyeSlash: (
+            <g>
+                <rect
+                    fill='var(--error-1)'
+                    x='2'
+                    y='21.2154'
+                    width='26'
+                    height='2'
+                    transform='rotate(-45 2 21.2154)'
+                />
+                <path
+                    fill={fillColor}
+                    fillRule='evenodd'
+                    clipRule='evenodd'
+                    d='M10.1843 18.8115C10.7713 18.9328 11.3775 19 12 19C18.352 19 23 12 23 12C23 12 21.9643 10.4402 20.2026 8.79322L15.8265 13.1693C15.4393 14.4384 14.4382 15.4393 13.1694 15.8264L10.1843 18.8115ZM12.4818 8.02871C12.3238 8.00975 12.1631 8 12 8C9.791 8 8 9.79 8 12C8 12.1631 8.00975 12.3239 8.0287 12.4818L4.59645 15.914C2.35293 14.0375 1 12 1 12C1 12 5.648 5 12 5C13.0508 5 14.055 5.19157 14.9992 5.51132L12.4818 8.02871Z'
                 />
             </g>
         ),

@@ -32,6 +32,8 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [x] Need to recreate dm notification implementation in AppNav
 -   [ ] Not receiving websocket when sending message in channel to move channel to top
 -   [ ] Channel that receives new message websocket need to display channel item as active
+-   [ ] Fixed layer components are being rerendered when clicking the buttons to open/close them
+-   [ ] Editing the image using `enter` to submit the form doesn't always work
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

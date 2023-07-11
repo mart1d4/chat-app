@@ -96,7 +96,7 @@ const UserSection = (): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={userSettings?.microphone ? 'mic' : 'micCut'}
+                                name={userSettings?.microphone ? 'mic' : 'micSlash'}
                                 size={20}
                             />
                         </div>
@@ -141,7 +141,7 @@ const UserSection = (): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={userSettings?.sound ? 'headset' : 'headsetCut'}
+                                name={userSettings?.sound ? 'headset' : 'headsetSlash'}
                                 size={20}
                             />
                         </div>

@@ -89,7 +89,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                             </div>
                         )}
 
-                        {message.messageReference && <span>{message.messageReference?.author.username}</span>}
+                        {message.messageReference && <span>{message.messageReference?.author.displayName}</span>}
 
                         {message.messageReference ? (
                             <div>
@@ -128,7 +128,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                     </div>
 
                     <h3>
-                        <span className={styles.titleUsername}>{message.author?.username}</span>
+                        <span className={styles.titleUsername}>{message.author?.displayName}</span>
                         <span
                             className={styles.titleTimestamp}
                             onMouseEnter={(e) =>

@@ -168,10 +168,6 @@
     background-color: var(--background-4);
 }
 
-.contentWrapper::-webkit-scrollbar {
-    width: 16px;
-}
-
 .content {
     position: relative;
     padding: 60px 10px 80px 40px;

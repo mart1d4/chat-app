@@ -245,6 +245,62 @@
     min-width: 96px;
 }
 
+.imagePopup {
+    position: absolute;
+    left: 20px;
+    top: -20px;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    height: 104px;
+}
+
+.spoilerCheckbox {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    user-select: none;
+    font-size: 16px;
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.spoilerCheckbox > * {
+    pointer-events: none;
+}
+
+.spoilerCheckbox > input {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    appearance: none;
+    outline: 0;
+}
+
+.spoilerCheckbox > div:nth-child(2) {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
+    border-radius: 6px;
+    border: 1px solid var(--foreground-4);
+}
+
+.spoilerCheckbox > div:last-child {
+    line-height: 24px;
+    padding-left: 8px;
+    flex: 1 1 auto;
+    color: var(--foreground-2);
+}
+
 .loader {
     display: inline-block;
     width: 18px;

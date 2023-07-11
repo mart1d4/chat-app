@@ -510,7 +510,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         });
                                     }}
                                 >
-                                    {message.messageReference?.author?.username}
+                                    {message.messageReference?.author?.displayName}
                                 </span>
                             )}
 
@@ -620,7 +620,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     });
                                 }}
                             >
-                                {message.author?.username}
+                                {message.author?.displayName}
                             </span>
                             <span
                                 className={styles.titleTimestamp}
