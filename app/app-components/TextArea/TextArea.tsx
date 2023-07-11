@@ -2,12 +2,13 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import useFetchHelper from '@/hooks/useFetchHelper';
 import { trimMessage } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
+import filetypeinfo from 'magic-bytes.js';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import useFetchHelper from '@/hooks/useFetchHelper';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
@@ -18,8 +19,8 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         }[]
     >([]);
 
+    const { setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
-    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -147,21 +148,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             );
         }
     };
-
-    const FileList = useMemo(
-        () => (
-            <ul className={styles.filesList + ' scrollbar'}>
-                {files?.map((file) => (
-                    <FilePreview
-                        key={uuidv4()}
-                        file={file}
-                        setFiles={setFiles}
-                    />
-                ))}
-            </ul>
-        ),
-        [files]
-    );
 
     const textContainer = useMemo(
         () => (
@@ -347,7 +333,15 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                     <div className={styles.scrollableContainer + ' scrollbar'}>
                         {files.length > 0 && (
                             <>
-                                {FileList}
+                                <ul className={styles.filesList + ' scrollbar'}>
+                                    {files?.map((file) => (
+                                        <FilePreview
+                                            key={file.name + file.lastModified}
+                                            file={file}
+                                            setFiles={setFiles}
+                                        />
+                                    ))}
+                                </ul>
                                 <div className={styles.formDivider} />
                             </>
                         )}
@@ -360,27 +354,37 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                     accept='*'
                                     multiple
                                     onChange={async (e) => {
-                                        if (!channel) return;
                                         const newFiles = Array.from(e.target.files as FileList);
+
                                         if (files.length + newFiles.length > 10) {
-                                            alert('You can only upload 10 files at a time');
+                                            setPopup({
+                                                type: 'WARNING',
+                                                warning: 'FILE_LIMIT',
+                                            });
+                                            e.target.value = '';
                                             return;
                                         }
 
                                         let checkedFiles = [];
 
-                                        // Run checks
                                         const maxFileSize = 1024 * 1024 * 10; // 10MB
+
                                         for (const file of newFiles) {
                                             if (file.size > maxFileSize) {
-                                                alert(`File ${file.name} is too big and was skipped`);
-                                            } else {
-                                                checkedFiles.push(file);
+                                                setPopup({
+                                                    type: 'WARNING',
+                                                    warning: 'FILE_SIZE',
+                                                });
+                                                e.target.value = '';
+                                                checkedFiles = [];
+                                                return;
                                             }
+
+                                            checkedFiles.push(file);
                                         }
 
-                                        // Add files to state
                                         setFiles([...files, ...checkedFiles]);
+                                        e.target.value = '';
                                     }}
                                     style={{ display: 'none' }}
                                 />
@@ -609,17 +613,40 @@ export const EmojiPicker = () => {
 };
 
 const FilePreview = ({ file, setFiles }: any) => {
+    const [isImage, setIsImage] = useState<boolean | null>(null);
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
-    return useMemo(
-        () => (
+    useEffect(() => {
+        const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];
+
+        const isFileImage = async () => {
+            const fileBytes = new Uint8Array(await file.arrayBuffer());
+            const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
+            setIsImage(imageTypes.includes(fileType ?? ''));
+        };
+
+        isFileImage();
+    }, [file]);
+
+    return useMemo(() => {
+        if (typeof isImage !== 'boolean') {
+            return <></>;
+        }
+        return (
             <li className={styles.fileItem}>
                 <div className={styles.fileItemContainer}>
                     <div className={styles.image}>
-                        <img
-                            src={URL.createObjectURL(file)}
-                            alt='File Preview'
-                        />
+                        {isImage ? (
+                            <img
+                                src={URL.createObjectURL(file)}
+                                alt='File Preview'
+                            />
+                        ) : (
+                            <img
+                                src='/assets/app/file-text.svg'
+                                alt='File Preview'
+                            />
+                        )}
                     </div>
 
                     <div className={styles.fileName}>
@@ -678,7 +705,10 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
-                                onClick={() => setFiles((files: any) => files.filter((f: any) => f !== file))}
+                                onClick={() => {
+                                    setFiles((files: any) => files.filter((f: any) => f !== file));
+                                    setTooltip(null);
+                                }}
                             >
                                 <Icon
                                     name='delete'
@@ -690,9 +720,8 @@ const FilePreview = ({ file, setFiles }: any) => {
                     </div>
                 </div>
             </li>
-        ),
-        [file]
-    );
+        );
+    }, [file, isImage]);
 };
 
 export default TextArea;

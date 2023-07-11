@@ -712,9 +712,9 @@ const Profiles = () => {
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
-                        const fileType = filetypeinfo(fileBytes);
+                        const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
 
-                        if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
+                        if (!fileType || !allowedFileTypes.includes(fileType)) {
                             setPopup({
                                 type: 'WARNING',
                                 warning: 'FILE_TYPE',

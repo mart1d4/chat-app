@@ -14,7 +14,7 @@ export default function useRefreshToken() {
             return res.json();
         });
 
-        setAuth((prev: AuthContextValueType) => {
+        setAuth((prev: AuthProviderValue) => {
             return {
                 ...prev,
                 accessToken: response.accessToken,

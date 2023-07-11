@@ -327,3 +327,17 @@ type MessageReplyObject = {
     messageId: TMessage.id;
     author: TUser;
 };
+
+// Context
+
+type TAuth = null | {
+    user: TCleanUser;
+    accessToken: string;
+};
+
+type AuthProviderValue = {
+    auth: TAuth;
+    setAuth: Dispatch<SetStateAction<TAuth>>;
+    loading: boolean;
+    setLoading: Dispatch<SetStateAction<boolean>>;
+};
