@@ -142,7 +142,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         (node: HTMLDivElement) => {
             if (node) node.scrollTop = node.scrollHeight;
         },
-        [messages, loading, edit, reply]
+        [messages, loading, reply]
     );
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {

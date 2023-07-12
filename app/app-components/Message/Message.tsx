@@ -22,7 +22,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     // States
     const [hover, setHover] = useState<boolean>(false);
     const [shift, setShift] = useState<boolean>(false);
-    const [editContent, setEditContent] = useState<string>(message.content);
+    const [editContent, setEditContent] = useState<string>(message.content || '');
 
     // Hooks
     const { menu, fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
@@ -48,6 +48,8 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                 }
             } else if (e.key === 'Enter' && e.shiftKey === false) {
                 if (!edit || edit?.messageId !== message.id) return;
+                e.preventDefault();
+                e.stopPropagation();
                 sendEditedMessage();
             }
         };
@@ -174,24 +176,33 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
         setEdit({
             messageId: message.id,
-            content: message.content,
+            content: message.content || '',
         });
 
         setLocalStorage({
             edit: {
                 messageId: message.id,
-                content: message.content,
+                content: message.content || '',
             },
         });
     };
 
     const sendEditedMessage = async () => {
         if (!setEdit) return;
-        const content = trimMessage(editContent);
+        const content = trimMessage(editContent) ?? null;
 
-        if (content.length === 0 || content.length > 4000 || content === message.content) {
-            setEdit(null);
-            setLocalStorage({ edit: null });
+        if (content === null && message.attachments.length === 0) {
+            setPopup({
+                type: 'DELETE_MESSAGE',
+                channelId: message.channelId[0],
+                message: message,
+            });
+
+            setTimeout(() => {
+                setEdit(null);
+                setLocalStorage({ edit: null });
+            }, 1000);
+
             return;
         }
 
@@ -340,7 +351,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                 color: message.error ? 'var(--error-1)' : '',
                             }}
                         >
-                            {message.content + ' '}
+                            {message?.content ? message.content + ' ' : ''}
 
                             <span
                                 className={styles.contentTimestamp}
@@ -622,6 +633,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                             >
                                 {message.author?.displayName}
                             </span>
+
                             <span
                                 className={styles.titleTimestamp}
                                 onMouseEnter={(e) =>
@@ -637,54 +649,227 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                             </span>
                         </h3>
 
-                        {edit?.messageId === message.id ? (
-                            <>
-                                <TextArea
-                                    channel={message.channelId[0]}
-                                    editContent={editContent}
-                                    setEditContent={setEditContent}
-                                />
-                                <div className={styles.editHint}>
-                                    escape to{' '}
-                                    <span
-                                        onClick={() => {
-                                            if (!setEdit) return;
-                                            setEdit(null);
-                                            setLocalStorage({ edit: null });
-                                        }}
-                                    >
-                                        cancel{' '}
-                                    </span>
-                                    • enter to <span onClick={() => sendEditedMessage()}>save </span>
-                                </div>
-                            </>
-                        ) : (
-                            <div
-                                style={{
-                                    whiteSpace: 'pre-line',
-                                    opacity: message.waiting ? 0.5 : 1,
-                                    color: message.error ? 'var(--error-1)' : '',
-                                }}
-                            >
-                                {message.content}{' '}
-                                {message.edited && (
-                                    <div className={styles.contentTimestamp}>
+                        <div
+                            style={{
+                                whiteSpace: 'pre-line',
+                                opacity: message.waiting ? 0.5 : 1,
+                                color: message.error ? 'var(--error-1)' : '',
+                            }}
+                        >
+                            {edit?.messageId === message.id ? (
+                                <>
+                                    <TextArea
+                                        channel={message.channelId[0]}
+                                        editContent={editContent}
+                                        setEditContent={setEditContent}
+                                    />
+
+                                    <div className={styles.editHint}>
+                                        escape to{' '}
                                         <span
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: getLongDate(message.updatedAt),
-                                                    element: e.currentTarget,
-                                                    delay: 1000,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                if (!setEdit) return;
+                                                setEdit(null);
+                                                setLocalStorage({ edit: null });
+                                            }}
                                         >
-                                            (edited)
+                                            cancel{' '}
                                         </span>
+                                        • enter to <span onClick={() => sendEditedMessage()}>save </span>
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </>
+                            ) : message.content ? (
+                                message.content + ' '
+                            ) : (
+                                ''
+                            )}
+
+                            {message.attachments.length > 0 && (
+                                <div className={styles.attachments}>
+                                    <div>
+                                        {message.attachments.length === 1 &&
+                                            message.attachments.slice(0, 1).map((attachment) => (
+                                                <div className={styles.gridOneBig}>
+                                                    <Image
+                                                        attachment={attachment}
+                                                        message={message}
+                                                    />
+                                                </div>
+                                            ))}
+
+                                        {message.attachments.length == 2 && (
+                                            <div className={styles.gridTwo}>
+                                                {message.attachments.slice(0, 2).map((attachment, index) => (
+                                                    <Image
+                                                        attachment={attachment}
+                                                        message={message}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {message.attachments.length == 3 && (
+                                            <div className={styles.gridTwo}>
+                                                <div className={styles.gridOneSolo}>
+                                                    {message.attachments.slice(0, 1).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.gridTwoColumn}>
+                                                    {message.attachments.slice(1, 3).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {message.attachments.length == 4 && (
+                                            <div className={styles.gridFour}>
+                                                {message.attachments.slice(0, 4).map((attachment) => (
+                                                    <Image
+                                                        attachment={attachment}
+                                                        message={message}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {message.attachments.length == 5 && (
+                                            <>
+                                                <div className={styles.gridTwo}>
+                                                    {message.attachments.slice(0, 2).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.gridThree}>
+                                                    {message.attachments.slice(2, 5).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {message.attachments.length == 6 && (
+                                            <div className={styles.gridThree}>
+                                                {message.attachments.slice(0, 6).map((attachment) => (
+                                                    <Image
+                                                        attachment={attachment}
+                                                        message={message}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {message.attachments.length == 7 && (
+                                            <>
+                                                <div className={styles.gridOne}>
+                                                    {message.attachments.slice(0, 1).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.gridThree}>
+                                                    {message.attachments.slice(1, 7).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {message.attachments.length == 8 && (
+                                            <>
+                                                <div className={styles.gridTwo}>
+                                                    {message.attachments.slice(0, 2).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.gridThree}>
+                                                    {message.attachments.slice(2, 8).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {message.attachments.length == 9 && (
+                                            <div className={styles.gridThree}>
+                                                {message.attachments.slice(0, 9).map((attachment) => (
+                                                    <Image
+                                                        attachment={attachment}
+                                                        message={message}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {message.attachments.length == 10 && (
+                                            <>
+                                                <div className={styles.gridOne}>
+                                                    {message.attachments.slice(0, 1).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.gridThree}>
+                                                    {message.attachments.slice(1, 10).map((attachment) => (
+                                                        <Image
+                                                            attachment={attachment}
+                                                            message={message}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {message.edited && (
+                                <div className={styles.contentTimestamp}>
+                                    <span
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: getLongDate(message.updatedAt),
+                                                element: e.currentTarget,
+                                                delay: 1000,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                    >
+                                        (edited)
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -744,7 +929,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     color: message.error ? 'var(--error-1)' : '',
                                 }}
                             >
-                                {message.content}{' '}
+                                {message?.content ? message.content : ''}{' '}
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
@@ -908,6 +1093,82 @@ const MessageMenu = ({ message, large, functions }: any) => {
                     )}
                 </div>
             </div>
+        </div>
+    );
+};
+
+type ImageComponent = {
+    attachment:
+        | string
+        | {
+              file: File;
+              id: string;
+              description?: string;
+          };
+    message: TMessage;
+};
+
+const Image = ({ attachment, message }: ImageComponent) => {
+    const [showDelete, setShowDelete] = useState<boolean>(false);
+
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { sendRequest } = useFetchHelper();
+
+    return (
+        <div
+            className={styles.image}
+            onMouseEnter={() => setShowDelete(true)}
+            onMouseLeave={() => setShowDelete(false)}
+        >
+            <img
+                src={
+                    message.waiting
+                        ? // @ts-ignore
+                          URL.createObjectURL(attachment.file)
+                        : `${process.env.NEXT_PUBLIC_CDN_URL}${attachment}/-/preview/${600}x${600}/`
+                }
+                // @ts-ignore
+                alt={attachment?.file?.name ?? ''}
+            />
+
+            {showDelete && (
+                <div
+                    className={styles.deleteImage}
+                    onMouseEnter={(e) =>
+                        setTooltip({
+                            text: 'Delete',
+                            element: e.currentTarget,
+                            gap: 2,
+                        })
+                    }
+                    onMouseLeave={() => setTooltip(null)}
+                    onClick={() => {
+                        if (message.waiting || message.error) return;
+                        if (message.attachments.length === 1) {
+                            setPopup({
+                                type: 'DELETE_MESSAGE',
+                                channelId: message.channelId[0],
+                                message: message,
+                            });
+                            return;
+                        }
+
+                        const updatedAttachments = message.attachments.filter((uuid: string) => uuid !== attachment);
+
+                        setPopup({
+                            type: 'DELETE_ATTACHMENT',
+                            message: message,
+                            attachments: updatedAttachments,
+                        });
+                    }}
+                >
+                    <Icon
+                        name='delete'
+                        size={20}
+                    />
+                </div>
+            )}
         </div>
     );
 };

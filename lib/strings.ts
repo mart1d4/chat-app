@@ -9,6 +9,10 @@ export const translateCap = (str?: string) => {
 };
 
 export const trimMessage = (message: string) => {
+    if (!message) {
+        return null;
+    }
+
     const notAllowedUnicode: string[] = [];
 
     while (message.startsWith('\n')) {

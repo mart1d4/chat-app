@@ -117,7 +117,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
     const channelId = params.channelId;
     const { message } = await req.json();
 
-    if (!message || !message.content) {
+    if (!message || (!message.content && !message.attachments && !message.embeds)) {
         return NextResponse.json(
             {
                 success: false,
@@ -291,6 +291,19 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         );
     } catch (error) {
         console.error(error);
+
+        if (message.attachments) {
+            message.attachments.forEach(async (attachment: string) => {
+                await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
+                        Accept: 'application/vnd.uploadcare-v0.7+json',
+                    },
+                });
+            });
+        }
+
         return NextResponse.json(
             {
                 success: false,

@@ -358,3 +358,114 @@
     object-fit: contain;
     pointer-events: none;
 }
+
+/* ATTACHEMENTS */
+
+.attachments {
+    display: grid;
+    grid-auto-flow: row;
+    row-gap: 0.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+    text-indent: 0;
+    min-height: 0;
+    min-width: 0;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    position: relative;
+}
+
+.attachments > div {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    justify-self: flex-start;
+    width: 100%;
+    max-width: 550px;
+    border-radius: 8px;
+}
+
+.image {
+    overflow: hidden;
+    position: relative;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    flex-flow: row nowrap;
+    cursor: pointer;
+    height: 100%;
+    width: 100%;
+}
+
+.image > img {
+    display: block;
+    min-width: 100%;
+    min-height: 100%;
+    height: 350px;
+    object-fit: cover;
+}
+
+.deleteImage {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    padding: 6px;
+    border-radius: 5px;
+    overflow: hidden;
+    color: var(--foreground-3);
+    background-color: var(--background-4);
+    z-index: 2;
+}
+
+.deleteImage:hover {
+    color: var(--foreground-1);
+    background-color: var(--error-1);
+}
+
+/* Image grids */
+
+.gridOneBig {
+    max-width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    display: inline-block;
+    width: fit-content;
+    max-height: 350px;
+}
+
+.gridOne {
+    display: flex;
+    max-height: 280px;
+    width: 100%;
+}
+
+.gridOneSolo {
+    flex: 2;
+}
+
+.gridTwo {
+    flex-direction: row;
+    gap: 4px;
+    display: flex;
+    max-height: 280px;
+}
+
+.gridTwoColumn {
+    flex: 1;
+}
+
+.gridFour {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 4px;
+    max-height: 350px;
+}
+
+.gridThree {
+    margin-top: 4px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}

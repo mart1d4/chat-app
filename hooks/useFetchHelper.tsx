@@ -32,7 +32,7 @@ type Props = {
 const urls = {
     ['SEND_MESSAGE']: '/users/me/channels/:channelId/messages',
     ['UPDATE_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId',
-    ['PIN_MESSAGE']: '/users/me/channels/:channelId/pins/:messageId',
+    ['PIN_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId/pin',
     ['UNPIN_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId/pin',
     ['DELETE_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId',
     ['ADD_FRIEND']: '/users/me/friends/:username',

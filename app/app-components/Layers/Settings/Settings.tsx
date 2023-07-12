@@ -35,7 +35,7 @@ const Settings = (): ReactElement => {
 
     const { popup, showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { logout } = useLogout();
+    const { setPopup }: any = useContextHook({ context: 'layer' });
 
     useEffect(() => {
         setMinified(window.innerWidth < 1024);
@@ -185,7 +185,7 @@ const Settings = (): ReactElement => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 if (tab.name === 'separator' || tab.type === 'title') return;
-                                                if (tab.name === 'Log Out') return logout();
+                                                if (tab.name === 'Log Out') return setPopup({ type: 'LOGOUT' });
                                                 setActiveTab(tab.name);
                                                 if (minified) setHideNav(true);
                                             }}

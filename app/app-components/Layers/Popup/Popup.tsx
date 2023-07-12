@@ -5,12 +5,14 @@ import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
     const { popup, setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const { logout } = useLogout();
     const { sendRequest } = useFetchHelper();
     const type = popup?.type;
 
@@ -212,7 +214,9 @@ const Popup = (): ReactElement => {
                 }),
         },
         FILE_EDIT: {
-            title: popup?.file?.file?.name,
+            title: popup?.file?.file?.name.startsWith('SPOILER_')
+                ? popup.file.file.name.slice(8)
+                : popup?.file?.file?.name,
             description: '',
             buttonColor: 'blue',
             buttonText: 'Save',
@@ -221,6 +225,30 @@ const Popup = (): ReactElement => {
                     filename: filename,
                     description: description,
                     isSpoiler: isSpoiler,
+                }),
+        },
+        LOGOUT: {
+            title: 'Log Out',
+            description: 'Are you sure you want to logout?',
+            buttonColor: 'red',
+            buttonText: 'Log Out',
+            function: () => logout(),
+        },
+        DELETE_ATTACHMENT: {
+            title: 'Are you sure?',
+            description: 'This will remove this attachment from this message permanently.',
+            buttonColor: 'red',
+            buttonText: 'Remove Attachment',
+            function: () =>
+                sendRequest({
+                    query: 'UPDATE_MESSAGE',
+                    params: {
+                        channelId: popup.message.channelId[0],
+                        messageId: popup.message.id,
+                    },
+                    data: {
+                        attachments: popup.attachments,
+                    },
                 }),
         },
     };
@@ -251,7 +279,9 @@ const Popup = (): ReactElement => {
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
+        setTimeout(() => {
+            window.addEventListener('keydown', handleKeyDown);
+        }, 100);
 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [popup, uid, password, password1, newPassword, confirmPassword, isLoading]);
@@ -417,15 +447,18 @@ const Popup = (): ReactElement => {
                     )}
 
                     <div className={styles.popupContent + ' scrollbar'}>
-                        {popup?.message && (
+                        {type !== 'UPDATE_USERNAME' && type !== 'UPDATE_PASSWORD' && (
                             <>
-                                <div className={styles.description}>{prop.description}</div>
-                                <div className={styles.messagesContainer}>
-                                    <FixedMessage
-                                        message={popup.message}
-                                        pinned={false}
-                                    />
-                                </div>
+                                {prop.description && <div className={styles.description}>{prop.description}</div>}
+
+                                {popup?.message && popup.type !== 'DELETE_ATTACHMENT' && (
+                                    <div className={styles.messagesContainer}>
+                                        <FixedMessage
+                                            message={popup.message}
+                                            pinned={false}
+                                        />
+                                    </div>
+                                )}
                             </>
                         )}
 

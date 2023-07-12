@@ -9,6 +9,7 @@ import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
+import { uploadFileGroup } from '@uploadcare/upload-client';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
@@ -24,7 +25,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         }[]
     >([]);
 
-    const { setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
+    const { setFixedLayer, setPopup, popup }: any = useContextHook({ context: 'layer' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
@@ -69,10 +70,18 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         if (input?.innerText !== editContent) {
             setMessage(editContent);
             input.innerText = editContent;
-            // set cursor to end of text
+
+            // Set cursor to end of text
             const range = document.createRange();
             const sel = window.getSelection();
-            range.setStart(input.childNodes[0], input.innerText.length);
+
+            // If content has line breask, it will be split into multiple text nodes
+            // We need to select the last text node
+
+            const textNodes = input.childNodes;
+            const lastTextNode = textNodes[textNodes.length - 1];
+            if (!lastTextNode) return;
+            range.setStart(lastTextNode, lastTextNode.textContent!.length);
             range.collapse(true);
             sel?.removeAllRanges();
             sel?.addRange(range);
@@ -83,6 +92,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     const sendMessage = async () => {
         let messageContent = trimMessage(message);
+        const attachments = files;
 
         if (message.length === 0 && files.length === 0) {
             return;
@@ -92,7 +102,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         const tempMessage = {
             id: tempId,
             content: messageContent,
-            attachments: files,
+            attachments: attachments,
             author: auth.user,
             channelId: [channel.id],
             messageReference: reply?.messageId ?? null,
@@ -117,13 +127,37 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         }
 
         try {
+            let uploadedFiles: string[] = [];
+
+            if (attachments.length > 0) {
+                const filesToAdd = attachments.map((file) => file.file);
+
+                const result = await uploadFileGroup(filesToAdd, {
+                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                    store: 'auto',
+                });
+
+                if (!result.files) {
+                    console.error(result);
+                    setMessages((messages: TMessage[]) =>
+                        messages.map((message) =>
+                            message.id === tempId ? { ...message, error: true, waiting: false } : message
+                        )
+                    );
+                    return;
+                } else {
+                    uploadedFiles = result.files.map((file) => file.uuid);
+                }
+            }
+
+            console.log(uploadedFiles);
             const response = await sendRequest({
                 query: 'SEND_MESSAGE',
                 params: { channelId: channel.id },
                 data: {
                     message: {
                         content: messageContent,
-                        attachments: files,
+                        attachments: uploadedFiles,
                         messageReference: reply?.messageId ?? null,
                     },
                 },
@@ -189,7 +223,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
 
-                            if (editContent) {
+                            if (typeof editContent === 'string') {
                                 setEditContent(text);
                                 localStorage.setItem(
                                     `channel-${channel.id}`,
@@ -237,11 +271,11 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                         }}
                         onKeyDown={(e) => {
                             if (!channel) return;
-                            if (e.key === 'Enter' && !e.shiftKey && editContent) {
+                            if (e.key === 'Enter' && !e.shiftKey && typeof editContent === 'string') {
                                 e.preventDefault();
                                 return;
                             }
-                            if (e.key === 'Enter' && !e.shiftKey && !editContent) {
+                            if (e.key === 'Enter' && !e.shiftKey && typeof editContent !== 'string') {
                                 e.preventDefault();
                                 sendMessage();
                                 setMessage('');
@@ -267,7 +301,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 </div>
             </div>
         ),
-        [message, friend, channel, editContent, reply]
+        [message, friend, channel, editContent, reply, files]
     );
 
     if (typeof editContent === 'string')

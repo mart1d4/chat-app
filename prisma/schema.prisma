@@ -266,7 +266,7 @@ model Channel {
 model Message {
     id                String      @id @default(auto()) @map("_id") @db.ObjectId
     type              ETMessage
-    content           String
+    content           String?
     attachments       String[]
     embeds            TEmbed[]
     edited            Boolean     @default(false)

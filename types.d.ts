@@ -204,7 +204,7 @@ type TMessage = readonly {
     id: string;
     type: ETMessage;
     content: string;
-    attachments: File[];
+    attachments: string[];
     embeds: TEmbed[];
     edited: boolean;
     pinned?: DateTime;

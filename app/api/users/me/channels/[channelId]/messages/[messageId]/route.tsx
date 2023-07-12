@@ -9,17 +9,25 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 
     const channelId = params.channelId;
     const messageId = params.messageId;
-    const { content } = await req.json();
+    const { content, attachments } = await req.json();
 
-    if (!content) {
+    if (content !== undefined && typeof content !== 'string' && content !== null) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Content are required',
+                message: 'Content must be a string or null',
             },
+            { status: 400 }
+        );
+    }
+
+    if (attachments !== undefined && !Array.isArray(attachments)) {
+        return NextResponse.json(
             {
-                status: 400,
-            }
+                success: false,
+                message: 'Attachments must be an array',
+            },
+            { status: 400 }
         );
     }
 
@@ -67,7 +75,8 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                 id: messageId,
             },
             data: {
-                content: String(content),
+                content: content,
+                attachments: attachments,
                 edited: true,
             },
         });
@@ -128,7 +137,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully sent message',
+                message: 'Successfully updated message',
             },
             { status: 200 }
         );
@@ -218,6 +227,18 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 messageReferenceId: null,
             },
         });
+
+        if (message.attachments.length > 0) {
+            for (const attachment of message.attachments) {
+                await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
+                        Accept: 'application/vnd.uploadcare-v0.7+json',
+                    },
+                });
+            }
+        }
 
         await prisma.message.delete({
             where: {
