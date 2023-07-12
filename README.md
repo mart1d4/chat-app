@@ -21,20 +21,20 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 
 ## Issue Tracker
 
--   [x] Add Friends' popup closing when clicking on user to add them (working fine when fixed layer's listens for `mousedown` instead of `click`)
--   [x] Some tooltips not reappearing when closing a popup
+-   [x] `Add Friends` popup closing when clicking on a user to add (working fine when fixed layer listens for `mousedown` instead of `click`)
+-   [x] Some tooltips not rerendering when closing a fixed layer
 -   [x] Some menus not opening in the correct position
--   [x] Menus going off screen when opening if too close to the edge
--   [x] User profile content isn't scrolling and expanding instead
+-   [x] Menus going off screen when opening too close to the edge
+-   [x] User profile content isn't scrolling but expanding instead
 -   [x] Pusher triggers not properly configured
--   [x] Message improperly displayed when pinning or deleting a message
--   [ ] Prisma Relations: disconnecting a channel from a user removes the user from the channel
+-   [x] Message improperly displayed in pin and delete popup
+-   [ ] [Prisma Relations] disconnecting a channel from a user removes the user from the channel
 -   [x] Need to recreate dm notification implementation in AppNav
--   [ ] Not receiving websocket when sending message in channel
--   [ ] Channel that receives new message websockets need to display channel item as active
--   [ ] Fixed layer components are being rerendered when clicking the buttons to close them
+-   [ ] Not always receiving websockets when sending a message to the channel the user is currently in
+-   [ ] Channel receiving a `message-sent` websocket needs to display the channel item as active
+-   [ ] `FixedLayer` components are being rerendered when clicking the buttons to close them
 -   [ ] Editing an image data using `enter` to submit the form doesn't always work
--   [ ] User card and User profile banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
+-   [ ] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 
