@@ -173,7 +173,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             newMessage = await prisma.message.create({
                 data: {
                     type: message.messageReference ? 'REPLY' : 'DEFAULT',
-                    content: String(message.content),
+                    content: message.content,
                     attachments: message.attachments || [],
                     embeds: message.embeds || [],
                     mentionEveryone: message.mentionEveryone || false,
@@ -195,7 +195,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             newMessage = await prisma.message.create({
                 data: {
                     type: message.messageReference ? 'REPLY' : 'DEFAULT',
-                    content: String(message.content),
+                    content: message.content,
                     attachments: message.attachments || [],
                     embeds: message.embeds || [],
                     mentionEveryone: message.mentionEveryone || false,

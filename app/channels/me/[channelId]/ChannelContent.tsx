@@ -140,7 +140,11 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
-            if (node) node.scrollTop = node.scrollHeight;
+            if (node) {
+                setTimeout(() => {
+                    node.scrollTop = node.scrollHeight;
+                }, 100);
+            }
         },
         [messages, loading, reply]
     );

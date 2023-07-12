@@ -72,6 +72,7 @@ const useFetchHelper = () => {
     const router = useRouter();
 
     const channelExists = (recipients: string[]) => {
+        console.log(recipients);
         const channel = auth.user.channels.find((channel: TChannel) => {
             return (
                 channel.recipients.length === recipients.length &&

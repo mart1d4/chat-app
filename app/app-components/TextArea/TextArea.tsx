@@ -90,11 +90,15 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         }
     }, [editContent]);
 
+    useEffect(() => {
+        textAreaRef.current?.focus();
+    }, [files]);
+
     const sendMessage = async () => {
         let messageContent = trimMessage(message);
         const attachments = files;
 
-        if (message.length === 0 && files.length === 0) {
+        if (messageContent === null && files.length === 0) {
             return;
         }
 
@@ -150,7 +154,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 }
             }
 
-            console.log(uploadedFiles);
             const response = await sendRequest({
                 query: 'SEND_MESSAGE',
                 params: { channelId: channel.id },
@@ -165,9 +168,21 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
             if (!response.success) {
                 setMessages((messages: TMessage[]) =>
-                    messages.map((message) =>
-                        message.id === tempId ? { ...message, error: true, waiting: false } : message
-                    )
+                    messages.map((message) => {
+                        if (message.id === tempId) {
+                            if (uploadedFiles.length > 0) {
+                                return {
+                                    ...message,
+                                    attachments: uploadedFiles,
+                                    error: true,
+                                    waiting: false,
+                                };
+                            } else {
+                                return { ...message, error: true, waiting: false };
+                            }
+                        }
+                        return message;
+                    })
                 );
                 return;
             }

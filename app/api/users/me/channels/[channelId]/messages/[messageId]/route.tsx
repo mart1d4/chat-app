@@ -81,6 +81,22 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
+        if (message.attachments !== attachments) {
+            const toDelete = message.attachments?.filter((attachment) => !attachments?.includes(attachment));
+
+            if (toDelete.length > 0) {
+                toDelete.forEach(async (attachment) => {
+                    await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
+                            Accept: 'application/vnd.uploadcare-v0.7+json',
+                        },
+                    });
+                });
+            }
+        }
+
         const messageToSend = await prisma.message.findUnique({
             where: {
                 id: messageId,
@@ -229,7 +245,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         });
 
         if (message.attachments.length > 0) {
-            for (const attachment of message.attachments) {
+            message.attachments.forEach(async (attachment) => {
                 await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
                     method: 'DELETE',
                     headers: {
@@ -237,7 +253,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                         Accept: 'application/vnd.uploadcare-v0.7+json',
                     },
                 });
-            }
+            });
         }
 
         await prisma.message.delete({

@@ -388,21 +388,59 @@
 .image {
     overflow: hidden;
     position: relative;
-    border-radius: 3px;
+    max-height: inherit;
+    max-width: 100%;
+    border-radius: 2px;
     display: flex;
     align-items: center;
+    justify-self: auto !important;
     flex-flow: row nowrap;
     cursor: pointer;
     height: 100%;
     width: 100%;
 }
 
-.image > img {
+.image > div:not(.deleteImage) {
+    height: 100%;
+    width: 100%;
+    flex: auto;
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.image > div > div {
+    flex-flow: row nowrap;
+    flex: auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.image > div > div > div {
+    display: block;
+    max-height: inherit;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    position: relative;
+    user-select: text;
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.image > div > div > div > div {
+    height: 100%;
+    width: 100%;
+}
+
+.image > div > div > div > div > img {
     display: block;
     min-width: 100%;
     min-height: 100%;
-    height: 350px;
+    height: 100%;
     object-fit: cover;
+    max-width: calc(100% + 1px);
 }
 
 .deleteImage {
@@ -444,15 +482,39 @@
     flex: 2;
 }
 
+.gridOneSolo .image {
+    aspect-ratio: 1/1;
+}
+
 .gridTwo {
     flex-direction: row;
     gap: 4px;
     display: flex;
-    max-height: 280px;
+    max-height: 350px;
+}
+
+.gridTwo .image {
+    aspect-ratio: 1/1;
 }
 
 .gridTwoColumn {
     flex: 1;
+}
+
+.gridTwoColumn .image {
+    aspect-ratio: 1/1;
+}
+
+.gridTwoColumn > div {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 4px;
+}
+
+.gridTwoColumn > div > div {
+    flex: 1;
+    min-height: 0;
 }
 
 .gridFour {
@@ -463,9 +525,24 @@
     max-height: 350px;
 }
 
+.gridFour .image {
+    aspect-ratio: 1/1;
+}
+
 .gridThree {
     margin-top: 4px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
+}
+
+.gridThree .image {
+    aspect-ratio: 1/1;
+}
+
+.gridThreeBig {
+    max-height: 350px;
+    flex-direction: row;
+    gap: 4px;
+    display: flex;
 }

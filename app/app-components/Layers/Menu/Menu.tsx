@@ -268,7 +268,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         func: () => writeText(`/channels/@me/${message.channel}/${message.id}`),
                     },
                     {
-                        name: 'Speak Message',
+                        name: message.content !== null ? 'Speak Message' : null,
                         icon: 'speak',
                         func: () => {
                             const msg = new SpeechSynthesisUtterance();
@@ -441,7 +441,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                             sendRequest({
                                 query: 'CREATE_CHANNEL',
                                 data: {
-                                    recipients: [auth.user.id, user.id],
+                                    recipients: [user.id],
                                 },
                             }),
                     },
@@ -467,7 +467,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                             sendRequest({
                                 query: 'CREATE_CHANNEL',
                                 data: {
-                                    recipients: [auth.user.id, user.id],
+                                    recipients: [user.id],
                                 },
                             }),
                     },
@@ -511,7 +511,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                             sendRequest({
                                 query: 'CREATE_CHANNEL',
                                 data: {
-                                    recipients: [auth.user.id, user.id],
+                                    recipients: [user.id],
                                 },
                             }),
                     },

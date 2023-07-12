@@ -35,6 +35,7 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] `FixedLayer` components are being rerendered when clicking the buttons to close them
 -   [ ] Editing an image data using `enter` to submit the form doesn't always work
 -   [ ] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
+-   [ ] Requesting a friend adds the user twice to the friends list (only way to fix is to refresh the page)
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 
