@@ -11,6 +11,13 @@ datasource db {
 
 // Types
 
+type TImage {
+    id          String
+    name        String
+    isSpoiler   Boolean
+    description String?
+}
+
 type TNotification {
     type      ENotificationType
     senderId  String
@@ -267,7 +274,7 @@ model Message {
     id                String      @id @default(auto()) @map("_id") @db.ObjectId
     type              ETMessage
     content           String?
-    attachments       String[]
+    attachments       TImage[]
     embeds            TEmbed[]
     edited            Boolean     @default(false)
     pinned            DateTime?

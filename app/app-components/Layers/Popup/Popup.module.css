@@ -514,3 +514,37 @@
         opacity: 1;
     }
 }
+
+/* ATTACHMENT PREVIEW */
+
+.imagePreview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    user-select: text;
+    overflow: hidden;
+    max-width: 80dvw;
+}
+
+.imagePreview > img {
+    max-width: 100%;
+}
+
+.imageLink {
+    position: absolute;
+    top: 100%;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-block;
+    color: var(--foreground-1);
+    text-decoration: none;
+    line-height: 30px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.imageLink:hover {
+    opacity: 1;
+    text-decoration: underline;
+}

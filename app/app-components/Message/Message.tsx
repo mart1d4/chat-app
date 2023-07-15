@@ -1,6 +1,7 @@
 'use client';
 
 import { TextArea, Icon, Avatar } from '@/app/app-components';
+import { uploadFileGroup } from '@uploadcare/upload-client';
 import { useEffect, useState, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
@@ -43,7 +44,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     setReply(null);
                     setLocalStorage({ reply: null });
                 }
-            } else if (e.key === 'Enter' && e.shiftKey === false) {
+            } else if (e.key === 'Enter' && !e.shiftKey) {
                 if (!edit || edit?.messageId !== message.id) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -76,7 +77,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
     // Functions
 
-    const deleteLocalMessage = () => {
+    const deleteLocalMessage = async () => {
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
     };
 
@@ -91,20 +92,52 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
             createdAt: new Date(),
             error: false,
             waiting: true,
-        };
+        } as TMessage;
 
         deleteLocalMessage();
-        // @ts-expect-error
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
 
+        let uploadedFiles: any = [];
+
         try {
+            if (prevMessage.attachments.length > 0) {
+                // @ts-ignore
+                const filesToAdd = prevMessage.attachments.map((file: TImage) => file.file as File);
+
+                const result = await uploadFileGroup(filesToAdd, {
+                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                    store: 'auto',
+                });
+
+                if (!result.files) {
+                    console.error(result);
+                    setMessages((messages: TMessage[]) =>
+                        messages.map((message) =>
+                            message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
+                        )
+                    );
+                    return;
+                } else {
+                    uploadedFiles = result.files.map((file, index) => {
+                        return {
+                            id: file.uuid,
+                            // @ts-ignore
+                            name: prevMessage.attachments[index].file.name,
+                            // @ts-ignore
+                            isSpoiler: prevMessage.attachments[index].file.name.startsWith('SPOILER_'),
+                            description: prevMessage.attachments[index].description,
+                        };
+                    });
+                }
+            }
+
             const response = await sendRequest({
                 query: 'SEND_MESSAGE',
                 params: { channelId: prevMessage.channelId[0] },
                 data: {
                     message: {
                         content: prevMessage.content,
-                        attachments: prevMessage.attachments,
+                        attachments: uploadedFiles,
                         messageReference: prevMessage.messageReference,
                     },
                 },
@@ -116,12 +149,28 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                         message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
                     )
                 );
+
+                if (uploadedFiles.length > 0) {
+                    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            attachments: uploadedFiles,
+                        }),
+                    });
+                }
+
                 return;
             }
 
+            const message = response.data.message;
+
             // Stop message from being marked as waiting
             setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== prevMessage.id));
-            setMessages((messages: TMessage[]) => [...messages, prevMessage]);
+            setMessages((messages: TMessage[]) => [...messages, message]);
         } catch (err) {
             console.error(err);
             setMessages((messages: TMessage[]) =>
@@ -129,6 +178,19 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
                 )
             );
+
+            if (uploadedFiles.length > 0) {
+                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        attachments: uploadedFiles,
+                    }),
+                });
+            }
         }
     };
 
@@ -280,6 +342,16 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         return inlineTypes.includes(message.type);
     };
 
+    const functions = {
+        deletePopup,
+        pinPopup,
+        unpinPopup,
+        editMessageState,
+        replyToMessageState,
+        deleteLocalMessage,
+        retrySendMessage,
+    };
+
     if (shouldDisplayInlined()) {
         return (
             <li
@@ -312,18 +384,11 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     backgroundColor: fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
                 }}
             >
-                {(hover || fixedLayer?.message?.id === message?.id) && (
-                    <MessageMenu
-                        message={message}
-                        large={large}
-                        functions={{
-                            deletePopup,
-                            replyToMessageState,
-                            deleteLocalMessage,
-                            retrySendMessage,
-                        }}
-                    />
-                )}
+                <MessageMenu
+                    message={message}
+                    large={large}
+                    functions={functions}
+                />
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
@@ -390,11 +455,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                             mouseY: e.clientY,
                         },
                         message: message,
-                        deletePopup,
-                        pinPopup,
-                        unpinPopup,
-                        editMessageState,
-                        replyToMessageState,
+                        functions: functions,
                     });
                 }}
                 style={{
@@ -405,21 +466,11 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                             : '',
                 }}
             >
-                {(hover || fixedLayer?.message?.id === message?.id) && edit?.messageId !== message.id && (
-                    <MessageMenu
-                        message={message}
-                        large={large}
-                        functions={{
-                            deletePopup,
-                            pinPopup,
-                            unpinPopup,
-                            editMessageState,
-                            replyToMessageState,
-                            deleteLocalMessage,
-                            retrySendMessage,
-                        }}
-                    />
-                )}
+                <MessageMenu
+                    message={message}
+                    large={large}
+                    functions={functions}
+                />
 
                 {large || message.type === 'REPLY' ? (
                     <div className={styles.messagelarge}>
@@ -678,16 +729,19 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     ''
                                 )}
 
-                                {message.attachments.length > 0 && (
+                                {message.attachments.length > 0 && !(message.error || message.waiting) && (
                                     <div className={styles.attachments}>
                                         <div>
                                             {message.attachments.length === 1 &&
                                                 message.attachments.slice(0, 1).map((attachment) => (
-                                                    <div className={styles.gridOneBig}>
+                                                    <div
+                                                        key={uuidv4()}
+                                                        className={styles.gridOneBig}
+                                                    >
                                                         <Image
-                                                            key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     </div>
                                                 ))}
@@ -699,6 +753,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -712,6 +767,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -724,6 +780,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                         key={uuidv4()}
                                                                         attachment={attachment}
                                                                         message={message}
+                                                                        functions={functions}
                                                                     />
                                                                 ))}
                                                             </div>
@@ -734,6 +791,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                         key={uuidv4()}
                                                                         attachment={attachment}
                                                                         message={message}
+                                                                        functions={functions}
                                                                     />
                                                                 ))}
                                                             </div>
@@ -749,6 +807,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -762,6 +821,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -772,6 +832,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -785,6 +846,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -798,6 +860,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -808,6 +871,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -822,6 +886,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -832,6 +897,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -845,6 +911,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -858,6 +925,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -868,6 +936,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 key={uuidv4()}
                                                                 attachment={attachment}
                                                                 message={message}
+                                                                functions={functions}
                                                             />
                                                         ))}
                                                     </div>
@@ -876,6 +945,18 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         </div>
                                     </div>
                                 )}
+
+                                {message.attachments.length > 0 && (message.error || message.waiting) && (
+                                    <div>
+                                        Uploading {message.attachments.length} files
+                                        {message.attachments.length > 1 && 's'}
+                                        <span>
+                                            Size: {/* @ts-ignore */}
+                                            {message.attachments.reduce((a, b) => a + b.file.size, 0) / 1000000} MB
+                                        </span>
+                                    </div>
+                                )}
+
                                 {message.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
@@ -947,21 +1028,48 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     </div>
                                 </>
                             ) : message.content ? (
-                                message.content + ' '
+                                <div
+                                    style={{
+                                        whiteSpace: 'pre-line',
+                                        opacity: message.waiting ? 0.5 : 1,
+                                        color: message.error ? 'var(--error-1)' : '',
+                                    }}
+                                >
+                                    {message.content}{' '}
+                                    {message.edited && message.attachments.length === 0 && (
+                                        <div className={styles.contentTimestamp}>
+                                            <span
+                                                onMouseEnter={(e) =>
+                                                    setTooltip({
+                                                        text: getLongDate(message.updatedAt),
+                                                        element: e.currentTarget,
+                                                        delay: 1000,
+                                                    })
+                                                }
+                                                onMouseLeave={() => setTooltip(null)}
+                                            >
+                                                (edited)
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 ''
                             )}
 
-                            {message.attachments.length > 0 && (
+                            {message.attachments.length > 0 && !(message.error || message.waiting) && (
                                 <div className={styles.attachments}>
                                     <div>
                                         {message.attachments.length === 1 &&
                                             message.attachments.slice(0, 1).map((attachment) => (
-                                                <div className={styles.gridOneBig}>
+                                                <div
+                                                    key={uuidv4()}
+                                                    className={styles.gridOneBig}
+                                                >
                                                     <Image
-                                                        key={uuidv4()}
                                                         attachment={attachment}
                                                         message={message}
+                                                        functions={functions}
                                                     />
                                                 </div>
                                             ))}
@@ -973,6 +1081,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                         key={uuidv4()}
                                                         attachment={attachment}
                                                         message={message}
+                                                        functions={functions}
                                                     />
                                                 ))}
                                             </div>
@@ -986,6 +1095,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -998,6 +1108,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                     key={uuidv4()}
                                                                     attachment={attachment}
                                                                     message={message}
+                                                                    functions={functions}
                                                                 />
                                                             ))}
                                                         </div>
@@ -1008,6 +1119,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                     key={uuidv4()}
                                                                     attachment={attachment}
                                                                     message={message}
+                                                                    functions={functions}
                                                                 />
                                                             ))}
                                                         </div>
@@ -1023,6 +1135,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                         key={uuidv4()}
                                                         attachment={attachment}
                                                         message={message}
+                                                        functions={functions}
                                                     />
                                                 ))}
                                             </div>
@@ -1036,6 +1149,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1046,6 +1160,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1059,6 +1174,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                         key={uuidv4()}
                                                         attachment={attachment}
                                                         message={message}
+                                                        functions={functions}
                                                     />
                                                 ))}
                                             </div>
@@ -1072,6 +1188,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1082,6 +1199,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1096,6 +1214,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1106,6 +1225,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1119,6 +1239,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                         key={uuidv4()}
                                                         attachment={attachment}
                                                         message={message}
+                                                        functions={functions}
                                                     />
                                                 ))}
                                             </div>
@@ -1132,6 +1253,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1142,6 +1264,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             key={uuidv4()}
                                                             attachment={attachment}
                                                             message={message}
+                                                            functions={functions}
                                                         />
                                                     ))}
                                                 </div>
@@ -1151,7 +1274,18 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                 </div>
                             )}
 
-                            {message.edited && (
+                            {message.attachments.length > 0 && (message.error || message.waiting) && (
+                                <div>
+                                    Uploading {message.attachments.length} files
+                                    {message.attachments.length > 1 && 's'}
+                                    <span>
+                                        Size: {/* @ts-ignore */}
+                                        {message.attachments.reduce((a, b) => a + b.file.size, 0) / 1000000} MB
+                                    </span>
+                                </div>
+                            )}
+
+                            {message.edited && message.attachments.length > 0 && (
                                 <div className={styles.contentTimestamp}>
                                     <span
                                         onMouseEnter={(e) =>
@@ -1172,7 +1306,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                 )}
             </li>
         ),
-        [message, large, edit, reply, hover, fixedLayer]
+        [message, edit, reply, editContent]
     );
 };
 
@@ -1191,7 +1325,12 @@ const MessageMenu = ({ message, large, functions }: any) => {
     if (message.waiting || typeof menuSender !== 'boolean') return null;
 
     return (
-        <div className={styles.buttonContainer}>
+        <div
+            className={styles.buttonContainer}
+            style={{
+                visibility: fixedLayer?.message?.id === message?.id ? 'visible' : undefined,
+            }}
+        >
             <div
                 className={styles.buttonWrapper}
                 style={{ top: large ? '-16px' : '-25px' }}
@@ -1266,11 +1405,7 @@ const MessageMenu = ({ message, large, functions }: any) => {
                                             element: e.currentTarget,
                                             gap: 5,
                                             message: message,
-                                            deletePopup: functions.deletePopup,
-                                            pinPopup: functions.pinPopup,
-                                            unpinPopup: functions.unpinPopup,
-                                            editMessageState: functions.editMessageState,
-                                            replyToMessageState: functions.replyToMessageState,
+                                            functions: functions,
                                         });
                                         setTooltip(null);
                                     }
@@ -1321,21 +1456,17 @@ const MessageMenu = ({ message, large, functions }: any) => {
 };
 
 type ImageComponent = {
-    attachment:
-        | string
-        | {
-              file: File;
-              id: string;
-              description?: string;
-          };
+    attachment: TImageUpload;
     message: TMessage;
+    functions: any;
 };
 
-const Image = ({ attachment, message }: ImageComponent) => {
+const Image = ({ attachment, message, functions }: ImageComponent) => {
+    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
+    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     return useMemo(
@@ -1343,12 +1474,41 @@ const Image = ({ attachment, message }: ImageComponent) => {
             <div
                 className={styles.image}
                 onMouseEnter={() => {
-                    if (message.waiting || message.error || auth.user.id !== message.author.id) return;
+                    if (auth.user.id !== message.author.id) return;
                     setShowDelete(true);
                 }}
                 onMouseLeave={() => {
-                    if (message.waiting || message.error || auth.user.id !== message.author.id) return;
+                    if (auth.user.id !== message.author.id) return;
                     setShowDelete(false);
+                }}
+                onClick={() => {
+                    if (attachment.isSpoiler && !hideSpoiler) {
+                        setHideSpoiler(true);
+                        return;
+                    }
+
+                    const index = message.attachments.findIndex((a) => a.id === attachment.id);
+
+                    setPopup({
+                        type: 'ATTACHMENT_PREVIEW',
+                        attachments: message.attachments,
+                        current: index,
+                    });
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setFixedLayer({
+                        type: 'menu',
+                        event: {
+                            mouseX: e.clientX,
+                            mouseY: e.clientY,
+                        },
+                        gap: 5,
+                        message: message,
+                        attachment: attachment,
+                        functions: functions,
+                    });
                 }}
             >
                 <div>
@@ -1356,21 +1516,16 @@ const Image = ({ attachment, message }: ImageComponent) => {
                         <div>
                             <div>
                                 <img
-                                    src={
-                                        message.waiting
-                                            ? // @ts-ignore
-                                              URL.createObjectURL(attachment.file)
-                                            : `${process.env.NEXT_PUBLIC_CDN_URL}${attachment}/-/resize/x550/-/format/webp/`
-                                    }
-                                    // @ts-ignore
-                                    alt={attachment?.file?.name ?? ''}
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${attachment.id}/-/resize/x550/-/format/webp/`}
+                                    alt={attachment?.name}
+                                    style={{ filter: attachment.isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none' }}
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {showDelete && (
+                {showDelete && (!attachment.isSpoiler || hideSpoiler) && (
                     <div
                         className={styles.deleteImage}
                         onMouseEnter={(e) =>
@@ -1381,9 +1536,11 @@ const Image = ({ attachment, message }: ImageComponent) => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
-                        onClick={() => {
-                            if (message.waiting || message.error || auth.user.id !== message.author.id) return;
-                            if (message.attachments.length === 1) {
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (auth.user.id !== message.author.id) return;
+
+                            if (message.attachments.length === 1 && !message.content) {
                                 setPopup({
                                     type: 'DELETE_MESSAGE',
                                     channelId: message.channelId[0],
@@ -1392,9 +1549,9 @@ const Image = ({ attachment, message }: ImageComponent) => {
                                 return;
                             }
 
-                            const updatedAttachments = message.attachments.filter(
-                                (uuid: string) => uuid !== attachment
-                            );
+                            const updatedAttachments = message.attachments
+                                .map((file) => file.id)
+                                .filter((id: string) => id !== attachment.id);
 
                             setPopup({
                                 type: 'DELETE_ATTACHMENT',
@@ -1409,9 +1566,27 @@ const Image = ({ attachment, message }: ImageComponent) => {
                         />
                     </div>
                 )}
+
+                {attachment.isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+                {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
+                    <button
+                        className={styles.imageAlt}
+                        onMouseEnter={(e) => {
+                            e.stopPropagation();
+                            setTooltip({
+                                text: attachment.description,
+                                element: e.currentTarget,
+                                gap: 2,
+                            });
+                        }}
+                        onMouseLeave={() => setTooltip(null)}
+                    >
+                        ALT
+                    </button>
+                )}
             </div>
         ),
-        [attachment, message, showDelete]
+        [attachment, showDelete, hideSpoiler]
     );
 };
 

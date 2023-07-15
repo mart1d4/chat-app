@@ -37,6 +37,7 @@
     position: relative;
     background-color: var(--background-1);
     outline: 1px solid transparent;
+    overflow: hidden;
 }
 
 .inputWrapper:focus-within {

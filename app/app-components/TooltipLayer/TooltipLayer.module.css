@@ -8,14 +8,16 @@
 .tooltip {
     position: relative;
     display: flex;
+    flex-wrap: wrap;
+    word-break: break-word;
     align-items: center;
-    justify-content: center;
     font-size: 14px;
     line-height: 16px;
     font-weight: 500;
     text-transform: none;
     border-radius: 5px;
     padding: 8px 12px;
+    max-width: 240px;
     color: var(--foreground-2);
     box-shadow: var(--elevation-high);
 }

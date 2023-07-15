@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ReactElement } from 'react';
+import { useEffect, useState, ReactElement, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './TooltipLayer.module.css';
@@ -105,51 +105,53 @@ const TooltipLayer = (): ReactElement => {
 
         setPositions(pos);
         setArrowPositions(arrowPos);
-    }, [tooltip]);
+    }, [text, element, position, gap, big, color, delay, arrow]);
 
-    return (
-        <AnimatePresence>
-            {tooltip && positions?.transform && (
-                <div
-                    style={{ ...positions }}
-                    className={styles.container}
-                >
-                    <motion.div
-                        className={big ? styles.tooltip + ' ' + styles.big : styles.tooltip}
-                        initial={{
-                            opacity: 0,
-                            scale: 0.95,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            scale: 1,
-                        }}
-                        exit={{
-                            opacity: 0,
-                            scale: 0.95,
-                            transition: {
-                                duration: 0.1,
-                                ease: 'backOut',
-                                delay: 0,
-                            },
-                        }}
-                        transition={{
-                            duration: 0.2,
-                            ease: 'backOut',
-                            delay: delay,
-                        }}
-                        style={{
-                            maxWidth: big ? '190px' : '',
-                            backgroundColor: color,
-                        }}
+    return useMemo(
+        () => (
+            <AnimatePresence>
+                {tooltip && positions?.transform && (
+                    <div
+                        style={{ ...positions }}
+                        className={styles.container}
                     >
-                        {text}
-
-                        {arrow && <span style={{ ...arrowPositions }} />}
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
+                        <motion.div
+                            className={big ? styles.tooltip + ' ' + styles.big : styles.tooltip}
+                            initial={{
+                                opacity: 0,
+                                scale: 0.95,
+                            }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                            }}
+                            exit={{
+                                opacity: 0,
+                                scale: 0.95,
+                                transition: {
+                                    duration: 0.1,
+                                    ease: 'backOut',
+                                    delay: 0,
+                                },
+                            }}
+                            transition={{
+                                duration: 0.2,
+                                ease: 'backOut',
+                                delay: delay,
+                            }}
+                            style={{
+                                maxWidth: big ? '190px' : '',
+                                backgroundColor: color,
+                            }}
+                        >
+                            {text}
+                            {arrow && <span style={{ ...arrowPositions }} />}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        ),
+        [positions, arrowPositions, text]
     );
 };
 

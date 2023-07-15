@@ -175,9 +175,7 @@ const Avatar = (props: Props) => {
                             src={
                                 props.relativeSrc
                                     ? props.src
-                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${
-                                          props.size
-                                      }/-/format/${props.srcAs ?? 'webp'}/`
+                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size}x/-/crop/1:1/`
                             }
                             alt={props.alt}
                             width={props.size}
@@ -218,9 +216,7 @@ const Avatar = (props: Props) => {
                 src={
                     props.relativeSrc
                         ? props.src
-                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/preview/${props.size}x${
-                              props.size
-                          }/-/format/${props.srcAs ?? 'webp'}/`
+                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size}x/-/crop/1:1/`
                 }
                 alt={props.alt}
                 width={props.size}

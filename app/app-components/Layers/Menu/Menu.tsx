@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ReactElement } from 'react';
+import { useEffect, useState, ReactElement, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { Icon } from '@/app/app-components';
@@ -194,6 +194,51 @@ const content = ({ content }: { content: any }): ReactElement => {
                     func: () => content?.pasteText(),
                 },
             ]);
+        } else if (content?.attachment && !message) {
+            setItems([
+                {
+                    name: content?.attachment ? 'Copy Image' : null,
+                    func: () => {
+                        const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
+
+                        fetch(url)
+                            .then((res) => res.blob())
+                            .then((blob) => {
+                                navigator.clipboard.write([
+                                    new ClipboardItem({
+                                        [blob.type]: blob,
+                                    }),
+                                ]);
+                            });
+                    },
+                },
+                {
+                    name: content?.attachment ? 'Save Image' : null,
+                    func: () => {
+                        const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
+
+                        fetch(url)
+                            .then((res) => res.blob())
+                            .then((blob) => {
+                                const a = document.createElement('a');
+                                a.href = URL.createObjectURL(blob);
+                                a.download = content.attachment.name;
+                                a.click();
+                            });
+                    },
+                },
+                { name: content?.attachment ? 'Divider' : null },
+                {
+                    name: content?.attachment ? 'Copy Link' : null,
+                    func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
+                },
+                {
+                    name: content?.attachment ? 'Open Link' : null,
+                    func: () => {
+                        window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
+                    },
+                },
+            ]);
         } else if (message) {
             if (shouldDisplayInlined(message.type)) {
                 setItems([
@@ -227,12 +272,14 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: !!userProps?.isSelf ? 'Edit Message' : null,
                         icon: 'edit',
-                        func: () => content?.editMessageState(),
+                        func: () => content?.functions?.editMessageState(),
                     },
                     {
                         name: message.pinned ? 'Unpin Message' : 'Pin Message',
                         icon: 'pin',
-                        func: message?.pinned ? () => content?.unpinPopup() : () => content?.pinPopup(),
+                        func: message?.pinned
+                            ? () => content?.functions?.unpinPopup()
+                            : () => content?.functions?.pinPopup(),
                         funcShift: message.pinned
                             ? () =>
                                   sendRequest({
@@ -254,10 +301,10 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Reply',
                         icon: 'reply',
-                        func: () => content?.replyToMessageState(),
+                        func: () => content?.functions?.replyToMessageState(),
                     },
                     {
-                        name: 'Copy Text',
+                        name: message.content !== null ? 'Copy Text' : null,
                         icon: 'copy',
                         func: () => writeText(message.content),
                     },
@@ -279,7 +326,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: !!userProps?.isSelf ? 'Delete Message' : null,
                         icon: 'delete',
-                        func: () => content?.deletePopup(),
+                        func: () => content?.functions?.deletePopup(),
                         funcShift: () =>
                             sendRequest({
                                 query: 'DELETE_MESSAGE',
@@ -295,6 +342,49 @@ const content = ({ content }: { content: any }): ReactElement => {
                         icon: 'report',
                         func: () => {},
                         danger: true,
+                    },
+                    { name: content?.attachment ? 'Divider' : null },
+                    {
+                        name: content?.attachment ? 'Copy Image' : null,
+                        func: () => {
+                            const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
+
+                            fetch(url)
+                                .then((res) => res.blob())
+                                .then((blob) => {
+                                    navigator.clipboard.write([
+                                        new ClipboardItem({
+                                            [blob.type]: blob,
+                                        }),
+                                    ]);
+                                });
+                        },
+                    },
+                    {
+                        name: content?.attachment ? 'Save Image' : null,
+                        func: () => {
+                            const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
+
+                            fetch(url)
+                                .then((res) => res.blob())
+                                .then((blob) => {
+                                    const a = document.createElement('a');
+                                    a.href = URL.createObjectURL(blob);
+                                    a.download = content.attachment.name;
+                                    a.click();
+                                });
+                        },
+                    },
+                    { name: content?.attachment ? 'Divider' : null },
+                    {
+                        name: content?.attachment ? 'Copy Link' : null,
+                        func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
+                    },
+                    {
+                        name: content?.attachment ? 'Open Link' : null,
+                        func: () => {
+                            window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
+                        },
                     },
                     { name: 'Divider' },
                     {
@@ -608,65 +698,68 @@ const content = ({ content }: { content: any }): ReactElement => {
         auth.user.blockedByUserIds,
     ]);
 
-    return (
-        <div
-            className={styles.menuContainer}
-            onMouseLeave={() => setActive('')}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }}
-        >
-            <div>
-                {items?.map((item) => {
-                    if (!item.name) return;
-                    else if (item.name === 'Divider')
-                        return (
-                            <div
-                                key={uuidv4()}
-                                className={styles.divider}
-                            />
-                        );
-                    else
-                        return (
-                            <div
-                                key={uuidv4()}
-                                className={
-                                    item.disabled
-                                        ? styles.menuItemDisabled
-                                        : item.danger
-                                        ? active === item.name
-                                            ? styles.menuItemDangerActive
-                                            : styles.menuItemDanger
-                                        : active === item.name
-                                        ? styles.menuItemActive
-                                        : styles.menuItem
-                                }
-                                onClick={() => {
-                                    if (item.disabled) return;
-                                    setFixedLayer(null);
-                                    if (shift && item.funcShift) item.funcShift();
-                                    else if (item.func) item.func();
-                                }}
-                                onMouseEnter={() => setActive(item.name as string)}
-                            >
-                                <div className={styles.label}>{item.name}</div>
+    return useMemo(
+        () => (
+            <div
+                className={styles.menuContainer}
+                onMouseLeave={() => setActive('')}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }}
+            >
+                <div>
+                    {items?.map((item, index) => {
+                        if (!item.name) return;
+                        else if (item.name === 'Divider')
+                            return (
+                                <div
+                                    key={index}
+                                    className={styles.divider}
+                                />
+                            );
+                        else
+                            return (
+                                <div
+                                    key={index}
+                                    className={
+                                        item.disabled
+                                            ? styles.menuItemDisabled
+                                            : item.danger
+                                            ? active === item.name
+                                                ? styles.menuItemDangerActive
+                                                : styles.menuItemDanger
+                                            : active === item.name
+                                            ? styles.menuItemActive
+                                            : styles.menuItem
+                                    }
+                                    onClick={() => {
+                                        if (item.disabled) return;
+                                        setFixedLayer(null);
+                                        if (shift && item.funcShift) item.funcShift();
+                                        else if (item.func) item.func();
+                                    }}
+                                    onMouseEnter={() => setActive(item.name as string)}
+                                >
+                                    <div className={styles.label}>{item.name}</div>
 
-                                {item.icon && (
-                                    <div className={styles.icon}>
-                                        <Icon
-                                            name={item.icon}
-                                            size={item.iconSize ?? 16}
-                                        />
-                                    </div>
-                                )}
+                                    {item.icon && (
+                                        <div className={styles.icon}>
+                                            <Icon
+                                                name={item.icon}
+                                                size={item.iconSize ?? 16}
+                                            />
+                                        </div>
+                                    )}
 
-                                {item.textTip && <div className={styles.text}>{item.textTip}</div>}
-                            </div>
-                        );
-                })}
+                                    {item.textTip && <div className={styles.text}>{item.textTip}</div>}
+                                </div>
+                            );
+                    })}
+                </div>
             </div>
-        </div>
+        ),
+        [items, shift, active]
     );
 };
 

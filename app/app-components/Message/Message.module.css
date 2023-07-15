@@ -106,7 +106,7 @@
     user-select: text;
 }
 
-.messageContent > div:not(.editHint, .specialIcon, .userAvatar) {
+.messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp) {
     font-weight: 300;
     font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     user-select: text;
@@ -286,7 +286,12 @@
 
 /* Message menu */
 
+.messageContainer:hover .buttonContainer {
+    visibility: visible;
+}
+
 .buttonContainer {
+    visibility: hidden;
     position: absolute;
     top: 0;
     right: 0;
@@ -390,17 +395,15 @@
     position: relative;
     max-height: inherit;
     max-width: 100%;
-    border-radius: 2px;
     display: flex;
     align-items: center;
-    justify-self: auto !important;
     flex-flow: row nowrap;
     cursor: pointer;
     height: 100%;
     width: 100%;
 }
 
-.image > div:not(.deleteImage) {
+.image > div:not(.deleteImage, .spoilerButton) {
     height: 100%;
     width: 100%;
     flex: auto;
@@ -438,7 +441,6 @@
     display: block;
     min-width: 100%;
     min-height: 100%;
-    height: 100%;
     object-fit: cover;
     max-width: calc(100% + 1px);
 }
@@ -459,6 +461,54 @@
 .deleteImage:hover {
     color: var(--foreground-1);
     background-color: var(--error-1);
+}
+
+.image .spoilerButton {
+    font-family: 'gg sans';
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    font-size: 15px;
+    user-select: none;
+    color: var(--foreground-2);
+    background-color: var(--background-dark);
+    z-index: 1;
+}
+
+.image:hover .spoilerButton {
+    background-color: var(--background-dark-1);
+}
+
+.imageAlt {
+    position: absolute;
+    left: 4.5px;
+    bottom: 4px;
+    padding: 7px 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: var(--foreground-1);
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 18px;
+    cursor: pointer;
+}
+
+.imageAlt:hover {
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 /* Image grids */

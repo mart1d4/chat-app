@@ -54,6 +54,10 @@ export async function middleware(req: NextRequest) {
         });
     } catch (error) {
         console.error('[MIDDLEWARE] Error: ', error);
-        return NextResponse.redirect(new URL('/login', req.url));
+        if (!authPaths.includes(pathname) && !allowedPaths.includes(pathname)) {
+            return NextResponse.redirect(new URL('/login', req.url));
+        } else {
+            return NextResponse.next();
+        }
     }
 }

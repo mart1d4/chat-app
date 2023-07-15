@@ -430,6 +430,11 @@
 }
 
 .fileItemContainer > .image > .spoilerButton {
+    font-family: 'gg sans';
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     left: 50%;
     top: 50%;

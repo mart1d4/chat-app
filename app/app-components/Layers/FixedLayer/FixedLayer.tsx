@@ -195,7 +195,7 @@ const FixedLayer = (): ReactElement => {
             ref={layerRef}
             style={{
                 ...positions,
-                zIndex: 1000,
+                zIndex: 100000,
                 position: 'fixed',
                 width: contentContainer?.width,
                 height: contentContainer?.height,

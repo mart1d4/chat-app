@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useMemo, useEffect } from 'react';
+import { uploadFileGroup } from '@uploadcare/upload-client';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { trimMessage } from '@/lib/strings';
@@ -9,14 +10,14 @@ import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadFileGroup } from '@uploadcare/upload-client';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
     const [files, setFiles] = useState<
         {
-            file: File;
             id: string;
+            file: File;
+            description?: string;
         }[]
     >([]);
     const [usersTyping, setUsersTyping] = useState<
@@ -33,23 +34,100 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (reply?.messageId) textAreaRef?.current?.focus();
-    }, [reply]);
+    const setCursorToEnd = () => {
+        const input = textAreaRef.current as HTMLInputElement;
 
-    const pasteText = async () => {
-        const text = await navigator.clipboard.readText();
-        setMessage((message) => message + text);
+        if (!input) return;
+
+        // Set cursor to end of text
+        const range = document.createRange();
+        const sel = window.getSelection();
+
+        // If content has line breaks, it will be split into multiple text nodes
+        // We need to select the last text node
+        const textNodes = input.childNodes;
+        const lastTextNode = textNodes[textNodes.length - 1];
+        if (!lastTextNode) return;
+
+        range.setStart(lastTextNode, lastTextNode.textContent!.length);
+        range.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+
+        input.focus();
     };
+
+    useEffect(() => {
+        if (reply?.messageId) setCursorToEnd();
+    }, [reply]);
 
     useEffect(() => {
         if (!channel) return;
 
         const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}')?.message;
-        if (message) setMessage(message);
+        if (message) {
+            setMessage(message);
+            const input = textAreaRef.current as HTMLInputElement;
+            input.innerText = message;
+            setCursorToEnd();
+        }
 
-        textAreaRef.current?.focus();
-    }, [channel]);
+        const handlePaste = (e: ClipboardEvent) => {
+            if (popup) return;
+            e.preventDefault();
+
+            const clipboardData = e.clipboardData;
+            const items = clipboardData?.items;
+
+            if (!items) return;
+
+            for (const item of items) {
+                if (item.type.includes('image')) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        setFiles((files) => [...files, { id: uuidv4(), file }]);
+                    }
+                } else if (item.type === 'text/plain') {
+                    const text = clipboardData?.getData('text/plain') || '';
+                    if (text) {
+                        const input = textAreaRef.current as HTMLInputElement;
+
+                        const selection = window.getSelection();
+                        const range = selection?.getRangeAt(0);
+                        if (!range) return;
+
+                        const start = range.startOffset;
+                        const end = range.endOffset;
+
+                        const textBefore = input.innerText.slice(0, start);
+                        const textAfter = input.innerText.slice(end);
+
+                        input.innerText = textBefore + text + textAfter;
+
+                        // Set cursor to the end of the pasted text, and don't forget there can be line breaks thus multiple text nodes
+                        const textNodes = input.childNodes;
+                        const lastTextNode = textNodes[textNodes.length - 1];
+                        if (!lastTextNode) return;
+
+                        const range2 = document.createRange();
+                        const sel = window.getSelection();
+                        range2.setStart(lastTextNode, lastTextNode.textContent!.length);
+                        range2.collapse(true);
+                        sel?.removeAllRanges();
+                        sel?.addRange(range2);
+
+                        setMessage(input.innerText);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('paste', handlePaste);
+
+        return () => {
+            window.removeEventListener('paste', handlePaste);
+        };
+    }, [channel, popup]);
 
     useEffect(() => {
         if (!channel) return;
@@ -70,28 +148,16 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         if (input?.innerText !== editContent) {
             setMessage(editContent);
             input.innerText = editContent;
-
-            // Set cursor to end of text
-            const range = document.createRange();
-            const sel = window.getSelection();
-
-            // If content has line breask, it will be split into multiple text nodes
-            // We need to select the last text node
-
-            const textNodes = input.childNodes;
-            const lastTextNode = textNodes[textNodes.length - 1];
-            if (!lastTextNode) return;
-            range.setStart(lastTextNode, lastTextNode.textContent!.length);
-            range.collapse(true);
-            sel?.removeAllRanges();
-            sel?.addRange(range);
-
-            input.focus();
+            setCursorToEnd();
         }
     }, [editContent]);
 
     useEffect(() => {
-        textAreaRef.current?.focus();
+        const input = textAreaRef.current as HTMLInputElement;
+
+        if (input !== document.activeElement) {
+            setCursorToEnd();
+        }
     }, [files]);
 
     const sendMessage = async () => {
@@ -130,9 +196,9 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             );
         }
 
-        try {
-            let uploadedFiles: string[] = [];
+        let uploadedFiles: any = [];
 
+        try {
             if (attachments.length > 0) {
                 const filesToAdd = attachments.map((file) => file.file);
 
@@ -150,7 +216,14 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                     );
                     return;
                 } else {
-                    uploadedFiles = result.files.map((file) => file.uuid);
+                    uploadedFiles = result.files.map((file, index) => {
+                        return {
+                            id: file.uuid,
+                            name: attachments[index].file.name,
+                            isSpoiler: attachments[index].file.name.startsWith('SPOILER_'),
+                            description: attachments[index].description,
+                        };
+                    });
                 }
             }
 
@@ -168,22 +241,24 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
             if (!response.success) {
                 setMessages((messages: TMessage[]) =>
-                    messages.map((message) => {
-                        if (message.id === tempId) {
-                            if (uploadedFiles.length > 0) {
-                                return {
-                                    ...message,
-                                    attachments: uploadedFiles,
-                                    error: true,
-                                    waiting: false,
-                                };
-                            } else {
-                                return { ...message, error: true, waiting: false };
-                            }
-                        }
-                        return message;
-                    })
+                    messages.map((message) =>
+                        message.id === tempId ? { ...message, error: true, waiting: false } : message
+                    )
                 );
+
+                if (uploadedFiles.length > 0) {
+                    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            attachments: uploadedFiles,
+                        }),
+                    });
+                }
+
                 return;
             }
 
@@ -194,12 +269,24 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             setMessages((messages: TMessage[]) => [...messages, message]);
         } catch (err) {
             console.error(err);
-            // Make message marked as error
             setMessages((messages: TMessage[]) =>
                 messages.map((message) =>
                     message.id === tempId ? { ...message, error: true, waiting: false } : message
                 )
             );
+
+            if (uploadedFiles.length > 0) {
+                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        attachments: uploadedFiles,
+                    }),
+                });
+            }
         }
     };
 
@@ -255,35 +342,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                 setMessage(text);
                             }
                         }}
-                        onPaste={(e) => {
-                            if (!channel) return;
-                            e.preventDefault();
-
-                            // Get where the cursor is to insert the text at the right place
-                            const selection = window.getSelection();
-                            const range = selection?.getRangeAt(0);
-                            const start = range?.startOffset;
-                            const end = range?.endOffset;
-
-                            // Convert HTML to plain text
-                            const text = e.clipboardData.getData('text/plain');
-
-                            // Add text to the div at the right place
-                            const input = e.target as HTMLDivElement;
-                            const currentText = input.innerText.toString();
-                            const newText = currentText.slice(0, start) + text + currentText.slice(end);
-                            input.innerText = newText;
-
-                            // Set the cursor back to the right place
-                            const newRange = document.createRange();
-                            newRange.setStart(input.childNodes[0], start || 0 + text.length);
-                            newRange.collapse(true);
-                            selection?.removeAllRanges();
-                            selection?.addRange(newRange);
-
-                            // Finally, update the state
-                            setMessage(text);
-                        }}
                         onKeyDown={(e) => {
                             if (!channel) return;
                             if (e.key === 'Enter' && !e.shiftKey && typeof editContent === 'string') {
@@ -312,6 +370,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                 sendButton: true,
                             });
                         }}
+                        onPaste={(e) => {}}
                     />
                 </div>
             </div>
@@ -690,7 +749,6 @@ const FilePreview = ({ file, setFiles }: any) => {
     }, [file]);
 
     const handleFileChange = (data: any) => {
-        console.log(data);
         const editedFile = {
             file: new File([file.file], data.isSpoiler ? `SPOILER_${data.filename}` : data.filename, {
                 type: file.file.type,

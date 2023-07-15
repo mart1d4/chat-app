@@ -76,17 +76,19 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
             data: {
                 content: content,
-                attachments: attachments,
+                attachments: attachments
+                    ? message.attachments.filter((file) => attachments.includes(file.id))
+                    : message.attachments,
                 edited: true,
             },
         });
 
-        if (message.attachments !== attachments) {
-            const toDelete = message.attachments?.filter((attachment) => !attachments?.includes(attachment));
+        if (message.attachments.length !== attachments.length) {
+            const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
 
             if (toDelete.length > 0) {
-                toDelete.forEach(async (attachment) => {
-                    await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+                toDelete.forEach(async (file) => {
+                    await fetch(`https://api.uploadcare.com/files/${file.id}/storage/`, {
                         method: 'DELETE',
                         headers: {
                             Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
@@ -245,8 +247,8 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         });
 
         if (message.attachments.length > 0) {
-            message.attachments.forEach(async (attachment) => {
-                await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+            message.attachments.forEach(async (attachment: any) => {
+                await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
                     method: 'DELETE',
                     headers: {
                         Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,

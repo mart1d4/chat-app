@@ -15,6 +15,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
+    const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -143,11 +144,32 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             if (node) {
                 setTimeout(() => {
                     node.scrollTop = node.scrollHeight;
-                }, 100);
+                }, 300);
             }
         },
-        [messages, loading, reply]
+        [loading, scrollToBottom]
     );
+
+    useEffect(() => {
+        const container = scrollableContainer;
+        // @ts-ignore
+        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
+
+        if (!isAtBottom) {
+            if (edit) setScrollToBottom((prev) => !prev);
+            if (reply) setScrollToBottom((prev) => !prev);
+        }
+    }, [edit, reply]);
+
+    useEffect(() => {
+        const container = scrollableContainer;
+        // @ts-ignore
+        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
+
+        if (!isAtBottom) {
+            setScrollToBottom((prev) => !prev);
+        }
+    }, [messages]);
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
         const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
@@ -204,7 +226,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                                                 {hasMore ? <MessageSkeleton /> : <FirstMessage channel={channel} />}
 
                                                 {messages?.map((message: TMessage, index: number) => (
-                                                    <div key={uuidv4()}>
+                                                    <div key={message.id}>
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
@@ -252,7 +274,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                 </div>
             </div>
         ),
-        [channel, loading, edit, reply, messages, hasMore]
+        [channel, loading, messages, hasMore, edit, reply]
     );
 };
 

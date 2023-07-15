@@ -1,7 +1,7 @@
 'use client';
 
+import { useRef, useEffect, useState, ReactElement, useMemo } from 'react';
 import { FixedMessage, LoadingDots, Icon } from '@/app/app-components';
-import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
@@ -10,10 +10,10 @@ import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
 
 const Popup = (): ReactElement => {
-    const { popup, setPopup }: any = useContextHook({ context: 'layer' });
+    const { popup, setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
-    const { logout } = useLogout();
     const { sendRequest } = useFetchHelper();
+    const { logout } = useLogout();
     const type = popup?.type;
 
     const [isLoading, setIsLoading] = useState(false);
@@ -153,8 +153,6 @@ const Popup = (): ReactElement => {
         setIsLoading(false);
     };
 
-    const editFile = () => {};
-
     const props = {
         UPDATE_USERNAME: {
             title: 'Change your username',
@@ -269,11 +267,10 @@ const Popup = (): ReactElement => {
                 setPopup(null);
             }
 
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey && popup?.type) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (!popup?.type) return;
                 props[popup.type as keyof typeof props].function();
                 setPopup(null);
             }
@@ -284,7 +281,7 @@ const Popup = (): ReactElement => {
         }, 100);
 
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [popup, uid, password, password1, newPassword, confirmPassword, isLoading]);
+    }, [popup, uid, password, password1, newPassword, confirmPassword, isLoading, filename, description, isSpoiler]);
 
     useEffect(() => {
         uidInputRef?.current?.focus();
@@ -330,7 +327,57 @@ const Popup = (): ReactElement => {
                 />
             )}
 
-            {popup?.type === 'WARNING' ? (
+            {popup?.type === 'ATTACHMENT_PREVIEW' ? (
+                <motion.div
+                    className={styles.container}
+                    key='attachment-preview'
+                    ref={popupRef}
+                    role='dialog'
+                    aria-modal='true'
+                    initial={{
+                        transform: 'translate(-50%, -50%) scale(0.5)',
+                        opacity: 0,
+                    }}
+                    animate={{
+                        transform: 'translate(-50%, -50%) scale(1)',
+                        opacity: 1,
+                    }}
+                    exit={{
+                        transform: 'translate(-50%, -50%) scale(0.5)',
+                        opacity: 0,
+                    }}
+                    transition={{ ease: 'easeInOut', duration: 0.2 }}
+                >
+                    <div
+                        className={styles.imagePreview}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setFixedLayer({
+                                type: 'menu',
+                                event: {
+                                    mouseX: e.clientX,
+                                    mouseY: e.clientY,
+                                },
+                                attachment: popup.attachments[popup.current],
+                            });
+                        }}
+                    >
+                        <img
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/`}
+                            alt={popup.attachments[popup.current]?.description ?? 'Image'}
+                        />
+                    </div>
+
+                    <a
+                        target='_blank'
+                        className={styles.imageLink}
+                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/`}
+                    >
+                        Open in new tab
+                    </a>
+                </motion.div>
+            ) : popup?.type === 'WARNING' ? (
                 <motion.div
                     className={styles.container}
                     key='warning'
@@ -733,7 +780,11 @@ const Popup = (): ReactElement => {
                         )}
                     </div>
 
-                    <div>
+                    <div
+                        style={{
+                            margin: type === 'FILE_EDIT' ? '0 -4px' : '',
+                        }}
+                    >
                         <button
                             className='underline'
                             onClick={() => setPopup(null)}

@@ -204,7 +204,6 @@ type TMessage = readonly {
     id: string;
     type: ETMessage;
     content: string;
-    attachments: string[];
     embeds: TEmbed[];
     edited: boolean;
     pinned?: DateTime;
@@ -228,10 +227,36 @@ type TMessage = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
+} &
+    (
+        | {
+              error?: false;
+              waiting?: false;
+              attachments: TImage[];
+          }
+        | {
+              error: true;
+              waiting?: false;
+              attachments: TImageUpload[];
+          }
+        | {
+              error?: false;
+              waiting: true;
+              attachments: TImageUpload[];
+          }
+    );
 
-    // Not in database
-    waiting?: boolean;
-    error?: boolean;
+type TImage = {
+    id: string;
+    file: File;
+    description?: string;
+};
+
+type TImageUpload = {
+    id: string;
+    name: string;
+    isSpoiler: boolean;
+    description?: string;
 };
 
 type TEmbed = readonly {

@@ -187,7 +187,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         connect: { id: channelId },
                     },
                     messageReference: {
-                        connect: { id: message.messageReference || '' },
+                        connect: { id: message.messageReference },
                     },
                 },
             });
@@ -203,9 +203,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     mentionRoleIds: message.mentionRoleIds || [],
                     mentionUserIds: message.mentionUserIds || [],
                     author: {
-                        connect: {
-                            id: senderId,
-                        },
+                        connect: { id: senderId },
                     },
                     channel: {
                         connect: { id: channelId },
@@ -293,8 +291,8 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         console.error(error);
 
         if (message.attachments) {
-            message.attachments.forEach(async (attachment: string) => {
-                await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+            message.attachments.forEach(async (attachment: any) => {
+                await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
                     method: 'DELETE',
                     headers: {
                         Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
