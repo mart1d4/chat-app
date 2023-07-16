@@ -356,7 +356,7 @@ type MessageReplyObject = {
 // Context
 
 type TAuth = null | {
-    user: TCleanUser;
+    user: TUser;
     accessToken: string;
 };
 

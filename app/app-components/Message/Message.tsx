@@ -34,17 +34,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         if (!setEdit || !setReply) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                if (edit) {
-                    setEdit(null);
-                    setLocalStorage({ edit: null });
-                }
-
-                if (reply) {
-                    setReply(null);
-                    setLocalStorage({ reply: null });
-                }
-            } else if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 if (!edit || edit?.messageId !== message.id) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -55,7 +45,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [edit, editContent]);
+    }, [edit]);
 
     useEffect(() => {
         const handleShift = (e: KeyboardEvent) => {

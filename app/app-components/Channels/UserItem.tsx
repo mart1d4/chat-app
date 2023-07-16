@@ -158,14 +158,14 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                 e.stopPropagation();
                                 e.preventDefault();
 
-                                if (!pathname.includes(channel.id)) {
-                                    return sendRequest({
-                                        query: 'LEAVE_CHANNEL',
-                                        params: { channelId: channel.id },
-                                    });
-                                }
+                                sendRequest({
+                                    query: 'CHANNEL_DELETE',
+                                    params: { channelId: channel.id },
+                                });
 
-                                router.push('/channels/me');
+                                if (pathname.includes(channel.id)) {
+                                    router.push('/channels/me');
+                                }
                             }}
                         >
                             <Icon

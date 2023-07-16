@@ -35,10 +35,11 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] `FixedLayer` components are being rerendered when clicking the buttons to close them
 -   [x] Editing an image data using `enter` to submit the form doesn't always work
 -   [ ] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
--   [ ] Requesting a friend adds the user twice to the friends list (only way to fix is to refresh the page)
+-   [x] Requesting a friend adds the user twice to the friends list (only way to fix is to refresh the page)
 -   [ ] Editing/Replying to a message rerenders the entire channel
 -   [ ] Clicking on an image to preview it sometimes takes a while to load and messes up the layout
 -   [ ] Textarea still needs improvements; e.g. pasting text while having text selected doesn't always work as expected
+-   [ ] Textarea content doesn't get cleared when sending a message
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

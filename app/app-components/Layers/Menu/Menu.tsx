@@ -420,13 +420,24 @@ const content = ({ content }: { content: any }): ReactElement => {
                 { name: 'Divider' },
                 {
                     name: 'Leave Group',
-                    func: () =>
-                        sendRequest({
-                            query: 'LEAVE_CHANNEL',
-                            params: {
-                                channelId: content.channel.id,
-                            },
-                        }),
+                    func: () => {
+                        if (content.channel.recipients.length === 1) {
+                            sendRequest({
+                                query: 'CHANNEL_DELETE',
+                                params: {
+                                    channelId: content.channel.id,
+                                },
+                            });
+                        } else {
+                            sendRequest({
+                                query: 'CHANNEL_RECIPIENT_REMOVE',
+                                params: {
+                                    channelId: content.channel.id,
+                                    recipientId: user.id,
+                                },
+                            });
+                        }
+                    },
                     danger: true,
                 },
                 { name: 'Divider' },
@@ -529,7 +540,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         name: !userProps?.isBlocked ? 'Message' : null,
                         func: () =>
                             sendRequest({
-                                query: 'CREATE_CHANNEL',
+                                query: 'CHANNEL_CREATE',
                                 data: {
                                     recipients: [user.id],
                                 },
@@ -555,7 +566,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         name: 'Message',
                         func: () =>
                             sendRequest({
-                                query: 'CREATE_CHANNEL',
+                                query: 'CHANNEL_CREATE',
                                 data: {
                                     recipients: [user.id],
                                 },
@@ -599,7 +610,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         name: 'Message',
                         func: () =>
                             sendRequest({
-                                query: 'CREATE_CHANNEL',
+                                query: 'CHANNEL_CREATE',
                                 data: {
                                     recipients: [user.id],
                                 },
@@ -623,7 +634,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         name: content?.channel && 'Close DM',
                         func: () =>
                             sendRequest({
-                                query: 'LEAVE_CHANNEL',
+                                query: 'CHANNEL_DELETE',
                                 params: { channelId: content.channel.id },
                             }),
                     },

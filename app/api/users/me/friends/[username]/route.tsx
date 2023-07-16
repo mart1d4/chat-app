@@ -85,6 +85,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
         const sentRequest = sender.requestSentIds.find((request) => request === user.id);
         const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
 
+        console.log('Requests sent: ', sender.requestSentIds);
+
         if (isBlocked || isBlockedBy) {
             return NextResponse.json(
                 {
@@ -190,7 +192,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Friend request sent.',
+                message: `Success. Friend request sent to ${user.username}.`,
             },
             { status: 200 }
         );

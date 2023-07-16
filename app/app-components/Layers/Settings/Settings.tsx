@@ -51,6 +51,13 @@ const Settings = (): ReactElement => {
     }, []);
 
     useEffect(() => {
+        if (typeof showSettings !== 'boolean') {
+            setActiveTab(showSettings.type);
+            if (minified) setHideNav(true);
+        }
+    }, [showSettings, popup]);
+
+    useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 if (popup) return;
@@ -59,11 +66,6 @@ const Settings = (): ReactElement => {
         };
 
         window.addEventListener('keydown', handleEsc);
-
-        if (typeof showSettings !== 'boolean') {
-            setActiveTab(showSettings.type);
-            if (minified) setHideNav(true);
-        }
 
         return () => window.removeEventListener('keydown', handleEsc);
     }, [showSettings, popup]);

@@ -13,9 +13,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Unauthorized',
             },
-            {
-                status: 401,
-            }
+            { status: 401 }
         );
     }
 
@@ -64,9 +62,18 @@ export async function GET(req: Request): Promise<NextResponse> {
                         },
                     },
                 },
+                hiddenChannelIds: true,
                 channelIds: true,
                 channels: {
-                    include: {
+                    orderBy: {
+                        updatedAt: 'asc',
+                    },
+                    select: {
+                        id: true,
+                        type: true,
+                        icon: true,
+                        ownerId: true,
+                        recipientIds: true,
                         recipients: {
                             select: {
                                 id: true,
@@ -85,9 +92,8 @@ export async function GET(req: Request): Promise<NextResponse> {
                                 createdAt: true,
                             },
                         },
-                    },
-                    orderBy: {
-                        updatedAt: 'desc',
+                        createdAt: true,
+                        updatedAt: true,
                     },
                 },
                 friendIds: true,
@@ -164,9 +170,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'Forbidden',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
@@ -184,9 +188,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'Forbidden',
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
@@ -195,11 +197,12 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: true,
                 message: 'Successfully refreshed token.',
                 accessToken: accessToken,
-                user: user,
+                user: {
+                    ...user,
+                    channels: user.channels.filter((channel) => !user.hiddenChannelIds.includes(channel.id)),
+                },
             },
-            {
-                status: 200,
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(error);
@@ -208,9 +211,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

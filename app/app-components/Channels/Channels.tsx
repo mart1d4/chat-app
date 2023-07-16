@@ -7,7 +7,6 @@ import { getChannelName } from '@/lib/strings';
 import { useRouter } from 'next/navigation';
 import styles from './Channels.module.css';
 import UserSection from './UserSection';
-import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 import Title from './Title';
 
@@ -26,51 +25,78 @@ const Channels = (): ReactElement => {
 
     useEffect(() => {
         pusher.bind('channel-created', (data: any) => {
-            if (!data.channel.recipientIds.includes(auth.user.id)) return;
+            if (!data.recipients.includes(auth.user.id)) return;
 
-            setAuth((prev: any) => ({
+            setAuth((prev: TAuth) => ({
                 ...prev,
                 user: {
-                    ...prev.user,
-                    channelIds: [data.channel.id, ...prev.user.channelIds],
-                    channels: [data.channel, ...prev.user.channels],
+                    ...prev?.user,
+                    channelIds: [data.channel.id, ...(prev?.user.channelIds ?? [])],
+                    channels: [data.channel, ...(prev?.user.channels ?? [])],
                 },
             }));
 
-            if (data.senderId === auth.user.id) {
+            if (data.redirect) {
                 router.push(`/channels/me/${data.channel.id}`);
             }
         });
 
-        pusher.bind('channel-users-added', (data: any) => {
-            const recipientIds = data.recipients.map((recipient: TUser) => recipient.id);
-            if (!recipientIds.includes(auth.user.id)) return;
+        pusher.bind('channel-left', (data: any) => {
+            if (data.recipientId !== auth.user.id && !data.recpients?.includes(auth.user.id)) return;
 
-            setAuth((prev: any) => ({
+            if (data.recipients && data.recipientId !== auth.user.id) {
+                setAuth((prev: TAuth) => ({
+                    ...prev,
+                    user: {
+                        ...prev?.user,
+                        channels: prev?.user?.channels?.map((channel: TChannel) => {
+                            if (channel.id === data.channelId) {
+                                return {
+                                    ...channel,
+                                    recipientIds: channel.recipientIds.filter(
+                                        (recipientId: string) => recipientId !== data.recipientId
+                                    ),
+                                    recipients: channel.recipients.filter(
+                                        (recipient: TUser) => recipient.id !== data.recipientId
+                                    ),
+                                };
+                            }
+
+                            return channel;
+                        }),
+                    },
+                }));
+            } else if (data.recipientId === auth.user.id) {
+                setAuth((prev: TAuth) => ({
+                    ...prev,
+                    user: {
+                        ...prev?.user,
+                        channelIds: prev?.user?.channelIds?.filter((channelId: string) => channelId !== data.channelId),
+                        channels: prev?.user?.channels?.filter((channel: TChannel) => channel.id !== data.channelId),
+                    },
+                }));
+            }
+        });
+
+        pusher.bind('channel-recipient-add', (data: any) => {
+            if (!data.recipients.includes(auth.user.id)) return;
+
+            setAuth((prev: TAuth) => ({
                 ...prev,
                 user: {
-                    ...prev.user,
-                    channels: prev.user.channels.map((channel: TChannel) => {
+                    ...prev?.user,
+                    channels: prev?.user?.channels?.map((channel: TChannel) => {
                         if (channel.id === data.channelId) {
                             return {
                                 ...channel,
-                                recipients: [data.recipients],
+                                recipientIds: [...channel.recipientIds, ...data.recipient.id],
+                                recipients: [...channel.recipients, ...data.recipient],
+                                ownerId: data.newOwner ?? channel.ownerId,
                             };
                         }
 
                         return channel;
                     }),
-                },
-            }));
-        });
-
-        pusher.bind('channel-left', (data: any) => {
-            if (data.senderId !== auth.user.id) return;
-            setAuth((prev: any) => ({
-                ...prev,
-                user: {
-                    ...prev.user,
-                    channels: prev.user.channels.filter((channel: TChannel) => channel.id !== data.channelId),
                 },
             }));
         });
@@ -93,8 +119,8 @@ const Channels = (): ReactElement => {
 
         return () => {
             pusher.unbind('channel-created');
-            pusher.unbind('channel-users-added');
             pusher.unbind('channel-left');
+            pusher.unbind('channel-recipient-add');
             pusher.unbind('message-sent');
         };
     }, [auth.user]);
@@ -115,7 +141,12 @@ const Channels = (): ReactElement => {
                         <Title />
 
                         {channels.length > 0 ? (
-                            <ChannelList channels={channels} />
+                            channels.map((channel: TChannel) => (
+                                <UserItem
+                                    key={channel.id}
+                                    channel={channel}
+                                />
+                            ))
                         ) : (
                             <img
                                 src='/assets/app/no-channels.svg'
@@ -129,17 +160,6 @@ const Channels = (): ReactElement => {
             <UserSection />
         </div>
     );
-};
-
-const ChannelList = ({ channels }: any): ReactElement => {
-    return useMemo(() => {
-        return channels.map((channel: any) => (
-            <UserItem
-                key={uuidv4()}
-                channel={channel}
-            />
-        ));
-    }, [channels]);
 };
 
 export default Channels;

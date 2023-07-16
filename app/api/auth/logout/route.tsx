@@ -21,6 +21,9 @@ export async function POST(req: Request): Promise<NextResponse> {
             where: {
                 refreshToken: token,
             },
+            select: {
+                id: true,
+            },
         });
 
         if (!user) {
@@ -44,6 +47,9 @@ export async function POST(req: Request): Promise<NextResponse> {
             },
             data: {
                 refreshToken: null,
+            },
+            select: {
+                id: true,
             },
         });
 

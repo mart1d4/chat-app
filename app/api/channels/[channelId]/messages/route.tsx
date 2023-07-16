@@ -132,6 +132,33 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             where: {
                 id: channelId,
             },
+            select: {
+                id: true,
+                type: true,
+                icon: true,
+                ownerId: true,
+                recipientIds: true,
+                recipients: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                createdAt: true,
+                updatedAt: true,
+            },
         });
 
         const sender = await prisma.user.findUnique({
@@ -174,12 +201,12 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 data: {
                     type: message.messageReference ? 'REPLY' : 'DEFAULT',
                     content: message.content,
-                    attachments: message.attachments || [],
-                    embeds: message.embeds || [],
-                    mentionEveryone: message.mentionEveryone || false,
-                    mentionChannelIds: message.mentionChannelIds || [],
-                    mentionRoleIds: message.mentionRoleIds || [],
-                    mentionUserIds: message.mentionUserIds || [],
+                    attachments: message.attachments,
+                    embeds: message.embeds,
+                    mentionEveryone: message.mentionEveryone,
+                    mentionChannelIds: message.mentionChannelIds,
+                    mentionRoleIds: message.mentionRoleIds,
+                    mentionUserIds: message.mentionUserIds,
                     author: {
                         connect: { id: senderId },
                     },
@@ -196,12 +223,12 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 data: {
                     type: message.messageReference ? 'REPLY' : 'DEFAULT',
                     content: message.content,
-                    attachments: message.attachments || [],
-                    embeds: message.embeds || [],
-                    mentionEveryone: message.mentionEveryone || false,
-                    mentionChannelIds: message.mentionChannelIds || [],
-                    mentionRoleIds: message.mentionRoleIds || [],
-                    mentionUserIds: message.mentionUserIds || [],
+                    attachments: message.attachments,
+                    embeds: message.embeds,
+                    mentionEveryone: message.mentionEveryone,
+                    mentionChannelIds: message.mentionChannelIds,
+                    mentionRoleIds: message.mentionRoleIds,
+                    mentionUserIds: message.mentionUserIds,
                     author: {
                         connect: { id: senderId },
                     },
@@ -212,17 +239,36 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             });
         }
 
-        await prisma.channel.update({
-            where: {
-                id: channelId,
-            },
-            data: {
-                messages: {
-                    connect: { id: newMessage.id },
+        if (channel.type === 'DM') {
+            // If the recipient has hidden the channel, unhide it
+            const recipientId = channel.recipientIds.find((id) => id !== senderId);
+            const recipient = await prisma.user.findUnique({
+                where: {
+                    id: recipientId,
                 },
-                updatedAt: new Date(),
-            },
-        });
+                select: {
+                    hiddenChannelIds: true,
+                },
+            });
+
+            if (recipient?.hiddenChannelIds.includes(channelId)) {
+                await prisma.user.update({
+                    where: {
+                        id: recipientId,
+                    },
+                    data: {
+                        hiddenChannelIds: {
+                            set: recipient.hiddenChannelIds.filter((id) => id !== channelId),
+                        },
+                    },
+                });
+
+                await pusher.trigger('chat-app', 'channel-created', {
+                    recipients: [recipientId],
+                    channel: channel,
+                });
+            }
+        }
 
         const messageToSend = await prisma.message.findUnique({
             where: {

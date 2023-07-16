@@ -102,7 +102,7 @@ enum EUserStatus {
     OFFLINE
 }
 
-enum ETChannel {
+enum EChannel {
     DM
     GROUP_DM
     GUILD_TEXT
@@ -160,6 +160,8 @@ model User {
 
     channelIds String[]  @db.ObjectId
     channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
+
+    hiddenChannelIds String[] @db.ObjectId
 
     ownedChannelIds String[]  @db.ObjectId
     ownedChannels   Channel[] @relation("Owner")
@@ -242,12 +244,12 @@ model Role {
 }
 
 model Channel {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    type        ETChannel
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    type        EChannel
     name        String?
     description String?
     icon        String?
-    nsfw        Boolean   @default(false)
+    nsfw        Boolean  @default(false)
     position    Int?
     parentId    String?
     rateLimit   Int?
@@ -279,7 +281,7 @@ model Message {
     edited            Boolean     @default(false)
     pinned            DateTime?
     reactions         TReaction[]
-    mentionEveryone   Boolean
+    mentionEveryone   Boolean     @default(false)
     mentionChannelIds String[]
     mentionRoleIds    String[]
     mentionUserIds    String[]

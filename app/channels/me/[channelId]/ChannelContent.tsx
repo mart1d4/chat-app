@@ -17,7 +17,42 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     const [loading, setLoading] = useState<boolean>(true);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
+    const { popup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+
+    useEffect(() => {
+        if (!setEdit || !setReply || !channel) return;
+
+        const setLocalStorage = (data: {}) => {
+            localStorage.setItem(
+                `channel-${channel.id}`,
+                JSON.stringify({
+                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                    ...data,
+                })
+            );
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                if (popup) return;
+
+                if (edit) {
+                    setEdit(null);
+                    setLocalStorage({ edit: null });
+                }
+
+                if (reply) {
+                    setReply(null);
+                    setLocalStorage({ reply: null });
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [edit, popup]);
 
     useEffect(() => {
         if (!channel) return;
@@ -28,16 +63,13 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         if (localChannel?.reply) setReply(localChannel.reply);
 
         const getMessages = async () => {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/users/me/channels/${channel.id}/messages`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${auth.accessToken}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            ).then((res) => res?.json());
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${auth.accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }).then((res) => res?.json());
 
             if (response.error) {
                 console.log(response.error);

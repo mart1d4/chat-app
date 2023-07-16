@@ -103,42 +103,40 @@ const Popout = ({ content }: any) => {
         }
     }, [search, friends]);
 
-    const createChan = async (channelId?: string) => {
-        let allRecipients = [...chosen];
+    const createChan = async () => {
+        const recipients = chosen.map((user) => user.id);
 
         if (content?.channel) {
-            allRecipients = [...allRecipients, ...content?.channel.recipients];
-            allRecipients = allRecipients.filter((recipient) => {
-                return recipient.id !== auth?.user.id;
-            });
-        }
-
-        const recipientIds = allRecipients?.map((recipient) => recipient.id);
-
-        if (!content?.channel) {
-            const sameChannel = auth.user.channels.find((channel: any) => {
-                return (
-                    channel.recipientIds.length === recipientIds.length + 1 &&
-                    channel.recipientIds.every((recipientId: string) =>
-                        [...recipientIds, auth.user.id].includes(recipientId)
-                    )
+            if (content.channel.type === 'DM') {
+                const currentRecipient = content.channel.recipientIds.find(
+                    (recipient: string) => recipient !== auth.user.id
                 );
-            });
 
-            if (sameChannel) {
-                setFixedLayer(null);
-                router.push(`/channels/me/${sameChannel.id}`);
-                return;
+                sendRequest({
+                    query: 'CHANNEL_CREATE',
+                    data: {
+                        recipients: [currentRecipient, ...recipients],
+                    },
+                });
             }
-        }
 
-        sendRequest({
-            query: 'CREATE_CHANNEL',
-            data: {
-                recipients: recipientIds,
-                channelId: channelId,
-            },
-        });
+            recipients.forEach((recipient) => {
+                sendRequest({
+                    query: 'CHANNEL_RECIPIENT_ADD',
+                    params: {
+                        channelId: content?.channel.id,
+                        recipientId: recipient,
+                    },
+                });
+            });
+        } else {
+            sendRequest({
+                query: 'CHANNEL_CREATE',
+                data: {
+                    recipients: recipients,
+                },
+            });
+        }
     };
 
     if (content?.pinned) {
@@ -254,7 +252,8 @@ const Popout = ({ content }: any) => {
                                             className={chosen?.length ? 'blue' : 'blue disabled'}
                                             onClick={() => {
                                                 if (chosen?.length) {
-                                                    createChan(content?.channel.id);
+                                                    createChan();
+                                                    setFixedLayer(null);
                                                 }
                                             }}
                                         >

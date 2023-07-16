@@ -10,6 +10,7 @@ const AddFriend = () => {
     const [input, setInput] = useState<string>('');
     const [error, setError] = useState<string>('');
     const [valid, setValid] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
@@ -69,10 +70,12 @@ const AddFriend = () => {
                                 }}
                                 onKeyDown={async (e) => {
                                     if (e.key === 'Enter') {
-                                        if (!input.length) {
+                                        if (!input.length || loading) {
                                             inputRef.current?.focus();
                                             return;
                                         }
+
+                                        setLoading(true);
 
                                         const res = await sendRequest({
                                             query: 'ADD_FRIEND',
@@ -80,7 +83,12 @@ const AddFriend = () => {
                                         });
 
                                         if (!res.success) setError(res.message);
-                                        else setValid('Friend request sent!');
+                                        else {
+                                            setValid(res.message);
+                                            setInput('');
+                                        }
+
+                                        setLoading(false);
                                     }
                                 }}
                                 onContextMenu={(e) => {
@@ -99,10 +107,12 @@ const AddFriend = () => {
                             className={input.length > 0 ? 'blue' : 'blue disabled'}
                             onClick={async (e) => {
                                 e.preventDefault();
-                                if (!input.length) {
+                                if (!input.length || loading) {
                                     inputRef.current?.focus();
                                     return;
                                 }
+
+                                setLoading(true);
 
                                 const res = await sendRequest({
                                     query: 'ADD_FRIEND',
@@ -110,7 +120,12 @@ const AddFriend = () => {
                                 });
 
                                 if (!res.success) setError(res.message);
-                                else setValid('Friend request sent!');
+                                else {
+                                    setValid(res.message);
+                                    setInput('');
+                                }
+
+                                setLoading(false);
                             }}
                         >
                             Send Friend Request

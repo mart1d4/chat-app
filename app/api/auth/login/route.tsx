@@ -68,9 +68,18 @@ export async function POST(req: Request): Promise<NextResponse> {
                         },
                     },
                 },
+                hiddenChannelIds: true,
                 channelIds: true,
                 channels: {
-                    include: {
+                    orderBy: {
+                        updatedAt: 'asc',
+                    },
+                    select: {
+                        id: true,
+                        type: true,
+                        icon: true,
+                        ownerId: true,
+                        recipientIds: true,
                         recipients: {
                             select: {
                                 id: true,
@@ -89,9 +98,8 @@ export async function POST(req: Request): Promise<NextResponse> {
                                 createdAt: true,
                             },
                         },
-                    },
-                    orderBy: {
-                        updatedAt: 'desc',
+                        createdAt: true,
+                        updatedAt: true,
                     },
                 },
                 friendIds: true,
@@ -199,12 +207,18 @@ export async function POST(req: Request): Promise<NextResponse> {
                 data: {
                     refreshToken: refreshToken,
                 },
+                select: {
+                    id: true,
+                },
             });
 
             return NextResponse.json(
                 {
                     success: true,
-                    user: user,
+                    user: {
+                        ...user,
+                        channels: user.channels.filter((channel) => !user.hiddenChannelIds.includes(channel.id)),
+                    },
                     accessToken: accessToken,
                 },
                 {

@@ -36,6 +36,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     const setCursorToEnd = () => {
         const input = textAreaRef.current as HTMLInputElement;
+        input.focus();
 
         if (!input) return;
 
@@ -53,8 +54,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         range.collapse(true);
         sel?.removeAllRanges();
         sel?.addRange(range);
-
-        input.focus();
     };
 
     useEffect(() => {
@@ -85,6 +84,24 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 if (item.type.includes('image')) {
                     const file = item.getAsFile();
                     if (file) {
+                        if (files.length >= 10) {
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_LIMIT',
+                            });
+                            return;
+                        }
+
+                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+
+                        if (file.size > maxFileSize) {
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_SIZE',
+                            });
+                            return;
+                        }
+
                         setFiles((files) => [...files, { id: uuidv4(), file }]);
                     }
                 } else if (item.type === 'text/plain') {
@@ -127,7 +144,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         return () => {
             window.removeEventListener('paste', handlePaste);
         };
-    }, [channel, popup]);
+    }, [channel, popup, files]);
 
     useEffect(() => {
         if (!channel) return;
@@ -156,6 +173,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         const input = textAreaRef.current as HTMLInputElement;
 
         if (input !== document.activeElement) {
+            console.log('not active');
             setCursorToEnd();
         }
     }, [files]);
@@ -181,6 +199,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             waiting: true,
         };
 
+        setMessage('');
         const input = textAreaRef.current as HTMLInputElement;
         input.innerText = '';
         setFiles([]);
@@ -493,11 +512,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                                 return;
                                             }
 
-                                            const fileToAdd = {
-                                                file: file,
-                                                id: uuidv4(),
-                                            };
-                                            checkedFiles.push(fileToAdd);
+                                            checkedFiles.push({ id: uuidv4(), file });
                                         }
 
                                         setFiles([...files, ...checkedFiles]);

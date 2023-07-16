@@ -62,7 +62,10 @@ const AppNav = (): ReactElement => {
 
     useEffect(() => {
         pusher.bind('user-updated', (data: any) => updateUserData(data));
-        pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
+        pusher.bind('relationship-updated', (data: any) => {
+            console.log('relationship-updated');
+            updateRelationship(data);
+        });
         pusher.bind('message-sent', (data: any) => updateNotifications(data));
 
         return () => {
@@ -72,123 +75,104 @@ const AppNav = (): ReactElement => {
         };
     }, [auth.user]);
 
-    const addFriend = useCallback(
-        (user: TCleanUser) => {
-            setAuth({
-                ...auth,
+    const addFriend = (user: TCleanUser) => {
+        setAuth((prev: TAuth) => ({
+            ...prev,
+            user: {
+                ...prev?.user,
+                friendIds: [...(prev?.user?.friendIds ?? []), user.id],
+                friends: [...(prev?.user?.friends ?? []), user],
+                requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
+                requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+            },
+        }));
+    };
+
+    const removeFriend = (user: TCleanUser) => {
+        setAuth((prev: TAuth) => ({
+            ...prev,
+            user: {
+                ...prev?.user,
+                friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
+                friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
+                requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+            },
+        }));
+    };
+
+    const addFriendRequest = (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
+        if (type === 'SENT') {
+            setAuth((prev: TAuth) => ({
+                ...prev,
                 user: {
-                    ...auth.user,
-                    friendIds: [...auth.user.friendIds, user.id],
-                    friends: [...auth.user.friends, user],
-                    requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                    requestsReceived: auth.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
-                    requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    ...prev?.user,
+                    requestSentIds: [...(prev?.user?.requestSentIds ?? []), user.id],
+                    requestsSent: [...(prev?.user?.requestsSent ?? []), user],
                 },
-            });
-        },
-        [auth.user]
-    );
-
-    const removeFriend = useCallback(
-        (user: TCleanUser) => {
-            setAuth({
-                ...auth,
+            }));
+        } else {
+            setAuth((prev: TAuth) => ({
+                ...prev,
                 user: {
-                    ...auth.user,
-                    friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
-                    friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                    requestsReceived: auth.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
-                    requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    ...prev?.user,
+                    requestReceivedIds: [...(prev?.user?.requestReceivedIds ?? []), user.id],
+                    requestsReceived: [...(prev?.user?.requestsReceived ?? []), user],
                 },
-            });
-        },
-        [auth.user]
-    );
+            }));
+        }
+    };
 
-    const addFriendRequest = useCallback(
-        (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
-            if (type === 'SENT') {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        requestSentIds: [...auth.user.requestSentIds, user.id],
-                        requestsSent: [...auth.user.requestsSent, user],
-                    },
-                });
-            } else {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        requestReceivedIds: [...auth.user.requestReceivedIds, user.id],
-                        requestsReceived: [...auth.user.requestsReceived, user],
-                    },
-                });
-            }
-        },
-        [auth.user]
-    );
-
-    const blockUser = useCallback(
-        (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
-            if (type === 'SENT') {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
-                        friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                        requestsReceived: auth.user.requestsReceived?.filter(
-                            (user2: TCleanUser) => user2.id !== user.id
-                        ),
-                        requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
-                        requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-                        blockedUserIds: [...auth.user.blockedUserIds, user.id],
-                        blockedUsers: [...auth.user.blockedUsers, user],
-                    },
-                });
-            } else {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        friendIds: auth.user.friendIds?.filter((id: string) => id !== user.id),
-                        friends: auth.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                        requestReceivedIds: auth.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                        requestsReceived: auth.user.requestsReceived?.filter(
-                            (user2: TCleanUser) => user2.id !== user.id
-                        ),
-                        requestSentIds: auth.user.requestSentIds?.filter((id: string) => id !== user.id),
-                        requestsSent: auth.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-                        blockedByUserIds: [...auth.user.blockedByUserIds, user.id],
-                        blockedByUsers: [...auth.user.blockedByUsers, user],
-                    },
-                });
-            }
-        },
-        [auth.user]
-    );
-
-    const unblockUser = useCallback(
-        (user: TCleanUser) => {
-            setAuth({
-                ...auth,
+    const blockUser = (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
+        if (type === 'SENT') {
+            setAuth((prev: TAuth) => ({
+                ...prev,
                 user: {
-                    ...auth.user,
-                    blockedUserIds: auth.user.blockedUserIds?.filter((id: string) => id !== user.id),
-                    blockedUsers: auth.user.blockedUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    blockedByUserIds: auth.user.blockedByUserIds?.filter((id: string) => id !== user.id),
-                    blockedByUsers: auth.user.blockedByUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    ...prev?.user,
+                    friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
+                    friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                    requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
+                    requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    blockedUserIds: [...(prev?.user?.blockedUserIds ?? []), user.id],
+                    blockedUsers: [...(prev?.user?.blockedUsers ?? []), user],
                 },
-            });
-        },
-        [auth.user]
-    );
+            }));
+        } else {
+            setAuth((prev: TAuth) => ({
+                ...prev,
+                user: {
+                    ...prev?.user,
+                    friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
+                    friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
+                    requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
+                    requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
+                    blockedByUserIds: [...(prev?.user?.blockedByUserIds ?? []), user.id],
+                    blockedByUsers: [...(prev?.user?.blockedByUsers ?? []), user],
+                },
+            }));
+        }
+    };
+
+    const unblockUser = (user: TCleanUser) => {
+        setAuth((prev: TAuth) => ({
+            ...prev,
+            user: {
+                ...prev?.user,
+                blockedUserIds: prev?.user.blockedUserIds?.filter((id: string) => id !== user.id),
+                blockedUsers: prev?.user.blockedUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
+                blockedByUserIds: prev?.user?.blockedByUserIds?.filter((id: string) => id !== user.id),
+                blockedByUsers: prev?.user?.blockedByUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
+            },
+        }));
+    };
 
     const updateRelationship = (data: any) => {
         if (data.sender.id === auth.user.id || data.receiver.id === auth.user.id) {

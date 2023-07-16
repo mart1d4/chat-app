@@ -12,12 +12,11 @@ type TQuery =
     | 'BLOCK_USER'
     | 'UNBLOCK_USER'
     | 'UPDATE_USER'
-    | 'CREATE_CHANNEL'
-    | 'UPDATE_CHANNEL'
-    | 'LEAVE_CHANNEL'
-    | 'DELETE_CHANNEL'
-    | 'ADD_CHANNEL_RECIPENTS'
-    | 'REMOVE_CHANNEL_RECIPENTS';
+    | 'CHANNEL_CREATE'
+    | 'CHANNEL_UPDATE'
+    | 'CHANNEL_DELETE'
+    | 'CHANNEL_RECIPIENT_ADD'
+    | 'CHANNEL_RECIPIENT_REMOVE';
 
 type Props = {
     query: TQuery;
@@ -27,25 +26,25 @@ type Props = {
     data?: {
         [key: string]: any;
     };
+    skipCheck?: boolean;
 };
 
 const urls = {
-    ['SEND_MESSAGE']: '/users/me/channels/:channelId/messages',
-    ['UPDATE_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId',
-    ['PIN_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId/pin',
-    ['UNPIN_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId/pin',
-    ['DELETE_MESSAGE']: '/users/me/channels/:channelId/messages/:messageId',
+    ['SEND_MESSAGE']: '/channels/:channelId/messages',
+    ['UPDATE_MESSAGE']: '/channels/:channelId/messages/:messageId',
+    ['PIN_MESSAGE']: '/channels/:channelId/messages/:messageId/pin',
+    ['UNPIN_MESSAGE']: '/channels/:channelId/messages/:messageId/pin',
+    ['DELETE_MESSAGE']: '/channels/:channelId/messages/:messageId',
     ['ADD_FRIEND']: '/users/me/friends/:username',
     ['REMOVE_FRIEND']: '/users/me/friends/:username',
     ['BLOCK_USER']: '/users/:username/block',
     ['UNBLOCK_USER']: '/users/:username/block',
     ['UPDATE_USER']: '/users/me',
-    ['CREATE_CHANNEL']: '/users/me/channels',
-    ['UPDATE_CHANNEL']: '/users/me/channels/:channelId',
-    ['LEAVE_CHANNEL']: '/users/me/channels/:channelId',
-    ['DELETE_CHANNEL']: '/users/me/channels/:channelId',
-    ['ADD_CHANNEL_RECIPENTS']: '/users/me/channels/:channelId/recipients',
-    ['REMOVE_CHANNEL_RECIPENTS']: '/users/me/channels/:channelId/recipients',
+    ['CHANNEL_CREATE']: '/users/me/channels',
+    ['CHANNEL_UPDATE']: '/users/me/channels/:channelId',
+    ['CHANNEL_DELETE']: '/users/me/channels/:channelId',
+    ['CHANNEL_RECIPIENT_ADD']: '/channels/:channelId/recipients/:recipientId',
+    ['CHANNEL_RECIPIENT_REMOVE']: '/channels/:channelId/recipients/:recipientId',
 };
 
 const methods = {
@@ -59,20 +58,19 @@ const methods = {
     ['BLOCK_USER']: 'POST',
     ['UNBLOCK_USER']: 'DELETE',
     ['UPDATE_USER']: 'PATCH',
-    ['CREATE_CHANNEL']: 'POST',
-    ['UPDATE_CHANNEL']: 'PATCH',
-    ['LEAVE_CHANNEL']: 'DELETE',
-    ['DELETE_CHANNEL']: 'DELETE',
-    ['ADD_CHANNEL_RECIPENTS']: 'PUT',
-    ['REMOVE_CHANNEL_RECIPENTS']: 'DELETE',
+    ['CHANNEL_CREATE']: 'POST',
+    ['CHANNEL_UPDATE']: 'PUT',
+    ['CHANNEL_DELETE']: 'DELETE',
+    ['CHANNEL_RECIPIENT_ADD']: 'PUT',
+    ['CHANNEL_RECIPIENT_REMOVE']: 'DELETE',
 };
 
 const useFetchHelper = () => {
+    const { setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 
     const channelExists = (recipients: string[]) => {
-        console.log(recipients);
         const channel = auth.user.channels.find((channel: TChannel) => {
             return (
                 channel.recipients.length === recipients.length &&
@@ -80,20 +78,30 @@ const useFetchHelper = () => {
             );
         });
 
-        if (channel) return channel.id;
+        if (channel) return channel;
     };
 
-    const sendRequest = async ({ query, params, data }: Props) => {
+    const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
         if (!auth?.accessToken) {
             throw new Error('[useFetchHelper] An access token is required');
         }
 
-        if (query === 'CREATE_CHANNEL') {
+        if (query === 'CHANNEL_CREATE' && (typeof skipCheck === 'undefined' || !skipCheck)) {
             const channel = channelExists([...data?.recipients, auth.user.id]);
 
+            console.log(channel);
+
             if (channel) {
-                router.push(`/channels/me/${channel}`);
-                return;
+                if (channel.type === 'DM') {
+                    router.push(`/channels/me/${channel.id}`);
+                    return;
+                } else if (channel.type === 'GROUP_DM' && channel.recipients.length !== 1) {
+                    setPopup({
+                        type: 'CHANNEL_EXISTS',
+                        channel: channel,
+                    });
+                    return;
+                }
             }
         }
 
@@ -119,9 +127,14 @@ const useFetchHelper = () => {
             throw new Error('[useFetchHelper] A username is required');
         }
 
+        if (url.includes(':recipientId') && !params?.recipientId) {
+            throw new Error('[useFetchHelper] A recipientId is required');
+        }
+
         url = url.replace(':channelId', params?.channelId ?? '');
         url = url.replace(':messageId', params?.messageId ?? '');
         url = url.replace(':username', params?.username ?? '');
+        url = url.replace(':recipientId', params?.recipientId ?? '');
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {

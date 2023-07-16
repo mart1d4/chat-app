@@ -41,11 +41,11 @@ const UserItem = ({ content, user }: Props): ReactElement => {
             className={
                 fixedLayer?.refElement === liRef.current ? styles.liContainer + ' ' + styles.active : styles.liContainer
             }
-            onClick={async () => {
+            onClick={() => {
                 if (!['all', 'online'].includes(content)) return;
 
                 sendRequest({
-                    query: 'CREATE_CHANNEL',
+                    query: 'CHANNEL_CREATE',
                     data: { recipients: [user.id] },
                 });
             }}
@@ -100,17 +100,10 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                     {(content === 'all' || content === 'online') && (
                         <>
                             <button
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                     e.stopPropagation();
-
-                                    const channelId = channelExists(user.id);
-                                    if (channelId) {
-                                        router.push(`/channels/me/${channelId}`);
-                                        return;
-                                    }
-
                                     sendRequest({
-                                        query: 'CREATE_CHANNEL',
+                                        query: 'CHANNEL_CREATE',
                                         data: { recipients: [user.id] },
                                     });
                                 }}
