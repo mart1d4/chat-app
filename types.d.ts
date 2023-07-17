@@ -234,17 +234,17 @@ type TMessage = readonly {
         | {
               error?: false;
               waiting?: false;
+              attachments: TImageUpload[];
+          }
+        | {
+              waiting: false;
+              error: true;
               attachments: TImage[];
           }
         | {
-              error: true;
-              waiting?: false;
-              attachments: TImageUpload[];
-          }
-        | {
-              error?: false;
               waiting: true;
-              attachments: TImageUpload[];
+              error: false;
+              attachments: TImage[];
           }
     );
 
@@ -257,6 +257,8 @@ type TImage = {
 type TImageUpload = {
     id: string;
     name: string;
+    width: number;
+    height: number;
     isSpoiler: boolean;
     description?: string;
 };

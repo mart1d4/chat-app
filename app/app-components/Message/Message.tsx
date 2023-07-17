@@ -1,7 +1,7 @@
 'use client';
 
 import { TextArea, Icon, Avatar } from '@/app/app-components';
-import { uploadFileGroup } from '@uploadcare/upload-client';
+import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from '@uploadcare/upload-client';
 import { useEffect, useState, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
@@ -27,6 +27,8 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
+
+    const controller = useMemo(() => new AbortController(), []);
 
     const shouldDisplayInlined = () => {
         const inlineTypes = [
@@ -129,6 +131,8 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     };
 
     const retrySendMessage = async (prevMessage: TMessage) => {
+        if (!prevMessage || (!prevMessage.waiting && !prevMessage.error)) return;
+
         const tempMessage = {
             id: prevMessage.id,
             content: prevMessage.content,
@@ -148,43 +152,39 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
         try {
             if (prevMessage.attachments.length > 0) {
-                // @ts-ignore
-                const onProgress = ({ isComputable, value }) => {
-                    if (!isComputable) return;
-                    setFileProgress(value);
+                const onProgress = (props: ComputableProgressInfo | UnknownProgressInfo) => {
+                    if ('value' in props) {
+                        setFileProgress(props.value);
+                    }
                 };
-                const abortController = new AbortController();
-                // @ts-ignore
-                const filesToAdd = prevMessage.attachments.map((file: TImage) => file.file as File);
 
-                const result = await uploadFileGroup(filesToAdd, {
+                const filesToAdd = prevMessage.attachments.map((file) => file.file);
+
+                await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
                     store: 'auto',
-                    // @ts-ignore
                     onProgress,
-                    signal: abortController.signal,
-                });
-
-                if (!result.files) {
-                    console.error(result);
-                    setMessages((messages: TMessage[]) =>
-                        messages.map((message) =>
-                            message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
-                        )
-                    );
-                    return;
-                } else {
-                    uploadedFiles = result.files.map((file, index) => {
-                        return {
-                            id: file.uuid,
-                            // @ts-ignore
-                            name: prevMessage.attachments[index].file.name,
-                            // @ts-ignore
-                            isSpoiler: prevMessage.attachments[index].file.name.startsWith('SPOILER_'),
-                            description: prevMessage.attachments[index].description,
-                        };
+                    signal: controller.signal,
+                })
+                    .then((result) => {
+                        uploadedFiles = result.files.map((file, index) => {
+                            return {
+                                id: file.uuid,
+                                name: prevMessage.attachments[index].file.name,
+                                isSpoiler: prevMessage.attachments[index].file.name.startsWith('SPOILER_'),
+                                description: prevMessage.attachments[index].description,
+                            };
+                        });
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        // @ts-expect-error
+                        setMessages((prev: TMessage[]) => {
+                            return prev.map((message) =>
+                                message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
+                            );
+                        });
                     });
-                }
             }
 
             const response = await sendRequest({
@@ -200,11 +200,12 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
             });
 
             if (!response.success) {
-                setMessages((messages: TMessage[]) =>
-                    messages.map((message) =>
+                // @ts-expect-error
+                setMessages((prev: TMessage[]) => {
+                    return prev.map((message) =>
                         message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
-                    )
-                );
+                    );
+                });
 
                 if (uploadedFiles.length > 0) {
                     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
@@ -224,16 +225,16 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
             const message = response.data.message;
 
-            // Stop message from being marked as waiting
             setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== prevMessage.id));
             setMessages((messages: TMessage[]) => [...messages, message]);
-        } catch (err) {
-            console.error(err);
-            setMessages((messages: TMessage[]) =>
-                messages.map((message) =>
+        } catch (error) {
+            console.error(error);
+            // @ts-expect-error
+            setMessages((prev: TMessage[]) => {
+                return prev.map((message) =>
                     message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
-                )
-            );
+                );
+            });
 
             if (uploadedFiles.length > 0) {
                 await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
@@ -844,8 +845,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                 <>
                                                     <div>
                                                         {message.attachments.length === 1
-                                                            ? // @ts-expect-error
-                                                              message.attachments[0].file.name
+                                                            ? message.attachments[0].file.name
                                                             : `${message.attachments.length} files`}
                                                     </div>
 
@@ -879,7 +879,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div onClick={() => controller.abort()}>
                                         <Icon name='close' />
                                     </div>
                                 </div>

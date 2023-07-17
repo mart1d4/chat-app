@@ -14,6 +14,8 @@ datasource db {
 type TImage {
     id          String
     name        String
+    width       Int
+    height      Int
     isSpoiler   Boolean
     description String?
 }

@@ -1,7 +1,7 @@
 'use client';
 
+import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from '@uploadcare/upload-client';
 import { useState, useRef, useMemo, useEffect } from 'react';
-import { uploadFileGroup } from '@uploadcare/upload-client';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { trimMessage } from '@/lib/strings';
@@ -12,18 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
-    const [files, setFiles] = useState<
-        {
-            id: string;
-            file: File;
-            description?: string;
-        }[]
-    >([]);
-    const [usersTyping, setUsersTyping] = useState<
-        {
-            [key: string]: boolean;
-        }[]
-    >([]);
+    const [files, setFiles] = useState<TImage[]>([]);
+    const [usersTyping, setUsersTyping] = useState<string[]>([]);
 
     const { setFixedLayer, setPopup, popup }: any = useContextHook({ context: 'layer' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
@@ -56,6 +46,16 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     };
 
     useEffect(() => {
+        if (!channel) return;
+
+        localStorage.setItem(
+            `channel-${channel.id}`,
+            JSON.stringify({
+                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                reply: reply,
+            })
+        );
+
         if (reply?.messageId) setCursorToEnd();
     }, [reply]);
 
@@ -140,9 +140,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
         window.addEventListener('paste', handlePaste);
 
-        return () => {
-            window.removeEventListener('paste', handlePaste);
-        };
+        return () => window.removeEventListener('paste', handlePaste);
     }, [channel, popup, files]);
 
     useEffect(() => {
@@ -184,9 +182,8 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             return;
         }
 
-        const tempId = uuidv4();
         const tempMessage = {
-            id: tempId,
+            id: uuidv4(),
             content: messageContent,
             attachments: attachments,
             author: auth.user,
@@ -202,55 +199,45 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         input.innerText = '';
         setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
-
-        if (reply?.messageId) {
-            setReply(null);
-            localStorage.setItem(
-                `channel-${channel.id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
-                    reply: null,
-                })
-            );
-        }
+        if (reply?.messageId) setReply(null);
 
         let uploadedFiles: any = [];
 
         try {
             if (attachments.length > 0) {
-                // @ts-ignore
-                const onProgress = ({ isComputable, value }) => {
-                    console.log(isComputable, value);
+                const onProgress = (props: ComputableProgressInfo | UnknownProgressInfo) => {
+                    if ('value' in props) {
+                        console.log(props.isComputable, props.value);
+                    }
                 };
+
                 const abortController = new AbortController();
                 const filesToAdd = attachments.map((file) => file.file);
 
-                const result = await uploadFileGroup(filesToAdd, {
+                await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
                     store: 'auto',
-                    // @ts-ignore
                     onProgress,
                     signal: abortController.signal,
-                });
-
-                if (!result.files) {
-                    console.error(result);
-                    setMessages((messages: TMessage[]) =>
-                        messages.map((message) =>
-                            message.id === tempId ? { ...message, error: true, waiting: false } : message
-                        )
-                    );
-                    return;
-                } else {
-                    uploadedFiles = result.files.map((file, index) => {
-                        return {
-                            id: file.uuid,
-                            name: attachments[index].file.name,
-                            isSpoiler: attachments[index].file.name.startsWith('SPOILER_'),
-                            description: attachments[index].description,
-                        };
+                })
+                    .then((result) => {
+                        uploadedFiles = result.files.map((file, index) => {
+                            return {
+                                id: file.uuid,
+                                name: attachments[index].file.name,
+                                isSpoiler: attachments[index].file.name.startsWith('SPOILER_'),
+                                description: attachments[index].description,
+                            };
+                        });
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        setMessages((messages: TMessage[]) =>
+                            messages.map((message) =>
+                                message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
+                            )
+                        );
                     });
-                }
             }
 
             const response = await sendRequest({
@@ -268,7 +255,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             if (!response.success) {
                 setMessages((messages: TMessage[]) =>
                     messages.map((message) =>
-                        message.id === tempId ? { ...message, error: true, waiting: false } : message
+                        message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
                     )
                 );
 
@@ -290,14 +277,13 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
             const message = response.data.message;
 
-            // Stop message from being marked as waiting
-            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempId));
+            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempMessage.id));
             setMessages((messages: TMessage[]) => [...messages, message]);
         } catch (err) {
             console.error(err);
             setMessages((messages: TMessage[]) =>
                 messages.map((message) =>
-                    message.id === tempId ? { ...message, error: true, waiting: false } : message
+                    message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
                 )
             );
 
@@ -630,8 +616,8 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                     />
                                 </svg>
                                 <span>
-                                    {usersTyping.map((user) => (
-                                        <span>{user.username}, </span>
+                                    {usersTyping.map((username) => (
+                                        <span>{username}, </span>
                                     ))}
 
                                     {usersTyping.length > 0 ? 'are typing...' : 'is typing...'}
