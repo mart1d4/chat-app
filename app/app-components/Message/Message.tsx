@@ -206,20 +206,6 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                         message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
                     );
                 });
-
-                if (uploadedFiles.length > 0) {
-                    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-                        method: 'DELETE',
-                        headers: {
-                            Authorization: `Bearer ${auth.token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            attachments: uploadedFiles,
-                        }),
-                    });
-                }
-
                 return;
             }
 
@@ -235,19 +221,6 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
                 );
             });
-
-            if (uploadedFiles.length > 0) {
-                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${auth.token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        attachments: uploadedFiles,
-                    }),
-                });
-            }
         }
     };
 
@@ -728,8 +701,9 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                 </span>
 
                                 {message.waiting && <span className={styles.titleTimestamp}>Sending...</span>}
+                                {message.error && <span className={styles.titleTimestamp}>Error Sending</span>}
 
-                                {!message.waiting && (
+                                {!message.waiting && !message.error && (
                                     <span
                                         className={styles.titleTimestamp}
                                         onMouseEnter={(e) =>
@@ -873,6 +847,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                             0,
                                                             0
                                                         )`,
+                                                        backgroundColor: message.error ? 'var(--error-1)' : '',
                                                     }}
                                                 />
                                             </div>
@@ -1207,7 +1182,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                         })
                                     }
                                     onMouseLeave={() => setTooltip(null)}
-                                    onClick={() => functions.editMessageState()}
+                                    onClick={() => {
+                                        setTooltip(null);
+                                        functions.editMessageState();
+                                    }}
                                 >
                                     <Icon name='edit' />
                                 </div>
@@ -1222,7 +1200,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                         })
                                     }
                                     onMouseLeave={() => setTooltip(null)}
-                                    onClick={() => functions.replyToMessageState()}
+                                    onClick={() => {
+                                        setTooltip(null);
+                                        functions.replyToMessageState();
+                                    }}
                                 >
                                     <Icon name='reply' />
                                 </div>
@@ -1272,7 +1253,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
-                                onClick={() => functions.retrySendMessage(message)}
+                                onClick={() => {
+                                    setTooltip(null);
+                                    functions.retrySendMessage(message);
+                                }}
                             >
                                 <Icon name='retry' />
                             </div>
@@ -1287,7 +1271,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
-                                onClick={() => functions.deleteLocalMessage()}
+                                onClick={() => {
+                                    setTooltip(null);
+                                    functions.deleteLocalMessage();
+                                }}
                             >
                                 <Icon name='delete' />
                             </div>

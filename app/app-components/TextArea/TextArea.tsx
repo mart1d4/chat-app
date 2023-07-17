@@ -258,20 +258,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                         message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
                     )
                 );
-
-                if (uploadedFiles.length > 0) {
-                    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-                        method: 'DELETE',
-                        headers: {
-                            Authorization: `Bearer ${auth.token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            attachments: uploadedFiles,
-                        }),
-                    });
-                }
-
                 return;
             }
 
@@ -286,19 +272,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                     message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
                 )
             );
-
-            if (uploadedFiles.length > 0) {
-                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${auth.token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        attachments: uploadedFiles,
-                    }),
-                });
-            }
         }
     };
 

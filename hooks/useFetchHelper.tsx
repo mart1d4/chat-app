@@ -149,6 +149,20 @@ const useFetchHelper = () => {
             return response;
         } catch (error) {
             console.error(error);
+
+            if (data?.message.attachments.length > 0) {
+                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        attachments: data?.message.attachments,
+                    }),
+                });
+            }
+
             throw new Error('[useFetchHelper] Error sending request');
         }
     };

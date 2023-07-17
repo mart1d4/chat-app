@@ -34,8 +34,8 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             );
         }
 
-        attachments.forEach(async (attachment: string) => {
-            await fetch(`https://api.uploadcare.com/files/${attachment}/storage/`, {
+        attachments.forEach(async (attachment: TImageUpload) => {
+            await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
