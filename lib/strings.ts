@@ -74,7 +74,7 @@ export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
         }
 
         const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-        return `Yesterday at ${date.toLocaleString('en-US', options)}`;
+        return `Yesterday at ${date.toLocaleString('en-US', options as Intl.DateTimeFormatOptions)}`;
     }
 
     const options = {
@@ -85,5 +85,6 @@ export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
         minute: 'numeric',
         hour12: true,
     };
-    return date.toLocaleString('en-US', options);
+
+    return date.toLocaleString('en-US', options as Intl.DateTimeFormatOptions);
 };
