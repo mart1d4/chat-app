@@ -70,11 +70,12 @@ const useFetchHelper = () => {
     const { auth }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 
-    const channelExists = (recipients: string[]) => {
+    const channelExists = (recipients: string[], searchDM: boolean) => {
         const channel = auth.user.channels.find((channel: TChannel) => {
             return (
                 channel.recipients.length === recipients.length &&
-                channel.recipientIds.every((recipient: string) => recipients.includes(recipient))
+                channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
+                (searchDM ? channel.type === 'DM' : true)
             );
         });
 
@@ -86,10 +87,11 @@ const useFetchHelper = () => {
             throw new Error('[useFetchHelper] An access token is required');
         }
 
-        if (query === 'CHANNEL_CREATE' && (typeof skipCheck === 'undefined' || !skipCheck)) {
-            const channel = channelExists([...data?.recipients, auth.user.id]);
-
-            console.log(channel);
+        if (query === 'CHANNEL_CREATE' && !skipCheck) {
+            const channel =
+                data?.recipients.length === 1
+                    ? channelExists([...data?.recipients, auth.user.id], true)
+                    : channelExists([...data?.recipients, auth.user.id], false);
 
             if (channel) {
                 if (channel.type === 'DM') {
@@ -99,6 +101,7 @@ const useFetchHelper = () => {
                     setPopup({
                         type: 'CHANNEL_EXISTS',
                         channel: channel,
+                        recipients: data?.recipients,
                     });
                     return;
                 }
@@ -139,8 +142,8 @@ const useFetchHelper = () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
                 method: method,
-                headers,
-                body,
+                headers: headers,
+                body: body,
             }).then((res) => res.json());
 
             return response;

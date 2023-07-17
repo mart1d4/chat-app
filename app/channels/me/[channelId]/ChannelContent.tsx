@@ -210,16 +210,11 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     };
 
     const shouldBeLarge = (index: number) => {
-        if (index === 0 || !['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) {
-            return true;
-        }
+        if (index === 0 || messages[index].type === 'REPLY') return true;
+        if (!['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) return true;
 
-        if (
-            messages[index - 1].author.id !== messages[index].author.id ||
-            moreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)
-        ) {
-            return true;
-        }
+        if (messages[index - 1].author.id !== messages[index].author.id) return true;
+        if (moreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
 
         return false;
     };
@@ -276,7 +271,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                                                             message={message}
                                                             setMessages={setMessages}
                                                             large={shouldBeLarge(index)}
-                                                            last={index === messages.length - 1}
                                                             edit={edit}
                                                             setEdit={setEdit}
                                                             reply={reply}

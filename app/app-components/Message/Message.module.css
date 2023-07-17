@@ -108,7 +108,7 @@
 
 .messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp) {
     font-weight: 300;
-    font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     user-select: text;
     font-size: 1rem;
     line-height: 1.375rem;
@@ -120,7 +120,12 @@
     color: var(--foreground-2);
 }
 
+.inlined .messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp) {
+    color: var(--foreground-4);
+}
+
 .messageTimestamp {
+    visibility: hidden;
     position: absolute;
     left: 0;
     height: 1.375rem;
@@ -136,6 +141,10 @@
     cursor: default;
     display: inline-block;
     color: var(--foreground-4);
+}
+
+.messageContainer:hover .messageTimestamp {
+    visibility: visible;
 }
 
 .messageTimestamp > span {
@@ -236,7 +245,7 @@
     text-decoration: underline;
 }
 
-.messageReply > div {
+.referenceContent {
     cursor: pointer;
     text-overflow: ellipsis;
     flex: 0 1 auto;
@@ -244,8 +253,14 @@
     white-space: nowrap;
 }
 
-.messageReply > div:hover {
+.referenceContent:hover {
     color: var(--foreground-1);
+}
+
+.messageReply > svg {
+    margin-left: 4px;
+    flex: 0 0 auto;
+    pointer-events: none;
 }
 
 .specialIcon {
@@ -595,4 +610,110 @@
     flex-direction: row;
     gap: 4px;
     display: flex;
+}
+
+/* MENTIONS */
+
+.inlineMention {
+    cursor: pointer;
+    color: #fff;
+    font-weight: 500;
+    word-wrap: break-word;
+}
+
+.inlineMention:hover {
+    text-decoration: underline;
+}
+
+.mention {
+    border-radius: 3px;
+    padding: 0 2px;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--foreground-2);
+    background-color: var(--background-mention);
+    transition: all 0.05s ease-out;
+}
+
+.mention:hover {
+    text-decoration: underline;
+    color: var(--foreground-1);
+    background-color: var(--accent-1);
+}
+
+.imagesUpload {
+    border-radius: 3px;
+    max-width: 520px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--background-2);
+    display: flex;
+    align-items: center;
+    background-color: var(--background-3);
+}
+
+.imagesUpload > img {
+    width: 30px;
+    height: 40px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.imagesUpload > div:first-of-type {
+    flex: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.imagesUpload > div:first-of-type > div:first-child {
+    display: flex;
+    align-items: center;
+}
+
+.imagesUpload > div:first-of-type > div:first-child > div:first-child {
+    color: var(--foreground-1);
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.imagesUpload > div:first-of-type > div:first-child > div:last-child {
+    color: var(--foreground-4);
+    margin-left: 4px;
+}
+
+.imagesUpload > div:first-of-type > div:last-child {
+    height: 16px;
+    display: flex;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.imagesUpload > div:first-of-type > div:last-child > div {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    border-radius: 3px;
+    height: 6px;
+    background-color: var(--background-4);
+}
+
+.imagesUpload > div:first-of-type > div:last-child > div > div {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    transition: transform 0.2s ease-out;
+    background-color: var(--accent-1);
+    transform: translate3d(-100%, 0, 0);
+}
+
+.imagesUpload > div:last-of-type {
+    display: flex;
+    color: var(--foreground-2);
+    cursor: pointer;
+}
+
+.imagesUpload > div:last-of-type:hover {
+    color: var(--foreground-1);
 }

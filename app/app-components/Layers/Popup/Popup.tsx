@@ -1,19 +1,22 @@
 'use client';
 
-import { useRef, useEffect, useState, ReactElement, useMemo } from 'react';
-import { FixedMessage, LoadingDots, Icon } from '@/app/app-components';
+import { FixedMessage, LoadingDots, Icon, Avatar } from '@/app/app-components';
+import { useRef, useEffect, useState, ReactElement } from 'react';
+import { getChannelName, getRelativeDate } from '@/lib/strings';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
+import { useRouter } from 'next/navigation';
 
 const Popup = (): ReactElement => {
     const { popup, setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
     const { logout } = useLogout();
+    const router = useRouter();
     const type = popup?.type;
 
     const [isLoading, setIsLoading] = useState(false);
@@ -248,6 +251,25 @@ const Popup = (): ReactElement => {
                         attachments: popup.attachments,
                     },
                 }),
+        },
+        CHANNEL_EXISTS: {
+            title: 'Confirm New Group',
+            description: 'You already have a group with these people! Are you sure you want to create a new one?',
+            buttonColor: 'blue',
+            buttonText: 'Create Group',
+            function: () => {
+                if (popup?.addUsers) {
+                    popup.addUsers();
+                } else if (popup?.recipients) {
+                    sendRequest({
+                        query: 'CHANNEL_CREATE',
+                        data: {
+                            recipients: popup.recipients,
+                        },
+                        skipCheck: true,
+                    });
+                }
+            },
         },
     };
 
@@ -518,6 +540,25 @@ const Popup = (): ReactElement => {
                                     <strong> {type === 'DELETE_MESSAGE' ? 'delete message' : 'unpin message'} </strong>
                                     to bypass this confirmation entirely.
                                 </div>
+                            </div>
+                        )}
+
+                        {type === 'CHANNEL_EXISTS' && (
+                            <div
+                                className={styles.channelItem}
+                                onClick={() => {
+                                    setPopup(null);
+                                    router.push(`/channels/me/${popup.channel.id}`);
+                                }}
+                            >
+                                <Avatar
+                                    src={popup.channel.icon}
+                                    alt={getChannelName(popup.channel, auth.user.id)}
+                                    size={24}
+                                />
+
+                                <span>{getChannelName(popup.channel, auth.user.id)}</span>
+                                <span>{getRelativeDate(popup.channel.updatedAt, true)}</span>
                             </div>
                         )}
 

@@ -83,7 +83,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        if (message.attachments.length !== attachments.length) {
+        if (attachments && message.attachments.length !== attachments.length) {
             const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
 
             if (toDelete.length > 0) {

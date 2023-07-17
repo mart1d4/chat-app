@@ -433,7 +433,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                                 query: 'CHANNEL_RECIPIENT_REMOVE',
                                 params: {
                                     channelId: content.channel.id,
-                                    recipientId: user.id,
+                                    recipientId: auth.user.id,
                                 },
                             });
                         }

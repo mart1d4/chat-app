@@ -51,6 +51,7 @@
     min-height: 0;
     flex: 1 1 auto;
     padding-bottom: 8px;
+    scrollbar-width: thin;
 }
 
 .scroller::-webkit-scrollbar {

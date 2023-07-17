@@ -71,9 +71,14 @@ export async function POST(req: Request): Promise<NextResponse> {
                 hiddenChannelIds: true,
                 channelIds: true,
                 channels: {
-                    orderBy: {
-                        updatedAt: 'asc',
-                    },
+                    orderBy: [
+                        {
+                            updatedAt: 'asc',
+                        },
+                        {
+                            createdAt: 'asc',
+                        },
+                    ],
                     select: {
                         id: true,
                         type: true,

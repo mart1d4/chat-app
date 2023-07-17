@@ -65,9 +65,11 @@ export async function GET(req: Request): Promise<NextResponse> {
                 hiddenChannelIds: true,
                 channelIds: true,
                 channels: {
-                    orderBy: {
-                        updatedAt: 'asc',
-                    },
+                    orderBy: [
+                        {
+                            updatedAt: 'desc',
+                        },
+                    ],
                     select: {
                         id: true,
                         type: true,

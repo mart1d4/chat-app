@@ -4,6 +4,7 @@ import { ReactElement, useState, useEffect, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import ChannelContent from './ChannelContent';
 import { useRouter } from 'next/navigation';
+import { getChannelName } from '@/lib/strings';
 
 const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElement => {
     const [channel, setChannel] = useState<TChannel | null>(null);
@@ -21,18 +22,7 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
             return;
         }
 
-        let name = channel?.name;
-        if (channel.type === 'DM') {
-            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as TUser;
-            name = user.username;
-        } else if (channel.type === 'GROUP_DM' && !channel.name) {
-            if (channel.recipients.length > 1) {
-                const filtered = channel.recipients.filter((user: any) => user.id !== auth.user.id);
-                name = filtered.map((recipient: any) => recipient.username).join(', ');
-            } else {
-                name = `${channel.recipients[0].username}'s Group`;
-            }
-        }
+        let name = getChannelName(channel, auth.user.id);
 
         let src = channel?.icon;
         if (channel.type === 'DM') {
@@ -45,7 +35,7 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
             name: name,
             icon: src,
         });
-    }, [params.channelId]);
+    }, [params.channelId, auth.user.channels]);
 
     return useMemo(() => {
         return <ChannelContent channel={channel} />;

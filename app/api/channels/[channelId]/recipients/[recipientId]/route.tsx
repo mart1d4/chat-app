@@ -128,15 +128,7 @@ export async function PUT(req: Request, { params }: Params) {
             );
         }
 
-        let newOwner = null;
-
-        if (channel.ownerId === recipientId) {
-            const randomIndex = Math.floor(Math.random() * channel.recipientIds.length - 1);
-
-            newOwner = channel.recipientIds.filter((id) => id !== recipientId)[randomIndex];
-        }
-
-        await prisma.channel.update({
+        const newChannel = await prisma.channel.update({
             where: {
                 id: channelId,
             },
@@ -146,22 +138,40 @@ export async function PUT(req: Request, { params }: Params) {
                         id: recipientId,
                     },
                 },
-                owner: {
-                    connect: {
-                        id: newOwner ?? (channel.ownerId as string),
-                    },
-                },
             },
             select: {
                 id: true,
+                type: true,
+                icon: true,
+                ownerId: true,
+                recipientIds: true,
+                recipients: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                createdAt: true,
+                updatedAt: true,
             },
         });
 
         await pusher.trigger('chat-app', 'channel-recipient-add', {
-            channelId: channelId,
+            channel: newChannel,
             recipients: [channel.recipientIds, recipientId],
             recipient: recipient,
-            newOwner: newOwner,
         });
 
         // Create message
@@ -179,6 +189,96 @@ export async function PUT(req: Request, { params }: Params) {
                         id: channelId,
                     },
                 },
+                mentions: {
+                    connect: [{ id: userId }, { id: recipientId }],
+                },
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                messageReference: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                        mentions: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
+                mentions: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+
+        await prisma.channel.update({
+            where: {
+                id: channelId,
+            },
+            data: {
+                updatedAt: new Date(),
             },
         });
 
@@ -257,6 +357,7 @@ export async function DELETE(req: Request, { params }: Params) {
             select: {
                 type: true,
                 recipientIds: true,
+                ownerId: true,
             },
         });
 
@@ -300,6 +401,18 @@ export async function DELETE(req: Request, { params }: Params) {
             );
         }
 
+        let newOwner;
+
+        console.log('Owner Id: ', channel.ownerId);
+        if (channel.ownerId === recipientId) {
+            console.log('Changing owner');
+            const randomIndex = Math.floor(Math.random() * channel.recipientIds.length - 1);
+            newOwner = channel.recipientIds.filter((id) => id !== recipientId)[randomIndex];
+        }
+
+        console.log('Recipient Id: ', recipientId);
+        console.log('New Owner Id: ', newOwner);
+
         await prisma.channel.update({
             where: {
                 id: channelId,
@@ -308,6 +421,11 @@ export async function DELETE(req: Request, { params }: Params) {
                 recipients: {
                     disconnect: {
                         id: recipientId,
+                    },
+                },
+                owner: {
+                    connect: {
+                        id: newOwner ?? (channel.ownerId as string),
                     },
                 },
             },
@@ -320,6 +438,112 @@ export async function DELETE(req: Request, { params }: Params) {
             channelId: channelId,
             recipientId: recipientId,
             recipients: channel.recipientIds,
+            newOwner: newOwner,
+        });
+
+        const message = await prisma.message.create({
+            data: {
+                type: 'RECIPIENT_REMOVE',
+                content: newOwner
+                    ? `<@${userId}> left the group.`
+                    : `<@${userId}> removed <@${recipientId}> from the group.`,
+                author: {
+                    connect: {
+                        id: userId,
+                    },
+                },
+                channel: {
+                    connect: {
+                        id: channelId,
+                    },
+                },
+                mentions: {
+                    connect: newOwner ? [{ id: userId }] : [{ id: userId }, { id: recipientId }],
+                },
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                messageReference: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                        mentions: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                    },
+                },
+                mentions: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+
+        await pusher.trigger('chat-app', 'message-sent', {
+            channelId: channelId,
+            message: message,
         });
 
         return NextResponse.json(

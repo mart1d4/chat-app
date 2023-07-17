@@ -319,10 +319,6 @@
     overflow: visible;
 }
 
-.buttonContainer:hover .emoji {
-    filter: grayscale(0%);
-}
-
 .emoji {
     background-image: url('/assets/app/emoji-picker.png');
     background-repeat: no-repeat;
@@ -332,7 +328,12 @@
     background-position: -176px -66px;
     background-size: 242px 110px;
     filter: grayscale(100%);
-    transition: filter 0.15s ease;
+    transition: filter 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.buttonContainer:hover .emoji {
+    filter: grayscale(0%);
+    transform: scale(1.15);
 }
 
 .fileItem {

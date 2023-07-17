@@ -171,6 +171,9 @@ model User {
 
     messages Message[]
 
+    mentionIds String[]  @db.ObjectId
+    mentions   Message[] @relation("MessageMention", fields: [mentionIds], references: [id])
+
     friendIds String[] @db.ObjectId
     friends   User[]   @relation("Friend", fields: [friendIds], references: [id])
 
@@ -284,7 +287,9 @@ model Message {
     mentionEveryone   Boolean     @default(false)
     mentionChannelIds String[]
     mentionRoleIds    String[]
-    mentionUserIds    String[]
+
+    mentionIds String[] @db.ObjectId
+    mentions   User[]   @relation("MessageMention", fields: [mentionIds], references: [id])
 
     authorId String @db.ObjectId
     author   User   @relation(fields: [authorId], references: [id])

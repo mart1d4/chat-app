@@ -53,6 +53,8 @@ const Avatar = (props: Props) => {
         return () => setTooltip(null);
     }, []);
 
+    if (!props.src) return <></>;
+
     if (props.status) {
         return (
             <svg

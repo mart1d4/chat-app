@@ -309,16 +309,18 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                         {onlineMembers?.length > 0 &&
                             onlineMembers.map((user: TCleanUser) => (
                                 <UserItem
-                                    key={uuidv4()}
+                                    key={user.id}
                                     user={user}
+                                    isOwner={channel.ownerId === user.id}
                                 />
                             ))}
 
                         {offlineMembers?.length > 0 &&
                             offlineMembers.map((user: TCleanUser) => (
                                 <UserItem
-                                    key={uuidv4()}
+                                    key={user.id}
                                     user={user}
+                                    isOwner={channel.ownerId === user.id}
                                 />
                             ))}
                     </div>

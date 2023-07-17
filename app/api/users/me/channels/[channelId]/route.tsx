@@ -90,6 +90,14 @@ export async function DELETE(req: Request, { params }: Params) {
                 channelId: channelId,
                 recipientId: userId,
             });
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Channel deleted',
+                },
+                { status: 200 }
+            );
         } else if (channel.type === 'GROUP_DM') {
             if (channel.recipientIds.length > 1) {
                 return NextResponse.json(

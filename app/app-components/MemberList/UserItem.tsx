@@ -5,7 +5,7 @@ import { Avatar } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 
-const UserItem = ({ user }: { user: TCleanUser }): ReactElement => {
+const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
 
     const liRef = useRef(null);
@@ -65,6 +65,8 @@ const UserItem = ({ user }: { user: TCleanUser }): ReactElement => {
 
                             {user?.customStatus && <div className={styles.contentStatus}>{user.customStatus}</div>}
                         </div>
+
+                        {isOwner && <div>Owner</div>}
                     </div>
                 </div>
             </div>

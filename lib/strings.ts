@@ -55,3 +55,35 @@ export const getChannelName = (channel: TChannel, userId: TUser['id']): string =
 
     return name;
 };
+
+export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
+    // If date is earlier than 2 days, return a relative date like 'Yesterday at 10:00 AM'
+    // Otherwise, return a date like '10/15/2020 10:00 AM'
+    // If hours is true, the relative date should display like '10 hours ago'
+
+    const date = new Date(timestamp);
+
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const diffInDays = diff / (1000 * 3600 * 24);
+    const diffInHours = diff / (1000 * 3600);
+
+    if (diffInDays < 2) {
+        if (hours) {
+            return `${Math.round(diffInHours)} hours ago`;
+        }
+
+        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+        return `Yesterday at ${date.toLocaleString('en-US', options)}`;
+    }
+
+    const options = {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+    };
+    return date.toLocaleString('en-US', options);
+};

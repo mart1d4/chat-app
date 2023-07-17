@@ -62,6 +62,42 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                                         createdAt: true,
                                     },
                                 },
+                                mentions: {
+                                    select: {
+                                        id: true,
+                                        username: true,
+                                        displayName: true,
+                                        avatar: true,
+                                        banner: true,
+                                        primaryColor: true,
+                                        accentColor: true,
+                                        description: true,
+                                        customStatus: true,
+                                        status: true,
+                                        guildIds: true,
+                                        channelIds: true,
+                                        friendIds: true,
+                                        createdAt: true,
+                                    },
+                                },
+                            },
+                        },
+                        mentions: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
                             },
                         },
                     },
@@ -195,49 +231,125 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             }
         }
 
+        const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
+        const mentions: string[] = (message.content?.match(regex) || []).map((match: string) => match.slice(2, -1));
+
+        // Check if mentions are valid
+        const validMentions = await prisma.user.findMany({
+            where: {
+                id: {
+                    in: mentions,
+                },
+            },
+            select: { id: true },
+        });
+
+        mentions.forEach((mention) => {
+            if (!validMentions.find((user) => user.id === mention)) {
+                // Remove invalid mentions from array
+                mentions.splice(mentions.indexOf(mention), 1);
+            }
+        });
+
         let newMessage;
         if (message.messageReference !== null) {
-            newMessage = await prisma.message.create({
-                data: {
-                    type: message.messageReference ? 'REPLY' : 'DEFAULT',
-                    content: message.content,
-                    attachments: message.attachments,
-                    embeds: message.embeds,
-                    mentionEveryone: message.mentionEveryone,
-                    mentionChannelIds: message.mentionChannelIds,
-                    mentionRoleIds: message.mentionRoleIds,
-                    mentionUserIds: message.mentionUserIds,
-                    author: {
-                        connect: { id: senderId },
+            if (mentions.length > 0) {
+                newMessage = await prisma.message.create({
+                    data: {
+                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        content: message.content,
+                        attachments: message.attachments,
+                        embeds: message.embeds,
+                        mentionEveryone: message.mentionEveryone,
+                        mentionChannelIds: message.mentionChannelIds,
+                        mentionRoleIds: message.mentionRoleIds,
+                        mentions: {
+                            connect: mentions.map((id) => ({ id })),
+                        },
+                        author: {
+                            connect: { id: senderId },
+                        },
+                        channel: {
+                            connect: { id: channelId },
+                        },
+                        messageReference: {
+                            connect: { id: message.messageReference },
+                        },
                     },
-                    channel: {
-                        connect: { id: channelId },
+                });
+            } else {
+                newMessage = await prisma.message.create({
+                    data: {
+                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        content: message.content,
+                        attachments: message.attachments,
+                        embeds: message.embeds,
+                        mentionEveryone: message.mentionEveryone,
+                        mentionChannelIds: message.mentionChannelIds,
+                        mentionRoleIds: message.mentionRoleIds,
+                        author: {
+                            connect: { id: senderId },
+                        },
+                        channel: {
+                            connect: { id: channelId },
+                        },
+                        messageReference: {
+                            connect: { id: message.messageReference },
+                        },
                     },
-                    messageReference: {
-                        connect: { id: message.messageReference },
-                    },
-                },
-            });
+                });
+            }
         } else {
-            newMessage = await prisma.message.create({
-                data: {
-                    type: message.messageReference ? 'REPLY' : 'DEFAULT',
-                    content: message.content,
-                    attachments: message.attachments,
-                    embeds: message.embeds,
-                    mentionEveryone: message.mentionEveryone,
-                    mentionChannelIds: message.mentionChannelIds,
-                    mentionRoleIds: message.mentionRoleIds,
-                    mentionUserIds: message.mentionUserIds,
-                    author: {
-                        connect: { id: senderId },
+            if (mentions.length > 0) {
+                newMessage = await prisma.message.create({
+                    data: {
+                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        content: message.content,
+                        attachments: message.attachments,
+                        embeds: message.embeds,
+                        mentionEveryone: message.mentionEveryone,
+                        mentionChannelIds: message.mentionChannelIds,
+                        mentionRoleIds: message.mentionRoleIds,
+                        mentions: {
+                            connect: mentions.map((id) => ({ id })),
+                        },
+                        author: {
+                            connect: { id: senderId },
+                        },
+                        channel: {
+                            connect: { id: channelId },
+                        },
                     },
-                    channel: {
-                        connect: { id: channelId },
+                });
+            } else {
+                newMessage = await prisma.message.create({
+                    data: {
+                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        content: message.content,
+                        attachments: message.attachments,
+                        embeds: message.embeds,
+                        mentionEveryone: message.mentionEveryone,
+                        mentionChannelIds: message.mentionChannelIds,
+                        mentionRoleIds: message.mentionRoleIds,
+                        author: {
+                            connect: { id: senderId },
+                        },
+                        channel: {
+                            connect: { id: channelId },
+                        },
                     },
-                },
-            });
+                });
+            }
         }
+
+        await prisma.channel.update({
+            where: {
+                id: channelId,
+            },
+            data: {
+                updatedAt: new Date(),
+            },
+        });
 
         if (channel.type === 'DM') {
             // If the recipient has hidden the channel, unhide it
@@ -313,6 +425,24 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                                 createdAt: true,
                             },
                         },
+                    },
+                },
+                mentions: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
                     },
                 },
             },

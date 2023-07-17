@@ -62,10 +62,7 @@ const AppNav = (): ReactElement => {
 
     useEffect(() => {
         pusher.bind('user-updated', (data: any) => updateUserData(data));
-        pusher.bind('relationship-updated', (data: any) => {
-            console.log('relationship-updated');
-            updateRelationship(data);
-        });
+        pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
         pusher.bind('message-sent', (data: any) => updateNotifications(data));
 
         return () => {

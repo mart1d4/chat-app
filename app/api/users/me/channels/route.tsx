@@ -194,6 +194,7 @@ export async function POST(req: Request) {
             await pusher.trigger('chat-app', 'channel-created', {
                 recipients: [userId],
                 channel: channel,
+                redirect: true,
             });
 
             return NextResponse.json(

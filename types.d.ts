@@ -211,7 +211,9 @@ type TMessage = readonly {
     mentionEveryone: boolean;
     mentionChannelIds: TChannel.id[];
     mentionRoleIds: TRole.id[];
-    mentionUserIds: TUser.id[];
+
+    mentionIds: TUser.id[];
+    mentions: TUser[];
 
     authorId: TUser.id;
     author: TUser;

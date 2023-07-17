@@ -8,7 +8,6 @@ import { trimMessage } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
-import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 
 const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
@@ -173,7 +172,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         const input = textAreaRef.current as HTMLInputElement;
 
         if (input !== document.activeElement) {
-            console.log('not active');
             setCursorToEnd();
         }
     }, [files]);
@@ -204,6 +202,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         input.innerText = '';
         setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
+
         if (reply?.messageId) {
             setReply(null);
             localStorage.setItem(
@@ -219,11 +218,19 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
         try {
             if (attachments.length > 0) {
+                // @ts-ignore
+                const onProgress = ({ isComputable, value }) => {
+                    console.log(isComputable, value);
+                };
+                const abortController = new AbortController();
                 const filesToAdd = attachments.map((file) => file.file);
 
                 const result = await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
                     store: 'auto',
+                    // @ts-ignore
+                    onProgress,
+                    signal: abortController.signal,
                 });
 
                 if (!result.files) {
@@ -370,9 +377,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                             if (e.key === 'Enter' && !e.shiftKey && typeof editContent !== 'string') {
                                 e.preventDefault();
                                 sendMessage();
-                                setMessage('');
-                                const input = textAreaRef.current as HTMLInputElement;
-                                input.innerText = '';
                             }
                         }}
                         onContextMenu={(e) => {
@@ -385,7 +389,17 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                     mouseY: e.clientY,
                                 },
                                 input: true,
-                                pasteText,
+                                pasteText: () => {
+                                    navigator.clipboard.readText().then((content) => {
+                                        if (!channel) return;
+                                        const input = textAreaRef.current;
+                                        if (!input) return;
+
+                                        input.innerText += content;
+                                        input.focus();
+                                        setMessage(input.innerText.toString());
+                                    });
+                                },
                                 sendButton: true,
                             });
                         }}
@@ -559,13 +573,10 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                                 : styles.sendButton
                                         }
                                         onClick={(e) => {
-                                            if (!channel) return;
                                             e.preventDefault();
+                                            if (!channel) return;
                                             if (editContent) return;
                                             sendMessage();
-                                            setMessage('');
-                                            // @ts-expect-error
-                                            e.target.innerText = '';
                                         }}
                                         disabled={message.length === 0}
                                         style={{
@@ -713,34 +724,22 @@ const emojisPos = [
     { x: -220, y: -66 },
 ];
 
-const scale = {
-    hover: {
-        scale: 1.15,
-        transition: {
-            duration: 0.1,
-            ease: 'easeInOut',
-        },
-    },
-};
-
 export const EmojiPicker = () => {
     const [emojisPosIndex, setEmojisPosIndex] = useState(Math.floor(Math.random() * emojisPos.length));
 
     return (
-        <motion.button
+        <button
             onMouseEnter={() => setEmojisPosIndex(Math.floor(Math.random() * emojisPos.length))}
             onClick={(e) => e.preventDefault()}
             className={styles.buttonContainer}
-            whileHover='hover'
         >
-            <motion.div
+            <div
                 className={styles.emoji}
                 style={{
                     backgroundPosition: `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`,
                 }}
-                variants={scale}
-            ></motion.div>
-        </motion.button>
+            />
+        </button>
     );
 };
 

@@ -524,7 +524,7 @@
     position: relative;
     user-select: text;
     overflow: hidden;
-    max-width: 80dvw;
+    max-width: 85dvw;
 }
 
 .imagePreview > img {
@@ -547,4 +547,34 @@
 .imageLink:hover {
     opacity: 1;
     text-decoration: underline;
+}
+
+/* CHANNEL_EXISTS */
+
+.channelItem {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin: 0 -8px;
+    border-radius: 4px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.channelItem:hover {
+    background-color: var(--background-hover-1);
+}
+
+.channelItem > span:first-of-type {
+    font-weight: 500;
+    font-size: 14px;
+    margin-left: 8px;
+    color: var(--foreground-1);
+}
+
+.channelItem > span:last-of-type {
+    margin-left: 8px;
+    color: var(--foreground-4);
+    font-size: 12px;
+    margin-top: 2px;
 }

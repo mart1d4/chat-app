@@ -42,7 +42,7 @@ const Channels = (): ReactElement => {
         });
 
         pusher.bind('channel-left', (data: any) => {
-            if (data.recipientId !== auth.user.id && !data.recpients?.includes(auth.user.id)) return;
+            if (!auth.user.channelIds.includes(data.channelId) && auth.user.id !== data.recipientId) return;
 
             if (data.recipients && data.recipientId !== auth.user.id) {
                 setAuth((prev: TAuth) => ({
@@ -59,6 +59,7 @@ const Channels = (): ReactElement => {
                                     recipients: channel.recipients.filter(
                                         (recipient: TUser) => recipient.id !== data.recipientId
                                     ),
+                                    ownerId: data.newOwner ?? channel.ownerId,
                                 };
                             }
 
@@ -79,26 +80,36 @@ const Channels = (): ReactElement => {
         });
 
         pusher.bind('channel-recipient-add', (data: any) => {
-            if (!data.recipients.includes(auth.user.id)) return;
+            if (!auth.user.channelIds.includes(data.channel.id) && auth.user.id !== data.recipient.id) return;
 
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    channels: prev?.user?.channels?.map((channel: TChannel) => {
-                        if (channel.id === data.channelId) {
-                            return {
-                                ...channel,
-                                recipientIds: [...channel.recipientIds, ...data.recipient.id],
-                                recipients: [...channel.recipients, ...data.recipient],
-                                ownerId: data.newOwner ?? channel.ownerId,
-                            };
-                        }
+            if (auth.user.id === data.recipient.id) {
+                setAuth((prev: TAuth) => ({
+                    ...prev,
+                    user: {
+                        ...prev?.user,
+                        channelIds: [data.channel.id, ...(prev?.user.channelIds ?? [])],
+                        channels: [data.channel, ...(prev?.user.channels ?? [])],
+                    },
+                }));
+            } else {
+                setAuth((prev: TAuth) => ({
+                    ...prev,
+                    user: {
+                        ...prev?.user,
+                        channels: prev?.user?.channels?.map((channel: TChannel) => {
+                            if (channel.id === data.channel.id) {
+                                return {
+                                    ...channel,
+                                    recipientIds: [...channel.recipientIds, data.recipient.id],
+                                    recipients: [...channel.recipients, data.recipient],
+                                };
+                            }
 
-                        return channel;
-                    }),
-                },
-            }));
+                            return channel;
+                        }),
+                    },
+                }));
+            }
         });
 
         pusher.bind('message-sent', (data: any) => {

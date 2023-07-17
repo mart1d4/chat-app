@@ -8,7 +8,6 @@ import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { base } from '@uploadcare/upload-client';
 import styles from './Settings.module.css';
-import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
@@ -55,7 +54,7 @@ const Settings = (): ReactElement => {
             setActiveTab(showSettings.type);
             if (minified) setHideNav(true);
         }
-    }, [showSettings, popup]);
+    }, [showSettings]);
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {

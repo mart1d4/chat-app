@@ -17,7 +17,7 @@ const Popout = ({ content }: any) => {
     const [friends, setFriends] = useState<TCleanUser[]>([]);
     const [pinned, setPinned] = useState<TMessage[]>([]);
 
-    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
     const token = auth.accessToken;
@@ -29,12 +29,15 @@ const Popout = ({ content }: any) => {
     useEffect(() => {
         if (content?.pinned) {
             const fetchPinned = async () => {
-                const response = await fetch(`/api/users/me/channels/${content.channel.id}/messages/pinned`, {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }).then((res) => res.json());
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/channels/${content.channel.id}/messages/pinned`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                ).then((res) => res.json());
 
                 setPinned(response.pinned);
             };
@@ -118,17 +121,42 @@ const Popout = ({ content }: any) => {
                         recipients: [currentRecipient, ...recipients],
                     },
                 });
-            }
+            } else if (content.channel.type === 'GROUP_DM') {
+                const channelExists = (recipients: string[]) => {
+                    const channel = auth.user.channels.find((channel: TChannel) => {
+                        return (
+                            channel.recipients.length === recipients.length &&
+                            channel.recipientIds.every((recipient: string) => recipients.includes(recipient))
+                        );
+                    });
 
-            recipients.forEach((recipient) => {
-                sendRequest({
-                    query: 'CHANNEL_RECIPIENT_ADD',
-                    params: {
-                        channelId: content?.channel.id,
-                        recipientId: recipient,
-                    },
-                });
-            });
+                    if (channel) return channel;
+                };
+
+                const addUsers = () => {
+                    recipients.forEach((recipient) => {
+                        sendRequest({
+                            query: 'CHANNEL_RECIPIENT_ADD',
+                            params: {
+                                channelId: content?.channel.id,
+                                recipientId: recipient,
+                            },
+                        });
+                    });
+                };
+
+                const channel = channelExists([...content.channel.recipientIds, ...recipients]);
+
+                if (channel) {
+                    setPopup({
+                        type: 'CHANNEL_EXISTS',
+                        channel: channel,
+                        addUsers: addUsers,
+                    });
+                } else {
+                    addUsers();
+                }
+            }
         } else {
             sendRequest({
                 query: 'CHANNEL_CREATE',
