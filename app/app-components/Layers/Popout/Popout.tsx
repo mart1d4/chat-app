@@ -190,7 +190,7 @@ const Popout = ({ content }: any) => {
                     ) : (
                         pinned.map((message) => (
                             <div
-                                key={uuidv4()}
+                                key={message.id}
                                 className={styles.messageContainer}
                             >
                                 <FixedMessage
@@ -234,7 +234,7 @@ const Popout = ({ content }: any) => {
                                     <div>
                                         {chosen?.map((friend) => (
                                             <div
-                                                key={uuidv4()}
+                                                key={friend.username}
                                                 className={styles.friendChip}
                                                 onClick={() => {
                                                     setChosen(chosen?.filter((user) => user.id !== friend.id));
@@ -313,11 +313,9 @@ const Popout = ({ content }: any) => {
                         <div className={styles.scroller + ' scrollbar'}>
                             {filteredList.map((friend) => (
                                 <div
-                                    key={uuidv4()}
+                                    key={friend.id}
                                     className={styles.friend}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
+                                    onClick={() => {
                                         if (chosen.includes(friend)) {
                                             setChosen(chosen?.filter((user) => user.id !== friend.id));
                                         } else {

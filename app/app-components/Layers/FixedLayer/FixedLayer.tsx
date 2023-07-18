@@ -174,18 +174,24 @@ const FixedLayer = (): ReactElement => {
         });
 
         const handleClick = (e: MouseEvent) => {
-            if (!currentNode?.contains(e.target as Node)) setFixedLayer(null);
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentNode?.contains(e.target as Node)) {
+                setFixedLayer(null);
+            }
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (e.key === 'Escape') setFixedLayer(null);
         };
 
-        document.addEventListener('mousedown', handleClick);
+        document.addEventListener('click', handleClick);
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('click', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [currentNode]);

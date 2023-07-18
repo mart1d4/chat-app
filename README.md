@@ -40,6 +40,8 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [ ] Clicking on an image to preview it sometimes takes a while to load and messes up the layout
 -   [ ] Textarea still needs improvements; e.g. pasting text while having text selected doesn't always work as expected
 -   [ ] Textarea content doesn't get cleared when sending a message
+-   [ ] Clicking an element that rerenders in a `FixedLayer` component closes the layer
+-   [ ] Deleting a large message doesn't make the one below large if it needs to be
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
 

@@ -524,7 +524,8 @@
     position: relative;
     user-select: text;
     overflow: hidden;
-    max-width: 85dvw;
+    max-width: 95dvw;
+    width: fit-content;
 }
 
 .imagePreview > img {
@@ -542,6 +543,7 @@
     line-height: 30px;
     opacity: 0.5;
     transition: all 0.2s ease;
+    width: 100px;
 }
 
 .imageLink:hover {

@@ -547,10 +547,6 @@
     flex: 2;
 }
 
-.gridOneSolo .image {
-    aspect-ratio: 1/1;
-}
-
 .gridTwo {
     flex-direction: row;
     gap: 4px;
@@ -558,16 +554,8 @@
     max-height: 350px;
 }
 
-.gridTwo .image {
-    aspect-ratio: 1/1;
-}
-
 .gridTwoColumn {
     flex: 1;
-}
-
-.gridTwoColumn .image {
-    aspect-ratio: 1/1;
 }
 
 .gridTwoColumn > div {
@@ -590,10 +578,6 @@
     max-height: 350px;
 }
 
-.gridFour .image {
-    aspect-ratio: 1/1;
-}
-
 .gridThree {
     margin-top: 4px;
     display: grid;
@@ -601,9 +585,9 @@
     gap: 4px;
 }
 
-.gridThree .image {
+/* .gridThree .image {
     aspect-ratio: 1/1;
-}
+} */
 
 .gridThreeBig {
     max-height: 350px;

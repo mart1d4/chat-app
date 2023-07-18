@@ -11,11 +11,15 @@ datasource db {
 
 // Types
 
+type TDimensions {
+    width  Int
+    height Int
+}
+
 type TImage {
     id          String
     name        String
-    width       Int
-    height      Int
+    dimensions  TDimensions
     isSpoiler   Boolean
     description String?
 }

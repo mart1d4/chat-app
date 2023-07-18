@@ -229,21 +229,32 @@ type TMessage = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
+
+    needsToBeSent?: boolean;
 } &
     (
         | {
               error?: false;
               waiting?: false;
+              needsToBeSent?: false;
               attachments: TImageUpload[];
           }
         | {
               waiting: false;
               error: true;
+              needsToBeSent: false;
               attachments: TImage[];
           }
         | {
               waiting: true;
               error: false;
+              needsToBeSent: false;
+              attachments: TImage[];
+          }
+        | {
+              waiting: false;
+              error: false;
+              needsToBeSent: true;
               attachments: TImage[];
           }
     );
@@ -251,14 +262,20 @@ type TMessage = readonly {
 type TImage = {
     id: string;
     file: File;
+    dimensions: {
+        width: number;
+        height: number;
+    };
     description?: string;
 };
 
 type TImageUpload = {
     id: string;
     name: string;
-    width: number;
-    height: number;
+    dimensions: {
+        width: number;
+        height: number;
+    };
     isSpoiler: boolean;
     description?: string;
 };

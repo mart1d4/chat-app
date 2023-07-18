@@ -1,12 +1,13 @@
 'use client';
 
 import useContextHook from '@/hooks/useContextHook';
-import { Avatar } from '@/app/app-components';
+import { Avatar, Icon } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 
 const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
     const liRef = useRef(null);
 
@@ -16,7 +17,7 @@ const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): Re
             className={styles.liContainer}
             onClick={(e) => {
                 if (fixedLayer?.element === e.currentTarget) {
-                    setFixedLayer(null);
+                    return;
                 } else {
                     setFixedLayer({
                         type: 'usercard',
@@ -60,13 +61,29 @@ const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): Re
 
                         <div className={styles.layoutContent}>
                             <div className={styles.contentName}>
-                                <div className={styles.nameWrapper}>{user.username}</div>
+                                <div>{user.username}</div>
+                                <span
+                                    onMouseEnter={(e) => {
+                                        e.stopPropagation();
+                                        setTooltip({
+                                            text: 'Group Owner',
+                                            element: e.currentTarget,
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    {isOwner && (
+                                        <Icon
+                                            name='crown'
+                                            size={18}
+                                            viewbox='0 0 20 20'
+                                        />
+                                    )}
+                                </span>
                             </div>
 
                             {user?.customStatus && <div className={styles.contentStatus}>{user.customStatus}</div>}
                         </div>
-
-                        {isOwner && <div>Owner</div>}
                     </div>
                 </div>
             </div>

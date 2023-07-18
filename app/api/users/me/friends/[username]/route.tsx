@@ -63,7 +63,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "Hm. didn't work. Double check that the username is correct.",
                 },
                 { status: 404 }
             );

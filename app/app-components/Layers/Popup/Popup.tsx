@@ -386,7 +386,11 @@ const Popup = (): ReactElement => {
                         }}
                     >
                         <img
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/`}
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/-/resize/${
+                                popup.attachments[popup.current].dimensions.width >= window.innerWidth
+                                    ? Math.ceil(window.innerWidth * 0.9)
+                                    : popup.attachments[popup.current].dimensions.width
+                            }x/`}
                             alt={popup.attachments[popup.current]?.description ?? 'Image'}
                         />
                     </div>
@@ -439,6 +443,8 @@ const Popup = (): ReactElement => {
                                     ? 'Your files are too powerful'
                                     : popup.warning === 'FILE_TYPE'
                                     ? 'Oops, something went wrong...'
+                                    : popup.warning === 'UPLOAD_FAILED'
+                                    ? 'Upload Failed'
                                     : 'Too many uploads!'}
                             </div>
 
@@ -447,6 +453,8 @@ const Popup = (): ReactElement => {
                                     ? 'Max file size is 10.00 MB please.'
                                     : popup.warning === 'FILE_TYPE'
                                     ? 'Unable to process image'
+                                    : popup.warning === 'UPLOAD_FAILED'
+                                    ? 'Something went wrong. Try again later'
                                     : 'You can only upload 10 files at a time.'}
                             </div>
                         </div>

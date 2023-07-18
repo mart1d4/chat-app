@@ -70,7 +70,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             setCursorToEnd();
         }
 
-        const handlePaste = (e: ClipboardEvent) => {
+        const handlePaste = async (e: ClipboardEvent) => {
             if (popup) return;
             e.preventDefault();
 
@@ -101,7 +101,19 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                             return;
                         }
 
-                        setFiles((files) => [...files, { id: uuidv4(), file }]);
+                        // Check image dimensions
+                        const image = await new Promise<HTMLImageElement>((resolve) => {
+                            const img = new Image();
+                            img.onload = () => resolve(img);
+                            img.src = URL.createObjectURL(file);
+                        });
+
+                        const dimensions = {
+                            height: image.height,
+                            width: image.width,
+                        };
+
+                        setFiles((files) => [...files, { id: uuidv4(), file, dimensions }]);
                     }
                 } else if (item.type === 'text/plain') {
                     const text = clipboardData?.getData('text/plain') || '';
@@ -190,8 +202,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
             channelId: [channel.id],
             messageReference: reply?.messageId ?? null,
             createdAt: new Date(),
-            error: false,
-            waiting: true,
+            needsToBeSent: true,
         };
 
         setMessage('');
@@ -200,79 +211,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
         if (reply?.messageId) setReply(null);
-
-        let uploadedFiles: any = [];
-
-        try {
-            if (attachments.length > 0) {
-                const onProgress = (props: ComputableProgressInfo | UnknownProgressInfo) => {
-                    if ('value' in props) {
-                        console.log(props.isComputable, props.value);
-                    }
-                };
-
-                const abortController = new AbortController();
-                const filesToAdd = attachments.map((file) => file.file);
-
-                await uploadFileGroup(filesToAdd, {
-                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                    store: 'auto',
-                    onProgress,
-                    signal: abortController.signal,
-                })
-                    .then((result) => {
-                        uploadedFiles = result.files.map((file, index) => {
-                            return {
-                                id: file.uuid,
-                                name: attachments[index].file.name,
-                                isSpoiler: attachments[index].file.name.startsWith('SPOILER_'),
-                                description: attachments[index].description,
-                            };
-                        });
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        setMessages((messages: TMessage[]) =>
-                            messages.map((message) =>
-                                message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
-                            )
-                        );
-                    });
-            }
-
-            const response = await sendRequest({
-                query: 'SEND_MESSAGE',
-                params: { channelId: channel.id },
-                data: {
-                    message: {
-                        content: messageContent,
-                        attachments: uploadedFiles,
-                        messageReference: reply?.messageId ?? null,
-                    },
-                },
-            });
-
-            if (!response.success) {
-                setMessages((messages: TMessage[]) =>
-                    messages.map((message) =>
-                        message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
-                    )
-                );
-                return;
-            }
-
-            const message = response.data.message;
-
-            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== tempMessage.id));
-            setMessages((messages: TMessage[]) => [...messages, message]);
-        } catch (err) {
-            console.error(err);
-            setMessages((messages: TMessage[]) =>
-                messages.map((message) =>
-                    message.id === tempMessage.id ? { ...message, error: true, waiting: false } : message
-                )
-            );
-        }
     };
 
     const textContainer = useMemo(
@@ -485,7 +423,18 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                                 return;
                                             }
 
-                                            checkedFiles.push({ id: uuidv4(), file });
+                                            const image = await new Promise<HTMLImageElement>((resolve) => {
+                                                const img = new Image();
+                                                img.onload = () => resolve(img);
+                                                img.src = URL.createObjectURL(file);
+                                            });
+
+                                            const dimensions = {
+                                                height: image.height,
+                                                width: image.width,
+                                            };
+
+                                            checkedFiles.push({ id: uuidv4(), file, dimensions });
                                         }
 
                                         setFiles([...files, ...checkedFiles]);
