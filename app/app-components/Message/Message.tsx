@@ -301,13 +301,18 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     };
 
     useEffect(() => {
-        if (message?.needsToBeSent && hasRendered.current) {
+        // // Disable for production
+        // if (message?.needsToBeSent && hasRendered.current) {
+        //     retrySendMessage(message);
+        // }
+
+        // return () => {
+        //     hasRendered.current = true;
+        // };
+
+        if (message?.needsToBeSent) {
             retrySendMessage(message);
         }
-
-        return () => {
-            hasRendered.current = true;
-        };
     }, [message]);
 
     const setLocalStorage = (data: {}) => {
