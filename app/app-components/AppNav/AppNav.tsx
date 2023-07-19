@@ -195,107 +195,102 @@ const AppNav = (): ReactElement => {
         }
     };
 
-    const updateNotifications = useCallback(
-        (data: any) => {
-            if (pathname.includes(data.channelId) || !auth.user.channelIds.includes(data.channelId)) {
-                return;
-            }
+    const updateNotifications = (data: any) => {
+        if (pathname.includes(data.channelId) || !auth.user.channelIds.includes(data.channelId)) {
+            return;
+        }
 
-            const notification = dmNotifications.find(
-                (notif: TNotification) => notif?.channelId === data.channelId && notif?.type === 'MESSAGE'
-            );
+        const notification = dmNotifications.find(
+            (notif: TNotification) => notif?.channelId === data.channelId && notif?.type === 'MESSAGE'
+        );
 
-            setAuth({
-                ...auth,
+        setAuth({
+            ...auth,
+            user: {
+                ...auth.user,
+                notifications: notification
+                    ? auth.user.notifications.map((notif: TNotification) => {
+                          notif?.channelId === data.channelId
+                              ? {
+                                    ...notif,
+                                    count: notif?.count + 1,
+                                }
+                              : notif;
+                      })
+                    : [
+                          {
+                              type: 'MESSAGE',
+                              senderId: data.senderId,
+                              channelId: data.channelId,
+                              count: 1,
+                              createdAt: new Date().toISOString(),
+                          },
+                          ...auth.user.notifications,
+                      ],
+            },
+        });
+
+        const audio = new Audio('/assets/sounds/ping.mp3');
+        audio.volume = 0.5;
+        audio.play();
+    };
+
+    const updateUserData = (data: any) => {
+        const object = {
+            username: data.username,
+            displayName: data.displayName,
+            description: data.description,
+            avatar: data.avatar,
+            banner: data.banner,
+            primaryColor: data.primaryColor,
+            accentColor: data.accentColor,
+            status: data.status,
+        };
+
+        if (data.userId === auth.user.id) {
+            console.log('AppNav Object: ', object);
+            setAuth((prev: TAuth) => ({
+                ...prev,
                 user: {
-                    ...auth.user,
-                    notifications: notification
-                        ? auth.user.notifications.map((notif: TNotification) => {
-                              notif?.channelId === data.channelId
-                                  ? {
-                                        ...notif,
-                                        count: notif?.count + 1,
-                                    }
-                                  : notif;
-                          })
-                        : [
-                              {
-                                  type: 'MESSAGE',
-                                  senderId: data.senderId,
-                                  channelId: data.channelId,
-                                  count: 1,
-                                  createdAt: new Date().toISOString(),
-                              },
-                              ...auth.user.notifications,
-                          ],
+                    ...prev?.user,
+                    ...object,
                 },
-            });
-
-            const audio = new Audio('/assets/sounds/ping.mp3');
-            audio.volume = 0.5;
-            audio.play();
-        },
-        [auth.user.notifications]
-    );
-
-    const updateUserData = useCallback(
-        (data: any) => {
-            const object = {
-                username: data.username,
-                displayName: data.displayName,
-                description: data.description,
-                avatar: data.avatar,
-                banner: data.banner,
-                primaryColor: data.primaryColor,
-                accentColor: data.accentColor,
-                status: data.status,
-            };
-
-            if (data.userId === auth.user.id) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        ...object,
-                    },
-                });
-            } else if (auth.user.friendIds?.includes(data.userId)) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        friends: auth.user.friends.map((friend: TCleanUser) => {
-                            return friend.id === data.userId ? { ...friend, ...object } : friend;
-                        }),
-                        requestsReceived: auth.user.requestsReceived.map((user: TCleanUser) => {
-                            return user.id === data.userId ? { ...user, ...object } : user;
-                        }),
-                        requestsSent: auth.user.requestsSent.map((user: TCleanUser) => {
-                            return user.id === data.userId ? { ...user, ...object } : user;
-                        }),
-                        blockedUsers: auth.user.blockedUsers.map((user: TCleanUser) => {
-                            return user.id === data.userId ? { ...user, ...object } : user;
-                        }),
-                    },
-                });
-            }
-
+            }));
+        } else if (auth.user.friendIds?.includes(data.userId)) {
             setAuth({
                 ...auth,
                 user: {
                     ...auth.user,
-                    channels: auth.user.channels.map((channel: TChannel) => {
-                        const recipients = channel.recipients.map((recipient: TCleanUser) => {
-                            return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
-                        });
-
-                        return { ...channel, recipients };
+                    friends: auth.user.friends.map((friend: TCleanUser) => {
+                        return friend.id === data.userId ? { ...friend, ...object } : friend;
+                    }),
+                    requestsReceived: auth.user.requestsReceived.map((user: TCleanUser) => {
+                        return user.id === data.userId ? { ...user, ...object } : user;
+                    }),
+                    requestsSent: auth.user.requestsSent.map((user: TCleanUser) => {
+                        return user.id === data.userId ? { ...user, ...object } : user;
+                    }),
+                    blockedUsers: auth.user.blockedUsers.map((user: TCleanUser) => {
+                        return user.id === data.userId ? { ...user, ...object } : user;
                     }),
                 },
             });
-        },
-        [auth.user]
-    );
+        }
+
+        setAuth({
+            ...auth,
+            user: {
+                ...auth.user,
+                channels: auth.user.channels.map((channel: TChannel) => {
+                    const recipients = channel.recipients.map((recipient: TCleanUser) => {
+                        return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
+                    });
+
+                    return { ...channel, recipients };
+                }),
+            },
+        });
+    };
 
     const chatAppIcon = (
         <svg

@@ -15,6 +15,11 @@
     background-color: var(--background-message-highlight-hover);
 }
 
+.inlined > div:last-child {
+    margin-top: 0.125rem;
+    margin-bottom: 0.125rem;
+}
+
 .messageContainer.reply::before {
     content: '';
     position: absolute;

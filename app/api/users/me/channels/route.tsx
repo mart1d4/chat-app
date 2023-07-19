@@ -349,7 +349,7 @@ export async function POST(req: Request) {
             }
         }
 
-        if (recipients.lenght > 1 && recipients.length < 10) {
+        if (recipients.length > 1 && recipients.length < 10) {
             // Create a group channel
 
             const recipientsUser = await prisma.user.findMany({
@@ -417,6 +417,7 @@ export async function POST(req: Request) {
             await pusher.trigger('chat-app', 'channel-created', {
                 recipients: [...recipients, userId],
                 channel: channel,
+                redirect: true,
             });
 
             return NextResponse.json(
@@ -427,6 +428,14 @@ export async function POST(req: Request) {
                 { status: 201 }
             );
         }
+
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid recipients length',
+            },
+            { status: 400 }
+        );
     } catch (error) {
         console.error(error);
         return NextResponse.json(

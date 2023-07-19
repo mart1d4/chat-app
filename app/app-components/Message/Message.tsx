@@ -48,17 +48,71 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
     const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId[0]);
     const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel?.guildId);
-
-    const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
-    const userIds: string[] = (message.content?.match(regex) || []).map((match: string) => match.slice(2, -1));
-
-    const mentions: TCleanUser[] = message.mentions?.filter((user) => userIds.includes(user.id));
+    const userRegex: RegExp = /<([@#\-*])([a-zA-Z0-9]{6,24})>/g;
 
     let messageContent: JSX.Element | null = null;
     if (message.content) {
+        const userIds: string[] = (message.content?.match(userRegex) || []).map((match: string) => match.slice(2, -1));
+
         messageContent = (
             <span>
-                {message.content.split(regex).map((part, index) => {
+                {message.content.split(userRegex).map((part, index) => {
+                    if (userIds.includes(part)) {
+                        console.log(part);
+                        const mentionUser = message.mentions?.find((user) => user.id === part);
+
+                        return mentionUser ? (
+                            <span
+                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (fixedLayer?.element === e.currentTarget) return;
+                                    setFixedLayer({
+                                        type: 'usercard',
+                                        user: mentionUser,
+                                        element: e.currentTarget,
+                                        firstSide: 'RIGHT',
+                                        gap: 10,
+                                    });
+                                }}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (fixedLayer?.element === e.currentTarget) return;
+                                    setFixedLayer({
+                                        type: 'menu',
+                                        menu: 'USER',
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
+                                        user: mentionUser,
+                                    });
+                                }}
+                            >
+                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                            </span>
+                        ) : (
+                            <span className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}>
+                                @Unknown
+                            </span>
+                        );
+                    } else {
+                        return part;
+                    }
+                })}
+            </span>
+        );
+    }
+
+    let referencedContent: JSX.Element | null = null;
+    if (message.messageReference?.content) {
+        const userIds: string[] = (message.messageReference.content?.match(userRegex) || []).map((match: string) =>
+            match.slice(2, -1)
+        );
+        referencedContent = (
+            <span>
+                {message.messageReference?.content.split(userRegex).map((part, index) => {
                     if (userIds.includes(part)) {
                         const mentionUser = message.mentions?.find((user) => user.id === part);
                         return mentionUser ? (
@@ -82,6 +136,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     if (fixedLayer?.element === e.currentTarget) return;
                                     setFixedLayer({
                                         type: 'menu',
+                                        menu: 'USER',
                                         event: {
                                             mouseX: e.clientX,
                                             mouseY: e.clientY,
@@ -124,8 +179,6 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [edit]);
-
-    // Functions
 
     const deleteLocalMessage = async () => {
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
@@ -414,6 +467,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     e.preventDefault();
                     setFixedLayer({
                         type: 'menu',
+                        menu: 'MESSAGE',
                         event: {
                             mouseX: e.clientX,
                             mouseY: e.clientY,
@@ -428,6 +482,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                 }}
                 style={{
                     backgroundColor: fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                    marginTop: large ? '1.0625rem' : '',
                 }}
             >
                 <MessageMenu
@@ -445,6 +500,8 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         ? 'join'
                                         : message.type === 'RECIPIENT_REMOVE'
                                         ? 'leave'
+                                        : message.type === 'CHANNEL_PINNED_MESSAGE'
+                                        ? 'pin'
                                         : 'edit'
                                 }.svg)`,
                                 width: '1rem',
@@ -471,6 +528,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         text: getLongDate(message.createdAt),
                                         element: e.currentTarget,
                                         delay: 1000,
+                                        wide: true,
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
@@ -503,6 +561,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                         if (edit?.messageId === message.id || message.waiting || message.error) return;
                         setFixedLayer({
                             type: 'menu',
+                            menu: 'MESSAGE',
                             event: {
                                 mouseX: e.clientX,
                                 mouseY: e.clientY,
@@ -553,11 +612,11 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                             if (!message.messageReference) return;
                                             setFixedLayer({
                                                 type: 'menu',
+                                                menu: 'USER',
                                                 event: {
                                                     mouseX: e.clientX,
                                                     mouseY: e.clientY,
                                                 },
-                                                //  @ts-ignore
                                                 user: message.messageReference?.author,
                                             });
                                         }}
@@ -605,6 +664,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                             e.stopPropagation();
                                             setFixedLayer({
                                                 type: 'menu',
+                                                menu: 'USER',
                                                 event: {
                                                     mouseX: e.clientX,
                                                     mouseY: e.clientY,
@@ -617,21 +677,21 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     </span>
                                 )}
 
-                                {message.messageReference ? (
+                                {referencedContent ? (
                                     <div className={styles.referenceContent}>
-                                        {message.messageReference.content}{' '}
+                                        {referencedContent}{' '}
                                         {message.messageReference.edited && (
                                             <div className={styles.contentTimestamp}>
                                                 <span
                                                     onMouseEnter={(e) =>
                                                         setTooltip({
-                                                            text: getLongDate(message.messageReference.updatedAt),
+                                                            text: getLongDate(message.updatedAt),
                                                             element: e.currentTarget,
                                                             delay: 1000,
+                                                            wide: true,
                                                         })
                                                     }
                                                     onMouseLeave={() => setTooltip(null)}
-                                                    style={{ fontSize: '10px', opacity: 0.75 }}
                                                 >
                                                     (edited)
                                                 </span>
@@ -639,7 +699,11 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         )}
                                     </div>
                                 ) : (
-                                    <div className={styles.italic}>Original message was deleted</div>
+                                    <div className={styles.italic}>
+                                        {message.messageReference?.attachments.length > 0
+                                            ? 'Click to see attachment'
+                                            : 'Original message was deleted'}
+                                    </div>
                                 )}
 
                                 {message.messageReference?.attachments?.length > 0 && (
@@ -685,6 +749,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                         e.stopPropagation();
                                         setFixedLayer({
                                             type: 'menu',
+                                            menu: 'USER',
                                             event: {
                                                 mouseX: e.clientX,
                                                 mouseY: e.clientY,
@@ -725,6 +790,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                             e.stopPropagation();
                                             setFixedLayer({
                                                 type: 'menu',
+                                                menu: 'USER',
                                                 event: {
                                                     mouseX: e.clientX,
                                                     mouseY: e.clientY,
@@ -747,6 +813,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                     text: getLongDate(message.createdAt),
                                                     element: e.currentTarget,
                                                     delay: 1000,
+                                                    wide: true,
                                                 })
                                             }
                                             onMouseLeave={() => setTooltip(null)}
@@ -771,6 +838,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                 element: e.currentTarget,
                                                 gap: 2,
                                                 delay: 1000,
+                                                wide: true,
                                             })
                                         }
                                         onMouseLeave={() => setTooltip(null)}
@@ -821,6 +889,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                                 text: getLongDate(message.updatedAt),
                                                                 element: e.currentTarget,
                                                                 delay: 1000,
+                                                                wide: true,
                                                             })
                                                         }
                                                         onMouseLeave={() => setTooltip(null)}
@@ -904,6 +973,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                                     text: getLongDate(message.updatedAt),
                                                     element: e.currentTarget,
                                                     delay: 1000,
+                                                    wide: true,
                                                 })
                                             }
                                             onMouseLeave={() => setTooltip(null)}
@@ -1262,6 +1332,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     } else {
                                         setFixedLayer({
                                             type: 'menu',
+                                            menu: 'MESSAGE',
                                             firstSide: 'LEFT',
                                             element: e.currentTarget,
                                             gap: 5,
@@ -1367,6 +1438,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                     e.stopPropagation();
                     setFixedLayer({
                         type: 'menu',
+                        menu: 'MESSAGE',
                         event: {
                             mouseX: e.clientX,
                             mouseY: e.clientY,

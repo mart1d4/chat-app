@@ -458,6 +458,7 @@ const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
             onContextMenu={(e) => {
                 setFixedLayer({
                     type: 'menu',
+                    menu: 'USER',
                     event: {
                         mouseX: e.clientX,
                         mouseY: e.clientY,

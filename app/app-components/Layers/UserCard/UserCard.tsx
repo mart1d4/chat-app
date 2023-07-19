@@ -8,7 +8,7 @@ import { translateCap } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
-const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
+const UserCard = ({ content, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
@@ -17,6 +17,7 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
+    const animation = content?.animation;
     const user = content?.user;
 
     useEffect(() => {
@@ -51,7 +52,9 @@ const UserCard = ({ content, side, resetPosition }: any): ReactElement => {
                             '--card-border-color': user.primaryColor,
                         } as React.CSSProperties
                     }
-                    initial={{ transform: `translateX(${side === 'LEFT' ? '-' : '+'}20px)` }}
+                    initial={{
+                        transform: animation !== 'off' ? `translateX(${animation === 'LEFT' ? '-' : '+'}20px)` : '',
+                    }}
                     animate={{ transform: 'translateX(0px)' }}
                     transition={{ ease: 'easeOut' }}
                 >

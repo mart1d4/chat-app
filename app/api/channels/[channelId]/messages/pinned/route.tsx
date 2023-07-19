@@ -94,7 +94,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully retrieved messages',
+                message: 'Successfully retrieved pinned messages',
                 pinned: channel.messages,
             },
             {

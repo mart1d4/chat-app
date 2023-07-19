@@ -17,8 +17,23 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     const [loading, setLoading] = useState<boolean>(true);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
-    const { popup }: any = useContextHook({ context: 'layer' });
+    const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+
+    const shouldDisplayInlined = (message: TMessage) => {
+        const inlineTypes = [
+            'RECIPIENT_ADD',
+            'RECIPIENT_REMOVE',
+            'CALL',
+            'CHANNEL_NAME_CHANGE',
+            'CHANNEL_ICON_CHANGE',
+            'CHANNEL_PINNED_MESSAGE',
+            'GUILD_MEMBER_JOIN',
+            'OWNER_CHANGE',
+        ];
+
+        return inlineTypes.includes(message.type);
+    };
 
     useEffect(() => {
         if (!setEdit || !setReply || !channel) return;
@@ -35,7 +50,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (popup) return;
+                if (popup || fixedLayer) return;
 
                 if (edit) {
                     setEdit(null);
@@ -52,7 +67,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [edit, popup]);
+    }, [edit, popup, fixedLayer]);
 
     useEffect(() => {
         if (!channel) return;
@@ -89,7 +104,11 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
         const listenSockets = () => {
             pusher.bind('message-sent', (data: any) => {
-                if (data.channelId !== channel.id || data.message.author.id === auth.user.id) return;
+                if (
+                    data.channelId !== channel.id ||
+                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message))
+                )
+                    return;
                 setMessages((messages) => [...messages, data.message]);
             });
 
@@ -168,6 +187,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             pusher.unbind('message-sent');
             pusher.unbind('message-edited');
             pusher.unbind('message-deleted');
+            pusher.unbind('user-updated');
         };
     }, [channel, messages]);
 
@@ -211,6 +231,12 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
     const shouldBeLarge = (index: number) => {
         if (index === 0 || messages[index].type === 'REPLY') return true;
+
+        if (shouldDisplayInlined(messages[index])) {
+            if (shouldDisplayInlined(messages[index - 1])) return false;
+            return true;
+        }
+
         if (!['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) return true;
 
         if (messages[index - 1].author.id !== messages[index].author.id) return true;

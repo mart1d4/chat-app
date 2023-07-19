@@ -108,10 +108,60 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
+        const pinnedNotification = await prisma.message.create({
+            data: {
+                type: 'CHANNEL_PINNED_MESSAGE',
+                content: `<@${senderId}> pinned <-${message.id}> to this channel. See all <*pinned>.`,
+                author: {
+                    connect: {
+                        id: senderId,
+                    },
+                },
+                channel: {
+                    connect: {
+                        id: channelId,
+                    },
+                },
+                mentions: {
+                    connect: [{ id: senderId }],
+                },
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                    },
+                },
+                mentions: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+
+        await pusher.trigger('chat-app', 'message-sent', {
+            channelId: channelId,
+            message: pinnedNotification,
+        });
+
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully sent message',
+                message: 'Successfully pinned message',
             },
             { status: 200 }
         );
@@ -235,7 +285,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully sent message',
+                message: 'Successfully removed pin from message',
             },
             { status: 200 }
         );

@@ -73,10 +73,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 channels: {
                     orderBy: [
                         {
-                            updatedAt: 'asc',
-                        },
-                        {
-                            createdAt: 'asc',
+                            updatedAt: 'desc',
                         },
                     ],
                     select: {

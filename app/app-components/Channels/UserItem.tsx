@@ -82,6 +82,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                         e.preventDefault();
                         setFixedLayer({
                             type: 'menu',
+                            menu: 'CHANNEL',
                             event: {
                                 mouseX: e.clientX,
                                 mouseY: e.clientY,

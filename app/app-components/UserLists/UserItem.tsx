@@ -53,6 +53,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                 e.preventDefault();
                 setFixedLayer({
                     type: 'menu',
+                    menu: 'USER',
                     event: {
                         mouseX: e.clientX,
                         mouseY: e.clientY,
@@ -128,6 +129,7 @@ const UserItem = ({ content, user }: Props): ReactElement => {
                                     e.stopPropagation();
                                     setFixedLayer({
                                         type: 'menu',
+                                        menu: 'USER_SMALL',
                                         event: {
                                             mouseX: e.clientX,
                                             mouseY: e.clientY,

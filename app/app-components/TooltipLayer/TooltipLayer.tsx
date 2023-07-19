@@ -18,6 +18,7 @@ const TooltipLayer = (): ReactElement => {
     const color = tooltip?.color || 'var(--background-dark)';
     const delay = tooltip?.delay / 1000 || 0;
     const arrow = tooltip?.arrow || true;
+    const wide = tooltip?.wide || false;
 
     useEffect(() => {
         if (!tooltip) {
@@ -140,7 +141,7 @@ const TooltipLayer = (): ReactElement => {
                                 delay: delay,
                             }}
                             style={{
-                                maxWidth: big ? '190px' : '',
+                                maxWidth: big || wide ? '300px' : '190px',
                                 backgroundColor: color,
                             }}
                         >

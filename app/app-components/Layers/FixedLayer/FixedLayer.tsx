@@ -22,7 +22,7 @@ const FixedLayer = (): ReactElement => {
     const [contentContainer, setContentContainer] = useState<null | ConType>(null);
     const [currentNode, setCurrentNode] = useState<null | Node>(null);
 
-    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { fixedLayer, setFixedLayer, popup }: any = useContextHook({ context: 'layer' });
 
     const type = fixedLayer?.type;
 
@@ -176,7 +176,7 @@ const FixedLayer = (): ReactElement => {
         const handleClick = (e: MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!currentNode?.contains(e.target as Node)) {
+            if (!currentNode?.contains(e.target as Node) && !popup) {
                 setFixedLayer(null);
             }
         };
@@ -194,14 +194,14 @@ const FixedLayer = (): ReactElement => {
             document.removeEventListener('click', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [currentNode]);
+    }, [currentNode, popup]);
 
     return (
         <div
             ref={layerRef}
             style={{
                 ...positions,
-                zIndex: 100000,
+                zIndex: type === 'menu' ? 1003 : 1000,
                 position: 'fixed',
                 width: contentContainer?.width,
                 height: contentContainer?.height,
@@ -217,7 +217,6 @@ const FixedLayer = (): ReactElement => {
 
             {type === 'usercard' && (
                 <UserCard
-                    side={firstSide}
                     content={fixedLayer}
                     resetPosition={setResetPosition}
                 />

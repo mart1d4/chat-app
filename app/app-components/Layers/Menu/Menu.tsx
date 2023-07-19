@@ -28,20 +28,30 @@ type ItemType = {
     disabled?: boolean;
 };
 
+enum EMenuType {
+    USER = 'USER',
+    USER_SMALL = 'USER_SMALL',
+    USER_GROUP = 'USER_GROUP',
+    CHANNEL = 'CHANNEL',
+    MESSAGE = 'MESSAGE',
+    INPUT = 'INPUT',
+    IMAGE = 'IMAGE',
+}
+
 const content = ({ content }: { content: any }): ReactElement => {
     const [active, setActive] = useState<string>('');
     const [items, setItems] = useState<ItemType[]>([]);
-    const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [shift, setShift] = useState<boolean>(false);
+    const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
     const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
-    const router = useRouter();
 
-    const user: TUser = content.user;
+    const type: EMenuType = content.menu;
+    const user: TCleanUser = content.user;
     const message: TMessage = content.message;
 
     const shouldDisplayInlined = (type: string) => {
@@ -61,11 +71,6 @@ const content = ({ content }: { content: any }): ReactElement => {
 
     const writeText = async (text: string) => {
         await navigator.clipboard.writeText(text);
-    };
-
-    const pasteText = async (element: HTMLElement) => {
-        const text = await navigator.clipboard.readText();
-        element.innerText += text;
     };
 
     useEffect(() => {
@@ -154,34 +159,30 @@ const content = ({ content }: { content: any }): ReactElement => {
                 receivedRequest: auth.user.requestReceivedIds?.includes(content.user.id),
             });
         } else if (content?.message) {
-            setUserProps({
-                isSelf: content.message.author.id === auth.user.id,
-            });
+            setUserProps({ isSelf: content.message.author.id === auth.user.id });
         } else {
             setUserProps(null);
         }
     }, [content]);
 
     useEffect(() => {
-        if (user && typeof userProps?.isFriend !== 'boolean') {
-            return;
-        } else if (message && typeof userProps?.isSelf !== 'boolean') {
-            return;
-        } else if (content?.input) {
+        if (!type || (user && !userProps)) return;
+
+        if (type === 'INPUT') {
             setItems([
                 {
-                    name: content?.sendButton && 'Send Message Button',
-                    icon: userSettings?.sendButton ? 'boxFilled' : 'box',
+                    name: content.sendButton && 'Send Message Button',
+                    icon: userSettings.sendButton ? 'boxFilled' : 'box',
                     iconSize: 18,
                     iconInverted: true,
                     func: () => {
                         setUserSettings({
                             ...userSettings,
-                            sendButton: !userSettings?.sendButton,
+                            sendButton: !userSettings.sendButton,
                         });
                     },
                 },
-                { name: content?.sendButton && 'Divider' },
+                { name: content.sendButton && 'Divider' },
                 {
                     name: 'Spellcheck',
                     icon: 'box',
@@ -194,10 +195,12 @@ const content = ({ content }: { content: any }): ReactElement => {
                     func: () => content?.pasteText(),
                 },
             ]);
-        } else if (content?.attachment && !message) {
+        }
+
+        if (type === 'IMAGE') {
             setItems([
                 {
-                    name: content?.attachment ? 'Copy Image' : null,
+                    name: content.attachment ? 'Copy Image' : null,
                     func: () => {
                         const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
@@ -213,7 +216,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                 },
                 {
-                    name: content?.attachment ? 'Save Image' : null,
+                    name: content.attachment ? 'Save Image' : null,
                     func: () => {
                         const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
@@ -227,19 +230,21 @@ const content = ({ content }: { content: any }): ReactElement => {
                             });
                     },
                 },
-                { name: content?.attachment ? 'Divider' : null },
+                { name: content.attachment ? 'Divider' : null },
                 {
-                    name: content?.attachment ? 'Copy Link' : null,
+                    name: content.attachment ? 'Copy Link' : null,
                     func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
                 },
                 {
-                    name: content?.attachment ? 'Open Link' : null,
+                    name: content.attachment ? 'Open Link' : null,
                     func: () => {
                         window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
                     },
                 },
             ]);
-        } else if (message) {
+        }
+
+        if (type === 'MESSAGE') {
             if (shouldDisplayInlined(message.type)) {
                 setItems([
                     {
@@ -394,60 +399,319 @@ const content = ({ content }: { content: any }): ReactElement => {
                     },
                 ]);
             }
-        } else if (content?.channel?.type === 'GROUP_DM') {
+        }
+
+        if (type === 'USER_SMALL') {
             setItems([
                 {
-                    name: 'Mark As Read',
-                    func: () => {},
-                    disabled: true,
-                },
-                { name: 'Divider' },
-                {
-                    name: 'Invites',
+                    name: 'Start Video Call',
                     func: () => {},
                 },
                 {
-                    name: 'Change Icon',
+                    name: 'Start Voice Call',
                     func: () => {},
                 },
-                { name: 'Divider' },
                 {
-                    name: 'Mute Conversation',
-                    func: () => {},
-                    icon: 'arrow',
-                    iconSize: 10,
-                },
-                { name: 'Divider' },
-                {
-                    name: 'Leave Group',
-                    func: () => {
-                        if (content.channel.recipients.length === 1) {
-                            sendRequest({
-                                query: 'CHANNEL_DELETE',
-                                params: {
-                                    channelId: content.channel.id,
-                                },
-                            });
-                        } else {
-                            sendRequest({
-                                query: 'CHANNEL_RECIPIENT_REMOVE',
-                                params: {
-                                    channelId: content.channel.id,
-                                    recipientId: auth.user.id,
-                                },
-                            });
-                        }
-                    },
+                    name: 'Remove Friend',
+                    func: () =>
+                        sendRequest({
+                            query: 'REMOVE_FRIEND',
+                            params: {
+                                username: user.username,
+                            },
+                        }),
                     danger: true,
                 },
-                { name: 'Divider' },
-                {
-                    name: 'Copy Channel ID',
-                    func: () => writeText(content.channel.id),
-                    icon: 'id',
-                },
             ]);
-        } else if (user) {
+        }
+
+        if (type === 'USER' || type === 'CHANNEL') {
+            if (user) {
+                if (userProps?.isSelf) {
+                    setItems([
+                        {
+                            name: 'Profile',
+                            func: () => {
+                                setUserProfile(null);
+                                setTimeout(() => setUserProfile({ user }), 50);
+                            },
+                        },
+                        {
+                            name: 'Mention',
+                            func: () => {},
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: 'Copy User ID',
+                            func: () => writeText(user.id),
+                            icon: 'id',
+                        },
+                    ]);
+                } else if (content?.userprofile) {
+                    setItems([
+                        {
+                            name: !userProps?.isBlocked
+                                ? userProps?.receivedRequest
+                                    ? 'Accept Friend Request'
+                                    : userProps?.sentRequest
+                                    ? 'Cancel Friend Request'
+                                    : userProps?.isFriend
+                                    ? 'Remove Friend'
+                                    : 'Add Friend'
+                                : null,
+                            func: () =>
+                                userProps?.sentRequest || userProps?.isFriend
+                                    ? sendRequest({
+                                          query: 'REMOVE_FRIEND',
+                                          params: {
+                                              username: user.username,
+                                          },
+                                      })
+                                    : sendRequest({
+                                          query: 'ADD_FRIEND',
+                                          params: {
+                                              username: user.username,
+                                          },
+                                      }),
+                            danger: userProps?.sentRequest || userProps?.isFriend,
+                        },
+                        {
+                            name: userProps?.isBlocked ? 'Unblock' : 'Block',
+                            func: () =>
+                                userProps?.isBlocked
+                                    ? sendRequest({
+                                          query: 'UNBLOCK_USER',
+                                          params: {
+                                              username: user.username,
+                                          },
+                                      })
+                                    : sendRequest({
+                                          query: 'BLOCK_USER',
+                                          params: {
+                                              username: user.username,
+                                          },
+                                      }),
+                            danger: !userProps?.isBlocked,
+                        },
+                        {
+                            name: !userProps?.isBlocked ? 'Message' : null,
+                            func: () =>
+                                sendRequest({
+                                    query: 'CHANNEL_CREATE',
+                                    data: {
+                                        recipients: [user.id],
+                                    },
+                                }),
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: 'Copy User ID',
+                            func: () => writeText(user.id),
+                            icon: 'id',
+                        },
+                    ]);
+                } else if (userProps?.isBlocked) {
+                    setItems([
+                        {
+                            name: 'Profile',
+                            func: () => {
+                                setUserProfile(null);
+                                setTimeout(() => setUserProfile({ user }), 50);
+                            },
+                        },
+                        {
+                            name: 'Message',
+                            func: () =>
+                                sendRequest({
+                                    query: 'CHANNEL_CREATE',
+                                    data: {
+                                        recipients: [user.id],
+                                    },
+                                }),
+                        },
+                        {
+                            name: 'Add Note',
+                            func: () => setUserProfile({ user, focusNote: true }),
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: 'Unblock User',
+                            func: () =>
+                                sendRequest({
+                                    query: 'UNBLOCK_USER',
+                                    params: {
+                                        username: user.username,
+                                    },
+                                }),
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: 'Copy User ID',
+                            func: () => writeText(user.id),
+                            icon: 'id',
+                        },
+                    ]);
+                } else {
+                    setItems([
+                        {
+                            name: content?.channel && 'Mark As Read',
+                            func: () => {},
+                            disabled: true,
+                        },
+                        { name: content?.channel && 'Divider' },
+                        {
+                            name: 'Profile',
+                            func: () => setUserProfile({ user }),
+                        },
+                        {
+                            name: 'Message',
+                            func: () =>
+                                sendRequest({
+                                    query: 'CHANNEL_CREATE',
+                                    data: {
+                                        recipients: [user.id],
+                                    },
+                                }),
+                        },
+                        {
+                            name: !userProps?.sentRequest ? 'Call' : null,
+                            func: () => {},
+                        },
+                        {
+                            name: 'Add Note',
+                            func: () => setUserProfile({ user, focusNote: true }),
+                        },
+                        {
+                            name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
+                                ? 'Add Friend Nickname'
+                                : null,
+                            func: () => {},
+                        },
+                        {
+                            name: content?.channel && 'Close DM',
+                            func: () =>
+                                sendRequest({
+                                    query: 'CHANNEL_DELETE',
+                                    params: { channelId: content.channel.id },
+                                }),
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: !userProps?.sentRequest && 'Invite to Server',
+                            func: () => {},
+                            icon: 'arrow',
+                            iconSize: 10,
+                        },
+                        {
+                            name: userProps?.receivedRequest
+                                ? 'Accept Friend Request'
+                                : userProps?.sentRequest
+                                ? 'Cancel Friend Request'
+                                : userProps?.isFriend
+                                ? 'Remove Friend'
+                                : 'Add Friend',
+                            func: () =>
+                                userProps?.sentRequest || userProps?.isFriend
+                                    ? sendRequest({
+                                          query: 'REMOVE_FRIEND',
+                                          params: { username: user.username },
+                                      })
+                                    : sendRequest({
+                                          query: 'ADD_FRIEND',
+                                          params: { username: user.username },
+                                      }),
+                        },
+                        {
+                            name: userProps?.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
+                            func: () =>
+                                userProps?.isBlocked
+                                    ? sendRequest({
+                                          query: 'UNBLOCK_USER',
+                                          params: { username: user.username },
+                                      })
+                                    : sendRequest({
+                                          query: 'BLOCK_USER',
+                                          params: { username: user.username },
+                                      }),
+                            danger: !userProps?.isBlocked,
+                        },
+                        { name: 'Divider' },
+                        {
+                            name: content?.channel && `Mute @${user.username}`,
+                            func: () => {},
+                            icon: 'arrow',
+                            iconSize: 10,
+                        },
+                        { name: content?.channel && 'Divider' },
+                        {
+                            name: 'Copy User ID',
+                            func: () => writeText(user.id),
+                            icon: 'id',
+                        },
+                        {
+                            name: content?.channel && 'Copy Channel ID',
+                            func: () => writeText(content.channel.id),
+                            icon: 'id',
+                        },
+                    ]);
+                }
+            } else {
+                setItems([
+                    {
+                        name: 'Mark As Read',
+                        func: () => {},
+                        disabled: true,
+                    },
+                    { name: 'Divider' },
+                    {
+                        name: 'Invites',
+                        func: () => {},
+                    },
+                    {
+                        name: 'Change Icon',
+                        func: () => {},
+                    },
+                    { name: 'Divider' },
+                    {
+                        name: 'Mute Conversation',
+                        func: () => {},
+                        icon: 'arrow',
+                        iconSize: 10,
+                    },
+                    { name: 'Divider' },
+                    {
+                        name: 'Leave Group',
+                        func: () => {
+                            if (content.channel.recipients.length === 1) {
+                                sendRequest({
+                                    query: 'CHANNEL_DELETE',
+                                    params: {
+                                        channelId: content.channel.id,
+                                    },
+                                });
+                            } else {
+                                sendRequest({
+                                    query: 'CHANNEL_RECIPIENT_REMOVE',
+                                    params: {
+                                        channelId: content.channel.id,
+                                        recipientId: auth.user.id,
+                                    },
+                                });
+                            }
+                        },
+                        danger: true,
+                    },
+                    { name: 'Divider' },
+                    {
+                        name: 'Copy Channel ID',
+                        func: () => writeText(content.channel.id),
+                        icon: 'id',
+                    },
+                ]);
+            }
+        }
+
+        if (type === 'USER_GROUP') {
             if (userProps?.isSelf) {
                 setItems([
                     {
@@ -468,143 +732,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                         icon: 'id',
                     },
                 ]);
-            } else if (content?.userlist) {
-                setItems([
-                    {
-                        name: 'Start Video Call',
-                        func: () => {},
-                    },
-                    {
-                        name: 'Start Voice Call',
-                        func: () => {},
-                    },
-                    {
-                        name: 'Remove Friend',
-                        func: () =>
-                            sendRequest({
-                                query: 'REMOVE_FRIEND',
-                                params: {
-                                    username: user.username,
-                                },
-                            }),
-                        danger: true,
-                    },
-                ]);
-            } else if (content?.userprofile) {
-                setItems([
-                    {
-                        name: !userProps?.isBlocked
-                            ? userProps?.receivedRequest
-                                ? 'Accept Friend Request'
-                                : userProps?.sentRequest
-                                ? 'Cancel Friend Request'
-                                : userProps?.isFriend
-                                ? 'Remove Friend'
-                                : 'Add Friend'
-                            : null,
-                        func: () =>
-                            userProps?.sentRequest || userProps?.isFriend
-                                ? sendRequest({
-                                      query: 'REMOVE_FRIEND',
-                                      params: {
-                                          username: user.username,
-                                      },
-                                  })
-                                : sendRequest({
-                                      query: 'ADD_FRIEND',
-                                      params: {
-                                          username: user.username,
-                                      },
-                                  }),
-                        danger: userProps?.sentRequest || userProps?.isFriend,
-                    },
-                    {
-                        name: userProps?.isBlocked ? 'Unblock' : 'Block',
-                        func: () =>
-                            userProps?.isBlocked
-                                ? sendRequest({
-                                      query: 'UNBLOCK_USER',
-                                      params: {
-                                          username: user.username,
-                                      },
-                                  })
-                                : sendRequest({
-                                      query: 'BLOCK_USER',
-                                      params: {
-                                          username: user.username,
-                                      },
-                                  }),
-                        danger: !userProps?.isBlocked,
-                    },
-                    {
-                        name: !userProps?.isBlocked ? 'Message' : null,
-                        func: () =>
-                            sendRequest({
-                                query: 'CHANNEL_CREATE',
-                                data: {
-                                    recipients: [user.id],
-                                },
-                            }),
-                    },
-                    { name: 'Divider' },
-                    {
-                        name: 'Copy User ID',
-                        func: () => writeText(user.id),
-                        icon: 'id',
-                    },
-                ]);
-            } else if (userProps?.isBlocked) {
-                setItems([
-                    {
-                        name: 'Profile',
-                        func: () => {
-                            setUserProfile(null);
-                            setTimeout(() => setUserProfile({ user }), 50);
-                        },
-                    },
-                    {
-                        name: 'Message',
-                        func: () =>
-                            sendRequest({
-                                query: 'CHANNEL_CREATE',
-                                data: {
-                                    recipients: [user.id],
-                                },
-                            }),
-                    },
-                    {
-                        name: 'Add Note',
-                        func: () => setUserProfile({ user, focusNote: true }),
-                    },
-                    { name: 'Divider' },
-                    {
-                        name: 'Unblock User',
-                        func: () =>
-                            sendRequest({
-                                query: 'UNBLOCK_USER',
-                                params: {
-                                    username: user.username,
-                                },
-                            }),
-                    },
-                    { name: 'Divider' },
-                    {
-                        name: 'Copy User ID',
-                        func: () => writeText(user.id),
-                        icon: 'id',
-                    },
-                ]);
             } else {
                 setItems([
                     {
-                        name: content?.channel && 'Mark As Read',
-                        func: () => {},
-                        disabled: true,
-                    },
-                    { name: content?.channel && 'Divider' },
-                    {
                         name: 'Profile',
                         func: () => setUserProfile({ user }),
+                    },
+                    {
+                        name: 'Mention',
+                        func: () => {},
                     },
                     {
                         name: 'Message',
@@ -630,17 +766,20 @@ const content = ({ content }: { content: any }): ReactElement => {
                             : null,
                         func: () => {},
                     },
+                    { name: 'Divider' },
                     {
-                        name: content?.channel && 'Close DM',
-                        func: () =>
-                            sendRequest({
-                                query: 'CHANNEL_DELETE',
-                                params: { channelId: content.channel.id },
-                            }),
+                        name: 'Remove From Group',
+                        func: () => {},
+                        danger: true,
+                    },
+                    {
+                        name: 'Make Group Owner',
+                        func: () => {},
+                        danger: true,
                     },
                     { name: 'Divider' },
                     {
-                        name: !userProps?.sentRequest && 'Invite to Server',
+                        name: !userProps?.sentRequest ? 'Invite to Server' : null,
                         func: () => {},
                         icon: 'arrow',
                         iconSize: 10,
@@ -676,24 +815,11 @@ const content = ({ content }: { content: any }): ReactElement => {
                                       query: 'BLOCK_USER',
                                       params: { username: user.username },
                                   }),
-                        danger: !userProps?.isBlocked,
-                    },
-                    { name: 'Divider' },
-                    {
-                        name: content?.channel && `Mute @${user.username}`,
-                        func: () => {},
-                        icon: 'arrow',
-                        iconSize: 10,
                     },
                     { name: content?.channel && 'Divider' },
                     {
                         name: 'Copy User ID',
                         func: () => writeText(user.id),
-                        icon: 'id',
-                    },
-                    {
-                        name: content?.channel && 'Copy Channel ID',
-                        func: () => writeText(content.channel.id),
                         icon: 'id',
                     },
                 ]);

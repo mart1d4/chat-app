@@ -95,6 +95,7 @@ const AddFriend = () => {
                                     e.preventDefault();
                                     setFixedLayer({
                                         type: 'menu',
+                                        menu: 'INPUT',
                                         event: e,
                                         input: true,
                                         pasteText,

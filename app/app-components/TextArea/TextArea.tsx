@@ -1,11 +1,10 @@
 'use client';
 
-import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from '@uploadcare/upload-client';
 import { useState, useRef, useMemo, useEffect } from 'react';
+import { Icon, LoadingDots } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { trimMessage } from '@/lib/strings';
-import { Icon } from '@/app/app-components';
 import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,7 +14,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     const [files, setFiles] = useState<TImage[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
 
-    const { setFixedLayer, setPopup, popup }: any = useContextHook({ context: 'layer' });
+    const { fixedLayer, setFixedLayer, setPopup, popup }: any = useContextHook({ context: 'layer' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
@@ -25,16 +24,15 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     const setCursorToEnd = () => {
         const input = textAreaRef.current as HTMLInputElement;
-        input.focus();
-
         if (!input) return;
+
+        input.focus();
 
         // Set cursor to end of text
         const range = document.createRange();
         const sel = window.getSelection();
 
-        // If content has line breaks, it will be split into multiple text nodes
-        // We need to select the last text node
+        // Select the last text node
         const textNodes = input.childNodes;
         const lastTextNode = textNodes[textNodes.length - 1];
         if (!lastTextNode) return;
@@ -47,31 +45,19 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     useEffect(() => {
         if (!channel) return;
-
-        localStorage.setItem(
-            `channel-${channel.id}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
-                reply: reply,
-            })
-        );
-
-        if (reply?.messageId) setCursorToEnd();
-    }, [reply]);
-
-    useEffect(() => {
-        if (!channel) return;
-
         const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}')?.message;
+
         if (message) {
             setMessage(message);
             const input = textAreaRef.current as HTMLInputElement;
             input.innerText = message;
             setCursorToEnd();
         }
+    }, [channel]);
 
+    useEffect(() => {
         const handlePaste = async (e: ClipboardEvent) => {
-            if (popup) return;
+            if (popup || fixedLayer) return;
             e.preventDefault();
 
             const clipboardData = e.clipboardData;
@@ -153,7 +139,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         window.addEventListener('paste', handlePaste);
 
         return () => window.removeEventListener('paste', handlePaste);
-    }, [channel, popup, files]);
+    }, [popup, files]);
 
     useEffect(() => {
         if (!channel) return;
@@ -168,6 +154,11 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     }, [message]);
 
     useEffect(() => {
+        const input = textAreaRef.current as HTMLInputElement;
+        if (input !== document.activeElement) setCursorToEnd();
+    }, [files]);
+
+    useEffect(() => {
         if (!editContent) return;
         const input = textAreaRef.current as HTMLInputElement;
 
@@ -179,20 +170,24 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
     }, [editContent]);
 
     useEffect(() => {
-        const input = textAreaRef.current as HTMLInputElement;
+        if (!channel) return;
 
-        if (input !== document.activeElement) {
-            setCursorToEnd();
-        }
-    }, [files]);
+        localStorage.setItem(
+            `channel-${channel.id}`,
+            JSON.stringify({
+                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                reply: reply,
+            })
+        );
+
+        if (reply?.messageId) setCursorToEnd();
+    }, [reply]);
 
     const sendMessage = async () => {
         let messageContent = trimMessage(message);
         const attachments = files;
 
-        if (messageContent === null && files.length === 0) {
-            return;
-        }
+        if (messageContent === null && files.length === 0) return;
 
         const tempMessage = {
             id: uuidv4(),
@@ -206,9 +201,9 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         };
 
         setMessage('');
+        setFiles([]);
         const input = textAreaRef.current as HTMLInputElement;
         input.innerText = '';
-        setFiles([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
         if (reply?.messageId) setReply(null);
     };
@@ -281,6 +276,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                             e.preventDefault();
                             setFixedLayer({
                                 type: 'menu',
+                                menu: 'INPUT',
                                 event: {
                                     mouseX: e.clientX,
                                     mouseY: e.clientY,
@@ -308,14 +304,11 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
         [message, friend, channel, editContent, reply, files]
     );
 
-    if (typeof editContent === 'string')
+    if (typeof editContent === 'string') {
         return (
             <form
                 className={styles.form}
-                style={{
-                    padding: '0 0 0 0',
-                    marginTop: '8px',
-                }}
+                style={{ padding: '0 0 0 0', marginTop: '8px' }}
             >
                 <div
                     className={styles.textArea}
@@ -333,28 +326,18 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 </div>
             </form>
         );
-    else if (!auth.user.blockedUserIds.includes(friend?.id)) {
+    } else if (!auth.user.blockedUserIds.includes(friend?.id)) {
         return (
             <form className={styles.form}>
-                {reply?.channelId === channel?.id && channel && (
+                {channel && reply?.channelId === channel?.id && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
-                            Replying to <span>{reply?.author?.username || 'User'}</span>
+                            Replying to <span>{reply.author.username || 'User'}</span>
                         </div>
 
                         <div
                             className={styles.replyClose}
-                            onClick={() => {
-                                if (!channel) return;
-                                setReply(null);
-                                localStorage.setItem(
-                                    `channel-${channel.id}`,
-                                    JSON.stringify({
-                                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) ?? '{}'),
-                                        reply: null,
-                                    })
-                                );
-                            }}
+                            onClick={() => setReply(null)}
                         >
                             <div>
                                 <Icon
@@ -369,9 +352,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
                 <div
                     className={styles.textArea}
-                    style={{
-                        borderRadius: reply?.channelId === channel?.id && channel ? '0 0 8px 8px' : '8px',
-                    }}
+                    style={{ borderRadius: channel && reply?.channelId === channel?.id ? '0 0 8px 8px' : '8px' }}
                 >
                     <div className={styles.scrollableContainer + ' scrollbar'}>
                         {files.length > 0 && (
@@ -409,7 +390,6 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                         }
 
                                         let checkedFiles = [];
-
                                         const maxFileSize = 1024 * 1024 * 10; // 10MB
 
                                         for (const file of newFiles) {
@@ -516,27 +496,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                     <div className={styles.typingContainer}>
                         {usersTyping.length > 0 && (
                             <>
-                                <svg
-                                    xmlns='http://www.w3.org/2000/svg'
-                                    width='24.5'
-                                    height='7'
-                                >
-                                    <circle
-                                        cx='3.5'
-                                        cy='3.5'
-                                        r='3.5'
-                                    />
-                                    <circle
-                                        cx='12.25'
-                                        cy='3.5'
-                                        r='3.5'
-                                    />
-                                    <circle
-                                        cx='21'
-                                        cy='3.5'
-                                        r='3.5'
-                                    />
-                                </svg>
+                                <LoadingDots />
                                 <span>
                                     {usersTyping.map((username) => (
                                         <span>{username}, </span>
@@ -549,11 +509,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                     </div>
 
                     <div className={styles.counterContainer}>
-                        <span
-                            style={{
-                                color: message.length > 4000 ? 'var(--error-1)' : 'var(--foreground-3)',
-                            }}
-                        >
+                        <span style={{ color: message.length > 4000 ? 'var(--error-1)' : 'var(--foreground-3)' }}>
                             {message.length}
                         </span>
                         /4000
@@ -569,7 +525,12 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
                     <button
                         className='grey'
-                        // onClick={(e) => unblockUser()}
+                        onClick={() =>
+                            sendRequest({
+                                query: 'UNBLOCK_USER',
+                                params: { userId: friend.id },
+                            })
+                        }
                     >
                         Unblock
                     </button>

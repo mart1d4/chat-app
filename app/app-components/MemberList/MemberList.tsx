@@ -271,9 +271,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                             <Icon
                                                 name='chevron'
                                                 size={24}
-                                                style={{
-                                                    transform: `rotate(${!showFriends ? '-90deg' : '0deg'})`,
-                                                }}
+                                                style={{ transform: `rotate(${!showFriends ? '-90deg' : '0deg'})` }}
                                             />
                                         </div>
                                     </button>
@@ -311,6 +309,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                 <UserItem
                                     key={user.id}
                                     user={user}
+                                    channel={channel}
                                     isOwner={channel.ownerId === user.id}
                                 />
                             ))}
@@ -320,6 +319,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                 <UserItem
                                     key={user.id}
                                     user={user}
+                                    channel={channel}
                                     isOwner={channel.ownerId === user.id}
                                 />
                             ))}
@@ -356,6 +356,7 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                 if (!user) return;
                 setFixedLayer({
                     type: 'menu',
+                    menu: 'USER',
                     event: {
                         mouseX: e.clientX,
                         mouseY: e.clientY,

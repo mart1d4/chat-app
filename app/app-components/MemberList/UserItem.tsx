@@ -5,7 +5,15 @@ import { Avatar, Icon } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 
-const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): ReactElement => {
+const UserItem = ({
+    user,
+    channel,
+    isOwner,
+}: {
+    user: TCleanUser;
+    channel: TChannel;
+    isOwner: boolean;
+}): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
@@ -32,11 +40,13 @@ const UserItem = ({ user, isOwner }: { user: TCleanUser; isOwner: boolean }): Re
                 e.preventDefault();
                 setFixedLayer({
                     type: 'menu',
+                    menu: 'USER_GROUP',
                     event: {
                         mouseX: e.clientX,
                         mouseY: e.clientY,
                     },
                     user: user,
+                    channel: channel,
                 });
             }}
             style={{

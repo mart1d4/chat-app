@@ -4,9 +4,9 @@ import { FixedMessage, Icon, Avatar } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import pusher from '@/lib/pusher/client-connection';
 import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
-import { v4 as uuidv4 } from 'uuid';
 
 const Popout = ({ content }: any) => {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
@@ -166,6 +166,92 @@ const Popout = ({ content }: any) => {
             });
         }
     };
+
+    useEffect(() => {
+        if (!content?.pinned) return;
+
+        const listenSockets = () => {
+            pusher.bind('message-edited', (data: any) => {
+                if (!pinned.map((message) => message.id).includes(data.message.id)) return;
+                if (!data.message.pinned) {
+                    setPinned((messages) => messages.filter((message) => message.id !== data.message.id));
+                } else {
+                    setPinned((messages) =>
+                        messages.map((message) => {
+                            if (message.id === data.message.id) return data.message;
+                            if (message.messageReferenceId === data.message.id)
+                                return { ...message, messageReference: data.message };
+                            return message;
+                        })
+                    );
+                }
+            });
+
+            pusher.bind('message-deleted', (data: any) => {
+                if (!pinned.map((message) => message.id).includes(data.messageId)) return;
+                setPinned((messages) => {
+                    return messages
+                        .filter((message) => message.id !== data.messageId)
+                        .map((message) => {
+                            if (message.messageReferenceId === data.messageId) {
+                                return { ...message, messageReference: null };
+                            }
+                            return message;
+                        }) as TMessage[];
+                });
+            });
+
+            pusher.bind('user-updated', (data: any) => {
+                const object = {
+                    username: data.username,
+                    displayName: data.displayName,
+                    description: data.description,
+                    avatar: data.avatar,
+                    banner: data.banner,
+                    primaryColor: data.primaryColor,
+                    accentColor: data.accentColor,
+                    status: data.status,
+                };
+
+                const messagesUpdated = pinned.map((message) => {
+                    if (message.author.id === data.userId) {
+                        return { ...message, author: { ...message.author, ...object } };
+                    } else if (message.messageReference?.author.id === data.userId) {
+                        return {
+                            ...message,
+                            messageReference: {
+                                ...message.messageReference,
+                                author: { ...message.messageReference.author, ...object },
+                            },
+                        };
+                    } else if (
+                        message.messageReference?.author.id === data.userId &&
+                        message.author.id === data.userId
+                    ) {
+                        return {
+                            ...message,
+                            author: { ...message.author, ...object },
+                            messageReference: {
+                                ...message.messageReference,
+                                author: { ...message.messageReference.author, ...object },
+                            },
+                        };
+                    }
+                    return message;
+                });
+
+                setPinned(messagesUpdated);
+            });
+        };
+
+        listenSockets();
+
+        return () => {
+            pusher.unbind('message-edited');
+            pusher.unbind('message-deleted');
+            pusher.unbind('user-updated');
+        };
+    }, [content, pinned]);
 
     if (content?.pinned) {
         return (

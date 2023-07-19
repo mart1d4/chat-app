@@ -32,6 +32,7 @@ const UserSection = (): ReactElement => {
                             element: e.currentTarget,
                             firstSide: 'TOP',
                             secondSide: 'RIGHT',
+                            animation: 'off',
                             gap: 14,
                         });
                     }}

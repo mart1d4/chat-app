@@ -468,6 +468,11 @@ const Profiles = () => {
     const accentColorInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        console.log('Settings auth user: ', auth.user);
+        resetState();
+    }, [auth.user]);
+
+    useEffect(() => {
         descriptionRef.current!.innerText = description;
     }, []);
 
@@ -477,9 +482,9 @@ const Profiles = () => {
         setDisplayName(auth.user.displayName);
         setPrimaryColor(auth.user.primaryColor);
         setAccentColor(auth.user.accentColor);
-        setDescription(auth.user.description || '');
+        setDescription(auth.user.description ?? '');
         const descRef = descriptionRef.current as HTMLInputElement;
-        descRef.innerText = auth.user.description || '';
+        descRef.innerText = auth.user.description ?? '';
     };
 
     const saveUser = async () => {
@@ -535,7 +540,7 @@ const Profiles = () => {
         setIsLoading(false);
     };
 
-    const needsSaving = useCallback(() => {
+    const needsSaving = () => {
         return (
             avatar !== auth.user.avatar ||
             banner !== auth.user.banner ||
@@ -544,7 +549,7 @@ const Profiles = () => {
             accentColor !== auth.user.accentColor ||
             description !== (auth.user.description || '')
         );
-    }, [avatar, banner, displayName, primaryColor, accentColor, description, auth.user]);
+    };
 
     const CardBanner = useMemo(
         () => (

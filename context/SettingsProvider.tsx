@@ -20,21 +20,23 @@ type ProviderValue = {
     setUserSettings: Dispatch<SetStateAction<TSettings>>;
 };
 
+const initialValues = {
+    language: 'en-US',
+    microphone: false,
+    sound: true,
+    camera: false,
+    appearance: 'default',
+    font: 'default',
+    theme: 'dark',
+    friendTab: 'add',
+    sendButton: false,
+    showUsers: true,
+};
+
 export const SettingsContext = createContext<ProviderValue | null>(null);
 
 const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement => {
-    const [userSettings, setUserSettings] = useState<TSettings>({
-        language: 'en-US',
-        microphone: false,
-        sound: true,
-        camera: false,
-        appearance: 'default',
-        font: 'default',
-        theme: 'dark',
-        friendTab: 'add',
-        sendButton: false,
-        showUsers: true,
-    });
+    const [userSettings, setUserSettings] = useState<TSettings>(initialValues);
 
     useEffect(() => {
         const userSettingsLocal = localStorage.getItem('user-settings');
@@ -42,7 +44,7 @@ const SettingsProvider = ({ children }: { children: ReactNode }): ReactElement =
     }, []);
 
     useEffect(() => {
-        if (!userSettings) return;
+        if (userSettings === initialValues) return;
         localStorage.setItem('user-settings', JSON.stringify(userSettings));
     }, [userSettings]);
 

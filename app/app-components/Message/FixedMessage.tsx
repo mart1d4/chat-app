@@ -2,12 +2,14 @@
 
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import { Avatar, Icon } from '@/app/app-components';
 import styles from './FixedMessage.module.css';
-import { Avatar } from '@/app/app-components';
+import { useState, useMemo } from 'react';
 
 const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean }) => {
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { sendRequest } = useFetchHelper();
+    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     const getLongDate = (date: Date) => {
         return new Intl.DateTimeFormat('en-US', {
@@ -31,6 +33,89 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
         }).format(new Date(date));
     };
 
+    const shouldDisplayInlined = () => {
+        const inlineTypes = [
+            'RECIPIENT_ADD',
+            'RECIPIENT_REMOVE',
+            'CALL',
+            'CHANNEL_NAME_CHANGE',
+            'CHANNEL_ICON_CHANGE',
+            'CHANNEL_PINNED_MESSAGE',
+            'GUILD_MEMBER_JOIN',
+            'OWNER_CHANGE',
+        ];
+
+        return inlineTypes.includes(message.type);
+    };
+
+    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId[0]);
+    const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel?.guildId);
+    const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
+
+    let messageContent: JSX.Element | null = null;
+    if (message.content) {
+        const userIds: string[] = (message.content?.match(regex) || []).map((match: string) => match.slice(2, -1));
+        messageContent = (
+            <span>
+                {message.content.split(regex).map((part, index) => {
+                    if (userIds.includes(part)) {
+                        const mentionUser = message.mentions?.find((user) => user.id === part);
+                        return mentionUser ? (
+                            <span
+                                key={index}
+                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                            >
+                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                            </span>
+                        ) : (
+                            <span
+                                key={index}
+                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                            >
+                                @Unknown
+                            </span>
+                        );
+                    } else {
+                        return part;
+                    }
+                })}
+            </span>
+        );
+    }
+
+    let referencedContent: JSX.Element | null = null;
+    if (message.messageReference?.content) {
+        const userIds: string[] = (message.messageReference.content?.match(regex) || []).map((match: string) =>
+            match.slice(2, -1)
+        );
+        referencedContent = (
+            <span>
+                {message.messageReference?.content.split(regex).map((part, index) => {
+                    if (userIds.includes(part)) {
+                        const mentionUser = message.mentions?.find((user) => user.id === part);
+                        return mentionUser ? (
+                            <span
+                                key={index}
+                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                            >
+                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                            </span>
+                        ) : (
+                            <span
+                                key={index}
+                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                            >
+                                @Unknown
+                            </span>
+                        );
+                    } else {
+                        return part;
+                    }
+                })}
+            </span>
+        );
+    }
+
     return (
         <li className={styles.messageContainer}>
             {pinned && (
@@ -46,12 +131,10 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                         height='24'
                         viewBox='0 0 24 24'
                         onClick={() =>
-                            sendRequest({
-                                query: 'UNPIN_MESSAGE',
-                                params: {
-                                    channelId: message.channelId[0],
-                                    messageId: message.id,
-                                },
+                            setPopup({
+                                type: 'UNPIN_MESSAGE',
+                                channelId: message.channelId[0],
+                                message: message,
                             })
                         }
                     >
@@ -89,23 +172,23 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                             </div>
                         )}
 
-                        {message.messageReference && <span>{message.messageReference?.author.displayName}</span>}
+                        {message.messageReference && <span>{message.messageReference.author.displayName}</span>}
 
-                        {message.messageReference ? (
-                            <div>
-                                {message.messageReference?.content}{' '}
-                                {message.messageReference?.edited && (
+                        {referencedContent ? (
+                            <div className={styles.referenceContent}>
+                                {referencedContent}{' '}
+                                {message.messageReference.edited && (
                                     <div className={styles.contentTimestamp}>
                                         <span
                                             onMouseEnter={(e) =>
                                                 setTooltip({
-                                                    text: getLongDate(message.messageReference?.updatedAt),
+                                                    text: getLongDate(message.updatedAt),
                                                     element: e.currentTarget,
                                                     delay: 1000,
+                                                    wide: true,
                                                 })
                                             }
                                             onMouseLeave={() => setTooltip(null)}
-                                            style={{ fontSize: '10px', opacity: 0.75 }}
                                         >
                                             (edited)
                                         </span>
@@ -113,7 +196,18 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                                 )}
                             </div>
                         ) : (
-                            <div className={styles.italic}>Original message was deleted</div>
+                            <div className={styles.italic}>
+                                {message.messageReference?.attachments.length > 0
+                                    ? 'Click to see attachment'
+                                    : 'Original message was deleted'}
+                            </div>
+                        )}
+
+                        {message.messageReference?.attachments?.length > 0 && (
+                            <Icon
+                                name='image'
+                                size={20}
+                            />
                         )}
                     </div>
                 )}
@@ -136,6 +230,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                                     text: getLongDate(message.createdAt),
                                     element: e.currentTarget,
                                     delay: 1000,
+                                    wide: true,
                                 })
                             }
                             onMouseLeave={() => setTooltip(null)}
@@ -151,8 +246,32 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                             color: message.error ? 'var(--error-1)' : '',
                         }}
                     >
-                        {message.content}{' '}
-                        {message.edited && (
+                        {messageContent && (
+                            <>
+                                {messageContent}{' '}
+                                {message.edited && message.attachments.length === 0 && (
+                                    <div className={styles.contentTimestamp}>
+                                        <span
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: getLongDate(message.updatedAt),
+                                                    element: e.currentTarget,
+                                                    delay: 1000,
+                                                    wide: true,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                        >
+                                            (edited)
+                                        </span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {message.attachments.length > 0 && <MessageAttachments message={message} />}
+
+                        {message.edited && message.attachments.length > 0 && (
                             <div className={styles.contentTimestamp}>
                                 <span
                                     onMouseEnter={(e) =>
@@ -160,6 +279,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                                             text: getLongDate(message.updatedAt),
                                             element: e.currentTarget,
                                             delay: 1000,
+                                            wide: true,
                                         })
                                     }
                                     onMouseLeave={() => setTooltip(null)}
@@ -172,6 +292,280 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                 </div>
             </div>
         </li>
+    );
+};
+
+const MessageAttachments = ({ message, functions }: any) => {
+    return (
+        <div className={styles.attachments}>
+            <div>
+                {message.attachments.length === 1 &&
+                    message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                        <div
+                            key={attachment.id}
+                            className={styles.gridOneBig}
+                        >
+                            <Image
+                                attachment={attachment}
+                                message={message}
+                            />
+                        </div>
+                    ))}
+
+                {message.attachments.length == 2 && (
+                    <div className={styles.gridTwo}>
+                        {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                            <Image
+                                key={attachment.id}
+                                attachment={attachment}
+                                message={message}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {message.attachments.length == 3 && (
+                    <div className={styles.gridTwo}>
+                        <div className={styles.gridOneSolo}>
+                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={styles.gridTwoColumn}>
+                            <div>
+                                <div>
+                                    {message.attachments.slice(1, 2).map((attachment: TImageUpload) => (
+                                        <Image
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                            message={message}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div>
+                                    {message.attachments.slice(2, 3).map((attachment: TImageUpload) => (
+                                        <Image
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                            message={message}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {message.attachments.length == 4 && (
+                    <div className={styles.gridFour}>
+                        {message.attachments.slice(0, 4).map((attachment: TImageUpload) => (
+                            <Image
+                                key={attachment.id}
+                                attachment={attachment}
+                                message={message}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {message.attachments.length == 5 && (
+                    <>
+                        <div className={styles.gridTwo}>
+                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={styles.gridThree}>
+                            {message.attachments.slice(2, 5).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {message.attachments.length == 6 && (
+                    <div className={styles.gridThree}>
+                        {message.attachments.slice(0, 6).map((attachment: TImageUpload) => (
+                            <Image
+                                key={attachment.id}
+                                attachment={attachment}
+                                message={message}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {message.attachments.length == 7 && (
+                    <>
+                        <div className={styles.gridOne}>
+                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={styles.gridThree}>
+                            {message.attachments.slice(1, 7).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {message.attachments.length == 8 && (
+                    <>
+                        <div className={styles.gridTwo}>
+                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={styles.gridThree}>
+                            {message.attachments.slice(2, 8).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {message.attachments.length == 9 && (
+                    <div className={styles.gridThree}>
+                        {message.attachments.slice(0, 9).map((attachment: TImageUpload) => (
+                            <Image
+                                key={attachment.id}
+                                attachment={attachment}
+                                message={message}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {message.attachments.length == 10 && (
+                    <>
+                        <div className={styles.gridOne}>
+                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={styles.gridThree}>
+                            {message.attachments.slice(1, 10).map((attachment: TImageUpload) => (
+                                <Image
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    message={message}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+type ImageComponent = {
+    attachment: TImageUpload;
+    message: TMessage;
+};
+
+const Image = ({ attachment, message }: ImageComponent) => {
+    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
+
+    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+
+    return useMemo(
+        () => (
+            <div
+                className={styles.image}
+                onClick={() => {
+                    if (attachment.isSpoiler && !hideSpoiler) {
+                        setHideSpoiler(true);
+                        return;
+                    }
+
+                    const index = message.attachments.findIndex((a) => a.id === attachment.id);
+
+                    setPopup({
+                        type: 'ATTACHMENT_PREVIEW',
+                        attachments: message.attachments,
+                        current: index,
+                    });
+                }}
+            >
+                <div>
+                    <div>
+                        <div>
+                            <div>
+                                <img
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${attachment.id}/-/resize/x${
+                                        attachment.dimensions.height >= 350 ? 350 : attachment.dimensions.height
+                                    }/-/format/webp/`}
+                                    alt={attachment?.name}
+                                    style={{
+                                        filter: attachment.isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none',
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {attachment.isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+                {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
+                    <button
+                        className={styles.imageAlt}
+                        onMouseEnter={(e) => {
+                            e.stopPropagation();
+                            setTooltip({
+                                text: attachment.description,
+                                element: e.currentTarget,
+                                gap: 2,
+                            });
+                        }}
+                        onMouseLeave={() => setTooltip(null)}
+                    >
+                        ALT
+                    </button>
+                )}
+            </div>
+        ),
+        [attachment, hideSpoiler]
     );
 };
 

@@ -150,7 +150,7 @@ const useFetchHelper = () => {
         } catch (error) {
             console.error(error);
 
-            if (data?.message.attachments.length > 0) {
+            if (data?.message?.attachments.length > 0) {
                 await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
                     method: 'DELETE',
                     headers: {

@@ -272,7 +272,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully sent message',
+                message: 'Successfully deleted message',
             },
             { status: 200 }
         );

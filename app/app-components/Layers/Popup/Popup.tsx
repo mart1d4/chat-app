@@ -342,7 +342,9 @@ const Popup = (): ReactElement => {
                     onMouseDown={(e) => {
                         if (e.button === 2) return;
                         if (!popupRef?.current?.contains(e.target as Node)) {
-                            setPopup(null);
+                            setTimeout(() => {
+                                setPopup(null);
+                            }, 200);
                         }
                     }}
                     onContextMenu={(e) => e.preventDefault()}
@@ -377,6 +379,7 @@ const Popup = (): ReactElement => {
                             e.stopPropagation();
                             setFixedLayer({
                                 type: 'menu',
+                                menu: 'IMAGE',
                                 event: {
                                     mouseX: e.clientX,
                                     mouseY: e.clientY,

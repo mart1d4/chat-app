@@ -1,5 +1,5 @@
 .menuContainer {
-    position: fixed;
+    position: absolute;
     min-width: 188px;
     max-width: 320px;
     display: flex;
@@ -8,7 +8,7 @@
     border-radius: 4px;
     background-color: var(--background-dark);
     box-shadow: var(--elevation-high);
-    z-index: 1000000;
+    z-index: 10003;
 }
 
 .menuContainer > div {
