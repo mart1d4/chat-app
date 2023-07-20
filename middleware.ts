@@ -40,7 +40,7 @@ export async function middleware(req: NextRequest) {
             audience: process.env.AUDIENCE,
         });
 
-        if (!pathname.startsWith('/api') && !pathname.startsWith('/channels/me')) {
+        if (!pathname.startsWith('/api') && !pathname.startsWith('/channels')) {
             return NextResponse.redirect(new URL('/channels/me', req.url));
         }
 

@@ -58,7 +58,6 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
             <span>
                 {message.content.split(userRegex).map((part, index) => {
                     if (userIds.includes(part)) {
-                        console.log(part);
                         const mentionUser = message.mentions?.find((user) => user.id === part);
 
                         return mentionUser ? (
@@ -301,18 +300,18 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     };
 
     useEffect(() => {
-        // // Disable for production
-        // if (message?.needsToBeSent && hasRendered.current) {
-        //     retrySendMessage(message);
-        // }
-
-        // return () => {
-        //     hasRendered.current = true;
-        // };
-
-        if (message?.needsToBeSent) {
+        // Disable for production
+        if (message?.needsToBeSent && hasRendered.current) {
             retrySendMessage(message);
         }
+
+        return () => {
+            hasRendered.current = true;
+        };
+
+        // if (message?.needsToBeSent) {
+        //     retrySendMessage(message);
+        // }
     }, [message]);
 
     const setLocalStorage = (data: {}) => {

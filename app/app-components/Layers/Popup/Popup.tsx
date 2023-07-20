@@ -1,15 +1,17 @@
 'use client';
 
-import { FixedMessage, LoadingDots, Icon, Avatar } from '@/app/app-components';
+import { FixedMessage, LoadingDots, Icon, Avatar, Checkbox } from '@/app/app-components';
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { getChannelName, getRelativeDate } from '@/lib/strings';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import { base } from '@uploadcare/upload-client';
+import { useRouter } from 'next/navigation';
 import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
-import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const Popup = (): ReactElement => {
     const { popup, setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
@@ -36,9 +38,45 @@ const Popup = (): ReactElement => {
     const [description, setDescription] = useState('');
     const [isSpoiler, setIsSpoiler] = useState(false);
 
+    const [join, setJoin] = useState(false);
+    const [guildTemplate, setGuildTemplate] = useState<number>(0);
+    const [guildName, setGuildName] = useState(`${auth.user.username}'s server`);
+    const [guildIcon, setGuildIcon] = useState<null | File>(null);
+
+    const [channelName, setChannelName] = useState('');
+    const [channelType, setChannelType] = useState('GUILD_TEXT');
+    const [channelLocked, setChannelLocked] = useState(false);
+
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+    const guildIconInput = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        // Reset all state when popup is closed
+        if (!popup) {
+            setIsLoading(false);
+            setUID(auth.user.username);
+            setPassword('');
+            setPassword1('');
+            setNewPassword('');
+            setConfirmPassword('');
+            setPassword1Error('');
+
+            setFilename('');
+            setDescription('');
+            setIsSpoiler(false);
+
+            setJoin(false);
+            setGuildTemplate(0);
+            setGuildName(`${auth.user.username}'s server`);
+            setGuildIcon(null);
+
+            setChannelName('');
+            setChannelType('GUILD_TEXT');
+            setChannelLocked(false);
+        }
+    }, [popup]);
 
     useEffect(() => {
         if (!popup?.file) return;
@@ -157,12 +195,55 @@ const Popup = (): ReactElement => {
     };
 
     const props = {
+        CREATE_GUILD: {
+            title: join || guildTemplate ? 'Customize your server' : 'Create a server',
+            description:
+                join || guildTemplate
+                    ? 'Give your new server a personality with a name and an icon. You can always change it later'
+                    : 'Your server is where you and your friends hang out. Make yours and start talking.',
+            buttonColor: join || guildTemplate ? 'blue' : 'grey',
+            buttonText: join ? 'Join server' : guildTemplate ? 'Create' : 'Join a server',
+            buttonDisabled: guildTemplate && !guildName,
+            function: async () => {
+                if (!guildTemplate && !join) {
+                    setGuildTemplate(1);
+                } else if (guildTemplate) {
+                    await createGuild();
+                } else if (join) {
+                    // Join server with invite code
+                }
+            },
+            centered: true,
+        },
+        GUILD_CHANNEL_CREATE: {
+            title: 'Create Channel',
+            description: popup?.category ? `in ${popup?.category.name}` : '',
+            buttonColor: 'blue',
+            buttonText: channelLocked ? 'Next' : 'Create Channel',
+            buttonDisabled: !channelName || channelLocked,
+            function: () => {
+                if (!channelName || channelLocked) return;
+                sendRequest({
+                    query: 'GUILD_CHANNEL_CREATE',
+                    params: {
+                        guildId: popup.guild,
+                    },
+                    data: {
+                        name: channelName,
+                        type: channelType,
+                        locked: channelLocked,
+                        categoryId: popup?.category?.id,
+                    },
+                });
+            },
+        },
         UPDATE_USERNAME: {
             title: 'Change your username',
             description: 'Enter a new username and your existing password.',
             buttonColor: 'blue',
             buttonText: 'Done',
             function: handleUsernameSubmit,
+            centered: true,
         },
         UPDATE_PASSWORD: {
             title: 'Update your password',
@@ -170,6 +251,7 @@ const Popup = (): ReactElement => {
             buttonColor: 'blue',
             buttonText: 'Done',
             function: handlePasswordSubmit,
+            centered: true,
         },
         DELETE_MESSAGE: {
             title: 'Delete Message',
@@ -286,12 +368,37 @@ const Popup = (): ReactElement => {
             if (e.key === 'Escape') {
                 e.preventDefault();
                 e.stopPropagation();
+
+                if (type === 'CREATE_GUILD') {
+                    if (guildTemplate) {
+                        setGuildTemplate(0);
+                    } else if (join) {
+                        setJoin(false);
+                    } else {
+                        setPopup(null);
+                    }
+                    return;
+                }
+
                 setPopup(null);
             }
 
             if (e.key === 'Enter' && !e.shiftKey && popup?.type) {
                 e.preventDefault();
                 e.stopPropagation();
+
+                if (isLoading) return;
+
+                if (type === 'CREATE_GUILD') {
+                    if (!guildTemplate && !join) {
+                        setGuildTemplate(1);
+                    } else if (guildTemplate) {
+                        await createGuild();
+                    } else if (join) {
+                        // Join server with invite code
+                    }
+                    return;
+                }
 
                 props[popup.type as keyof typeof props].function();
                 setPopup(null);
@@ -303,7 +410,64 @@ const Popup = (): ReactElement => {
         }, 100);
 
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [popup, uid, password, password1, newPassword, confirmPassword, isLoading, filename, description, isSpoiler]);
+    }, [
+        popup,
+        uid,
+        password,
+        password1,
+        newPassword,
+        confirmPassword,
+        isLoading,
+        filename,
+        description,
+        isSpoiler,
+        guildTemplate,
+        guildName,
+        guildIcon,
+        join,
+    ]);
+
+    const createGuild = async () => {
+        if (!guildTemplate || !guildName) return;
+        setIsLoading(true);
+        let uploadedIcon = null;
+
+        try {
+            const getIcon = async () => {
+                if (!guildIcon) return null;
+
+                const result = await base(guildIcon, {
+                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                    store: 'auto',
+                });
+
+                console.log('RESULT  ', result);
+
+                if (!result.file) console.error(result);
+                else uploadedIcon = result.file;
+            };
+
+            await getIcon();
+            const response = await sendRequest({
+                query: 'GUILD_CREATE',
+                data: {
+                    name: guildName,
+                    icon: uploadedIcon,
+                    template: guildTemplate,
+                },
+            });
+
+            if (!response.success) {
+                alert(response.message ?? 'Something went wrong. Try again later.');
+                return;
+            }
+
+            setPopup(null);
+        } catch (err) {
+            console.error(err);
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         uidInputRef?.current?.focus();
@@ -482,7 +646,7 @@ const Popup = (): ReactElement => {
                     }}
                     transition={{ ease: 'easeInOut', duration: 0.2 }}
                     style={{
-                        width: type === 'FILE_EDIT' ? '530px' : '',
+                        width: type === 'FILE_EDIT' ? '530px' : type === 'GUILD_CHANNEL_CREATE' ? '460px' : '',
                         padding: type === 'FILE_EDIT' ? '84px 4px 0 4px' : '',
                     }}
                 >
@@ -501,8 +665,11 @@ const Popup = (): ReactElement => {
                             />
                         ))}
 
-                    {type !== 'UPDATE_USERNAME' && type !== 'UPDATE_PASSWORD' ? (
-                        <div className={styles.titleBlock}>
+                    {!prop?.centered ? (
+                        <div
+                            className={styles.titleBlock}
+                            style={{ paddingBottom: type === 'GUILD_CHANNEL_CREATE' ? '0' : '' }}
+                        >
                             <h1>{prop.title}</h1>
                         </div>
                     ) : (
@@ -527,9 +694,17 @@ const Popup = (): ReactElement => {
                     )}
 
                     <div className={styles.popupContent + ' scrollbar'}>
-                        {type !== 'UPDATE_USERNAME' && type !== 'UPDATE_PASSWORD' && (
+                        {!prop?.centered && (
                             <>
-                                {prop.description && <div className={styles.description}>{prop.description}</div>}
+                                {prop.description && (
+                                    <div
+                                        className={`${styles.description} ${
+                                            type === 'GUILD_CHANNEL_CREATE' ? styles.small : ''
+                                        }`}
+                                    >
+                                        {prop.description}
+                                    </div>
+                                )}
 
                                 {popup?.message && popup.type !== 'DELETE_ATTACHMENT' && (
                                     <div className={styles.messagesContainer}>
@@ -571,6 +746,265 @@ const Popup = (): ReactElement => {
                                 <span>{getChannelName(popup.channel, auth.user.id)}</span>
                                 <span>{getRelativeDate(popup.channel.updatedAt, true)}</span>
                             </div>
+                        )}
+
+                        {type === 'CREATE_GUILD' && !guildTemplate && !join && (
+                            <>
+                                <button
+                                    className={styles.serverTemplate}
+                                    onClick={() => {
+                                        setGuildTemplate(1);
+                                    }}
+                                >
+                                    <img
+                                        src='/assets/app/server/create/own.svg'
+                                        alt='Create My Own'
+                                    />
+                                    <div>Create My Own</div>
+                                    <img
+                                        src='/assets/app/arrow-next.svg'
+                                        alt='Next'
+                                    />
+                                </button>
+
+                                <div className={styles.serverTemplateTitle}>Start from a template</div>
+
+                                {[
+                                    ['Gaming', 'gaming'],
+                                    ['School Club', 'school'],
+                                    ['Study Group', 'study'],
+                                    ['Friends', 'friends'],
+                                    ['Artists & Creators', 'artists'],
+                                    ['Local Community', 'community'],
+                                ].map((template, index) => (
+                                    <button
+                                        key={template[1]}
+                                        className={styles.serverTemplate}
+                                        onClick={() => {
+                                            setGuildTemplate(index + 2);
+                                        }}
+                                    >
+                                        <img
+                                            src={`/assets/app/server/create/${template[1]}.svg`}
+                                            alt={template[0]}
+                                        />
+                                        <div>{template[0]} </div>
+                                        <img
+                                            src='/assets/app/arrow-next.svg'
+                                            alt='Next'
+                                        />
+                                    </button>
+                                ))}
+                            </>
+                        )}
+
+                        {type === 'CREATE_GUILD' && guildTemplate && (
+                            <>
+                                <div className={styles.uploadIcon}>
+                                    <div>
+                                        {guildIcon ? (
+                                            <Image
+                                                src={URL.createObjectURL(guildIcon)}
+                                                alt='Guild Icon'
+                                                width={80}
+                                                height={80}
+                                                style={{
+                                                    borderRadius: '50%',
+                                                }}
+                                            />
+                                        ) : (
+                                            <Icon
+                                                name='fileUpload'
+                                                size={80}
+                                                viewbox='0 0 80 80'
+                                            />
+                                        )}
+
+                                        <div
+                                            role='button'
+                                            aria-label='Upload a Server Icon'
+                                            onClick={() => guildIconInput.current?.click()}
+                                        />
+                                    </div>
+
+                                    <input
+                                        type='file'
+                                        ref={guildIconInput}
+                                        accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
+                                        onChange={async (e) => {
+                                            const allowedFileTypes = [
+                                                'image/png',
+                                                'image/jpeg',
+                                                'image/gif',
+                                                'image/apng',
+                                                'image/webp',
+                                            ];
+                                            const file = e.target.files ? e.target.files[0] : null;
+                                            if (!file) {
+                                                e.target.value = '';
+                                                return;
+                                            }
+
+                                            // Run checks
+                                            const maxFileSize = 1024 * 1024 * 10; // 10MB
+                                            if (file.size > maxFileSize) {
+                                                setPopup({
+                                                    type: 'WARNING',
+                                                    warning: 'FILE_SIZE',
+                                                });
+                                                e.target.value = '';
+                                                return;
+                                            }
+
+                                            const fileBytes = new Uint8Array(await file.arrayBuffer());
+                                            const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
+
+                                            if (!fileType || !allowedFileTypes.includes(fileType)) {
+                                                setPopup({
+                                                    type: 'WARNING',
+                                                    warning: 'FILE_TYPE',
+                                                });
+                                                e.target.value = '';
+                                                return;
+                                            }
+
+                                            const newFile = new File([file], 'image', {
+                                                type: file.type,
+                                            });
+
+                                            setGuildIcon(newFile);
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                </div>
+
+                                <div className={styles.input}>
+                                    <label>Server name</label>
+                                    <div>
+                                        <input
+                                            type='text'
+                                            maxLength={100}
+                                            value={guildName}
+                                            onChange={(e) => setGuildName(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {type === 'GUILD_CHANNEL_CREATE' && (
+                            <>
+                                <div className={styles.channelType}>
+                                    <h2>Channel Type</h2>
+
+                                    <div
+                                        className={styles.typePick}
+                                        onClick={() => setChannelType('GUILD_TEXT')}
+                                        style={{
+                                            backgroundColor:
+                                                channelType === 'GUILD_TEXT' ? 'var(--background-hover-2)' : '',
+                                        }}
+                                    >
+                                        <div>
+                                            <div
+                                                style={{
+                                                    color: channelType === 'GUILD_TEXT' ? 'var(--foreground-1)' : '',
+                                                }}
+                                            >
+                                                <Icon
+                                                    name={channelType === 'GUILD_TEXT' ? 'circleChecked' : 'circle'}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <div>
+                                                    <Icon name={channelLocked ? 'hashtagLock' : 'hashtag'} />
+                                                </div>
+
+                                                <div className={styles.content}>
+                                                    <div>Text</div>
+                                                    <div>Send messages, images, GIFs, emoji, opinions, and puns</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className={styles.typePick}
+                                        onClick={() => setChannelType('GUILD_VOICE')}
+                                        style={{
+                                            backgroundColor:
+                                                channelType === 'GUILD_VOICE' ? 'var(--background-hover-2)' : '',
+                                        }}
+                                    >
+                                        <div>
+                                            <div
+                                                style={{
+                                                    color: channelType === 'GUILD_VOICE' ? 'var(--foreground-1)' : '',
+                                                }}
+                                            >
+                                                <Icon
+                                                    name={channelType === 'GUILD_VOICE' ? 'circleChecked' : 'circle'}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <div>
+                                                    <Icon name={channelLocked ? 'voiceLock' : 'voice'} />
+                                                </div>
+
+                                                <div className={styles.content}>
+                                                    <div>Voice</div>
+                                                    <div>Hang out together with voice, video, and screen share</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={`${styles.input} ${styles.channel}`}>
+                                    <label>Channel name</label>
+                                    <div>
+                                        <Icon
+                                            name={
+                                                channelType === 'GUILD_TEXT'
+                                                    ? channelLocked
+                                                        ? 'hashtagLock'
+                                                        : 'hashtag'
+                                                    : channelLocked
+                                                    ? 'voiceLock'
+                                                    : 'voice'
+                                            }
+                                        />
+
+                                        <input
+                                            type='text'
+                                            maxLength={100}
+                                            value={channelName}
+                                            placeholder='new-channel'
+                                            onChange={(e) => setChannelName(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles.privateCheck}>
+                                    <div>
+                                        <label>
+                                            <Icon name='lock' />
+                                            Private Channel
+                                        </label>
+
+                                        <div>
+                                            <Checkbox
+                                                checked={channelLocked}
+                                                onChange={() => setChannelLocked((prev) => !prev)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>Only selected members and roles will be able to view this channel.</div>
+                                </div>
+                            </>
                         )}
 
                         {type === 'FILE_EDIT' && (
@@ -839,14 +1273,32 @@ const Popup = (): ReactElement => {
                     >
                         <button
                             className='underline'
-                            onClick={() => setPopup(null)}
+                            onClick={() => {
+                                if (type === 'CREATE_GUILD') {
+                                    if (guildTemplate) {
+                                        setGuildTemplate(0);
+                                    } else if (join) {
+                                        setJoin(false);
+                                    }
+                                    return;
+                                }
+                                setPopup(null);
+                            }}
                         >
-                            Cancel
+                            {guildTemplate || join ? 'Back' : 'Cancel'}
                         </button>
 
                         <button
-                            className={prop.buttonColor}
-                            onClick={() => {
+                            className={`${prop.buttonColor} ${prop?.buttonDisabled ? 'disabled' : ''}`}
+                            onClick={async () => {
+                                if (prop?.buttonDisabled) return;
+                                if (type === 'CREATE_GUILD') {
+                                    if (!guildTemplate && !join) setJoin(true);
+                                    else if (join) console.log('Join server with invite code');
+                                    else if (guildTemplate) await createGuild();
+                                    return;
+                                }
+
                                 prop.function();
                                 setPopup(null);
                             }}

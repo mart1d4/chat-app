@@ -1,0 +1,29 @@
+.container {
+    opacity: 1;
+    border-radius: 14px;
+    cursor: pointer;
+    position: relative;
+    width: 40px;
+    height: 24px;
+}
+
+.container > svg {
+    display: block;
+    position: absolute;
+    width: 28px;
+    height: 18px;
+    margin: 3px;
+    transition: left 0.2s ease-in-out;
+}
+
+.container > input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    margin: 0;
+    border-radius: 14px;
+    cursor: pointer;
+}

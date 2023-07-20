@@ -32,6 +32,7 @@ const UserItem = ({
                         element: e.currentTarget,
                         user: user,
                         firstSide: 'LEFT',
+                        animation: 'LEFT',
                         gap: 16,
                     });
                 }

@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactElement, useEffect, useState, useMemo, useCallback } from 'react';
+import { ReactElement, useEffect, useState, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
-import { usePathname } from 'next/navigation';
 import styles from './AppNav.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import NavIcon from './NavIcon';
@@ -14,10 +14,17 @@ const AppNav = (): ReactElement => {
 
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         if (pathname.startsWith('/channels/me')) {
             localStorage.setItem('channel-url', pathname);
+            setUrl(pathname);
+        } else if (pathname.startsWith('/channels/')) {
+            const guildId = pathname.split('/')[2];
+            const channelId = pathname.split('/')[3];
+
+            localStorage.setItem(`guild-${guildId}`, JSON.stringify({ channelId }));
             setUrl(pathname);
         }
     }, [pathname]);
@@ -64,11 +71,23 @@ const AppNav = (): ReactElement => {
         pusher.bind('user-updated', (data: any) => updateUserData(data));
         pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
         pusher.bind('message-sent', (data: any) => updateNotifications(data));
+        pusher.bind('guild-created', (data: any) => {
+            if (data.userId !== auth.user.id) return;
+            setAuth({
+                ...auth,
+                user: {
+                    ...auth.user,
+                    guilds: [...auth.user.guilds, data.guild],
+                },
+            });
+            router.push(`/channels/${data.guild.id}`);
+        });
 
         return () => {
             pusher.unbind('user-updated');
             pusher.unbind('message-sent');
             pusher.unbind('relationship-updated');
+            pusher.unbind('guild-created');
         };
     }, [auth.user]);
 
@@ -360,6 +379,17 @@ const AppNav = (): ReactElement => {
                     <div className={styles.listItem}>
                         <div className={styles.separator} />
                     </div>
+
+                    {auth.user.guilds.map((guild: TGuild) => (
+                        <NavIcon
+                            key={guild.id}
+                            name={guild.name}
+                            guild={true}
+                            link={`/channels/${guild.id}`}
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`}
+                            count={0}
+                        />
+                    ))}
 
                     <NavIcon
                         green={true}

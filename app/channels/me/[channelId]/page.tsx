@@ -18,7 +18,11 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
         );
 
         if (!channel) {
-            router.push('/channels/me');
+            const channelId = localStorage.getItem('channel-url');
+
+            if (channelId) router.push(`/channels/me/${channelId}`);
+            else router.push('/channels/me');
+
             return;
         }
 

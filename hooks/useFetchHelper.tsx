@@ -16,7 +16,9 @@ type TQuery =
     | 'CHANNEL_UPDATE'
     | 'CHANNEL_DELETE'
     | 'CHANNEL_RECIPIENT_ADD'
-    | 'CHANNEL_RECIPIENT_REMOVE';
+    | 'CHANNEL_RECIPIENT_REMOVE'
+    | 'GUILD_CREATE'
+    | 'GUILD_CHANNEL_CREATE';
 
 type Props = {
     query: TQuery;
@@ -45,6 +47,8 @@ const urls = {
     ['CHANNEL_DELETE']: '/users/me/channels/:channelId',
     ['CHANNEL_RECIPIENT_ADD']: '/channels/:channelId/recipients/:recipientId',
     ['CHANNEL_RECIPIENT_REMOVE']: '/channels/:channelId/recipients/:recipientId',
+    ['GUILD_CREATE']: '/guilds',
+    ['GUILD_CHANNEL_CREATE']: '/guilds/:guildId/channels',
 };
 
 const methods = {
@@ -63,6 +67,8 @@ const methods = {
     ['CHANNEL_DELETE']: 'DELETE',
     ['CHANNEL_RECIPIENT_ADD']: 'PUT',
     ['CHANNEL_RECIPIENT_REMOVE']: 'DELETE',
+    ['GUILD_CREATE']: 'POST',
+    ['GUILD_CHANNEL_CREATE']: 'POST',
 };
 
 const useFetchHelper = () => {
@@ -134,10 +140,15 @@ const useFetchHelper = () => {
             throw new Error('[useFetchHelper] A recipientId is required');
         }
 
+        if (url.includes(':guildId') && !params?.guildId) {
+            throw new Error('[useFetchHelper] A guildId is required');
+        }
+
         url = url.replace(':channelId', params?.channelId ?? '');
         url = url.replace(':messageId', params?.messageId ?? '');
         url = url.replace(':username', params?.username ?? '');
         url = url.replace(':recipientId', params?.recipientId ?? '');
+        url = url.replace(':guildId', params?.guildId ?? '');
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {

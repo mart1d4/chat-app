@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 type Props = {
     green?: boolean;
     special?: boolean;
+    guild?: boolean;
     name: string;
     link: string;
     src?: string;
@@ -16,10 +17,11 @@ type Props = {
     count?: number;
 };
 
-const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactElement => {
+const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props): ReactElement => {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
+    const { setPopup, popup }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -31,7 +33,7 @@ const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactE
     );
 
     useEffect(() => {
-        if (special ? pathname.startsWith('/channels/me') : pathname === link) {
+        if (special ? pathname.startsWith('/channels/me') : guild ? pathname.startsWith(link) : pathname === link) {
             setActive(true);
             setMarkHeight(40);
         } else {
@@ -62,7 +64,7 @@ const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactE
                 )}
             </div>
 
-            <motion.div
+            <div
                 className={active ? styles.wrapperActive : styles.wrapper}
                 onMouseEnter={(e) => {
                     setTooltip({
@@ -80,18 +82,22 @@ const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactE
                 }}
                 onClick={() => {
                     setTooltip(null);
+                    if (name === 'Add a Server') {
+                        setPopup({
+                            type: 'CREATE_GUILD',
+                        });
+                        return;
+                    }
                     router.push(link);
                 }}
-                transition={{
-                    duration: 0,
-                    delay: 0,
-                    ease: 'linear',
-                }}
-                whileTap={{
-                    transform: 'translateY(1px)',
-                }}
+                // style={{
+                //     backgroundColor: src ? 'transparent' : '',
+                // }}
                 style={{
-                    backgroundColor: src ? 'transparent' : '',
+                    backgroundColor:
+                        popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--success-1)' : '',
+                    color: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--foreground-1)' : '',
+                    borderRadius: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? '33%' : '',
                 }}
             >
                 {badgeCount > 0 && (
@@ -109,7 +115,7 @@ const NavIcon = ({ green, special, name, link, src, svg, count }: Props): ReactE
                 ) : (
                     svg
                 )}
-            </motion.div>
+            </div>
         </div>
     );
 };

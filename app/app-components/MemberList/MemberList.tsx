@@ -293,16 +293,33 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                 </aside>
             );
         } else {
-            const onlineMembers: any = channel.recipients.filter((recipient: any) =>
-                ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
-            );
+            let onlineMembers: TCleanUser[];
 
-            const offlineMembers: any = channel.recipients.filter((recipient: any) => recipient.status === 'OFFLINE');
+            if (channel?.guildId) {
+                const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
+                onlineMembers = guild.members.filter((recipient: any) =>
+                    ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
+                );
+            } else {
+                onlineMembers = channel.recipients.filter((recipient: any) =>
+                    ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
+                );
+            }
+
+            let offlineMembers: TCleanUser[];
+
+            if (channel?.guildId) {
+                const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
+                offlineMembers = guild.members.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+            } else {
+                offlineMembers = channel.recipients.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+            }
 
             return (
                 <aside className={styles.memberList}>
                     <div>
-                        <h2>Members—{channel.recipients.length}</h2>
+                        {!channel?.guildId && <h2>Members—{channel.recipients.length}</h2>}
+                        {channel?.guildId && onlineMembers.length > 0 && <h2>Online—{onlineMembers.length}</h2>}
 
                         {onlineMembers?.length > 0 &&
                             onlineMembers.map((user: TCleanUser) => (
@@ -313,6 +330,8 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                     isOwner={channel.ownerId === user.id}
                                 />
                             ))}
+
+                        {channel?.guildId && offlineMembers?.length > 0 && <h2>Offline—{offlineMembers?.length}</h2>}
 
                         {offlineMembers?.length > 0 &&
                             offlineMembers.map((user: TCleanUser) => (

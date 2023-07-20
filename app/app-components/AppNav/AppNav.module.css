@@ -60,21 +60,26 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    transition: all 0.2s ease-in-out;
 }
 
-.wrapper svg,
-.wrapperActive svg {
+.wrapper:hover img,
+.wrapperActive:hover img {
+    border-radius: 33% !important;
+}
+
+.wrapper,
+.wrapperActive {
     color: var(--foreground-1);
-    transition: color 0.2s ease-in-out;
 }
 
-.green > .wrapper svg {
+.green > .wrapper {
     color: var(--success-light);
 }
 
-.green > .wrapper:hover svg,
-.green > .wrapperActive svg,
-.green > .wrapperActive:hover svg {
+.green > .wrapper:hover,
+.green > .wrapperActive,
+.green > .wrapperActive:hover {
     color: var(--foreground-1);
 }
 

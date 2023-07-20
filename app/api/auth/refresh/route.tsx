@@ -39,7 +39,11 @@ export async function GET(req: Request): Promise<NextResponse> {
                 guildIds: true,
                 guilds: {
                     include: {
-                        channels: true,
+                        channels: {
+                            orderBy: {
+                                position: 'asc',
+                            },
+                        },
                         roles: true,
                         emotes: true,
                         members: {

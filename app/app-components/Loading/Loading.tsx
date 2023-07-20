@@ -10,8 +10,6 @@ type Props = {
 };
 
 const Loading = ({ children }: Props): ReactElement => {
-    const { showSettings, userProfile, popup, fixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth, loading }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 

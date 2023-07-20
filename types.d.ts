@@ -165,7 +165,9 @@ type TGuild = readonly {
     memberIds: TUser.id[];
     members: TUser[];
 
+    channelIds: TChannel.id[];
     channels: TChannel[];
+
     roles: TRole[];
 
     createdAt: DateTime;

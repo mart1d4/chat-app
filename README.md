@@ -17,7 +17,7 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   Block users
 -   Create channels
 -   Create groups
--   Create guilds (coming soon)
+-   Create guilds
 
 ## Issue Tracker
 

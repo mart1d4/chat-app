@@ -206,7 +206,7 @@ model User {
 model Guild {
     id            String          @id @default(auto()) @map("_id") @db.ObjectId
     name          String
-    icon          String          @default("blue")
+    icon          String
     banner        String?
     description   String?
     welcomeScreen TWelcomeScreen?
@@ -222,8 +222,10 @@ model Guild {
     memberIds String[] @db.ObjectId
     members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
 
-    channels Channel[]
-    roles    Role[]
+    channelIds String[]  @db.ObjectId
+    channels   Channel[] @relation("GuildChannel")
+
+    roles Role[]
 
     emoteIds String[] @db.ObjectId
     emotes   Emote[]  @relation("GuildEmote")
@@ -261,11 +263,12 @@ model Channel {
     nsfw        Boolean  @default(false)
     position    Int?
     parentId    String?
+    children    Int      @default(0)
     rateLimit   Int?
     permissions String[]
 
     guildId String? @db.ObjectId
-    guild   Guild?  @relation(fields: [guildId], references: [id])
+    guild   Guild?  @relation("GuildChannel", fields: [guildId], references: [id])
 
     ownerId String? @db.ObjectId
     owner   User?   @relation("Owner", fields: [ownerId], references: [id])

@@ -21,6 +21,7 @@ import Avatar from './Avatar/Avatar';
 import TooltipLayer from './TooltipLayer/TooltipLayer';
 import { EmojiPicker } from './TextArea/TextArea';
 import FixedMessage from './Message/FixedMessage';
+import Checkbox from './Checkbox/Checkbox';
 
 export {
     AppNav,
@@ -46,4 +47,5 @@ export {
     Avatar,
     TooltipLayer,
     EmojiPicker,
+    Checkbox,
 };

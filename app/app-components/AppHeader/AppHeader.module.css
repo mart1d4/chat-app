@@ -31,6 +31,10 @@
     margin: 0 8px;
 }
 
+.icon > svg {
+    color: var(--foreground-5);
+}
+
 .icon > img {
     width: 24px;
     height: 24px;
@@ -48,7 +52,7 @@
     min-width: auto;
     overflow: hidden;
     white-space: nowrap;
-    color: var(--foreground-1);
+    color: var(--foreground-2);
     font-size: 16px;
     line-height: 20px;
     font-weight: 600;

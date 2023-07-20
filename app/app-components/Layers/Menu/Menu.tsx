@@ -4,9 +4,7 @@ import { useEffect, useState, ReactElement, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { Icon } from '@/app/app-components';
-import { useRouter } from 'next/navigation';
 import styles from './Menu.module.css';
-import { v4 as uuidv4 } from 'uuid';
 
 type UserProps = {
     isSelf: boolean;
@@ -20,7 +18,6 @@ type ItemType = {
     name: string | null;
     icon?: string;
     iconSize?: number;
-    iconInverted?: boolean;
     textTip?: string;
     func?: () => void;
     funcShift?: () => void;
@@ -36,6 +33,7 @@ enum EMenuType {
     MESSAGE = 'MESSAGE',
     INPUT = 'INPUT',
     IMAGE = 'IMAGE',
+    GUILD = 'GUILD',
 }
 
 const content = ({ content }: { content: any }): ReactElement => {
@@ -168,13 +166,95 @@ const content = ({ content }: { content: any }): ReactElement => {
     useEffect(() => {
         if (!type || (user && !userProps)) return;
 
+        if (type === 'GUILD') {
+            setItems([
+                {
+                    name: 'Server Boost',
+                    icon: 'boost',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Invite People',
+                    icon: 'addUser',
+                    func: () => {},
+                },
+                {
+                    name: 'Invite a Guest',
+                    icon: 'addUser',
+                    func: () => {},
+                },
+                {
+                    name: 'Server Settings',
+                    icon: 'settings',
+                    func: () => {},
+                },
+                {
+                    name: 'Create Channel',
+                    icon: 'addCircle',
+                    func: () => {},
+                },
+                {
+                    name: 'Create Category',
+                    icon: 'addFolder',
+                    func: () => {},
+                },
+                {
+                    name: 'Create Event',
+                    icon: 'calendar',
+                    func: () => {},
+                },
+                {
+                    name: 'App Directory',
+                    icon: 'bot',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Notification Settings',
+                    icon: 'bell',
+                    func: () => {},
+                },
+                {
+                    name: 'Privacy Settings',
+                    icon: 'policeBadge',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Edit Server Profile',
+                    icon: 'edit',
+                    func: () => {},
+                },
+                {
+                    name: 'Hide Muted Channels',
+                    icon: 'checkbox',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Report Raid',
+                    icon: 'shield',
+                    func: () => {},
+                    danger: true,
+                },
+            ]);
+        }
+
         if (type === 'INPUT') {
             setItems([
                 {
                     name: content.sendButton && 'Send Message Button',
-                    icon: userSettings.sendButton ? 'boxFilled' : 'box',
+                    icon: userSettings.sendButton ? 'checkboxFilled' : 'checkbox',
                     iconSize: 18,
-                    iconInverted: true,
                     func: () => {
                         setUserSettings({
                             ...userSettings,
@@ -185,7 +265,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                 { name: content.sendButton && 'Divider' },
                 {
                     name: 'Spellcheck',
-                    icon: 'box',
+                    icon: 'checkbox',
                     iconSize: 18,
                 },
                 { name: 'Divider' },
@@ -838,11 +918,15 @@ const content = ({ content }: { content: any }): ReactElement => {
     return useMemo(
         () => (
             <div
-                className={styles.menuContainer}
+                className={`${styles.menuContainer} ${type === 'GUILD' ? 'big' : ''}`}
                 onMouseLeave={() => setActive('')}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                }}
+                style={{
+                    width: type === 'GUILD' ? 220 : '',
+                    transform: type === 'GUILD' ? 'translateX(+10px)' : '',
                 }}
             >
                 <div>
@@ -872,19 +956,29 @@ const content = ({ content }: { content: any }): ReactElement => {
                                     }
                                     onClick={() => {
                                         if (item.disabled) return;
-                                        setFixedLayer(null);
                                         if (shift && item.funcShift) item.funcShift();
                                         else if (item.func) item.func();
+                                        if (item.name === 'Send Message Button') return;
+                                        setFixedLayer(null);
                                     }}
                                     onMouseEnter={() => setActive(item.name as string)}
                                 >
                                     <div className={styles.label}>{item.name}</div>
 
                                     {item.icon && (
-                                        <div className={styles.icon}>
+                                        <div
+                                            className={`${styles.icon} ${
+                                                item.name === 'Send Message Button'
+                                                    ? userSettings.sendButton
+                                                        ? styles.revert
+                                                        : ''
+                                                    : ''
+                                            }`}
+                                        >
                                             <Icon
                                                 name={item.icon}
-                                                size={item.iconSize ?? 16}
+                                                size={item.iconSize ?? type === 'GUILD' ? 18 : 16}
+                                                viewbox={item.icon === 'boost' ? '0 0 8 12' : ''}
                                             />
                                         </div>
                                     )}

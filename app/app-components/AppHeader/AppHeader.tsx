@@ -18,9 +18,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
     useEffect(() => {
         if (!channel) return;
 
-        if (channel.type === 'DM') {
-            setFriend(channel.recipients.find((user: TUser) => user.id !== auth.user.id));
-        }
+        if (channel.type === 'DM') setFriend(channel.recipients.find((user: TUser) => user.id !== auth.user.id));
+        else setFriend(undefined);
     }, [channel]);
 
     useEffect(() => {
@@ -53,197 +52,250 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
 
     const toolbarItems =
         typeof channel !== 'undefined'
-            ? [
-                  { name: 'Start Voice Call', icon: 'call', func: () => {} },
-                  { name: 'Start Video Call', icon: 'video', func: () => {} },
-                  {
-                      name: 'Pinned Messages',
-                      icon: 'pin',
-                      func: (e: MouseEvent) => {
-                          if (!channel) return;
-                          setFixedLayer({
-                              type: 'popout',
-                              element: e.currentTarget,
-                              firstSide: 'BOTTOM',
-                              secondSide: 'LEFT',
-                              gap: 10,
-                              channel: channel,
-                              pinned: true,
-                          });
+            ? channel?.guildId
+                ? [
+                      {
+                          name: 'Threads',
+                          icon: 'threads',
+                          func: {},
                       },
-                  },
-                  {
-                      name: 'Add Friends to DM',
-                      icon: 'addUser',
-                      func: (e: MouseEvent) => {
-                          if (!channel) return;
-                          setFixedLayer({
-                              type: 'popout',
-                              element: e.currentTarget,
-                              gap: 10,
-                              firstSide: 'BOTTOM',
-                              secondSide: 'RIGHT',
-                              channel: channel,
-                          });
+                      {
+                          name: 'Notification Settings',
+                          icon: 'bell',
+                          func: {},
                       },
-                  },
-                  {
-                      name:
-                          userSettings.showUsers && widthLimitPassed
-                              ? 'Hide User Profile'
-                              : `Show ${channel?.type === 'DM' ? ' User Profile' : 'Member List'}`,
-                      icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
-                      active: userSettings.showUsers,
-                      disabled: widthLimitPassed === false,
-                      func: () => {
-                          if (!channel) return;
-                          setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers });
+                      {
+                          name: 'Pinned Messages',
+                          icon: 'pin',
+                          func: (e: MouseEvent) => {
+                              if (!channel) return;
+                              setFixedLayer({
+                                  type: 'popout',
+                                  element: e.currentTarget,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'LEFT',
+                                  gap: 10,
+                                  channel: channel,
+                                  pinned: true,
+                              });
+                          },
                       },
-                  },
-              ]
+                      {
+                          name:
+                              userSettings.showUsers && widthLimitPassed
+                                  ? 'Hide User Profile'
+                                  : `Show ${channel?.type === 'DM' ? ' User Profile' : 'Member List'}`,
+                          icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
+                          active: userSettings.showUsers,
+                          disabled: widthLimitPassed === false,
+                          func: () => {
+                              if (!channel) return;
+                              setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers });
+                          },
+                      },
+                  ]
+                : [
+                      { name: 'Start Voice Call', icon: 'call', func: () => {} },
+                      { name: 'Start Video Call', icon: 'video', func: () => {} },
+                      {
+                          name: 'Pinned Messages',
+                          icon: 'pin',
+                          func: (e: MouseEvent) => {
+                              if (!channel) return;
+                              setFixedLayer({
+                                  type: 'popout',
+                                  element: e.currentTarget,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'LEFT',
+                                  gap: 10,
+                                  channel: channel,
+                                  pinned: true,
+                              });
+                          },
+                      },
+                      {
+                          name: 'Add Friends to DM',
+                          icon: 'addUser',
+                          func: (e: MouseEvent) => {
+                              if (!channel) return;
+                              setFixedLayer({
+                                  type: 'popout',
+                                  element: e.currentTarget,
+                                  gap: 10,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'RIGHT',
+                                  channel: channel,
+                              });
+                          },
+                      },
+                      {
+                          name:
+                              userSettings.showUsers && widthLimitPassed
+                                  ? 'Hide User Profile'
+                                  : `Show ${channel?.type === 'DM' ? ' User Profile' : 'Member List'}`,
+                          icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
+                          active: userSettings.showUsers,
+                          disabled: widthLimitPassed === false,
+                          func: () => {
+                              if (!channel) return;
+                              setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers });
+                          },
+                      },
+                  ]
             : [{ name: 'New Group DM', icon: 'newDM', func: () => {} }];
 
     return useMemo(
-        () => (
-            <div className={styles.header}>
-                <div className={styles.nav}>
-                    {typeof channel === 'undefined' ? (
-                        <>
-                            <div className={styles.icon}>
-                                <Icon
-                                    name='friends'
-                                    fill='var(--foreground-5)'
-                                />
-                            </div>
-                            <h1 className={styles.title}>Friends</h1>
-                            <div className={styles.divider}></div>
-                            <ul className={styles.list}>
-                                {tabs.map((tab, index) => (
-                                    <li
-                                        key={index}
-                                        onClick={() =>
-                                            setUserSettings({
-                                                ...userSettings,
-                                                friendTab: tab.func,
-                                            })
-                                        }
-                                        className={
-                                            tab.name === 'Add Friend'
-                                                ? userSettings?.friendTab === tab.func
-                                                    ? styles.itemAddActive
-                                                    : styles.itemAdd
-                                                : userSettings?.friendTab === tab.func
-                                                ? styles.itemActive
-                                                : styles.item
-                                        }
-                                    >
-                                        {tab.name}
-                                        {tab.name === 'Pending' && badgeCount > 0 && (
-                                            <div className={styles.badge}>{badgeCount}</div>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    ) : (
-                        <>
-                            <div className={styles.icon}>
-                                <Avatar
-                                    src={channel?.icon || '/assets/blurs/avatar.png'}
-                                    relativeSrc={!channel}
-                                    alt={channel?.name || 'User'}
-                                    size={24}
-                                    status={channel?.type === 'DM' ? friend?.status : undefined}
-                                />
-                            </div>
+        () =>
+            !channel ? (
+                <></>
+            ) : (
+                <div className={styles.header}>
+                    <div className={styles.nav}>
+                        {typeof channel === 'undefined' ? (
+                            <>
+                                <div className={styles.icon}>
+                                    <Icon
+                                        name='friends'
+                                        fill='var(--foreground-5)'
+                                    />
+                                </div>
+                                <h1 className={styles.title}>Friends</h1>
+                                <div className={styles.divider}></div>
+                                <ul className={styles.list}>
+                                    {tabs.map((tab, index) => (
+                                        <li
+                                            key={index}
+                                            onClick={() =>
+                                                setUserSettings({
+                                                    ...userSettings,
+                                                    friendTab: tab.func,
+                                                })
+                                            }
+                                            className={
+                                                tab.name === 'Add Friend'
+                                                    ? userSettings?.friendTab === tab.func
+                                                        ? styles.itemAddActive
+                                                        : styles.itemAdd
+                                                    : userSettings?.friendTab === tab.func
+                                                    ? styles.itemActive
+                                                    : styles.item
+                                            }
+                                        >
+                                            {tab.name}
+                                            {tab.name === 'Pending' && badgeCount > 0 && (
+                                                <div className={styles.badge}>{badgeCount}</div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        ) : (
+                            <>
+                                <div className={styles.icon}>
+                                    {channel?.guildId ? (
+                                        <Icon name='hashtag' />
+                                    ) : (
+                                        <Avatar
+                                            src={channel?.icon || '/assets/blurs/avatar.png'}
+                                            relativeSrc={!channel}
+                                            alt={channel?.name || 'User'}
+                                            size={24}
+                                            status={channel?.type === 'DM' ? friend?.status : undefined}
+                                        />
+                                    )}
+                                </div>
 
-                            <h1
-                                className={styles.titleFriend}
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: channel?.name || '',
-                                        element: e.currentTarget,
-                                        position: 'bottom',
-                                        gap: 5,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    if (channel?.type !== 'DM') return;
-                                    setUserProfile({ user: friend });
-                                }}
-                            >
-                                {channel?.name || ''}
-                            </h1>
-                        </>
-                    )}
-                </div>
-
-                <div className={styles.toolbar}>
-                    {toolbarItems.map((item) => (
-                        <ToolbarIcon
-                            key={uuidv4()}
-                            item={item}
-                        />
-                    ))}
-
-                    {typeof channel === 'undefined' ? (
-                        <div className={styles.divider} />
-                    ) : (
-                        <div className={styles.search}>
-                            <div
-                                role='combobox'
-                                aria-expanded='false'
-                                aria-haspopup='listbox'
-                                aria-label='Search'
-                                autoCorrect='off'
-                            >
-                                Search
-                            </div>
-
-                            <div>
-                                <Icon
-                                    name='search'
-                                    size={16}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    <div
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text: 'Inbox',
-                                element: e.currentTarget,
-                                position: 'bottom',
-                                gap: 5,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        <Icon name='inbox' />
+                                <h1
+                                    className={styles.titleFriend}
+                                    onMouseEnter={(e) => {
+                                        if (channel?.guildId) return;
+                                        setTooltip({
+                                            text: channel?.name || '',
+                                            element: e.currentTarget,
+                                            position: 'bottom',
+                                            gap: 5,
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                    onClick={() => {
+                                        if (channel?.type !== 'DM') return;
+                                        setUserProfile({ user: friend });
+                                    }}
+                                    style={{
+                                        cursor: channel?.guildId ? 'default' : '',
+                                    }}
+                                >
+                                    {channel?.name || ''}
+                                </h1>
+                            </>
+                        )}
                     </div>
 
-                    <a
-                        href='/en-US/support'
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text: 'Help',
-                                element: e.currentTarget,
-                                position: 'bottom',
-                                gap: 5,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        <Icon name='help' />
-                    </a>
+                    <div className={styles.toolbar}>
+                        {toolbarItems.map((item) => (
+                            <ToolbarIcon
+                                key={uuidv4()}
+                                item={item}
+                            />
+                        ))}
+
+                        {typeof channel === 'undefined' ? (
+                            <div className={styles.divider} />
+                        ) : (
+                            <div className={styles.search}>
+                                <div
+                                    role='combobox'
+                                    aria-expanded='false'
+                                    aria-haspopup='listbox'
+                                    aria-label='Search'
+                                    autoCorrect='off'
+                                >
+                                    Search
+                                </div>
+
+                                <div>
+                                    <Icon
+                                        name='search'
+                                        size={16}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div
+                            className={styles.toolbarIcon}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: 'Inbox',
+                                    element: e.currentTarget,
+                                    position: 'bottom',
+                                    gap: 5,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
+                        >
+                            <Icon name='inbox' />
+                        </div>
+
+                        <a
+                            href='/en-US/support'
+                            className={styles.toolbarIcon}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: 'Help',
+                                    element: e.currentTarget,
+                                    position: 'bottom',
+                                    gap: 5,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
+                        >
+                            <Icon name='help' />
+                        </a>
+                    </div>
                 </div>
-            </div>
-        ),
-        [channel, friend, userSettings, widthLimitPassed, badgeCount]
+            ),
+        [friend, userSettings, widthLimitPassed, badgeCount]
     );
 };
 

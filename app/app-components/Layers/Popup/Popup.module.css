@@ -40,7 +40,7 @@
     word-wrap: break-word;
     position: relative;
     padding: 16px;
-    overflow-x: hidden;
+    overflow: hidden;
     flex-wrap: nowrap;
     display: flex;
     align-items: center;
@@ -179,6 +179,15 @@
     line-height: 20px;
     font-weight: 400;
     color: var(--foreground-2);
+}
+
+.popupContent > div:first-child.small {
+    color: var(--foreground-3);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
 }
 
 .messagesContainer {
@@ -579,4 +588,262 @@
     color: var(--foreground-4);
     font-size: 12px;
     margin-top: 2px;
+}
+
+/* CREATE GUILD */
+
+.serverTemplate {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid var(--background-2);
+    margin-bottom: 8px;
+    cursor: pointer;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    transition: background-color 0s;
+}
+
+.serverTemplate:hover {
+    background-color: var(--background-hover-1);
+}
+
+.serverTemplate > img:first-child {
+    margin: 8px 8px 8px 16px;
+}
+
+.serverTemplate > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--foreground-1);
+}
+
+.serverTemplate > img:last-child {
+    margin-left: auto;
+    margin-right: 16px;
+}
+
+.serverTemplateTitle {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
+.uploadIcon {
+    padding-top: 4px;
+    display: flex;
+    justify-content: center;
+    color: var(--foreground-3);
+}
+
+.uploadIcon > input {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+.uploadIcon > div {
+    height: 80px;
+    width: 80px;
+    position: relative;
+}
+
+.uploadIcon > div > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+}
+
+.input {
+    margin-top: 24px;
+}
+
+.input > label {
+    display: block;
+    color: var(--foreground-2);
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+}
+
+.input > div {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.input > div > input {
+    font-weight: 500;
+    padding: 10px;
+    height: 40px;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-3);
+    background-color: var(--background-1);
+    border: none;
+    outline: none;
+}
+
+.input.channel > div > svg {
+    width: 16px;
+    height: 16px;
+    color: var(--foreground-2);
+    position: absolute;
+    top: 12px;
+    left: 8px;
+}
+
+.input.channel > div > input {
+    padding-left: 28px;
+}
+
+/* CREATE GUILD CHANNEL */
+
+.channelType {
+    margin-bottom: 20px;
+}
+
+.channelType > h2 {
+    color: var(--foreground-2);
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    font-family: 'gg sans';
+}
+
+.typePick {
+    font-family: 'gg sans';
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    background-color: var(--background-3);
+    user-select: none;
+}
+
+.typePick:hover {
+    background-color: var(--background-hover-1);
+}
+
+.typePick > div {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 4px;
+    gap: 8px;
+}
+
+.typePick > div > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    order: 2;
+}
+
+.typePick:hover > div > div:first-child {
+    color: var(--foreground-2);
+}
+
+.typePick > div > div:last-child {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-right: 8px;
+    order: 1;
+}
+
+.typePick > div > div:last-child > div:first-child {
+    opacity: 0.6;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+}
+
+.typePick .content > div:first-child {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--foreground-3);
+}
+
+.typePick .content > div:last-child {
+    color: var(--foreground-4);
+    margin-top: 4px;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+}
+
+.privateCheck {
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
+}
+
+.privateCheck > div:first-child {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.privateCheck > div:first-child > label {
+    flex: 1;
+    display: block;
+    overflow: hidden;
+    color: var(--foreground-1);
+    line-height: 24px;
+    font-size: 16px;
+    font-weight: 500;
+    word-wrap: break-word;
+    cursor: pointer;
+}
+
+.privateCheck > div:first-child > label > svg {
+    position: relative;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    opacity: 0.6;
+    margin-right: 3px;
+}
+
+.privateCheck > div:first-child > div {
+    flex: 0 0 auto;
+}
+
+.privateCheck > div:last-child {
+    margin-top: 8px;
+    color: var(--foreground-3);
+    user-select: none;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
 }

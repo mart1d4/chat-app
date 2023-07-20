@@ -4,12 +4,9 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
+    const senderId = headers().get('userId') || '';
     const channelId = params.channelId;
-    const skip = 0;
-    const limit = 500;
-
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
+    const { skip, limit } = { skip: 0, limit: 500 };
 
     try {
         const channel = await prisma.channel.findUnique({
@@ -105,7 +102,13 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        if (!channel) {
+        const sender = await prisma.user.findUnique({
+            where: {
+                id: senderId,
+            },
+        });
+
+        if (!channel || !sender) {
             return NextResponse.json(
                 {
                     success: false,
@@ -115,7 +118,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             );
         }
 
-        if (!channel.recipientIds.includes(senderId)) {
+        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? '')) {
             return NextResponse.json(
                 {
                     success: false,
@@ -192,6 +195,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         createdAt: true,
                     },
                 },
+                guildId: true,
                 createdAt: true,
                 updatedAt: true,
             },
@@ -210,6 +214,16 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     message: 'Channel or sender not found',
                 },
                 { status: 404 }
+            );
+        }
+
+        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? '')) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'You are not in this channel',
+                },
+                { status: 401 }
             );
         }
 

@@ -45,7 +45,11 @@ export async function POST(req: Request): Promise<NextResponse> {
                 guildIds: true,
                 guilds: {
                     include: {
-                        channels: true,
+                        channels: {
+                            orderBy: {
+                                position: 'asc',
+                            },
+                        },
                         roles: true,
                         emotes: true,
                         members: {

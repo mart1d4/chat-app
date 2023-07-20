@@ -99,6 +99,26 @@
     margin-left: 8px;
 }
 
+.menuItem > .icon.revert path:first-child,
+.menuItemActive > .icon.revert path:first-child {
+    fill: var(--accent-1);
+}
+
+.menuItem > .icon.revert path:last-of-type,
+.menuItemActive > .icon.revert path:last-of-type {
+    fill: var(--foreground-1);
+}
+
+.menuItem:hover > .icon.revert path:first-child,
+.menuItemActive:hover > .icon.revert path:first-child {
+    fill: var(--foreground-1);
+}
+
+.menuItem:hover > .icon.revert path:last-of-type,
+.menuItemActive:hover > .icon.revert path:last-of-type {
+    fill: var(--accent-1);
+}
+
 .menuItem > .text,
 .menuItemActive > .text,
 .menuItemDanger > .text,

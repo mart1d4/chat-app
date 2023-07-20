@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactElement, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Avatar, Icon, LoadingDots, EmojiPicker } from '@/app/app-components';
+import { ReactElement, useEffect, useState, useRef, useMemo } from 'react';
 import { getButtonColor } from '@/lib/colors/getColors';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';

@@ -1,7 +1,7 @@
+import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import pusher from '@/lib/pusher/api-connection';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get('userId') || '';
