@@ -7,7 +7,22 @@ import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './UserProfile.module.css';
 import { translateCap } from '@/lib/strings';
-import { v4 as uuidv4 } from 'uuid';
+
+const colors = {
+    ONLINE: '#22A559',
+    IDLE: '#F0B232',
+    DO_NOT_DISTURB: '#F23F43',
+    INVISIBLE: '#80848E',
+    OFFLINE: '#80848E',
+};
+
+const masks = {
+    ONLINE: '',
+    IDLE: 'status-mask-idle',
+    DO_NOT_DISTURB: 'status-mask-dnd',
+    INVISIBLE: 'status-mask-offline',
+    OFFLINE: 'status-mask-offline',
+};
 
 const UserProfile = (): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
@@ -205,8 +220,8 @@ const UserProfile = (): ReactElement => {
                                             width='100%'
                                             rx={12}
                                             ry={12}
-                                            fill='var(--success-light)'
-                                            mask='url(#svg-mask-status-online)'
+                                            fill={colors[user.status ?? 'OFFLINE']}
+                                            mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
                                         />
                                     </svg>
                                 </div>
@@ -316,7 +331,7 @@ const UserProfile = (): ReactElement => {
                                             {mutualFriends.length > 0 ? (
                                                 mutualFriends.map((friend) => (
                                                     <FriendItem
-                                                        key={uuidv4()}
+                                                        key={friend.id}
                                                         friend={friend}
                                                     />
                                                 ))

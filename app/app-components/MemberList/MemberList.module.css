@@ -333,6 +333,7 @@
     margin: 1px 0px 1px 8px;
     color: var(--foreground-3);
     cursor: pointer;
+    user-select: none;
 }
 
 .mutualItem:hover {

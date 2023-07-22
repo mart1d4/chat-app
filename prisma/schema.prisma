@@ -1,5 +1,4 @@
 // Initial Setup
-
 generator client {
     provider = "prisma-client-js"
 }
@@ -10,6 +9,22 @@ datasource db {
 }
 
 // Types
+type TMember {
+    userId String @db.ObjectId
+
+    nickname String?
+    avatar   String?
+
+    roleIds String[] @db.ObjectId
+
+    joinedAt DateTime @default(now()) @db.Date
+
+    deaf         Boolean   @default(false)
+    mute         Boolean   @default(false)
+    timeoutUntil DateTime?
+
+    permissions Int[]
+}
 
 type TDimensions {
     width  Int
@@ -98,6 +113,13 @@ type TReaction {
     updatedAt DateTime @default(now()) @db.Date
 }
 
+type TPermissionOverwrite {
+    id    String   @db.ObjectId
+    type  Int
+    allow String[]
+    deny  String[]
+}
+
 // Enums
 
 enum EUserStatus {
@@ -141,41 +163,36 @@ enum ENotificationType {
 // Models
 
 model User {
-    id            String          @id @default(auto()) @map("_id") @db.ObjectId
-    username      String          @unique
-    displayName   String
-    email         String?
-    avatar        String
-    banner        String?
-    primaryColor  String
-    accentColor   String
-    description   String?
-    customStatus  String?
-    password      String
-    refreshToken  String?
-    status        EUserStatus     @default(OFFLINE)
-    system        Boolean         @default(false)
-    verified      Boolean         @default(false)
+    id          String  @id @default(auto()) @map("_id") @db.ObjectId
+    username    String  @unique
+    displayName String
+    email       String?
+
+    avatar       String
+    banner       String?
+    primaryColor String
+    accentColor  String
+
+    description  String?
+    customStatus String?
+
+    password     String
+    refreshToken String?
+
+    status   EUserStatus @default(OFFLINE)
+    system   Boolean     @default(false)
+    verified Boolean     @default(false)
+
     notifications TNotification[]
 
     guildIds String[] @db.ObjectId
     guilds   Guild[]  @relation("UserGuild", fields: [guildIds], references: [id])
 
-    ownedGuildIds String[] @db.ObjectId
-    ownedGuilds   Guild[]  @relation("Owner")
-
     channelIds String[]  @db.ObjectId
     channels   Channel[] @relation("UserChannel", fields: [channelIds], references: [id])
 
-    hiddenChannelIds String[] @db.ObjectId
-
-    ownedChannelIds String[]  @db.ObjectId
-    ownedChannels   Channel[] @relation("Owner")
-
-    ownedRoleIds String[] @db.ObjectId
-    ownedRoles   Role[]   @relation("UserRole", fields: [ownedRoleIds], references: [id])
-
-    messages Message[]
+    hiddenChannelIds String[]  @db.ObjectId
+    messages         Message[]
 
     mentionIds String[]  @db.ObjectId
     mentions   Message[] @relation("MessageMention", fields: [mentionIds], references: [id])
@@ -204,28 +221,33 @@ model User {
 }
 
 model Guild {
-    id            String          @id @default(auto()) @map("_id") @db.ObjectId
-    name          String
-    icon          String
-    banner        String?
-    description   String?
+    id          String  @id @default(auto()) @map("_id") @db.ObjectId
+    name        String
+    icon        String?
+    banner      String?
+    description String?
+
     welcomeScreen TWelcomeScreen?
     vanityUrl     String?
     vanityUrlUses Int?
     invites       TInvite[]
-    afkChannelId  String?
-    afkTimeout    Int?
+
+    systemChannelId String? @db.ObjectId
+    afkChannelId    String? @db.ObjectId
+    afkTimeout      Int?
 
     ownerId String @db.ObjectId
-    owner   User   @relation("Owner", fields: [ownerId], references: [id])
 
-    memberIds String[] @db.ObjectId
-    members   User[]   @relation("UserGuild", fields: [memberIds], references: [id])
+    rawMemberIds String[] @db.ObjectId
+    rawMembers   User[]   @relation("UserGuild", fields: [rawMemberIds], references: [id])
+
+    members TMember[]
 
     channelIds String[]  @db.ObjectId
     channels   Channel[] @relation("GuildChannel")
 
-    roles Role[]
+    roleIds String[] @db.ObjectId
+    roles   Role[]   @relation("UserRole")
 
     emoteIds String[] @db.ObjectId
     emotes   Emote[]  @relation("GuildEmote")
@@ -236,18 +258,17 @@ model Guild {
 }
 
 model Role {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    id          String  @id @default(auto()) @map("_id") @db.ObjectId
     name        String
-    color       String
-    permissions String[]
+    color       String?
+    hoist       Boolean
+    icon        String?
     position    Int
+    permissions Int[]
     mentionable Boolean
 
     guildId String @db.ObjectId
-    guild   Guild  @relation(fields: [guildId], references: [id])
-
-    memberIds String[] @db.ObjectId
-    members   User[]   @relation("UserRole", fields: [memberIds], references: [id])
+    guild   Guild  @relation("UserRole", fields: [guildId], references: [id])
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
@@ -255,29 +276,38 @@ model Role {
 }
 
 model Channel {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    type        EChannel
-    name        String?
-    description String?
-    icon        String?
-    nsfw        Boolean  @default(false)
-    position    Int?
-    parentId    String?
-    children    Int      @default(0)
-    rateLimit   Int?
-    permissions String[]
+    id    String   @id @default(auto()) @map("_id") @db.ObjectId
+    type  EChannel
+    name  String?
+    topic String?
+    icon  String?
+
+    nsfw     Boolean?
+    position Int?
+    parentId String?
+
+    lastMessageId    String?   @db.ObjectId
+    lastPinTimestamp DateTime?
+
+    rateLimit Int?
+    userLimit Int?
+    bitrate   Int?
+
+    rtcRegion        String?
+    videoQualityMode String?
+
+    ownerId String? @db.ObjectId
 
     guildId String? @db.ObjectId
     guild   Guild?  @relation("GuildChannel", fields: [guildId], references: [id])
-
-    ownerId String? @db.ObjectId
-    owner   User?   @relation("Owner", fields: [ownerId], references: [id])
 
     recipientIds String[] @db.ObjectId
     recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
 
     messageIds String[]  @db.ObjectId
     messages   Message[] @relation("ChannelMessage", fields: [messageIds], references: [id])
+
+    permissionOverwrites TPermissionOverwrite[]
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date

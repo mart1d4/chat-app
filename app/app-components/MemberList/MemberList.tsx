@@ -9,6 +9,22 @@ import { translateCap } from '@/lib/strings';
 import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 
+const colors = {
+    ONLINE: '#22A559',
+    IDLE: '#F0B232',
+    DO_NOT_DISTURB: '#F23F43',
+    INVISIBLE: '#80848E',
+    OFFLINE: '#80848E',
+};
+
+const masks = {
+    ONLINE: '',
+    IDLE: 'status-mask-idle',
+    DO_NOT_DISTURB: 'status-mask-dnd',
+    INVISIBLE: 'status-mask-offline',
+    OFFLINE: 'status-mask-offline',
+};
+
 const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => {
     const [user, setUser] = useState<null | TCleanUser>(null);
 
@@ -158,8 +174,8 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         width='100%'
                                         rx={8}
                                         ry={8}
-                                        fill='var(--success-light)'
-                                        mask='url(#svg-mask-status-online)'
+                                        fill={colors[user.status ?? 'OFFLINE']}
+                                        mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
                                     />
                                 </svg>
                             </div>
@@ -247,7 +263,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         <ul className={styles.mutualItems}>
                                             {mutualGuilds.map((guild: TGuild) => (
                                                 <MutualItem
-                                                    key={uuidv4()}
+                                                    key={guild.id}
                                                     guild={guild}
                                                 />
                                             ))}
@@ -280,7 +296,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         <ul className={styles.mutualItems}>
                                             {mutualFriends.map((friend: TCleanUser) => (
                                                 <MutualItem
-                                                    key={uuidv4()}
+                                                    key={friend.id}
                                                     user={friend}
                                                 />
                                             ))}
@@ -297,7 +313,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
 
             if (channel?.guildId) {
                 const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
-                onlineMembers = guild.members.filter((recipient: any) =>
+                onlineMembers = guild.rawMembers?.filter((recipient: any) =>
                     ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
                 );
             } else {
@@ -310,9 +326,9 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
 
             if (channel?.guildId) {
                 const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
-                offlineMembers = guild.members.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+                offlineMembers = guild.rawMembers?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
             } else {
-                offlineMembers = channel.recipients.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+                offlineMembers = channel.recipients?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
             }
 
             return (

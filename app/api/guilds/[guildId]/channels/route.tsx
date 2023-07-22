@@ -35,7 +35,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             },
             select: {
                 id: true,
-                memberIds: true,
+                rawMemberIds: true,
             },
         });
 
@@ -49,7 +49,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             );
         }
 
-        if (!guild.memberIds.includes(senderId)) {
+        if (!guild.rawMemberIds.includes(senderId)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -64,6 +64,40 @@ export async function POST(req: Request, { params }: { params: { guildId: string
         let channel;
 
         if (category) {
+            const channelCount = await prisma.channel.count({
+                where: {
+                    parentId: category.id,
+                },
+            });
+
+            if (channelCount >= 50) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'Category channel limit reached',
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const textChannelCount = await prisma.channel.count({
+                where: {
+                    AND: [
+                        {
+                            parentId: category.id,
+                        },
+                        {
+                            type: 'GUILD_TEXT',
+                        },
+                    ],
+                },
+            });
+
+            const position =
+                type === 'GUILD_TEXT'
+                    ? textChannelCount + (category.position as number) + 1
+                    : channelCount + (category.position as number) + 1;
+
             channel = await prisma.channel.create({
                 data: {
                     name: name,
@@ -73,22 +107,57 @@ export async function POST(req: Request, { params }: { params: { guildId: string
                             id: guildId,
                         },
                     },
-                    position: category.children,
+                    position: position,
                     parentId: categoryId,
                 },
             });
 
-            await prisma.channel.update({
+            await prisma.channel.updateMany({
                 where: {
-                    id: categoryId,
+                    AND: [
+                        {
+                            id: {
+                                not: channel.id,
+                            },
+                        },
+                        {
+                            guildId: guild.id,
+                        },
+                        {
+                            position: {
+                                gte: position,
+                            },
+                        },
+                    ],
                 },
                 data: {
-                    children: {
+                    position: {
                         increment: 1,
                     },
                 },
             });
         } else {
+            const channelCount = await prisma.channel.count({
+                where: {
+                    guildId: guild.id,
+                    parentId: null,
+                },
+            });
+
+            console.log('Total count: ' + channelCount);
+
+            const textChannelCount = await prisma.channel.count({
+                where: {
+                    guildId: guild.id,
+                    parentId: null,
+                    type: 'GUILD_TEXT',
+                },
+            });
+
+            console.log('Text count: ' + textChannelCount);
+
+            const position = type === 'GUILD_TEXT' ? textChannelCount : channelCount;
+
             channel = await prisma.channel.create({
                 data: {
                     name: name,
@@ -98,14 +167,40 @@ export async function POST(req: Request, { params }: { params: { guildId: string
                             id: guildId,
                         },
                     },
-                    position: 0,
+                    position: position,
+                },
+            });
+
+            await prisma.channel.updateMany({
+                where: {
+                    AND: [
+                        {
+                            id: {
+                                not: channel.id,
+                            },
+                        },
+                        {
+                            guildId: guild.id,
+                        },
+                        {
+                            position: {
+                                gte: position,
+                            },
+                        },
+                    ],
+                },
+                data: {
+                    position: {
+                        increment: 1,
+                    },
                 },
             });
         }
 
         await pusher.trigger('chat-app', 'channel-create', {
-            guildId: guildId,
+            guildId: guild.id,
             channel: channel,
+            redirect: channel.type === 'GUILD_TEXT',
         });
 
         return NextResponse.json(

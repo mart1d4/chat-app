@@ -8,6 +8,8 @@ export const config = {
 
 const allowedPaths = ['/', '/download'];
 const authPaths = ['/login', '/register', '/reset-password'];
+const appPaths =
+    /^(?:\/channels\/(?:discover|me|me\/([a-zA-Z0-9]{24})|([a-zA-Z0-9]{24})(?:\/([a-zA-Z0-9]{24}))?)|\/api(?:\/[a-zA-Z0-9]+(?:\/[a-zA-Z0-9]+)*)?)$/;
 
 export async function middleware(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
@@ -40,7 +42,7 @@ export async function middleware(req: NextRequest) {
             audience: process.env.AUDIENCE,
         });
 
-        if (!pathname.startsWith('/api') && !pathname.startsWith('/channels')) {
+        if (!appPaths.test(pathname)) {
             return NextResponse.redirect(new URL('/channels/me', req.url));
         }
 
@@ -54,10 +56,7 @@ export async function middleware(req: NextRequest) {
         });
     } catch (error) {
         console.error('[MIDDLEWARE] Error: ', error);
-        if (!authPaths.includes(pathname) && !allowedPaths.includes(pathname)) {
-            return NextResponse.redirect(new URL('/login', req.url));
-        } else {
-            return NextResponse.next();
-        }
+        if (!authPaths.includes(pathname)) return NextResponse.redirect(new URL('/login', req.url));
+        else return NextResponse.next();
     }
 }

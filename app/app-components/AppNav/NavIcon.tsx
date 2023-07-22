@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 type Props = {
     green?: boolean;
     special?: boolean;
-    guild?: boolean;
+    guild?: TGuild;
     name: string;
     link: string;
     src?: string;
@@ -21,7 +21,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
-    const { setPopup, popup }: any = useContextHook({ context: 'layer' });
+    const { setPopup, popup, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
@@ -41,6 +41,12 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
             setMarkHeight(count ? 7 : 0);
         }
     }, [pathname, link, count]);
+
+    let firstLetters =
+        name
+            .toLowerCase()
+            .match(/\b(\w)/g)
+            ?.join('') ?? '';
 
     return (
         <div className={green ? styles.navIcon + ' ' + styles.green : styles.navIcon}>
@@ -90,14 +96,36 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                     }
                     router.push(link);
                 }}
-                // style={{
-                //     backgroundColor: src ? 'transparent' : '',
-                // }}
+                onContextMenu={(e) => {
+                    if (guild) {
+                        setFixedLayer({
+                            type: 'menu',
+                            menu: 'GUILD_ICON',
+                            guild: guild,
+                            event: {
+                                mouseX: e.clientX,
+                                mouseY: e.clientY,
+                            },
+                        });
+                    }
+                }}
                 style={{
                     backgroundColor:
                         popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--success-1)' : '',
                     color: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--foreground-1)' : '',
                     borderRadius: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? '33%' : '',
+                    fontSize:
+                        !src && !svg
+                            ? firstLetters?.length < 3
+                                ? '18px'
+                                : firstLetters?.length < 4
+                                ? '16px'
+                                : firstLetters?.length < 5
+                                ? '14px'
+                                : firstLetters?.length < 6
+                                ? '12px'
+                                : '10px'
+                            : '',
                 }}
             >
                 {badgeCount > 0 && (
@@ -112,8 +140,10 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                         src={src}
                         alt={name}
                     />
-                ) : (
+                ) : svg ? (
                     svg
+                ) : (
+                    firstLetters
                 )}
             </div>
         </div>

@@ -43,6 +43,14 @@ const rectPlacements = {
     120: 90,
 };
 
+const masks = {
+    ONLINE: '',
+    IDLE: 'status-mask-idle',
+    DO_NOT_DISTURB: 'status-mask-dnd',
+    INVISIBLE: 'status-mask-offline',
+    OFFLINE: 'status-mask-offline',
+};
+
 const Avatar = (props: Props) => {
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
@@ -164,6 +172,68 @@ const Avatar = (props: Props) => {
                     />
                 </mask>
 
+                {/* Inner Masks */}
+
+                <mask
+                    id='status-mask-offline'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+                    <circle
+                        fill='black'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.25'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-dnd'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+                    <rect
+                        fill='black'
+                        x='0.125'
+                        y='0.375'
+                        width='0.75'
+                        height='0.25'
+                        rx='0.125'
+                        ry='0.125'
+                    />
+                </mask>
+
+                <mask
+                    id='status-mask-idle'
+                    maskContentUnits='objectBoundingBox'
+                    viewBox='0 0 1 1'
+                >
+                    <circle
+                        fill='white'
+                        cx='0.5'
+                        cy='0.5'
+                        r='0.5'
+                    />
+                    <circle
+                        fill='black'
+                        cx='0.25'
+                        cy='0.25'
+                        r='0.375'
+                    />
+                </mask>
+
                 <foreignObject
                     x={0}
                     y={0}
@@ -177,7 +247,7 @@ const Avatar = (props: Props) => {
                             src={
                                 props.relativeSrc
                                     ? props.src
-                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size}x/-/crop/1:1/`
+                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size * 2}x/`
                             }
                             alt={props.alt}
                             width={props.size}
@@ -207,6 +277,7 @@ const Avatar = (props: Props) => {
                     rx={rectSize / 2}
                     ry={rectSize / 2}
                     fill={colors[props.status]}
+                    mask={`url(#${masks[props.status]})`}
                 />
             </svg>
         );
@@ -218,7 +289,7 @@ const Avatar = (props: Props) => {
                 src={
                     props.relativeSrc
                         ? props.src
-                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size}x/-/crop/1:1/`
+                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size * 2}x/`
                 }
                 alt={props.alt}
                 width={props.size}

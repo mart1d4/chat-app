@@ -18,6 +18,7 @@ type TQuery =
     | 'CHANNEL_RECIPIENT_ADD'
     | 'CHANNEL_RECIPIENT_REMOVE'
     | 'GUILD_CREATE'
+    | 'GUILD_DELETE'
     | 'GUILD_CHANNEL_CREATE';
 
 type Props = {
@@ -48,6 +49,7 @@ const urls = {
     ['CHANNEL_RECIPIENT_ADD']: '/channels/:channelId/recipients/:recipientId',
     ['CHANNEL_RECIPIENT_REMOVE']: '/channels/:channelId/recipients/:recipientId',
     ['GUILD_CREATE']: '/guilds',
+    ['GUILD_DELETE']: '/guilds/:guildId',
     ['GUILD_CHANNEL_CREATE']: '/guilds/:guildId/channels',
 };
 
@@ -68,6 +70,7 @@ const methods = {
     ['CHANNEL_RECIPIENT_ADD']: 'PUT',
     ['CHANNEL_RECIPIENT_REMOVE']: 'DELETE',
     ['GUILD_CREATE']: 'POST',
+    ['GUILD_DELETE']: 'DELETE',
     ['GUILD_CHANNEL_CREATE']: 'POST',
 };
 

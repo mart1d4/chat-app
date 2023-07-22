@@ -23,6 +23,9 @@ type ItemType = {
     funcShift?: () => void;
     danger?: boolean;
     disabled?: boolean;
+    checked?: boolean;
+    circle?: boolean;
+    items?: ItemType[];
 };
 
 enum EMenuType {
@@ -34,6 +37,9 @@ enum EMenuType {
     INPUT = 'INPUT',
     IMAGE = 'IMAGE',
     GUILD = 'GUILD',
+    GUILD_ICON = 'GUILD_ICON',
+    GUILD_CHANNEL = 'GUILD_CHANNEL',
+    GUILD_CHANNEL_LIST = 'GUILD_CHANNEL_LIST',
 }
 
 const content = ({ content }: { content: any }): ReactElement => {
@@ -43,8 +49,8 @@ const content = ({ content }: { content: any }): ReactElement => {
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
+    const { setFixedLayer, setUserProfile, setPopup }: any = useContextHook({ context: 'layer' });
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
-    const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -131,13 +137,13 @@ const content = ({ content }: { content: any }): ReactElement => {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const func = filteredItems.find((item) => item.name === active)?.func;
-                const funcShift = filteredItems.find((item) => item.name === active)?.funcShift;
+                const item = filteredItems.find((item) => item.name === active);
 
-                if (active) {
+                if (item) {
+                    if (item?.funcShift) item.funcShift();
+                    else if (item?.func) item.func();
+                    if ('checked' in item) return;
                     setFixedLayer(null);
-                    if (shift && funcShift) funcShift();
-                    else if (func) func();
                 }
             }
         };
@@ -163,8 +169,337 @@ const content = ({ content }: { content: any }): ReactElement => {
         }
     }, [content]);
 
+    const muteItems = [
+        {
+            name: 'For 15 Minutes',
+            func: () => {},
+        },
+        {
+            name: 'For 1 Hour',
+            func: () => {},
+        },
+        {
+            name: 'For 3 Hours',
+            func: () => {},
+        },
+        {
+            name: 'For 8 Hours',
+            func: () => {},
+        },
+        {
+            name: 'For 24 Hours',
+            func: () => {},
+        },
+        {
+            name: 'Until I turn it back on',
+            func: () => {},
+        },
+    ];
+
+    const notificationItems = [
+        {
+            name: 'Use Server Default',
+            checked: true,
+            circle: true,
+            func: () => {},
+        },
+        {
+            name: 'All Messages',
+            checked: false,
+            circle: true,
+            func: () => {},
+        },
+        {
+            name: 'Only @mentions',
+            checked: false,
+            circle: true,
+            func: () => {},
+        },
+        {
+            name: 'Nothing',
+            checked: false,
+            circle: true,
+            func: () => {},
+        },
+    ];
+
+    const serverSettingsItems = [
+        {
+            name: 'Cool Server Setting',
+            func: () => {},
+        },
+    ];
+
+    const serverItems = [
+        {
+            name: 'Cool Server',
+            func: () => {},
+        },
+    ];
+
+    const reactionItems = [
+        {
+            name: 'Cool Reaction',
+            func: () => {},
+        },
+    ];
+
     useEffect(() => {
         if (!type || (user && !userProps)) return;
+
+        if (type === 'GUILD_CHANNEL_LIST') {
+            setItems([
+                {
+                    name: 'Hide Muted Channels',
+                    checked: false,
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Create Channel',
+                    func: () => {
+                        setPopup({
+                            type: 'GUILD_CHANNEL_CREATE',
+                            guild: content.guild.id,
+                        });
+                    },
+                },
+                {
+                    name: 'Create Category',
+                    func: () => {},
+                },
+                {
+                    name: 'Invite People',
+                    func: () => {},
+                },
+            ]);
+        }
+
+        if (type === 'GUILD_CHANNEL') {
+            if (content.channel.type === 'GUILD_CATEGORY') {
+                setItems([
+                    {
+                        name: 'Mark As Read',
+                        disabled: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Collapse Category',
+                        checked: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Collapse All Categories',
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Mute Category',
+                        items: muteItems,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Notifications Settings',
+                        items: notificationItems,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Edit Category',
+                        func: () => {},
+                    },
+                    {
+                        name: 'Delete Category',
+                        danger: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Copy Channel ID',
+                        icon: 'id',
+                        func: () => writeText(content.channel.id),
+                    },
+                ]);
+            } else {
+                setItems([
+                    {
+                        name: 'Mark As Read',
+                        disabled: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Invite People',
+                        func: () => {},
+                    },
+                    {
+                        name: 'Copy Link',
+                        func: () => {},
+                    },
+                    {
+                        name: content.channel.type === 'GUILD_VOICE' ? 'Divider' : null,
+                    },
+                    {
+                        name: content.channel.type === 'GUILD_VOICE' ? 'Open Chat' : null,
+                        func: () => {},
+                    },
+                    {
+                        name: content.channel.type === 'GUILD_VOICE' ? 'Hide Names' : null,
+                        checked: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Mute Channel',
+                        items: muteItems,
+                        func: () => {},
+                    },
+                    {
+                        name: content.channel.type === 'GUILD_TEXT' ? 'Notifications Settings' : null,
+                        items: notificationItems,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Edit Channel',
+                        func: () => {},
+                    },
+                    {
+                        name: 'Duplicate Channel',
+                        func: () => {},
+                    },
+                    {
+                        name: `Create ${content.channel.type === 'GUILD_TEXT' ? 'Text' : 'Voice'} Channel`,
+                        func: () => {
+                            const guild = auth.user.guilds.find(
+                                (guild: TGuild) => guild.id === content.channel.guildId
+                            );
+                            const category = guild?.channels.find(
+                                (channel: TChannel) => channel.id === content.channel?.parentId
+                            );
+
+                            setPopup({
+                                type: 'GUILD_CHANNEL_CREATE',
+                                guild: content.channel.guildId,
+                                category: category ?? null,
+                            });
+                        },
+                    },
+                    {
+                        name: 'Delete Channel',
+                        danger: true,
+                        func: () => {},
+                    },
+                    {
+                        name: 'Divider',
+                    },
+                    {
+                        name: 'Copy Channel ID',
+                        icon: 'id',
+                        func: () => writeText(content.channel.id),
+                    },
+                ]);
+            }
+        }
+
+        if (type === 'GUILD_ICON') {
+            setItems([
+                {
+                    name: 'Mark As Read',
+                    disabled: true,
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Mute Server',
+                    items: muteItems,
+                    func: () => {},
+                },
+                {
+                    name: 'Notification Settings',
+                    items: notificationItems,
+                    func: () => {},
+                },
+                {
+                    name: 'Hide Muted Channels',
+                    checked: true,
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Server Settings',
+                    items: serverSettingsItems,
+                    func: () => {},
+                },
+                {
+                    name: 'Privacy Settings',
+                    func: () => {},
+                },
+                {
+                    name: 'Edit Server Profile',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Create Channel',
+                    func: () => {},
+                },
+                {
+                    name: 'Create Category',
+                    func: () => {},
+                },
+                {
+                    name: 'Create Event',
+                    func: () => {},
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Delete Guild',
+                    danger: true,
+                    func: () => {
+                        sendRequest({
+                            query: 'GUILD_DELETE',
+                            params: {
+                                guildId: content.guild.id,
+                            },
+                        });
+                    },
+                },
+                {
+                    name: 'Divider',
+                },
+                {
+                    name: 'Copy Server ID',
+                    icon: 'id',
+                    func: () => writeText(content.guild.id),
+                },
+            ]);
+        }
 
         if (type === 'GUILD') {
             setItems([
@@ -234,7 +569,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                 },
                 {
                     name: 'Hide Muted Channels',
-                    icon: 'checkbox',
+                    checked: false,
                     func: () => {},
                 },
                 {
@@ -253,8 +588,7 @@ const content = ({ content }: { content: any }): ReactElement => {
             setItems([
                 {
                     name: content.sendButton && 'Send Message Button',
-                    icon: userSettings.sendButton ? 'checkboxFilled' : 'checkbox',
-                    iconSize: 18,
+                    checked: userSettings.sendButton,
                     func: () => {
                         setUserSettings({
                             ...userSettings,
@@ -265,8 +599,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                 { name: content.sendButton && 'Divider' },
                 {
                     name: 'Spellcheck',
-                    icon: 'checkbox',
-                    iconSize: 18,
+                    checked: false,
                 },
                 { name: 'Divider' },
                 {
@@ -350,8 +683,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                 setItems([
                     {
                         name: 'Add Reaction',
-                        icon: 'arrow',
-                        iconSize: 10,
+                        items: reactionItems,
                         func: () => {},
                     },
                     {
@@ -677,10 +1009,9 @@ const content = ({ content }: { content: any }): ReactElement => {
                         },
                         { name: 'Divider' },
                         {
-                            name: !userProps?.sentRequest && 'Invite to Server',
+                            name: !userProps?.sentRequest ? 'Invite to Server' : null,
+                            items: serverItems,
                             func: () => {},
-                            icon: 'arrow',
-                            iconSize: 10,
                         },
                         {
                             name: userProps?.receivedRequest
@@ -718,9 +1049,8 @@ const content = ({ content }: { content: any }): ReactElement => {
                         { name: 'Divider' },
                         {
                             name: content?.channel && `Mute @${user.username}`,
+                            items: muteItems,
                             func: () => {},
-                            icon: 'arrow',
-                            iconSize: 10,
                         },
                         { name: content?.channel && 'Divider' },
                         {
@@ -739,13 +1069,13 @@ const content = ({ content }: { content: any }): ReactElement => {
                 setItems([
                     {
                         name: 'Mark As Read',
-                        func: () => {},
                         disabled: true,
+                        func: () => {},
                     },
                     { name: 'Divider' },
                     {
-                        name: 'Invites',
                         func: () => {},
+                        name: 'Invites',
                     },
                     {
                         name: 'Change Icon',
@@ -754,9 +1084,8 @@ const content = ({ content }: { content: any }): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: 'Mute Conversation',
+                        items: muteItems,
                         func: () => {},
-                        icon: 'arrow',
-                        iconSize: 10,
                     },
                     { name: 'Divider' },
                     {
@@ -860,9 +1189,8 @@ const content = ({ content }: { content: any }): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: !userProps?.sentRequest ? 'Invite to Server' : null,
+                        items: serverItems,
                         func: () => {},
-                        icon: 'arrow',
-                        iconSize: 10,
                     },
                     {
                         name: userProps?.receivedRequest
@@ -884,7 +1212,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                                   }),
                     },
                     {
-                        name: userProps?.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
+                        name: userProps?.isBlocked ? 'Unblock' : 'Block',
                         func: () =>
                             userProps?.isBlocked
                                 ? sendRequest({
@@ -958,25 +1286,32 @@ const content = ({ content }: { content: any }): ReactElement => {
                                         if (item.disabled) return;
                                         if (shift && item.funcShift) item.funcShift();
                                         else if (item.func) item.func();
-                                        if (item.name === 'Send Message Button') return;
+                                        if ('checked' in item) return;
                                         setFixedLayer(null);
                                     }}
                                     onMouseEnter={() => setActive(item.name as string)}
                                 >
                                     <div className={styles.label}>{item.name}</div>
 
-                                    {item.icon && (
+                                    {(item.icon || 'checked' in item || 'items' in item) && (
                                         <div
                                             className={`${styles.icon} ${
-                                                item.name === 'Send Message Button'
-                                                    ? userSettings.sendButton
-                                                        ? styles.revert
-                                                        : ''
-                                                    : ''
+                                                'checked' in item && item.checked ? styles.revert : ''
                                             }`}
+                                            style={{
+                                                transform: 'items' in item ? 'rotate(-90deg)' : '',
+                                            }}
                                         >
                                             <Icon
-                                                name={item.icon}
+                                                name={
+                                                    'checked' in item
+                                                        ? item.checked
+                                                            ? 'checkboxFilled'
+                                                            : 'checkbox'
+                                                        : 'items' in item
+                                                        ? 'arrowSmall'
+                                                        : item.icon ?? ''
+                                                }
                                                 size={item.iconSize ?? type === 'GUILD' ? 18 : 16}
                                                 viewbox={item.icon === 'boost' ? '0 0 8 12' : ''}
                                             />

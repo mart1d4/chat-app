@@ -52,7 +52,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                         },
                         roles: true,
                         emotes: true,
-                        members: {
+                        rawMembers: {
                             select: {
                                 id: true,
                                 username: true,

@@ -90,6 +90,17 @@
     border-radius: 50%;
 }
 
+.channelIcon {
+    width: 68px;
+    height: 68px;
+    margin-top: 16px;
+    border-radius: 50%;
+    background-color: var(--background-hover-2);
+    background-image: url('/assets/app/channel/hashtag.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 .friendUsername {
     font-weight: 700;
     margin: 8px 0;

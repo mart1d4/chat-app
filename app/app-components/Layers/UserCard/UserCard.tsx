@@ -8,6 +8,22 @@ import { translateCap } from '@/lib/strings';
 import { Icon } from '@/app/app-components';
 import styles from './UserCard.module.css';
 
+const colors = {
+    ONLINE: '#22A559',
+    IDLE: '#F0B232',
+    DO_NOT_DISTURB: '#F23F43',
+    INVISIBLE: '#80848E',
+    OFFLINE: '#80848E',
+};
+
+const masks = {
+    ONLINE: '',
+    IDLE: 'status-mask-idle',
+    DO_NOT_DISTURB: 'status-mask-dnd',
+    INVISIBLE: 'status-mask-offline',
+    OFFLINE: 'status-mask-offline',
+};
+
 const UserCard = ({ content, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [message, setMessage] = useState<string>('');
@@ -164,8 +180,8 @@ const UserCard = ({ content, resetPosition }: any): ReactElement => {
                                         width='100%'
                                         rx={8}
                                         ry={8}
-                                        fill='var(--success-light)'
-                                        mask='url(#svg-mask-status-online)'
+                                        fill={colors[user.status ?? 'OFFLINE']}
+                                        mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
                                     />
                                 </svg>
                             </div>

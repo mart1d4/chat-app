@@ -11,13 +11,13 @@ import Link from 'next/link';
 type Props = {
     channel: TChannel;
     category?: TChannel;
-    hide?: boolean;
-    setToShow?: Dispatch<SetStateAction<string[]>>;
+    hidden?: boolean;
+    setHidden?: Dispatch<SetStateAction<string[]>>;
 };
 
-const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElement => {
+const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElement => {
+    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
     const params = useParams();
 
     if (channel.type === 'GUILD_CATEGORY') {
@@ -26,14 +26,27 @@ const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElemen
                 drag='y'
                 dragSnapToOrigin={true}
                 draggable={true}
-                className={`${styles.category} ${hide ? styles.hide : ''}`}
+                className={`${styles.category} ${hidden ? styles.hide : ''}`}
                 onClick={() => {
-                    if (!setToShow) return;
-                    if (!hide) {
-                        setToShow((prev: string[]) => prev.filter((id) => id !== channel.id));
+                    if (!setHidden) return;
+                    if (!hidden) {
+                        setHidden((prev: string[]) => [...prev, channel.id]);
                     } else {
-                        setToShow((prev: string[]) => [...prev, channel.id]);
+                        setHidden((prev: string[]) => prev.filter((id) => id !== channel.id));
                     }
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setFixedLayer({
+                        type: 'menu',
+                        menu: 'GUILD_CHANNEL',
+                        channel: channel,
+                        event: {
+                            mouseX: e.clientX,
+                            mouseY: e.clientY,
+                        },
+                    });
                 }}
             >
                 <div>
@@ -54,7 +67,7 @@ const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElemen
                         setPopup({
                             type: 'GUILD_CHANNEL_CREATE',
                             guild: channel.guildId,
-                            category: category ?? channel,
+                            category: channel,
                         });
                     }}
                 >
@@ -74,6 +87,19 @@ const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElemen
             dragSnapToOrigin={true}
             draggable={true}
             className={styles.channel}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setFixedLayer({
+                    type: 'menu',
+                    menu: 'GUILD_CHANNEL',
+                    channel: channel,
+                    event: {
+                        mouseX: e.clientX,
+                        mouseY: e.clientY,
+                    },
+                });
+            }}
         >
             <div>
                 <div>
@@ -82,9 +108,22 @@ const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElemen
                         style={{
                             backgroundColor: params.channelId === channel.id ? 'var(--background-hover-2)' : '',
                         }}
+                        onClick={(e) => {
+                            if (channel.type === 'GUILD_VOICE') e.preventDefault();
+                        }}
                     >
                         <div>
-                            <div className={styles.icon}>
+                            <div
+                                className={styles.icon}
+                                onMouseEnter={(e) => {
+                                    setTooltip({
+                                        text: channel.type === 'GUILD_TEXT' ? 'Text' : 'Voice',
+                                        element: e.currentTarget,
+                                        delay: 500,
+                                    });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                            >
                                 <Icon name={channel.type === 'GUILD_TEXT' ? 'hashtag' : 'voice'} />
                             </div>
 
@@ -98,6 +137,28 @@ const ChannelItem = ({ channel, category, hide, setToShow }: Props): ReactElemen
                             </div>
 
                             <div className={styles.tools}>
+                                {channel.type === 'GUILD_VOICE' && (
+                                    <div
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: 'Open Chat',
+                                                element: e.currentTarget,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        style={{
+                                            display: params.channelId === channel.id ? 'flex' : '',
+                                            flex: params.channelId === channel.id ? '0 0 auto' : '',
+                                        }}
+                                    >
+                                        <Icon
+                                            name='message'
+                                            size={16}
+                                            viewbox='0 0 24 24'
+                                        />
+                                    </div>
+                                )}
+
                                 <div
                                     onMouseEnter={(e) =>
                                         setTooltip({

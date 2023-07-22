@@ -217,7 +217,7 @@ const Popup = (): ReactElement => {
         },
         GUILD_CHANNEL_CREATE: {
             title: 'Create Channel',
-            description: popup?.category ? `in ${popup?.category.name}` : '',
+            description: popup?.category ? `in ${popup?.category.name}` : ' ',
             buttonColor: 'blue',
             buttonText: channelLocked ? 'Next' : 'Create Channel',
             buttonDisabled: !channelName || channelLocked,
@@ -668,7 +668,9 @@ const Popup = (): ReactElement => {
                     {!prop?.centered ? (
                         <div
                             className={styles.titleBlock}
-                            style={{ paddingBottom: type === 'GUILD_CHANNEL_CREATE' ? '0' : '' }}
+                            style={{
+                                paddingBottom: type === 'GUILD_CHANNEL_CREATE' && prop.description !== ' ' ? '0' : '',
+                            }}
                         >
                             <h1>{prop.title}</h1>
                         </div>
@@ -716,7 +718,6 @@ const Popup = (): ReactElement => {
                                 )}
                             </>
                         )}
-
                         {(type === 'DELETE_MESSAGE' || type === 'UNPIN_MESSAGE') && (
                             <div className={styles.protip}>
                                 <div>Protip:</div>
@@ -728,7 +729,6 @@ const Popup = (): ReactElement => {
                                 </div>
                             </div>
                         )}
-
                         {type === 'CHANNEL_EXISTS' && (
                             <div
                                 className={styles.channelItem}
@@ -747,7 +747,6 @@ const Popup = (): ReactElement => {
                                 <span>{getRelativeDate(popup.channel.updatedAt, true)}</span>
                             </div>
                         )}
-
                         {type === 'CREATE_GUILD' && !guildTemplate && !join && (
                             <>
                                 <button
@@ -780,9 +779,7 @@ const Popup = (): ReactElement => {
                                     <button
                                         key={template[1]}
                                         className={styles.serverTemplate}
-                                        onClick={() => {
-                                            setGuildTemplate(index + 2);
-                                        }}
+                                        onClick={() => setGuildTemplate(index + 2)}
                                     >
                                         <img
                                             src={`/assets/app/server/create/${template[1]}.svg`}
@@ -798,7 +795,7 @@ const Popup = (): ReactElement => {
                             </>
                         )}
 
-                        {type === 'CREATE_GUILD' && guildTemplate && (
+                        {type === 'CREATE_GUILD' && guildTemplate !== 0 && (
                             <>
                                 <div className={styles.uploadIcon}>
                                     <div>
@@ -891,7 +888,6 @@ const Popup = (): ReactElement => {
                                 </div>
                             </>
                         )}
-
                         {type === 'GUILD_CHANNEL_CREATE' && (
                             <>
                                 <div className={styles.channelType}>
@@ -1006,7 +1002,6 @@ const Popup = (): ReactElement => {
                                 </div>
                             </>
                         )}
-
                         {type === 'FILE_EDIT' && (
                             <>
                                 <div className={styles.input}>
@@ -1097,7 +1092,6 @@ const Popup = (): ReactElement => {
                                 </label>
                             </>
                         )}
-
                         {type === 'UPDATE_USERNAME' && (
                             <>
                                 <div className={styles.input}>
@@ -1162,7 +1156,6 @@ const Popup = (): ReactElement => {
                                 </div>
                             </>
                         )}
-
                         {type === 'UPDATE_PASSWORD' && (
                             <>
                                 <div className={styles.input}>

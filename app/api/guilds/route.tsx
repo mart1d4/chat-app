@@ -1,3 +1,4 @@
+import { defaultPermissions } from '@/lib/permissions/data';
 import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
@@ -52,15 +53,33 @@ export async function POST(req: Request) {
 
         const guild = await prisma.guild.create({
             data: {
-                name: name ?? `${user.username}'s server`,
+                name: name,
                 icon: icon,
-                owner: {
+                ownerId: user.id,
+            },
+        });
+
+        const role = await prisma.role.create({
+            data: {
+                id: guild.id,
+                name: 'everyone',
+                position: 0,
+                hoist: false,
+                mentionable: false,
+                permissions: defaultPermissions,
+                guild: {
                     connect: {
-                        id: user.id,
+                        id: guild.id,
                     },
                 },
             },
         });
+
+        const memberObject = {
+            userId: user.id,
+            permissions: defaultPermissions,
+            joinedAt: new Date(),
+        };
 
         const textCategory = await prisma.channel.create({
             data: {
@@ -72,7 +91,6 @@ export async function POST(req: Request) {
                         id: guild.id,
                     },
                 },
-                children: 1,
             },
         });
 
@@ -80,13 +98,12 @@ export async function POST(req: Request) {
             data: {
                 type: 'GUILD_CATEGORY',
                 name: 'Voice Channels',
-                position: 1,
+                position: 2,
                 guild: {
                     connect: {
                         id: guild.id,
                     },
                 },
-                children: 1,
             },
         });
 
@@ -94,7 +111,7 @@ export async function POST(req: Request) {
             data: {
                 type: 'GUILD_TEXT',
                 name: 'general',
-                position: 0,
+                position: 1,
                 parentId: textCategory.id,
                 guild: {
                     connect: {
@@ -108,13 +125,30 @@ export async function POST(req: Request) {
             data: {
                 type: 'GUILD_VOICE',
                 name: 'General',
-                position: 0,
+                position: 3,
                 parentId: voiceCategory.id,
                 guild: {
                     connect: {
                         id: guild.id,
                     },
                 },
+            },
+        });
+
+        await prisma.guild.update({
+            where: {
+                id: guild.id,
+            },
+            data: {
+                roles: {
+                    connect: {
+                        id: role.id,
+                    },
+                },
+                members: {
+                    push: memberObject,
+                },
+                systemChannelId: textChannel.id,
             },
         });
 
@@ -136,7 +170,9 @@ export async function POST(req: Request) {
             guild: {
                 ...guild,
                 channels: [textCategory, textChannel, voiceCategory, voiceChannel],
-                members: [user],
+                roles: [role],
+                rawMembers: [user],
+                members: [memberObject],
             },
         });
 

@@ -12,14 +12,9 @@ import ChannelItem from './ChannelItem';
 import UserItem from './UserItem';
 import Title from './Title';
 
-type TGuildChannels = {
-    category: TChannel;
-    channels: TChannel[];
-};
-
 const Channels = (): ReactElement => {
     const [guild, setGuild] = useState<null | TGuild>(null);
-    const [categoriesToShow, setCategoriesToShow] = useState<string[]>([]);
+    const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
@@ -30,26 +25,14 @@ const Channels = (): ReactElement => {
         if (params.guildId) {
             const guild = auth.user.guilds.find((guild: TGuild) => guild.id === params.guildId);
             setGuild(guild);
+        } else {
+            setGuild(null);
         }
     }, [params, auth.user.guilds]);
 
     const channels = useMemo(() => {
         if (guild) {
-            const categories = guild.channels.filter((channel: TChannel) => channel.type === 'GUILD_CATEGORY');
-            const channels: any = [];
-
-            categories.map((category: TChannel, index) => {
-                channels[index] = {
-                    category: category,
-                    channels: guild.channels
-                        .filter((channel) => channel.parentId === category.id)
-                        .sort((a, b) => (a.position as number) - (b.position as number)),
-                };
-
-                setCategoriesToShow((prev: string[]) => [...prev, category.id]);
-            });
-
-            return channels;
+            return guild.channels.sort((a: TChannel, b: TChannel) => (a.position as number) - (b.position as number));
         }
 
         return (
@@ -69,12 +52,25 @@ const Channels = (): ReactElement => {
                     ...prev,
                     user: {
                         ...prev?.user,
-                        guilds: prev?.user?.guilds?.map((guild: TGuild) => {
+                        guilds: prev?.user.guilds?.map((guild: TGuild) => {
                             if (guild.id === data.guildId) {
+                                const updatedChannels = guild.channels.map((channel: TChannel) => {
+                                    if ((channel.position as number) >= data.channel.position) {
+                                        return {
+                                            ...channel,
+                                            position: (channel.position as number) + 1,
+                                        };
+                                    }
+
+                                    return channel;
+                                });
+
+                                console.log('Channel', data.channel);
+
                                 return {
                                     ...guild,
-                                    channelIds: [data.channel.id, ...(guild.channelIds ?? [])],
-                                    channels: [data.channel, ...(guild.channels ?? [])],
+                                    channelIds: guild.channelIds.splice(data.channel.position, 0, data.channel.id),
+                                    channels: [...updatedChannels, data.channel],
                                 };
                             }
 
@@ -82,7 +78,10 @@ const Channels = (): ReactElement => {
                         }),
                     },
                 }));
-                router.push(`/channels/${data.guildId}/${data.channel.id}`);
+
+                if (data.redirect) {
+                    router.push(`/channels/${data.guildId}/${data.channel.id}`);
+                }
             }
         });
 
@@ -206,119 +205,143 @@ const Channels = (): ReactElement => {
         };
     }, [auth.user]);
 
-    return (
-        <div className={styles.nav}>
-            <div className={styles.privateChannels}>
-                {!guild && (
-                    <div className={styles.searchContainer}>
-                        <button>Find or start a conversation</button>
-                    </div>
-                )}
+    return useMemo(
+        () => (
+            <div className={styles.nav}>
+                <div className={styles.privateChannels}>
+                    {!guild && (
+                        <div className={styles.searchContainer}>
+                            <button>Find or start a conversation</button>
+                        </div>
+                    )}
 
-                {guild && (
-                    <div
-                        className={styles.guildSettings}
-                        onClick={(e) => {
-                            if (fixedLayer?.guild) return;
-                            setFixedLayer({
-                                type: 'menu',
-                                menu: 'GUILD',
-                                guild: guild,
-                                element: e.currentTarget,
-                                firstSide: 'BOTTOM',
-                                secondSide: 'CENTER',
-                            });
-                        }}
-                        style={{
-                            backgroundColor: fixedLayer?.guild ? 'var(--background-hover-1)' : '',
-                        }}
-                    >
-                        <div>
-                            <div>{guild.name}</div>
+                    {guild && (
+                        <div
+                            className={styles.guildSettings}
+                            onClick={(e) => {
+                                if (fixedLayer?.guild) return;
+                                setFixedLayer({
+                                    type: 'menu',
+                                    menu: 'GUILD',
+                                    guild: guild,
+                                    element: e.currentTarget,
+                                    firstSide: 'BOTTOM',
+                                    secondSide: 'CENTER',
+                                });
+                            }}
+                            style={{
+                                backgroundColor: fixedLayer?.guild ? 'var(--background-hover-1)' : '',
+                            }}
+                        >
                             <div>
-                                {fixedLayer?.guild ? (
-                                    <Icon
-                                        name='close'
-                                        size={16}
-                                    />
-                                ) : (
-                                    <Icon
-                                        name='arrow'
-                                        size={14}
-                                    />
-                                )}
+                                <div>{guild.name}</div>
+                                <div>
+                                    {fixedLayer?.guild ? (
+                                        <Icon
+                                            name='close'
+                                            size={16}
+                                        />
+                                    ) : (
+                                        <Icon
+                                            name='arrow'
+                                            size={14}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                <div className={styles.scroller + ' scrollbar'}>
-                    <ul className={styles.channelList}>
-                        {!guild && (
-                            <>
-                                <div></div>
-                                <UserItem special />
-                                <Title />
-                            </>
-                        )}
+                    <div
+                        className={styles.scroller + ' scrollbar'}
+                        onContextMenu={(e) => {
+                            if (!guild) return;
+                            setFixedLayer({
+                                type: 'menu',
+                                menu: 'GUILD_CHANNEL_LIST',
+                                guild: guild,
+                                event: {
+                                    mouseX: e.clientX,
+                                    mouseY: e.clientY,
+                                },
+                            });
+                        }}
+                    >
+                        <ul className={styles.channelList}>
+                            {(!guild || channels[0]?.type !== 'GUILD_CATEGORY') && <div></div>}
 
-                        {channels.length === 0 && (
-                            <img
-                                src='/assets/app/no-channels.svg'
-                                alt='No Channels'
-                            />
-                        )}
+                            {!guild && (
+                                <>
+                                    <UserItem special />
+                                    <Title />
+                                </>
+                            )}
 
-                        {!guild &&
-                            channels.length > 0 &&
-                            channels.map((channel: TChannel) => (
-                                <UserItem
-                                    key={channel.id}
-                                    channel={channel}
+                            {channels.length === 0 && (
+                                <img
+                                    src='/assets/app/no-channels.svg'
+                                    alt='No Channels'
                                 />
-                            ))}
+                            )}
 
-                        {guild &&
-                            channels.length > 0 &&
-                            channels.map((object: TGuildChannels) => {
-                                const active = object.channels
-                                    .map((channel) => channel.id)
-                                    .includes(params.channelId as string);
+                            {!guild &&
+                                channels.length > 0 &&
+                                channels.map((channel: TChannel) => (
+                                    <UserItem
+                                        key={channel.id}
+                                        channel={channel}
+                                    />
+                                ))}
 
-                                return (
-                                    <>
-                                        <ChannelItem
-                                            key={object.category.id}
-                                            channel={object.category}
-                                            hide={!categoriesToShow.includes(object.category.id)}
-                                            setToShow={setCategoriesToShow}
-                                        />
+                            {guild &&
+                                channels.length > 0 &&
+                                channels.map((channel: TChannel) => {
+                                    if (channel.type === 'GUILD_CATEGORY') {
+                                        return (
+                                            <ChannelItem
+                                                key={channel.id}
+                                                channel={channel}
+                                                hidden={hiddenCategories.includes(channel.id)}
+                                                setHidden={setHiddenCategories}
+                                            />
+                                        );
+                                    }
 
-                                        {(categoriesToShow.includes(object.category.id) || active) &&
-                                            object.channels.map((channel: TChannel) => {
-                                                if (
-                                                    !categoriesToShow.includes(object.category.id) &&
-                                                    params.channelId !== channel.id
-                                                )
-                                                    return;
+                                    if (
+                                        hiddenCategories.includes(channel?.parentId) &&
+                                        params?.channelId !== channel.id
+                                    )
+                                        return;
 
-                                                return (
-                                                    <ChannelItem
-                                                        key={channel.id}
-                                                        channel={channel}
-                                                        category={object.category}
-                                                    />
-                                                );
-                                            })}
-                                    </>
-                                );
-                            })}
-                    </ul>
+                                    if (channel.parentId) {
+                                        const category = channels.find(
+                                            (channel: TChannel) => channel.id === channel.parentId
+                                        );
+
+                                        return (
+                                            <ChannelItem
+                                                key={channel.id}
+                                                channel={channel}
+                                                category={category}
+                                            />
+                                        );
+                                    } else {
+                                        return (
+                                            <ChannelItem
+                                                key={channel.id}
+                                                channel={channel}
+                                            />
+                                        );
+                                    }
+                                })}
+                        </ul>
+                    </div>
                 </div>
-            </div>
 
-            <UserSection />
-        </div>
+                <UserSection />
+            </div>
+        ),
+        [guild, channels, hiddenCategories, fixedLayer]
     );
 };
 

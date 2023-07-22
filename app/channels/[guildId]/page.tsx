@@ -14,9 +14,9 @@ const ChannelPage = ({ params }: { params: { guildId: string } }): ReactElement 
         console.log(guild);
 
         if (!guild) {
-            const channelId = localStorage.getItem('channel-url');
+            const channelUrl = localStorage.getItem('channel-url');
 
-            if (channelId) router.push(`/channels/me/${channelId}`);
+            if (channelUrl) router.push(channelUrl);
             else router.push('/channels/me');
 
             return;

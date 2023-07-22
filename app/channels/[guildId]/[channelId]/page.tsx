@@ -15,23 +15,21 @@ const ChannelPage = ({ params }: { params: { guildId: string; channelId: string 
         const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === params.guildId);
 
         if (!guild) {
-            const channelId = localStorage.getItem('channel-url');
+            const channelUrl = localStorage.getItem('channel-url');
 
-            if (channelId) router.push(`/channels/me/${channelId}`);
+            if (channelUrl) router.push(channelUrl);
             else router.push('/channels/me');
 
             return;
         }
 
-        const channel: TChannel | undefined = guild.channels?.find(
-            (channel: TChannel) => channel.id === params.channelId
-        );
+        const channel = guild.channels?.find((channel: TChannel) => channel.id === params.channelId);
 
         if (!channel) {
-            const channelId = JSON.parse(localStorage.getItem(`guild-${guild.id}`) ?? '{}')?.channelId;
+            const channelUrl = JSON.parse(localStorage.getItem(`guild-${guild.id}`) ?? '{}')?.channelId;
 
-            if (channelId) {
-                router.push(`/channels/${guild.id}/${channelId}`);
+            if (channelUrl) {
+                router.push(`/channels/${guild.id}/${channelUrl}`);
             } else {
                 const channel = guild.channels.find((channel: TChannel) => channel.type === 'GUILD_TEXT');
                 if (channel) router.push(`/channels/${guild.id}/${channel.id}`);
@@ -42,7 +40,8 @@ const ChannelPage = ({ params }: { params: { guildId: string; channelId: string 
         }
 
         setChannel(channel);
-    }, [params.channelId, auth.user.guilds, auth.user.channels]);
+        localStorage.setItem(`guild-${guild.id}`, JSON.stringify({ channelId: channel.id }));
+    }, [params.guildId, params.channelId, auth.user.guilds, auth.user.channels]);
 
     return useMemo(() => {
         return <ChannelContent channel={channel} />;

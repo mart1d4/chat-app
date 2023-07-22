@@ -217,7 +217,14 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 <div>
                     {message.length === 0 && typeof editContent !== 'string' && (
                         <div className={styles.textContainerPlaceholder}>
-                            Message {!channel ? '' : friend ? `@${friend.username}` : channel?.name}
+                            Message{' '}
+                            {!channel
+                                ? ''
+                                : friend
+                                ? `@${friend.username}`
+                                : channel.type === 'GUILD_TEXT'
+                                ? `#${channel.name}`
+                                : channel.name}
                         </div>
                     )}
 

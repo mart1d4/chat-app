@@ -10,7 +10,6 @@ import styles from './Channels.module.css';
 const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement => {
     const [edit, setEdit] = useState<MessageEditObject | null>(null);
     const [reply, setReply] = useState<MessageReplyObject | null>(null);
-    const [friend, setFriend] = useState<null | TCleanUser>(null);
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -207,17 +206,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
 
         if (!isAtBottom) {
-            if (edit) setScrollToBottom((prev) => !prev);
-            if (reply) setScrollToBottom((prev) => !prev);
-        }
-    }, [edit, reply]);
-
-    useEffect(() => {
-        const container = scrollableContainer;
-        // @ts-ignore
-        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
-
-        if (!isAtBottom) {
             setScrollToBottom((prev) => !prev);
         }
     }, [messages]);
@@ -314,7 +302,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
                         <TextArea
                             channel={channel}
-                            friend={friend}
                             reply={reply}
                             setReply={setReply}
                             setMessages={setMessages}
@@ -341,15 +328,19 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
 
     return (
         <div className={styles.firstTimeMessageContainer}>
-            <div className={styles.imageWrapper}>
-                <Avatar
-                    src={channel.icon as string}
-                    alt={channel.name as string}
-                    size={80}
-                />
-            </div>
+            {channel.guildId ? (
+                <div className={styles.channelIcon} />
+            ) : (
+                <div className={styles.imageWrapper}>
+                    <Avatar
+                        src={channel.icon as string}
+                        alt={channel.name as string}
+                        size={80}
+                    />
+                </div>
+            )}
 
-            <h3 className={styles.friendUsername}>{channel.name}</h3>
+            <h3 className={styles.friendUsername}>{channel.guildId ? `Welcome to #${channel.name}!` : channel.name}</h3>
 
             <div className={styles.descriptionContainer}>
                 {friend ? (
@@ -359,8 +350,14 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                     </>
                 ) : (
                     <>
-                        Welcome to the beginning of the
-                        <strong> {channel.name}</strong> group.
+                        {channel.guildId ? (
+                            `This is the start of the #${channel.name} channel.`
+                        ) : (
+                            <>
+                                Welcome to the beginning of the
+                                <strong> {channel.name}</strong> group.
+                            </>
+                        )}
                     </>
                 )}
 

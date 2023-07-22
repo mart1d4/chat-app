@@ -20,12 +20,6 @@ const AppNav = (): ReactElement => {
         if (pathname.startsWith('/channels/me')) {
             localStorage.setItem('channel-url', pathname);
             setUrl(pathname);
-        } else if (pathname.startsWith('/channels/')) {
-            const guildId = pathname.split('/')[2];
-            const channelId = pathname.split('/')[3];
-
-            localStorage.setItem(`guild-${guildId}`, JSON.stringify({ channelId }));
-            setUrl(pathname);
         }
     }, [pathname]);
 
@@ -82,12 +76,25 @@ const AppNav = (): ReactElement => {
             });
             router.push(`/channels/${data.guild.id}`);
         });
+        pusher.bind('guild-deleted', (data: any) => {
+            if (auth.user.guildIds.includes(data.guildId)) {
+                setAuth({
+                    ...auth,
+                    user: {
+                        ...auth.user,
+                        guildIds: auth.user.guildIds.filter((id: string) => id !== data.guildId),
+                        guilds: auth.user.guilds.filter((guild: TGuild) => guild.id !== data.guildId),
+                    },
+                });
+            }
+        });
 
         return () => {
             pusher.unbind('user-updated');
             pusher.unbind('message-sent');
             pusher.unbind('relationship-updated');
             pusher.unbind('guild-created');
+            pusher.unbind('guild-deleted');
         };
     }, [auth.user]);
 
@@ -384,9 +391,9 @@ const AppNav = (): ReactElement => {
                         <NavIcon
                             key={guild.id}
                             name={guild.name}
-                            guild={true}
+                            guild={guild}
                             link={`/channels/${guild.id}`}
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`}
+                            src={guild.icon ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/` : undefined}
                             count={0}
                         />
                     ))}
@@ -409,7 +416,7 @@ const AppNav = (): ReactElement => {
                 </ul>
             </nav>
         ),
-        [dmNotifications, url]
+        [dmNotifications, url, auth.user.guilds]
     );
 };
 

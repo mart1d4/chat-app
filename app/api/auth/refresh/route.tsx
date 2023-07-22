@@ -46,7 +46,7 @@ export async function GET(req: Request): Promise<NextResponse> {
                         },
                         roles: true,
                         emotes: true,
-                        members: {
+                        rawMembers: {
                             select: {
                                 id: true,
                                 username: true,
