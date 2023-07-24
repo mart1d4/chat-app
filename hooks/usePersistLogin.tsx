@@ -9,6 +9,8 @@ const PersistLogin = ({ children }: { children: ReactNode }): ReactNode => {
     const { auth, setLoading }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
+        setLoading(true);
+
         const verifyRefreshToken = async () => {
             await refresh();
             setLoading(false);

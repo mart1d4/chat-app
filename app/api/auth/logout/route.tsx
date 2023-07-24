@@ -19,10 +19,13 @@ export async function POST(req: Request): Promise<NextResponse> {
     try {
         const user = await prisma.user.findFirst({
             where: {
-                refreshToken: token,
+                refreshTokens: {
+                    has: token,
+                },
             },
             select: {
                 id: true,
+                refreshTokens: true,
             },
         });
 
@@ -46,7 +49,9 @@ export async function POST(req: Request): Promise<NextResponse> {
                 id: user.id,
             },
             data: {
-                refreshToken: null,
+                refreshTokens: {
+                    set: user.refreshTokens.filter((t) => t !== token),
+                },
             },
             select: {
                 id: true,
@@ -61,7 +66,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             {
                 status: 200,
                 headers: {
-                    'Set-Cookie': `token=; path=/; HttpOnly; SameSite=Strict; Max-Age=-1;`,
+                    'Set-Cookie': `token=; path=/; HttpOnly; SameSite=Strict; Max-Age=0;`,
                 },
             }
         );

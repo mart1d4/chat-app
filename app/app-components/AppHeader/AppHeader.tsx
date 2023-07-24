@@ -191,15 +191,15 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                             <div className={styles.icon}>
                                 {channel?.guildId ? (
                                     <Icon name='hashtag' />
-                                ) : (
+                                ) : channel?.icon ? (
                                     <Avatar
-                                        src={channel?.icon || '/assets/blurs/avatar.png'}
+                                        src={channel.icon}
                                         relativeSrc={!channel}
                                         alt={channel?.name || 'User'}
                                         size={24}
                                         status={channel?.type === 0 ? friend?.status : undefined}
                                     />
-                                )}
+                                ) : null}
                             </div>
 
                             <h1

@@ -149,7 +149,10 @@ const UserLists = ({ content }: Props): ReactElement => {
                                 setFixedLayer({
                                     type: 'menu',
                                     menu: 'INPUT',
-                                    event: e,
+                                    event: {
+                                        mouseX: e.clientX,
+                                        mouseY: e.clientY,
+                                    },
                                     input: true,
                                     pasteText,
                                 });

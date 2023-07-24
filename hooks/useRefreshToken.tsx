@@ -9,10 +9,11 @@ export default function useRefreshToken() {
         const response = await fetch('/api/auth/refresh', {
             method: 'GET',
             credentials: 'include',
-        }).then((res) => {
-            if (!res.ok) console.error('Could not refresh token');
-            return res.json();
-        });
+        }).then((res) => res.json());
+
+        if (!response.success) {
+            return null;
+        }
 
         setAuth((prev: AuthProviderValue) => {
             return {

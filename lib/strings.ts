@@ -40,7 +40,6 @@ export const getChannelName = (channel: TChannel, userId: TUser['id']): string =
     }
 
     if (channel.type === 0) {
-        console.log(channel);
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
         name = user.username;
     } else if (channel.type === 1 && !channel.name) {

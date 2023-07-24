@@ -20,7 +20,9 @@ export async function GET(req: Request): Promise<NextResponse> {
     try {
         const user = await prisma.user.findFirst({
             where: {
-                refreshToken: token,
+                refreshTokens: {
+                    has: token,
+                },
             },
             select: {
                 id: true,
@@ -183,20 +185,10 @@ export async function GET(req: Request): Promise<NextResponse> {
         const accessToken = await new SignJWT({ id: user.id })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
-            .setExpirationTime('1d')
+            .setExpirationTime('2d')
             .setIssuer(process.env.ISSUER as string)
             .setAudience(process.env.ISSUER as string)
             .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
-
-        if (!accessToken) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'Forbidden',
-                },
-                { status: 401 }
-            );
-        }
 
         return NextResponse.json(
             {

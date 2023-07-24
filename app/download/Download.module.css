@@ -33,8 +33,7 @@
 .hero > div:first-child > div:first-child > h1 {
     font-size: 56px;
     font-weight: 800;
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
-        sans-serif;
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     line-height: 95%;
     text-transform: uppercase;
     text-rendering: geometricPrecision;

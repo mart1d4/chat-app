@@ -254,7 +254,6 @@ const Avatar = (props: Props) => {
                             height={props.size}
                             draggable={false}
                             placeholder={props.size > 40 ? 'blur' : undefined}
-                            blurDataURL={'/assets/blurs/avatar.png'}
                         />
                     </div>
                 </foreignObject>
@@ -296,7 +295,6 @@ const Avatar = (props: Props) => {
                 height={props.size}
                 draggable={false}
                 placeholder={props.size > 40 ? 'blur' : undefined}
-                blurDataURL={'/assets/blurs/avatar.png'}
             />
         </div>
     );

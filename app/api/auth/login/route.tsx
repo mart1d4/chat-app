@@ -192,7 +192,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             const accessToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime(client === 'app' ? '365d' : '1h')
+                .setExpirationTime('2d')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
@@ -200,7 +200,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             const refreshToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime(client === 'app' ? '365d' : '1d')
+                .setExpirationTime('365d')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
@@ -211,7 +211,9 @@ export async function POST(req: Request): Promise<NextResponse> {
                     id: user.id,
                 },
                 data: {
-                    refreshToken: refreshToken,
+                    refreshTokens: {
+                        push: refreshToken,
+                    },
                 },
                 select: {
                     id: true,
