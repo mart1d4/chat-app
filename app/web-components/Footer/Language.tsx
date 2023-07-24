@@ -99,7 +99,7 @@ const Language = () => {
                         <div>{lang?.name}</div>
                     </div>
 
-                    <Icon name='arrowSmall' />
+                    <Icon name='arrow' />
                 </div>
             </div>
         </div>

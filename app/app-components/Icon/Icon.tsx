@@ -230,7 +230,7 @@ const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement 
                 ></path>
             </g>
         ),
-        arrowSmall: (
+        arrow: (
             <g>
                 <path
                     fill={fillColor}
@@ -575,19 +575,6 @@ const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactElement 
                 fill={fillColor}
                 d='M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z'
             />
-        ),
-        arrow: (
-            <g
-                fill='none'
-                fillRule='evenodd'
-            >
-                <polygon
-                    fill={fillColor}
-                    fillRule='nonzero'
-                    points='8.47 2 6.12 4.35 13.753 12 6.12 19.65 8.47 22 18.47 12'
-                />
-                <polygon points='0 0 24 0 24 24 0 24' />
-            </g>
         ),
         eye: (
             <g>

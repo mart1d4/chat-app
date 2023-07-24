@@ -233,17 +233,14 @@ const Channels = (): ReactElement => {
                         >
                             <div>
                                 <div>{guild.name}</div>
-                                <div>
+                                <div style={{ transform: !fixedLayer?.guild ? 'rotate(-90deg)' : '' }}>
                                     {fixedLayer?.guild ? (
                                         <Icon
                                             name='close'
                                             size={16}
                                         />
                                     ) : (
-                                        <Icon
-                                            name='arrow'
-                                            size={14}
-                                        />
+                                        <Icon name='arrow' />
                                     )}
                                 </div>
                             </div>

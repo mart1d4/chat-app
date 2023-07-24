@@ -330,25 +330,25 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Invite your friends</div>
-                            <Icon name='arrowSmall' />
+                            <Icon name='arrow' />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Personalize your server with an icon</div>
-                            <Icon name='arrowSmall' />
+                            <Icon name='arrow' />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Send your first message</div>
-                            <Icon name='arrowSmall' />
+                            <Icon name='arrow' />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Add your first app</div>
-                            <Icon name='arrowSmall' />
+                            <Icon name='arrow' />
                         </div>
                     </div>
                 </div>

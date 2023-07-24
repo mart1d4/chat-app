@@ -777,10 +777,7 @@ const Popup = (): ReactElement => {
                                         alt='Create My Own'
                                     />
                                     <div>Create My Own</div>
-                                    <img
-                                        src='/assets/app/arrow-next.svg'
-                                        alt='Next'
-                                    />
+                                    <Icon name='arrow' />
                                 </button>
 
                                 <div className={styles.serverTemplateTitle}>Start from a template</div>
@@ -803,10 +800,7 @@ const Popup = (): ReactElement => {
                                             alt={template[0]}
                                         />
                                         <div>{template[0]} </div>
-                                        <img
-                                            src='/assets/app/arrow-next.svg'
-                                            alt='Next'
-                                        />
+                                        <Icon name='arrow' />
                                     </button>
                                 ))}
                             </>

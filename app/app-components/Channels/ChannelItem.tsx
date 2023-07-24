@@ -50,7 +50,7 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
                 }}
             >
                 <div>
-                    <Icon name='arrowSmall' />
+                    <Icon name='arrow' />
                     <h3>{channel.name}</h3>
                 </div>
 

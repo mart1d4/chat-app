@@ -609,7 +609,7 @@
     background-color: var(--background-hover-1);
 }
 
-.serverTemplate > img:first-child {
+.serverTemplate > img {
     margin: 8px 8px 8px 16px;
 }
 
@@ -622,7 +622,8 @@
     color: var(--foreground-1);
 }
 
-.serverTemplate > img:last-child {
+.serverTemplate > svg {
+    transform: rotate(-90deg);
     margin-left: auto;
     margin-right: 16px;
 }
