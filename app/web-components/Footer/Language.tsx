@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Icon } from '@/app/app-components/';
 import styles from './Footer.module.css';
-import { v4 as uuidv4 } from 'uuid';
 
 type Language = {
     name: string;
@@ -73,7 +73,7 @@ const Language = () => {
                         <div>
                             {languages.map((language) => (
                                 <div
-                                    key={uuidv4()}
+                                    key={language.flag}
                                     className={styles.langItem}
                                     onClick={() => {
                                         setLang(language);
@@ -99,10 +99,7 @@ const Language = () => {
                         <div>{lang?.name}</div>
                     </div>
 
-                    <img
-                        src='/assets/homepages/arrow.svg'
-                        alt='Open Locale Picker'
-                    />
+                    <Icon name='arrowSmall' />
                 </div>
             </div>
         </div>

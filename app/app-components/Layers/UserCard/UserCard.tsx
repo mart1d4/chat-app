@@ -180,8 +180,8 @@ const UserCard = ({ content, resetPosition }: any): ReactElement => {
                                         width='100%'
                                         rx={8}
                                         ry={8}
-                                        fill={colors[user.status ?? 'OFFLINE']}
-                                        mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
+                                        fill={colors[user.status as EUserStatus]}
+                                        mask={`url(#${masks[user.status as EUserStatus]})`}
                                     />
                                 </svg>
                             </div>

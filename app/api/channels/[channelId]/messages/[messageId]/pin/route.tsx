@@ -110,7 +110,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         const pinnedNotification = await prisma.message.create({
             data: {
-                type: 'CHANNEL_PINNED_MESSAGE',
+                type: 7,
                 content: `<@${senderId}> pinned <-${message.id}> to this channel. See all <*pinned>.`,
                 author: {
                     connect: {

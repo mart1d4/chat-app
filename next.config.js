@@ -12,6 +12,7 @@ const nextConfig = {
                 hostname: 'ucarecdn.com',
             },
         ],
+        dangerouslyAllowSVG: true,
     },
     async headers() {
         return [

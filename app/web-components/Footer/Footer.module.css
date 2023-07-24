@@ -29,8 +29,7 @@
 
 .infoBox > h4 {
     color: #5865f2;
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
-        sans-serif;
+    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 800;
     font-size: 32px;
     line-height: 95%;
@@ -118,7 +117,7 @@
     line-height: 18px;
 }
 
-.language > div > div > img {
+.language > div > div > svg {
     padding-left: 8px;
 }
 

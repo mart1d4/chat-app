@@ -1,7 +1,7 @@
 'use client';
 
+import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
-import useFetchHelper from '@/hooks/useFetchHelper';
 import { Avatar, Icon } from '@/app/app-components';
 import styles from './FixedMessage.module.css';
 import { useState, useMemo } from 'react';
@@ -33,22 +33,9 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
         }).format(new Date(date));
     };
 
-    const shouldDisplayInlined = () => {
-        const inlineTypes = [
-            'RECIPIENT_ADD',
-            'RECIPIENT_REMOVE',
-            'CALL',
-            'CHANNEL_NAME_CHANGE',
-            'CHANNEL_ICON_CHANGE',
-            'CHANNEL_PINNED_MESSAGE',
-            'GUILD_MEMBER_JOIN',
-            'OWNER_CHANGE',
-        ];
+    const inline = shouldDisplayInlined(message.type);
 
-        return inlineTypes.includes(message.type);
-    };
-
-    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId[0]);
+    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId);
     const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel?.guildId);
     const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
 
@@ -63,14 +50,14 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                         return mentionUser ? (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                             >
-                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
                             </span>
                         ) : (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                             >
                                 @Unknown
                             </span>
@@ -96,14 +83,14 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                         return mentionUser ? (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                             >
-                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
                             </span>
                         ) : (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                             >
                                 @Unknown
                             </span>
@@ -133,7 +120,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
                         onClick={() =>
                             setPopup({
                                 type: 'UNPIN_MESSAGE',
-                                channelId: message.channelId[0],
+                                channelId: message.channelId,
                                 message: message,
                             })
                         }
@@ -147,7 +134,7 @@ const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean
             )}
 
             <div>
-                {message.type === 'REPLY' && (
+                {message.type === 1 && (
                     <div className={styles.messageReply}>
                         {message.messageReference ? (
                             <div className={styles.userAvatarReply}>

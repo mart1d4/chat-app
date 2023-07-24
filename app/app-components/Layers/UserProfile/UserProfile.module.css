@@ -414,7 +414,7 @@
 }
 
 .empty > div:first-child {
-    background-image: url('/assets/no-servers.svg');
+    background-image: url('https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/');
     width: 240px;
     height: 130px;
     background-position: 50%;
@@ -423,7 +423,7 @@
 }
 
 .empty.noFriends > div:first-child {
-    background-image: url('/assets/no-friends.svg');
+    background-image: url('https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/');
 }
 
 .empty > div:last-child {

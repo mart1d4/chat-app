@@ -2,11 +2,11 @@
 
 import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } from '@/app/app-components';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
+import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
-import { v4 as uuidv4 } from 'uuid';
 
 const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement => {
     const [edit, setEdit] = useState<MessageEditObject | null>(null);
@@ -19,21 +19,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
     const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
-
-    const shouldDisplayInlined = (message: TMessage) => {
-        const inlineTypes = [
-            'RECIPIENT_ADD',
-            'RECIPIENT_REMOVE',
-            'CALL',
-            'CHANNEL_NAME_CHANGE',
-            'CHANNEL_ICON_CHANGE',
-            'CHANNEL_PINNED_MESSAGE',
-            'GUILD_MEMBER_JOIN',
-            'OWNER_CHANGE',
-        ];
-
-        return inlineTypes.includes(message.type);
-    };
 
     useEffect(() => {
         if (!setEdit || !setReply || !channel) return;
@@ -106,7 +91,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             pusher.bind('message-sent', (data: any) => {
                 if (
                     data.channelId !== channel.id ||
-                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message))
+                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message.type))
                 )
                     return;
                 setMessages((messages) => [...messages, data.message]);
@@ -230,14 +215,14 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     };
 
     const shouldBeLarge = (index: number) => {
-        if (index === 0 || messages[index].type === 'REPLY') return true;
+        if (index === 0 || messages[index].type === 1) return true;
 
-        if (shouldDisplayInlined(messages[index])) {
-            if (shouldDisplayInlined(messages[index - 1])) return false;
+        if (shouldDisplayInlined(messages[index].type)) {
+            if (shouldDisplayInlined(messages[index - 1].type)) return false;
             return true;
         }
 
-        if (!['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) return true;
+        if (![0, 1].includes(messages[index - 1].type)) return true;
 
         if (messages[index - 1].author.id !== messages[index].author.id) return true;
         if (moreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
@@ -336,7 +321,7 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
 
     let friend: any;
 
-    if (channel.type === 'DM') {
+    if (channel.type === 0) {
         friend = channel.recipients.find((recipient: any) => recipient.id !== auth.user.id);
     }
 

@@ -36,6 +36,11 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             select: {
                 id: true,
                 rawMemberIds: true,
+                channels: {
+                    select: {
+                        id: true,
+                    },
+                },
             },
         });
 
@@ -87,14 +92,14 @@ export async function POST(req: Request, { params }: { params: { guildId: string
                             parentId: category.id,
                         },
                         {
-                            type: 'GUILD_TEXT',
+                            type: 2,
                         },
                     ],
                 },
             });
 
             const position =
-                type === 'GUILD_TEXT'
+                type === 2
                     ? textChannelCount + (category.position as number) + 1
                     : channelCount + (category.position as number) + 1;
 
@@ -140,23 +145,44 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             const channelCount = await prisma.channel.count({
                 where: {
                     guildId: guild.id,
-                    parentId: null,
+                    type: {
+                        not: 4,
+                    },
+                    OR: [
+                        {
+                            parentId: {
+                                isSet: false,
+                            },
+                        },
+                        {
+                            parentId: {
+                                equals: null,
+                            },
+                        },
+                    ],
                 },
             });
-
-            console.log('Total count: ' + channelCount);
 
             const textChannelCount = await prisma.channel.count({
                 where: {
                     guildId: guild.id,
-                    parentId: null,
-                    type: 'GUILD_TEXT',
+                    type: 2,
+                    OR: [
+                        {
+                            parentId: {
+                                isSet: false,
+                            },
+                        },
+                        {
+                            parentId: {
+                                equals: null,
+                            },
+                        },
+                    ],
                 },
             });
 
-            console.log('Text count: ' + textChannelCount);
-
-            const position = type === 'GUILD_TEXT' ? textChannelCount : channelCount;
+            const position = type === 4 ? guild.channels.length : type === 2 ? textChannelCount : channelCount;
 
             channel = await prisma.channel.create({
                 data: {
@@ -200,7 +226,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
         await pusher.trigger('chat-app', 'channel-create', {
             guildId: guild.id,
             channel: channel,
-            redirect: channel.type === 'GUILD_TEXT',
+            redirect: channel.type === 2,
         });
 
         return NextResponse.json(

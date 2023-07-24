@@ -1,5 +1,9 @@
 // Enums
 
+enum EPermissionType {
+    TEST = 1,
+}
+
 enum EUserStatus {
     ONLINE = 'ONLINE',
     IDLE = 'IDLE',
@@ -8,26 +12,28 @@ enum EUserStatus {
     OFFLINE = 'OFFLINE',
 }
 
-enum ETChannel {
-    DM = 'DM',
-    GROUP_DM = 'GROUP_DM',
-    GUILD_TEXT = 'GUILD_TEXT',
-    GUILD_VOICE = 'GUILD_VOICE',
-    GUILD_CATEGORY = 'GUILD_CATEGORY',
-    FORUM = 'FORUM',
+enum EChannelType {
+    DM = 0,
+    GROUP_DM = 1,
+    GUILD_TEXT = 2,
+    GUILD_VOICE = 3,
+    GUILD_CATEGORY = 4,
+    GUILD_ANNOUNCEMENT = 5,
+    GUILD_THREAD = 6,
+    FORUM = 7,
 }
 
-enum ETMessage {
-    DEFAULT = 'DEFAULT',
-    REPLY = 'REPLY',
-    RECIPIENT_ADD = 'RECIPIENT_ADD',
-    RECIPIENT_REMOVE = 'RECIPIENT_REMOVE',
-    CALL = 'CALL',
-    CHANNEL_NAME_CHANGE = 'CHANNEL_NAME_CHANGE',
-    CHANNEL_ICON_CHANGE = 'CHANNEL_ICON_CHANGE',
-    CHANNEL_PINNED_MESSAGE = 'CHANNEL_PINNED_MESSAGE',
-    GUILD_MEMBER_JOIN = 'GUILD_MEMBER_JOIN',
-    OWNER_CHANGE = 'OWNER_CHANGE',
+enum EMessageType {
+    DEFAULT = 0,
+    REPLY = 1,
+    RECIPIENT_ADD = 2,
+    RECIPIENT_REMOVE = 3,
+    CALL = 4,
+    CHANNEL_NAME_CHANGE = 5,
+    CHANNEL_ICON_CHANGE = 6,
+    CHANNEL_PINNED_MESSAGE = 7,
+    GUILD_MEMBER_JOIN = 8,
+    OWNER_CHANGE = 9,
 }
 
 enum ENotificationType {
@@ -45,35 +51,35 @@ type TUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+
     avatar: string;
     banner?: string;
     primaryColor: string;
     accentColor: string;
+
     description?: string;
     customStatus?: string;
+
     password: string;
     refreshToken?: string;
+
     status: EUserStatus;
     system: boolean;
     verified: boolean;
+
     notifications: TNotification[];
 
     guildIds: TGuild.id[];
     guilds?: TGuild[];
 
-    ownedGuildIds: TGuild.id[];
-    ownedGuilds?: TGuild[];
-
     channelIds: TChannel.id[];
     channels?: TChannel[];
 
-    ownedChannelIds: TChannel.id[];
-    ownedChannels?: TChannel[];
-
-    ownedRoleIds: TRole.id[];
-    ownedRoles?: TRole[];
-
+    hiddenChannelIds: TChannel.id[];
     messages: TMessage[];
+
+    mentionIds: TMessage.id[];
+    mentions: TMessage[];
 
     friendIds: TUser.id[];
     friends?: TUser[];
@@ -102,15 +108,19 @@ type TCleanUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+
     avatar: string;
     banner?: string;
     primaryColor: string;
     accentColor: string;
+
     description?: string;
     customStatus?: string;
+
     status: EUserStatus;
     system?: boolean;
     verified?: boolean;
+
     notifications?: TNotification[];
 
     guildIds: TGuild.id[];
@@ -131,6 +141,9 @@ type TCleanUser = readonly {
     blockedUserIds?: TUser.id[];
     blockedUsers?: TUser[];
 
+    blockedByUserIds?: TUser.id[];
+    blockedByUsers?: TUser[];
+
     createdAt: DateTime;
 };
 
@@ -138,6 +151,7 @@ type TSensitiveUser = readonly {
     id: string;
     username: string;
     displayName: string;
+
     avatar: string;
     banner?: string;
     primaryColor: string;
@@ -149,26 +163,28 @@ type TSensitiveUser = readonly {
 type TGuild = readonly {
     id: string;
     name: string;
-    icon: string;
+    icon?: string;
     banner?: string;
     description?: string;
+
     welcomeScreen?: TWelcomeScreen;
     vanityUrl?: string;
     vanityUrlUses?: number;
     invites?: TInvite[];
+
+    systemChannelId?: TChannel.id;
     afkChannelId?: TChannel.id;
     afkTimout?: number;
 
     ownerId: TUser.id;
-    owner: TUser;
 
-    memberIds: TUser.id[];
-    members: TUser[];
+    rawMemberIds: TUser.id[];
+    rawMembers: TUser[];
 
-    channelIds: TChannel.id[];
+    members: TMember[];
     channels: TChannel[];
-
     roles: TRole[];
+    emotes: TEmote[];
 
     createdAt: DateTime;
     updatedAt: DateTime;
@@ -176,27 +192,36 @@ type TGuild = readonly {
 
 type TChannel = readonly {
     id: string;
-    type: ETChannel;
+    type: EChannelType;
     name?: string;
-    description?: string;
+    topic?: string;
     icon?: string;
-    nsfw: boolean;
+
+    nsfw?: boolean;
     position?: number;
     parentId?: TChannel.id;
+
+    lastMessageId?: TMessage.id;
+    lastPinTimestamp?: DateTime;
+
     rateLimit?: number;
-    permissions: string[];
+    userLimit?: number;
+    bitrate?: number;
 
-    guildId: TGuild.id;
-    guild: TGuild;
+    rtcRegion?: string;
+    videoQualityMode?: string;
 
-    ownerId: TUser.id;
-    owner: TUser;
+    ownerId?: TUser.id;
+
+    guildId?: TGuild.id;
+    guild?: TGuild;
 
     recipientIds: TUser.id[];
     recipients: TUser[];
 
-    messageIds: TMessage.id[];
     messages: TMessage[];
+
+    permissionOverwrites: TPermissionOverwrite[];
 
     createdAt: DateTime;
     updatedAt: DateTime;
@@ -204,11 +229,13 @@ type TChannel = readonly {
 
 type TMessage = readonly {
     id: string;
-    type: ETMessage;
-    content: string;
+    type: EMessageType;
+    content?: string;
     embeds: TEmbed[];
+
     edited: boolean;
     pinned?: DateTime;
+
     reactions: TReaction[];
     mentionEveryone: boolean;
     mentionChannelIds: TChannel.id[];
@@ -226,13 +253,10 @@ type TMessage = readonly {
     messageReferenceId?: TMessage.id;
     messageReference: TMessage;
 
-    referencedByIds: TMessage.id[];
     referencedBy: TMessage[];
 
     createdAt: DateTime;
     updatedAt: DateTime;
-
-    needsToBeSent?: boolean;
 } &
     (
         | {
@@ -330,6 +354,13 @@ type TRole = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
+};
+
+type TPermissionOverwrite = readonly {
+    id: string;
+    type: 0 | 1;
+    allow: string[];
+    deny: string[];
 };
 
 type TNotification = readonly {

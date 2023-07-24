@@ -2,16 +2,14 @@ import styles from './Checkbox.module.css';
 
 type Props = {
     checked: boolean;
-    onChange: () => void;
+    onChange?: () => void;
 };
 
 const Checkbox = ({ checked, onChange }: Props) => {
     return (
         <div
             className={styles.container}
-            style={{
-                backgroundColor: checked ? 'var(--success-light)' : 'var(--default-2)',
-            }}
+            style={{ backgroundColor: checked ? 'var(--success-light)' : 'var(--default-2)' }}
         >
             <svg
                 viewBox='0 0 28 20'
@@ -60,7 +58,7 @@ const Checkbox = ({ checked, onChange }: Props) => {
 
             <input
                 type='checkbox'
-                onChange={onChange}
+                onChange={onChange ? onChange : () => {}}
             />
         </div>
     );

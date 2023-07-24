@@ -2,6 +2,7 @@ import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import { removeImage } from '@/lib/api/cdn';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get('userId') || '';
@@ -227,6 +228,23 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             );
         }
 
+        // if dm and user is blocked
+        if (channel.type === 0) {
+            const userId = channel.recipientIds.find((id) => id !== senderId) ?? '';
+            const isBlocked = sender.blockedUserIds.includes(userId);
+            const isBlockedBy = sender.blockedByUserIds.includes(userId);
+
+            if (isBlocked || isBlockedBy) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'You are blocked from sending messages in this channel',
+                    },
+                    { status: 401 }
+                );
+            }
+        }
+
         if (message.messageReference !== null) {
             const messageRef = await prisma.message.findUnique({
                 where: {
@@ -270,7 +288,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             if (mentions.length > 0) {
                 newMessage = await prisma.message.create({
                     data: {
-                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        type: message.messageReference ? 1 : 0,
                         content: message.content,
                         attachments: message.attachments,
                         embeds: message.embeds,
@@ -294,7 +312,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             } else {
                 newMessage = await prisma.message.create({
                     data: {
-                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        type: message.messageReference ? 1 : 0,
                         content: message.content,
                         attachments: message.attachments,
                         embeds: message.embeds,
@@ -317,7 +335,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             if (mentions.length > 0) {
                 newMessage = await prisma.message.create({
                     data: {
-                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        type: message.messageReference ? 1 : 0,
                         content: message.content,
                         attachments: message.attachments,
                         embeds: message.embeds,
@@ -338,7 +356,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             } else {
                 newMessage = await prisma.message.create({
                     data: {
-                        type: message.messageReference ? 'REPLY' : 'DEFAULT',
+                        type: message.messageReference ? 1 : 0,
                         content: message.content,
                         attachments: message.attachments,
                         embeds: message.embeds,
@@ -365,7 +383,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
-        if (channel.type === 'DM') {
+        if (channel.type === 0) {
             // If the recipient has hidden the channel, unhide it
             const recipientId = channel.recipientIds.find((id) => id !== senderId);
             const recipient = await prisma.user.findUnique({
@@ -482,13 +500,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         if (message.attachments) {
             message.attachments.forEach(async (attachment: any) => {
-                await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                        Accept: 'application/vnd.uploadcare-v0.7+json',
-                    },
-                });
+                await removeImage(attachment.id);
             });
         }
 

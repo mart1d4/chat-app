@@ -65,11 +65,9 @@ const Channels = (): ReactElement => {
                                     return channel;
                                 });
 
-                                console.log('Channel', data.channel);
-
                                 return {
                                     ...guild,
-                                    channelIds: guild.channelIds.splice(data.channel.position, 0, data.channel.id),
+                                    // channelIds: guild.channelIds.splice(data.channel.position, 0, data.channel.id),
                                     channels: [...updatedChannels, data.channel],
                                 };
                             }
@@ -268,7 +266,7 @@ const Channels = (): ReactElement => {
                         }}
                     >
                         <ul className={styles.channelList}>
-                            {(!guild || channels[0]?.type !== 'GUILD_CATEGORY') && <div></div>}
+                            {(!guild || channels[0]?.type !== 4) && <div></div>}
 
                             {!guild && (
                                 <>
@@ -279,7 +277,7 @@ const Channels = (): ReactElement => {
 
                             {channels.length === 0 && (
                                 <img
-                                    src='/assets/app/no-channels.svg'
+                                    src='https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/'
                                     alt='No Channels'
                                 />
                             )}
@@ -296,7 +294,7 @@ const Channels = (): ReactElement => {
                             {guild &&
                                 channels.length > 0 &&
                                 channels.map((channel: TChannel) => {
-                                    if (channel.type === 'GUILD_CATEGORY') {
+                                    if (channel.type === 4) {
                                         return (
                                             <ChannelItem
                                                 key={channel.id}

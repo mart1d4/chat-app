@@ -33,16 +33,16 @@ const AppNav = (): ReactElement => {
                 const channel = auth.user.channels.find((channel: TChannel) => channel.id === notif?.channelId);
 
                 let name = channel?.name;
-                if (channel.type === 'DM') {
+                if (channel.type === 0) {
                     const user = channel.recipients.find((user: TCleanUser) => user.id !== auth.user.id);
                     name = user?.username;
-                } else if (channel.type === 'GROUP_DM' && !channel.name) {
+                } else if (channel.type === 1 && !channel.name) {
                     const filteredMembers = channel.recipients.filter((user: TCleanUser) => user.id !== auth.user.id);
                     name = filteredMembers.map((user: TCleanUser) => user.username).join(', ');
                 }
 
                 let src = `${process.env.NEXT_PUBLIC_CDN_URL}${channel?.icon}/`;
-                if (channel.type === 'DM') {
+                if (channel.type === 0) {
                     const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
                     src = `${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`;
                 }

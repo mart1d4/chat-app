@@ -5,15 +5,14 @@ import { Avatar, Icon } from '@/app/app-components';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 
-const UserItem = ({
-    user,
-    channel,
-    isOwner,
-}: {
+type Props = {
     user: TCleanUser;
     channel: TChannel;
+    offline?: boolean;
     isOwner: boolean;
-}): ReactElement => {
+};
+
+const UserItem = ({ user, channel, offline, isOwner }: Props): ReactElement => {
     const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
 
@@ -24,10 +23,9 @@ const UserItem = ({
             ref={liRef}
             className={styles.liContainer}
             onClick={(e) => {
-                if (fixedLayer?.element === e.currentTarget) {
-                    return;
-                } else {
-                    setFixedLayer({
+                if (fixedLayer?.element === e.currentTarget) return;
+                else {
+                    return setFixedLayer({
                         type: 'usercard',
                         element: e.currentTarget,
                         user: user,
@@ -51,7 +49,7 @@ const UserItem = ({
                 });
             }}
             style={{
-                opacity: user.status === 'OFFLINE' && !fixedLayer?.element === liRef.current ? 0.3 : 1,
+                opacity: offline && fixedLayer?.element !== liRef.current ? 0.3 : 1,
                 backgroundColor: fixedLayer?.element === liRef.current ? 'var(--background-5)' : '',
                 color: fixedLayer?.element === liRef.current ? 'var(--foreground-2)' : '',
             }}
@@ -65,7 +63,8 @@ const UserItem = ({
                                     src={user.avatar}
                                     alt={user.username}
                                     size={32}
-                                    status={user.status}
+                                    status={offline ? undefined : user.status}
+                                    tooltip={true}
                                 />
                             </div>
                         </div>
@@ -77,7 +76,7 @@ const UserItem = ({
                                     onMouseEnter={(e) => {
                                         e.stopPropagation();
                                         setTooltip({
-                                            text: 'Group Owner',
+                                            text: `${channel.guildId ? 'Server' : 'Group'} Owner`,
                                             element: e.currentTarget,
                                         });
                                     }}

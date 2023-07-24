@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import SettingsProvider from '@/context/SettingsProvider';
 import TooltipProvider from '@/context/TooltipProvider';
 import { Analytics } from '@vercel/analytics/react';

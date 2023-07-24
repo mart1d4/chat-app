@@ -3,6 +3,7 @@
 import { useEffect, useState, ReactElement, useMemo } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import { shouldDisplayInlined } from '@/lib/message';
 import { Icon } from '@/app/app-components';
 import styles from './Menu.module.css';
 
@@ -57,21 +58,6 @@ const content = ({ content }: { content: any }): ReactElement => {
     const type: EMenuType = content.menu;
     const user: TCleanUser = content.user;
     const message: TMessage = content.message;
-
-    const shouldDisplayInlined = (type: string) => {
-        const inlineTypes = [
-            'RECIPIENT_ADD',
-            'RECIPIENT_REMOVE',
-            'CALL',
-            'CHANNEL_NAME_CHANGE',
-            'CHANNEL_ICON_CHANGE',
-            'CHANNEL_PINNED_MESSAGE',
-            'GUILD_MEMBER_JOIN',
-            'OWNER_CHANGE',
-        ];
-
-        return inlineTypes.includes(type);
-    };
 
     const writeText = async (text: string) => {
         await navigator.clipboard.writeText(text);
@@ -158,7 +144,7 @@ const content = ({ content }: { content: any }): ReactElement => {
             setUserProps({
                 isSelf: content.user.id === auth.user.id,
                 isFriend: auth.user.friendIds?.includes(content.user.id),
-                isBlocked: auth.user.blockedIds?.includes(content.user.id),
+                isBlocked: auth.user.blockedUserIds?.includes(content.user.id),
                 sentRequest: auth.user.requestSentIds?.includes(content.user.id),
                 receivedRequest: auth.user.requestReceivedIds?.includes(content.user.id),
             });
@@ -268,7 +254,13 @@ const content = ({ content }: { content: any }): ReactElement => {
                 },
                 {
                     name: 'Create Category',
-                    func: () => {},
+                    func: () => {
+                        setPopup({
+                            type: 'GUILD_CHANNEL_CREATE',
+                            guild: content.guild.id,
+                            isCategory: true,
+                        });
+                    },
                 },
                 {
                     name: 'Invite People',
@@ -278,7 +270,7 @@ const content = ({ content }: { content: any }): ReactElement => {
         }
 
         if (type === 'GUILD_CHANNEL') {
-            if (content.channel.type === 'GUILD_CATEGORY') {
+            if (content.channel.type === 4) {
                 setItems([
                     {
                         name: 'Mark As Read',
@@ -320,7 +312,12 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Delete Category',
                         danger: true,
-                        func: () => {},
+                        func: () => {
+                            setPopup({
+                                type: 'GUILD_CHANNEL_DELETE',
+                                channel: content.channel,
+                            });
+                        },
                     },
                     {
                         name: 'Divider',
@@ -350,14 +347,14 @@ const content = ({ content }: { content: any }): ReactElement => {
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 'GUILD_VOICE' ? 'Divider' : null,
+                        name: content.channel.type === 3 ? 'Divider' : null,
                     },
                     {
-                        name: content.channel.type === 'GUILD_VOICE' ? 'Open Chat' : null,
+                        name: content.channel.type === 3 ? 'Open Chat' : null,
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 'GUILD_VOICE' ? 'Hide Names' : null,
+                        name: content.channel.type === 3 ? 'Hide Names' : null,
                         checked: true,
                         func: () => {},
                     },
@@ -370,7 +367,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 'GUILD_TEXT' ? 'Notifications Settings' : null,
+                        name: content.channel.type === 2 ? 'Notifications Settings' : null,
                         items: notificationItems,
                         func: () => {},
                     },
@@ -386,7 +383,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                         func: () => {},
                     },
                     {
-                        name: `Create ${content.channel.type === 'GUILD_TEXT' ? 'Text' : 'Voice'} Channel`,
+                        name: `Create ${content.channel.type === 2 ? 'Text' : 'Voice'} Channel`,
                         func: () => {
                             const guild = auth.user.guilds.find(
                                 (guild: TGuild) => guild.id === content.channel.guildId
@@ -405,7 +402,12 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Delete Channel',
                         danger: true,
-                        func: () => {},
+                        func: () => {
+                            setPopup({
+                                type: 'GUILD_CHANNEL_DELETE',
+                                channel: content.channel,
+                            });
+                        },
                     },
                     {
                         name: 'Divider',
@@ -662,15 +664,14 @@ const content = ({ content }: { content: any }): ReactElement => {
                 setItems([
                     {
                         name: 'Add Reaction',
-                        icon: 'arrow',
-                        iconSize: 10,
+                        items: reactionItems,
                         func: () => {},
                     },
                     { name: 'Mark Unread', icon: 'mark', func: () => {} },
                     {
                         name: 'Copy Message Link',
                         icon: 'link',
-                        func: () => writeText(`/channels/@me/${message.channelId[0]}/${message.id}`),
+                        func: () => writeText(`/channels/@me/${message.channelId}/${message.id}`),
                     },
                     { name: 'Divider' },
                     {
@@ -698,22 +699,24 @@ const content = ({ content }: { content: any }): ReactElement => {
                             ? () => content?.functions?.unpinPopup()
                             : () => content?.functions?.pinPopup(),
                         funcShift: message.pinned
-                            ? () =>
+                            ? () => {
                                   sendRequest({
                                       query: 'UNPIN_MESSAGE',
                                       params: {
-                                          channelId: message.channelId[0],
+                                          channelId: message.channelId,
                                           messageId: message.id,
                                       },
-                                  })
-                            : () =>
+                                  });
+                              }
+                            : () => {
                                   sendRequest({
                                       query: 'PIN_MESSAGE',
                                       params: {
-                                          channelId: message.channelId[0],
+                                          channelId: message.channelId,
                                           messageId: message.id,
                                       },
-                                  }),
+                                  });
+                              },
                     },
                     {
                         name: 'Reply',
@@ -723,13 +726,13 @@ const content = ({ content }: { content: any }): ReactElement => {
                     {
                         name: message.content !== null ? 'Copy Text' : null,
                         icon: 'copy',
-                        func: () => writeText(message.content),
+                        func: () => writeText(message.content ?? ''),
                     },
                     { name: 'Mark Unread', icon: 'mark', func: () => {} },
                     {
                         name: 'Copy Message Link',
                         icon: 'link',
-                        func: () => writeText(`/channels/@me/${message.channel}/${message.id}`),
+                        func: () => writeText(`/channels/@me/${message.channelId}/${message.id}`),
                     },
                     {
                         name: message.content !== null ? 'Speak Message' : null,
@@ -748,7 +751,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                             sendRequest({
                                 query: 'DELETE_MESSAGE',
                                 params: {
-                                    channelId: message.channelId[0],
+                                    channelId: message.channelId,
                                     messageId: message.id,
                                 },
                             }),
@@ -1178,7 +1181,15 @@ const content = ({ content }: { content: any }): ReactElement => {
                     { name: 'Divider' },
                     {
                         name: 'Remove From Group',
-                        func: () => {},
+                        func: () => {
+                            sendRequest({
+                                query: 'CHANNEL_RECIPIENT_REMOVE',
+                                params: {
+                                    channelId: content.channel.id,
+                                    recipientId: user.id,
+                                },
+                            });
+                        },
                         danger: true,
                     },
                     {

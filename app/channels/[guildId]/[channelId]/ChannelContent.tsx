@@ -1,7 +1,8 @@
 'use client';
 
-import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } from '@/app/app-components';
+import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Icon } from '@/app/app-components';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
+import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
 import useFetchHelper from '@/hooks/useFetchHelper';
@@ -17,21 +18,6 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
 
     const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
-
-    const shouldDisplayInlined = (message: TMessage) => {
-        const inlineTypes = [
-            'RECIPIENT_ADD',
-            'RECIPIENT_REMOVE',
-            'CALL',
-            'CHANNEL_NAME_CHANGE',
-            'CHANNEL_ICON_CHANGE',
-            'CHANNEL_PINNED_MESSAGE',
-            'GUILD_MEMBER_JOIN',
-            'OWNER_CHANGE',
-        ];
-
-        return inlineTypes.includes(message.type);
-    };
 
     useEffect(() => {
         if (!setEdit || !setReply || !channel) return;
@@ -104,7 +90,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
             pusher.bind('message-sent', (data: any) => {
                 if (
                     data.channelId !== channel.id ||
-                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message))
+                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message.type))
                 )
                     return;
                 setMessages((messages) => [...messages, data.message]);
@@ -217,14 +203,14 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     };
 
     const shouldBeLarge = (index: number) => {
-        if (index === 0 || messages[index].type === 'REPLY') return true;
+        if (index === 0 || messages[index].type === 1) return true;
 
-        if (shouldDisplayInlined(messages[index])) {
-            if (shouldDisplayInlined(messages[index - 1])) return false;
+        if (shouldDisplayInlined(messages[index].type)) {
+            if (shouldDisplayInlined(messages[index - 1].type)) return false;
             return true;
         }
 
-        if (!['DEFAULT', 'REPLY'].includes(messages[index - 1].type)) return true;
+        if (![0, 1].includes(messages[index - 1].type)) return true;
 
         if (messages[index - 1].author.id !== messages[index].author.id) return true;
         if (moreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
@@ -320,119 +306,61 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
-    let friend: any;
+    const guild = auth.user.guilds.find((guild: TGuild) => guild.id === channel.guildId);
 
-    if (channel.type === 'DM') {
-        friend = channel.recipients.find((recipient: any) => recipient.id !== auth.user.id);
+    if (!guild) return;
+
+    if (guild.systemChannelId === channel.id) {
+        return (
+            <div className={styles.systemChannel}>
+                <div>
+                    <div>
+                        <div className={styles.welcomeMessage}>
+                            <h3>
+                                <p>Welcome to</p>
+                                <p>{guild.name}</p>
+                            </h3>
+
+                            <div>
+                                This is your brand new, shiny server. Here are some steps to help you get started. For
+                                more, check out our <a href=''>Getting Started guide</a>.
+                            </div>
+                        </div>
+
+                        <div className={styles.welcomeCard}>
+                            <div></div>
+                            <div>Invite your friends</div>
+                            <Icon name='arrowSmall' />
+                        </div>
+
+                        <div className={styles.welcomeCard}>
+                            <div></div>
+                            <div>Personalize your server with an icon</div>
+                            <Icon name='arrowSmall' />
+                        </div>
+
+                        <div className={styles.welcomeCard}>
+                            <div></div>
+                            <div>Send your first message</div>
+                            <Icon name='arrowSmall' />
+                        </div>
+
+                        <div className={styles.welcomeCard}>
+                            <div></div>
+                            <div>Add your first app</div>
+                            <Icon name='arrowSmall' />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className={styles.firstTimeMessageContainer}>
-            {channel.guildId ? (
-                <div className={styles.channelIcon} />
-            ) : (
-                <div className={styles.imageWrapper}>
-                    <Avatar
-                        src={channel.icon as string}
-                        alt={channel.name as string}
-                        size={80}
-                    />
-                </div>
-            )}
-
-            <h3 className={styles.friendUsername}>{channel.guildId ? `Welcome to #${channel.name}!` : channel.name}</h3>
-
-            <div className={styles.descriptionContainer}>
-                {friend ? (
-                    <>
-                        This is the beginning of your direct message history with
-                        <strong> @{channel.name}</strong>.
-                    </>
-                ) : (
-                    <>
-                        {channel.guildId ? (
-                            `This is the start of the #${channel.name} channel.`
-                        ) : (
-                            <>
-                                Welcome to the beginning of the
-                                <strong> {channel.name}</strong> group.
-                            </>
-                        )}
-                    </>
-                )}
-
-                {friend && (
-                    <div className={styles.descriptionActions}>
-                        {auth.user.friendIds.includes(friend.id) ? (
-                            <button
-                                className='grey'
-                                onClick={() =>
-                                    sendRequest({
-                                        query: 'REMOVE_FRIEND',
-                                        params: { username: friend.username },
-                                    })
-                                }
-                            >
-                                Remove Friend
-                            </button>
-                        ) : auth.user.requestSentIds.includes(friend.id) ? (
-                            <button className='blue disabled'>Friend Request Sent</button>
-                        ) : auth.user.requestReceivedIds.includes(friend.id) ? (
-                            <button
-                                className='grey'
-                                onClick={() =>
-                                    sendRequest({
-                                        query: 'ADD_FRIEND',
-                                        params: { username: friend.username },
-                                    })
-                                }
-                            >
-                                Accept Friend Request
-                            </button>
-                        ) : (
-                            !auth.user.blockedUserIds.includes(friend.id) && (
-                                <button
-                                    className='blue'
-                                    onClick={() =>
-                                        sendRequest({
-                                            query: 'ADD_FRIEND',
-                                            params: { username: friend.username },
-                                        })
-                                    }
-                                >
-                                    Add Friend
-                                </button>
-                            )
-                        )}
-
-                        {!auth.user.blockedUserIds.includes(friend.id) ? (
-                            <button
-                                className='grey'
-                                onClick={() =>
-                                    sendRequest({
-                                        query: 'BLOCK_USER',
-                                        params: { username: friend.username },
-                                    })
-                                }
-                            >
-                                Block
-                            </button>
-                        ) : (
-                            <button
-                                className='grey'
-                                onClick={() =>
-                                    sendRequest({
-                                        query: 'UNBLOCK_USER',
-                                        params: { username: friend.username },
-                                    })
-                                }
-                            >
-                                Unblock
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
+            <div className={styles.channelIcon} />
+            <h3 className={styles.friendUsername}>Welcome to #{channel.name}!</h3>
+            <div className={styles.descriptionContainer}>This is the start of the #{channel.name} channel.</div>
         </div>
     );
 };

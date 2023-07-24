@@ -63,7 +63,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
     }, []);
 
     useEffect(() => {
-        if (channel?.type === 'DM') {
+        if (channel?.type === 0) {
             // @ts-ignore
             setUser(channel?.recipients.find((recipient) => recipient.id !== auth.user.id));
         } else {
@@ -85,7 +85,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
 
         if (!channel) return <aside className={styles.aside} />;
 
-        if (channel?.type === 'DM' && user) {
+        if (channel?.type === 0 && user) {
             return (
                 <aside
                     className={styles.aside}
@@ -309,25 +309,22 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                 </aside>
             );
         } else {
-            let onlineMembers: TCleanUser[];
+            let onlineMembers, offlineMembers: TCleanUser[];
+            let guild: TGuild | undefined;
 
-            if (channel?.guildId) {
-                const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
+            if (channel.guildId) {
+                guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
+            }
+
+            if (guild) {
                 onlineMembers = guild.rawMembers?.filter((recipient: any) =>
                     ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
                 );
+                offlineMembers = guild.rawMembers?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
             } else {
                 onlineMembers = channel.recipients.filter((recipient: any) =>
                     ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
                 );
-            }
-
-            let offlineMembers: TCleanUser[];
-
-            if (channel?.guildId) {
-                const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
-                offlineMembers = guild.rawMembers?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
-            } else {
                 offlineMembers = channel.recipients?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
             }
 
@@ -335,7 +332,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                 <aside className={styles.memberList}>
                     <div>
                         {!channel?.guildId && <h2>Members—{channel.recipients.length}</h2>}
-                        {channel?.guildId && onlineMembers.length > 0 && <h2>Online—{onlineMembers.length}</h2>}
+                        {channel?.guildId && onlineMembers.length > 0 && <h2>Online — {onlineMembers.length}</h2>}
 
                         {onlineMembers?.length > 0 &&
                             onlineMembers.map((user: TCleanUser) => (
@@ -343,11 +340,11 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                     key={user.id}
                                     user={user}
                                     channel={channel}
-                                    isOwner={channel.ownerId === user.id}
+                                    isOwner={guild ? guild.ownerId === user.id : channel.ownerId === user.id}
                                 />
                             ))}
 
-                        {channel?.guildId && offlineMembers?.length > 0 && <h2>Offline—{offlineMembers?.length}</h2>}
+                        {channel?.guildId && offlineMembers?.length > 0 && <h2>Offline — {offlineMembers?.length}</h2>}
 
                         {offlineMembers?.length > 0 &&
                             offlineMembers.map((user: TCleanUser) => (
@@ -355,7 +352,8 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                     key={user.id}
                                     user={user}
                                     channel={channel}
-                                    isOwner={channel.ownerId === user.id}
+                                    offline
+                                    isOwner={guild ? guild.ownerId === user.id : channel.ownerId === user.id}
                                 />
                             ))}
                     </div>
@@ -410,7 +408,7 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                     />
                 )}
 
-                {guild && (
+                {guild?.icon && (
                     <Avatar
                         src={guild.icon}
                         alt={guild.name}

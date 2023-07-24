@@ -13,9 +13,7 @@ const AddFriend = () => {
     const [loading, setLoading] = useState<boolean>(false);
 
     const { setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
-    const token = auth.accessToken;
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -96,7 +94,10 @@ const AddFriend = () => {
                                     setFixedLayer({
                                         type: 'menu',
                                         menu: 'INPUT',
-                                        event: e,
+                                        event: {
+                                            mouseX: e.clientX,
+                                            mouseY: e.clientY,
+                                        },
                                         input: true,
                                         pasteText,
                                     });
@@ -142,7 +143,7 @@ const AddFriend = () => {
             <div className={styles.content}>
                 <div className={styles.noData}>
                     <Image
-                        src='/assets/add-friend.svg'
+                        src='https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/'
                         alt='Add Friend'
                         width={376}
                         height={162}

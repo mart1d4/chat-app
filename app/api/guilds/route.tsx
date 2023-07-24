@@ -3,6 +3,7 @@ import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import { removeImage } from '@/lib/api/cdn';
 
 export async function POST(req: Request) {
     const senderId = headers().get('userId') || '';
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
 
         const textCategory = await prisma.channel.create({
             data: {
-                type: 'GUILD_CATEGORY',
+                type: 4,
                 name: 'Text Channels',
                 position: 0,
                 guild: {
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
 
         const voiceCategory = await prisma.channel.create({
             data: {
-                type: 'GUILD_CATEGORY',
+                type: 4,
                 name: 'Voice Channels',
                 position: 2,
                 guild: {
@@ -109,7 +110,7 @@ export async function POST(req: Request) {
 
         const textChannel = await prisma.channel.create({
             data: {
-                type: 'GUILD_TEXT',
+                type: 2,
                 name: 'general',
                 position: 1,
                 parentId: textCategory.id,
@@ -123,7 +124,7 @@ export async function POST(req: Request) {
 
         const voiceChannel = await prisma.channel.create({
             data: {
-                type: 'GUILD_VOICE',
+                type: 3,
                 name: 'General',
                 position: 3,
                 parentId: voiceCategory.id,
@@ -170,6 +171,7 @@ export async function POST(req: Request) {
             guild: {
                 ...guild,
                 channels: [textCategory, textChannel, voiceCategory, voiceChannel],
+                systemChannelId: textChannel.id,
                 roles: [role],
                 rawMembers: [user],
                 members: [memberObject],
@@ -186,15 +188,7 @@ export async function POST(req: Request) {
     } catch (error) {
         console.error(error);
 
-        if (icon) {
-            await fetch(`https://api.uploadcare.com/files/${icon}/storage/`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                    Accept: 'application/vnd.uploadcare-v0.7+json',
-                },
-            });
-        }
+        if (icon) await removeImage(icon);
 
         return NextResponse.json(
             {

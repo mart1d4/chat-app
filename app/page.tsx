@@ -1,5 +1,6 @@
 import Header from './web-components/Header/Header';
 import Footer from './web-components/Footer/Footer';
+import { Icon } from '@/app/app-components/';
 import styles from './Home.module.css';
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
@@ -8,7 +9,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
     title: 'Chat App | Your Inviting Place to Connect and Chat.',
     description:
-        'Chat App is the easiest way to talk over voice, video, and text. Chat, hang out, and stay close with your friends and communities.',
+        'Chat App makes communication a breeze, offering seamless voice, video, and text interactions. Stay connected, socialize, and nurture bonds with friends and communities effortlessly.',
     keywords:
         'chat-app, chat, voice, video, text, gaming, friends, communities, free, open source, open source software, open source project',
 };
@@ -32,16 +33,7 @@ const HomePage = (): ReactNode => {
 
                         <div className={styles.heroButtons}>
                             <Link href='/download'>
-                                <svg
-                                    width='24'
-                                    height='24'
-                                    viewBox='0 0 24 24'
-                                >
-                                    <g fill='currentColor'>
-                                        <path d='M17.707 10.708L16.293 9.29398L13 12.587V2.00098H11V12.587L7.70697 9.29398L6.29297 10.708L12 16.415L17.707 10.708Z' />
-                                        <path d='M18 18.001V20.001H6V18.001H4V20.001C4 21.103 4.897 22.001 6 22.001H18C19.104 22.001 20 21.103 20 20.001V18.001H18Z' />
-                                    </g>
-                                </svg>
+                                <Icon name='download' />
                                 Download for Windows
                             </Link>
 
@@ -49,28 +41,13 @@ const HomePage = (): ReactNode => {
                         </div>
                     </div>
                 </div>
-
-                <div className={styles.imageBackground}>
-                    <img
-                        src='/assets/homepages/background1.svg'
-                        draggable='false'
-                    />
-                    <img
-                        src=''
-                        draggable='false'
-                    />
-                    <img
-                        src=''
-                        draggable='false'
-                    />
-                </div>
             </div>
 
             <div>
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/community.svg'
+                            src='https://ucarecdn.com/fbb73e90-e5a5-4ec6-b2d4-4a7a17657fbd/'
                             alt='Stylized image of friends talking and communicating with each other.'
                         />
 
@@ -89,7 +66,7 @@ const HomePage = (): ReactNode => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/connected.svg'
+                            src='https://ucarecdn.com/6017a425-258a-4665-944c-14f4a09f45d5/'
                             alt='Stylized image showing the world connected through Chat App.'
                         />
 
@@ -108,7 +85,7 @@ const HomePage = (): ReactNode => {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src='/assets/homepages/group.svg'
+                            src='https://ucarecdn.com/bd719cc4-d77a-4c75-8fe7-80bf86ad33bc/'
                             alt='Stylized image showing friends displaying their interests and hobbies.'
                         />
 
@@ -137,7 +114,7 @@ const HomePage = (): ReactNode => {
                         </div>
 
                         <img
-                            src='/assets/homepages/video.svg'
+                            src='https://ucarecdn.com/87faf419-4c2b-4434-843c-6d2ec2cfe338/'
                             alt='Stylized image showing friends video talking with each other on desktop.'
                         />
                     </div>

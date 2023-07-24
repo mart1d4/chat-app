@@ -18,7 +18,7 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
     useEffect(() => {
         if (!channel) return;
 
-        if (channel.type === 'DM') setFriend(channel.recipients.find((user: TUser) => user.id !== auth.user.id));
+        if (channel.type === 0) setFriend(channel.recipients.find((user: TUser) => user.id !== auth.user.id));
         else setFriend(undefined);
     }, [channel]);
 
@@ -84,8 +84,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                           name:
                               userSettings.showUsers && widthLimitPassed
                                   ? 'Hide User Profile'
-                                  : `Show ${channel?.type === 'DM' ? ' User Profile' : 'Member List'}`,
-                          icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
+                                  : `Show ${channel?.type === 0 ? ' User Profile' : 'Member List'}`,
+                          icon: channel?.type === 0 ? 'userProfile' : 'memberList',
                           active: userSettings.showUsers,
                           disabled: widthLimitPassed === false,
                           func: () => {
@@ -132,8 +132,8 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                           name:
                               userSettings.showUsers && widthLimitPassed
                                   ? 'Hide User Profile'
-                                  : `Show ${channel?.type === 'DM' ? ' User Profile' : 'Member List'}`,
-                          icon: channel?.type === 'DM' ? 'userProfile' : 'memberList',
+                                  : `Show ${channel?.type === 0 ? ' User Profile' : 'Member List'}`,
+                          icon: channel?.type === 0 ? 'userProfile' : 'memberList',
                           active: userSettings.showUsers,
                           disabled: widthLimitPassed === false,
                           func: () => {
@@ -197,7 +197,7 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                                         relativeSrc={!channel}
                                         alt={channel?.name || 'User'}
                                         size={24}
-                                        status={channel?.type === 'DM' ? friend?.status : undefined}
+                                        status={channel?.type === 0 ? friend?.status : undefined}
                                     />
                                 )}
                             </div>
@@ -215,7 +215,7 @@ const AppHeader = ({ channel }: { channel?: TChannel | null }): ReactElement => 
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    if (channel?.type !== 'DM') return;
+                                    if (channel?.type !== 0) return;
                                     setUserProfile({ user: friend });
                                 }}
                                 style={{

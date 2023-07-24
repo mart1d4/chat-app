@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import { removeImage } from '@/lib/api/cdn';
 
 export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
     const { attachments } = await req.json();
@@ -35,13 +36,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
         }
 
         attachments.forEach(async (attachment: TImageUpload) => {
-            await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                    Accept: 'application/vnd.uploadcare-v0.7+json',
-                },
-            });
+            await removeImage(attachment.id);
         });
 
         return NextResponse.json(

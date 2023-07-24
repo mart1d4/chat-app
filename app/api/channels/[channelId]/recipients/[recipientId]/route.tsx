@@ -98,7 +98,7 @@ export async function PUT(req: Request, { params }: Params) {
             );
         }
 
-        if (channel.type !== 'GROUP_DM') {
+        if (channel.type !== 1) {
             return NextResponse.json(
                 {
                     success: false,
@@ -177,7 +177,7 @@ export async function PUT(req: Request, { params }: Params) {
         // Create message
         const message = await prisma.message.create({
             data: {
-                type: 'RECIPIENT_ADD',
+                type: 2,
                 content: `<@${userId}> added <@${recipientId}> to the group.`,
                 author: {
                     connect: {
@@ -371,7 +371,7 @@ export async function DELETE(req: Request, { params }: Params) {
             );
         }
 
-        if (channel.type !== 'GROUP_DM') {
+        if (channel.type !== 1) {
             return NextResponse.json(
                 {
                     success: false,
@@ -403,15 +403,10 @@ export async function DELETE(req: Request, { params }: Params) {
 
         let newOwner;
 
-        console.log('Owner Id: ', channel.ownerId);
         if (channel.ownerId === recipientId) {
-            console.log('Changing owner');
             const randomIndex = Math.floor(Math.random() * channel.recipientIds.length - 1);
             newOwner = channel.recipientIds.filter((id) => id !== recipientId)[randomIndex];
         }
-
-        console.log('Recipient Id: ', recipientId);
-        console.log('New Owner Id: ', newOwner);
 
         await prisma.channel.update({
             where: {
@@ -423,11 +418,7 @@ export async function DELETE(req: Request, { params }: Params) {
                         id: recipientId,
                     },
                 },
-                owner: {
-                    connect: {
-                        id: newOwner ?? (channel.ownerId as string),
-                    },
-                },
+                ownerId: newOwner ?? channel.ownerId,
             },
             select: {
                 id: true,
@@ -443,7 +434,7 @@ export async function DELETE(req: Request, { params }: Params) {
 
         const message = await prisma.message.create({
             data: {
-                type: 'RECIPIENT_REMOVE',
+                type: 3,
                 content: newOwner
                     ? `<@${userId}> left the group.`
                     : `<@${userId}> removed <@${recipientId}> from the group.`,

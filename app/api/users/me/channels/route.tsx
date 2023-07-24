@@ -150,13 +150,9 @@ export async function POST(req: Request) {
             // Create a group channel with just the user
             const channel = await prisma.channel.create({
                 data: {
-                    type: 'GROUP_DM',
+                    type: 1,
                     icon: getRandomIcon(),
-                    owner: {
-                        connect: {
-                            id: userId,
-                        },
-                    },
+                    ownerId: userId,
                     recipients: {
                         connect: {
                             id: userId,
@@ -229,7 +225,7 @@ export async function POST(req: Request) {
             // Create a DM channel with the user and the recipient
             const channelExists = await prisma.channel.findFirst({
                 where: {
-                    type: 'DM',
+                    type: 0,
                     OR: [
                         {
                             recipientIds: {
@@ -243,13 +239,39 @@ export async function POST(req: Request) {
                         },
                     ],
                 },
+                select: {
+                    id: true,
+                    type: true,
+                    icon: true,
+                    ownerId: true,
+                    recipientIds: true,
+                    recipients: {
+                        select: {
+                            id: true,
+                            username: true,
+                            displayName: true,
+                            avatar: true,
+                            banner: true,
+                            primaryColor: true,
+                            accentColor: true,
+                            description: true,
+                            customStatus: true,
+                            status: true,
+                            guildIds: true,
+                            channelIds: true,
+                            friendIds: true,
+                            createdAt: true,
+                        },
+                    },
+                    createdAt: true,
+                },
             });
 
             if (!channelExists) {
                 // Create a DM channel
                 const channel = await prisma.channel.create({
                     data: {
-                        type: 'DM',
+                        type: 0,
                         icon: getRandomIcon(),
                         recipients: {
                             connect: [{ id: userId }, { id: recipients[0] }],
@@ -375,13 +397,9 @@ export async function POST(req: Request) {
 
             const channel = await prisma.channel.create({
                 data: {
-                    type: 'GROUP_DM',
+                    type: 1,
                     icon: getRandomIcon(),
-                    owner: {
-                        connect: {
-                            id: userId,
-                        },
-                    },
+                    ownerId: userId,
                     recipients: {
                         connect: [...recipients.map((recipient: string) => ({ id: recipient })), { id: userId }],
                     },

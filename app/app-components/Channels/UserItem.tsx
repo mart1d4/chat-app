@@ -28,7 +28,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
     const badgeCount = useMemo(() => auth.user.requestReceivedIds.length, [auth.user.requestReceivedIds]);
 
     useEffect(() => {
-        if (channel?.type === 'DM') {
+        if (channel?.type === 0) {
             setUser(channel.recipients.find((user) => user.id !== auth.user.id) as TUser);
         }
     }, [channel]);
@@ -101,7 +101,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                             <div className={styles.layout}>
                                 <div className={styles.layoutAvatar}>
                                     <div>
-                                        {channel.type === 'GROUP_DM' ? (
+                                        {channel.type === 1 ? (
                                             <Avatar
                                                 src={channel.icon || ''}
                                                 alt={channel.name || ''}
@@ -122,11 +122,11 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                 <div className={styles.layoutContent}>
                                     <div className={styles.contentName}>
                                         <div className={styles.nameWrapper}>
-                                            {channel.type === 'GROUP_DM' ? channel.name : user?.username}
+                                            {channel.type === 1 ? channel.name : user?.username}
                                         </div>
                                     </div>
 
-                                    {user?.customStatus && channel.type !== 'GROUP_DM' && (
+                                    {user?.customStatus && channel.type !== 1 && (
                                         <div
                                             className={styles.contentStatus}
                                             onMouseEnter={(e) => {
@@ -143,7 +143,7 @@ const UserItem = ({ special, channel }: Props): ReactElement => {
                                         </div>
                                     )}
 
-                                    {channel.type === 'GROUP_DM' && (
+                                    {channel.type === 1 && (
                                         <div className={styles.contentStatus}>
                                             {channel.recipients.length} Member
                                             {channel.recipients.length > 1 && 's'}

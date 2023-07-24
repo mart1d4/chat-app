@@ -129,7 +129,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: "You haven't blocked this user.",
+                    message: 'You have already blocked this user.',
                 },
                 { status: 400 }
             );

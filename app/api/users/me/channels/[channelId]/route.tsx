@@ -73,7 +73,7 @@ export async function DELETE(req: Request, { params }: Params) {
             );
         }
 
-        if (channel.type === 'DM') {
+        if (channel.type === 0) {
             // Add channel to hidden channels
             await prisma.user.update({
                 where: {
@@ -98,7 +98,7 @@ export async function DELETE(req: Request, { params }: Params) {
                 },
                 { status: 200 }
             );
-        } else if (channel.type === 'GROUP_DM') {
+        } else if (channel.type === 1) {
             if (channel.recipientIds.length > 1) {
                 return NextResponse.json(
                     {

@@ -44,7 +44,7 @@ const Popup = (): ReactElement => {
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
 
     const [channelName, setChannelName] = useState('');
-    const [channelType, setChannelType] = useState('GUILD_TEXT');
+    const [channelType, setChannelType] = useState(2);
     const [channelLocked, setChannelLocked] = useState(false);
 
     const popupRef = useRef<HTMLDivElement>(null);
@@ -73,7 +73,7 @@ const Popup = (): ReactElement => {
             setGuildIcon(null);
 
             setChannelName('');
-            setChannelType('GUILD_TEXT');
+            setChannelType(2);
             setChannelLocked(false);
         }
     }, [popup]);
@@ -216,10 +216,10 @@ const Popup = (): ReactElement => {
             centered: true,
         },
         GUILD_CHANNEL_CREATE: {
-            title: 'Create Channel',
-            description: popup?.category ? `in ${popup?.category.name}` : ' ',
+            title: `Create ${popup?.isCategory ? 'Category' : 'Channel'}`,
+            description: popup?.category ? `in ${popup?.category.name}` : popup?.isCategory ? null : ' ',
             buttonColor: 'blue',
-            buttonText: channelLocked ? 'Next' : 'Create Channel',
+            buttonText: channelLocked ? 'Next' : `Create ${popup?.isCategory ? 'Category' : 'Channel'}`,
             buttonDisabled: !channelName || channelLocked,
             function: () => {
                 if (!channelName || channelLocked) return;
@@ -230,9 +230,25 @@ const Popup = (): ReactElement => {
                     },
                     data: {
                         name: channelName,
-                        type: channelType,
+                        type: popup?.isCategory ? 4 : channelType,
                         locked: channelLocked,
                         categoryId: popup?.category?.id,
+                    },
+                });
+            },
+        },
+        GUILD_CHANNEL_DELETE: {
+            title: `Delete ${popup?.channel?.type === 4 ? 'Category' : 'Channel'}`,
+            description: `Are you sure you want to delete ${popup?.channel?.type === 2 ? '#' : ''}${
+                popup?.channel?.name
+            }? This cannot be undone.`,
+            buttonColor: 'red',
+            buttonText: `Delete ${popup?.channel?.type === 4 ? 'Category' : 'Channel'}`,
+            function: () => {
+                sendRequest({
+                    query: 'GUILD_CHANNEL_DELETE',
+                    params: {
+                        channelId: popup.channel?.id,
                     },
                 });
             },
@@ -258,14 +274,15 @@ const Popup = (): ReactElement => {
             description: 'Are you sure you want to delete this message?',
             buttonColor: 'red',
             buttonText: 'Delete',
-            function: () =>
+            function: () => {
                 sendRequest({
                     query: 'DELETE_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId[0],
+                        channelId: popup.message.channelId,
                         messageId: popup.message.id,
                     },
-                }),
+                });
+            },
         },
         PIN_MESSAGE: {
             title: 'Pin It. Pin It Good.',
@@ -273,28 +290,30 @@ const Popup = (): ReactElement => {
                 'Hey, just double checking that you want to pin this message to the current channel for posterity and greatness?',
             buttonColor: 'blue',
             buttonText: 'Oh yeah. Pin it',
-            function: () =>
+            function: () => {
                 sendRequest({
                     query: 'PIN_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId[0],
+                        channelId: popup.message.channelId,
                         messageId: popup.message.id,
                     },
-                }),
+                });
+            },
         },
         UNPIN_MESSAGE: {
             title: 'Unpin Message',
             description: 'You sure you want to remove this pinned message?',
             buttonColor: 'red',
             buttonText: 'Remove it please!',
-            function: () =>
+            function: () => {
                 sendRequest({
                     query: 'UNPIN_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId[0],
+                        channelId: popup.message.channelId,
                         messageId: popup.message.id,
                     },
-                }),
+                });
+            },
         },
         FILE_EDIT: {
             title: popup?.file?.file?.name.startsWith('SPOILER_')
@@ -303,12 +322,13 @@ const Popup = (): ReactElement => {
             description: '',
             buttonColor: 'blue',
             buttonText: 'Save',
-            function: () =>
+            function: () => {
                 popup.handleFileChange({
                     filename: filename,
                     description: description,
                     isSpoiler: isSpoiler,
-                }),
+                });
+            },
         },
         LOGOUT: {
             title: 'Log Out',
@@ -322,17 +342,18 @@ const Popup = (): ReactElement => {
             description: 'This will remove this attachment from this message permanently.',
             buttonColor: 'red',
             buttonText: 'Remove Attachment',
-            function: () =>
+            function: () => {
                 sendRequest({
                     query: 'UPDATE_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId[0],
+                        channelId: popup.message.channelId,
                         messageId: popup.message.id,
                     },
                     data: {
                         attachments: popup.attachments,
                     },
-                }),
+                });
+            },
         },
         CHANNEL_EXISTS: {
             title: 'Confirm New Group',
@@ -370,14 +391,13 @@ const Popup = (): ReactElement => {
                 e.stopPropagation();
 
                 if (type === 'CREATE_GUILD') {
-                    if (guildTemplate) {
+                    if (guildTemplate !== 0) {
                         setGuildTemplate(0);
+                        return;
                     } else if (join) {
                         setJoin(false);
-                    } else {
-                        setPopup(null);
+                        return;
                     }
-                    return;
                 }
 
                 setPopup(null);
@@ -412,6 +432,7 @@ const Popup = (): ReactElement => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [
         popup,
+        type,
         uid,
         password,
         password1,
@@ -440,8 +461,6 @@ const Popup = (): ReactElement => {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
                     store: 'auto',
                 });
-
-                console.log('RESULT  ', result);
 
                 if (!result.file) console.error(result);
                 else uploadedIcon = result.file;
@@ -660,7 +679,7 @@ const Popup = (): ReactElement => {
                         ) : (
                             <img
                                 className={styles.imagePopup}
-                                src='/assets/app/file-text.svg'
+                                src='https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/'
                                 alt={popup.file.file.name}
                             />
                         ))}
@@ -751,12 +770,10 @@ const Popup = (): ReactElement => {
                             <>
                                 <button
                                     className={styles.serverTemplate}
-                                    onClick={() => {
-                                        setGuildTemplate(1);
-                                    }}
+                                    onClick={() => setGuildTemplate(1)}
                                 >
                                     <img
-                                        src='/assets/app/server/create/own.svg'
+                                        src='https://ucarecdn.com/2699b806-e43b-4fea-aa0b-da3bde1972b4/'
                                         alt='Create My Own'
                                     />
                                     <div>Create My Own</div>
@@ -769,12 +786,12 @@ const Popup = (): ReactElement => {
                                 <div className={styles.serverTemplateTitle}>Start from a template</div>
 
                                 {[
-                                    ['Gaming', 'gaming'],
-                                    ['School Club', 'school'],
-                                    ['Study Group', 'study'],
-                                    ['Friends', 'friends'],
-                                    ['Artists & Creators', 'artists'],
-                                    ['Local Community', 'community'],
+                                    ['Gaming', '34bdb748-aea8-4542-b534-610ac9ad347f'],
+                                    ['School Club', 'd0460999-065f-4289-9021-5f9c4cf2ddd7'],
+                                    ['Study Group', 'fe757867-ce50-4353-9c9b-cb64ec3968b6'],
+                                    ['Friends', 'fcfc0474-e405-47df-b7ef-1373bfe83070'],
+                                    ['Artists & Creators', '6057e335-8633-4909-b7c8-970182095185'],
+                                    ['Local Community', 'bca2a8ed-2498-42a1-a964-9af6f8479d7f'],
                                 ].map((template, index) => (
                                     <button
                                         key={template[1]}
@@ -782,7 +799,7 @@ const Popup = (): ReactElement => {
                                         onClick={() => setGuildTemplate(index + 2)}
                                     >
                                         <img
-                                            src={`/assets/app/server/create/${template[1]}.svg`}
+                                            src={`https://ucarecdn.com/${template[1]}/`}
                                             alt={template[0]}
                                         />
                                         <div>{template[0]} </div>
@@ -890,115 +907,116 @@ const Popup = (): ReactElement => {
                         )}
                         {type === 'GUILD_CHANNEL_CREATE' && (
                             <>
-                                <div className={styles.channelType}>
-                                    <h2>Channel Type</h2>
+                                {!popup?.isCategory && (
+                                    <div className={styles.channelType}>
+                                        <h2>Channel Type</h2>
 
-                                    <div
-                                        className={styles.typePick}
-                                        onClick={() => setChannelType('GUILD_TEXT')}
-                                        style={{
-                                            backgroundColor:
-                                                channelType === 'GUILD_TEXT' ? 'var(--background-hover-2)' : '',
-                                        }}
-                                    >
-                                        <div>
-                                            <div
-                                                style={{
-                                                    color: channelType === 'GUILD_TEXT' ? 'var(--foreground-1)' : '',
-                                                }}
-                                            >
-                                                <Icon
-                                                    name={channelType === 'GUILD_TEXT' ? 'circleChecked' : 'circle'}
-                                                />
-                                            </div>
-
+                                        <div
+                                            className={styles.typePick}
+                                            onClick={() => setChannelType(2)}
+                                            style={{
+                                                backgroundColor: channelType === 2 ? 'var(--background-hover-2)' : '',
+                                            }}
+                                        >
                                             <div>
-                                                <div>
-                                                    <Icon name={channelLocked ? 'hashtagLock' : 'hashtag'} />
+                                                <div
+                                                    style={{
+                                                        color: channelType === 2 ? 'var(--foreground-1)' : '',
+                                                    }}
+                                                >
+                                                    <Icon name={channelType === 2 ? 'circleChecked' : 'circle'} />
                                                 </div>
 
-                                                <div className={styles.content}>
-                                                    <div>Text</div>
-                                                    <div>Send messages, images, GIFs, emoji, opinions, and puns</div>
+                                                <div>
+                                                    <div>
+                                                        <Icon name={channelLocked ? 'hashtagLock' : 'hashtag'} />
+                                                    </div>
+
+                                                    <div className={styles.content}>
+                                                        <div>Text</div>
+                                                        <div>
+                                                            Send messages, images, GIFs, emoji, opinions, and puns
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className={styles.typePick}
+                                            onClick={() => setChannelType(3)}
+                                            style={{
+                                                backgroundColor: channelType === 3 ? 'var(--background-hover-2)' : '',
+                                            }}
+                                        >
+                                            <div>
+                                                <div
+                                                    style={{
+                                                        color: channelType === 3 ? 'var(--foreground-1)' : '',
+                                                    }}
+                                                >
+                                                    <Icon name={channelType === 3 ? 'circleChecked' : 'circle'} />
+                                                </div>
+
+                                                <div>
+                                                    <div>
+                                                        <Icon name={channelLocked ? 'voiceLock' : 'voice'} />
+                                                    </div>
+
+                                                    <div className={styles.content}>
+                                                        <div>Voice</div>
+                                                        <div>Hang out together with voice, video, and screen share</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                )}
 
-                                    <div
-                                        className={styles.typePick}
-                                        onClick={() => setChannelType('GUILD_VOICE')}
-                                        style={{
-                                            backgroundColor:
-                                                channelType === 'GUILD_VOICE' ? 'var(--background-hover-2)' : '',
-                                        }}
-                                    >
-                                        <div>
-                                            <div
-                                                style={{
-                                                    color: channelType === 'GUILD_VOICE' ? 'var(--foreground-1)' : '',
-                                                }}
-                                            >
-                                                <Icon
-                                                    name={channelType === 'GUILD_VOICE' ? 'circleChecked' : 'circle'}
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <div>
-                                                    <Icon name={channelLocked ? 'voiceLock' : 'voice'} />
-                                                </div>
-
-                                                <div className={styles.content}>
-                                                    <div>Voice</div>
-                                                    <div>Hang out together with voice, video, and screen share</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`${styles.input} ${styles.channel}`}>
+                                <div className={`${styles.input} ${!popup?.isCategory && styles.channel}`}>
                                     <label>Channel name</label>
                                     <div>
-                                        <Icon
-                                            name={
-                                                channelType === 'GUILD_TEXT'
-                                                    ? channelLocked
-                                                        ? 'hashtagLock'
-                                                        : 'hashtag'
-                                                    : channelLocked
-                                                    ? 'voiceLock'
-                                                    : 'voice'
-                                            }
-                                        />
+                                        {!popup?.isCategory && (
+                                            <Icon
+                                                name={
+                                                    channelType === 2
+                                                        ? channelLocked
+                                                            ? 'hashtagLock'
+                                                            : 'hashtag'
+                                                        : channelLocked
+                                                        ? 'voiceLock'
+                                                        : 'voice'
+                                                }
+                                            />
+                                        )}
 
                                         <input
                                             type='text'
                                             maxLength={100}
                                             value={channelName}
-                                            placeholder='new-channel'
+                                            placeholder={popup?.isCategory ? 'New Category' : 'new-channel'}
                                             onChange={(e) => setChannelName(e.target.value)}
                                         />
                                     </div>
                                 </div>
 
                                 <div className={styles.privateCheck}>
-                                    <div>
+                                    <div onClick={() => setChannelLocked((prev) => !prev)}>
                                         <label>
                                             <Icon name='lock' />
-                                            Private Channel
+                                            {popup?.isCategory ? 'Private Category' : 'Private Channel'}
                                         </label>
 
                                         <div>
-                                            <Checkbox
-                                                checked={channelLocked}
-                                                onChange={() => setChannelLocked((prev) => !prev)}
-                                            />
+                                            <Checkbox checked={channelLocked} />
                                         </div>
                                     </div>
 
-                                    <div>Only selected members and roles will be able to view this channel.</div>
+                                    <div>
+                                        {popup?.isCategory
+                                            ? 'By making a category private, only selected members and roles will be able to view this category. Synced channels in this category will automatically match to this setting.'
+                                            : 'Only selected members and roles will be able to view this channel.'}
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -1268,12 +1286,13 @@ const Popup = (): ReactElement => {
                             className='underline'
                             onClick={() => {
                                 if (type === 'CREATE_GUILD') {
-                                    if (guildTemplate) {
+                                    if (guildTemplate !== 0) {
                                         setGuildTemplate(0);
+                                        return;
                                     } else if (join) {
                                         setJoin(false);
+                                        return;
                                     }
-                                    return;
                                 }
                                 setPopup(null);
                             }}

@@ -27,7 +27,7 @@ const ChannelPage = ({ params }: { params: { guildId: string } }): ReactElement 
         if (channelId) {
             router.push(`/channels/${guild.id}/${channelId}`);
         } else {
-            const channel = guild.channels.find((channel: TChannel) => channel.type === 'GUILD_TEXT');
+            const channel = guild.channels.find((channel: TChannel) => channel.type === 2);
             if (channel) router.push(`/channels/${guild.id}/${channel.id}`);
             else router.push(`/channels/me`);
         }

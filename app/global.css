@@ -268,6 +268,10 @@ input:-webkit-autofill:active {
     caret-color: var(--foreground-2);
 }
 
+input::placeholder {
+    user-select: none;
+}
+
 button.blue {
     background-color: var(--accent-1);
 }

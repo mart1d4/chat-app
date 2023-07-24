@@ -10,7 +10,7 @@ import Image from 'next/image';
 
 const contentData: contentType = {
     all: {
-        src: '/assets/add-friend.svg',
+        src: 'https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/',
         width: 376,
         height: 162,
         description: "We are waiting on friends. You don't have to though!",
@@ -18,7 +18,7 @@ const contentData: contentType = {
         title: 'All Friends',
     },
     online: {
-        src: '/assets/no-online.svg',
+        src: 'https://ucarecdn.com/11a4ecb1-1c4c-46a5-8a41-ad1a9347af2c/',
         width: 421,
         height: 218,
         description: "No one's around to play with us.",
@@ -26,7 +26,7 @@ const contentData: contentType = {
         title: 'Online',
     },
     pending: {
-        src: '/assets/no-pending.svg',
+        src: 'https://ucarecdn.com/357cdafa-b30c-4074-accb-4316074f1442/',
         width: 415,
         height: 200,
         description: "There are no pending requests. Here's us for now.",
@@ -34,7 +34,7 @@ const contentData: contentType = {
         title: 'Pending',
     },
     blocked: {
-        src: '/assets/no-blocked.svg',
+        src: 'https://ucarecdn.com/86b8a3de-5045-4b0b-8e02-23e701f8850c/',
         width: 433,
         height: 232,
         description: "You can't unblock us.",
@@ -42,7 +42,7 @@ const contentData: contentType = {
         title: 'Blocked',
     },
     noSearch: {
-        src: '/assets/no-online.svg',
+        src: 'https://ucarecdn.com/11a4ecb1-1c4c-46a5-8a41-ad1a9347af2c/',
         width: 421,
         height: 218,
         description: "We looked, but couldn't find anyone with that name.",

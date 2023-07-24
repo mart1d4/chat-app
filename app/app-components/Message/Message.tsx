@@ -3,6 +3,7 @@
 import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from '@uploadcare/upload-client';
 import { TextArea, Icon, Avatar } from '@/app/app-components';
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import { trimMessage } from '@/lib/strings';
@@ -28,25 +29,12 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
+    const inline = shouldDisplayInlined(message.type);
+
     const controller = useMemo(() => new AbortController(), []);
     const hasRendered = useRef(false);
 
-    const shouldDisplayInlined = () => {
-        const inlineTypes = [
-            'RECIPIENT_ADD',
-            'RECIPIENT_REMOVE',
-            'CALL',
-            'CHANNEL_NAME_CHANGE',
-            'CHANNEL_ICON_CHANGE',
-            'CHANNEL_PINNED_MESSAGE',
-            'GUILD_MEMBER_JOIN',
-            'OWNER_CHANGE',
-        ];
-
-        return inlineTypes.includes(message.type);
-    };
-
-    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId[0]);
+    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId);
     const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel?.guildId);
     const userRegex: RegExp = /<([@#\-*])([a-zA-Z0-9]{6,24})>/g;
 
@@ -62,7 +50,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
                         return mentionUser ? (
                             <span
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (fixedLayer?.element === e.currentTarget) return;
@@ -89,12 +77,10 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     });
                                 }}
                             >
-                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
                             </span>
                         ) : (
-                            <span className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}>
-                                @Unknown
-                            </span>
+                            <span className={inline ? styles.inlineMention : styles.mention}>@Unknown</span>
                         );
                     } else {
                         return part;
@@ -117,7 +103,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                         return mentionUser ? (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (fixedLayer?.element === e.currentTarget) return;
@@ -144,12 +130,12 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                     });
                                 }}
                             >
-                                {shouldDisplayInlined() ? `${mentionUser.username}` : `@${mentionUser.username}`}
+                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
                             </span>
                         ) : (
                             <span
                                 key={index}
-                                className={shouldDisplayInlined() ? styles.inlineMention : styles.mention}
+                                className={inline ? styles.inlineMention : styles.mention}
                             >
                                 @Unknown
                             </span>
@@ -191,7 +177,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
             content: prevMessage.content,
             attachments: prevMessage.attachments,
             author: prevMessage.author,
-            channelId: [prevMessage.channelId[0]],
+            channelId: prevMessage.channelId,
             messageReference: prevMessage.messageReference,
             createdAt: new Date(),
             error: false,
@@ -249,7 +235,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
             const response = await sendRequest({
                 query: 'SEND_MESSAGE',
-                params: { channelId: prevMessage.channelId[0] },
+                params: { channelId: prevMessage.channelId },
                 data: {
                     message: {
                         content: prevMessage.content,
@@ -316,9 +302,9 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
 
     const setLocalStorage = (data: {}) => {
         localStorage.setItem(
-            `channel-${message.channelId[0]}`,
+            `channel-${message.channelId}`,
             JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${message.channelId[0]}`) || '{}'),
+                ...JSON.parse(localStorage.getItem(`channel-${message.channelId}`) || '{}'),
                 ...data,
             })
         );
@@ -327,7 +313,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const deletePopup = () => {
         setPopup({
             type: 'DELETE_MESSAGE',
-            channelId: message.channelId[0],
+            channelId: message.channelId,
             message: message,
         });
     };
@@ -335,7 +321,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const pinPopup = () => {
         setPopup({
             type: 'PIN_MESSAGE',
-            channelId: message.channelId[0],
+            channelId: message.channelId,
             message: message,
         });
     };
@@ -343,7 +329,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const unpinPopup = () => {
         setPopup({
             type: 'UNPIN_MESSAGE',
-            channelId: message.channelId[0],
+            channelId: message.channelId,
             message: message,
         });
     };
@@ -371,7 +357,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         if (content === null && message.attachments.length === 0) {
             setPopup({
                 type: 'DELETE_MESSAGE',
-                channelId: message.channelId[0],
+                channelId: message.channelId,
                 message: message,
             });
 
@@ -387,7 +373,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
             sendRequest({
                 query: 'UPDATE_MESSAGE',
                 params: {
-                    channelId: message.channelId[0],
+                    channelId: message.channelId,
                     messageId: message.id,
                 },
                 data: { content: content },
@@ -404,14 +390,14 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         if (!setReply) return;
 
         setReply({
-            channelId: message.channelId[0],
+            channelId: message.channelId,
             messageId: message.id,
             author: message.author,
         });
 
         setLocalStorage({
             reply: {
-                channelId: message.channelId[0],
+                channelId: message.channelId,
                 messageId: message.id,
                 author: message.author,
             },
@@ -457,7 +443,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
         retrySendMessage,
     };
 
-    if (shouldDisplayInlined()) {
+    if (inline) {
         return (
             <li
                 className={
@@ -499,15 +485,15 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     <div className={styles.specialIcon}>
                         <div
                             style={{
-                                backgroundImage: `url(/assets/app/message/${
-                                    message.type === 'RECIPIENT_ADD'
-                                        ? 'join'
-                                        : message.type === 'RECIPIENT_REMOVE'
-                                        ? 'leave'
-                                        : message.type === 'CHANNEL_PINNED_MESSAGE'
-                                        ? 'pin'
-                                        : 'edit'
-                                }.svg)`,
+                                backgroundImage: `url(https://ucarecdn.com/${
+                                    message.type === 2
+                                        ? '834fd250-08b6-4009-be66-284b1e593abd'
+                                        : message.type === 3
+                                        ? 'la03e8741-1662-46ba-9870-839c54a5d7f0'
+                                        : message.type === 7
+                                        ? '938d46b0-fd11-411e-a891-42571825cd11'
+                                        : '979c692b-3889-48b5-81e3-a2fe80f42bad'
+                                }/)`,
                                 width: '1rem',
                                 height: '1rem',
                                 backgroundSize: '1rem 1rem',
@@ -585,7 +571,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                     />
 
                     <div className={styles.message}>
-                        {message.type === 'REPLY' && (
+                        {message.type === 1 && (
                             <div className={styles.messageReply}>
                                 {message.messageReference ? (
                                     <div
@@ -862,7 +848,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                 {edit?.messageId === message.id ? (
                                     <>
                                         <TextArea
-                                            channel={message.channelId[0]}
+                                            channel={message.channelId}
                                             editContent={editContent}
                                             setEditContent={setEditContent}
                                         />
@@ -916,7 +902,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                 {message.attachments.length > 0 && (message.waiting || message.error) && (
                                     <div className={styles.imagesUpload}>
                                         <img
-                                            src='/assets/app/file-blank.svg'
+                                            src='https://ucarecdn.com/81976ed2-ac05-457f-b52d-930c474dcb1d/'
                                             alt='File Upload'
                                         />
 
@@ -963,7 +949,12 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
                                             </div>
                                         </div>
 
-                                        <div onClick={() => controller.abort()}>
+                                        <div
+                                            onClick={() => {
+                                                if (message.error) deleteLocalMessage();
+                                                else controller.abort();
+                                            }}
+                                        >
                                             <Icon name='close' />
                                         </div>
                                     </div>
@@ -1490,7 +1481,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             if (message.attachments.length === 1 && !message.content) {
                                 setPopup({
                                     type: 'DELETE_MESSAGE',
-                                    channelId: message.channelId[0],
+                                    channelId: message.channelId,
                                     message: message,
                                 });
                                 return;

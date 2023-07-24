@@ -2,6 +2,7 @@ import pusher from '@/lib/pusher/api-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
+import { removeImage } from '@/lib/api/cdn';
 
 export async function DELETE(req: Request, { params }: { params: { guildId: string } }) {
     const senderId = headers().get('userId') || '';
@@ -38,6 +39,16 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             where: {
                 id: guildId,
             },
+            select: {
+                id: true,
+                ownerId: true,
+                icon: true,
+                channels: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
         });
 
         if (!guild) {
@@ -60,51 +71,33 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             );
         }
 
-        if (guild.icon) {
-            await fetch(`https://api.uploadcare.com/files/${guild.icon}/storage/`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                    Accept: 'application/vnd.uploadcare-v0.7+json',
-                },
-            });
-        }
+        if (guild.icon) await removeImage(guild.icon);
 
-        // const messageWithImages = await prisma.message.findMany({
-        //     where: {
-        //         channelId: {
-        //             in: guild.channelIds,
-        //         },
-        //         NOT: {
-        //             attachments: {
-        //                 equals: [],
-        //             },
-        //         },
-        //     },
-        // });
-
-        // messageWithImages.forEach(async (message) => {
-        //     message.attachments.forEach(async (attachment) => {
-        //         await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
-        //             method: 'DELETE',
-        //             headers: {
-        //                 Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-        //                 Accept: 'application/vnd.uploadcare-v0.7+json',
-        //             },
-        //         });
-        //     });
-        // });
-
-        await prisma.role.deleteMany({
+        const messageWithImages = await prisma.message.findMany({
             where: {
-                guildId,
+                channelId: {
+                    in: guild.channels.map((channel) => channel.id),
+                },
+                NOT: {
+                    attachments: {
+                        equals: [],
+                    },
+                },
+            },
+            select: {
+                attachments: {
+                    select: {
+                        id: true,
+                    },
+                },
             },
         });
 
-        await prisma.channel.deleteMany({
-            where: {
-                guildId,
-            },
+        // Delete all attachments from cdn before deleting guild
+        messageWithImages.forEach(async (message) => {
+            message.attachments.forEach(async (attachment) => {
+                await removeImage(attachment.id);
+            });
         });
 
         await prisma.guild.delete({

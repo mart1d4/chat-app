@@ -9,7 +9,9 @@ import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
 
-const TextArea = ({ channel, friend, editContent, setEditContent, reply, setReply, setMessages }: any) => {
+const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng'];
+
+const TextArea = ({ channel, editContent, setEditContent, reply, setReply, setMessages }: any) => {
     const [message, setMessage] = useState<string>('');
     const [files, setFiles] = useState<TImage[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
@@ -21,6 +23,8 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
+
+    const friend = channel?.recipients?.find((r: any) => r.id !== auth.user.id);
 
     const setCursorToEnd = () => {
         const input = textAreaRef.current as HTMLInputElement;
@@ -83,6 +87,17 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                             setPopup({
                                 type: 'WARNING',
                                 warning: 'FILE_SIZE',
+                            });
+                            return;
+                        }
+
+                        const fileBytes = new Uint8Array(await file.arrayBuffer());
+                        const fileType = filetypeinfo(fileBytes);
+
+                        if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? '')) {
+                            setPopup({
+                                type: 'WARNING',
+                                warning: 'FILE_TYPE',
                             });
                             return;
                         }
@@ -222,7 +237,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                 ? ''
                                 : friend
                                 ? `@${friend.username}`
-                                : channel.type === 'GUILD_TEXT'
+                                : channel.type === 2
                                 ? `#${channel.name}`
                                 : channel.name}
                         </div>
@@ -333,7 +348,7 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                 </div>
             </form>
         );
-    } else if (!auth.user.blockedUserIds.includes(friend?.id)) {
+    } else if (!auth.user.blockedUserIds?.includes(friend?.id) && !auth.user.blockedByUserIds?.includes(friend?.id)) {
         return (
             <form className={styles.form}>
                 {channel && reply?.channelId === channel?.id && (
@@ -407,6 +422,18 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
                                                 });
                                                 e.target.value = '';
                                                 checkedFiles = [];
+                                                return;
+                                            }
+
+                                            const fileBytes = new Uint8Array(await file.arrayBuffer());
+                                            const fileType = filetypeinfo(fileBytes);
+
+                                            if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? '')) {
+                                                setPopup({
+                                                    type: 'WARNING',
+                                                    warning: 'FILE_TYPE',
+                                                });
+                                                e.target.value = '';
                                                 return;
                                             }
 
@@ -532,12 +559,14 @@ const TextArea = ({ channel, friend, editContent, setEditContent, reply, setRepl
 
                     <button
                         className='grey'
-                        onClick={() =>
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             sendRequest({
                                 query: 'UNBLOCK_USER',
-                                params: { userId: friend.id },
-                            })
-                        }
+                                params: { username: friend.username },
+                            });
+                        }}
                     >
                         Unblock
                     </button>
@@ -644,6 +673,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                 type: file.file.type,
             }),
             id: file.id,
+            dimensions: file.dimensions,
             description: data.description,
         };
 
@@ -678,7 +708,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                             />
                         ) : (
                             <img
-                                src='/assets/app/file-text.svg'
+                                src='https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/'
                                 alt='File Preview'
                                 style={{ filter: isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none' }}
                             />
@@ -716,6 +746,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                                             { type: file.file.type }
                                         ),
                                         id: file.id,
+                                        dimensions: file.dimensions,
                                         description: file.description,
                                     };
 

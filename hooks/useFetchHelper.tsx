@@ -19,7 +19,9 @@ type TQuery =
     | 'CHANNEL_RECIPIENT_REMOVE'
     | 'GUILD_CREATE'
     | 'GUILD_DELETE'
-    | 'GUILD_CHANNEL_CREATE';
+    | 'GUILD_CHANNEL_CREATE'
+    | 'GUILD_CHANNEL_UPDATE'
+    | 'GUILD_CHANNEL_DELETE';
 
 type Props = {
     query: TQuery;
@@ -51,6 +53,8 @@ const urls = {
     ['GUILD_CREATE']: '/guilds',
     ['GUILD_DELETE']: '/guilds/:guildId',
     ['GUILD_CHANNEL_CREATE']: '/guilds/:guildId/channels',
+    ['GUILD_CHANNEL_UPDATE']: '/channels/:channelId',
+    ['GUILD_CHANNEL_DELETE']: '/channels/:channelId',
 };
 
 const methods = {
@@ -72,6 +76,8 @@ const methods = {
     ['GUILD_CREATE']: 'POST',
     ['GUILD_DELETE']: 'DELETE',
     ['GUILD_CHANNEL_CREATE']: 'POST',
+    ['GUILD_CHANNEL_UPDATE']: 'PUT',
+    ['GUILD_CHANNEL_DELETE']: 'DELETE',
 };
 
 const useFetchHelper = () => {
@@ -84,7 +90,7 @@ const useFetchHelper = () => {
             return (
                 channel.recipients.length === recipients.length &&
                 channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
-                (searchDM ? channel.type === 'DM' : true)
+                (searchDM ? channel.type === 0 : true)
             );
         });
 
@@ -103,10 +109,10 @@ const useFetchHelper = () => {
                     : channelExists([...data?.recipients, auth.user.id], false);
 
             if (channel) {
-                if (channel.type === 'DM') {
+                if (channel.type === 0) {
                     router.push(`/channels/me/${channel.id}`);
                     return;
-                } else if (channel.type === 'GROUP_DM' && channel.recipients.length !== 1) {
+                } else if (channel.type === 1 && channel.recipients.length !== 1) {
                     setPopup({
                         type: 'CHANNEL_EXISTS',
                         channel: channel,

@@ -146,7 +146,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             );
         }
 
-        if (channel.type !== 'GROUP_DM') {
+        if (channel.type !== 1) {
             return NextResponse.json(
                 {
                     success: false,
@@ -190,6 +190,234 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             {
                 success: false,
                 message: 'Something went wrong.',
+            },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
+    const userId = headers().get('userId') || '';
+    const channelId = params.channelId;
+
+    if (userId === '') {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Unauthorized',
+            },
+            { status: 401 }
+        );
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'User not found',
+                },
+                { status: 404 }
+            );
+        }
+
+        const channel = await prisma.channel.findUnique({
+            where: {
+                id: channelId,
+            },
+            select: {
+                id: true,
+                type: true,
+                position: true,
+                parentId: true,
+                recipientIds: true,
+                guildId: true,
+            },
+        });
+
+        const guild = await prisma.guild.findUnique({
+            where: {
+                id: channel?.guildId as string,
+            },
+            select: {
+                ownerId: true,
+                rawMemberIds: true,
+            },
+        });
+
+        if (!channel || !channel.guildId || !guild?.rawMemberIds.includes(userId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Channel not found',
+                },
+                { status: 404 }
+            );
+        }
+
+        if (channel.type !== 4) {
+            await prisma.channel.delete({
+                where: {
+                    id: channelId,
+                },
+            });
+
+            await prisma.channel.updateMany({
+                where: {
+                    guildId: channel.guildId,
+                    position: {
+                        gt: channel.position as number,
+                    },
+                },
+                data: {
+                    position: {
+                        decrement: 1,
+                    },
+                },
+            });
+        } else {
+            const textChannels = await prisma.channel.count({
+                where: {
+                    guildId: channel.guildId,
+                    type: 2,
+                    OR: [
+                        {
+                            parentId: {
+                                isSet: false,
+                            },
+                        },
+                        {
+                            parentId: {
+                                equals: null,
+                            },
+                        },
+                    ],
+                },
+            });
+
+            const textToAdd = await prisma.channel.findMany({
+                where: {
+                    guildId: channel.guildId,
+                    type: 2,
+                    parentId: channel.id,
+                },
+            });
+
+            const voiceToAdd = await prisma.channel.findMany({
+                where: {
+                    guildId: channel.guildId,
+                    type: 3,
+                    parentId: channel.id,
+                },
+            });
+
+            await prisma.channel.updateMany({
+                where: {
+                    guildId: channel.guildId,
+                    position: {
+                        gte: textChannels,
+                    },
+                },
+                data: {
+                    position: {
+                        increment: textToAdd.length,
+                    },
+                },
+            });
+
+            textToAdd.forEach(async (textChannel, index) => {
+                await prisma.channel.update({
+                    where: {
+                        id: textChannel.id,
+                    },
+                    data: {
+                        position: textChannels + index,
+                        parentId: null,
+                    },
+                });
+            });
+
+            const voiceChannels = await prisma.channel.count({
+                where: {
+                    guildId: channel.guildId,
+                    type: {
+                        not: 4,
+                    },
+                    OR: [
+                        {
+                            parentId: {
+                                isSet: false,
+                            },
+                        },
+                        {
+                            parentId: {
+                                equals: null,
+                            },
+                        },
+                    ],
+                },
+            });
+
+            await prisma.channel.updateMany({
+                where: {
+                    guildId: channel.guildId,
+                    position: {
+                        gte: voiceChannels,
+                    },
+                },
+                data: {
+                    position: {
+                        increment: voiceToAdd.length,
+                    },
+                },
+            });
+
+            voiceToAdd.forEach(async (voiceChannel, index) => {
+                await prisma.channel.update({
+                    where: {
+                        id: voiceChannel.id,
+                    },
+                    data: {
+                        position: voiceChannels + index,
+                        parentId: null,
+                    },
+                });
+            });
+
+            await prisma.channel.delete({
+                where: {
+                    id: channelId,
+                },
+            });
+        }
+
+        await pusher.trigger('chat-app', 'channel-deleted', {
+            guildId: channel.guildId,
+            channelId: channelId,
+        });
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Successfully deleted channel',
+            },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Something went wrong',
             },
             { status: 500 }
         );

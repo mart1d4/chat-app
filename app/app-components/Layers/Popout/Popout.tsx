@@ -59,7 +59,7 @@ const Popout = ({ content }: any) => {
                 setPlacesLeft(9);
             }
         }
-    }, [content]);
+    }, [content, auth.user]);
 
     useEffect(() => {
         if (content?.pinned) return;
@@ -110,7 +110,7 @@ const Popout = ({ content }: any) => {
         const recipients = chosen.map((user) => user.id);
 
         if (content?.channel) {
-            if (content.channel.type === 'DM') {
+            if (content.channel.type === 0) {
                 const currentRecipient = content.channel.recipientIds.find(
                     (recipient: string) => recipient !== auth.user.id
                 );
@@ -121,7 +121,7 @@ const Popout = ({ content }: any) => {
                         recipients: [currentRecipient, ...recipients],
                     },
                 });
-            } else if (content.channel.type === 'GROUP_DM') {
+            } else if (content.channel.type === 1) {
                 const channelExists = (recipients: string[]) => {
                     const channel = auth.user.channels.find((channel: TChannel) => {
                         return (
@@ -360,7 +360,7 @@ const Popout = ({ content }: any) => {
                                     </div>
                                 </div>
 
-                                {content?.channel?.type === 'GROUP_DM' && (
+                                {content?.channel?.type === 1 && (
                                     <div className={styles.addButton}>
                                         <button
                                             className={chosen?.length ? 'blue' : 'blue disabled'}
@@ -442,7 +442,7 @@ const Popout = ({ content }: any) => {
 
                         <div className={styles.separator} />
 
-                        {content?.channel?.type === 'GROUP_DM' ? (
+                        {content?.channel?.type === 1 ? (
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
@@ -501,7 +501,7 @@ const Popout = ({ content }: any) => {
                         >
                             <div
                                 style={{
-                                    backgroundImage: `url(/assets/nothing-found.svg)`,
+                                    backgroundImage: `url(https://ucarecdn.com/501ad905-28df-4c05-ae41-de0499966f4f/)`,
                                     width: '85px',
                                     height: '85px',
                                 }}
@@ -565,7 +565,7 @@ const Popout = ({ content }: any) => {
                     <div className={styles.noFriends}>
                         <div
                             style={{
-                                backgroundImage: `url(/assets/app/no-friends-popout.svg)`,
+                                backgroundImage: 'https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/',
                                 width: '171px',
                                 height: '86px',
                             }}

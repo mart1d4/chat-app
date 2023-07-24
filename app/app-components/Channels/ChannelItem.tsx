@@ -20,7 +20,7 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
     const { setTooltip }: any = useContextHook({ context: 'tooltip' });
     const params = useParams();
 
-    if (channel.type === 'GUILD_CATEGORY') {
+    if (channel.type === 4) {
         return (
             <motion.li
                 drag='y'
@@ -109,7 +109,7 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
                             backgroundColor: params.channelId === channel.id ? 'var(--background-hover-2)' : '',
                         }}
                         onClick={(e) => {
-                            if (channel.type === 'GUILD_VOICE') e.preventDefault();
+                            if (channel.type === 3) e.preventDefault();
                         }}
                     >
                         <div>
@@ -117,14 +117,14 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
                                 className={styles.icon}
                                 onMouseEnter={(e) => {
                                     setTooltip({
-                                        text: channel.type === 'GUILD_TEXT' ? 'Text' : 'Voice',
+                                        text: channel.type === 2 ? 'Text' : 'Voice',
                                         element: e.currentTarget,
                                         delay: 500,
                                     });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <Icon name={channel.type === 'GUILD_TEXT' ? 'hashtag' : 'voice'} />
+                                <Icon name={channel.type === 2 ? 'hashtag' : 'voice'} />
                             </div>
 
                             <div
@@ -137,7 +137,7 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
                             </div>
 
                             <div className={styles.tools}>
-                                {channel.type === 'GUILD_VOICE' && (
+                                {channel.type === 3 && (
                                     <div
                                         onMouseEnter={(e) =>
                                             setTooltip({

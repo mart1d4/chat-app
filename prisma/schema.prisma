@@ -130,28 +130,6 @@ enum EUserStatus {
     OFFLINE
 }
 
-enum EChannel {
-    DM
-    GROUP_DM
-    GUILD_TEXT
-    GUILD_VOICE
-    GUILD_CATEGORY
-    FORUM
-}
-
-enum ETMessage {
-    DEFAULT
-    REPLY
-    RECIPIENT_ADD
-    RECIPIENT_REMOVE
-    CALL
-    CHANNEL_NAME_CHANGE
-    CHANNEL_ICON_CHANGE
-    CHANNEL_PINNED_MESSAGE
-    GUILD_MEMBER_JOIN
-    OWNER_CHANGE
-}
-
 enum ENotificationType {
     REQUEST
     MESSAGE
@@ -241,16 +219,10 @@ model Guild {
     rawMemberIds String[] @db.ObjectId
     rawMembers   User[]   @relation("UserGuild", fields: [rawMemberIds], references: [id])
 
-    members TMember[]
-
-    channelIds String[]  @db.ObjectId
-    channels   Channel[] @relation("GuildChannel")
-
-    roleIds String[] @db.ObjectId
-    roles   Role[]   @relation("UserRole")
-
-    emoteIds String[] @db.ObjectId
-    emotes   Emote[]  @relation("GuildEmote")
+    members  TMember[]
+    channels Channel[] @relation("GuildChannel")
+    roles    Role[]    @relation("UserRole")
+    emotes   Emote[]   @relation("GuildEmote")
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
@@ -268,7 +240,7 @@ model Role {
     mentionable Boolean
 
     guildId String @db.ObjectId
-    guild   Guild  @relation("UserRole", fields: [guildId], references: [id])
+    guild   Guild  @relation("UserRole", fields: [guildId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
@@ -276,8 +248,8 @@ model Role {
 }
 
 model Channel {
-    id    String   @id @default(auto()) @map("_id") @db.ObjectId
-    type  EChannel
+    id    String  @id @default(auto()) @map("_id") @db.ObjectId
+    type  Int
     name  String?
     topic String?
     icon  String?
@@ -299,13 +271,12 @@ model Channel {
     ownerId String? @db.ObjectId
 
     guildId String? @db.ObjectId
-    guild   Guild?  @relation("GuildChannel", fields: [guildId], references: [id])
+    guild   Guild?  @relation("GuildChannel", fields: [guildId], references: [id], onDelete: Cascade)
 
     recipientIds String[] @db.ObjectId
     recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
 
-    messageIds String[]  @db.ObjectId
-    messages   Message[] @relation("ChannelMessage", fields: [messageIds], references: [id])
+    messages Message[] @relation("ChannelMessage")
 
     permissionOverwrites TPermissionOverwrite[]
 
@@ -315,13 +286,15 @@ model Channel {
 }
 
 model Message {
-    id                String      @id @default(auto()) @map("_id") @db.ObjectId
-    type              ETMessage
-    content           String?
-    attachments       TImage[]
-    embeds            TEmbed[]
-    edited            Boolean     @default(false)
-    pinned            DateTime?
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    type        Int
+    content     String?
+    attachments TImage[]
+    embeds      TEmbed[]
+
+    edited Boolean   @default(false)
+    pinned DateTime?
+
     reactions         TReaction[]
     mentionEveryone   Boolean     @default(false)
     mentionChannelIds String[]
@@ -333,8 +306,8 @@ model Message {
     authorId String @db.ObjectId
     author   User   @relation(fields: [authorId], references: [id])
 
-    channelId String[]  @db.ObjectId
-    channel   Channel[] @relation("ChannelMessage", fields: [channelId], references: [id])
+    channelId String  @db.ObjectId
+    channel   Channel @relation("ChannelMessage", fields: [channelId], references: [id], onDelete: Cascade)
 
     messageReferenceId String?  @db.ObjectId
     messageReference   Message? @relation("MessageReference", fields: [messageReferenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -353,7 +326,7 @@ model Emote {
     animated Boolean @default(false)
 
     guildId String @db.ObjectId
-    guild   Guild  @relation("GuildEmote", fields: [guildId], references: [id])
+    guild   Guild  @relation("GuildEmote", fields: [guildId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date

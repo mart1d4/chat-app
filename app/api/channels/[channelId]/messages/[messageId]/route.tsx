@@ -1,4 +1,5 @@
 import pusher from '@/lib/pusher/api-connection';
+import { removeImage } from '@/lib/api/cdn';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
@@ -88,13 +89,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 
             if (toDelete.length > 0) {
                 toDelete.forEach(async (file) => {
-                    await fetch(`https://api.uploadcare.com/files/${file.id}/storage/`, {
-                        method: 'DELETE',
-                        headers: {
-                            Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                            Accept: 'application/vnd.uploadcare-v0.7+json',
-                        },
-                    });
+                    await removeImage(file.id);
                 });
             }
         }
@@ -248,13 +243,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
 
         if (message.attachments.length > 0) {
             message.attachments.forEach(async (attachment: any) => {
-                await fetch(`https://api.uploadcare.com/files/${attachment.id}/storage/`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                        Accept: 'application/vnd.uploadcare-v0.7+json',
-                    },
-                });
+                await removeImage(attachment.id);
             });
         }
 

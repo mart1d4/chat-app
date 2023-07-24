@@ -1025,7 +1025,7 @@ const Profiles = () => {
                                             <div>
                                                 <Image
                                                     alt='Fake Activity'
-                                                    src='/assets/app/fake-activity.png'
+                                                    src='https://ucarecdn.com/5346d913-15ae-4ab3-af18-cd0df14d7678/'
                                                     width={48}
                                                     height={48}
                                                     draggable={false}

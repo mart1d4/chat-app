@@ -29,7 +29,7 @@ const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElemen
         let name = getChannelName(channel, auth.user.id);
 
         let src = channel?.icon;
-        if (channel.type === 'DM') {
+        if (channel.type === 0) {
             const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as TUser;
             src = user.avatar;
         }

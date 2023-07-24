@@ -44,8 +44,8 @@ const DownloadPage = (): ReactElement => {
                             <h1>Get Chat App for any device</h1>
 
                             <div>
-                                An adventure awaits. Hang out with your friends on our desktop app and keep the
-                                conversation going on mobile.
+                                Embark on an exciting journey with Chat App. Share thrilling moments with friends on our
+                                desktop app and continue the excitement on the go with seamless mobile conversations.
                             </div>
                         </div>
 
@@ -69,7 +69,7 @@ const DownloadPage = (): ReactElement => {
                     </div>
 
                     <div>
-                        <img src='/assets/homepages/hero-background.svg' />
+                        <img src='' />
                     </div>
                 </div>
             </div>
@@ -84,9 +84,11 @@ const DownloadPage = (): ReactElement => {
                             >
                                 {index === 4 ? (
                                     <>
-                                        <h3>Feeling experimental?</h3>
+                                        <h3>Ready to experiment?</h3>
 
-                                        <div>Try our Public Test Build and test new features before they launch.</div>
+                                        <div>
+                                            Discover new features before they launch with Chat App's Public Test Build.
+                                        </div>
 
                                         <PopoverButton links={links[index]} />
                                     </>

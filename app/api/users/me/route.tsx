@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
+import { removeImage } from '@/lib/api/cdn';
 
 const avatars = [
     '178ba6e1-5551-42f3-b199-ddb9fc0f80de',
@@ -168,23 +169,11 @@ export async function PATCH(req: Request) {
             usernameChanged = true;
         } else {
             if (avatar && !avatars.includes(sender.avatar)) {
-                await fetch(`https://api.uploadcare.com/files/${sender.avatar}/storage/`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                        Accept: 'application/vnd.uploadcare-v0.7+json',
-                    },
-                });
+                await removeImage(sender.avatar);
             }
 
             if ((banner && sender.banner) || (banner === null && sender.banner)) {
-                await fetch(`https://api.uploadcare.com/files/${sender.banner}/storage/`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Uploadcare.Simple ${process.env.UPLOADCARE_PUBLIC_KEY}:${process.env.UPLOADCARE_SECRET_KEY}`,
-                        Accept: 'application/vnd.uploadcare-v0.7+json',
-                    },
-                });
+                await removeImage(sender.banner);
             }
 
             await prisma.user.update({
