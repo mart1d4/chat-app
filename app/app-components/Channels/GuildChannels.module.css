@@ -308,3 +308,158 @@
 .toolbar > button:active {
     color: var(--foreground-1);
 }
+
+/* ChannelItem */
+
+.category {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 0 8px 0 16px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.category > div:first-child {
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: var(--foreground-5);
+}
+
+.category > div:first-child > svg {
+    position: absolute;
+    left: 2px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s ease-out;
+}
+
+.category.hide > div:first-child > svg {
+    transform: rotate(-90deg);
+}
+
+.category > div:first-child > h3 {
+    font-family: 'gg sans';
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.category:hover > div:first-child {
+    color: var(--foreground-1);
+}
+
+.category > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    color: var(--foreground-4);
+}
+
+.category > div:last-child:hover {
+    color: var(--foreground-1);
+}
+
+.channel {
+    position: relative;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.channel > div {
+    padding: 1px 0;
+    overflow: visible;
+    position: relative;
+    margin-left: 8px;
+}
+
+.channel a {
+    cursor: pointer;
+    position: relative;
+    padding: 6px 8px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    color: var(--foreground-3);
+    text-decoration: none;
+}
+
+.channel a:hover {
+    background-color: var(--background-hover-1);
+}
+
+.channel a > div {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.channel .icon {
+    position: relative;
+    margin-right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.channel .icon > svg {
+    color: var(--foreground-5);
+    height: 20px;
+    width: 20px;
+}
+
+.channel .name {
+    color: var(--foreground-5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    flex: 1 1 auto;
+    position: relative;
+}
+
+.channel a:hover .name {
+    color: var(--foreground-2);
+}
+
+.channel .tools {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.channel .tools > div {
+    display: none;
+    margin-left: 4px;
+    position: relative;
+    cursor: pointer;
+    line-height: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.channel a:hover .tools > div {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.channel .tools > div > svg {
+    color: var(--foreground-4);
+    width: 16px;
+    height: 16px;
+}

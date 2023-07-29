@@ -1,39 +1,11 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { getGuild } from '@/lib/auth';
 
-import useContextHook from '@/hooks/useContextHook';
-import { ReactElement, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+const Page = async ({ params }: { params: { guildId: string } }) => {
+    const guild = await getGuild(params.guildId);
+    if (!guild) redirect('/channels/me');
 
-const ChannelPage = ({ params }: { params: { guildId: string } }): ReactElement => {
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const router = useRouter();
-
-    useEffect(() => {
-        const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === params.guildId);
-
-        console.log(guild);
-
-        if (!guild) {
-            const channelUrl = localStorage.getItem('channel-url');
-
-            if (channelUrl) router.push(channelUrl);
-            else router.push('/channels/me');
-
-            return;
-        }
-
-        const channelId = JSON.parse(localStorage.getItem(`guild-${guild.id}`) ?? '{}')?.channelId;
-
-        if (channelId) {
-            router.push(`/channels/${guild.id}/${channelId}`);
-        } else {
-            const channel = guild.channels.find((channel: TChannel) => channel.type === 2);
-            if (channel) router.push(`/channels/${guild.id}/${channel.id}`);
-            else router.push(`/channels/me`);
-        }
-    }, [params.guildId, auth.user.guilds]);
-
-    return <></>;
+    redirect(`/channels/${params.guildId}/${guild.systemChannelId}`);
 };
 
-export default ChannelPage;
+export default Page;

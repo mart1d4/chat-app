@@ -4,16 +4,15 @@ import { Avatar, Icon } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
 import { useRef, ReactElement } from 'react';
 import { translateCap } from '@/lib/strings';
-import styles from './Channels.module.css';
+import styles from './UserSection.module.css';
 
-const UserSection = (): ReactElement => {
-    const { setShowSettings, fixedLayer, setFixedLayer }: any = useContextHook({
+const UserSection = ({ user }): ReactElement => {
+    const { setShowSettings, fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({
         context: 'layer',
     });
-    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { auth }: any = useContextHook({ context: 'auth' });
-
+    const { userSettings, setUserSettings }: any = useContextHook({
+        context: 'settings',
+    });
     const userSection = useRef<HTMLDivElement>(null);
 
     return (
@@ -28,7 +27,7 @@ const UserSection = (): ReactElement => {
                         }
                         setFixedLayer({
                             type: 'usercard',
-                            user: auth.user,
+                            user: user,
                             element: e.currentTarget,
                             firstSide: 'TOP',
                             secondSide: 'RIGHT',
@@ -42,16 +41,16 @@ const UserSection = (): ReactElement => {
                 >
                     <div>
                         <Avatar
-                            src={auth.user.avatar}
-                            alt={auth.user.username}
+                            src={user.avatar}
+                            alt={user.username}
                             size={32}
-                            status={auth.user.status}
+                            status={user.status}
                         />
                     </div>
 
                     <div className={styles.contentWrapper}>
-                        <div>{auth?.user?.username}</div>
-                        <div>{translateCap(auth?.user?.status)}</div>
+                        <div>{user?.username}</div>
+                        <div>{translateCap(user?.status)}</div>
                     </div>
                 </div>
 

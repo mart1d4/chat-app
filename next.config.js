@@ -2,9 +2,6 @@
 
 const nextConfig = {
     reactStrictMode: true,
-    experimental: {
-        appDir: true,
-    },
     images: {
         remotePatterns: [
             {
@@ -19,15 +16,13 @@ const nextConfig = {
             {
                 source: '/api/:path*',
                 headers: [
-                    // Add CORS headers
                     {
                         key: 'Access-Control-Allow-Origin',
-                        // value: 'https://tauri.localhost',
-                        value: 'http://localhost:5000',
+                        value: 'http://localhost:3000',
                     },
                     {
                         key: 'Access-Control-Allow-Methods',
-                        value: 'GET, OPTIONS, PATCH, DELETE, POST, PUT',
+                        value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
                     },
                     {
                         key: 'Access-Control-Allow-Headers',

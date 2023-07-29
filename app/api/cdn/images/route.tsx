@@ -1,12 +1,11 @@
+import { removeImage } from '@/lib/api/cdn';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import { removeImage } from '@/lib/api/cdn';
 
-export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+export async function DELETE(req: Request): Promise<NextResponse> {
+    const senderId = headers().get('X-UserId') || '';
     const { attachments } = await req.json();
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
 
     try {
         const sender = await prisma.user.findUnique({

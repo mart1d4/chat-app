@@ -232,14 +232,7 @@ const TextArea = ({ channel, editContent, setEditContent, reply, setReply, setMe
                 <div>
                     {message.length === 0 && typeof editContent !== 'string' && (
                         <div className={styles.textContainerPlaceholder}>
-                            Message{' '}
-                            {!channel
-                                ? ''
-                                : friend
-                                ? `@${friend.username}`
-                                : channel.type === 2
-                                ? `#${channel.name}`
-                                : channel.name}
+                            Message {`${channel.type === 0 ? '@' : channel.type === 2 ? '#' : ''}${channel.name}`}
                         </div>
                     )}
 
@@ -652,8 +645,7 @@ const FilePreview = ({ file, setFiles }: any) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [isImage, setIsImage] = useState<boolean | null>(null);
 
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
 
     useEffect(() => {
         const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];

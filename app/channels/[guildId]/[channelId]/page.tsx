@@ -1,51 +1,34 @@
-'use client';
+import { getChannel, getGuild, getUser, getGuildChannels } from '@/lib/auth';
+import { GuildChannels } from '@/app/app-components';
+import { redirect } from 'next/navigation';
+import Content from './Content';
 
-import { ReactElement, useState, useEffect, useMemo } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import ChannelContent from './ChannelContent';
-import { useRouter } from 'next/navigation';
+const Page = async ({ params }: { params: { guildId: string; channelId: string } }) => {
+    const guild = await getGuild(params.guildId);
+    if (!guild) redirect('/channels/me');
 
-const ChannelPage = ({ params }: { params: { guildId: string; channelId: string } }): ReactElement => {
-    const [channel, setChannel] = useState<TChannel | null>(null);
+    const channel = await getChannel(params.channelId);
+    if (!channel) redirect(`/channels/${params.guildId}`);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const router = useRouter();
+    const user = await getUser();
+    const channels = await getGuildChannels(guild.id);
 
-    useEffect(() => {
-        const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === params.guildId);
+    if (!user || !channels) return;
 
-        if (!guild) {
-            const channelUrl = localStorage.getItem('channel-url');
+    return (
+        <>
+            <GuildChannels
+                guild={guild}
+                channels={channels}
+                user={user}
+            />
 
-            if (channelUrl) router.push(channelUrl);
-            else router.push('/channels/me');
-
-            return;
-        }
-
-        const channel = guild.channels?.find((channel: TChannel) => channel.id === params.channelId);
-
-        if (!channel) {
-            const channelUrl = JSON.parse(localStorage.getItem(`guild-${guild.id}`) ?? '{}')?.channelId;
-
-            if (channelUrl) {
-                router.push(`/channels/${guild.id}/${channelUrl}`);
-            } else {
-                const channel = guild.channels.find((channel: TChannel) => channel.type === 2);
-                if (channel) router.push(`/channels/${guild.id}/${channel.id}`);
-                else router.push(`/channels/me`);
-            }
-
-            return;
-        }
-
-        setChannel(channel);
-        localStorage.setItem(`guild-${guild.id}`, JSON.stringify({ channelId: channel.id }));
-    }, [params.guildId, params.channelId, auth.user.guilds, auth.user.channels]);
-
-    return useMemo(() => {
-        return <ChannelContent channel={channel} />;
-    }, [channel]);
+            <Content
+                guild={guild}
+                channel={channel}
+            />
+        </>
+    );
 };
 
-export default ChannelPage;
+export default Page;

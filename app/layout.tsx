@@ -1,8 +1,6 @@
 import SettingsProvider from '@/context/SettingsProvider';
-import TooltipProvider from '@/context/TooltipProvider';
 import { Analytics } from '@vercel/analytics/react';
 import LayerProvider from '@/context/LayerProvider';
-import PersistLogin from '@/hooks/usePersistLogin';
 import AuthProvider from '@/context/AuthProvider';
 import { ReactElement } from 'react';
 import type { Metadata } from 'next';
@@ -17,23 +15,20 @@ export const metadata: Metadata = {
     },
 };
 
-const RootLayout = ({ children }: { children: ReactElement }): ReactElement => {
+const RootLayout = ({ children }: { children: ReactElement }) => {
     return (
-        <html lang='en'>
-            <body>
-                <AuthProvider>
-                    <PersistLogin>
-                        <LayerProvider>
-                            <TooltipProvider>
-                                <SettingsProvider>{children}</SettingsProvider>
-                            </TooltipProvider>
-                        </LayerProvider>
-                    </PersistLogin>
-                </AuthProvider>
-
-                <Analytics />
-            </body>
-        </html>
+        <AuthProvider>
+            <LayerProvider>
+                <SettingsProvider>
+                    <html lang='en'>
+                        <body>
+                            {children}
+                            <Analytics />
+                        </body>
+                    </html>
+                </SettingsProvider>
+            </LayerProvider>
+        </AuthProvider>
     );
 };
 

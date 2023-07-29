@@ -18,7 +18,7 @@ const getRandomIcon = () => {
 };
 
 export async function GET(req: Request): Promise<NextResponse> {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
 
     if (senderId === '') {
         return NextResponse.json(
@@ -103,7 +103,7 @@ export async function GET(req: Request): Promise<NextResponse> {
 }
 
 export async function POST(req: Request) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get('X-UserId') || '';
     const { recipients } = await req.json();
 
     if (userId === '') {

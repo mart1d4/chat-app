@@ -563,13 +563,7 @@ const Popout = ({ content }: any) => {
 
                 {friends.length === 0 && (
                     <div className={styles.noFriends}>
-                        <div
-                            style={{
-                                backgroundImage: 'https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/',
-                                width: '171px',
-                                height: '86px',
-                            }}
-                        />
+                        <div />
 
                         <div>You don't have any friends to add!</div>
 

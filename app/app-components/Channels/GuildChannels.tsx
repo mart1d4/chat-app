@@ -1,23 +1,154 @@
 'use client';
 
-import { ReactElement, Dispatch, SetStateAction } from 'react';
+import { ReactElement, useEffect, useState, SetStateAction, Dispatch } from 'react';
 import useContextHook from '@/hooks/useContextHook';
-import styles from './ChannelItem.module.css';
+import pusher from '@/lib/pusher/client-connection';
+import styles from './GuildChannels.module.css';
 import { Icon } from '@/app/app-components';
 import { useParams } from 'next/navigation';
+import UserSection from './UserSection';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-type Props = {
+interface Props {
+    user: TCleanUser;
+    channels: TChannel[];
+    guild: TGuild;
+}
+
+const Channels = ({ user, channels, guild }: Props): ReactElement => {
+    const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
+
+    const { fixedLayer, setFixedLayer }: any = useContextHook({
+        context: 'layer',
+    });
+    const params = useParams();
+
+    useEffect(() => {
+        pusher.bind('channel-create', (data: any) => {});
+
+        return () => {
+            pusher.unbind('channel-create');
+        };
+    }, []);
+
+    return (
+        <div className={styles.nav}>
+            <div className={styles.privateChannels}>
+                <div
+                    className={styles.guildSettings}
+                    onClick={(e) => {
+                        if (fixedLayer?.guild) return;
+                        setFixedLayer({
+                            type: 'menu',
+                            menu: 'GUILD',
+                            guild: guild,
+                            element: e.currentTarget,
+                            firstSide: 'BOTTOM',
+                            secondSide: 'CENTER',
+                        });
+                    }}
+                    style={{
+                        backgroundColor: fixedLayer?.guild ? 'var(--background-hover-1)' : '',
+                    }}
+                >
+                    <div>
+                        <div>{guild.name}</div>
+                        <div
+                            style={{
+                                transform: !fixedLayer?.guild ? 'rotate(-90deg)' : '',
+                            }}
+                        >
+                            {fixedLayer?.guild ? (
+                                <Icon
+                                    name='close'
+                                    size={16}
+                                />
+                            ) : (
+                                <Icon name='arrow' />
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    className={styles.scroller + ' scrollbar'}
+                    onContextMenu={(e) => {
+                        setFixedLayer({
+                            type: 'menu',
+                            menu: 'GUILD_CHANNEL_LIST',
+                            guild: guild,
+                            event: {
+                                mouseX: e.clientX,
+                                mouseY: e.clientY,
+                            },
+                        });
+                    }}
+                >
+                    <ul className={styles.channelList}>
+                        {channels[0]?.type !== 4 && <div></div>}
+
+                        {channels.length > 0 ? (
+                            channels.map((channel: TChannel) => {
+                                if (channel.type === 4) {
+                                    return (
+                                        <ChannelItem
+                                            key={channel.id}
+                                            channel={channel}
+                                            hidden={hiddenCategories.includes(channel.id)}
+                                            setHidden={setHiddenCategories}
+                                        />
+                                    );
+                                }
+
+                                if (hiddenCategories.includes(channel?.parentId) && params?.channelId !== channel.id)
+                                    return;
+
+                                if (channel.parentId) {
+                                    const category = channels.find(
+                                        (channel: TChannel) => channel.id === channel.parentId
+                                    );
+
+                                    return (
+                                        <ChannelItem
+                                            key={channel.id}
+                                            channel={channel}
+                                            category={category}
+                                        />
+                                    );
+                                } else {
+                                    return (
+                                        <ChannelItem
+                                            key={channel.id}
+                                            channel={channel}
+                                        />
+                                    );
+                                }
+                            })
+                        ) : (
+                            <img
+                                src='https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/'
+                                alt='No Channels'
+                            />
+                        )}
+                    </ul>
+                </div>
+            </div>
+
+            <UserSection user={user} />
+        </div>
+    );
+};
+
+type ChannelItemProps = {
     channel: TChannel;
     category?: TChannel;
     hidden?: boolean;
     setHidden?: Dispatch<SetStateAction<string[]>>;
 };
 
-const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElement => {
-    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+const ChannelItem = ({ channel, category, hidden, setHidden }: ChannelItemProps) => {
+    const { setPopup, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
     const params = useParams();
 
     if (channel.type === 4) {
@@ -207,4 +338,4 @@ const ChannelItem = ({ channel, category, hidden, setHidden }: Props): ReactElem
     );
 };
 
-export default ChannelItem;
+export default Channels;

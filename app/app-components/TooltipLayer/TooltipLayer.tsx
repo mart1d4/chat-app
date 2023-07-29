@@ -9,7 +9,7 @@ const TooltipLayer = (): ReactElement => {
     const [positions, setPositions] = useState<any>({});
     const [arrowPositions, setArrowPositions] = useState<any>({});
 
-    const { tooltip }: any = useContextHook({ context: 'tooltip' });
+    const { tooltip }: any = useContextHook({ context: 'layer' });
     const text = tooltip?.text || null;
     const element = tooltip?.element || null;
     const position = tooltip?.position || 'top';
@@ -89,20 +89,6 @@ const TooltipLayer = (): ReactElement => {
                 borderRightColor: color,
             };
         }
-
-        // if (position === 'top' || position === 'bottom') {
-        //     if (pos.left < 0) {
-        //         pos.left = 20;
-        //     } else if (pos.left > window.innerWidth) {
-        //         pos.left = window.innerWidth - 20;
-        //     }
-        // } else if (position === 'left' || position === 'right') {
-        //     if (pos.top < 0) {
-        //         pos.top = 20;
-        //     } else if (pos.top > window.innerHeight) {
-        //         pos.top = window.innerHeight - 20;
-        //     }
-        // }
 
         setPositions(pos);
         setArrowPositions(arrowPos);

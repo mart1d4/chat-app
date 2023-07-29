@@ -42,7 +42,6 @@
     cursor: pointer;
     background-color: var(--background-4);
     transition: all 0.2s ease-in-out;
-    overflow: hidden;
 }
 
 .wrapperActive,

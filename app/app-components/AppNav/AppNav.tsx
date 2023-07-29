@@ -1,323 +1,12 @@
-'use client';
-
-import { ReactElement, useEffect, useState, useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import useContextHook from '@/hooks/useContextHook';
-import pusher from '@/lib/pusher/client-connection';
 import styles from './AppNav.module.css';
-import { v4 as uuidv4 } from 'uuid';
 import NavIcon from './NavIcon';
 
-const AppNav = (): ReactElement => {
-    const [url, setUrl] = useState<string>('/channels/me');
-    const [dmNotifications, setDmNotifications] = useState<TNotification[]>([]);
+interface Props {
+    user: TCleanUser;
+    guilds: TGuild[];
+}
 
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-    const pathname = usePathname();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (pathname.startsWith('/channels/me')) {
-            localStorage.setItem('channel-url', pathname);
-            setUrl(pathname);
-        }
-    }, [pathname]);
-
-    useEffect(() => {
-        if (auth.user.notifications.length) {
-            const filtered = auth.user.notifications.filter((notif: TNotification) =>
-                auth.user.channelIds.includes(notif?.channelId)
-            );
-
-            const notifications = filtered.map((notif: TNotification) => {
-                const channel = auth.user.channels.find((channel: TChannel) => channel.id === notif?.channelId);
-
-                let name = channel?.name;
-                if (channel.type === 0) {
-                    const user = channel.recipients.find((user: TCleanUser) => user.id !== auth.user.id);
-                    name = user?.username;
-                } else if (channel.type === 1 && !channel.name) {
-                    const filteredMembers = channel.recipients.filter((user: TCleanUser) => user.id !== auth.user.id);
-                    name = filteredMembers.map((user: TCleanUser) => user.username).join(', ');
-                }
-
-                let src = `${process.env.NEXT_PUBLIC_CDN_URL}${channel?.icon}/`;
-                if (channel.type === 0) {
-                    const user = channel.recipients.find((user: any) => user.id !== auth.user.id);
-                    src = `${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`;
-                }
-
-                return {
-                    ...notif,
-                    channel: {
-                        ...channel,
-                        name: name,
-                        icon: src,
-                    },
-                };
-            });
-
-            setDmNotifications(notifications);
-        }
-    }, [auth.user.notifications]);
-
-    useEffect(() => {
-        pusher.bind('user-updated', (data: any) => updateUserData(data));
-        pusher.bind('relationship-updated', (data: any) => updateRelationship(data));
-        pusher.bind('message-sent', (data: any) => updateNotifications(data));
-        pusher.bind('guild-created', (data: any) => {
-            if (data.userId !== auth.user.id) return;
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    guilds: [...auth.user.guilds, data.guild],
-                },
-            });
-            router.push(`/channels/${data.guild.id}`);
-        });
-        pusher.bind('guild-deleted', (data: any) => {
-            if (auth.user.guildIds.includes(data.guildId)) {
-                setAuth({
-                    ...auth,
-                    user: {
-                        ...auth.user,
-                        guildIds: auth.user.guildIds.filter((id: string) => id !== data.guildId),
-                        guilds: auth.user.guilds.filter((guild: TGuild) => guild.id !== data.guildId),
-                    },
-                });
-            }
-        });
-
-        return () => {
-            pusher.unbind('user-updated');
-            pusher.unbind('message-sent');
-            pusher.unbind('relationship-updated');
-            pusher.unbind('guild-created');
-            pusher.unbind('guild-deleted');
-        };
-    }, [auth.user]);
-
-    const addFriend = (user: TCleanUser) => {
-        setAuth((prev: TAuth) => ({
-            ...prev,
-            user: {
-                ...prev?.user,
-                friendIds: [...(prev?.user?.friendIds ?? []), user.id],
-                friends: [...(prev?.user?.friends ?? []), user],
-                requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
-                requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-            },
-        }));
-    };
-
-    const removeFriend = (user: TCleanUser) => {
-        setAuth((prev: TAuth) => ({
-            ...prev,
-            user: {
-                ...prev?.user,
-                friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
-                friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
-                requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-            },
-        }));
-    };
-
-    const addFriendRequest = (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
-        if (type === 'SENT') {
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    requestSentIds: [...(prev?.user?.requestSentIds ?? []), user.id],
-                    requestsSent: [...(prev?.user?.requestsSent ?? []), user],
-                },
-            }));
-        } else {
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    requestReceivedIds: [...(prev?.user?.requestReceivedIds ?? []), user.id],
-                    requestsReceived: [...(prev?.user?.requestsReceived ?? []), user],
-                },
-            }));
-        }
-    };
-
-    const blockUser = (user: TCleanUser, type: 'SENT' | 'RECEIVED') => {
-        if (type === 'SENT') {
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
-                    friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                    requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
-                    requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    blockedUserIds: [...(prev?.user?.blockedUserIds ?? []), user.id],
-                    blockedUsers: [...(prev?.user?.blockedUsers ?? []), user],
-                },
-            }));
-        } else {
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    friendIds: prev?.user.friendIds?.filter((id: string) => id !== user.id),
-                    friends: prev?.user.friends?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestReceivedIds: prev?.user.requestReceivedIds?.filter((id: string) => id !== user.id),
-                    requestsReceived: prev?.user.requestsReceived?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    requestSentIds: prev?.user.requestSentIds?.filter((id: string) => id !== user.id),
-                    requestsSent: prev?.user.requestsSent?.filter((user2: TCleanUser) => user2.id !== user.id),
-                    blockedByUserIds: [...(prev?.user?.blockedByUserIds ?? []), user.id],
-                    blockedByUsers: [...(prev?.user?.blockedByUsers ?? []), user],
-                },
-            }));
-        }
-    };
-
-    const unblockUser = (user: TCleanUser) => {
-        setAuth((prev: TAuth) => ({
-            ...prev,
-            user: {
-                ...prev?.user,
-                blockedUserIds: prev?.user.blockedUserIds?.filter((id: string) => id !== user.id),
-                blockedUsers: prev?.user.blockedUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
-                blockedByUserIds: prev?.user?.blockedByUserIds?.filter((id: string) => id !== user.id),
-                blockedByUsers: prev?.user?.blockedByUsers?.filter((user2: TCleanUser) => user2.id !== user.id),
-            },
-        }));
-    };
-
-    const updateRelationship = (data: any) => {
-        if (data.sender.id === auth.user.id || data.receiver.id === auth.user.id) {
-            const isSender = data.sender.id === auth.user.id;
-
-            switch (data.type) {
-                case 'FRIEND_ADDED':
-                    addFriend(isSender ? data.receiver : data.sender);
-                    break;
-                case 'FRIEND_REMOVED':
-                    removeFriend(isSender ? data.receiver : data.sender);
-                    break;
-                case 'FRIEND_REQUEST':
-                    addFriendRequest(isSender ? data.receiver : data.sender, isSender ? 'SENT' : 'RECEIVED');
-                    break;
-                case 'USER_BLOCKED':
-                    blockUser(isSender ? data.receiver : data.sender, isSender ? 'SENT' : 'RECEIVED');
-                    break;
-                case 'USER_UNBLOCKED':
-                    unblockUser(isSender ? data.receiver : data.sender);
-                    break;
-            }
-        }
-    };
-
-    const updateNotifications = (data: any) => {
-        if (pathname.includes(data.channelId) || !auth.user.channelIds.includes(data.channelId)) {
-            return;
-        }
-
-        const notification = dmNotifications.find(
-            (notif: TNotification) => notif?.channelId === data.channelId && notif?.type === 'MESSAGE'
-        );
-
-        setAuth({
-            ...auth,
-            user: {
-                ...auth.user,
-                notifications: notification
-                    ? auth.user.notifications.map((notif: TNotification) => {
-                          notif?.channelId === data.channelId
-                              ? {
-                                    ...notif,
-                                    count: notif?.count + 1,
-                                }
-                              : notif;
-                      })
-                    : [
-                          {
-                              type: 'MESSAGE',
-                              senderId: data.senderId,
-                              channelId: data.channelId,
-                              count: 1,
-                              createdAt: new Date().toISOString(),
-                          },
-                          ...auth.user.notifications,
-                      ],
-            },
-        });
-
-        const audio = new Audio('/assets/sounds/ping.mp3');
-        audio.volume = 0.5;
-        audio.play();
-    };
-
-    const updateUserData = (data: any) => {
-        const object = {
-            username: data.username,
-            displayName: data.displayName,
-            description: data.description,
-            avatar: data.avatar,
-            banner: data.banner,
-            primaryColor: data.primaryColor,
-            accentColor: data.accentColor,
-            status: data.status,
-        };
-
-        if (data.userId === auth.user.id) {
-            console.log('AppNav Object: ', object);
-            setAuth((prev: TAuth) => ({
-                ...prev,
-                user: {
-                    ...prev?.user,
-                    ...object,
-                },
-            }));
-        } else if (auth.user.friendIds?.includes(data.userId)) {
-            setAuth({
-                ...auth,
-                user: {
-                    ...auth.user,
-                    friends: auth.user.friends.map((friend: TCleanUser) => {
-                        return friend.id === data.userId ? { ...friend, ...object } : friend;
-                    }),
-                    requestsReceived: auth.user.requestsReceived.map((user: TCleanUser) => {
-                        return user.id === data.userId ? { ...user, ...object } : user;
-                    }),
-                    requestsSent: auth.user.requestsSent.map((user: TCleanUser) => {
-                        return user.id === data.userId ? { ...user, ...object } : user;
-                    }),
-                    blockedUsers: auth.user.blockedUsers.map((user: TCleanUser) => {
-                        return user.id === data.userId ? { ...user, ...object } : user;
-                    }),
-                },
-            });
-        }
-
-        setAuth({
-            ...auth,
-            user: {
-                ...auth.user,
-                channels: auth.user.channels.map((channel: TChannel) => {
-                    const recipients = channel.recipients.map((recipient: TCleanUser) => {
-                        return recipient.id === data.userId ? { ...recipient, ...object } : recipient;
-                    });
-
-                    return { ...channel, recipients };
-                }),
-            },
-        });
-    };
-
+const AppNav = ({ user, guilds }: Props) => {
     const chatAppIcon = (
         <svg
             xmlns='http://www.w3.org/2000/svg'
@@ -362,11 +51,10 @@ const AppNav = (): ReactElement => {
         </svg>
     );
 
-    return useMemo(
-        () => (
-            <nav className={styles.nav}>
-                <ul className={styles.list}>
-                    {dmNotifications.map((notification: any) => (
+    return (
+        <nav className={styles.nav}>
+            <ul className={styles.list}>
+                {/* {dmNotifications.map((notification: any) => (
                         <NavIcon
                             key={uuidv4()}
                             name={notification.channel.name}
@@ -374,49 +62,47 @@ const AppNav = (): ReactElement => {
                             src={notification.channel.icon}
                             count={notification.count}
                         />
-                    ))}
+                    ))} */}
 
+                <NavIcon
+                    special={true}
+                    name='Direct Messages'
+                    link={'/channels/me'}
+                    svg={chatAppIcon}
+                />
+
+                <div className={styles.listItem}>
+                    <div className={styles.separator} />
+                </div>
+
+                {guilds?.map((guild: TGuild) => (
                     <NavIcon
-                        special={true}
-                        name='Direct Messages'
-                        link={url}
-                        svg={chatAppIcon}
-                    />
-
-                    <div className={styles.listItem}>
-                        <div className={styles.separator} />
-                    </div>
-
-                    {auth.user.guilds.map((guild: TGuild) => (
-                        <NavIcon
-                            key={guild.id}
-                            name={guild.name}
-                            guild={guild}
-                            link={`/channels/${guild.id}`}
-                            src={guild.icon ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/` : undefined}
-                            count={0}
-                        />
-                    ))}
-
-                    <NavIcon
-                        green={true}
-                        name='Add a Server'
-                        link={'/channels/add'}
-                        svg={addServerIcon}
+                        key={guild.id}
+                        name={guild.name}
+                        guild={guild}
+                        link={`/channels/${guild.id}`}
+                        src={guild.icon ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/` : undefined}
                         count={0}
                     />
+                ))}
 
-                    <NavIcon
-                        green={true}
-                        name='Discover Servers'
-                        link={'/channels/discover'}
-                        svg={discoverIcon}
-                        count={0}
-                    />
-                </ul>
-            </nav>
-        ),
-        [dmNotifications, url, auth.user.guilds]
+                <NavIcon
+                    green={true}
+                    name='Add a Server'
+                    link={'/channels/add'}
+                    svg={addServerIcon}
+                    count={0}
+                />
+
+                <NavIcon
+                    green={true}
+                    name='Discover Servers'
+                    link={'/channels/discover'}
+                    svg={discoverIcon}
+                    count={0}
+                />
+            </ul>
+        </nav>
     );
 };
 

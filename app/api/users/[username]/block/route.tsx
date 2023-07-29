@@ -4,9 +4,8 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function POST(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const senderId = headers().get('X-UserId') || '';
     const username = params.username;
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
 
     try {
         const sender = await prisma.user.findUnique({

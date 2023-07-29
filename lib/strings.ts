@@ -35,10 +35,6 @@ export const trimMessage = (message: string) => {
 export const getChannelName = (channel: TChannel, userId: TUser['id']): string => {
     let name;
 
-    if (!channel) {
-        return '';
-    }
-
     if (channel.type === 0) {
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
         name = user.username;
@@ -53,7 +49,18 @@ export const getChannelName = (channel: TChannel, userId: TUser['id']): string =
         name = channel.name as string;
     }
 
-    return name;
+    return name || '';
+};
+
+export const getChannelIcon = (channel: TChannel, userId: TUser['id']): string => {
+    let src = channel?.icon;
+
+    if (channel.type === 0) {
+        const user = channel.recipients.find((user: TCleanUser) => user.id !== userId) as TUser;
+        src = user.avatar;
+    }
+
+    return src || '';
 };
 
 export const getRelativeDate = (timestamp: Date, hours?: boolean) => {

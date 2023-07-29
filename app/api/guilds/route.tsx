@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
 import { removeImage } from '@/lib/api/cdn';
 
 export async function POST(req: Request) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const { name, icon } = await req.json();
 
     if (senderId === '') {

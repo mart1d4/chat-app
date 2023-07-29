@@ -457,10 +457,13 @@
 }
 
 .noFriends > div:first-child {
+    background-image: url('https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/');
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
     margin-bottom: 20px;
+    width: 171px;
+    height: 86px;
 }
 
 .noFriends > button {

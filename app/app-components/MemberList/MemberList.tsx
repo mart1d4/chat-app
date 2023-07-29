@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, ReactElement } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
 import { Avatar, Icon } from '@/app/app-components';
 import styles from './MemberList.module.css';
 import { translateCap } from '@/lib/strings';
-import { v4 as uuidv4 } from 'uuid';
 import UserItem from './UserItem';
 
 const colors = {
@@ -25,9 +24,13 @@ const masks = {
     OFFLINE: 'status-mask-offline',
 };
 
-const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => {
-    const [user, setUser] = useState<null | TCleanUser>(null);
+interface Props {
+    channel: TChannel;
+    user?: TCleanUser;
+    friend?: TCleanUser | null;
+}
 
+const MemberList = ({ channel, user, friend }: Props) => {
     const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<TGuild[]>([]);
     const [showFriends, setShowFriends] = useState<boolean>(false);
@@ -39,7 +42,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
     const [note, setNote] = useState<string>('');
 
     const { userSettings }: any = useContextHook({ context: 'settings' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -62,44 +65,24 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    useEffect(() => {
-        if (channel?.type === 0) {
-            // @ts-ignore
-            setUser(channel?.recipients.find((recipient) => recipient.id !== auth.user.id));
-        } else {
-            setUser(null);
-        }
-    }, [channel]);
-
-    useEffect(() => {
-        if (!user) return;
-
-        const friends = auth.user.friends?.filter((friend: TCleanUser) => user.friendIds?.includes(friend.id));
-        setMutualFriends(friends);
-        const guilds = auth.user.guilds?.filter((guild: TGuild) => user.guildIds?.includes(guild.id));
-        setMutualGuilds(guilds);
-    }, [user]);
-
     return useMemo(() => {
         if (!userSettings.showUsers || !widthLimitPassed) return <></>;
 
-        if (!channel) return <aside className={styles.aside} />;
-
-        if (channel?.type === 0 && user) {
+        if (friend) {
             return (
                 <aside
                     className={styles.aside}
                     style={
                         {
-                            '--card-primary-color': user.primaryColor,
-                            '--card-accent-color': user.accentColor,
+                            '--card-primary-color': friend.primaryColor,
+                            '--card-accent-color': friend.accentColor,
                             '--card-overlay-color': 'hsla(0, 0%, 0%, 0.6)',
                             '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
                             '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
                             '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
                             '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                            '--card-button-color': getButtonColor(user.primaryColor, user.accentColor as string),
-                            '--card-border-color': user.primaryColor,
+                            '--card-button-color': getButtonColor(friend.primaryColor, friend.accentColor),
+                            '--card-border-color': friend.primaryColor,
                         } as React.CSSProperties
                     }
                 >
@@ -136,9 +119,9 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                     <div
                                         className={styles.cardBannerBackground}
                                         style={{
-                                            backgroundColor: !user.banner ? user.primaryColor : '',
-                                            backgroundImage: user.banner
-                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
+                                            backgroundColor: !friend.banner ? friend.primaryColor : '',
+                                            backgroundImage: friend.banner
+                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.banner}/`
                                                 : '',
                                             height: '120px',
                                         }}
@@ -151,7 +134,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                             <div
                                 className={styles.avatarImage}
                                 style={{
-                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
+                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`,
                                 }}
                             />
 
@@ -159,7 +142,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                 className={styles.cardAvatarStatus}
                                 onMouseEnter={(e) => {
                                     setTooltip({
-                                        text: translateCap(user.status),
+                                        text: translateCap(friend.status),
                                         element: e.currentTarget,
                                         gap: 5,
                                     });
@@ -174,8 +157,10 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         width='100%'
                                         rx={8}
                                         ry={8}
-                                        fill={colors[user.status ?? 'OFFLINE']}
-                                        mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
+                                        // @ts-ignore
+                                        fill={colors[friend.status ?? 'OFFLINE']}
+                                        // @ts-ignore
+                                        mask={`url(#${masks[friend.status ?? 'OFFLINE']})`}
                                     />
                                 </svg>
                             </div>
@@ -185,22 +170,22 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
 
                         <div className={styles.cardBody}>
                             <div className={styles.cardSection}>
-                                <h4>{user.displayName}</h4>
-                                <div>{user.username}</div>
+                                <h4>{friend.displayName}</h4>
+                                <div>{friend.username}</div>
                             </div>
 
-                            {user.customStatus && (
+                            {friend.customStatus && (
                                 <div className={styles.cardSection}>
-                                    <div>{user.customStatus}</div>
+                                    <div>{friend.customStatus}</div>
                                 </div>
                             )}
 
                             <div className={styles.cardDivider} />
 
-                            {user.description && (
+                            {friend.description && (
                                 <div className={styles.cardSection}>
                                     <h4>About me</h4>
-                                    <div>{user.description}</div>
+                                    <div>{friend.description}</div>
                                 </div>
                             )}
 
@@ -211,7 +196,7 @@ const MemberList = ({ channel }: { channel: TChannel | null }): ReactElement => 
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
-                                    }).format(new Date(user.createdAt))}
+                                    }).format(new Date(friend.createdAt))}
                                 </div>
                             </div>
 

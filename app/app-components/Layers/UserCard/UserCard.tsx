@@ -28,8 +28,7 @@ const UserCard = ({ content, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-    const { setUserProfile, setFixedLayer, setShowSettings }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setUserProfile, setFixedLayer, setShowSettings, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);

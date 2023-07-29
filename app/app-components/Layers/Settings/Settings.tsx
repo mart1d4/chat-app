@@ -32,8 +32,7 @@ const Settings = (): ReactElement => {
     const [minified, setMinified] = useState<boolean>(false);
     const [hideNav, setHideNav] = useState<boolean>(false);
 
-    const { popup, showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { popup, showSettings, setShowSettings, setTooltip }: any = useContextHook({ context: 'layer' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
 
     useEffect(() => {
@@ -264,8 +263,7 @@ export default Settings;
 const MyAccount = ({ setActiveTab }: any) => {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const usernameRef = useRef<HTMLDivElement>(null);
@@ -445,8 +443,7 @@ const MyAccount = ({ setActiveTab }: any) => {
 };
 
 const Profiles = () => {
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
     const tabs = ['User Profile', 'Server Profiles'];

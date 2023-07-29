@@ -86,46 +86,46 @@ const useFetchHelper = () => {
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
-        const channel = auth.user.channels.find((channel: TChannel) => {
-            return (
-                channel.recipients.length === recipients.length &&
-                channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
-                (searchDM ? channel.type === 0 : true)
-            );
-        });
+        // const channel = auth.user.channels.find((channel: TChannel) => {
+        //     return (
+        //         channel.recipients.length === recipients.length &&
+        //         channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
+        //         (searchDM ? channel.type === 0 : true)
+        //     );
+        // });
 
-        if (channel) return channel;
+        // if (channel) return channel;
+        return true;
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
-        if (!auth?.accessToken) {
-            throw new Error('[useFetchHelper] An access token is required');
+        if (!auth.token) {
+            throw new Error('[useFetchHelper] An token is required');
         }
 
         if (query === 'CHANNEL_CREATE' && !skipCheck) {
-            const channel =
-                data?.recipients.length === 1
-                    ? channelExists([...data?.recipients, auth.user.id], true)
-                    : channelExists([...data?.recipients, auth.user.id], false);
-
-            if (channel) {
-                if (channel.type === 0) {
-                    router.push(`/channels/me/${channel.id}`);
-                    return;
-                } else if (channel.type === 1 && channel.recipients.length !== 1) {
-                    setPopup({
-                        type: 'CHANNEL_EXISTS',
-                        channel: channel,
-                        recipients: data?.recipients,
-                    });
-                    return;
-                }
-            }
+            // const channel =
+            //     data?.recipients.length === 1
+            //         ? channelExists([...data?.recipients, auth.user.id], true)
+            //         : channelExists([...data?.recipients, auth.user.id], false);
+            // if (channel) {
+            //     if (channel.type === 0) {
+            //         router.push(`/channels/me/${channel.id}`);
+            //         return;
+            //     } else if (channel.type === 1 && channel.recipients.length !== 1) {
+            //         setPopup({
+            //             type: 'CHANNEL_EXISTS',
+            //             channel: channel,
+            //             recipients: data?.recipients,
+            //         });
+            //         return;
+            //     }
+            // }
         }
 
         const headers = {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.accessToken}`,
+            Authorization: `Bearer ${auth.token}`,
         };
 
         const body = JSON.stringify(data ?? {});
@@ -170,18 +170,18 @@ const useFetchHelper = () => {
         } catch (error) {
             console.error(error);
 
-            if (data?.message?.attachments.length > 0) {
-                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${auth.token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        attachments: data?.message.attachments,
-                    }),
-                });
-            }
+            // if (data?.message?.attachments.length > 0) {
+            //     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
+            //         method: 'DELETE',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //             Authorization: `Bearer ${auth.token}`,
+            //         },
+            //         body: JSON.stringify({
+            //             attachments: data?.message.attachments,
+            //         }),
+            //     });
+            // }
 
             throw new Error('[useFetchHelper] Error sending request');
         }

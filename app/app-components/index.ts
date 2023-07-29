@@ -1,5 +1,4 @@
 import AppNav from './AppNav/AppNav';
-import Channels from './Channels/Channels';
 import UserProfile from './Layers/UserProfile/UserProfile';
 import Icon from './Icon/Icon';
 import Settings from './Layers/Settings/Settings';
@@ -22,10 +21,11 @@ import TooltipLayer from './TooltipLayer/TooltipLayer';
 import { EmojiPicker } from './TextArea/TextArea';
 import FixedMessage from './Message/FixedMessage';
 import Checkbox from './Checkbox/Checkbox';
+import UserChannels from './Channels/UserChannels';
+import GuildChannels from './Channels/GuildChannels';
 
 export {
     AppNav,
-    Channels,
     Icon,
     Settings,
     Popup,
@@ -48,4 +48,6 @@ export {
     TooltipLayer,
     EmojiPicker,
     Checkbox,
+    UserChannels,
+    GuildChannels,
 };

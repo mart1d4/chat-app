@@ -1,34 +1,32 @@
-import {
-    AppNav,
-    Channels,
-    Settings,
-    UserProfile,
-    Popup,
-    FixedLayer,
-    Loading,
-    TooltipLayer,
-} from '@/app/app-components';
-import { ReactElement, ReactNode } from 'react';
+import { AppNav, Settings, UserProfile, Popup, FixedLayer, TooltipLayer, Loading } from '@/app/app-components';
+import { getGuilds, getUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import styles from './Layout.module.css';
+import { ReactNode } from 'react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Chat App | Friends',
 };
 
-const Layout = ({ children }: { children: ReactNode }): ReactElement => {
-    return (
-        <Loading>
-            <>
-                <div className={styles.appContainer}>
-                    <AppNav />
+const Layout = async ({ children }: { children: ReactNode }) => {
+    const user = await getUser();
+    const guilds = await getGuilds();
 
-                    <div className={styles.appWrapper}>
-                        <div className={styles.channelsContainer}>
-                            <Channels />
-                            {children}
-                        </div>
-                    </div>
+    if (!user) {
+        redirect('/login');
+    }
+
+    return (
+        <Loading user={user}>
+            <div className={styles.appContainer}>
+                <AppNav
+                    user={user}
+                    guilds={guilds}
+                />
+
+                <div className={styles.appWrapper}>
+                    <div className={styles.channelsContainer}>{children}</div>
                 </div>
 
                 <div className={styles.layers}>
@@ -38,7 +36,7 @@ const Layout = ({ children }: { children: ReactNode }): ReactElement => {
                     <UserProfile />
                     <TooltipLayer />
                 </div>
-            </>
+            </div>
         </Loading>
     );
 };

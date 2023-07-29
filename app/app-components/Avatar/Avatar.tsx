@@ -52,7 +52,7 @@ const masks = {
 };
 
 const Avatar = (props: Props) => {
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setTooltip }: any = useContextHook({ context: 'layer' });
 
     const rectSize = rectSizes[props.size];
     const rectPlacement = rectPlacements[props.size];
@@ -253,7 +253,6 @@ const Avatar = (props: Props) => {
                             width={props.size}
                             height={props.size}
                             draggable={false}
-                            placeholder={props.size > 40 ? 'blur' : undefined}
                         />
                     </div>
                 </foreignObject>
@@ -294,7 +293,6 @@ const Avatar = (props: Props) => {
                 width={props.size}
                 height={props.size}
                 draggable={false}
-                placeholder={props.size > 40 ? 'blur' : undefined}
             />
         </div>
     );

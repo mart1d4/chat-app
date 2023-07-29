@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
 
     if (senderId === '') {
@@ -88,7 +88,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function PUT(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
     const { name, icon } = await req.json();
 
@@ -197,7 +197,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
 
     if (userId === '') {

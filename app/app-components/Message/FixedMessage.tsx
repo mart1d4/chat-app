@@ -7,8 +7,7 @@ import styles from './FixedMessage.module.css';
 import { useState, useMemo } from 'react';
 
 const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean }) => {
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const getLongDate = (date: Date) => {
@@ -493,8 +492,7 @@ type ImageComponent = {
 const Image = ({ attachment, message }: ImageComponent) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
 
-    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
 
     return useMemo(
         () => (

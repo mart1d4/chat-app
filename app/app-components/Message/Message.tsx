@@ -24,8 +24,7 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     const [editContent, setEditContent] = useState<string>(message.content || '');
     const [fileProgress, setFileProgress] = useState<number>(0);
 
-    const { fixedLayer, setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { fixedLayer, setFixedLayer, setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -1215,8 +1214,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
     const [menuSender, setMenuSender] = useState<boolean | null>(null);
     const [shift, setShift] = useState<boolean>(false);
 
-    const { setFixedLayer, fixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setFixedLayer, fixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
@@ -1398,8 +1396,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
-    const { setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { setPopup, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
 
     return useMemo(

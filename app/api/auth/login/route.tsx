@@ -3,14 +3,8 @@ import { prisma } from '@/lib/prismadb';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 
-type Body = {
-    username: string;
-    password: string;
-    client?: string;
-};
-
 export async function POST(req: Request): Promise<NextResponse> {
-    const { username, password, client }: Body = await req.json();
+    const { username, password } = await req.json();
 
     if (!username || !password) {
         return NextResponse.json(
@@ -189,21 +183,24 @@ export async function POST(req: Request): Promise<NextResponse> {
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (passwordsMatch) {
+            const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
+            const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
+
             const accessToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime('2d')
+                .setExpirationTime('1h')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
-                .sign(new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET));
+                .sign(accessSecret);
 
             const refreshToken = await new SignJWT({ id: user.id })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime('365d')
+                .setExpirationTime('1d')
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
-                .sign(new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET));
+                .sign(refreshSecret);
 
             // Save refresh token to database
             await prisma.user.update({
@@ -232,7 +229,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                 {
                     status: 200,
                     headers: {
-                        'Set-Cookie': `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=604800; Secure`,
+                        'Set-Cookie': `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure`,
                     },
                 }
             );

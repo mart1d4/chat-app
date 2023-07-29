@@ -10,7 +10,7 @@ type Params = {
 };
 
 export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
 
     if (userId === '') {

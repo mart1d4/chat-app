@@ -1,49 +1,50 @@
-'use client';
+import { getUser, getChannel, getChannels } from '@/lib/auth';
+import { UserChannels } from '@/app/app-components';
+import { redirect } from 'next/navigation';
+import Content from './Content';
 
-import { ReactElement, useState, useEffect, useMemo } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import ChannelContent from './ChannelContent';
-import { useRouter } from 'next/navigation';
-import { getChannelName } from '@/lib/strings';
+const getData = async (channelId: string) => {
+    const channel = await getChannel(channelId);
 
-const ChannelPage = ({ params }: { params: { channelId: string } }): ReactElement => {
-    const [channel, setChannel] = useState<TChannel | null>(null);
+    if (!channel) {
+        redirect('/channels/me');
+    }
 
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const router = useRouter();
+    const user = await getUser();
 
-    useEffect(() => {
-        const channel: TChannel | undefined = auth.user.channels?.find(
-            (channel: TChannel) => channel.id === params.channelId
-        );
+    return {
+        channel,
+        user,
+    };
+};
 
-        if (!channel) {
-            const channelId = localStorage.getItem('channel-url');
+const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
+    const { channel, user } = await getData(params.channelId);
+    const channels = await getChannels();
 
-            if (channelId) router.push(`/channels/me/${channelId}`);
-            else router.push('/channels/me');
+    if (!user) {
+        redirect('/login');
+    }
 
-            return;
-        }
+    let friend: TCleanUser | null = null;
+    if (channel.type === 0) {
+        friend = channel.recipients.find((u) => u.id !== user.id) || null;
+    }
 
-        let name = getChannelName(channel, auth.user.id);
+    return (
+        <>
+            <UserChannels
+                user={user}
+                channels={channels}
+            />
 
-        let src = channel?.icon;
-        if (channel.type === 0) {
-            const user = channel.recipients.find((user: any) => user.id !== auth.user.id) as TUser;
-            src = user.avatar;
-        }
-
-        setChannel({
-            ...channel,
-            name: name,
-            icon: src,
-        });
-    }, [params.channelId, auth.user.channels]);
-
-    return useMemo(() => {
-        return <ChannelContent channel={channel} />;
-    }, [channel]);
+            <Content
+                channel={channel}
+                user={user}
+                friend={friend}
+            />
+        </>
+    );
 };
 
 export default ChannelPage;

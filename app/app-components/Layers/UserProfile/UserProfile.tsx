@@ -29,10 +29,11 @@ const UserProfile = (): ReactElement => {
     const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [note, setNote] = useState<string>('');
 
-    const { userProfile, setUserProfile, fixedLayer, setFixedLayer, setShowSettings }: any = useContextHook({
-        context: 'layer',
-    });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
+    const { userProfile, setUserProfile, fixedLayer, setFixedLayer, setShowSettings, setTooltip }: any = useContextHook(
+        {
+            context: 'layer',
+        }
+    );
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const cardRef = useRef<HTMLDivElement>(null);

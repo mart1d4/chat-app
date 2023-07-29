@@ -4,10 +4,10 @@ import useContextHook from './useContextHook';
 
 const useLogout = () => {
     const { setShowSettings }: any = useContextHook({ context: 'layer' });
-    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
+    // const { auth, setAuth }: any = useContextHook({ context: 'auth' });
 
     const logout = async () => {
-        const channelIds = auth.user.channelIds;
+        // const channelIds = auth.user.channelIds;
 
         try {
             await fetch('/api/auth/logout', {
@@ -18,11 +18,11 @@ const useLogout = () => {
                 localStorage.removeItem('friends-tab');
                 localStorage.removeItem('user-settings');
 
-                channelIds.forEach((channelId: string) => {
-                    localStorage.removeItem(`channel-${channelId}`);
-                });
+                // channelIds.forEach((channelId: string) => {
+                //     localStorage.removeItem(`channel-${channelId}`);
+                // });
 
-                setAuth(null);
+                // setAuth(null);
                 setShowSettings(false);
             });
         } catch (error) {

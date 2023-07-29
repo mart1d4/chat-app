@@ -13,9 +13,7 @@ type Props = {
 };
 
 const UserItem = ({ user, channel, offline, isOwner }: Props): ReactElement => {
-    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-
+    const { fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
     const liRef = useRef(null);
 
     return (

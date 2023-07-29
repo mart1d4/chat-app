@@ -1,21 +1,26 @@
 'use client';
 
-import { ReactElement, ReactNode, createContext, useState, Dispatch, SetStateAction } from 'react';
+import { ReactNode, createContext, useState } from 'react';
 
 export const AuthContext = createContext<AuthProviderValue | null>(null);
 
-const AuthProvider = ({ children }: { children: ReactNode }): ReactElement => {
-    const [auth, setAuth] = useState<TAuth>(null);
-    const [loading, setLoading] = useState<boolean>(true);
+const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const [auth, setAuth] = useState<TAuth>({
+        user: {
+            id: '999',
+            username: 'mart1d4',
+            email: '',
+            avatar: '',
+            primaryColor: '#000000',
+            accentColor: '#000000',
+            description: '',
+            createdAt: '',
+            updatedAt: '',
+            displayName: '',
+        },
+    });
 
-    const value: AuthProviderValue = {
-        auth,
-        setAuth,
-        loading,
-        setLoading,
-    };
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={{ auth, setAuth } as AuthProviderValue}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

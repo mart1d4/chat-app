@@ -1,28 +1,34 @@
 'use client';
 
 import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } from '@/app/app-components';
-import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import pusher from '@/lib/pusher/client-connection';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
 
-const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement => {
+type Props = {
+    channel: TChannel;
+    user: TCleanUser;
+    friend: TCleanUser | null;
+};
+
+const Content = ({ channel, user, friend }: Props) => {
     const [edit, setEdit] = useState<MessageEditObject | null>(null);
     const [reply, setReply] = useState<MessageReplyObject | null>(null);
-    const [friend, setFriend] = useState<null | TCleanUser>(null);
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
     const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
-        if (!setEdit || !setReply || !channel) return;
+        document.title = `Chat App | @${channel.name}`;
+    }, []);
 
+    useEffect(() => {
         const setLocalStorage = (data: {}) => {
             localStorage.setItem(
                 `channel-${channel.id}`,
@@ -55,158 +61,43 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     }, [edit, popup, fixedLayer]);
 
     useEffect(() => {
-        if (!channel) return;
-
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');
 
         if (localChannel?.edit) setEdit(localChannel.edit);
         if (localChannel?.reply) setReply(localChannel.reply);
 
         const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${auth.accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            }).then((res) => res?.json());
+            // const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+            //     method: 'GET',
+            //     headers: {
+            //         Authorization: `Bearer wm`,
+            //         'Content-Type': 'application/json',
+            //     },
+            // }).then((res) => res?.json());
 
-            if (response.error) {
-                console.log(response.error);
-            } else {
-                setMessages(response.messages);
-                setHasMore(response.hasMore);
-            }
+            // if (response.error) {
+            //     console.log(response.error);
+            // } else {
+            //     setMessages(response.messages);
+            //     setHasMore(response.hasMore);
+            // }
 
+            setMessages([]);
+            setHasMore(false);
             setLoading(false);
         };
 
         getMessages();
-    }, [channel]);
-
-    useEffect(() => {
-        if (!channel) return;
-
-        const listenSockets = () => {
-            pusher.bind('message-sent', (data: any) => {
-                if (
-                    data.channelId !== channel.id ||
-                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message.type))
-                )
-                    return;
-                setMessages((messages) => [...messages, data.message]);
-            });
-
-            pusher.bind('message-edited', (data: any) => {
-                if (data.channelId !== channel.id) return;
-                setMessages((messages) =>
-                    messages.map((message) => {
-                        if (message.id === data.message.id) return data.message;
-                        if (message.messageReferenceId === data.message.id)
-                            return { ...message, messageReference: data.message };
-                        return message;
-                    })
-                );
-            });
-
-            pusher.bind('message-deleted', (data: any) => {
-                if (data.channelId !== channel.id) return;
-                setMessages((messages) => {
-                    return messages
-                        .filter((message) => message.id !== data.messageId)
-                        .map((message) => {
-                            if (message.messageReferenceId === data.messageId) {
-                                return { ...message, messageReference: null };
-                            }
-                            return message;
-                        }) as TMessage[];
-                });
-            });
-
-            pusher.bind('user-updated', (data: any) => {
-                const object = {
-                    username: data.username,
-                    displayName: data.displayName,
-                    description: data.description,
-                    avatar: data.avatar,
-                    banner: data.banner,
-                    primaryColor: data.primaryColor,
-                    accentColor: data.accentColor,
-                    status: data.status,
-                };
-
-                const messagesUpdated = messages.map((message) => {
-                    if (message.author.id === data.userId) {
-                        return { ...message, author: { ...message.author, ...object } };
-                    } else if (message.messageReference?.author.id === data.userId) {
-                        return {
-                            ...message,
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    } else if (
-                        message.messageReference?.author.id === data.userId &&
-                        message.author.id === data.userId
-                    ) {
-                        return {
-                            ...message,
-                            author: { ...message.author, ...object },
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    }
-                    return message;
-                });
-
-                setMessages(messagesUpdated);
-            });
-        };
-
-        listenSockets();
-
-        return () => {
-            pusher.unbind('message-sent');
-            pusher.unbind('message-edited');
-            pusher.unbind('message-deleted');
-            pusher.unbind('user-updated');
-        };
-    }, [channel, messages]);
+    }, []);
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
             if (node) {
-                setTimeout(() => {
-                    node.scrollTop = node.scrollHeight;
-                }, 300);
+                node.scrollTop = node.scrollHeight;
             }
         },
         [loading, scrollToBottom]
     );
-
-    useEffect(() => {
-        const container = scrollableContainer;
-        // @ts-ignore
-        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
-
-        if (!isAtBottom) {
-            if (edit) setScrollToBottom((prev) => !prev);
-            if (reply) setScrollToBottom((prev) => !prev);
-        }
-    }, [edit, reply]);
-
-    useEffect(() => {
-        const container = scrollableContainer;
-        // @ts-ignore
-        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
-
-        if (!isAtBottom) {
-            setScrollToBottom((prev) => !prev);
-        }
-    }, [messages]);
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
         const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
@@ -246,7 +137,10 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     return useMemo(
         () => (
             <div className={styles.container}>
-                <AppHeader channel={channel} />
+                <AppHeader
+                    channel={channel}
+                    friend={friend}
+                />
 
                 <div className={styles.content}>
                     <main className={styles.main}>
@@ -261,7 +155,15 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                                             <MessageSkeleton />
                                         ) : (
                                             <>
-                                                {hasMore ? <MessageSkeleton /> : <FirstMessage channel={channel} />}
+                                                {hasMore ? (
+                                                    <MessageSkeleton />
+                                                ) : (
+                                                    <FirstMessage
+                                                        channel={channel}
+                                                        user={user}
+                                                        friend={friend}
+                                                    />
+                                                )}
 
                                                 {messages?.map((message: TMessage, index: number) => (
                                                     <div key={message.id}>
@@ -307,23 +209,20 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                         />
                     </main>
 
-                    <MemberList channel={channel} />
+                    <MemberList
+                        channel={channel}
+                        user={user}
+                        friend={friend}
+                    />
                 </div>
             </div>
         ),
-        [channel, loading, messages, hasMore, edit, reply]
+        [channel, friend, messages, loading, hasMore, edit, reply]
     );
 };
 
-const FirstMessage = ({ channel }: { channel: TChannel }) => {
-    const { auth }: any = useContextHook({ context: 'auth' });
+const FirstMessage = ({ channel, user, friend }: Props) => {
     const { sendRequest } = useFetchHelper();
-
-    let friend: any;
-
-    if (channel.type === 0) {
-        friend = channel.recipients.find((recipient: any) => recipient.id !== auth.user.id);
-    }
 
     return (
         <div className={styles.firstTimeMessageContainer}>
@@ -352,7 +251,7 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
 
                 {friend && (
                     <div className={styles.descriptionActions}>
-                        {auth.user.friendIds.includes(friend.id) ? (
+                        {user.friendIds.includes(friend.id) ? (
                             <button
                                 className='grey'
                                 onClick={() =>
@@ -364,9 +263,9 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                             >
                                 Remove Friend
                             </button>
-                        ) : auth.user.requestSentIds.includes(friend.id) ? (
+                        ) : user.requestSentIds?.includes(friend.id) ? (
                             <button className='blue disabled'>Friend Request Sent</button>
-                        ) : auth.user.requestReceivedIds.includes(friend.id) ? (
+                        ) : user.requestReceivedIds?.includes(friend.id) ? (
                             <button
                                 className='grey'
                                 onClick={() =>
@@ -379,13 +278,15 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                                 Accept Friend Request
                             </button>
                         ) : (
-                            !auth.user.blockedUserIds.includes(friend.id) && (
+                            !user.blockedUserIds?.includes(friend.id) && (
                                 <button
                                     className='blue'
                                     onClick={() =>
                                         sendRequest({
                                             query: 'ADD_FRIEND',
-                                            params: { username: friend.username },
+                                            params: {
+                                                username: friend.username,
+                                            },
                                         })
                                     }
                                 >
@@ -394,7 +295,7 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
                             )
                         )}
 
-                        {!auth.user.blockedUserIds.includes(friend.id) ? (
+                        {!user.blockedUserIds?.includes(friend.id) ? (
                             <button
                                 className='grey'
                                 onClick={() =>
@@ -426,4 +327,4 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
     );
 };
 
-export default ChannelContent;
+export default Content;

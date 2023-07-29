@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { removeImage } from '@/lib/api/cdn';
 
 export async function DELETE(req: Request, { params }: { params: { guildId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const guildId = params.guildId;
 
     if (senderId === '') {

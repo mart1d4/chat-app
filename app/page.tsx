@@ -3,7 +3,6 @@ import Footer from './web-components/Footer/Footer';
 import { Icon } from '@/app/app-components/';
 import styles from './Home.module.css';
 import type { Metadata } from 'next';
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
         'chat-app, chat, voice, video, text, gaming, friends, communities, free, open source, open source software, open source project',
 };
 
-const HomePage = (): ReactNode => {
+const HomePage = () => {
     return (
         <div className={styles.mainContainer}>
             <div className={styles.heading}>

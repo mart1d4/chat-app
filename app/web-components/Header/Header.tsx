@@ -1,6 +1,5 @@
 import AuthButton from '../AuthButton/AuthButton';
 import styles from './Header.module.css';
-import { v4 as uuidv4 } from 'uuid';
 import Link from 'next/link';
 
 type Link = {
@@ -50,9 +49,9 @@ const Header = () => {
                     <div className={styles.navLinks}>
                         {links.map((link) => (
                             <Link
+                                key={link.name}
                                 href={link.href}
                                 className={styles.navLink}
-                                key={uuidv4()}
                             >
                                 {link.name}
                             </Link>

@@ -11,7 +11,7 @@ type Params = {
 };
 
 export async function PUT(req: Request, { params }: Params) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get('X-UserId') || '';
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 
@@ -307,7 +307,7 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get('X-UserId') || '';
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 

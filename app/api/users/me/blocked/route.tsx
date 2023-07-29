@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function GET(req: Request): Promise<NextResponse> {
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
 
     try {
         const sender = await prisma.user.findUnique({

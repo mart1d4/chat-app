@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
 
     try {

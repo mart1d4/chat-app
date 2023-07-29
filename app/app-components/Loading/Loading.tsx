@@ -2,22 +2,31 @@
 
 import useContextHook from '@/hooks/useContextHook';
 import { ReactElement, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import styles from './Loading.module.css';
 
 type Props = {
     children: ReactElement;
+    user: TCleanUser;
 };
 
-const Loading = ({ children }: Props): ReactElement => {
-    const { auth, loading }: any = useContextHook({ context: 'auth' });
-    const router = useRouter();
+const Loading = ({ children, user }: Props): ReactElement => {
+    const { setAuth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
-        if (!loading && !auth?.accessToken) {
-            router.push('/login');
-        }
-    }, [auth, loading]);
+        const setAuthContext = async () => {
+            // const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+            //     method: 'GET',
+            //     credentials: 'include',
+            // }).then((res) => res.json());
+
+            setAuth({
+                user: user,
+                // token: response.token,
+                token: '',
+            });
+        };
+
+        setAuthContext();
+    }, []);
 
     return (
         <div
@@ -27,21 +36,7 @@ const Loading = ({ children }: Props): ReactElement => {
             onDragOver={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
         >
-            {auth?.accessToken && !loading ? (
-                children
-            ) : (
-                <div className={styles.container}>
-                    <video
-                        autoPlay
-                        loop
-                    >
-                        <source
-                            src='/assets/app/spinner.webm'
-                            type='video/webm'
-                        />
-                    </video>
-                </div>
-            )}
+            {children}
         </div>
     );
 };

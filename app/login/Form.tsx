@@ -1,8 +1,6 @@
 'use client';
 
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import useContextHook from '@/hooks/useContextHook';
 import { LoadingDots } from '../app-components';
 import { useRouter } from 'next/navigation';
 import styles from '../Auth.module.css';
@@ -14,9 +12,8 @@ const Form = (): ReactElement => {
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const { setAuth }: any = useContextHook({ context: 'auth' });
     const usernameInputRef = useRef<HTMLInputElement>(null);
-    const router: AppRouterInstance = useRouter();
+    const router = useRouter();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
@@ -55,18 +52,13 @@ const Form = (): ReactElement => {
 
         if (!response.success) {
             setError(response.message || 'An error occurred');
-            setIsLoading(false);
         } else {
-            setAuth({
-                accessToken: response.accessToken,
-                user: response.user,
-            });
-
             setUsername('');
             setPassword('');
-            setIsLoading(false);
             router.push('/channels/me');
         }
+
+        setIsLoading(false);
     };
 
     return (

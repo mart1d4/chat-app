@@ -15,14 +15,13 @@ import Image from 'next/image';
 
 const Popup = (): ReactElement => {
     const { popup, setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
     const { logout } = useLogout();
     const router = useRouter();
     const type = popup?.type;
 
     const [isLoading, setIsLoading] = useState(false);
-    const [uid, setUID] = useState(auth.user.username);
+    const [uid, setUID] = useState('auth.user.username');
     const [usernameError, setUsernameError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [password, setPassword] = useState('');
@@ -40,7 +39,7 @@ const Popup = (): ReactElement => {
 
     const [join, setJoin] = useState(false);
     const [guildTemplate, setGuildTemplate] = useState<number>(0);
-    const [guildName, setGuildName] = useState(`${auth.user.username}'s server`);
+    const [guildName, setGuildName] = useState("`${auth.user.username}'s server`");
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
 
     const [channelName, setChannelName] = useState('');
@@ -56,7 +55,7 @@ const Popup = (): ReactElement => {
         // Reset all state when popup is closed
         if (!popup) {
             setIsLoading(false);
-            setUID(auth.user.username);
+            setUID('auth.user.username');
             setPassword('');
             setPassword1('');
             setNewPassword('');
@@ -69,7 +68,7 @@ const Popup = (): ReactElement => {
 
             setJoin(false);
             setGuildTemplate(0);
-            setGuildName(`${auth.user.username}'s server`);
+            setGuildName("`${auth.user.username}'s server`");
             setGuildIcon(null);
 
             setChannelName('');
@@ -108,11 +107,11 @@ const Popup = (): ReactElement => {
             return;
         }
 
-        if (auth.user.username === uid) {
-            setUsernameError('Username cannot be the same as your current username.');
-            setIsLoading(false);
-            return;
-        }
+        // if (auth.user.username === uid) {
+        //     setUsernameError('Username cannot be the same as your current username.');
+        //     setIsLoading(false);
+        //     return;
+        // }
 
         if (!password) {
             setPasswordError('Password cannot be empty.');
@@ -756,14 +755,14 @@ const Popup = (): ReactElement => {
                                     router.push(`/channels/me/${popup.channel.id}`);
                                 }}
                             >
-                                <Avatar
+                                {/* <Avatar
                                     src={popup.channel.icon}
                                     alt={getChannelName(popup.channel, auth.user.id)}
                                     size={24}
                                 />
 
                                 <span>{getChannelName(popup.channel, auth.user.id)}</span>
-                                <span>{getRelativeDate(popup.channel.updatedAt, true)}</span>
+                                <span>{getRelativeDate(popup.channel.updatedAt, true)}</span> */}
                             </div>
                         )}
                         {type === 'CREATE_GUILD' && !guildTemplate && !join && (

@@ -9,8 +9,11 @@ export const config = {
 const allowedPaths = ['/', '/download'];
 
 export async function middleware(req: NextRequest) {
+    const requestHeaders = new Headers(req.headers);
+
     const token = req.headers.get('Authorization')?.split(' ')[1];
-    console.log('[MIDDLEWARE] Token: ', token);
+    const refreshToken = req.cookies.get('token')?.value;
+
     const { pathname } = req.nextUrl;
 
     // Return early with 200 for CORS preflight
@@ -20,9 +23,9 @@ export async function middleware(req: NextRequest) {
         });
     }
 
-    if (pathname.startsWith('/api/auth') || allowedPaths.includes(pathname)) {
-        return NextResponse.next();
-    } else if (pathname.startsWith('/api')) {
+    if (pathname.startsWith('/api')) {
+        if (pathname.startsWith('/api/auth')) return NextResponse.next();
+
         if (!token) {
             return new NextResponse(null, {
                 status: 401,
@@ -36,16 +39,30 @@ export async function middleware(req: NextRequest) {
                     audience: process.env.AUDIENCE,
                 });
 
-                const requestHeaders = new Headers(req.headers);
-                requestHeaders.set('userId', payload.id as string);
+                if (!payload.id) {
+                    return new NextResponse(null, {
+                        status: 401,
+                    });
+                }
 
-                return NextResponse.next({
-                    request: {
-                        headers: requestHeaders,
-                    },
-                });
+                const response = await fetch(`${process.env.BASE_URL}/api/auth/api-auth`, {
+                    method: 'POST',
+                    body: JSON.stringify({ requesterId: payload.id }),
+                }).then((res) => res.json());
+
+                if (!response.success) {
+                    return new NextResponse(null, {
+                        status: 401,
+                    });
+                } else {
+                    requestHeaders.set('X-UserId', response.user.id);
+                    return NextResponse.next({
+                        request: {
+                            headers: requestHeaders,
+                        },
+                    });
+                }
             } catch (error) {
-                console.error('[MIDDLEWARE] Error: ', error);
                 return new NextResponse(null, {
                     status: 401,
                 });

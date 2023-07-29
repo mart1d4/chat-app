@@ -21,16 +21,13 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
-    const { setPopup, popup, setFixedLayer }: any = useContextHook({ context: 'layer' });
-    const { setTooltip }: any = useContextHook({ context: 'tooltip' });
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { setPopup, popup, setFixedLayer, setTooltip }: any = useContextHook({
+        context: 'layer',
+    });
 
     const pathname = usePathname();
     const router = useRouter();
-    const badgeCount = useMemo(
-        () => count ?? auth.user.requestReceivedIds.length,
-        [count, auth.user.requestReceivedIds]
-    );
+    const badgeCount = 12;
 
     useEffect(() => {
         if (special ? pathname.startsWith('/channels/me') : guild ? pathname.startsWith(link) : pathname === link) {
@@ -128,9 +125,21 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                             : '',
                 }}
             >
-                {badgeCount > 0 && (
-                    <div className={styles.badgeContainer}>
-                        <div>{badgeCount}</div>
+                {badgeCount > 0 && special && (
+                    <div
+                        className={styles.badgeContainer}
+                        style={{
+                            width: badgeCount > 99 ? '30px' : '',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: badgeCount > 99 ? '20px' : '',
+                                fontSize: badgeCount > 99 ? '10px' : '',
+                            }}
+                        >
+                            {badgeCount}
+                        </div>
                     </div>
                 )}
 

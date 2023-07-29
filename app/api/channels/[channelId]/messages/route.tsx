@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { removeImage } from '@/lib/api/cdn';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
     const channelId = params.channelId;
     const { skip, limit } = { skip: 0, limit: 500 };
 
@@ -151,8 +151,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
 
     const channelId = params.channelId;
     const { message } = await req.json();

@@ -38,6 +38,17 @@ type TPopup = null | {
     message?: TMessage;
 };
 
+type TTooltip = null | {
+    text: string;
+    element: HTMLElement;
+    position: 'top' | 'bottom' | 'left' | 'right';
+    gap?: number;
+    big?: boolean;
+    color?: string;
+    delay?: number;
+    arrow?: boolean;
+};
+
 type TFixedLayer = null | {
     type: EFixedLayerType;
     element?: HTMLElement;
@@ -52,12 +63,14 @@ type TFixedLayer = null | {
 
 type ProviderValue = {
     userProfile: TUserProfile;
-    setUserProfile: (content: TUserProfile) => void;
     showSettings: TSettings;
-    setShowSettings: Dispatch<SetStateAction<TSettings>>;
     fixedLayer: TFixedLayer;
-    setFixedLayer: (content: TFixedLayer) => void;
+    tooltip: TTooltip;
     popup: TPopup;
+    setUserProfile: (content: TUserProfile) => void;
+    setShowSettings: Dispatch<SetStateAction<TSettings>>;
+    setFixedLayer: (content: TFixedLayer) => void;
+    setTooltip: Dispatch<SetStateAction<TTooltip>>;
     setPopup: Dispatch<SetStateAction<TPopup>>;
 };
 
@@ -65,6 +78,7 @@ const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
     const [userProfile, setUserProfile2] = useState<TUserProfile>(null);
     const [showSettings, setShowSettings] = useState<TSettings>(false);
     const [fixedLayer, setFixedLayer2] = useState<TFixedLayer>(null);
+    const [tooltip, setTooltip] = useState<TTooltip>(null);
     const [popup, setPopup] = useState<TPopup>(null);
 
     const setUserProfile = (content: TUserProfile) => {
@@ -79,12 +93,14 @@ const LayerProvider = ({ children }: { children: ReactNode }): ReactElement => {
 
     const value: ProviderValue = {
         userProfile,
-        setUserProfile,
         showSettings,
-        setShowSettings,
         fixedLayer,
-        setFixedLayer,
+        tooltip,
         popup,
+        setUserProfile,
+        setShowSettings,
+        setFixedLayer,
+        setTooltip,
         setPopup,
     };
 

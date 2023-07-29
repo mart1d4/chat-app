@@ -5,8 +5,7 @@ import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
 
 export async function PUT(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
 
     const channelId = params.channelId;
     const messageId = params.messageId;
@@ -167,8 +166,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
+    const senderId = headers().get('X-UserId') || '';
 
     const channelId = params.channelId;
     const messageId = params.messageId;

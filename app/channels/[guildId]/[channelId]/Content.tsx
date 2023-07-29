@@ -4,24 +4,24 @@ import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Icon } from 
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
-import pusher from '@/lib/pusher/client-connection';
-import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
 
-const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement => {
+interface Props {
+    guild: TGuild;
+    channel: TChannel;
+}
+
+const Content = ({ guild, channel }: Props): ReactElement => {
     const [edit, setEdit] = useState<MessageEditObject | null>(null);
     const [reply, setReply] = useState<MessageReplyObject | null>(null);
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
     const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
-        if (!setEdit || !setReply || !channel) return;
-
         const setLocalStorage = (data: {}) => {
             localStorage.setItem(
                 `channel-${channel.id}`,
@@ -54,147 +54,41 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     }, [edit, popup, fixedLayer]);
 
     useEffect(() => {
-        if (!channel) return;
-
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');
 
         if (localChannel?.edit) setEdit(localChannel.edit);
         if (localChannel?.reply) setReply(localChannel.reply);
 
-        const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${auth.accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            }).then((res) => res?.json());
+        // const getMessages = async () => {
+        //     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+        //         method: 'GET',
+        //         headers: {
+        //             Authorization: `Bearer ${auth.accessToken}`,
+        //             'Content-Type': 'application/json',
+        //         },
+        //     }).then((res) => res?.json());
 
-            if (response.error) {
-                console.log(response.error);
-            } else {
-                setMessages(response.messages);
-                setHasMore(response.hasMore);
-            }
+        //     if (response.error) {
+        //         console.log(response.error);
+        //     } else {
+        //         setMessages(response.messages);
+        //         setHasMore(response.hasMore);
+        //     }
 
-            setLoading(false);
-        };
+        //     setLoading(false);
+        // };
 
-        getMessages();
-    }, [channel]);
-
-    useEffect(() => {
-        if (!channel) return;
-
-        const listenSockets = () => {
-            pusher.bind('message-sent', (data: any) => {
-                if (
-                    data.channelId !== channel.id ||
-                    (data.message.author.id === auth.user.id && !shouldDisplayInlined(data.message.type))
-                )
-                    return;
-                setMessages((messages) => [...messages, data.message]);
-            });
-
-            pusher.bind('message-edited', (data: any) => {
-                if (data.channelId !== channel.id) return;
-                setMessages((messages) =>
-                    messages.map((message) => {
-                        if (message.id === data.message.id) return data.message;
-                        if (message.messageReferenceId === data.message.id)
-                            return { ...message, messageReference: data.message };
-                        return message;
-                    })
-                );
-            });
-
-            pusher.bind('message-deleted', (data: any) => {
-                if (data.channelId !== channel.id) return;
-                setMessages((messages) => {
-                    return messages
-                        .filter((message) => message.id !== data.messageId)
-                        .map((message) => {
-                            if (message.messageReferenceId === data.messageId) {
-                                return { ...message, messageReference: null };
-                            }
-                            return message;
-                        }) as TMessage[];
-                });
-            });
-
-            pusher.bind('user-updated', (data: any) => {
-                const object = {
-                    username: data.username,
-                    displayName: data.displayName,
-                    description: data.description,
-                    avatar: data.avatar,
-                    banner: data.banner,
-                    primaryColor: data.primaryColor,
-                    accentColor: data.accentColor,
-                    status: data.status,
-                };
-
-                const messagesUpdated = messages.map((message) => {
-                    if (message.author.id === data.userId) {
-                        return { ...message, author: { ...message.author, ...object } };
-                    } else if (message.messageReference?.author.id === data.userId) {
-                        return {
-                            ...message,
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    } else if (
-                        message.messageReference?.author.id === data.userId &&
-                        message.author.id === data.userId
-                    ) {
-                        return {
-                            ...message,
-                            author: { ...message.author, ...object },
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    }
-                    return message;
-                });
-
-                setMessages(messagesUpdated);
-            });
-        };
-
-        listenSockets();
-
-        return () => {
-            pusher.unbind('message-sent');
-            pusher.unbind('message-edited');
-            pusher.unbind('message-deleted');
-            pusher.unbind('user-updated');
-        };
-    }, [channel, messages]);
+        // getMessages();
+    }, []);
 
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
             if (node) {
-                setTimeout(() => {
-                    node.scrollTop = node.scrollHeight;
-                }, 300);
+                node.scrollTop = node.scrollHeight;
             }
         },
         [loading, scrollToBottom]
     );
-
-    useEffect(() => {
-        const container = scrollableContainer;
-        // @ts-ignore
-        const isAtBottom = container?.scrollTop + container?.clientHeight === container?.scrollHeight;
-
-        if (!isAtBottom) {
-            setScrollToBottom((prev) => !prev);
-        }
-    }, [messages]);
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
         const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
@@ -231,6 +125,8 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
         );
     };
 
+    console.log(channel);
+
     return useMemo(
         () => (
             <div className={styles.container}>
@@ -249,7 +145,14 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
                                             <MessageSkeleton />
                                         ) : (
                                             <>
-                                                {hasMore ? <MessageSkeleton /> : <FirstMessage channel={channel} />}
+                                                {hasMore ? (
+                                                    <MessageSkeleton />
+                                                ) : (
+                                                    <FirstMessage
+                                                        guild={guild}
+                                                        channel={channel}
+                                                    />
+                                                )}
 
                                                 {messages?.map((message: TMessage, index: number) => (
                                                     <div key={message.id}>
@@ -302,14 +205,7 @@ const ChannelContent = ({ channel }: { channel: TChannel | null }): ReactElement
     );
 };
 
-const FirstMessage = ({ channel }: { channel: TChannel }) => {
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const { sendRequest } = useFetchHelper();
-
-    const guild = auth.user.guilds.find((guild: TGuild) => guild.id === channel.guildId);
-
-    if (!guild) return;
-
+const FirstMessage = ({ guild, channel }: Props) => {
     if (guild.systemChannelId === channel.id) {
         return (
             <div className={styles.systemChannel}>
@@ -365,4 +261,4 @@ const FirstMessage = ({ channel }: { channel: TChannel }) => {
     );
 };
 
-export default ChannelContent;
+export default Content;
