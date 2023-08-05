@@ -1,0 +1,34 @@
+.container {
+    width: 100dvw;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-3);
+}
+
+.container video {
+    width: 200px;
+    height: 200px;
+}
+
+.textContent {
+    text-align: center;
+    position: relative;
+    top: -20px;
+    user-select: none;
+    cursor: default;
+}
+
+.textContent > div:first-child {
+    margin-bottom: 8px;
+    color: var(--foreground-1);
+}
+
+.textContent > div:last-child {
+    max-width: 300px;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--foreground-2);
+}

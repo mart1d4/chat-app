@@ -1,5 +1,5 @@
 import { getChannel, getGuild, getUser, getGuildChannels } from '@/lib/auth';
-import { GuildChannels } from '@/app/app-components';
+import { GuildChannels } from '@components';
 import { redirect } from 'next/navigation';
 import Content from './Content';
 
@@ -14,6 +14,7 @@ const Page = async ({ params }: { params: { guildId: string; channelId: string }
     const channels = await getGuildChannels(guild.id);
 
     if (!user || !channels) return;
+    channels.sort((a, b) => (a.position as number) - (b.position as number));
 
     return (
         <>

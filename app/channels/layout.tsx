@@ -1,4 +1,4 @@
-import { AppNav, Settings, UserProfile, Popup, FixedLayer, TooltipLayer, Loading } from '@/app/app-components';
+import { AppNav, Settings, UserProfile, Popup, FixedLayer, Tooltip, Loading } from '@components';
 import { getGuilds, getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import styles from './Layout.module.css';
@@ -13,9 +13,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
     const user = await getUser();
     const guilds = await getGuilds();
 
-    if (!user) {
-        redirect('/login');
-    }
+    if (!user) return redirect('/login');
 
     return (
         <Loading user={user}>
@@ -34,7 +32,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
                     <Settings />
                     <FixedLayer />
                     <UserProfile />
-                    <TooltipLayer />
+                    <Tooltip />
                 </div>
             </div>
         </Loading>

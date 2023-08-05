@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Icon } from '@/app/app-components/';
 import styles from './Footer.module.css';
+import { Icon } from '@components';
 
 type Language = {
     name: string;

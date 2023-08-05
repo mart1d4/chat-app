@@ -100,7 +100,7 @@ const useFetchHelper = () => {
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
         if (!auth.token) {
-            throw new Error('[useFetchHelper] An token is required');
+            throw new Error('[useFetchHelper] A token is required');
         }
 
         if (query === 'CHANNEL_CREATE' && !skipCheck) {

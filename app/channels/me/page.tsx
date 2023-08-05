@@ -1,4 +1,4 @@
-import { AppHeader, UserChannels } from '@/app/app-components';
+import { AppHeader, UserChannels } from '@components';
 import { getUser, getChannels } from '@/lib/auth';
 import styles from './FriendsPage.module.css';
 import { redirect } from 'next/navigation';
@@ -14,9 +14,7 @@ const FriendsPage = async () => {
     const user = await getUser();
     const channels = await getChannels();
 
-    if (!user) {
-        redirect('/login');
-    }
+    if (!user) return redirect('/login');
 
     return (
         <>

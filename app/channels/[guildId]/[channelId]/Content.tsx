@@ -1,6 +1,6 @@
 'use client';
 
-import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Icon } from '@/app/app-components';
+import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from '@components';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
@@ -142,11 +142,11 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
                                         {loading || !channel ? (
-                                            <MessageSkeleton />
+                                            <MessageSk />
                                         ) : (
                                             <>
                                                 {hasMore ? (
-                                                    <MessageSkeleton />
+                                                    <MessageSk />
                                                 ) : (
                                                     <FirstMessage
                                                         guild={guild}

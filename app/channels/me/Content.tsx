@@ -1,7 +1,7 @@
 'use client';
 
-import { AddFriend, UserLists } from '@/app/app-components';
 import useContextHook from '@/hooks/useContextHook';
+import { AddFriend, UserLists } from '@components';
 import { ReactElement } from 'react';
 
 const Content = (): ReactElement => {

@@ -1,10 +1,9 @@
 'use client';
 
-import { AppHeader, Message, TextArea, MemberList, MessageSkeleton, Avatar } from '@/app/app-components';
+import { AppHeader, Message, TextArea, MemberList, MessageSk, Avatar } from '@components';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
-import pusher from '@/lib/pusher/client-connection';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
 
@@ -152,11 +151,11 @@ const Content = ({ channel, user, friend }: Props) => {
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
                                         {loading || !channel ? (
-                                            <MessageSkeleton />
+                                            <MessageSk />
                                         ) : (
                                             <>
                                                 {hasMore ? (
-                                                    <MessageSkeleton />
+                                                    <MessageSk />
                                                 ) : (
                                                     <FirstMessage
                                                         channel={channel}

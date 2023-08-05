@@ -1,8 +1,8 @@
 import Header from './web-components/Header/Header';
 import Footer from './web-components/Footer/Footer';
-import { Icon } from '@/app/app-components/';
 import styles from './Home.module.css';
 import type { Metadata } from 'next';
+import { Icon } from '@components';
 import Link from 'next/link';
 
 export const metadata: Metadata = {

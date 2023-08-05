@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import { LoadingDots } from '../app-components';
 import { useRouter } from 'next/navigation';
+import { LoadingDots } from '@components';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
 

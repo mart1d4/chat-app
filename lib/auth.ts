@@ -395,6 +395,7 @@ export const getGuildChannels = async (id: string): Promise<TChannel[]> => {
                     name: true,
                     position: true,
                     parentId: true,
+                    guildId: true,
                 },
             },
         },

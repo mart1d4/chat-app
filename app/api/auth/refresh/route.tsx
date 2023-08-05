@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prismadb';
+import { cookies } from 'next/headers';
 import { SignJWT } from 'jose';
 
 export async function GET(req: Request): Promise<NextResponse> {
@@ -64,17 +64,27 @@ export async function GET(req: Request): Promise<NextResponse> {
         const refreshToken = await new SignJWT({ id: user.id })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
-            .setExpirationTime('1d')
+            .setExpirationTime('30d')
             .setIssuer(process.env.ISSUER as string)
             .setAudience(process.env.ISSUER as string)
             .sign(refreshSecret);
+
+        await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                refreshTokens: {
+                    push: refreshToken,
+                },
+            },
+        });
 
         return NextResponse.json(
             {
                 success: true,
                 message: 'Successfully refreshed token.',
                 token: accessToken,
-                user: user,
             },
             {
                 status: 200,
@@ -84,7 +94,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[REFRESH] ${error}`);
         return NextResponse.json(
             {
                 success: false,

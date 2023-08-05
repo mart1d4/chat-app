@@ -6,8 +6,6 @@ export const config = {
     matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api)(.*)'],
 };
 
-const allowedPaths = ['/', '/download'];
-
 export async function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
 
@@ -32,9 +30,9 @@ export async function middleware(req: NextRequest) {
             });
         } else {
             try {
-                const tokenSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
+                const secret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
 
-                const { payload } = await jwtVerify(token, tokenSecret, {
+                const { payload } = await jwtVerify(token, secret, {
                     issuer: process.env.ISSUER,
                     audience: process.env.AUDIENCE,
                 });
@@ -45,7 +43,7 @@ export async function middleware(req: NextRequest) {
                     });
                 }
 
-                const response = await fetch(`${process.env.BASE_URL}/api/auth/api-auth`, {
+                const response = await fetch(`${process.env.BASE_URL}/api/auth`, {
                     method: 'POST',
                     body: JSON.stringify({ requesterId: payload.id }),
                 }).then((res) => res.json());
@@ -55,7 +53,7 @@ export async function middleware(req: NextRequest) {
                         status: 401,
                     });
                 } else {
-                    requestHeaders.set('X-UserId', response.user.id);
+                    requestHeaders.set('X-UserId', response.userId);
                     return NextResponse.next({
                         request: {
                             headers: requestHeaders,

@@ -9,6 +9,7 @@ const avatars = [
     '220b2392-c4c5-4226-8b91-2b60c5a13d0f',
     '51073721-c1b9-4d47-a2f3-34f0fbb1c0a8',
 ];
+
 const colors = ['#5865F2', '#3BA45C', '#737C89', '#ED4245', '#FAA51A'];
 
 const getRandomAvatar = (): { avatar: string; color: string } => {
@@ -25,39 +26,27 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: false,
                 message: 'Invalid Username or Password',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
-    const USER_REGEX = /^.{2,32}$/;
-    const PWD_REGEX = /^.{8,256}$/;
-
-    const v1: boolean = USER_REGEX.test(username);
-    const v2: boolean = PWD_REGEX.test(password);
-
-    if (!v1) {
+    if (!/^.{2,32}$/.test(username)) {
         return NextResponse.json(
             {
                 success: false,
                 message: 'Invalid Username',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
-    if (!v2) {
+    if (!/^.{8,256}$/.test(password)) {
         return NextResponse.json(
             {
                 success: false,
                 message: 'Invalid Password',
             },
-            {
-                status: 400,
-            }
+            { status: 400 }
         );
     }
 
@@ -74,9 +63,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     success: false,
                     message: 'User already exists',
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -99,20 +86,16 @@ export async function POST(req: Request): Promise<NextResponse> {
                 success: true,
                 message: 'User registered successfully',
             },
-            {
-                status: 201,
-            }
+            { status: 201 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[REGISTER] ${error}`);
         return NextResponse.json(
             {
                 success: false,
                 message: 'Something went wrong.',
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

@@ -334,3 +334,46 @@ button.disabled {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
 }
+
+.smallTitle {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+    user-select: none;
+}
+
+.keybind {
+    color: var(--foreground-1);
+    display: inline-flex;
+    margin-right: -2px;
+    transform: translateY(-1px);
+    position: relative;
+    height: 23px;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.keybind > span {
+    box-shadow: inset 0 -4px 0 hsl(225 6.3% 12.5%);
+    background-color: hsl(227 6.5% 27.3%);
+    border: 1px solid hsl(223 6.7% 20.6%);
+    padding: 3px 6px 4px;
+    border-radius: 4px;
+    min-width: 14px;
+    min-height: 14px;
+    text-align: center;
+    position: relative;
+    height: 23px;
+    line-height: 12px;
+}
+
+.keybind > span:active {
+    box-shadow: inset 0 -2px 0 hsl(223 6.7% 20.6%);
+    border: 1px solid hsl(225 6.3% 12.5%);
+    transform: translateY(2px);
+    padding-bottom: 2px;
+    height: 21px;
+}
