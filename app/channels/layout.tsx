@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import styles from './Layout.module.css';
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
     title: 'Chat App | Friends',
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 const Layout = async ({ children }: { children: ReactNode }) => {
     const user = await getUser();
     const guilds = await getGuilds();
+
+    console.log(headers().get('Authorization'));
 
     if (!user) return redirect('/login');
 

@@ -39,19 +39,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             );
         }
 
-        await prisma.user.update({
-            where: {
-                id: user.id,
-            },
-            data: {
-                refreshTokens: {
-                    set: user.refreshTokens.filter((refreshToken) => refreshToken !== token),
-                },
-            },
-        });
-
         const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
-        const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
 
         const accessToken = await new SignJWT({ id: user.id })
             .setProtectedHeader({ alg: 'HS256' })
@@ -61,37 +49,13 @@ export async function GET(req: Request): Promise<NextResponse> {
             .setAudience(process.env.ISSUER as string)
             .sign(accessSecret);
 
-        const refreshToken = await new SignJWT({ id: user.id })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setIssuedAt()
-            .setExpirationTime('30d')
-            .setIssuer(process.env.ISSUER as string)
-            .setAudience(process.env.ISSUER as string)
-            .sign(refreshSecret);
-
-        await prisma.user.update({
-            where: {
-                id: user.id,
-            },
-            data: {
-                refreshTokens: {
-                    push: refreshToken,
-                },
-            },
-        });
-
         return NextResponse.json(
             {
                 success: true,
                 message: 'Successfully refreshed token.',
                 token: accessToken,
             },
-            {
-                status: 200,
-                headers: {
-                    'Set-Cookie': `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure`,
-                },
-            }
+            { status: 200 }
         );
     } catch (error) {
         console.error(`[REFRESH] ${error}`);

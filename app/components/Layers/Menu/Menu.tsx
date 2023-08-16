@@ -665,6 +665,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Add Reaction',
                         items: reactionItems,
+                        icon: 'addReaction',
                         func: () => {},
                     },
                     { name: 'Mark Unread', icon: 'mark', func: () => {} },
@@ -685,6 +686,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Add Reaction',
                         items: reactionItems,
+                        icon: 'addReaction',
                         func: () => {},
                     },
                     {

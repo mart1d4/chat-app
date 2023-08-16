@@ -22,6 +22,7 @@ const Content = ({ channel, user, friend }: Props) => {
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
     const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
+    const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
         document.title = `Chat App | @${channel.name}`;
@@ -66,26 +67,25 @@ const Content = ({ channel, user, friend }: Props) => {
         if (localChannel?.reply) setReply(localChannel.reply);
 
         const getMessages = async () => {
-            // const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-            //     method: 'GET',
-            //     headers: {
-            //         Authorization: `Bearer wm`,
-            //         'Content-Type': 'application/json',
-            //     },
-            // }).then((res) => res?.json());
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${auth.token}`,
+                    'Content-Type': 'application/json',
+                },
+            }).then((res) => res?.json());
 
-            // if (response.error) {
-            //     console.log(response.error);
-            // } else {
-            //     setMessages(response.messages);
-            //     setHasMore(response.hasMore);
-            // }
+            if (response.error) {
+                console.log(response.error);
+            } else {
+                setMessages(response.messages);
+                setHasMore(response.hasMore);
+            }
 
-            setMessages([]);
-            setHasMore(false);
             setLoading(false);
         };
 
+        setLoading(true);
         getMessages();
     }, []);
 

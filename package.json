@@ -17,6 +17,7 @@
         "@vercel/analytics": "^1.0.1",
         "bcryptjs": "^2.4.3",
         "bufferutil": "^4.0.7",
+        "cryptr": "^6.2.0",
         "encoding": "^0.1.13",
         "framer-motion": "^10.13.0",
         "jose": "^4.14.4",

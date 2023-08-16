@@ -1,4 +1,4 @@
-import pusher from '@/lib/pusher/api-connection';
+import pusher from '@/lib/pusher/server-connection';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';

@@ -81,8 +81,8 @@ const methods = {
 };
 
 const useFetchHelper = () => {
+    const { auth, setAuth }: any = useContextHook({ context: 'auth' });
     const { setPopup }: any = useContextHook({ context: 'layer' });
-    const { auth }: any = useContextHook({ context: 'auth' });
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
@@ -99,10 +99,6 @@ const useFetchHelper = () => {
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
-        if (!auth.token) {
-            throw new Error('[useFetchHelper] A token is required');
-        }
-
         if (query === 'CHANNEL_CREATE' && !skipCheck) {
             // const channel =
             //     data?.recipients.length === 1
@@ -159,31 +155,32 @@ const useFetchHelper = () => {
         url = url.replace(':recipientId', params?.recipientId ?? '');
         url = url.replace(':guildId', params?.guildId ?? '');
 
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
-                method: method,
-                headers: headers,
-                body: body,
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
+            method: method,
+            headers: headers,
+            body: body,
+        });
+
+        if (response.status === 401) {
+            const { sendRequest: resend } = useFetchHelper();
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+                method: 'GET',
+                credentials: 'include',
             }).then((res) => res.json());
 
-            return response;
-        } catch (error) {
-            console.error(error);
+            if (!response.token) {
+                throw new Error('[useFetchHelper] No token found');
+            }
 
-            // if (data?.message?.attachments.length > 0) {
-            //     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cdn/images`, {
-            //         method: 'DELETE',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //             Authorization: `Bearer ${auth.token}`,
-            //         },
-            //         body: JSON.stringify({
-            //             attachments: data?.message.attachments,
-            //         }),
-            //     });
-            // }
+            setAuth((prev: any) => ({
+                ...prev,
+                token: response.token,
+            }));
 
-            throw new Error('[useFetchHelper] Error sending request');
+            return await resend({ query, params, data, skipCheck });
+        } else {
+            return await response.json();
         }
     };
 

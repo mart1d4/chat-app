@@ -1,8 +1,9 @@
-import pusher from '@/lib/pusher/api-connection';
+import pusher from '@/lib/pusher/server-connection';
+import { removeImage } from '@/lib/api/cdn';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
-import { removeImage } from '@/lib/api/cdn';
+import { decryptMessage, encryptMessage } from '@/lib/encryption';
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get('X-UserId') || '';
@@ -129,11 +130,18 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             );
         }
 
+        const messages = channel.messages.map((message) => {
+            return {
+                ...message,
+                content: decryptMessage(message.content),
+            };
+        });
+
         return NextResponse.json(
             {
                 success: true,
                 message: 'Successfully retrieved messages',
-                messages: channel.messages,
+                messages: messages,
                 hasMore: channel.messages.length - skip > limit,
             },
             { status: 200 }
@@ -244,6 +252,8 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             }
         }
 
+        const prevContent = message.content;
+
         if (message.messageReference !== null) {
             const messageRef = await prisma.message.findUnique({
                 where: {
@@ -288,7 +298,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 newMessage = await prisma.message.create({
                     data: {
                         type: message.messageReference ? 1 : 0,
-                        content: message.content,
+                        content: encryptMessage(message.content),
                         attachments: message.attachments,
                         embeds: message.embeds,
                         mentionEveryone: message.mentionEveryone,
@@ -312,7 +322,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 newMessage = await prisma.message.create({
                     data: {
                         type: message.messageReference ? 1 : 0,
-                        content: message.content,
+                        content: encryptMessage(message.content),
                         attachments: message.attachments,
                         embeds: message.embeds,
                         mentionEveryone: message.mentionEveryone,
@@ -335,7 +345,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 newMessage = await prisma.message.create({
                     data: {
                         type: message.messageReference ? 1 : 0,
-                        content: message.content,
+                        content: encryptMessage(message.content),
                         attachments: message.attachments,
                         embeds: message.embeds,
                         mentionEveryone: message.mentionEveryone,
@@ -356,7 +366,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 newMessage = await prisma.message.create({
                     data: {
                         type: message.messageReference ? 1 : 0,
-                        content: message.content,
+                        content: encryptMessage(message.content),
                         attachments: message.attachments,
                         embeds: message.embeds,
                         mentionEveryone: message.mentionEveryone,
@@ -481,7 +491,10 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         await pusher.trigger('chat-app', 'message-sent', {
             channelId: channelId,
-            message: messageToSend,
+            message: {
+                ...messageToSend,
+                content: prevContent,
+            },
         });
 
         return NextResponse.json(
@@ -489,7 +502,10 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 success: true,
                 message: 'Successfully sent message',
                 data: {
-                    message: messageToSend,
+                    message: {
+                        ...messageToSend,
+                        content: prevContent,
+                    },
                 },
             },
             { status: 200 }
