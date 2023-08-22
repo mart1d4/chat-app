@@ -7,6 +7,7 @@ import { translateCap } from '@/lib/strings';
 import { useRouter } from 'next/navigation';
 import styles from './UserItem.module.css';
 import { Avatar, Icon } from '@components';
+import { useLayers, useTooltip } from '@/lib/store';
 
 type Props = {
     content: string;
@@ -14,7 +15,9 @@ type Props = {
 };
 
 export const UserItem = ({ content, user }: Props): ReactElement => {
-    const { fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -38,7 +41,9 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
         <li
             ref={liRef}
             className={
-                fixedLayer?.refElement === liRef.current ? styles.liContainer + ' ' + styles.active : styles.liContainer
+                layers.MENU?.content.refElement === liRef.current
+                    ? styles.liContainer + ' ' + styles.active
+                    : styles.liContainer
             }
             onClick={() => {
                 if (!['all', 'online'].includes(content)) return;
@@ -50,20 +55,26 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
-                setFixedLayer({
-                    type: 'menu',
-                    menu: 'USER',
-                    event: {
-                        mouseX: e.clientX,
-                        mouseY: e.clientY,
+                setLayers({
+                    settings: {
+                        type: 'MENU',
+                        event: e,
                     },
-                    user: user,
-                    refElement: liRef.current,
+                    content: {
+                        type: 'USER',
+                        user: user,
+                        refElement: liRef.current,
+                    },
                 });
             }}
             onMouseEnter={() => {
-                if (fixedLayer?.refElement && fixedLayer?.user !== user) {
-                    setFixedLayer(null);
+                if (layers.MENU?.content.refElement && layers.MENU?.content.user !== user) {
+                    setLayers({
+                        settings: {
+                            type: 'MENU',
+                            setNull: true,
+                        },
+                    });
                 }
             }}
         >
@@ -110,7 +121,6 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseEnter={(e) =>
                                     setTooltip({
                                         text: 'Message',
-                                        position: 'top',
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -126,16 +136,17 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        menu: 'USER_SMALL',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
+                                    setLayers({
+                                        settings: {
+                                            type: 'MENU',
+                                            event: e,
                                         },
-                                        user: user,
-                                        userlist: true,
-                                        refElement: liRef.current,
+                                        content: {
+                                            type: 'USER_SMALL',
+                                            user: user,
+                                            userlist: true,
+                                            refElement: liRef.current,
+                                        },
                                     });
                                 }}
                                 onMouseEnter={(e) =>

@@ -5,6 +5,7 @@ import { translateCap } from '@/lib/strings';
 import styles from './Avatar.module.css';
 import { useEffect } from 'react';
 import Image from 'next/image';
+import { useTooltip } from '@/lib/store';
 
 type Props = {
     src: string;
@@ -52,7 +53,7 @@ const masks = {
 };
 
 export const Avatar = (props: Props) => {
-    const { setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
 
     const rectSize = rectSizes[props.size];
     const rectPlacement = rectPlacements[props.size];
@@ -262,8 +263,7 @@ export const Avatar = (props: Props) => {
                         if (!props.tooltip) return;
                         setTooltip({
                             text: translateCap(props.status),
-                            element: e.target,
-                            position: 'top',
+                            element: e.currentTarget,
                             gap: props.tooltipGap || 0,
                         });
                     }}

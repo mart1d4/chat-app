@@ -4,6 +4,7 @@ import { useState, ReactElement, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getButtonColor } from '@/lib/colors/getColors';
 import useContextHook from '@/hooks/useContextHook';
+import { useLayers, useTooltip } from '@/lib/store';
 import { translateCap } from '@/lib/strings';
 import styles from './UserCard.module.css';
 import { Icon } from '@components';
@@ -28,7 +29,9 @@ export const UserCard = ({ content, resetPosition }: any): ReactElement => {
     const [note, setNote] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-    const { setUserProfile, setFixedLayer, setShowSettings, setTooltip }: any = useContextHook({ context: 'layer' });
+    const { setShowSettings }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -87,7 +90,12 @@ export const UserCard = ({ content, resetPosition }: any): ReactElement => {
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    setFixedLayer(null);
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_CARD',
+                                            setNull: true,
+                                        },
+                                    });
                                     setShowSettings({
                                         type: 'Profiles',
                                     });
@@ -153,8 +161,20 @@ export const UserCard = ({ content, resetPosition }: any): ReactElement => {
                                     backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
                                 }}
                                 onClick={() => {
-                                    setFixedLayer(null);
-                                    setUserProfile({ user: user });
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_CARD',
+                                            setNull: true,
+                                        },
+                                    });
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_PROFILE',
+                                        },
+                                        content: {
+                                            user,
+                                        },
+                                    });
                                 }}
                             />
 

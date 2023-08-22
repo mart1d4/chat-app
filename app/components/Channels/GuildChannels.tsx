@@ -7,6 +7,7 @@ import { Icon, UserSection } from '@components';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useLayers, useTooltip } from '@/lib/store';
 
 interface Props {
     user: TCleanUser;
@@ -17,7 +18,8 @@ interface Props {
 export const GuildChannels = ({ user, channels, guild }: Props): ReactElement => {
     const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
-    const { fixedLayer, setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const params = useParams();
 
     return (
@@ -26,24 +28,28 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                 <div
                     className={styles.guildSettings}
                     onClick={(e) => {
-                        if (fixedLayer?.guild) return;
-                        setFixedLayer({
-                            type: 'menu',
-                            menu: 'GUILD',
-                            guild: guild,
-                            element: e.currentTarget,
-                            firstSide: 'BOTTOM',
-                            secondSide: 'CENTER',
+                        if (layers.MENU?.content.guild) return;
+                        setLayers({
+                            settings: {
+                                type: 'MENU',
+                                element: e.currentTarget,
+                                firstSide: 'BOTTOM',
+                                secondSide: 'CENTER',
+                            },
+                            content: {
+                                type: 'GUILD',
+                                guild: guild,
+                            },
                         });
                     }}
                     style={{
-                        backgroundColor: fixedLayer?.guild ? 'var(--background-hover-1)' : '',
+                        backgroundColor: layers.MENU?.content.guild ? 'var(--background-hover-1)' : '',
                     }}
                 >
                     <div>
                         <div>{guild.name}</div>
-                        <div style={{ transform: !fixedLayer?.guild ? 'rotate(-90deg)' : '' }}>
-                            {fixedLayer?.guild ? (
+                        <div style={{ transform: !layers.MENU?.content.guild ? 'rotate(-90deg)' : '' }}>
+                            {layers.MENU?.content.guild ? (
                                 <Icon
                                     name='close'
                                     size={16}
@@ -58,13 +64,14 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                 <div
                     className={styles.scroller + ' scrollbar'}
                     onContextMenu={(e) => {
-                        setFixedLayer({
-                            type: 'menu',
-                            menu: 'GUILD_CHANNEL_LIST',
-                            guild: guild,
-                            event: {
-                                mouseX: e.clientX,
-                                mouseY: e.clientY,
+                        setLayers({
+                            settings: {
+                                type: 'MENU',
+                                event: e,
+                            },
+                            content: {
+                                type: 'GUILD_CHANNEL_LIST',
+                                guild: guild,
                             },
                         });
                     }}
@@ -130,7 +137,8 @@ type ChannelItemProps = {
 };
 
 const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
-    const { setPopup, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const params = useParams();
 
     if (channel.type === 4) {
@@ -151,13 +159,14 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setFixedLayer({
-                        type: 'menu',
-                        menu: 'GUILD_CHANNEL',
-                        channel: channel,
-                        event: {
-                            mouseX: e.clientX,
-                            mouseY: e.clientY,
+                    setLayers({
+                        settings: {
+                            type: 'MENU',
+                            event: e,
+                        },
+                        content: {
+                            type: 'GUILD_CHANNEL',
+                            channel: channel,
                         },
                     });
                 }}
@@ -177,10 +186,15 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                     onMouseLeave={() => setTooltip(null)}
                     onClick={(e) => {
                         e.stopPropagation();
-                        setPopup({
-                            type: 'GUILD_CHANNEL_CREATE',
-                            guild: channel.guildId,
-                            category: channel,
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'GUILD_CHANNEL_CREATE',
+                                guild: channel.guildId,
+                                category: channel,
+                            },
                         });
                     }}
                 >
@@ -203,13 +217,14 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
             onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setFixedLayer({
-                    type: 'menu',
-                    menu: 'GUILD_CHANNEL',
-                    channel: channel,
-                    event: {
-                        mouseX: e.clientX,
-                        mouseY: e.clientY,
+                setLayers({
+                    settings: {
+                        type: 'MENU',
+                        event: e,
+                    },
+                    content: {
+                        type: 'GUILD_CHANNEL',
+                        channel: channel,
                     },
                 });
             }}

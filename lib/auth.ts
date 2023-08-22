@@ -4,7 +4,6 @@ import { prisma } from './prismadb';
 
 export const isLoggedIn = async () => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return false;
 
     const user = await prisma.user.findFirst({
@@ -18,13 +17,11 @@ export const isLoggedIn = async () => {
         },
     });
 
-    if (!user) return false;
-    return true;
+    return !!user;
 };
 
-export const getUser = async (): Promise<TCleanUser | null> => {
+export const useUser = async (): Promise<TCleanUser | null> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return null;
 
     const user = (await prisma.user.findFirst({
@@ -58,13 +55,11 @@ export const getUser = async (): Promise<TCleanUser | null> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return null;
     return user;
 };
 
 export const getFriends = async (): Promise<TCleanUser[]> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return [];
 
     const user = (await prisma.user.findFirst({
@@ -99,13 +94,11 @@ export const getFriends = async (): Promise<TCleanUser[]> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return [];
-    return user.friends ?? [];
+    return user?.friends ?? [];
 };
 
-export const getRequests = async (type: 0 | 1): Promise<TCleanUser[]> => {
+export const getRequests = async (type?: 0 | 1): Promise<TCleanUser[]> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return [];
 
     const user = (await prisma.user.findFirst({
@@ -161,13 +154,13 @@ export const getRequests = async (type: 0 | 1): Promise<TCleanUser[]> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return [];
-    return type === 0 ? user.requestsReceived ?? [] : user.requestsSent ?? [];
+    if (type === 0) return user?.requestsReceived ?? [];
+    if (type === 1) return user?.requestsSent ?? [];
+    else return [...(user?.requestsReceived ?? []), ...(user?.requestsSent ?? [])];
 };
 
 export const getBlocked = async (): Promise<TCleanUser[] | null> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return [];
 
     const user = (await prisma.user.findFirst({
@@ -199,13 +192,11 @@ export const getBlocked = async (): Promise<TCleanUser[] | null> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return null;
-    return user.blockedUsers ?? [];
+    return user?.blockedUsers ?? [];
 };
 
 export const getChannels = async (): Promise<TChannel[]> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return [];
 
     const user = (await prisma.user.findFirst({
@@ -252,9 +243,8 @@ export const getChannels = async (): Promise<TChannel[]> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return [];
     return (
-        user.channels?.map((channel) => ({
+        user?.channels?.map((channel) => ({
             ...channel,
             name: getChannelName(channel, user.id),
             icon: getChannelIcon(channel, user.id),
@@ -263,8 +253,7 @@ export const getChannels = async (): Promise<TChannel[]> => {
 };
 
 export const getChannel = async (id: string): Promise<TChannel | null> => {
-    const user = await getUser();
-
+    const user = await useUser();
     if (!user) return null;
 
     const channel = (await prisma.channel.findUnique({
@@ -313,36 +302,8 @@ export const getChannel = async (id: string): Promise<TChannel | null> => {
     };
 };
 
-export const getGuild = async (id: string): Promise<TGuild | null> => {
-    const user = await getUser();
-
-    if (!user || !user.guildIds.includes(id)) return null;
-
-    const guild = (await prisma.guild.findUnique({
-        where: {
-            id,
-        },
-        select: {
-            id: true,
-            ownerId: true,
-            name: true,
-            icon: true,
-            channels: {
-                select: {
-                    id: true,
-                },
-            },
-            systemChannelId: true,
-        },
-    })) as TGuild | null;
-
-    if (!guild) return null;
-    return guild;
-};
-
 export const getGuilds = async (): Promise<TGuild[]> => {
     const refreshToken = cookies().get('token')?.value;
-
     if (!refreshToken) return [];
 
     const user = (await prisma.user.findFirst({
@@ -374,13 +335,36 @@ export const getGuilds = async (): Promise<TGuild[]> => {
         },
     })) as TCleanUser | null;
 
-    if (!user) return [];
-    return user.guilds ?? [];
+    return user?.guilds ?? [];
+};
+
+export const getGuild = async (id: string): Promise<TGuild | null> => {
+    const user = await useUser();
+    if (!user || !user.guildIds.includes(id)) return null;
+
+    const guild = (await prisma.guild.findUnique({
+        where: {
+            id,
+        },
+        select: {
+            id: true,
+            ownerId: true,
+            name: true,
+            icon: true,
+            channels: {
+                select: {
+                    id: true,
+                },
+            },
+            systemChannelId: true,
+        },
+    })) as TGuild | null;
+
+    return guild;
 };
 
 export const getGuildChannels = async (id: string): Promise<TChannel[]> => {
-    const user = await getUser();
-
+    const user = await useUser();
     if (!user || !user.guildIds.includes(id)) return [];
 
     const guild = (await prisma.guild.findUnique({
@@ -401,6 +385,5 @@ export const getGuildChannels = async (id: string): Promise<TChannel[]> => {
         },
     })) as TGuild | null;
 
-    if (!guild) return [];
-    return guild.channels ?? [];
+    return guild?.channels ?? [];
 };

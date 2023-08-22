@@ -3,8 +3,8 @@
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from '@components';
 import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
-import useContextHook from '@/hooks/useContextHook';
 import styles from './Channels.module.css';
+import { useLayers } from '@/lib/store';
 
 interface Props {
     guild: TGuild;
@@ -19,7 +19,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
-    const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
+    const layers = useLayers((state) => state.layers);
 
     useEffect(() => {
         const setLocalStorage = (data: {}) => {
@@ -34,14 +34,12 @@ const Content = ({ guild, channel }: Props): ReactElement => {
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (popup || fixedLayer) return;
-
-                if (edit) {
+                if (edit && !layers.MENU) {
                     setEdit(null);
                     setLocalStorage({ edit: null });
                 }
 
-                if (reply) {
+                if (reply && !layers.MENU) {
                     setReply(null);
                     setLocalStorage({ reply: null });
                 }
@@ -49,9 +47,8 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         };
 
         document.addEventListener('keydown', handleKeyDown);
-
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [edit, popup, fixedLayer]);
+    }, [edit, reply, layers.MENU]);
 
     useEffect(() => {
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');
@@ -124,8 +121,6 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             firstDate.getFullYear() !== secondDate.getFullYear()
         );
     };
-
-    console.log(channel);
 
     return useMemo(
         () => (

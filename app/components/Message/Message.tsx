@@ -6,6 +6,7 @@ import { TextArea, Icon, Avatar } from '@components';
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
+import { useLayers, useTooltip } from '@/lib/store';
 import { trimMessage } from '@/lib/strings';
 import styles from './Message.module.css';
 
@@ -24,7 +25,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     const [editContent, setEditContent] = useState<string>(message.content || '');
     const [fileProgress, setFileProgress] = useState<number>(0);
 
-    const { fixedLayer, setFixedLayer, setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -52,27 +55,32 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 className={inline ? styles.inlineMention : styles.mention}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (fixedLayer?.element === e.currentTarget) return;
-                                    setFixedLayer({
-                                        type: 'usercard',
-                                        user: mentionUser,
-                                        element: e.currentTarget,
-                                        firstSide: 'RIGHT',
-                                        gap: 10,
+                                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_CARD',
+                                            element: e.currentTarget,
+                                            firstSide: 'RIGHT',
+                                            gap: 10,
+                                        },
+                                        content: {
+                                            user: mentionUser,
+                                        },
                                     });
                                 }}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (fixedLayer?.element === e.currentTarget) return;
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        menu: 'USER',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
+                                    if (layers.MENU?.settings.element === e.currentTarget) return;
+                                    setLayers({
+                                        settings: {
+                                            type: 'MENU',
+                                            event: e,
                                         },
-                                        user: mentionUser,
+                                        content: {
+                                            type: 'USER',
+                                            user: mentionUser,
+                                        },
                                     });
                                 }}
                             >
@@ -105,27 +113,32 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 className={inline ? styles.inlineMention : styles.mention}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (fixedLayer?.element === e.currentTarget) return;
-                                    setFixedLayer({
-                                        type: 'usercard',
-                                        user: mentionUser,
-                                        element: e.currentTarget,
-                                        firstSide: 'RIGHT',
-                                        gap: 10,
+                                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_CARD',
+                                            element: e.currentTarget,
+                                            firstSide: 'RIGHT',
+                                            gap: 10,
+                                        },
+                                        content: {
+                                            user: mentionUser,
+                                        },
                                     });
                                 }}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (fixedLayer?.element === e.currentTarget) return;
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        menu: 'USER',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
+                                    if (layers.MENU?.settings.element === e.currentTarget) return;
+                                    setLayers({
+                                        settings: {
+                                            type: 'MENU',
+                                            event: e,
                                         },
-                                        user: mentionUser,
+                                        content: {
+                                            type: 'USER',
+                                            user: mentionUser,
+                                        },
                                     });
                                 }}
                             >
@@ -225,9 +238,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                             );
                         });
 
-                        setPopup({
-                            type: 'WARNING',
-                            warning: 'UPLOAD_FAILED',
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'WARNING',
+                                warning: 'UPLOAD_FAILED',
+                            },
                         });
                     });
             }
@@ -253,9 +271,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                 });
 
                 if (prevMessage.attachments.length > 0) {
-                    setPopup({
-                        type: 'WARNING',
-                        warning: 'UPLOAD_FAILED',
+                    setLayers({
+                        settings: {
+                            type: 'POPUP',
+                        },
+                        content: {
+                            type: 'WARNING',
+                            warning: 'UPLOAD_FAILED',
+                        },
                     });
                 }
 
@@ -276,9 +299,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             });
 
             if (prevMessage.attachments.length > 0) {
-                setPopup({
-                    type: 'WARNING',
-                    warning: 'UPLOAD_FAILED',
+                setLayers({
+                    settings: {
+                        type: 'POPUP',
+                    },
+                    content: {
+                        type: 'WARNING',
+                        warning: 'UPLOAD_FAILED',
+                    },
                 });
             }
         }
@@ -313,26 +341,41 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     };
 
     const deletePopup = () => {
-        setPopup({
-            type: 'DELETE_MESSAGE',
-            channelId: message.channelId,
-            message: message,
+        setLayers({
+            settings: {
+                type: 'POPUP',
+            },
+            content: {
+                type: 'DELETE_MESSAGE',
+                channelId: message.channelId,
+                message: message,
+            },
         });
     };
 
     const pinPopup = () => {
-        setPopup({
-            type: 'PIN_MESSAGE',
-            channelId: message.channelId,
-            message: message,
+        setLayers({
+            settings: {
+                type: 'POPUP',
+            },
+            content: {
+                type: 'PIN_MESSAGE',
+                channelId: message.channelId,
+                message: message,
+            },
         });
     };
 
     const unpinPopup = () => {
-        setPopup({
-            type: 'UNPIN_MESSAGE',
-            channelId: message.channelId,
-            message: message,
+        setLayers({
+            settings: {
+                type: 'POPUP',
+            },
+            content: {
+                type: 'UNPIN_MESSAGE',
+                channelId: message.channelId,
+                message: message,
+            },
         });
     };
 
@@ -357,18 +400,21 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         const content = trimMessage(editContent) ?? null;
 
         if (content === null && message.attachments.length === 0) {
-            setPopup({
-                type: 'DELETE_MESSAGE',
-                channelId: message.channelId,
-                message: message,
+            setLayers({
+                settings: {
+                    type: 'POPUP',
+                },
+                content: {
+                    type: 'DELETE_MESSAGE',
+                    channelId: message.channelId,
+                    message: message,
+                },
             });
 
-            setTimeout(() => {
+            return setTimeout(() => {
                 setEdit(null);
                 setLocalStorage({ edit: null });
             }, 1000);
-
-            return;
         }
 
         try {
@@ -457,23 +503,24 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                 }
                 onContextMenu={(e) => {
                     e.preventDefault();
-                    setFixedLayer({
-                        type: 'menu',
-                        menu: 'MESSAGE',
-                        event: {
-                            mouseX: e.clientX,
-                            mouseY: e.clientY,
+                    setLayers({
+                        settings: {
+                            type: 'MENU',
+                            event: e,
                         },
-                        message: {
-                            ...message,
-                            inline: true,
+                        content: {
+                            type: 'MESSAGE',
+                            message: {
+                                ...message,
+                                inline: true,
+                            },
+                            deletePopup,
+                            replyToMessageState,
                         },
-                        deletePopup,
-                        replyToMessageState,
                     });
                 }}
                 style={{
-                    backgroundColor: fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                    backgroundColor: layers.MENU?.contenu.message?.id === message.id ? 'var(--background-hover-4)' : '',
                     marginTop: large ? '1.0625rem' : '',
                 }}
             >
@@ -551,19 +598,21 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                         e.preventDefault();
                         e.stopPropagation();
                         if (edit?.messageId === message.id || message.waiting || message.error) return;
-                        setFixedLayer({
-                            type: 'menu',
-                            menu: 'MESSAGE',
-                            event: {
-                                mouseX: e.clientX,
-                                mouseY: e.clientY,
+                        setLayers({
+                            settings: {
+                                type: 'MENU',
+                                event: e,
                             },
-                            message: message,
-                            functions: functions,
+                            content: {
+                                type: 'MESSAGE',
+                                message: message,
+                                functions: functions,
+                            },
                         });
                     }}
                     style={{
-                        backgroundColor: fixedLayer?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                        backgroundColor:
+                            layers.MENU?.contenu?.message?.id === message.id ? 'var(--background-hover-4)' : '',
                     }}
                 >
                     <MessageMenu
@@ -582,19 +631,24 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (!message.messageReference) return;
-                                            if (fixedLayer?.e?.currentTarget === e.currentTarget) {
-                                                setFixedLayer(null);
-                                            } else {
-                                                setFixedLayer({
-                                                    type: 'usercard',
-                                                    event: {
-                                                        mouseX: e.clientX,
-                                                        mouseY: e.clientY,
+                                            if (layers.MENU?.settings.e.currentTarget === e.currentTarget) {
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        setNull: true,
                                                     },
-                                                    user: message.messageReference?.author,
-                                                    element: e.currentTarget,
-                                                    firstSide: 'RIGHT',
-                                                    gap: 10,
+                                                });
+                                            } else {
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        element: e.currentTarget,
+                                                        firstSide: 'RIGHT',
+                                                        gap: 10,
+                                                    },
+                                                    content: {
+                                                        user: message.messageReference?.author,
+                                                    },
                                                 });
                                             }
                                         }}
@@ -602,14 +656,15 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             e.preventDefault();
                                             e.stopPropagation();
                                             if (!message.messageReference) return;
-                                            setFixedLayer({
-                                                type: 'menu',
-                                                menu: 'USER',
-                                                event: {
-                                                    mouseX: e.clientX,
-                                                    mouseY: e.clientY,
+                                            setLayers({
+                                                settings: {
+                                                    type: 'MENU',
+                                                    event: e,
                                                 },
-                                                user: message.messageReference?.author,
+                                                content: {
+                                                    type: 'USER',
+                                                    user: message.messageReference?.author,
+                                                },
                                             });
                                         }}
                                     >
@@ -639,29 +694,39 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (fixedLayer?.element === e.currentTarget) {
-                                                setFixedLayer(null);
+                                            if (layers.USER_CARD?.settings.element === e.currentTarget) {
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        setNull: true,
+                                                    },
+                                                });
                                             } else {
-                                                setFixedLayer({
-                                                    type: 'usercard',
-                                                    user: message.messageReference.author,
-                                                    element: e.currentTarget,
-                                                    firstSide: 'RIGHT',
-                                                    gap: 10,
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        element: e.currentTarget,
+                                                        firstSide: 'RIGHT',
+                                                        gap: 10,
+                                                    },
+                                                    content: {
+                                                        user: message.messageReference.author,
+                                                    },
                                                 });
                                             }
                                         }}
                                         onContextMenu={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            setFixedLayer({
-                                                type: 'menu',
-                                                menu: 'USER',
-                                                event: {
-                                                    mouseX: e.clientX,
-                                                    mouseY: e.clientY,
+                                            setLayers({
+                                                settings: {
+                                                    type: 'MENU',
+                                                    event: e,
                                                 },
-                                                user: message.messageReference.author,
+                                                content: {
+                                                    type: 'USER',
+                                                    user: message.messageReference.author,
+                                                },
                                             });
                                         }}
                                     >
@@ -722,31 +787,38 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 <div
                                     className={styles.userAvatar}
                                     onClick={(e) => {
-                                        if (fixedLayer?.element === e.currentTarget) {
-                                            setFixedLayer(null);
-                                            return;
-                                        }
-
-                                        setFixedLayer({
-                                            type: 'usercard',
-                                            user: message?.author,
-                                            element: e.currentTarget,
-                                            firstSide: 'RIGHT',
-                                            gap: 10,
+                                        if (layers.USER_CARD?.settings.element === e.currentTarget)
+                                            return setLayers({
+                                                settings: {
+                                                    type: 'USER_CARD',
+                                                    setNull: true,
+                                                },
+                                            });
+                                        setLayers({
+                                            settings: {
+                                                type: 'USER_CARD',
+                                                element: e.currentTarget,
+                                                firstSide: 'RIGHT',
+                                                gap: 10,
+                                            },
+                                            content: {
+                                                user: message.author,
+                                            },
                                         });
                                     }}
                                     onDoubleClick={(e) => e.stopPropagation()}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setFixedLayer({
-                                            type: 'menu',
-                                            menu: 'USER',
-                                            event: {
-                                                mouseX: e.clientX,
-                                                mouseY: e.clientY,
+                                        setLayers({
+                                            settings: {
+                                                type: 'MENU',
+                                                event: e,
                                             },
-                                            user: message.author,
+                                            content: {
+                                                type: 'USER',
+                                                user: message.author,
+                                            },
                                         });
                                     }}
                                 >
@@ -765,29 +837,39 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (fixedLayer?.element === e.currentTarget) {
-                                                setFixedLayer(null);
+                                            if (layers.USER_CARD?.settings.element === e.currentTarget) {
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        setNull: true,
+                                                    },
+                                                });
                                             } else {
-                                                setFixedLayer({
-                                                    type: 'usercard',
-                                                    user: message.author,
-                                                    element: e.currentTarget,
-                                                    firstSide: 'RIGHT',
-                                                    gap: 10,
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'USER_CARD',
+                                                        element: e.currentTarget,
+                                                        firstSide: 'RIGHT',
+                                                        gap: 10,
+                                                    },
+                                                    content: {
+                                                        user: message.author,
+                                                    },
                                                 });
                                             }
                                         }}
                                         onContextMenu={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            setFixedLayer({
-                                                type: 'menu',
-                                                menu: 'USER',
-                                                event: {
-                                                    mouseX: e.clientX,
-                                                    mouseY: e.clientY,
+                                            setLayers({
+                                                settings: {
+                                                    type: 'MENU',
+                                                    event: e,
                                                 },
-                                                user: message.author,
+                                                content: {
+                                                    type: 'USER',
+                                                    user: message.author,
+                                                },
                                             });
                                         }}
                                     >
@@ -820,7 +902,8 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 <span
                                     className={styles.messageTimestamp}
                                     style={{
-                                        visibility: fixedLayer?.message?.id === message.id ? 'visible' : undefined,
+                                        visibility:
+                                            layers.MENU?.content.message?.id === message.id ? 'visible' : undefined,
                                     }}
                                 >
                                     <span
@@ -984,7 +1067,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     </div>
                 </li>
             ),
-        [message, edit, reply, editContent, fixedLayer, fileProgress]
+        [message, edit, reply, editContent, layers.MENU, fileProgress]
     );
 };
 
@@ -1217,7 +1300,9 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
     const [menuSender, setMenuSender] = useState<boolean | null>(null);
     const [shift, setShift] = useState<boolean>(false);
 
-    const { setFixedLayer, fixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     useEffect(() => {
@@ -1249,7 +1334,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
         <div
             className={styles.buttonContainer}
             style={{
-                visibility: fixedLayer?.message?.id === message?.id ? 'visible' : undefined,
+                visibility: layers.MENU?.content.message?.id === message?.id ? 'visible' : undefined,
             }}
         >
             <div
@@ -1323,17 +1408,26 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (fixedLayer?.element === e.currentTarget) {
-                                        setFixedLayer(null);
+                                    if (layers.MENU?.settings.element === e.currentTarget) {
+                                        setLayers({
+                                            settings: {
+                                                type: 'MENU',
+                                                setNull: true,
+                                            },
+                                        });
                                     } else {
-                                        setFixedLayer({
-                                            type: 'menu',
-                                            menu: 'MESSAGE',
-                                            firstSide: 'LEFT',
-                                            element: e.currentTarget,
-                                            gap: 5,
-                                            message: message,
-                                            functions: functions,
+                                        setLayers({
+                                            settings: {
+                                                type: 'MENU',
+                                                element: e.currentTarget,
+                                                firstSide: 'LEFT',
+                                                gap: 5,
+                                            },
+                                            content: {
+                                                type: 'MESSAGE',
+                                                message: message,
+                                                functions: functions,
+                                            },
                                         });
                                         setTooltip(null);
                                     }
@@ -1399,7 +1493,8 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
-    const { setPopup, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     return useMemo(
@@ -1416,32 +1511,36 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                 }}
                 onClick={() => {
                     if (attachment.isSpoiler && !hideSpoiler) {
-                        setHideSpoiler(true);
-                        return;
+                        return setHideSpoiler(true);
                     }
 
                     const index = message.attachments.findIndex((a) => a.id === attachment.id);
 
-                    setPopup({
-                        type: 'ATTACHMENT_PREVIEW',
-                        attachments: message.attachments,
-                        current: index,
+                    setLayers({
+                        settings: {
+                            type: 'POPUP',
+                        },
+                        content: {
+                            type: 'ATTACHMENT_PREVIEW',
+                            attachments: message.attachments,
+                            current: index,
+                        },
                     });
                 }}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setFixedLayer({
-                        type: 'menu',
-                        menu: 'MESSAGE',
-                        event: {
-                            mouseX: e.clientX,
-                            mouseY: e.clientY,
+                    setLayers({
+                        settings: {
+                            type: 'MENU',
+                            event: e,
                         },
-                        gap: 5,
-                        message: message,
-                        attachment: attachment,
-                        functions: functions,
+                        content: {
+                            type: 'MESSAGE',
+                            message: message,
+                            attachment: attachment,
+                            functions: functions,
+                        },
                     });
                 }}
             >
@@ -1479,22 +1578,31 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             if (auth.user.id !== message.author.id) return;
 
                             if (message.attachments.length === 1 && !message.content) {
-                                setPopup({
-                                    type: 'DELETE_MESSAGE',
-                                    channelId: message.channelId,
-                                    message: message,
+                                return setLayers({
+                                    settings: {
+                                        type: 'POPUP',
+                                    },
+                                    content: {
+                                        type: 'DELETE_MESSAGE',
+                                        channelId: message.channelId,
+                                        message: message,
+                                    },
                                 });
-                                return;
                             }
 
                             const updatedAttachments = message.attachments
                                 .map((file) => file.id)
                                 .filter((id: string) => id !== attachment.id);
 
-                            setPopup({
-                                type: 'DELETE_ATTACHMENT',
-                                message: message,
-                                attachments: updatedAttachments,
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'DELETE_ATTACHMENT',
+                                    message: message,
+                                    attachments: updatedAttachments,
+                                },
                             });
                         }}
                     >

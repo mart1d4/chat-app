@@ -1,7 +1,6 @@
 import { AppHeader, UserChannels } from '@components';
-import { getUser, getChannels } from '@/lib/auth';
+import { useUser, getChannels, getRequests, getBlocked, getFriends } from '@/lib/auth';
 import styles from './FriendsPage.module.css';
-import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import Content from './Content';
 import Aside from './Aside';
@@ -11,10 +10,13 @@ export const metadata: Metadata = {
 };
 
 const FriendsPage = async () => {
-    const user = await getUser();
+    const user = (await useUser()) as TCleanUser;
     const channels = await getChannels();
 
-    if (!user) return redirect('/login');
+    const friends = await getFriends();
+    const requestsReceived = await getRequests(0);
+    const requestsSent = await getRequests(1);
+    const blockedUsers = await getBlocked();
 
     return (
         <>
@@ -27,7 +29,14 @@ const FriendsPage = async () => {
                 <AppHeader />
 
                 <div className={styles.content}>
-                    <Content />
+                    <Content
+                        data={{
+                            friends,
+                            requestsReceived,
+                            requestsSent,
+                            blockedUsers,
+                        }}
+                    />
                     <Aside />
                 </div>
             </div>

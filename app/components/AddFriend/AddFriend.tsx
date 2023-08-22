@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './AddFriend.module.css';
+import { useLayers } from '@/lib/store';
 import Image from 'next/image';
 
 export const AddFriend = () => {
@@ -12,7 +12,7 @@ export const AddFriend = () => {
     const [valid, setValid] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
 
-    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
+    const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -69,8 +69,7 @@ export const AddFriend = () => {
                                 onKeyDown={async (e) => {
                                     if (e.key === 'Enter') {
                                         if (!input.length || loading) {
-                                            inputRef.current?.focus();
-                                            return;
+                                            return inputRef.current?.focus();
                                         }
 
                                         setLoading(true);
@@ -91,15 +90,16 @@ export const AddFriend = () => {
                                 }}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
-                                    setFixedLayer({
-                                        type: 'menu',
-                                        menu: 'INPUT',
-                                        event: {
-                                            mouseX: e.clientX,
-                                            mouseY: e.clientY,
+                                    setLayers({
+                                        settings: {
+                                            type: 'MENU',
+                                            event: e,
                                         },
-                                        input: true,
-                                        pasteText,
+                                        content: {
+                                            type: 'INPUT',
+                                            input: true,
+                                            pasteText,
+                                        },
                                     });
                                 }}
                             />
@@ -110,8 +110,7 @@ export const AddFriend = () => {
                             onClick={async (e) => {
                                 e.preventDefault();
                                 if (!input.length || loading) {
-                                    inputRef.current?.focus();
-                                    return;
+                                    return inputRef.current?.focus();
                                 }
 
                                 setLoading(true);

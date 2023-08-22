@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, ReactElement } from 'react';
 import useContextHook from '@/hooks/useContextHook';
+import { useLayers, useTooltip } from '@/lib/store';
 import styles from './AppHeader.module.css';
 import { Icon, Avatar } from '@components';
 
@@ -13,8 +14,9 @@ interface Props {
 export const AppHeader = ({ channel, friend }: Props): ReactElement => {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
-    const { setUserProfile, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
 
     useEffect(() => {
         const width: number = window.innerWidth;
@@ -30,7 +32,6 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
         };
 
         window.addEventListener('resize', handleResize);
-
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -62,14 +63,18 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                       icon: 'pin',
                       func: (e: MouseEvent) => {
                           if (!channel) return;
-                          setFixedLayer({
-                              type: 'popout',
-                              element: e.currentTarget,
-                              firstSide: 'BOTTOM',
-                              secondSide: 'LEFT',
-                              gap: 10,
-                              channel: channel,
-                              pinned: true,
+                          setLayers({
+                              settings: {
+                                  type: 'POPUP',
+                                  element: e.currentTarget,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'LEFT',
+                                  gap: 10,
+                              },
+                              content: {
+                                  type: 'PINNED_MESSAGES',
+                                  channel: channel,
+                              },
                           });
                       },
                   },
@@ -95,14 +100,18 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                       icon: 'pin',
                       func: (e: MouseEvent) => {
                           if (!channel) return;
-                          setFixedLayer({
-                              type: 'popout',
-                              element: e.currentTarget,
-                              firstSide: 'BOTTOM',
-                              secondSide: 'LEFT',
-                              gap: 10,
-                              channel: channel,
-                              pinned: true,
+                          setLayers({
+                              settings: {
+                                  type: 'POPUP',
+                                  element: e.currentTarget,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'LEFT',
+                                  gap: 10,
+                              },
+                              content: {
+                                  type: 'PINNED_MESSAGES',
+                                  channel: channel,
+                              },
                           });
                       },
                   },
@@ -111,13 +120,18 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                       icon: 'addUser',
                       func: (e: MouseEvent) => {
                           if (!channel) return;
-                          setFixedLayer({
-                              type: 'popout',
-                              element: e.currentTarget,
-                              gap: 10,
-                              firstSide: 'BOTTOM',
-                              secondSide: 'RIGHT',
-                              channel: channel,
+                          setLayers({
+                              settings: {
+                                  type: 'POPUP',
+                                  element: e.currentTarget,
+                                  firstSide: 'BOTTOM',
+                                  secondSide: 'RIGHT',
+                                  gap: 10,
+                              },
+                              content: {
+                                  type: 'CREATE_DM',
+                                  channel: channel,
+                              },
                           });
                       },
                   },
@@ -202,14 +216,21 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                                     setTooltip({
                                         text: channel.name || '',
                                         element: e.currentTarget,
-                                        position: 'bottom',
+                                        position: 'BOTTOM',
                                         gap: 5,
                                     });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
                                     if (channel?.type !== 0) return;
-                                    setUserProfile({ user: friend });
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_PROFILE',
+                                        },
+                                        content: {
+                                            user: friend,
+                                        },
+                                    });
                                 }}
                                 style={{
                                     cursor: channel?.guildId ? 'default' : '',
@@ -258,7 +279,7 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                             setTooltip({
                                 text: 'Inbox',
                                 element: e.currentTarget,
-                                position: 'bottom',
+                                position: 'BOTTOM',
                                 gap: 5,
                             })
                         }
@@ -274,7 +295,7 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                             setTooltip({
                                 text: 'Help',
                                 element: e.currentTarget,
-                                position: 'bottom',
+                                position: 'BOTTOM',
                                 gap: 5,
                             })
                         }
@@ -290,31 +311,38 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
 };
 
 const ToolbarIcon = ({ item }: any) => {
-    const { fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
 
     return (
         <div
             className={`${styles.toolbarIcon} ${item.disabled && styles.disabled}`}
             onMouseEnter={(e) => {
-                if (fixedLayer?.element === e.currentTarget) return;
+                if (layers?.POPUP?.settings?.element === e.currentTarget) return;
                 setTooltip({
                     text: item.disabled ? item.name + ' (Unavailable)' : item.name,
                     element: e.currentTarget,
-                    position: 'bottom',
+                    position: 'BOTTOM',
                     gap: 5,
                 });
             }}
             onMouseLeave={() => setTooltip(null)}
             onClick={(e) => {
                 if (item.disabled) return;
-                if (fixedLayer?.element === e.currentTarget) {
+                if (layers?.POPUP?.settings?.element === e.currentTarget) {
                     setTooltip({
                         text: item.disabled ? item.name + ' (Unavailable)' : item.name,
                         element: e.currentTarget,
-                        position: 'bottom',
+                        position: 'BOTTOM',
                         gap: 5,
                     });
-                    setFixedLayer(null);
+                    setLayers({
+                        settings: {
+                            type: 'POPUP',
+                            setNull: true,
+                        },
+                    });
                 } else {
                     setTooltip(null);
                     item.func(e);

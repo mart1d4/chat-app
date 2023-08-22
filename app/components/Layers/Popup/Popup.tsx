@@ -1,6 +1,6 @@
 'use client';
 
-import { FixedMessage, LoadingDots, Icon, Avatar, Checkbox } from '@components';
+import { FixedMessage, LoadingDots, Icon, Popout, Checkbox } from '@components';
 import { useRef, useEffect, useState, ReactElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
@@ -11,16 +11,29 @@ import useLogout from '@/hooks/useLogout';
 import filetypeinfo from 'magic-bytes.js';
 import styles from './Popup.module.css';
 import Image from 'next/image';
+import { useLayers } from '@/lib/store';
 
-export const Popup = (): ReactElement => {
-    const { popup, setPopup, setFixedLayer }: any = useContextHook({ context: 'layer' });
+export const Popup = ({ content, friends }: any): ReactElement => {
+    if (content.type === 'PINNED_MESSAGES' || content.type === 'CREATE_DM') {
+        return (
+            <Popout
+                content={content}
+                friends={friends}
+            />
+        );
+    }
+
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
+    const { auth }: any = useContextHook({ context: 'auth' });
+
     const { sendRequest } = useFetchHelper();
     const { logout } = useLogout();
     const router = useRouter();
-    const type = popup?.type;
+    const type = content.type;
 
     const [isLoading, setIsLoading] = useState(false);
-    const [uid, setUID] = useState('auth.user.username');
+    const [uid, setUID] = useState(auth.user.username);
     const [usernameError, setUsernameError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [password, setPassword] = useState('');
@@ -38,7 +51,7 @@ export const Popup = (): ReactElement => {
 
     const [join, setJoin] = useState(false);
     const [guildTemplate, setGuildTemplate] = useState<number>(0);
-    const [guildName, setGuildName] = useState("`${auth.user.username}'s server`");
+    const [guildName, setGuildName] = useState(`${auth.user.username}'s server`);
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
 
     const [channelName, setChannelName] = useState('');
@@ -52,9 +65,9 @@ export const Popup = (): ReactElement => {
 
     useEffect(() => {
         // Reset all state when popup is closed
-        if (!popup) {
+        if (!layers.POPUP) {
             setIsLoading(false);
-            setUID('auth.user.username');
+            setUID(auth.user.username);
             setPassword('');
             setPassword1('');
             setNewPassword('');
@@ -74,21 +87,21 @@ export const Popup = (): ReactElement => {
             setChannelType(2);
             setChannelLocked(false);
         }
-    }, [popup]);
+    }, [layers.POPUP]);
 
     useEffect(() => {
-        if (!popup?.file) return;
+        if (!content.file) return;
 
         const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];
 
         const isFileImage = async () => {
-            const fileBytes = new Uint8Array(await popup?.file.file.arrayBuffer());
+            const fileBytes = new Uint8Array(await content.file.file.arrayBuffer());
             const fileType = filetypeinfo(fileBytes)?.[0]?.mime?.toString();
             setIsImage(imageTypes.includes(fileType ?? ''));
         };
 
         isFileImage();
-    }, [popup?.file]);
+    }, [content.file]);
 
     const handleUsernameSubmit = async () => {
         if (isLoading) return;
@@ -96,26 +109,22 @@ export const Popup = (): ReactElement => {
 
         if (!uid) {
             setUsernameError('Username cannot be empty.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (uid.length < 3 || uid.length > 32) {
             setUsernameError('Username must be between 3 and 32 characters.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         // if (auth.user.username === uid) {
         //     setUsernameError('Username cannot be the same as your current username.');
-        //     setIsLoading(false);
-        //     return;
+        //     return setIsLoading(false);
         // }
 
         if (!password) {
             setPasswordError('Password cannot be empty.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         try {
@@ -129,7 +138,12 @@ export const Popup = (): ReactElement => {
 
             if (!response.success) return setUsernameError(response.message ?? "Couldn't update username.");
             setPassword('');
-            setPopup(null);
+            setLayers({
+                settings: {
+                    type: 'POPUP',
+                    setNull: true,
+                },
+            });
         } catch (err) {
             console.error(err);
         }
@@ -143,32 +157,27 @@ export const Popup = (): ReactElement => {
 
         if (!password1) {
             setPassword1Error('Current password cannot be empty.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (!newPassword) {
             setNewPasswordError('New password cannot be empty.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (newPassword.length < 8 || newPassword.length > 256) {
             setNewPasswordError('New password must be between 8 and 256 characters.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (!confirmPassword) {
             setNewPasswordError('Confirm password cannot be empty.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (newPassword !== confirmPassword) {
             setNewPasswordError('New password and confirm password must match.');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         try {
@@ -184,7 +193,12 @@ export const Popup = (): ReactElement => {
             setPassword1('');
             setNewPassword('');
             setConfirmPassword('');
-            setPopup(null);
+            setLayers({
+                settings: {
+                    type: 'POPUP',
+                    setNull: true,
+                },
+            });
         } catch (err) {
             console.error(err);
         }
@@ -214,39 +228,39 @@ export const Popup = (): ReactElement => {
             centered: true,
         },
         GUILD_CHANNEL_CREATE: {
-            title: `Create ${popup?.isCategory ? 'Category' : 'Channel'}`,
-            description: popup?.category ? `in ${popup?.category.name}` : popup?.isCategory ? null : ' ',
+            title: `Create ${content.isCategory ? 'Category' : 'Channel'}`,
+            description: content.category ? `in ${content.category.name}` : content.isCategory ? null : ' ',
             buttonColor: 'blue',
-            buttonText: channelLocked ? 'Next' : `Create ${popup?.isCategory ? 'Category' : 'Channel'}`,
+            buttonText: channelLocked ? 'Next' : `Create ${content.isCategory ? 'Category' : 'Channel'}`,
             buttonDisabled: !channelName || channelLocked,
             function: () => {
                 if (!channelName || channelLocked) return;
                 sendRequest({
                     query: 'GUILD_CHANNEL_CREATE',
                     params: {
-                        guildId: popup.guild,
+                        guildId: content.guild,
                     },
                     data: {
                         name: channelName,
-                        type: popup?.isCategory ? 4 : channelType,
+                        type: content.isCategory ? 4 : channelType,
                         locked: channelLocked,
-                        categoryId: popup?.category?.id,
+                        categoryId: content.category?.id,
                     },
                 });
             },
         },
         GUILD_CHANNEL_DELETE: {
-            title: `Delete ${popup?.channel?.type === 4 ? 'Category' : 'Channel'}`,
-            description: `Are you sure you want to delete ${popup?.channel?.type === 2 ? '#' : ''}${
-                popup?.channel?.name
+            title: `Delete ${content.channel?.type === 4 ? 'Category' : 'Channel'}`,
+            description: `Are you sure you want to delete ${content.channel?.type === 2 ? '#' : ''}${
+                content.channel?.name
             }? This cannot be undone.`,
             buttonColor: 'red',
-            buttonText: `Delete ${popup?.channel?.type === 4 ? 'Category' : 'Channel'}`,
+            buttonText: `Delete ${content.channel?.type === 4 ? 'Category' : 'Channel'}`,
             function: () => {
                 sendRequest({
                     query: 'GUILD_CHANNEL_DELETE',
                     params: {
-                        channelId: popup.channel?.id,
+                        channelId: content.channel?.id,
                     },
                 });
             },
@@ -276,8 +290,8 @@ export const Popup = (): ReactElement => {
                 sendRequest({
                     query: 'DELETE_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId,
-                        messageId: popup.message.id,
+                        channelId: content.message.channelId,
+                        messageId: content.message.id,
                     },
                 });
             },
@@ -292,8 +306,8 @@ export const Popup = (): ReactElement => {
                 sendRequest({
                     query: 'PIN_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId,
-                        messageId: popup.message.id,
+                        channelId: content.message.channelId,
+                        messageId: content.message.id,
                     },
                 });
             },
@@ -307,21 +321,21 @@ export const Popup = (): ReactElement => {
                 sendRequest({
                     query: 'UNPIN_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId,
-                        messageId: popup.message.id,
+                        channelId: content.message.channelId,
+                        messageId: content.message.id,
                     },
                 });
             },
         },
         FILE_EDIT: {
-            title: popup?.file?.file?.name.startsWith('SPOILER_')
-                ? popup.file.file.name.slice(8)
-                : popup?.file?.file?.name,
+            title: content.file?.file?.name.startsWith('SPOILER_')
+                ? content.file.file.name.slice(8)
+                : content?.file?.file?.name,
             description: '',
             buttonColor: 'blue',
             buttonText: 'Save',
             function: () => {
-                popup.handleFileChange({
+                content.handleFileChange({
                     filename: filename,
                     description: description,
                     isSpoiler: isSpoiler,
@@ -344,11 +358,11 @@ export const Popup = (): ReactElement => {
                 sendRequest({
                     query: 'UPDATE_MESSAGE',
                     params: {
-                        channelId: popup.message.channelId,
-                        messageId: popup.message.id,
+                        channelId: content.message.channelId,
+                        messageId: content.message.id,
                     },
                     data: {
-                        attachments: popup.attachments,
+                        attachments: content.attachments,
                     },
                 });
             },
@@ -359,13 +373,13 @@ export const Popup = (): ReactElement => {
             buttonColor: 'blue',
             buttonText: 'Create Group',
             function: () => {
-                if (popup?.addUsers) {
-                    popup.addUsers();
-                } else if (popup?.recipients) {
+                if (content?.addUsers) {
+                    content.addUsers();
+                } else if (content.recipients) {
                     sendRequest({
                         query: 'CHANNEL_CREATE',
                         data: {
-                            recipients: popup.recipients,
+                            recipients: content.recipients,
                         },
                         skipCheck: true,
                     });
@@ -375,12 +389,12 @@ export const Popup = (): ReactElement => {
     };
 
     useEffect(() => {
-        if (!popup?.file) return;
-        const name = popup?.file.file.name;
+        if (!content?.file) return;
+        const name = content.file.file.name;
         setFilename(name.startsWith('SPOILER_') ? name.slice(8) : name);
-        setDescription(popup?.file.description ?? '');
-        setIsSpoiler(popup?.file.file.name.startsWith('SPOILER_'));
-    }, [popup?.file]);
+        setDescription(content.file.description ?? '');
+        setIsSpoiler(content.file.file.name.startsWith('SPOILER_'));
+    }, [content.file]);
 
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
@@ -389,19 +403,19 @@ export const Popup = (): ReactElement => {
                 e.stopPropagation();
 
                 if (type === 'CREATE_GUILD') {
-                    if (guildTemplate !== 0) {
-                        setGuildTemplate(0);
-                        return;
-                    } else if (join) {
-                        setJoin(false);
-                        return;
-                    }
+                    if (guildTemplate !== 0) return setGuildTemplate(0);
+                    else if (join) return setJoin(false);
                 }
 
-                setPopup(null);
+                setLayers({
+                    settings: {
+                        type: 'POPUP',
+                        setNull: true,
+                    },
+                });
             }
 
-            if (e.key === 'Enter' && !e.shiftKey && popup?.type) {
+            if (e.key === 'Enter' && !e.shiftKey && content.type) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -418,8 +432,13 @@ export const Popup = (): ReactElement => {
                     return;
                 }
 
-                props[popup.type as keyof typeof props].function();
-                setPopup(null);
+                props[content.type as keyof typeof props].function();
+                setLayers({
+                    settings: {
+                        type: 'POPUP',
+                        setNull: true,
+                    },
+                });
             }
         };
 
@@ -429,7 +448,7 @@ export const Popup = (): ReactElement => {
 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [
-        popup,
+        layers.POPUP,
         type,
         uid,
         password,
@@ -475,11 +494,15 @@ export const Popup = (): ReactElement => {
             });
 
             if (!response.success) {
-                alert(response.message ?? 'Something went wrong. Try again later.');
-                return;
+                return alert(response.message ?? 'Something went wrong. Try again later.');
             }
 
-            setPopup(null);
+            setLayers({
+                settings: {
+                    type: 'POPUP',
+                    setNull: true,
+                },
+            });
         } catch (err) {
             console.error(err);
             setIsLoading(false);
@@ -489,7 +512,7 @@ export const Popup = (): ReactElement => {
     useEffect(() => {
         uidInputRef?.current?.focus();
         passwordRef?.current?.focus();
-    }, [popup]);
+    }, [layers.POPUP]);
 
     useEffect(() => {
         setUsernameError('');
@@ -508,105 +531,60 @@ export const Popup = (): ReactElement => {
     }, [newPassword, confirmPassword]);
 
     let prop: any;
-    if (popup?.type && popup?.type !== 'WARNING') prop = props[popup.type as keyof typeof props];
+    if (content?.type && content.type !== 'WARNING') prop = props[content.type as keyof typeof props];
 
     return (
         <AnimatePresence>
-            {popup?.type && (
-                <motion.div
-                    key='wrapper'
-                    className={styles.wrapper}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    onMouseDown={(e) => {
-                        if (e.button === 2) return;
-                        if (!popupRef?.current?.contains(e.target as Node)) {
-                            setTimeout(() => {
-                                setPopup(null);
-                            }, 200);
-                        }
-                    }}
-                    onContextMenu={(e) => e.preventDefault()}
-                />
-            )}
-
-            {popup?.type === 'ATTACHMENT_PREVIEW' ? (
-                <motion.div
-                    className={styles.container}
-                    key='attachment-preview'
+            {content.type === 'ATTACHMENT_PREVIEW' ? (
+                <div
                     ref={popupRef}
                     role='dialog'
                     aria-modal='true'
-                    initial={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    animate={{
-                        transform: 'translate(-50%, -50%) scale(1)',
-                        opacity: 1,
-                    }}
-                    exit={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    transition={{ ease: 'easeInOut', duration: 0.2 }}
+                    className={styles.container}
+                    onContextMenu={(e) => e.preventDefault()}
                 >
                     <div
                         className={styles.imagePreview}
                         onContextMenu={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setFixedLayer({
-                                type: 'menu',
-                                menu: 'IMAGE',
-                                event: {
-                                    mouseX: e.clientX,
-                                    mouseY: e.clientY,
+                            setLayers({
+                                settings: {
+                                    type: 'MENU',
+                                    event: e,
                                 },
-                                attachment: popup.attachments[popup.current],
+                                content: {
+                                    type: 'IMAGE',
+                                    attachment: content.attachments[content.current],
+                                },
                             });
                         }}
                     >
                         <img
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/-/resize/${
-                                popup.attachments[popup.current].dimensions.width >= window.innerWidth
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
+                                content.attachments[content.current].id
+                            }/-/resize/${
+                                content.attachments[content.current].dimensions.width >= window.innerWidth
                                     ? Math.ceil(window.innerWidth * 0.9)
-                                    : popup.attachments[popup.current].dimensions.width
+                                    : content.attachments[content.current].dimensions.width
                             }x/`}
-                            alt={popup.attachments[popup.current]?.description ?? 'Image'}
+                            alt={content.attachments[content.current]?.description ?? 'Image'}
                         />
                     </div>
 
                     <a
                         target='_blank'
                         className={styles.imageLink}
-                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${popup.attachments[popup.current].id}/`}
+                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[content.current].id}/`}
                     >
                         Open in new tab
                     </a>
-                </motion.div>
-            ) : popup?.type === 'WARNING' ? (
-                <motion.div
-                    className={styles.container}
-                    key='warning'
+                </div>
+            ) : content.type === 'WARNING' ? (
+                <div
                     ref={popupRef}
                     role='dialog'
                     aria-modal='true'
-                    initial={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    animate={{
-                        transform: 'translate(-50%, -50%) scale(1)',
-                        opacity: 1,
-                    }}
-                    exit={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    transition={{ ease: 'easeInOut', duration: 0.2 }}
+                    className={styles.container}
+                    onContextMenu={(e) => e.preventDefault()}
                 >
                     <div className={styles.warning}>
                         <div>
@@ -623,62 +601,49 @@ export const Popup = (): ReactElement => {
                             </div>
 
                             <div className={styles.title}>
-                                {popup.warning === 'FILE_SIZE'
+                                {content.warning === 'FILE_SIZE'
                                     ? 'Your files are too powerful'
-                                    : popup.warning === 'FILE_TYPE'
+                                    : content.warning === 'FILE_TYPE'
                                     ? 'Oops, something went wrong...'
-                                    : popup.warning === 'UPLOAD_FAILED'
+                                    : content.warning === 'UPLOAD_FAILED'
                                     ? 'Upload Failed'
                                     : 'Too many uploads!'}
                             </div>
 
                             <div className={styles.description}>
-                                {popup.warning === 'FILE_SIZE'
+                                {content.warning === 'FILE_SIZE'
                                     ? 'Max file size is 10.00 MB please.'
-                                    : popup.warning === 'FILE_TYPE'
+                                    : content.warning === 'FILE_TYPE'
                                     ? 'Unable to process image'
-                                    : popup.warning === 'UPLOAD_FAILED'
+                                    : content.warning === 'UPLOAD_FAILED'
                                     ? 'Something went wrong. Try again later'
                                     : 'You can only upload 10 files at a time.'}
                             </div>
                         </div>
                     </div>
-                </motion.div>
-            ) : popup?.type ? (
-                <motion.div
-                    key='popup'
+                </div>
+            ) : content.type ? (
+                <div
                     ref={popupRef}
                     className={styles.cardContainer}
-                    initial={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    animate={{
-                        transform: 'translate(-50%, -50%) scale(1)',
-                        opacity: 1,
-                    }}
-                    exit={{
-                        transform: 'translate(-50%, -50%) scale(0.5)',
-                        opacity: 0,
-                    }}
-                    transition={{ ease: 'easeInOut', duration: 0.2 }}
                     style={{
                         width: type === 'FILE_EDIT' ? '530px' : type === 'GUILD_CHANNEL_CREATE' ? '460px' : '',
                         padding: type === 'FILE_EDIT' ? '84px 4px 0 4px' : '',
                     }}
+                    onContextMenu={(e) => e.preventDefault()}
                 >
                     {type === 'FILE_EDIT' &&
                         (isImage ? (
                             <img
                                 className={styles.imagePopup}
-                                src={URL.createObjectURL(popup.file.file)}
-                                alt={popup.file.file.name}
+                                src={URL.createObjectURL(content.file.file)}
+                                alt={content.file.file.name}
                             />
                         ) : (
                             <img
                                 className={styles.imagePopup}
                                 src='https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/'
-                                alt={popup.file.file.name}
+                                alt={content.file.file.name}
                             />
                         ))}
 
@@ -696,7 +661,16 @@ export const Popup = (): ReactElement => {
                             <div>{prop.title}</div>
                             <div>{prop.description}</div>
 
-                            <button onClick={() => setPopup(null)}>
+                            <button
+                                onClick={() =>
+                                    setLayers({
+                                        settings: {
+                                            type: 'POPUP',
+                                            setNull: true,
+                                        },
+                                    })
+                                }
+                            >
                                 <svg
                                     viewBox='0 0 24 24'
                                     width='24'
@@ -725,10 +699,10 @@ export const Popup = (): ReactElement => {
                                     </div>
                                 )}
 
-                                {popup?.message && popup.type !== 'DELETE_ATTACHMENT' && (
+                                {content.message && content.type !== 'DELETE_ATTACHMENT' && (
                                     <div className={styles.messagesContainer}>
                                         <FixedMessage
-                                            message={popup.message}
+                                            message={content.message}
                                             pinned={false}
                                         />
                                     </div>
@@ -750,18 +724,23 @@ export const Popup = (): ReactElement => {
                             <div
                                 className={styles.channelItem}
                                 onClick={() => {
-                                    setPopup(null);
-                                    router.push(`/channels/me/${popup.channel.id}`);
+                                    setLayers({
+                                        settings: {
+                                            type: 'POPUP',
+                                            setNull: true,
+                                        },
+                                    });
+                                    router.push(`/channels/me/${content.channel.id}`);
                                 }}
                             >
                                 {/* <Avatar
-                                    src={popup.channel.icon}
-                                    alt={getChannelName(popup.channel, auth.user.id)}
+                                    src={content.channel.icon}
+                                    alt={getChannelName(content.channel, auth.user.id)}
                                     size={24}
                                 />
 
-                                <span>{getChannelName(popup.channel, auth.user.id)}</span>
-                                <span>{getRelativeDate(popup.channel.updatedAt, true)}</span> */}
+                                <span>{getChannelName(content.channel, auth.user.id)}</span>
+                                <span>{getRelativeDate(content.channel.updatedAt, true)}</span> */}
                             </div>
                         )}
                         {type === 'CREATE_GUILD' && !guildTemplate && !join && (
@@ -845,33 +824,39 @@ export const Popup = (): ReactElement => {
                                                 'image/apng',
                                                 'image/webp',
                                             ];
+
                                             const file = e.target.files ? e.target.files[0] : null;
-                                            if (!file) {
-                                                e.target.value = '';
-                                                return;
-                                            }
+                                            if (!file) return (e.target.value = '');
 
                                             // Run checks
                                             const maxFileSize = 1024 * 1024 * 10; // 10MB
                                             if (file.size > maxFileSize) {
-                                                setPopup({
-                                                    type: 'WARNING',
-                                                    warning: 'FILE_SIZE',
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'POPUP',
+                                                    },
+                                                    content: {
+                                                        type: 'WARNING',
+                                                        warning: 'FILE_SIZE',
+                                                    },
                                                 });
-                                                e.target.value = '';
-                                                return;
+                                                return (e.target.value = '');
                                             }
 
                                             const fileBytes = new Uint8Array(await file.arrayBuffer());
                                             const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
 
                                             if (!fileType || !allowedFileTypes.includes(fileType)) {
-                                                setPopup({
-                                                    type: 'WARNING',
-                                                    warning: 'FILE_TYPE',
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'POPUP',
+                                                    },
+                                                    content: {
+                                                        type: 'WARNING',
+                                                        warning: 'FILE_TYPE',
+                                                    },
                                                 });
-                                                e.target.value = '';
-                                                return;
+                                                return (e.target.value = '');
                                             }
 
                                             const newFile = new File([file], 'image', {
@@ -899,7 +884,7 @@ export const Popup = (): ReactElement => {
                         )}
                         {type === 'GUILD_CHANNEL_CREATE' && (
                             <>
-                                {!popup?.isCategory && (
+                                {!content.isCategory && (
                                     <div className={styles.channelType}>
                                         <h2>Channel Type</h2>
 
@@ -965,10 +950,10 @@ export const Popup = (): ReactElement => {
                                     </div>
                                 )}
 
-                                <div className={`${styles.input} ${!popup?.isCategory && styles.channel}`}>
+                                <div className={`${styles.input} ${!content.isCategory && styles.channel}`}>
                                     <label>Channel name</label>
                                     <div>
-                                        {!popup?.isCategory && (
+                                        {!content.isCategory && (
                                             <Icon
                                                 name={
                                                     channelType === 2
@@ -986,7 +971,7 @@ export const Popup = (): ReactElement => {
                                             type='text'
                                             maxLength={100}
                                             value={channelName}
-                                            placeholder={popup?.isCategory ? 'New Category' : 'new-channel'}
+                                            placeholder={content.isCategory ? 'New Category' : 'new-channel'}
                                             onChange={(e) => setChannelName(e.target.value)}
                                         />
                                     </div>
@@ -996,7 +981,7 @@ export const Popup = (): ReactElement => {
                                     <div onClick={() => setChannelLocked((prev) => !prev)}>
                                         <label>
                                             <Icon name='lock' />
-                                            {popup?.isCategory ? 'Private Category' : 'Private Channel'}
+                                            {content.isCategory ? 'Private Category' : 'Private Channel'}
                                         </label>
 
                                         <div>
@@ -1005,7 +990,7 @@ export const Popup = (): ReactElement => {
                                     </div>
 
                                     <div>
-                                        {popup?.isCategory
+                                        {content.isCategory
                                             ? 'By making a category private, only selected members and roles will be able to view this category. Synced channels in this category will automatically match to this setting.'
                                             : 'Only selected members and roles will be able to view this channel.'}
                                     </div>
@@ -1278,15 +1263,15 @@ export const Popup = (): ReactElement => {
                             className='underline'
                             onClick={() => {
                                 if (type === 'CREATE_GUILD') {
-                                    if (guildTemplate !== 0) {
-                                        setGuildTemplate(0);
-                                        return;
-                                    } else if (join) {
-                                        setJoin(false);
-                                        return;
-                                    }
+                                    if (guildTemplate !== 0) return setGuildTemplate(0);
+                                    else if (join) return setJoin(false);
                                 }
-                                setPopup(null);
+                                setLayers({
+                                    settings: {
+                                        type: 'POPUP',
+                                        setNull: true,
+                                    },
+                                });
                             }}
                         >
                             {guildTemplate || join ? 'Back' : 'Cancel'}
@@ -1304,14 +1289,18 @@ export const Popup = (): ReactElement => {
                                 }
 
                                 prop.function();
-                                setPopup(null);
+                                setLayers({
+                                    settings: {
+                                        type: 'POPUP',
+                                        setNull: true,
+                                    },
+                                });
                             }}
                         >
-                            {!isLoading && prop.buttonText}
-                            {isLoading && <LoadingDots />}
+                            {isLoading ? <LoadingDots /> : prop.buttonText}
                         </button>
                     </div>
-                </motion.div>
+                </div>
             ) : (
                 <></>
             )}

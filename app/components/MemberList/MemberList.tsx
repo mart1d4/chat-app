@@ -7,6 +7,7 @@ import styles from './MemberList.module.css';
 import { translateCap } from '@/lib/strings';
 import { Avatar, Icon } from '@components';
 import { UserItem } from './UserItem';
+import { useLayers, useTooltip } from '@/lib/store';
 
 const colors = {
     ONLINE: '#22A559',
@@ -42,7 +43,7 @@ export const MemberList = ({ channel, user, friend }: Props) => {
     const [note, setNote] = useState<string>('');
 
     const { userSettings }: any = useContextHook({ context: 'settings' });
-    const { setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -360,26 +361,33 @@ export const MemberList = ({ channel, user, friend }: Props) => {
 
 const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
     if (!user && !guild) return <></>;
-
-    const { setFixedLayer, setUserProfile }: any = useContextHook({ context: 'layer' });
+    const setLayers = useLayers((state) => state.setLayers);
 
     return (
         <div
             className={styles.mutualItem}
             onClick={() => {
                 if (!user) return;
-                setUserProfile({ user: user });
+                setLayers({
+                    settings: {
+                        type: 'USER_PROFILE',
+                    },
+                    content: {
+                        user,
+                    },
+                });
             }}
             onContextMenu={(e) => {
                 if (!user) return;
-                setFixedLayer({
-                    type: 'menu',
-                    menu: 'USER',
-                    event: {
-                        mouseX: e.clientX,
-                        mouseY: e.clientY,
+                setLayers({
+                    settings: {
+                        type: 'POPUP',
+                        event: e,
                     },
-                    user: user,
+                    content: {
+                        type: 'USER',
+                        user: user,
+                    },
                 });
             }}
         >

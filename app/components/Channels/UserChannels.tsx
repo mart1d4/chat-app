@@ -8,6 +8,7 @@ import pusher from '@/lib/pusher/client-connection';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './UserChannels.module.css';
 import Link from 'next/link';
+import { useLayers, useTooltip } from '@/lib/store';
 
 interface Props {
     user: TCleanUser;
@@ -70,14 +71,16 @@ export const UserChannels = ({ user, channels }: Props): ReactElement => {
 };
 
 const Title = () => {
-    const { fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
 
     return (
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <div
                 onMouseEnter={(e) => {
-                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
+                    if (layers.POPUP.map((layer) => layer.content.type).includes('CREATE_DM')) {
                         return;
                     }
                     setTooltip({
@@ -87,20 +90,30 @@ const Title = () => {
                 }}
                 onMouseLeave={() => setTooltip(null)}
                 onClick={(e) => {
-                    if (fixedLayer?.type === 'popout' && !fixedLayer?.channel) {
-                        setFixedLayer(null);
+                    if (layers.POPUP.map((layer) => layer.content.type).includes('CREATE_DM')) {
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                                setNull: true,
+                            },
+                        });
                         setTooltip({
                             text: 'Create DM',
                             element: e.currentTarget,
                         });
                     } else {
                         setTooltip(null);
-                        setFixedLayer({
-                            type: 'popout',
-                            element: e.currentTarget,
-                            gap: 5,
-                            firstSide: 'BOTTOM',
-                            secondSide: 'RIGHT',
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                                element: e.currentTarget,
+                                firstSide: 'BOTTOM',
+                                secondSide: 'RIGHT',
+                                gap: 5,
+                            },
+                            content: {
+                                type: 'CREATE_DM',
+                            },
                         });
                     }
                 }}
@@ -122,7 +135,8 @@ interface ChannelItemProps {
 }
 
 const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
-    const { setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
     const pathname = usePathname();
@@ -176,15 +190,16 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                     href={`/channels/me/${channel.id}`}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        setFixedLayer({
-                            type: 'menu',
-                            menu: 'CHANNEL',
-                            event: {
-                                mouseX: e.clientX,
-                                mouseY: e.clientY,
+                        setLayers({
+                            settings: {
+                                type: 'MENU',
+                                event: e,
                             },
-                            user: user,
-                            channel: channel || null,
+                            content: {
+                                type: 'CHANNEL',
+                                user: user,
+                                channel: channel || null,
+                            },
                         });
                     }}
                     style={{

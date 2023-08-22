@@ -1,7 +1,7 @@
 export { AppNav } from './AppNav/AppNav';
 
 export { UserProfile } from './Layers/UserProfile/UserProfile';
-export { FixedLayer } from './Layers/FixedLayer/FixedLayer';
+export { Layers } from './Layers/FixedLayer/FixedLayer';
 export { Tooltip } from './Layers/Tooltip/Tooltip';
 export { Settings } from './Layers/Settings/Settings';
 export { UserCard } from './Layers/UserCard/UserCard';

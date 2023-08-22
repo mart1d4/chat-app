@@ -4,27 +4,27 @@ import { useEffect, useState, ReactElement, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useContextHook from '@/hooks/useContextHook';
 import styles from './Tooltip.module.css';
+import { useTooltip } from '@/lib/store';
 
 export const Tooltip = (): ReactElement => {
     const [positions, setPositions] = useState<any>({});
     const [arrowPositions, setArrowPositions] = useState<any>({});
 
-    const { tooltip }: any = useContextHook({ context: 'layer' });
+    const tooltip = useTooltip((state) => state.tooltip);
     const text = tooltip?.text || null;
     const element = tooltip?.element || null;
     const position = tooltip?.position || 'top';
     const gap = tooltip?.gap || 0;
     const big = tooltip?.big || false;
     const color = tooltip?.color || 'var(--background-dark)';
-    const delay = tooltip?.delay / 1000 || 0;
+    const delay = (tooltip?.delay || 0) / 1000;
     const arrow = tooltip?.arrow || true;
     const wide = tooltip?.wide || false;
 
     useEffect(() => {
         if (!tooltip) {
             setPositions({});
-            setArrowPositions({});
-            return;
+            return setArrowPositions({});
         }
 
         let pos: any = {};
@@ -49,7 +49,7 @@ export const Tooltip = (): ReactElement => {
                 transform: 'translateX(-50%)',
                 borderTopColor: color,
             };
-        } else if (position === 'bottom') {
+        } else if (position === 'BOTTOM') {
             pos = {
                 top: container.bottom + gap + 5,
                 left: container.left + container.width / 2,
@@ -62,7 +62,7 @@ export const Tooltip = (): ReactElement => {
                 transform: 'translateX(-50%)',
                 borderBottomColor: color,
             };
-        } else if (position === 'left') {
+        } else if (position === 'LEFT') {
             pos = {
                 top: container.top + container.height / 2,
                 right: screenX - container.left + gap + 6,
@@ -75,7 +75,7 @@ export const Tooltip = (): ReactElement => {
                 transform: 'translateY(-50%)',
                 borderLeftColor: color,
             };
-        } else if (position === 'right') {
+        } else if (position === 'RIGHT') {
             pos = {
                 top: container.top + container.height / 2,
                 left: container.right + gap + 5,

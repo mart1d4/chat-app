@@ -9,8 +9,7 @@ const Aside = () => {
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth < 1200) {
-                setIsOpen(false);
-                return;
+                return setIsOpen(false);
             }
             setIsOpen(true);
         };

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getGuild, useUser } from './lib/auth';
 
 export const config = {
     matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api)(.*)'],
@@ -67,6 +68,33 @@ export async function middleware(req: NextRequest) {
             }
         }
     }
+
+    // if (pathname.match(/^\/channels\/me\/[0-9a-f]{24}$/)) {
+    //     const user = await useUser();
+    //     if (!user?.channelIds.includes(pathname.split('/')[3])) {
+    //         return NextResponse.redirect(new URL('/channels/me', req.url));
+    //     }
+    // } else if (pathname.match(/^\/channels\/[0-9a-f]{24}\/[0-9a-f]{24}?$/)) {
+    //     const guildId = pathname.split('/')[2];
+    //     const channelId = pathname.split('/')[3];
+
+    //     const user = await useUser();
+    //     if (!user?.guildIds.includes(guildId)) {
+    //         return NextResponse.redirect(new URL('/channels/me', req.url));
+    //     }
+
+    //     const guild = await getGuild(guildId);
+    //     if (!guild) {
+    //         return NextResponse.redirect(new URL('/channels/me', req.url));
+    //     }
+
+    //     const channelIds = guild.channels.map((channel) => channel.id);
+    //     if (!channelIds?.includes(channelId)) {
+    //         const firstChannel = guild.channels.find((channel) => channel.type === 2);
+    //         if (!firstChannel) return NextResponse.redirect(new URL('/channels/me', req.url));
+    //         return NextResponse.redirect(new URL(`/channels/${guildId}/${firstChannel?.id}`, req.url));
+    //     }
+    // }
 
     return NextResponse.next();
 }

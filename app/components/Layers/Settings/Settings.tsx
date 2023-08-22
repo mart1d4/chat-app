@@ -11,6 +11,7 @@ import styles from './Settings.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
+import { useLayers, useTooltip } from '@/lib/store';
 
 const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/apng', 'image/webp'];
 
@@ -32,8 +33,10 @@ export const Settings = (): ReactElement => {
     const [minified, setMinified] = useState<boolean>(false);
     const [hideNav, setHideNav] = useState<boolean>(false);
 
-    const { popup, showSettings, setShowSettings, setTooltip }: any = useContextHook({ context: 'layer' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const { showSettings, setShowSettings }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
 
     useEffect(() => {
         setMinified(window.innerWidth < 1024);
@@ -58,15 +61,14 @@ export const Settings = (): ReactElement => {
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (popup) return;
+                if (layers) return;
                 setShowSettings(false);
             }
         };
 
         window.addEventListener('keydown', handleEsc);
-
         return () => window.removeEventListener('keydown', handleEsc);
-    }, [showSettings, popup]);
+    }, [showSettings, layers]);
 
     const tabs = [
         {
@@ -185,7 +187,15 @@ export const Settings = (): ReactElement => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 if (tab.name === 'separator' || tab.type === 'title') return;
-                                                if (tab.name === 'Log Out') return setPopup({ type: 'LOGOUT' });
+                                                if (tab.name === 'Log Out')
+                                                    return setLayers({
+                                                        settings: {
+                                                            type: 'POPUP',
+                                                        },
+                                                        content: {
+                                                            type: 'LOGOUT',
+                                                        },
+                                                    });
                                                 setActiveTab(tab.name);
                                                 if (minified) setHideNav(true);
                                             }}
@@ -263,7 +273,8 @@ export default Settings;
 const MyAccount = ({ setActiveTab }: any) => {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
-    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const usernameRef = useRef<HTMLDivElement>(null);
@@ -300,7 +311,16 @@ const MyAccount = ({ setActiveTab }: any) => {
             title: 'Username',
             value: auth.user.username,
             edit: true,
-            func: () => setPopup({ type: 'UPDATE_USERNAME' }),
+            func: () => {
+                setLayers({
+                    settings: {
+                        type: 'POPUP',
+                    },
+                    content: {
+                        type: 'UPDATE_USERNAME',
+                    },
+                });
+            },
         },
         {
             title: 'Email',
@@ -402,7 +422,16 @@ const MyAccount = ({ setActiveTab }: any) => {
                 <button
                     className='blue'
                     style={{ marginBottom: '28px' }}
-                    onClick={() => setPopup({ type: 'UPDATE_PASSWORD' })}
+                    onClick={() => {
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'UPDATE_PASSWORD',
+                            },
+                        });
+                    }}
                 >
                     Change Password
                 </button>
@@ -443,7 +472,8 @@ const MyAccount = ({ setActiveTab }: any) => {
 };
 
 const Profiles = () => {
-    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
     const tabs = ['User Profile', 'Server Profiles'];
@@ -698,32 +728,37 @@ const Profiles = () => {
                     accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
                     onChange={async (e) => {
                         const file = e.target.files ? e.target.files[0] : null;
-                        if (!file) {
-                            e.target.value = '';
-                            return;
-                        }
+                        if (!file) return (e.target.value = '');
 
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_SIZE',
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_SIZE',
+                                },
                             });
-                            e.target.value = '';
-                            return;
+                            return (e.target.value = '');
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
                         const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
 
                         if (!fileType || !allowedFileTypes.includes(fileType)) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_TYPE',
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_TYPE',
+                                },
                             });
-                            e.target.value = '';
-                            return;
+                            return (e.target.value = '');
                         }
 
                         const newFile = new File([file], 'image', {
@@ -742,32 +777,37 @@ const Profiles = () => {
                     accept='image/png, image/jpeg, image/gif, image/apng, image/webp'
                     onChange={async (e) => {
                         const file = e.target.files ? e.target.files[0] : null;
-                        if (!file) {
-                            e.target.value = '';
-                            return;
-                        }
+                        if (!file) return (e.target.value = '');
 
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_SIZE',
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_SIZE',
+                                },
                             });
-                            e.target.value = '';
-                            return;
+                            return (e.target.value = '');
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_TYPE',
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_TYPE',
+                                },
                             });
-                            e.target.value = '';
-                            return;
+                            return (e.target.value = '');
                         }
 
                         const newFile = new File([file], 'image', {

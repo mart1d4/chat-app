@@ -1,22 +1,20 @@
-import { AppNav, Settings, UserProfile, Popup, FixedLayer, Tooltip, Loading } from '@components';
-import { getGuilds, getUser } from '@/lib/auth';
+import { AppNav, Settings, UserProfile, Layers, Tooltip, Loading } from '@components';
+import { getFriends, getGuilds, useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import styles from './Layout.module.css';
-import { ReactNode } from 'react';
+import { ReactElement } from 'react';
 import { Metadata } from 'next';
-import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
     title: 'Chat App | Friends',
 };
 
-const Layout = async ({ children }: { children: ReactNode }) => {
-    const user = await getUser();
-    const guilds = await getGuilds();
-
-    console.log(headers().get('Authorization'));
-
+const Layout = async ({ children }: { children: ReactElement }) => {
+    const user = await useUser();
     if (!user) return redirect('/login');
+
+    const guilds = await getGuilds();
+    const friends = await getFriends();
 
     return (
         <Loading user={user}>
@@ -31,10 +29,8 @@ const Layout = async ({ children }: { children: ReactNode }) => {
                 </div>
 
                 <div className={styles.layers}>
-                    <Popup />
                     <Settings />
-                    <FixedLayer />
-                    <UserProfile />
+                    <Layers friends={friends} />
                     <Tooltip />
                 </div>
             </div>

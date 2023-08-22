@@ -6,6 +6,7 @@ import useFetchHelper from '@/hooks/useFetchHelper';
 import { shouldDisplayInlined } from '@/lib/message';
 import styles from './Menu.module.css';
 import { Icon } from '@components';
+import { useLayers } from '@/lib/store';
 
 type UserProps = {
     isSelf: boolean;
@@ -50,12 +51,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
-    const { setFixedLayer, setUserProfile, setPopup }: any = useContextHook({ context: 'layer' });
     const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
-    const type: EMenuType = content.menu;
+    const type: EMenuType = content.type;
     const user: TCleanUser = content.user;
     const message: TMessage = content.message;
 
@@ -90,7 +91,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             if (e.key === 'Escape') {
                 e.preventDefault();
                 e.stopPropagation();
-                setFixedLayer(null);
+                setLayers({
+                    settings: {
+                        type: 'MENU',
+                        setNull: true,
+                    },
+                });
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -129,7 +135,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     if (item?.funcShift) item.funcShift();
                     else if (item?.func) item.func();
                     if ('checked' in item) return;
-                    setFixedLayer(null);
+                    setLayers({
+                        settings: {
+                            type: 'MENU',
+                            setNull: true,
+                        },
+                    });
                 }
             }
         };
@@ -246,19 +257,29 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 {
                     name: 'Create Channel',
                     func: () => {
-                        setPopup({
-                            type: 'GUILD_CHANNEL_CREATE',
-                            guild: content.guild.id,
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'GUILD_CHANNEL_CREATE',
+                                guild: content.guild.id,
+                            },
                         });
                     },
                 },
                 {
                     name: 'Create Category',
                     func: () => {
-                        setPopup({
-                            type: 'GUILD_CHANNEL_CREATE',
-                            guild: content.guild.id,
-                            isCategory: true,
+                        setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'GUILD_CHANNEL_CREATE',
+                                guild: content.guild.id,
+                                isCategory: true,
+                            },
                         });
                     },
                 },
@@ -313,9 +334,14 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         name: 'Delete Category',
                         danger: true,
                         func: () => {
-                            setPopup({
-                                type: 'GUILD_CHANNEL_DELETE',
-                                channel: content.channel,
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'GUILD_CHANNEL_DELETE',
+                                    channel: content.channel,
+                                },
                             });
                         },
                     },
@@ -392,10 +418,15 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                 (channel: TChannel) => channel.id === content.channel?.parentId
                             );
 
-                            setPopup({
-                                type: 'GUILD_CHANNEL_CREATE',
-                                guild: content.channel.guildId,
-                                category: category ?? null,
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'GUILD_CHANNEL_CREATE',
+                                    guild: content.channel.guildId,
+                                    category: category ?? null,
+                                },
                             });
                         },
                     },
@@ -403,9 +434,14 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         name: 'Delete Channel',
                         danger: true,
                         func: () => {
-                            setPopup({
-                                type: 'GUILD_CHANNEL_DELETE',
-                                channel: content.channel,
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'GUILD_CHANNEL_DELETE',
+                                    channel: content.channel,
+                                },
                             });
                         },
                     },
@@ -849,8 +885,22 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         {
                             name: 'Profile',
                             func: () => {
-                                setUserProfile(null);
-                                setTimeout(() => setUserProfile({ user }), 50);
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                        setNull: true,
+                                    },
+                                });
+                                setTimeout(() => {
+                                    setLayers({
+                                        settings: {
+                                            type: 'USER_PROFILE',
+                                        },
+                                        content: {
+                                            user,
+                                        },
+                                    });
+                                }, 50);
                             },
                         },
                         {
@@ -932,8 +982,24 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         {
                             name: 'Profile',
                             func: () => {
-                                setUserProfile(null);
-                                setTimeout(() => setUserProfile({ user }), 50);
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                        setNull: true,
+                                    },
+                                });
+                                setTimeout(
+                                    () =>
+                                        setLayers({
+                                            settings: {
+                                                type: 'USER_PROFILE',
+                                            },
+                                            content: {
+                                                user,
+                                            },
+                                        }),
+                                    50
+                                );
                             },
                         },
                         {
@@ -948,7 +1014,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         },
                         {
                             name: 'Add Note',
-                            func: () => setUserProfile({ user, focusNote: true }),
+                            func: () => {
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                    },
+                                    content: {
+                                        user,
+                                        focusNote: true,
+                                    },
+                                });
+                            },
                         },
                         { name: 'Divider' },
                         {
@@ -978,7 +1054,16 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         { name: content?.channel && 'Divider' },
                         {
                             name: 'Profile',
-                            func: () => setUserProfile({ user }),
+                            func: () => {
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                    },
+                                    content: {
+                                        user,
+                                    },
+                                });
+                            },
                         },
                         {
                             name: 'Message',
@@ -996,7 +1081,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         },
                         {
                             name: 'Add Note',
-                            func: () => setUserProfile({ user, focusNote: true }),
+                            func: () => {
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                    },
+                                    content: {
+                                        user,
+                                        focusNote: true,
+                                    },
+                                });
+                            },
                         },
                         {
                             name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
@@ -1131,8 +1226,23 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     {
                         name: 'Profile',
                         func: () => {
-                            setUserProfile(null);
-                            setTimeout(() => setUserProfile({ user }), 50);
+                            setLayers({
+                                settings: {
+                                    type: 'USER_PROFILE',
+                                    setNull: true,
+                                },
+                            });
+                            setTimeout(() => {
+                                setLayers({
+                                    settings: {
+                                        type: 'USER_PROFILE',
+                                    },
+                                    content: {
+                                        user,
+                                        focusNote: true,
+                                    },
+                                });
+                            }, 50);
                         },
                     },
                     {
@@ -1150,7 +1260,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 setItems([
                     {
                         name: 'Profile',
-                        func: () => setUserProfile({ user }),
+                        func: () => {
+                            setLayers({
+                                settings: {
+                                    type: 'USER_PROFILE',
+                                },
+                                content: {
+                                    user,
+                                    focusNote: true,
+                                },
+                            });
+                        },
                     },
                     {
                         name: 'Mention',
@@ -1172,7 +1292,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: 'Add Note',
-                        func: () => setUserProfile({ user, focusNote: true }),
+                        func: () => {
+                            setLayers({
+                                settings: {
+                                    type: 'USER_PROFILE',
+                                },
+                                content: {
+                                    user,
+                                    focusNote: true,
+                                },
+                            });
+                        },
                     },
                     {
                         name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
@@ -1300,7 +1430,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                         if (shift && item.funcShift) item.funcShift();
                                         else if (item.func) item.func();
                                         if ('checked' in item) return;
-                                        setFixedLayer(null);
+                                        setLayers({
+                                            settings: {
+                                                type: 'MENU',
+                                                setNull: true,
+                                            },
+                                        });
                                     }}
                                     onMouseEnter={() => setActive(item.name as string)}
                                 >
@@ -1322,7 +1457,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                                             ? 'checkboxFilled'
                                                             : 'checkbox'
                                                         : 'items' in item
-                                                        ? 'arrowSmall'
+                                                        ? 'arrow'
                                                         : item.icon ?? ''
                                                 }
                                                 size={item.iconSize ?? type === 'GUILD' ? 18 : 16}

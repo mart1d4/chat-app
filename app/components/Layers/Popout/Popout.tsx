@@ -4,74 +4,66 @@ import { FixedMessage, Icon, Avatar } from '@components';
 import useContextHook from '@/hooks/useContextHook';
 import { useEffect, useState, useRef } from 'react';
 import useFetchHelper from '@/hooks/useFetchHelper';
-import pusher from '@/lib/pusher/client-connection';
 import { useRouter } from 'next/navigation';
 import styles from './Popout.module.css';
+import { useLayers } from '@/lib/store';
 
-export const Popout = ({ content }: any) => {
+export const Popout = ({ content, friends }: any) => {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
     const [search, setSearch] = useState<string>('');
     const [chosen, setChosen] = useState<TCleanUser[]>([]);
     const [copied, setCopied] = useState<boolean>(false);
     const [placesLeft, setPlacesLeft] = useState<number>(9);
-    const [friends, setFriends] = useState<TCleanUser[]>([]);
     const [pinned, setPinned] = useState<TMessage[]>([]);
 
-    const { setFixedLayer, setPopup }: any = useContextHook({ context: 'layer' });
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
-    const token = auth.accessToken;
 
-    const inputRef = useRef<HTMLInputElement>(null);
     const inputLinkRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
     useEffect(() => {
-        if (content?.pinned) {
+        if (content.type === 'PINNED_MESSAGES') {
             const fetchPinned = async () => {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/channels/${content.channel.id}/messages/pinned`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                ).then((res) => res.json());
+                const response = await sendRequest({
+                    query: 'CHANNEL_PINNED_MESSAGES',
+                    params: {
+                        channelId: content.channel.id,
+                    },
+                });
 
                 setPinned(response.pinned);
             };
 
             fetchPinned();
         } else {
-            const friendList = auth.user.friends || [];
-            setFriends(friendList);
-
-            if (content?.channel) {
-                const filteredFriends = friendList.filter((friend: any) => {
+            if (content.channel) {
+                const filteredFriends = friends.filter((friend: any) => {
                     return !content.channel.recipientIds.includes(friend.id);
                 });
 
                 setFilteredList(filteredFriends);
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
-                setFilteredList(friendList);
+                setFilteredList(friends);
                 setPlacesLeft(9);
             }
         }
     }, [content, auth.user]);
 
     useEffect(() => {
-        if (content?.pinned) return;
+        if (content.type === 'PINNED_MESSAGES') return;
 
-        if (content?.channel) {
+        if (content.channel) {
             if (chosen?.length === 0) {
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
                 setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
             }
         } else {
-            if (chosen?.length === 0) setPlacesLeft(9);
+            if (chosen.length === 0) setPlacesLeft(9);
             else setPlacesLeft(9 - chosen.length);
         }
     }, [chosen]);
@@ -148,10 +140,15 @@ export const Popout = ({ content }: any) => {
                 const channel = channelExists([...content.channel.recipientIds, ...recipients]);
 
                 if (channel) {
-                    setPopup({
-                        type: 'CHANNEL_EXISTS',
-                        channel: channel,
-                        addUsers: addUsers,
+                    setLayers({
+                        settings: {
+                            type: 'POPUP',
+                        },
+                        content: {
+                            type: 'CHANNEL_EXISTS',
+                            channel: channel,
+                            addUsers: addUsers,
+                        },
                     });
                 } else {
                     addUsers();
@@ -167,93 +164,7 @@ export const Popout = ({ content }: any) => {
         }
     };
 
-    useEffect(() => {
-        if (!content?.pinned) return;
-
-        const listenSockets = () => {
-            pusher.bind('message-edited', (data: any) => {
-                if (!pinned.map((message) => message.id).includes(data.message.id)) return;
-                if (!data.message.pinned) {
-                    setPinned((messages) => messages.filter((message) => message.id !== data.message.id));
-                } else {
-                    setPinned((messages) =>
-                        messages.map((message) => {
-                            if (message.id === data.message.id) return data.message;
-                            if (message.messageReferenceId === data.message.id)
-                                return { ...message, messageReference: data.message };
-                            return message;
-                        })
-                    );
-                }
-            });
-
-            pusher.bind('message-deleted', (data: any) => {
-                if (!pinned.map((message) => message.id).includes(data.messageId)) return;
-                setPinned((messages) => {
-                    return messages
-                        .filter((message) => message.id !== data.messageId)
-                        .map((message) => {
-                            if (message.messageReferenceId === data.messageId) {
-                                return { ...message, messageReference: null };
-                            }
-                            return message;
-                        }) as TMessage[];
-                });
-            });
-
-            pusher.bind('user-updated', (data: any) => {
-                const object = {
-                    username: data.username,
-                    displayName: data.displayName,
-                    description: data.description,
-                    avatar: data.avatar,
-                    banner: data.banner,
-                    primaryColor: data.primaryColor,
-                    accentColor: data.accentColor,
-                    status: data.status,
-                };
-
-                const messagesUpdated = pinned.map((message) => {
-                    if (message.author.id === data.userId) {
-                        return { ...message, author: { ...message.author, ...object } };
-                    } else if (message.messageReference?.author.id === data.userId) {
-                        return {
-                            ...message,
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    } else if (
-                        message.messageReference?.author.id === data.userId &&
-                        message.author.id === data.userId
-                    ) {
-                        return {
-                            ...message,
-                            author: { ...message.author, ...object },
-                            messageReference: {
-                                ...message.messageReference,
-                                author: { ...message.messageReference.author, ...object },
-                            },
-                        };
-                    }
-                    return message;
-                });
-
-                setPinned(messagesUpdated);
-            });
-        };
-
-        listenSockets();
-
-        return () => {
-            pusher.unbind('message-edited');
-            pusher.unbind('message-deleted');
-            pusher.unbind('user-updated');
-        };
-    }, [content, pinned]);
-
-    if (content?.pinned) {
+    if (content.type === 'PINNED_MESSAGES') {
         return (
             <div
                 className={styles.pinContainer}
@@ -360,14 +271,19 @@ export const Popout = ({ content }: any) => {
                                     </div>
                                 </div>
 
-                                {content?.channel?.type === 1 && (
+                                {content.channel?.type === 1 && (
                                     <div className={styles.addButton}>
                                         <button
                                             className={chosen?.length ? 'blue' : 'blue disabled'}
                                             onClick={() => {
                                                 if (chosen?.length) {
                                                     createChan();
-                                                    setFixedLayer(null);
+                                                    setLayers({
+                                                        settings: {
+                                                            type: 'POPUP',
+                                                            setNull: true,
+                                                        },
+                                                    });
                                                 }
                                             }}
                                         >
@@ -379,7 +295,16 @@ export const Popout = ({ content }: any) => {
                         </>
                     )}
 
-                    <button onClick={() => setFixedLayer(null)}>
+                    <button
+                        onClick={() =>
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                    setNull: true,
+                                },
+                            })
+                        }
+                    >
                         <svg
                             viewBox='0 0 24 24'
                             width='24'
@@ -442,7 +367,7 @@ export const Popout = ({ content }: any) => {
 
                         <div className={styles.separator} />
 
-                        {content?.channel?.type === 1 ? (
+                        {content.channel?.type === 1 ? (
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
@@ -452,7 +377,7 @@ export const Popout = ({ content }: any) => {
                                             ref={inputLinkRef}
                                             type='text'
                                             readOnly
-                                            value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
+                                            value={`https://chat-app.mart1d4.com/${content.channel.id}`}
                                             onClick={() => inputLinkRef.current?.select()}
                                         />
                                     </div>
@@ -461,7 +386,7 @@ export const Popout = ({ content }: any) => {
                                         className={copied ? 'green' : 'blue'}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
-                                                `https://chat-app.mart1d4.com/${content?.channel.id}`
+                                                `https://chat-app.mart1d4.com/${content.channel.id}`
                                             );
                                             setCopied(true);
                                             setTimeout(() => setCopied(false), 1000);
@@ -476,10 +401,15 @@ export const Popout = ({ content }: any) => {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className={'blue ' + (content?.channel && !chosen.length ? 'disabled' : '')}
+                                    className={'blue ' + (content.channel && !chosen.length ? 'disabled' : '')}
                                     onClick={() => {
                                         if (content?.channel && !chosen.length) return;
-                                        setFixedLayer(null);
+                                        setLayers({
+                                            settings: {
+                                                type: 'POPUP',
+                                                setNull: true,
+                                            },
+                                        });
                                         createChan();
                                     }}
                                 >
@@ -512,7 +442,7 @@ export const Popout = ({ content }: any) => {
 
                         <div className={styles.separator} />
 
-                        {content?.channel?.type === 1 ? (
+                        {content.channel?.type === 1 ? (
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
@@ -522,7 +452,7 @@ export const Popout = ({ content }: any) => {
                                             ref={inputLinkRef}
                                             type='text'
                                             readOnly
-                                            value={`https://chat-app.mart1d4.com/${content?.channel.id}`}
+                                            value={`https://chat-app.mart1d4.com/${content.channel.id}`}
                                             onClick={() => inputLinkRef.current?.select()}
                                         />
                                     </div>
@@ -531,7 +461,7 @@ export const Popout = ({ content }: any) => {
                                         className={copied ? 'green' : 'blue'}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
-                                                `https://chat-app.mart1d4.com/${content?.channel.id}`
+                                                `https://chat-app.mart1d4.com/${content.channel.id}`
                                             );
                                             setCopied(true);
                                             setTimeout(() => setCopied(false), 1000);
@@ -548,8 +478,13 @@ export const Popout = ({ content }: any) => {
                                 <button
                                     className='blue'
                                     onClick={() => {
-                                        if (chosen?.length) {
-                                            setFixedLayer(null);
+                                        if (chosen.length) {
+                                            setLayers({
+                                                settings: {
+                                                    type: 'POPUP',
+                                                    setNull: true,
+                                                },
+                                            });
                                             createChan();
                                         }
                                     }}
@@ -570,7 +505,12 @@ export const Popout = ({ content }: any) => {
                         <button
                             className='green'
                             onClick={() => {
-                                setFixedLayer(null);
+                                setLayers({
+                                    settings: {
+                                        type: 'POPUP',
+                                        setNull: true,
+                                    },
+                                });
                                 localStorage.setItem('friends-tab', 'add');
                                 router.push('/channels/me');
                             }}

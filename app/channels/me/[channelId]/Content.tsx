@@ -6,6 +6,7 @@ import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
 import useFetchHelper from '@/hooks/useFetchHelper';
 import styles from './Channels.module.css';
+import { useLayers } from '@/lib/store';
 
 type Props = {
     channel: TChannel;
@@ -21,8 +22,8 @@ const Content = ({ channel, user, friend }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
-    const { popup, fixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const layers = useLayers((state) => state.layers);
 
     useEffect(() => {
         document.title = `Chat App | @${channel.name}`;
@@ -41,14 +42,12 @@ const Content = ({ channel, user, friend }: Props) => {
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (popup || fixedLayer) return;
-
-                if (edit) {
+                if (edit && !layers.MENU) {
                     setEdit(null);
                     setLocalStorage({ edit: null });
                 }
 
-                if (reply) {
+                if (reply && !layers.MENU) {
                     setReply(null);
                     setLocalStorage({ reply: null });
                 }
@@ -56,9 +55,8 @@ const Content = ({ channel, user, friend }: Props) => {
         };
 
         document.addEventListener('keydown', handleKeyDown);
-
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [edit, popup, fixedLayer]);
+    }, [edit, reply, layers]);
 
     useEffect(() => {
         const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');

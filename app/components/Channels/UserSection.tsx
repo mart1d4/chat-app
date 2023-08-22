@@ -5,14 +5,14 @@ import { useRef, ReactElement } from 'react';
 import { translateCap } from '@/lib/strings';
 import styles from './UserSection.module.css';
 import { Avatar, Icon } from '@components';
+import { useLayers, useTooltip } from '@/lib/store';
 
-export const UserSection = ({ user }): ReactElement => {
-    const { setShowSettings, fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({
-        context: 'layer',
-    });
-    const { userSettings, setUserSettings }: any = useContextHook({
-        context: 'settings',
-    });
+export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
+    const { setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const userSection = useRef<HTMLDivElement>(null);
 
     return (
@@ -22,21 +22,26 @@ export const UserSection = ({ user }): ReactElement => {
                     ref={userSection}
                     className={styles.avatarWrapper}
                     onClick={(e) => {
-                        if (fixedLayer?.element === e.currentTarget) {
-                            return;
-                        }
-                        setFixedLayer({
-                            type: 'usercard',
-                            user: user,
-                            element: e.currentTarget,
-                            firstSide: 'TOP',
-                            secondSide: 'RIGHT',
-                            animation: 'off',
-                            gap: 14,
+                        if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                        setLayers({
+                            settings: {
+                                type: 'USER_CARD',
+                                element: e.currentTarget,
+                                firstSide: 'TOP',
+                                secondSide: 'RIGHT',
+                                gap: 14,
+                            },
+                            content: {
+                                user: user,
+                                animation: 'off',
+                            },
                         });
                     }}
                     style={{
-                        backgroundColor: fixedLayer?.element === userSection.current ? 'var(--background-hover-1)' : '',
+                        backgroundColor:
+                            layers.USER_CARD?.settings.element === userSection.current
+                                ? 'var(--background-hover-1)'
+                                : '',
                     }}
                 >
                     <div>
@@ -64,12 +69,12 @@ export const UserSection = ({ user }): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
-                        onClick={() => {
-                            setTooltip((prev: any) => ({
-                                ...prev,
+                        onClick={(e) => {
+                            setTooltip({
                                 text: !userSettings.microphone ? 'Mute' : 'Unmute',
+                                element: e.currentTarget,
                                 gap: 3,
-                            }));
+                            });
 
                             if (!userSettings?.microphone && !userSettings?.sound) {
                                 setUserSettings({
@@ -111,12 +116,12 @@ export const UserSection = ({ user }): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
-                        onClick={() => {
-                            setTooltip((prev: any) => ({
-                                ...prev,
+                        onClick={(e) => {
+                            setTooltip({
                                 text: !userSettings.sound ? 'Deafen' : 'Undeafen',
+                                element: e.currentTarget,
                                 gap: 3,
-                            }));
+                            });
 
                             if (userSettings?.microphone && userSettings?.sound) {
                                 setUserSettings({

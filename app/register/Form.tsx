@@ -62,20 +62,17 @@ const Register = (): ReactElement => {
 
         if (!v1) {
             setUsernameError('Userame must be between 3 and 32 characters');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (!v2) {
             setPasswordError('Password must be between 8 and 256 characters');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (password !== passwordMatch) {
             setPasswordError('Passwords do not match');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         const response = await fetch('/api/auth/register', {

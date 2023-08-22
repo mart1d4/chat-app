@@ -8,6 +8,7 @@ import { trimMessage } from '@/lib/strings';
 import styles from './TextArea.module.css';
 import filetypeinfo from 'magic-bytes.js';
 import { v4 as uuidv4 } from 'uuid';
+import { useLayers, useTooltip } from '@/lib/store';
 
 const allowedFileTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng'];
 
@@ -16,8 +17,9 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
     const [files, setFiles] = useState<TImage[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
 
-    const { fixedLayer, setFixedLayer, setPopup, popup }: any = useContextHook({ context: 'layer' });
     const { userSettings }: any = useContextHook({ context: 'settings' });
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
 
@@ -61,7 +63,7 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
     useEffect(() => {
         const handlePaste = async (e: ClipboardEvent) => {
-            if (popup || fixedLayer) return;
+            if (layers) return;
             e.preventDefault();
 
             const clipboardData = e.clipboardData;
@@ -74,32 +76,44 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                     const file = item.getAsFile();
                     if (file) {
                         if (files.length >= 10) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_LIMIT',
+                            return setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_LIMIT',
+                                },
                             });
-                            return;
                         }
 
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
 
                         if (file.size > maxFileSize) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_SIZE',
+                            return setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_SIZE',
+                                },
                             });
-                            return;
                         }
 
                         const fileBytes = new Uint8Array(await file.arrayBuffer());
                         const fileType = filetypeinfo(fileBytes);
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? '')) {
-                            setPopup({
-                                type: 'WARNING',
-                                warning: 'FILE_TYPE',
+                            return setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'WARNING',
+                                    warning: 'FILE_TYPE',
+                                },
                             });
-                            return;
                         }
 
                         // Check image dimensions
@@ -152,9 +166,8 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         };
 
         window.addEventListener('paste', handlePaste);
-
         return () => window.removeEventListener('paste', handlePaste);
-    }, [popup, files]);
+    }, [layers, files]);
 
     useEffect(() => {
         if (!channel) return;
@@ -223,6 +236,18 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         if (reply?.messageId) setReply(null);
     };
 
+    const pasteText = () => {
+        navigator.clipboard.readText().then((content) => {
+            if (!channel) return;
+            const input = textAreaRef.current;
+            if (!input) return;
+
+            input.innerText += content;
+            input.focus();
+            setMessage(input.innerText.toString());
+        });
+    };
+
     const textContainer = useMemo(
         () => (
             <div
@@ -278,8 +303,7 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                         onKeyDown={(e) => {
                             if (!channel) return;
                             if (e.key === 'Enter' && !e.shiftKey && typeof editContent === 'string') {
-                                e.preventDefault();
-                                return;
+                                return e.preventDefault();
                             }
                             if (e.key === 'Enter' && !e.shiftKey && typeof editContent !== 'string') {
                                 e.preventDefault();
@@ -289,26 +313,17 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                         onContextMenu={(e) => {
                             if (!channel) return;
                             e.preventDefault();
-                            setFixedLayer({
-                                type: 'menu',
-                                menu: 'INPUT',
-                                event: {
-                                    mouseX: e.clientX,
-                                    mouseY: e.clientY,
+                            setLayers({
+                                settings: {
+                                    type: 'MENU',
+                                    event: e,
                                 },
-                                input: true,
-                                pasteText: () => {
-                                    navigator.clipboard.readText().then((content) => {
-                                        if (!channel) return;
-                                        const input = textAreaRef.current;
-                                        if (!input) return;
-
-                                        input.innerText += content;
-                                        input.focus();
-                                        setMessage(input.innerText.toString());
-                                    });
+                                content: {
+                                    type: 'INPUT',
+                                    input: true,
+                                    sendButton: true,
+                                    pasteText,
                                 },
-                                sendButton: true,
                             });
                         }}
                         onPaste={(e) => {}}
@@ -396,12 +411,17 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                         const newFiles = Array.from(e.target.files as FileList);
 
                                         if (files.length + newFiles.length > 10) {
-                                            setPopup({
-                                                type: 'WARNING',
-                                                warning: 'FILE_LIMIT',
+                                            setLayers({
+                                                settings: {
+                                                    type: 'POPUP',
+                                                },
+                                                content: {
+                                                    type: 'WARNING',
+                                                    warning: 'FILE_LIMIT',
+                                                },
                                             });
-                                            e.target.value = '';
-                                            return;
+
+                                            return (e.target.value = '');
                                         }
 
                                         let checkedFiles = [];
@@ -409,25 +429,35 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
                                         for (const file of newFiles) {
                                             if (file.size > maxFileSize) {
-                                                setPopup({
-                                                    type: 'WARNING',
-                                                    warning: 'FILE_SIZE',
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'POPUP',
+                                                    },
+                                                    content: {
+                                                        type: 'WARNING',
+                                                        warning: 'FILE_SIZE',
+                                                    },
                                                 });
-                                                e.target.value = '';
+
                                                 checkedFiles = [];
-                                                return;
+                                                return (e.target.value = '');
                                             }
 
                                             const fileBytes = new Uint8Array(await file.arrayBuffer());
                                             const fileType = filetypeinfo(fileBytes);
 
                                             if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? '')) {
-                                                setPopup({
-                                                    type: 'WARNING',
-                                                    warning: 'FILE_TYPE',
+                                                setLayers({
+                                                    settings: {
+                                                        type: 'POPUP',
+                                                    },
+                                                    content: {
+                                                        type: 'WARNING',
+                                                        warning: 'FILE_TYPE',
+                                                    },
                                                 });
-                                                e.target.value = '';
-                                                return;
+
+                                                return (e.target.value = '');
                                             }
 
                                             const image = await new Promise<HTMLImageElement>((resolve) => {
@@ -645,7 +675,8 @@ const FilePreview = ({ file, setFiles }: any) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [isImage, setIsImage] = useState<boolean | null>(null);
 
-    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
 
     useEffect(() => {
         const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/apng', 'image/apng'];
@@ -767,10 +798,15 @@ const FilePreview = ({ file, setFiles }: any) => {
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
                                     setTooltip(null);
-                                    setPopup({
-                                        type: 'FILE_EDIT',
-                                        file: file,
-                                        handleFileChange,
+                                    setLayers({
+                                        settings: {
+                                            type: 'POPUP',
+                                        },
+                                        content: {
+                                            type: 'FILE_EDIT',
+                                            file: file,
+                                            handleFileChange,
+                                        },
                                     });
                                 }}
                             >

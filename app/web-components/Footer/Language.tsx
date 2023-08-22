@@ -50,15 +50,12 @@ const Language = () => {
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
-            if (langMenu.current?.contains(e.target as Node) || langButton.current?.contains(e.target as Node)) {
-                return;
+            if (!(langMenu.current?.contains(e.target as Node) || langButton.current?.contains(e.target as Node))) {
+                setShowPopover(false);
             }
-
-            setShowPopover(false);
         };
 
         document.addEventListener('click', handleClick);
-
         return () => document.removeEventListener('click', handleClick);
     }, []);
 

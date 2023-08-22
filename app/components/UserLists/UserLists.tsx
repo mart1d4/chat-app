@@ -4,8 +4,8 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import useContextHook from '@/hooks/useContextHook';
 import { Icon, UserItem } from '@components';
 import styles from './UserLists.module.css';
-import { v4 as uuidv4 } from 'uuid';
 import Image from 'next/image';
+import { useLayers } from '@/lib/store';
 
 const contentData: contentType = {
     all: {
@@ -63,15 +63,21 @@ type contentType = {
 
 type Props = {
     content: string;
+    data: {
+        friends: TCleanUser[];
+        requestsReceived: TCleanUser[];
+        requestsSent: TCleanUser[];
+        blockedUsers: TCleanUser[];
+    };
 };
 
-export const UserLists = ({ content }: Props): ReactElement => {
+export const UserLists = ({ content, data }: Props): ReactElement => {
     const [search, setSearch] = useState<string>('');
     const [list, setList] = useState<TCleanUser[]>([]);
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
 
-    const { setFixedLayer }: any = useContextHook({ context: 'layer' });
     const { auth }: any = useContextHook({ context: 'auth' });
+    const setLayers = useLayers((state) => state.setLayers);
     const searchBar = useRef<HTMLInputElement>(null);
 
     const pasteText = async () => {
@@ -81,42 +87,21 @@ export const UserLists = ({ content }: Props): ReactElement => {
     };
 
     useEffect(() => {
-        if (content === 'all' || content === 'online') {
-            let friends = auth.user.friends || [];
-
-            if (content === 'online') {
-                if (friends.length) {
-                    friends = friends.filter((user: TCleanUser) => user.status === 'ONLINE');
-                }
-                setList(friends);
-                return;
-            }
-
-            setList(friends);
+        if (content === 'online') {
+            setList(data.friends.filter((user: TCleanUser) => user.status === 'ONLINE'));
+        } else if (content === 'all') {
+            setList(data.friends);
         } else if (content === 'pending') {
-            const sent = auth.user.requestsSent || [];
-            const received = auth.user.requestsReceived || [];
+            const a = data.requestsReceived?.map((user: TCleanUser) => {
+                return { ...user, req: 'Received' };
+            });
+            const b = data.requestsSent?.map((user: TCleanUser) => {
+                return { ...user, req: 'Sent' };
+            });
 
-            let sentReq = [];
-            if (sent.length) {
-                sentReq =
-                    sent?.map((user: TCleanUser) => {
-                        return { ...user, req: 'Sent' };
-                    }) || [];
-            }
-
-            let receivedReq = [];
-            if (received.length) {
-                receivedReq =
-                    received?.map((user: TCleanUser) => {
-                        return { ...user, req: 'Received' };
-                    }) || [];
-            }
-
-            setList([...sentReq, ...receivedReq].sort((a, b) => a.username.localeCompare(b.username)));
-        } else if (content === 'blocked') {
-            const blockedUsers = auth.user.blockedUsers || [];
-            setList(blockedUsers);
+            setList([...a, ...b].sort((a, b) => a.username.localeCompare(b.username)));
+        } else {
+            setList(data.blockedUsers);
         }
     }, [content, auth.user]);
 
@@ -145,15 +130,16 @@ export const UserLists = ({ content }: Props): ReactElement => {
                             onChange={(e) => setSearch(e.target.value)}
                             onContextMenu={(e) => {
                                 e.preventDefault();
-                                setFixedLayer({
-                                    type: 'menu',
-                                    menu: 'INPUT',
-                                    event: {
-                                        mouseX: e.clientX,
-                                        mouseY: e.clientY,
+                                setLayers({
+                                    settings: {
+                                        type: 'MENU',
+                                        event: e,
                                     },
-                                    input: true,
-                                    pasteText,
+                                    content: {
+                                        type: 'INPUT',
+                                        input: true,
+                                        pasteText,
+                                    },
                                 });
                             }}
                         />
@@ -180,14 +166,13 @@ export const UserLists = ({ content }: Props): ReactElement => {
                 </h2>
 
                 <ul className={styles.listContainer + ' scrollbar'}>
-                    {filteredList.length &&
-                        filteredList?.map((user) => (
-                            <UserItem
-                                key={uuidv4()}
-                                user={user}
-                                content={content}
-                            />
-                        ))}
+                    {filteredList.map((user) => (
+                        <UserItem
+                            key={user.id}
+                            user={user}
+                            content={content}
+                        />
+                    ))}
                 </ul>
             </div>
         ),

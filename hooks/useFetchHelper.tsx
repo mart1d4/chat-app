@@ -1,5 +1,6 @@
 import useContextHook from './useContextHook';
 import { useRouter } from 'next/navigation';
+import { useLayers } from '@/lib/store';
 
 type TQuery =
     | 'SEND_MESSAGE'
@@ -17,6 +18,7 @@ type TQuery =
     | 'CHANNEL_DELETE'
     | 'CHANNEL_RECIPIENT_ADD'
     | 'CHANNEL_RECIPIENT_REMOVE'
+    | 'CHANNEL_PINNED_MESSAGES'
     | 'GUILD_CREATE'
     | 'GUILD_DELETE'
     | 'GUILD_CHANNEL_CREATE'
@@ -50,6 +52,7 @@ const urls = {
     ['CHANNEL_DELETE']: '/users/me/channels/:channelId',
     ['CHANNEL_RECIPIENT_ADD']: '/channels/:channelId/recipients/:recipientId',
     ['CHANNEL_RECIPIENT_REMOVE']: '/channels/:channelId/recipients/:recipientId',
+    ['CHANNEL_PINNED_MESSAGES']: '/channels/:channelId/messages/pinned',
     ['GUILD_CREATE']: '/guilds',
     ['GUILD_DELETE']: '/guilds/:guildId',
     ['GUILD_CHANNEL_CREATE']: '/guilds/:guildId/channels',
@@ -73,6 +76,7 @@ const methods = {
     ['CHANNEL_DELETE']: 'DELETE',
     ['CHANNEL_RECIPIENT_ADD']: 'PUT',
     ['CHANNEL_RECIPIENT_REMOVE']: 'DELETE',
+    ['CHANNEL_PINNED_MESSAGES']: 'GET',
     ['GUILD_CREATE']: 'POST',
     ['GUILD_DELETE']: 'DELETE',
     ['GUILD_CHANNEL_CREATE']: 'POST',
@@ -82,41 +86,44 @@ const methods = {
 
 const useFetchHelper = () => {
     const { auth, setAuth }: any = useContextHook({ context: 'auth' });
-    const { setPopup }: any = useContextHook({ context: 'layer' });
+    const setLayers = useLayers((state) => state.setLayers);
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
-        // const channel = auth.user.channels.find((channel: TChannel) => {
-        //     return (
-        //         channel.recipients.length === recipients.length &&
-        //         channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
-        //         (searchDM ? channel.type === 0 : true)
-        //     );
-        // });
+        const channel = auth.user.channels.find((channel: TChannel) => {
+            return (
+                channel.recipients.length === recipients.length &&
+                channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
+                (searchDM ? channel.type === 0 : true)
+            );
+        });
 
-        // if (channel) return channel;
+        if (channel) return channel;
         return true;
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
         if (query === 'CHANNEL_CREATE' && !skipCheck) {
-            // const channel =
-            //     data?.recipients.length === 1
-            //         ? channelExists([...data?.recipients, auth.user.id], true)
-            //         : channelExists([...data?.recipients, auth.user.id], false);
-            // if (channel) {
-            //     if (channel.type === 0) {
-            //         router.push(`/channels/me/${channel.id}`);
-            //         return;
-            //     } else if (channel.type === 1 && channel.recipients.length !== 1) {
-            //         setPopup({
-            //             type: 'CHANNEL_EXISTS',
-            //             channel: channel,
-            //             recipients: data?.recipients,
-            //         });
-            //         return;
-            //     }
-            // }
+            const channel =
+                data?.recipients.length === 1
+                    ? channelExists([...data?.recipients, auth.user.id], true)
+                    : channelExists([...data?.recipients, auth.user.id], false);
+            if (channel) {
+                if (channel.type === 0) {
+                    return router.push(`/channels/me/${channel.id}`);
+                } else if (channel.type === 1 && channel.recipients.length !== 1) {
+                    return setLayers({
+                        settings: {
+                            type: 'POPUP',
+                        },
+                        content: {
+                            type: 'CHANNEL_EXISTS',
+                            channel: channel,
+                            recipients: data?.recipients,
+                        },
+                    });
+                }
+            }
         }
 
         const headers = {
@@ -158,7 +165,7 @@ const useFetchHelper = () => {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
             method: method,
             headers: headers,
-            body: body,
+            body: method !== 'GET' ? body : undefined,
         });
 
         if (response.status === 401) {
@@ -178,9 +185,11 @@ const useFetchHelper = () => {
                 token: response.token,
             }));
 
-            return await resend({ query, params, data, skipCheck });
+            const res: any = await resend({ query, params, data, skipCheck });
+            return res;
         } else {
-            return await response.json();
+            const res = await response.json();
+            return res;
         }
     };
 

@@ -2,12 +2,14 @@
 
 import { shouldDisplayInlined } from '@/lib/message';
 import useContextHook from '@/hooks/useContextHook';
+import { useLayers, useTooltip } from '@/lib/store';
 import styles from './FixedMessage.module.css';
 import { Avatar, Icon } from '@components';
 import { useState, useMemo } from 'react';
 
 export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean }) => {
-    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
     const { auth }: any = useContextHook({ context: 'auth' });
 
     const getLongDate = (date: Date) => {
@@ -117,10 +119,15 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                         height='24'
                         viewBox='0 0 24 24'
                         onClick={() =>
-                            setPopup({
-                                type: 'UNPIN_MESSAGE',
-                                channelId: message.channelId,
-                                message: message,
+                            setLayers({
+                                settings: {
+                                    type: 'POPUP',
+                                },
+                                content: {
+                                    type: 'UNPIN_MESSAGE',
+                                    channelId: message.channelId,
+                                    message: message,
+                                },
                             })
                         }
                     >
@@ -492,7 +499,8 @@ type ImageComponent = {
 const Image = ({ attachment, message }: ImageComponent) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
 
-    const { setPopup, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
 
     return useMemo(
         () => (
@@ -500,16 +508,20 @@ const Image = ({ attachment, message }: ImageComponent) => {
                 className={styles.image}
                 onClick={() => {
                     if (attachment.isSpoiler && !hideSpoiler) {
-                        setHideSpoiler(true);
-                        return;
+                        return setHideSpoiler(true);
                     }
 
                     const index = message.attachments.findIndex((a) => a.id === attachment.id);
 
-                    setPopup({
-                        type: 'ATTACHMENT_PREVIEW',
-                        attachments: message.attachments,
-                        current: index,
+                    setLayers({
+                        settings: {
+                            type: 'POPUP',
+                        },
+                        content: {
+                            type: 'ATTACHMENT_PREVIEW',
+                            attachments: message.attachments,
+                            current: index,
+                        },
                     });
                 }}
             >

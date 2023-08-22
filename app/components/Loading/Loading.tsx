@@ -31,10 +31,7 @@ export const Loading = ({ children, user }: Props): ReactElement => {
         };
 
         if (env == 'development') {
-            if (hasRendered.current) {
-                setAuthContext();
-            }
-
+            if (hasRendered.current) setAuthContext();
             return () => {
                 hasRendered.current = true;
             };
@@ -46,9 +43,9 @@ export const Loading = ({ children, user }: Props): ReactElement => {
     return (
         <div
             onDrag={(e) => e.preventDefault()}
-            onDragStart={(e) => e.preventDefault()}
             onDragEnd={(e) => e.preventDefault()}
             onDragOver={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
         >
             {auth?.user && auth?.token ? (

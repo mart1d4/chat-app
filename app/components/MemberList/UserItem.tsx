@@ -4,6 +4,7 @@ import useContextHook from '@/hooks/useContextHook';
 import { ReactElement, useRef } from 'react';
 import styles from './UserItem.module.css';
 import { Avatar, Icon } from '@components';
+import { useLayers, useTooltip } from '@/lib/store';
 
 type Props = {
     user: TCleanUser;
@@ -13,7 +14,9 @@ type Props = {
 };
 
 export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactElement => {
-    const { fixedLayer, setFixedLayer, setTooltip }: any = useContextHook({ context: 'layer' });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
     const liRef = useRef(null);
 
     return (
@@ -21,35 +24,40 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
             ref={liRef}
             className={styles.liContainer}
             onClick={(e) => {
-                if (fixedLayer?.element === e.currentTarget) return;
+                if (layers.USER_CARD?.settings.element === e.currentTarget) return;
                 else {
-                    return setFixedLayer({
-                        type: 'usercard',
-                        element: e.currentTarget,
-                        user: user,
-                        firstSide: 'LEFT',
-                        animation: 'LEFT',
-                        gap: 16,
+                    return setLayers({
+                        settings: {
+                            type: 'USER_CARD',
+                            element: e.currentTarget,
+                            firstSide: 'LEFT',
+                            gap: 16,
+                        },
+                        content: {
+                            user: user,
+                            animation: 'LEFT',
+                        },
                     });
                 }
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
-                setFixedLayer({
-                    type: 'menu',
-                    menu: 'USER_GROUP',
-                    event: {
-                        mouseX: e.clientX,
-                        mouseY: e.clientY,
+                setLayers({
+                    settings: {
+                        type: 'MENU',
+                        event: e,
                     },
-                    user: user,
-                    channel: channel,
+                    content: {
+                        type: 'USER_GROUP',
+                        user: user,
+                        channel: channel,
+                    },
                 });
             }}
             style={{
-                opacity: offline && fixedLayer?.element !== liRef.current ? 0.3 : 1,
-                backgroundColor: fixedLayer?.element === liRef.current ? 'var(--background-5)' : '',
-                color: fixedLayer?.element === liRef.current ? 'var(--foreground-2)' : '',
+                opacity: offline && layers.USER_CARD?.settings.element !== liRef.current ? 0.3 : 1,
+                backgroundColor: layers.USER_CARD?.settings.element === liRef.current ? 'var(--background-5)' : '',
+                color: layers.USER_CARD?.settings.element === liRef.current ? 'var(--foreground-2)' : '',
             }}
         >
             <div className={styles.liWrapper}>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, ReactElement, ReactNode, useMemo } from 'react';
+import { useState, useEffect, ReactElement, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useContextHook from '@/hooks/useContextHook';
+import { useLayers, useTooltip } from '@/lib/store';
 import styles from './AppNav.module.css';
 import { motion } from 'framer-motion';
 
@@ -21,9 +22,9 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
-    const { setPopup, popup, setFixedLayer, setTooltip }: any = useContextHook({
-        context: 'layer',
-    });
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
 
     const pathname = usePathname();
     const router = useRouter();
@@ -73,7 +74,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                     setTooltip({
                         text: name,
                         element: e.currentTarget,
-                        position: 'right',
+                        position: 'RIGHT',
                         gap: 15,
                         big: true,
                     });
@@ -86,31 +87,42 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                 onClick={() => {
                     setTooltip(null);
                     if (name === 'Add a Server') {
-                        setPopup({
-                            type: 'CREATE_GUILD',
+                        return setLayers({
+                            settings: {
+                                type: 'POPUP',
+                            },
+                            content: {
+                                type: 'CREATE_GUILD',
+                            },
                         });
-                        return;
                     }
                     router.push(link);
                 }}
                 onContextMenu={(e) => {
                     if (guild) {
-                        setFixedLayer({
-                            type: 'menu',
-                            menu: 'GUILD_ICON',
-                            guild: guild,
-                            event: {
-                                mouseX: e.clientX,
-                                mouseY: e.clientY,
+                        setLayers({
+                            settings: {
+                                type: 'MENU',
+                                event: e,
+                            },
+                            content: {
+                                type: 'GUILD_ICON',
+                                guild: guild,
                             },
                         });
                     }
                 }}
                 style={{
                     backgroundColor:
-                        popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--success-1)' : '',
-                    color: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? 'var(--foreground-1)' : '',
-                    borderRadius: popup?.type === 'CREATE_GUILD' && name === 'Add a Server' ? '33%' : '',
+                        layers.POPUP?.content?.type === 'CREATE_GUILD' && name === 'Add a Server'
+                            ? 'var(--success-1)'
+                            : '',
+                    color:
+                        layers.POPUP?.content?.type === 'CREATE_GUILD' && name === 'Add a Server'
+                            ? 'var(--foreground-1)'
+                            : '',
+                    borderRadius:
+                        layers.POPUP?.content?.type === 'CREATE_GUILD' && name === 'Add a Server' ? '33%' : '',
                     fontSize:
                         !src && !svg
                             ? firstLetters?.length < 3
