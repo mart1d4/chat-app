@@ -286,18 +286,21 @@ const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }
     };
 
     useEffect(() => {
-        // Disable for production
-        if (message?.needsToBeSent && hasRendered.current) {
-            retrySendMessage(message);
+        const env = process.env.NODE_ENV;
+
+        if (env == 'development') {
+            if (message?.needsToBeSent && hasRendered.current) {
+                retrySendMessage(message);
+            }
+
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == 'production') {
+            if (message?.needsToBeSent) {
+                retrySendMessage(message);
+            }
         }
-
-        return () => {
-            hasRendered.current = true;
-        };
-
-        // if (message?.needsToBeSent) {
-        //     retrySendMessage(message);
-        // }
     }, [message]);
 
     const setLocalStorage = (data: {}) => {
