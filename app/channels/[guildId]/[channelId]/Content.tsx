@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
 import { shouldDisplayInlined } from '@/lib/message';
 import styles from './Channels.module.css';
 import { useLayers } from '@/lib/store';
+import useContextHook from '@/hooks/useContextHook';
 
 interface Props {
     guild: TGuild;
@@ -19,6 +20,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
+    const { auth }: any = useContextHook({ context: "auth" })
     const layers = useLayers((state) => state.layers);
 
     useEffect(() => {
@@ -56,26 +58,26 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         if (localChannel?.edit) setEdit(localChannel.edit);
         if (localChannel?.reply) setReply(localChannel.reply);
 
-        // const getMessages = async () => {
-        //     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-        //         method: 'GET',
-        //         headers: {
-        //             Authorization: `Bearer ${auth.accessToken}`,
-        //             'Content-Type': 'application/json',
-        //         },
-        //     }).then((res) => res?.json());
+        const getMessages = async () => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${auth.token}`,
+                    'Content-Type': 'application/json',
+                },
+            }).then((res) => res?.json());
 
-        //     if (response.error) {
-        //         console.log(response.error);
-        //     } else {
-        //         setMessages(response.messages);
-        //         setHasMore(response.hasMore);
-        //     }
+            if (response.error) {
+                console.log(response.error);
+            } else {
+                setMessages(response.messages);
+                setHasMore(response.hasMore);
+            }
 
-        //     setLoading(false);
-        // };
+            setLoading(false);
+        };
 
-        // getMessages();
+        getMessages();
     }, []);
 
     const scrollableContainer = useCallback(

@@ -62,6 +62,7 @@ export async function middleware(req: NextRequest) {
                     });
                 }
             } catch (error) {
+                console.log(error);
                 return new NextResponse(null, {
                     status: 401,
                 });
