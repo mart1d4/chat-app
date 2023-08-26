@@ -1,13 +1,13 @@
 export { AppNav } from './AppNav/AppNav';
 
-export { UserProfile } from './Layers/UserProfile/UserProfile';
 export { Layers } from './Layers/FixedLayer/FixedLayer';
-export { Tooltip } from './Layers/Tooltip/Tooltip';
 export { Settings } from './Layers/Settings/Settings';
+export { Tooltip } from './Layers/Tooltip/Tooltip';
+export { Menu } from './Layers/Menu/Menu';
 export { UserCard } from './Layers/UserCard/UserCard';
+export { UserProfile } from './Layers/UserProfile/UserProfile';
 export { Popout } from './Layers/Popout/Popout';
 export { Popup } from './Layers/Popup/Popup';
-export { Menu } from './Layers/Menu/Menu';
 
 export { Icon } from './Icon/Icon';
 

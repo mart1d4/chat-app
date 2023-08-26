@@ -55,7 +55,7 @@ type TLayer = {
     settings: {
         type: 'MENU' | 'POPUP' | 'USER_CARD' | 'USER_PROFILE';
         setNull?: boolean;
-        element?: HTMLElement | EventTarget | null;
+        element?: HTMLElement | null;
         event?: React.MouseEvent;
         firstSide?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | 'CENTER';
         secondSide?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | 'CENTER';
@@ -99,6 +99,7 @@ export const useLayers = create<LayersState>()((set) => ({
                         layers: {
                             ...state.layers,
                             [layer.settings.type]: [...(state.layers[layer.settings.type] as TLayer[]), layer],
+                            MENU: null
                         },
                     };
                 } else {
@@ -108,9 +109,20 @@ export const useLayers = create<LayersState>()((set) => ({
                         layers: {
                             ...state.layers,
                             [layer.settings.type]: layers.slice(0, layers.length - 1),
+                            MENU: null
                         },
                     };
                 }
+            }
+
+            if (layer.settings.type !== 'MENU') {
+                return {
+                    layers: {
+                        ...state.layers,
+                        [layer.settings.type]: layer.settings.setNull ? null : layer,
+                        MENU: null,
+                    },
+                };
             }
 
             return {

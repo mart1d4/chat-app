@@ -47,7 +47,6 @@ export const Settings = (): ReactElement => {
         };
 
         window.addEventListener('resize', handleWindowResize);
-
         return () => window.removeEventListener('resize', handleWindowResize);
     }, []);
 

@@ -212,7 +212,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
                 const filesToAdd = prevMessage.attachments.map((file) => file.file);
 
-                await uploadFileGroup(filesToAdd, {
+                const res = await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
                     store: 'auto',
                     onProgress,
@@ -247,6 +247,8 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 warning: 'UPLOAD_FAILED',
                             },
                         });
+
+                        return null;
                     });
             }
 

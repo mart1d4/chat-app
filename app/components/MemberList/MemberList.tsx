@@ -27,11 +27,12 @@ const masks = {
 
 interface Props {
     channel: TChannel;
+    guild?: TGuild;
     user?: TCleanUser;
     friend?: TCleanUser | null;
 }
 
-export const MemberList = ({ channel, user, friend }: Props) => {
+export const MemberList = ({ channel, guild, user, friend }: Props) => {
     const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<TGuild[]>([]);
     const [showFriends, setShowFriends] = useState<boolean>(false);
@@ -296,17 +297,12 @@ export const MemberList = ({ channel, user, friend }: Props) => {
             );
         } else {
             let onlineMembers, offlineMembers: TCleanUser[];
-            let guild: TGuild | undefined;
-
-            if (channel.guildId) {
-                guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel.guildId);
-            }
 
             if (guild) {
-                onlineMembers = guild.rawMembers?.filter((recipient: any) =>
+                onlineMembers = guild.rawMembers.filter((recipient: any) =>
                     ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
                 );
-                offlineMembers = guild.rawMembers?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+                offlineMembers = guild.rawMembers.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
             } else {
                 onlineMembers = channel.recipients.filter((recipient: any) =>
                     ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)

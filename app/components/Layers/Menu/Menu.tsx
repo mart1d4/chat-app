@@ -44,7 +44,7 @@ enum EMenuType {
     GUILD_CHANNEL_LIST = 'GUILD_CHANNEL_LIST',
 }
 
-export const Menu = ({ content }: { content: any }): ReactElement => {
+export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[] }): ReactElement => {
     const [active, setActive] = useState<string>('');
     const [items, setItems] = useState<ItemType[]>([]);
     const [shift, setShift] = useState<boolean>(false);

@@ -194,7 +194,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                         />
                     </main>
 
-                    <MemberList channel={channel} />
+                    <MemberList channel={channel} guild={guild} />
                 </div>
             </div>
         ),

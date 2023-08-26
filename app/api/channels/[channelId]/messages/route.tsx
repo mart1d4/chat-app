@@ -1,12 +1,12 @@
-import pusher from '@/lib/pusher/server-connection';
-import { removeImage } from '@/lib/api/cdn';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
-import { decryptMessage, encryptMessage } from '@/lib/encryption';
+import pusher from "@/lib/pusher/server-connection";
+import { removeImage } from "@/lib/api/cdn";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
+import { decryptMessage, encryptMessage } from "@/lib/encryption";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
     const { skip, limit } = { skip: 0, limit: 500 };
 
@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             include: {
                 messages: {
                     orderBy: {
-                        createdAt: 'asc',
+                        createdAt: "asc",
                     },
                     skip: skip,
                     take: limit,
@@ -114,17 +114,17 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
         }
 
-        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? '')) {
+        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? "")) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not in this channel',
+                    message: "You are not in this channel",
                 },
                 { status: 401 }
             );
@@ -140,7 +140,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully retrieved messages',
+                message: "Successfully retrieved messages",
                 messages: messages,
                 hasMore: channel.messages.length - skip > limit,
             },
@@ -151,7 +151,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -159,7 +159,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;
     const { message } = await req.json();
@@ -168,7 +168,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         return NextResponse.json(
             {
                 success: false,
-                message: 'Message is required',
+                message: "Message is required",
             },
             { status: 400 }
         );
@@ -219,17 +219,17 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or sender not found',
+                    message: "Channel or sender not found",
                 },
                 { status: 404 }
             );
         }
 
-        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? '')) {
+        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? "")) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not in this channel',
+                    message: "You are not in this channel",
                 },
                 { status: 401 }
             );
@@ -237,7 +237,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         // if dm and user is blocked
         if (channel.type === 0) {
-            const userId = channel.recipientIds.find((id) => id !== senderId) ?? '';
+            const userId = channel.recipientIds.find((id) => id !== senderId) ?? "";
             const isBlocked = sender.blockedUserIds.includes(userId);
             const isBlockedBy = sender.blockedByUserIds.includes(userId);
 
@@ -245,11 +245,21 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'You are blocked from sending messages in this channel',
+                        message: "You are blocked from sending messages in this channel",
                     },
                     { status: 401 }
                 );
             }
+        }
+
+        if (!message.content && message.attachments.length === 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message can't be blank",
+                },
+                { status: 400 }
+            );
         }
 
         const prevContent = message.content;
@@ -265,7 +275,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'Referenced message not found',
+                        message: "Referenced message not found",
                     },
                     { status: 404 }
                 );
@@ -416,7 +426,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     },
                 });
 
-                await pusher.trigger('chat-app', 'channel-created', {
+                await pusher.trigger("chat-app", "channel-created", {
                     recipients: [recipientId],
                     channel: channel,
                 });
@@ -489,7 +499,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
-        await pusher.trigger('chat-app', 'message-sent', {
+        await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: {
                 ...messageToSend,
@@ -500,7 +510,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully sent message',
+                message: "Successfully sent message",
                 data: {
                     message: {
                         ...messageToSend,
@@ -522,7 +532,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

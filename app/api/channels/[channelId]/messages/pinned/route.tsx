@@ -1,3 +1,4 @@
+import { decryptMessage } from '@/lib/encryption';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { headers } from 'next/headers';
@@ -98,7 +99,12 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             {
                 success: true,
                 message: 'Successfully retrieved pinned messages',
-                pinned: channel.messages,
+                pinned: channel.messages.map((message) => {
+                    return {
+                        ...message,
+                        content: decryptMessage(message.content),
+                    };
+                }),
             },
             { status: 200 }
         );

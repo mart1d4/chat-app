@@ -194,14 +194,26 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             );
         }
 
-        if (!sender.channelIds.includes(channelId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'You are not in this channel',
-                },
-                { status: 403 }
-            );
+        if (!channel.guildId) {
+            if (!sender.channelIds.includes(channelId)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'You are not in this channel',
+                    },
+                    { status: 403 }
+                );
+            }
+        } else {
+            if (!sender.guildIds.includes(channel.guildId)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: 'You are not in this channel',
+                    },
+                    { status: 403 }
+                );
+            }
         }
 
         const message = await prisma.message.findUnique({

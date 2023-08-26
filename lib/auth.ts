@@ -356,6 +356,23 @@ export const getGuild = async (id: string): Promise<TGuild | null> => {
                     id: true,
                 },
             },
+            rawMembers: {
+                select: {
+                    id: true,
+                    username: true,
+                    displayName: true,
+                    avatar: true,
+                    banner: true,
+                    primaryColor: true,
+                    accentColor: true,
+                    description: true,
+                    customStatus: true,
+                    status: true,
+                    guildIds: true,
+                    friendIds: true,
+                    createdAt: true,
+                },
+            },
             systemChannelId: true,
         },
     })) as TGuild | null;
