@@ -1320,7 +1320,7 @@ const content = ({ content }: { content: any }): ReactElement => {
                                                             ? 'checkboxFilled'
                                                             : 'checkbox'
                                                         : 'items' in item
-                                                        ? 'arrowSmall'
+                                                        ? 'arrow'
                                                         : item.icon ?? ''
                                                 }
                                                 size={item.iconSize ?? type === 'GUILD' ? 18 : 16}
