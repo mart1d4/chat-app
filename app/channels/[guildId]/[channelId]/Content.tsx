@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from '@components';
-import { useState, useEffect, useCallback, ReactElement, useMemo } from 'react';
-import { shouldDisplayInlined } from '@/lib/message';
-import styles from './Channels.module.css';
-import { useLayers } from '@/lib/store';
-import useContextHook from '@/hooks/useContextHook';
+import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from "@components";
+import { useState, useEffect, useCallback, ReactElement, useMemo } from "react";
+import { shouldDisplayInlined } from "@/lib/message";
+import styles from "./Channels.module.css";
+import { useLayers } from "@/lib/store";
+import useContextHook from "@/hooks/useContextHook";
 
 interface Props {
     guild: TGuild;
@@ -20,7 +20,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({ context: "auth" })
+    const { auth }: any = useContextHook({ context: "auth" });
     const layers = useLayers((state) => state.layers);
 
     useEffect(() => {
@@ -28,14 +28,14 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             localStorage.setItem(
                 `channel-${channel.id}`,
                 JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
                     ...data,
                 })
             );
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 if (edit && !layers.MENU) {
                     setEdit(null);
                     setLocalStorage({ edit: null });
@@ -48,22 +48,22 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit, reply, layers.MENU]);
 
     useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');
+        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}");
 
         if (localChannel?.edit) setEdit(localChannel.edit);
         if (localChannel?.reply) setReply(localChannel.reply);
 
         const getMessages = async () => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-                method: 'GET',
+                method: "GET",
                 headers: {
                     Authorization: `Bearer ${auth.token}`,
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
             }).then((res) => res?.json());
 
@@ -80,6 +80,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         getMessages();
     }, []);
 
+    useEffect(() => {
+        setScrollToBottom((prev) => !prev);
+    }, [messages]);
+
     const scrollableContainer = useCallback(
         (node: HTMLDivElement) => {
             if (node) {
@@ -91,7 +95,6 @@ const Content = ({ guild, channel }: Props): ReactElement => {
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
         const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
-
         return diff / (1000 * 60) >= 5;
     };
 
@@ -134,7 +137,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                         <div className={styles.messagesWrapper}>
                             <div
                                 ref={scrollableContainer}
-                                className={styles.messagesScrollableContainer + ' scrollbar'}
+                                className={styles.messagesScrollableContainer + " scrollbar"}
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
@@ -145,10 +148,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                                 {hasMore ? (
                                                     <MessageSk />
                                                 ) : (
-                                                    <FirstMessage
-                                                        guild={guild}
-                                                        channel={channel}
-                                                    />
+                                                    <FirstMessage guild={guild} channel={channel} />
                                                 )}
 
                                                 {messages?.map((message: TMessage, index: number) => (
@@ -156,11 +156,11 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
-                                                                    {new Intl.DateTimeFormat('en-US', {
-                                                                        weekday: 'long',
-                                                                        year: 'numeric',
-                                                                        month: 'long',
-                                                                        day: 'numeric',
+                                                                    {new Intl.DateTimeFormat("en-US", {
+                                                                        weekday: "long",
+                                                                        year: "numeric",
+                                                                        month: "long",
+                                                                        day: "numeric",
                                                                     }).format(new Date(message.createdAt))}
                                                                 </span>
                                                             </div>
@@ -186,12 +186,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                             </div>
                         </div>
 
-                        <TextArea
-                            channel={channel}
-                            reply={reply}
-                            setReply={setReply}
-                            setMessages={setMessages}
-                        />
+                        <TextArea channel={channel} reply={reply} setReply={setReply} setMessages={setMessages} />
                     </main>
 
                     <MemberList channel={channel} guild={guild} />
@@ -216,32 +211,32 @@ const FirstMessage = ({ guild, channel }: Props) => {
 
                             <div>
                                 This is your brand new, shiny server. Here are some steps to help you get started. For
-                                more, check out our <a href=''>Getting Started guide</a>.
+                                more, check out our <a href="">Getting Started guide</a>.
                             </div>
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Invite your friends</div>
-                            <Icon name='arrow' />
+                            <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Personalize your server with an icon</div>
-                            <Icon name='arrow' />
+                            <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Send your first message</div>
-                            <Icon name='arrow' />
+                            <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
                             <div></div>
                             <div>Add your first app</div>
-                            <Icon name='arrow' />
+                            <Icon name="arrow" />
                         </div>
                     </div>
                 </div>

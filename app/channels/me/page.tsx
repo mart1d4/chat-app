@@ -1,12 +1,12 @@
-import { AppHeader, UserChannels } from '@components';
-import { useUser, getChannels, getRequests, getBlocked, getFriends } from '@/lib/auth';
-import styles from './FriendsPage.module.css';
-import { Metadata } from 'next';
-import Content from './Content';
-import Aside from './Aside';
+import { useUser, getChannels, getRequests, getBlocked, getFriends } from "@/lib/auth";
+import { AppHeader, UserChannels } from "@components";
+import styles from "./FriendsPage.module.css";
+import { Metadata } from "next";
+import Content from "./Content";
+import Aside from "./Aside";
 
 export const metadata: Metadata = {
-    title: 'Chat App | Friends',
+    title: "Chat App | Friends",
 };
 
 const FriendsPage = async () => {
@@ -20,10 +20,7 @@ const FriendsPage = async () => {
 
     return (
         <>
-            <UserChannels
-                user={user}
-                channels={channels}
-            />
+            <UserChannels user={user} channels={channels} />
 
             <div className={styles.main}>
                 <AppHeader />

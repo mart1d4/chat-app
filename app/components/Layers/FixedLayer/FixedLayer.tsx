@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, ReactElement } from "react";
+import { useEffect, useState, useCallback, ReactElement, KeyboardEvent } from "react";
 import { Menu, Popup, UserCard, UserProfile } from "@components";
 import { useLayers } from "@/lib/store";
 
 export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => {
+    const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
     let popupHasBackground = false;
@@ -44,6 +45,16 @@ export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => 
                     zIndex: 1001,
                     pointerEvents: darkBackground ? "all" : "none",
                     backgroundColor: darkBackground ? "rgba(0, 0, 0, 0.80)" : "",
+                }}
+                onMouseDown={() => {
+                    if (layers.USER_PROFILE || layers.POPUP.length > 0) {
+                        setLayers({
+                            settings: {
+                                type: layers.USER_PROFILE ? "USER_PROFILE" : "POPUP",
+                                setNull: true,
+                            },
+                        });
+                    }
                 }}
             />
 
@@ -289,46 +300,37 @@ const Layer = ({ settings, content, friends }: TLayer) => {
         if (!settings?.type || !currentNode) return;
 
         const handleOutsideClick = (e: MouseEvent) => {
-            console.log("owdniawbnuodwqbn");
+            e.stopPropagation();
+            console.log(currentNode);
+            // @ts-expect-error
+            if (currentNode.contains(e)) return;
 
-            //     if (layers.MENU) {
-            //         setLayers({
-            //             settings: {
-            //                 type: 'MENU',
-            //                 setNull: true,
-            //             },
-            //         });
-            //     }
-            //     if (layers.POPUP) {
-            //         setLayers({
-            //             settings: {
-            //                 type: 'POPUP',
-            //                 setNull: true,
-            //             },
-            //         });
-            //     }
-            //     if (layers.USER_CARD) {
-            //         setLayers({
-            //             settings: {
-            //                 type: 'USER_CARD',
-            //                 setNull: true,
-            //             },
-            //         });
-            //     }
-            //     if (layers.USER_PROFILE) {
-            //         setLayers({
-            //             settings: {
-            //                 type: 'USER_PROFILE',
-            //                 setNull: true,
-            //             },
-            //         });
-            //     }
+            setLayers({
+                settings: {
+                    type: settings.type,
+                    setNull: true,
+                },
+            });
         };
 
-        console.log(currentNode);
+        const handleEscKey = (e: any) => {
+            if (e.key === "Escape") {
+                setLayers({
+                    settings: {
+                        type: settings.type,
+                        setNull: true,
+                    },
+                });
+            }
+        };
 
         window.addEventListener("mousedown", handleOutsideClick);
-        return window.removeEventListener("mousedown", handleOutsideClick);
+        window.addEventListener("keydown", handleEscKey);
+
+        return () => {
+            window.removeEventListener("mousedown", handleOutsideClick);
+            window.removeEventListener("keydown", handleEscKey);
+        };
     }, [currentNode, settings?.type]);
 
     const index =
@@ -348,6 +350,7 @@ const Layer = ({ settings, content, friends }: TLayer) => {
                 visibility: positions.top ? "visible" : "hidden",
                 pointerEvents: "all",
             }}
+            onMouseDown={(e) => e.stopPropagation()}
         >
             {settings?.type === "MENU" && <Menu content={content} friends={friends} />}
             {settings?.type === "POPUP" && <Popup content={content} friends={friends} />}

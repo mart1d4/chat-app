@@ -1,10 +1,11 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { encryptMessage } from "@/lib/encryption";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function POST(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;
     const messageId = params.messageId;
@@ -26,7 +27,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or sender not found',
+                    message: "Channel or sender not found",
                 },
                 { status: 404 }
             );
@@ -84,7 +85,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Message not found',
+                    message: "Message not found",
                 },
                 { status: 404 }
             );
@@ -99,7 +100,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
-        await pusher.trigger('chat-app', 'message-edited', {
+        await pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
             message: {
                 ...message,
@@ -110,7 +111,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         const pinnedNotification = await prisma.message.create({
             data: {
                 type: 7,
-                content: `<@${senderId}> pinned <-${message.id}> to this channel. See all <*pinned>.`,
+                content: encryptMessage(`<@${senderId}> pinned <-${message.id}> to this channel. See all <*pinned>.`),
                 author: {
                     connect: {
                         id: senderId,
@@ -152,7 +153,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             },
         });
 
-        await pusher.trigger('chat-app', 'message-sent', {
+        await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: pinnedNotification,
         });
@@ -160,7 +161,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully pinned message',
+                message: "Successfully pinned message",
             },
             { status: 200 }
         );
@@ -169,7 +170,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -177,7 +178,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;
     const messageId = params.messageId;
@@ -199,7 +200,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or sender not found',
+                    message: "Channel or sender not found",
                 },
                 { status: 404 }
             );
@@ -257,7 +258,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Message not found',
+                    message: "Message not found",
                 },
                 { status: 404 }
             );
@@ -272,7 +273,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             },
         });
 
-        await pusher.trigger('chat-app', 'message-edited', {
+        await pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
             message: {
                 ...message,
@@ -283,7 +284,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully removed pin from message',
+                message: "Successfully removed pin from message",
             },
             { status: 200 }
         );
@@ -292,7 +293,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

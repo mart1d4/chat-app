@@ -1,21 +1,22 @@
-import pusher from '@/lib/pusher/server-connection';
-import { removeImage } from '@/lib/api/cdn';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { encryptMessage } from "@/lib/encryption";
+import { removeImage } from "@/lib/api/cdn";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function PUT(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;
     const messageId = params.messageId;
     const { content, attachments } = await req.json();
 
-    if (content !== undefined && typeof content !== 'string' && content !== null) {
+    if (content !== undefined && typeof content !== "string" && content !== null) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Content must be a string or null',
+                message: "Content must be a string or null",
             },
             { status: 400 }
         );
@@ -25,7 +26,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Attachments must be an array',
+                message: "Attachments must be an array",
             },
             { status: 400 }
         );
@@ -48,7 +49,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or sender not found',
+                    message: "Channel or sender not found",
                 },
                 { status: 404 }
             );
@@ -64,7 +65,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Message not found',
+                    message: "Message not found",
                 },
                 { status: 404 }
             );
@@ -75,7 +76,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                 id: messageId,
             },
             data: {
-                content: content,
+                content: encryptMessage(content),
                 attachments: attachments
                     ? message.attachments.filter((file) => attachments.includes(file.id))
                     : message.attachments,
@@ -141,7 +142,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        await pusher.trigger('chat-app', 'message-edited', {
+        await pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
             message: messageToSend,
         });
@@ -149,7 +150,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully updated message',
+                message: "Successfully updated message",
             },
             { status: 200 }
         );
@@ -158,7 +159,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -166,7 +167,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;
     const messageId = params.messageId;
@@ -188,7 +189,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or sender not found',
+                    message: "Channel or sender not found",
                 },
                 { status: 404 }
             );
@@ -199,7 +200,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'You are not in this channel',
+                        message: "You are not in this channel",
                     },
                     { status: 403 }
                 );
@@ -209,7 +210,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'You are not in this channel',
+                        message: "You are not in this channel",
                     },
                     { status: 403 }
                 );
@@ -226,7 +227,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Message not found',
+                    message: "Message not found",
                 },
                 { status: 404 }
             );
@@ -236,7 +237,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not the author of this message',
+                    message: "You are not the author of this message",
                 },
                 { status: 403 }
             );
@@ -263,7 +264,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             },
         });
 
-        await pusher.trigger('chat-app', 'message-deleted', {
+        await pusher.trigger("chat-app", "message-deleted", {
             channelId: channelId,
             messageId: messageId,
         });
@@ -271,7 +272,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully deleted message',
+                message: "Successfully deleted message",
             },
             { status: 200 }
         );
@@ -280,7 +281,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

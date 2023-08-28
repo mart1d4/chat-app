@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { usePathname, useRouter } from 'next/navigation';
-import { ReactElement, useEffect, useMemo } from 'react';
-import { Icon, Avatar, UserSection } from '@components';
-import useContextHook from '@/hooks/useContextHook';
-import pusher from '@/lib/pusher/client-connection';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import styles from './UserChannels.module.css';
-import Link from 'next/link';
-import { useLayers, useTooltip } from '@/lib/store';
+import { usePathname, useRouter } from "next/navigation";
+import { ReactElement, useEffect, useMemo } from "react";
+import { Icon, Avatar, UserSection } from "@components";
+import useContextHook from "@/hooks/useContextHook";
+import pusher from "@/lib/pusher/client-connection";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import styles from "./UserChannels.module.css";
+import Link from "next/link";
+import { useLayers, useTooltip } from "@/lib/store";
 
 interface Props {
     user: TCleanUser;
@@ -16,18 +16,27 @@ interface Props {
 }
 
 export const UserChannels = ({ user, channels }: Props): ReactElement => {
-    useEffect(() => {
-        pusher.bind('channel-created', (data: any) => {});
-        pusher.bind('channel-left', (data: any) => {});
-        pusher.bind('channel-recipient-add', (data: any) => {});
-        pusher.bind('message-sent', (data: any) => {});
+    const { setAuth }: any = useContextHook({ context: "auth" });
 
-        return () => {
-            pusher.unbind('channel-created');
-            pusher.unbind('channel-left');
-            pusher.unbind('channel-recipient-add');
-            pusher.unbind('message-sent');
-        };
+    // useEffect(() => {
+    //     pusher.bind("channel-created", (data: any) => {});
+    //     pusher.bind("channel-left", (data: any) => {});
+    //     pusher.bind("channel-recipient-add", (data: any) => {});
+    //     pusher.bind("message-sent", (data: any) => {});
+
+    //     return () => {
+    //         pusher.unbind("channel-created");
+    //         pusher.unbind("channel-left");
+    //         pusher.unbind("channel-recipient-add");
+    //         pusher.unbind("message-sent");
+    //     };
+    // }, []);
+
+    useEffect(() => {
+        setAuth((auth: any) => ({
+            ...auth,
+            channels,
+        }));
     }, []);
 
     return useMemo(
@@ -38,7 +47,7 @@ export const UserChannels = ({ user, channels }: Props): ReactElement => {
                         <button>Find or start a conversation</button>
                     </div>
 
-                    <div className={styles.scroller + ' scrollbar'}>
+                    <div className={styles.scroller + " scrollbar"}>
                         <ul className={styles.channelList}>
                             <div></div>
 
@@ -47,16 +56,12 @@ export const UserChannels = ({ user, channels }: Props): ReactElement => {
 
                             {channels.length > 0 ? (
                                 channels.map((channel: TChannel) => (
-                                    <ChannelItem
-                                        key={channel.id}
-                                        channel={channel}
-                                        currentUser={user}
-                                    />
+                                    <ChannelItem key={channel.id} channel={channel} currentUser={user} />
                                 ))
                             ) : (
                                 <img
-                                    src='https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/'
-                                    alt='No Channels'
+                                    src="https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/"
+                                    alt="No Channels"
                                 />
                             )}
                         </ul>
@@ -80,49 +85,45 @@ const Title = () => {
             <span>Direct Messages</span>
             <div
                 onMouseEnter={(e) => {
-                    if (layers.POPUP.map((layer) => layer.content.type).includes('CREATE_DM')) {
+                    if (layers.POPUP.map((layer) => layer.content.type).includes("CREATE_DM")) {
                         return;
                     }
                     setTooltip({
-                        text: 'Create DM',
+                        text: "Create DM",
                         element: e.currentTarget,
                     });
                 }}
                 onMouseLeave={() => setTooltip(null)}
                 onClick={(e) => {
-                    if (layers.POPUP.map((layer) => layer.content.type).includes('CREATE_DM')) {
+                    if (layers.POPUP.map((layer) => layer.content.type).includes("CREATE_DM")) {
                         setLayers({
                             settings: {
-                                type: 'POPUP',
+                                type: "POPUP",
                                 setNull: true,
                             },
                         });
                         setTooltip({
-                            text: 'Create DM',
+                            text: "Create DM",
                             element: e.currentTarget,
                         });
                     } else {
                         setTooltip(null);
                         setLayers({
                             settings: {
-                                type: 'POPUP',
+                                type: "POPUP",
                                 element: e.currentTarget,
-                                firstSide: 'BOTTOM',
-                                secondSide: 'RIGHT',
+                                firstSide: "BOTTOM",
+                                secondSide: "RIGHT",
                                 gap: 5,
                             },
                             content: {
-                                type: 'CREATE_DM',
+                                type: "CREATE_DM",
                             },
                         });
                     }
                 }}
             >
-                <Icon
-                    name='add'
-                    size={16}
-                    viewbox='0 0 18 18'
-                />
+                <Icon name="add" size={16} viewbox="0 0 18 18" />
             </div>
         </h2>
     );
@@ -155,8 +156,8 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                 href={`/channels/me`}
                 className={styles.liContainer}
                 style={{
-                    backgroundColor: pathname === '/channels/me' ? 'var(--background-5)' : '',
-                    color: pathname === '/channels/me' ? 'var(--foreground-1)' : '',
+                    backgroundColor: pathname === "/channels/me" ? "var(--background-5)" : "",
+                    color: pathname === "/channels/me" ? "var(--foreground-1)" : "",
                 }}
             >
                 <div className={styles.liWrapper}>
@@ -164,8 +165,8 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                         <div className={styles.layoutFriends}>
                             <div className={styles.layoutAvatar}>
                                 <Icon
-                                    name='friends'
-                                    fill={pathname === '/channels/@me' ? 'var(--foreground-1)' : 'var(--foreground-3)'}
+                                    name="friends"
+                                    fill={pathname === "/channels/@me" ? "var(--foreground-1)" : "var(--foreground-3)"}
                                 />
                             </div>
 
@@ -192,19 +193,19 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                         e.preventDefault();
                         setLayers({
                             settings: {
-                                type: 'MENU',
+                                type: "MENU",
                                 event: e,
                             },
                             content: {
-                                type: 'CHANNEL',
+                                type: "CHANNEL",
                                 user: user,
                                 channel: channel || null,
                             },
                         });
                     }}
                     style={{
-                        backgroundColor: pathname.includes(channel.id) ? 'var(--background-5)' : '',
-                        color: pathname.includes(channel.id) ? 'var(--foreground-1)' : '',
+                        backgroundColor: pathname.includes(channel.id) ? "var(--background-5)" : "",
+                        color: pathname.includes(channel.id) ? "var(--foreground-1)" : "",
                     }}
                 >
                     <div className={styles.liWrapper}>
@@ -213,8 +214,8 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                                 <div className={styles.layoutAvatar}>
                                     <div>
                                         <Avatar
-                                            src={channel.icon || ''}
-                                            alt={channel.name || ''}
+                                            src={channel.icon || ""}
+                                            alt={channel.name || ""}
                                             size={32}
                                             status={user?.status}
                                             tooltip={user ? true : false}
@@ -247,7 +248,7 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                                     {channel.type === 1 && (
                                         <div className={styles.contentStatus}>
                                             {channel.recipients.length} Member
-                                            {channel.recipients.length > 1 && 's'}
+                                            {channel.recipients.length > 1 && "s"}
                                         </div>
                                     )}
                                 </div>
@@ -261,19 +262,16 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                                 e.preventDefault();
 
                                 sendRequest({
-                                    query: 'CHANNEL_DELETE',
+                                    query: "CHANNEL_DELETE",
                                     params: { channelId: channel.id },
                                 });
 
                                 if (pathname.includes(channel.id)) {
-                                    router.push('/channels/me');
+                                    router.push("/channels/me");
                                 }
                             }}
                         >
-                            <Icon
-                                name='close'
-                                size={16}
-                            />
+                            <Icon name="close" size={16} />
                         </div>
                     </div>
                 </Link>

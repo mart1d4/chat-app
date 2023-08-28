@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from '@uploadcare/upload-client';
-import { useEffect, useState, useMemo, useRef } from 'react';
-import { TextArea, Icon, Avatar } from '@components';
-import { shouldDisplayInlined } from '@/lib/message';
-import useContextHook from '@/hooks/useContextHook';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import { useLayers, useTooltip } from '@/lib/store';
-import { trimMessage } from '@/lib/strings';
-import styles from './Message.module.css';
+import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from "@uploadcare/upload-client";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { TextArea, Icon, Avatar } from "@components";
+import { shouldDisplayInlined } from "@/lib/message";
+import useContextHook from "@/hooks/useContextHook";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useLayers, useTooltip } from "@/lib/store";
+import { trimMessage } from "@/lib/strings";
+import styles from "./Message.module.css";
 
 type Props = {
     message: TMessage;
@@ -22,13 +22,13 @@ type Props = {
 };
 
 export const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }: Props) => {
-    const [editContent, setEditContent] = useState<string>(message.content || '');
+    const [editContent, setEditContent] = useState<string>(message.content || "");
     const [fileProgress, setFileProgress] = useState<number>(0);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth }: any = useContextHook({ context: "auth" });
     const { sendRequest } = useFetchHelper();
 
     const inline = shouldDisplayInlined(message.type);
@@ -58,9 +58,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     if (layers.USER_CARD?.settings.element === e.currentTarget) return;
                                     setLayers({
                                         settings: {
-                                            type: 'USER_CARD',
+                                            type: "USER_CARD",
                                             element: e.currentTarget,
-                                            firstSide: 'RIGHT',
+                                            firstSide: "RIGHT",
                                             gap: 10,
                                         },
                                         content: {
@@ -74,11 +74,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     if (layers.MENU?.settings.element === e.currentTarget) return;
                                     setLayers({
                                         settings: {
-                                            type: 'MENU',
+                                            type: "MENU",
                                             event: e,
                                         },
                                         content: {
-                                            type: 'USER',
+                                            type: "USER",
                                             user: mentionUser,
                                         },
                                     });
@@ -116,9 +116,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     if (layers.USER_CARD?.settings.element === e.currentTarget) return;
                                     setLayers({
                                         settings: {
-                                            type: 'USER_CARD',
+                                            type: "USER_CARD",
                                             element: e.currentTarget,
-                                            firstSide: 'RIGHT',
+                                            firstSide: "RIGHT",
                                             gap: 10,
                                         },
                                         content: {
@@ -132,11 +132,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     if (layers.MENU?.settings.element === e.currentTarget) return;
                                     setLayers({
                                         settings: {
-                                            type: 'MENU',
+                                            type: "MENU",
                                             event: e,
                                         },
                                         content: {
-                                            type: 'USER',
+                                            type: "USER",
                                             user: mentionUser,
                                         },
                                     });
@@ -145,10 +145,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
                             </span>
                         ) : (
-                            <span
-                                key={index}
-                                className={inline ? styles.inlineMention : styles.mention}
-                            >
+                            <span key={index} className={inline ? styles.inlineMention : styles.mention}>
                                 @Unknown
                             </span>
                         );
@@ -164,7 +161,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         if (!setEdit || !setReply) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey) {
                 if (!edit || edit?.messageId !== message.id) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -172,9 +169,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
 
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit]);
 
     const deleteLocalMessage = async () => {
@@ -205,55 +202,31 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         try {
             if (prevMessage.attachments.length > 0) {
                 const onProgress = (props: ComputableProgressInfo | UnknownProgressInfo) => {
-                    if ('value' in props) {
-                        setFileProgress(props.value);
-                    }
+                    if ("value" in props) setFileProgress(props.value);
                 };
 
                 const filesToAdd = prevMessage.attachments.map((file) => file.file);
 
-                const res = await uploadFileGroup(filesToAdd, {
+                await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                    store: 'auto',
+                    store: "auto",
                     onProgress,
                     signal: controller.signal,
-                })
-                    .then((result) => {
-                        uploadedFiles = result.files.map((file, index) => {
-                            return {
-                                id: file.uuid,
-                                dimensions: prevMessage.attachments[index].dimensions,
-                                name: prevMessage.attachments[index].file.name,
-                                isSpoiler: prevMessage.attachments[index].file.name.startsWith('SPOILER_'),
-                                description: prevMessage.attachments[index].description,
-                            };
-                        });
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        // @ts-expect-error
-                        setMessages((prev: TMessage[]) => {
-                            return prev.map((message) =>
-                                message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
-                            );
-                        });
-
-                        setLayers({
-                            settings: {
-                                type: 'POPUP',
-                            },
-                            content: {
-                                type: 'WARNING',
-                                warning: 'UPLOAD_FAILED',
-                            },
-                        });
-
-                        return null;
+                }).then((result) => {
+                    uploadedFiles = result.files.map((file, index) => {
+                        return {
+                            id: file.uuid,
+                            dimensions: prevMessage.attachments[index].dimensions,
+                            name: prevMessage.attachments[index].file.name,
+                            isSpoiler: prevMessage.attachments[index].file.name.startsWith("SPOILER_"),
+                            description: prevMessage.attachments[index].description,
+                        };
                     });
+                });
             }
 
             const response = await sendRequest({
-                query: 'SEND_MESSAGE',
+                query: "SEND_MESSAGE",
                 params: { channelId: prevMessage.channelId },
                 data: {
                     message: {
@@ -275,11 +248,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                 if (prevMessage.attachments.length > 0) {
                     setLayers({
                         settings: {
-                            type: 'POPUP',
+                            type: "POPUP",
                         },
                         content: {
-                            type: 'WARNING',
-                            warning: 'UPLOAD_FAILED',
+                            type: "WARNING",
+                            warning: "UPLOAD_FAILED",
                         },
                     });
                 }
@@ -294,20 +267,20 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         } catch (error) {
             console.error(error);
             // @ts-expect-error
-            setMessages((prev: TMessage[]) => {
-                return prev.map((message) =>
-                    message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
-                );
+            setMessages((messages) => {
+                return messages.map((message) => {
+                    return message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message;
+                });
             });
 
             if (prevMessage.attachments.length > 0) {
                 setLayers({
                     settings: {
-                        type: 'POPUP',
+                        type: "POPUP",
                     },
                     content: {
-                        type: 'WARNING',
-                        warning: 'UPLOAD_FAILED',
+                        type: "WARNING",
+                        warning: "UPLOAD_FAILED",
                     },
                 });
             }
@@ -317,7 +290,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     useEffect(() => {
         const env = process.env.NODE_ENV;
 
-        if (env == 'development') {
+        if (env == "development") {
             if (message?.needsToBeSent && hasRendered.current) {
                 retrySendMessage(message);
             }
@@ -325,7 +298,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             return () => {
                 hasRendered.current = true;
             };
-        } else if (env == 'production') {
+        } else if (env == "production") {
             if (message?.needsToBeSent) {
                 retrySendMessage(message);
             }
@@ -336,7 +309,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         localStorage.setItem(
             `channel-${message.channelId}`,
             JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${message.channelId}`) || '{}'),
+                ...JSON.parse(localStorage.getItem(`channel-${message.channelId}`) || "{}"),
                 ...data,
             })
         );
@@ -345,10 +318,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     const deletePopup = () => {
         setLayers({
             settings: {
-                type: 'POPUP',
+                type: "POPUP",
             },
             content: {
-                type: 'DELETE_MESSAGE',
+                type: "DELETE_MESSAGE",
                 channelId: message.channelId,
                 message: message,
             },
@@ -358,10 +331,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     const pinPopup = () => {
         setLayers({
             settings: {
-                type: 'POPUP',
+                type: "POPUP",
             },
             content: {
-                type: 'PIN_MESSAGE',
+                type: "PIN_MESSAGE",
                 channelId: message.channelId,
                 message: message,
             },
@@ -371,10 +344,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     const unpinPopup = () => {
         setLayers({
             settings: {
-                type: 'POPUP',
+                type: "POPUP",
             },
             content: {
-                type: 'UNPIN_MESSAGE',
+                type: "UNPIN_MESSAGE",
                 channelId: message.channelId,
                 message: message,
             },
@@ -386,13 +359,13 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
         setEdit({
             messageId: message.id,
-            content: message.content || '',
+            content: message.content || "",
         });
 
         setLocalStorage({
             edit: {
                 messageId: message.id,
-                content: message.content || '',
+                content: message.content || "",
             },
         });
     };
@@ -404,10 +377,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         if (content === null && message.attachments.length === 0) {
             setLayers({
                 settings: {
-                    type: 'POPUP',
+                    type: "POPUP",
                 },
                 content: {
-                    type: 'DELETE_MESSAGE',
+                    type: "DELETE_MESSAGE",
                     channelId: message.channelId,
                     message: message,
                 },
@@ -421,7 +394,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
         try {
             sendRequest({
-                query: 'UPDATE_MESSAGE',
+                query: "UPDATE_MESSAGE",
                 params: {
                     channelId: message.channelId,
                     messageId: message.id,
@@ -455,31 +428,31 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     };
 
     const getLongDate = (date: Date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
+        return new Intl.DateTimeFormat("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
         }).format(new Date(date));
     };
 
     const getMidDate = (date: Date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'numeric',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
+        return new Intl.DateTimeFormat("en-US", {
+            month: "numeric",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "numeric",
         }).format(new Date(date));
     };
 
     const getShortDate = (date: Date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            hour: 'numeric',
-            minute: 'numeric',
+        return new Intl.DateTimeFormat("en-US", {
+            hour: "numeric",
+            minute: "numeric",
         }).format(new Date(date));
     };
 
@@ -498,20 +471,20 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             <li
                 className={
                     styles.messageContainer +
-                    ' ' +
+                    " " +
                     styles.inlined +
-                    ' ' +
-                    (reply?.messageId === message.id ? styles.reply : '')
+                    " " +
+                    (reply?.messageId === message.id ? styles.reply : "")
                 }
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setLayers({
                         settings: {
-                            type: 'MENU',
+                            type: "MENU",
                             event: e,
                         },
                         content: {
-                            type: 'MESSAGE',
+                            type: "MESSAGE",
                             message: {
                                 ...message,
                                 inline: true,
@@ -522,15 +495,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     });
                 }}
                 style={{
-                    backgroundColor: layers.MENU?.contenu.message?.id === message.id ? 'var(--background-hover-4)' : '',
-                    marginTop: large ? '1.0625rem' : '',
+                    backgroundColor: layers.MENU?.content.message?.id === message.id ? "var(--background-hover-4)" : "",
+                    marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                <MessageMenu
-                    message={message}
-                    large={false}
-                    functions={functions}
-                />
+                <MessageMenu message={message} large={false} functions={functions} />
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
@@ -538,17 +507,17 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                             style={{
                                 backgroundImage: `url(https://ucarecdn.com/${
                                     message.type === 2
-                                        ? '834fd250-08b6-4009-be66-284b1e593abd'
+                                        ? "834fd250-08b6-4009-be66-284b1e593abd"
                                         : message.type === 3
-                                        ? 'la03e8741-1662-46ba-9870-839c54a5d7f0'
+                                        ? "la03e8741-1662-46ba-9870-839c54a5d7f0"
                                         : message.type === 7
-                                        ? '938d46b0-fd11-411e-a891-42571825cd11'
-                                        : '979c692b-3889-48b5-81e3-a2fe80f42bad'
+                                        ? "938d46b0-fd11-411e-a891-42571825cd11"
+                                        : "979c692b-3889-48b5-81e3-a2fe80f42bad"
                                 }/)`,
-                                width: '1rem',
-                                height: '1rem',
-                                backgroundSize: '1rem 1rem',
-                                backgroundRepeat: 'no-repeat',
+                                width: "1rem",
+                                height: "1rem",
+                                backgroundSize: "1rem 1rem",
+                                backgroundRepeat: "no-repeat",
                             }}
                         />
                     </div>
@@ -556,12 +525,12 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     <div className={styles.messageContent}>
                         <div
                             style={{
-                                whiteSpace: 'pre-line',
+                                whiteSpace: "pre-line",
                                 opacity: message.waiting ? 0.5 : 1,
-                                color: message.error ? 'var(--error-1)' : '',
+                                color: message.error ? "var(--error-1)" : "",
                             }}
                         >
-                            {messageContent ? messageContent : ''}{' '}
+                            {messageContent ? messageContent : ""}{" "}
                             <span
                                 className={styles.contentTimestamp}
                                 onMouseEnter={(e) =>
@@ -574,7 +543,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <span style={{ userSelect: 'text' }}>{getMidDate(message.createdAt)}</span>
+                                <span style={{ userSelect: "text" }}>{getMidDate(message.createdAt)}</span>
                             </span>
                         </div>
                     </div>
@@ -591,10 +560,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                 <li
                     className={
                         styles.messageContainer +
-                        ' ' +
-                        (large ? styles.large : '') +
-                        ' ' +
-                        (reply?.messageId === message.id ? styles.reply : '')
+                        " " +
+                        (large ? styles.large : "") +
+                        " " +
+                        (reply?.messageId === message.id ? styles.reply : "")
                     }
                     onContextMenu={(e) => {
                         e.preventDefault();
@@ -602,11 +571,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                         if (edit?.messageId === message.id || message.waiting || message.error) return;
                         setLayers({
                             settings: {
-                                type: 'MENU',
+                                type: "MENU",
                                 event: e,
                             },
                             content: {
-                                type: 'MESSAGE',
+                                type: "MESSAGE",
                                 message: message,
                                 functions: functions,
                             },
@@ -614,14 +583,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     }}
                     style={{
                         backgroundColor:
-                            layers.MENU?.contenu?.message?.id === message.id ? 'var(--background-hover-4)' : '',
+                            layers.MENU?.content?.message?.id === message.id ? "var(--background-hover-4)" : "",
                     }}
                 >
-                    <MessageMenu
-                        message={message}
-                        large={large}
-                        functions={functions}
-                    />
+                    <MessageMenu message={message} large={large} functions={functions} />
 
                     <div className={styles.message}>
                         {message.type === 1 && (
@@ -636,16 +601,16 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             if (layers.MENU?.settings.e.currentTarget === e.currentTarget) {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         setNull: true,
                                                     },
                                                 });
                                             } else {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         element: e.currentTarget,
-                                                        firstSide: 'RIGHT',
+                                                        firstSide: "RIGHT",
                                                         gap: 10,
                                                     },
                                                     content: {
@@ -660,11 +625,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             if (!message.messageReference) return;
                                             setLayers({
                                                 settings: {
-                                                    type: 'MENU',
+                                                    type: "MENU",
                                                     event: e,
                                                 },
                                                 content: {
-                                                    type: 'USER',
+                                                    type: "USER",
                                                     user: message.messageReference?.author,
                                                 },
                                             });
@@ -678,14 +643,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     </div>
                                 ) : (
                                     <div className={styles.noReplyBadge}>
-                                        <svg
-                                            width='12'
-                                            height='8'
-                                            viewBox='0 0 12 8'
-                                        >
+                                        <svg width="12" height="8" viewBox="0 0 12 8">
                                             <path
-                                                d='M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z'
-                                                fill='currentColor'
+                                                d="M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z"
+                                                fill="currentColor"
                                             />
                                         </svg>
                                     </div>
@@ -699,16 +660,16 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             if (layers.USER_CARD?.settings.element === e.currentTarget) {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         setNull: true,
                                                     },
                                                 });
                                             } else {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         element: e.currentTarget,
-                                                        firstSide: 'RIGHT',
+                                                        firstSide: "RIGHT",
                                                         gap: 10,
                                                     },
                                                     content: {
@@ -722,11 +683,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             e.stopPropagation();
                                             setLayers({
                                                 settings: {
-                                                    type: 'MENU',
+                                                    type: "MENU",
                                                     event: e,
                                                 },
                                                 content: {
-                                                    type: 'USER',
+                                                    type: "USER",
                                                     user: message.messageReference.author,
                                                 },
                                             });
@@ -738,7 +699,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
                                 {referencedContent ? (
                                     <div className={styles.referenceContent}>
-                                        {referencedContent}{' '}
+                                        {referencedContent}{" "}
                                         {message.messageReference.edited && (
                                             <div className={styles.contentTimestamp}>
                                                 <span
@@ -760,17 +721,12 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 ) : (
                                     <div className={styles.italic}>
                                         {message.messageReference?.attachments.length > 0
-                                            ? 'Click to see attachment'
-                                            : 'Original message was deleted'}
+                                            ? "Click to see attachment"
+                                            : "Original message was deleted"}
                                     </div>
                                 )}
 
-                                {message.messageReference?.attachments?.length > 0 && (
-                                    <Icon
-                                        name='image'
-                                        size={20}
-                                    />
-                                )}
+                                {message.messageReference?.attachments?.length > 0 && <Icon name="image" size={20} />}
                             </div>
                         )}
 
@@ -792,15 +748,15 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         if (layers.USER_CARD?.settings.element === e.currentTarget)
                                             return setLayers({
                                                 settings: {
-                                                    type: 'USER_CARD',
+                                                    type: "USER_CARD",
                                                     setNull: true,
                                                 },
                                             });
                                         setLayers({
                                             settings: {
-                                                type: 'USER_CARD',
+                                                type: "USER_CARD",
                                                 element: e.currentTarget,
-                                                firstSide: 'RIGHT',
+                                                firstSide: "RIGHT",
                                                 gap: 10,
                                             },
                                             content: {
@@ -814,21 +770,17 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         e.stopPropagation();
                                         setLayers({
                                             settings: {
-                                                type: 'MENU',
+                                                type: "MENU",
                                                 event: e,
                                             },
                                             content: {
-                                                type: 'USER',
+                                                type: "USER",
                                                 user: message.author,
                                             },
                                         });
                                     }}
                                 >
-                                    <Avatar
-                                        src={message.author.avatar}
-                                        alt={message.author.username}
-                                        size={40}
-                                    />
+                                    <Avatar src={message.author.avatar} alt={message.author.username} size={40} />
                                 </div>
                             )}
 
@@ -842,16 +794,16 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             if (layers.USER_CARD?.settings.element === e.currentTarget) {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         setNull: true,
                                                     },
                                                 });
                                             } else {
                                                 setLayers({
                                                     settings: {
-                                                        type: 'USER_CARD',
+                                                        type: "USER_CARD",
                                                         element: e.currentTarget,
-                                                        firstSide: 'RIGHT',
+                                                        firstSide: "RIGHT",
                                                         gap: 10,
                                                     },
                                                     content: {
@@ -865,11 +817,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                             e.stopPropagation();
                                             setLayers({
                                                 settings: {
-                                                    type: 'MENU',
+                                                    type: "MENU",
                                                     event: e,
                                                 },
                                                 content: {
-                                                    type: 'USER',
+                                                    type: "USER",
                                                     user: message.author,
                                                 },
                                             });
@@ -905,7 +857,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     className={styles.messageTimestamp}
                                     style={{
                                         visibility:
-                                            layers.MENU?.content.message?.id === message.id ? 'visible' : undefined,
+                                            layers.MENU?.content.message?.id === message.id ? "visible" : undefined,
                                     }}
                                 >
                                     <span
@@ -927,9 +879,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
                             <div
                                 style={{
-                                    whiteSpace: 'pre-line',
+                                    whiteSpace: "pre-line",
                                     opacity: message.waiting && message?.attachments?.length === 0 ? 0.5 : 1,
-                                    color: message.error ? 'var(--error-1)' : '',
+                                    color: message.error ? "var(--error-1)" : "",
                                 }}
                             >
                                 {edit?.messageId === message.id ? (
@@ -941,7 +893,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         />
 
                                         <div className={styles.editHint}>
-                                            escape to{' '}
+                                            escape to{" "}
                                             <span
                                                 onClick={() => {
                                                     if (!setEdit) return;
@@ -949,7 +901,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                     setLocalStorage({ edit: null });
                                                 }}
                                             >
-                                                cancel{' '}
+                                                cancel{" "}
                                             </span>
                                             • enter to <span onClick={() => sendEditedMessage()}>save </span>
                                         </div>
@@ -957,7 +909,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 ) : (
                                     messageContent && (
                                         <>
-                                            {messageContent}{' '}
+                                            {messageContent}{" "}
                                             {message.edited && message.attachments.length === 0 && (
                                                 <div className={styles.contentTimestamp}>
                                                     <span
@@ -980,17 +932,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 )}
 
                                 {message.attachments.length > 0 && !(message.error || message.waiting) && (
-                                    <MessageAttachments
-                                        message={message}
-                                        functions={functions}
-                                    />
+                                    <MessageAttachments message={message} functions={functions} />
                                 )}
 
                                 {message.attachments.length > 0 && (message.waiting || message.error) && (
                                     <div className={styles.imagesUpload}>
                                         <img
-                                            src='https://ucarecdn.com/81976ed2-ac05-457f-b52d-930c474dcb1d/'
-                                            alt='File Upload'
+                                            src="https://ucarecdn.com/81976ed2-ac05-457f-b52d-930c474dcb1d/"
+                                            alt="File Upload"
                                         />
 
                                         <div>
@@ -1006,14 +955,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                         </div>
 
                                                         <div>
-                                                            —{' '}
+                                                            —{" "}
                                                             {(
                                                                 message.attachments.reduce(
                                                                     (acc: number, attachment: any) =>
                                                                         acc + attachment.file.size,
                                                                     0
                                                                 ) / 1000000
-                                                            ).toFixed(2)}{' '}
+                                                            ).toFixed(2)}{" "}
                                                             MB
                                                         </div>
                                                     </>
@@ -1029,7 +978,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                             0,
                                                             0
                                                         )`,
-                                                            backgroundColor: message.error ? 'var(--error-1)' : '',
+                                                            backgroundColor: message.error ? "var(--error-1)" : "",
                                                         }}
                                                     />
                                                 </div>
@@ -1042,7 +991,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                 else controller.abort();
                                             }}
                                         >
-                                            <Icon name='close' />
+                                            <Icon name="close" />
                                         </div>
                                     </div>
                                 )}
@@ -1079,15 +1028,8 @@ const MessageAttachments = ({ message, functions }: any) => {
             <div>
                 {message.attachments.length === 1 &&
                     message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
-                        <div
-                            key={attachment.id}
-                            className={styles.gridOneBig}
-                        >
-                            <Image
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                        <div key={attachment.id} className={styles.gridOneBig}>
+                            <Image attachment={attachment} message={message} functions={functions} />
                         </div>
                     ))}
 
@@ -1305,7 +1247,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth }: any = useContextHook({ context: "auth" });
 
     useEffect(() => {
         if (message.author.id === auth.user.id) setMenuSender(true);
@@ -1314,58 +1256,55 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
 
     useEffect(() => {
         const handleShift = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') setShift(true);
+            if (e.key === "Shift") setShift(true);
         };
 
         const handleShiftUp = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') setShift(false);
+            if (e.key === "Shift") setShift(false);
         };
 
-        document.addEventListener('keydown', handleShift);
-        document.addEventListener('keyup', handleShiftUp);
+        document.addEventListener("keydown", handleShift);
+        document.addEventListener("keyup", handleShiftUp);
 
         return () => {
-            document.removeEventListener('keydown', handleShift);
-            document.removeEventListener('keyup', handleShiftUp);
+            document.removeEventListener("keydown", handleShift);
+            document.removeEventListener("keyup", handleShiftUp);
         };
     }, []);
 
-    if (message.waiting || typeof menuSender !== 'boolean') return null;
+    if (message.waiting || typeof menuSender !== "boolean") return null;
 
     return (
         <div
             className={styles.buttonContainer}
             style={{
-                visibility: layers.MENU?.content.message?.id === message?.id ? 'visible' : undefined,
+                visibility: layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
             }}
         >
-            <div
-                className={styles.buttonWrapper}
-                style={{ top: large ? '-16px' : '-25px' }}
-            >
+            <div className={styles.buttonWrapper} style={{ top: large ? "-16px" : "-25px" }}>
                 <div className={styles.buttons}>
                     {!message.error ? (
                         <>
                             <div
-                                role='button'
+                                role="button"
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'Add Reaction',
+                                        text: "Add Reaction",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <Icon name='addReaction' />
+                                <Icon name="addReaction" />
                             </div>
 
                             {menuSender ? (
                                 <div
-                                    role='button'
+                                    role="button"
                                     onMouseEnter={(e) =>
                                         setTooltip({
-                                            text: 'Edit',
+                                            text: "Edit",
                                             element: e.currentTarget,
                                             gap: 3,
                                         })
@@ -1376,14 +1315,14 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                         functions.editMessageState();
                                     }}
                                 >
-                                    <Icon name='edit' />
+                                    <Icon name="edit" />
                                 </div>
                             ) : (
                                 <div
-                                    role='button'
+                                    role="button"
                                     onMouseEnter={(e) =>
                                         setTooltip({
-                                            text: 'Reply',
+                                            text: "Reply",
                                             element: e.currentTarget,
                                             gap: 3,
                                         })
@@ -1394,15 +1333,15 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                         functions.replyToMessageState();
                                     }}
                                 >
-                                    <Icon name='reply' />
+                                    <Icon name="reply" />
                                 </div>
                             )}
 
                             <div
-                                role='button'
+                                role="button"
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'More',
+                                        text: "More",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -1413,20 +1352,20 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     if (layers.MENU?.settings.element === e.currentTarget) {
                                         setLayers({
                                             settings: {
-                                                type: 'MENU',
+                                                type: "MENU",
                                                 setNull: true,
                                             },
                                         });
                                     } else {
                                         setLayers({
                                             settings: {
-                                                type: 'MENU',
+                                                type: "MENU",
                                                 element: e.currentTarget,
-                                                firstSide: 'LEFT',
+                                                firstSide: "LEFT",
                                                 gap: 5,
                                             },
                                             content: {
-                                                type: 'MESSAGE',
+                                                type: "MESSAGE",
                                                 message: message,
                                                 functions: functions,
                                             },
@@ -1435,7 +1374,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     }
                                 }}
                             >
-                                <Icon name='dots' />
+                                <Icon name="dots" />
                             </div>
                         </>
                     ) : message.waiting ? (
@@ -1443,10 +1382,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                     ) : (
                         <>
                             <div
-                                role='button'
+                                role="button"
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'Retry',
+                                        text: "Retry",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -1457,14 +1396,14 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     functions.retrySendMessage(message);
                                 }}
                             >
-                                <Icon name='retry' />
+                                <Icon name="retry" />
                             </div>
 
                             <div
-                                role='button'
+                                role="button"
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'Delete',
+                                        text: "Delete",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -1475,7 +1414,7 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                     functions.deleteLocalMessage();
                                 }}
                             >
-                                <Icon name='delete' />
+                                <Icon name="delete" />
                             </div>
                         </>
                     )}
@@ -1497,7 +1436,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const { auth }: any = useContextHook({ context: "auth" });
 
     return useMemo(
         () => (
@@ -1520,10 +1459,10 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
 
                     setLayers({
                         settings: {
-                            type: 'POPUP',
+                            type: "POPUP",
                         },
                         content: {
-                            type: 'ATTACHMENT_PREVIEW',
+                            type: "ATTACHMENT_PREVIEW",
                             attachments: message.attachments,
                             current: index,
                         },
@@ -1534,11 +1473,11 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                     e.stopPropagation();
                     setLayers({
                         settings: {
-                            type: 'MENU',
+                            type: "MENU",
                             event: e,
                         },
                         content: {
-                            type: 'MESSAGE',
+                            type: "MESSAGE",
                             message: message,
                             attachment: attachment,
                             functions: functions,
@@ -1556,7 +1495,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                                     }/-/format/webp/`}
                                     alt={attachment?.name}
                                     style={{
-                                        filter: attachment.isSpoiler && !hideSpoiler ? 'blur(44px)' : 'none',
+                                        filter: attachment.isSpoiler && !hideSpoiler ? "blur(44px)" : "none",
                                     }}
                                 />
                             </div>
@@ -1569,7 +1508,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                         className={styles.deleteImage}
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: 'Delete',
+                                text: "Delete",
                                 element: e.currentTarget,
                                 gap: 2,
                             })
@@ -1582,10 +1521,10 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             if (message.attachments.length === 1 && !message.content) {
                                 return setLayers({
                                     settings: {
-                                        type: 'POPUP',
+                                        type: "POPUP",
                                     },
                                     content: {
-                                        type: 'DELETE_MESSAGE',
+                                        type: "DELETE_MESSAGE",
                                         channelId: message.channelId,
                                         message: message,
                                     },
@@ -1598,20 +1537,17 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
 
                             setLayers({
                                 settings: {
-                                    type: 'POPUP',
+                                    type: "POPUP",
                                 },
                                 content: {
-                                    type: 'DELETE_ATTACHMENT',
+                                    type: "DELETE_ATTACHMENT",
                                     message: message,
                                     attachments: updatedAttachments,
                                 },
                             });
                         }}
                     >
-                        <Icon
-                            name='delete'
-                            size={20}
-                        />
+                        <Icon name="delete" size={20} />
                     </div>
                 )}
 
