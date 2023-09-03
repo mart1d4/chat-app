@@ -1,28 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { getButtonColor } from '@/lib/colors/getColors';
-import useContextHook from '@/hooks/useContextHook';
-import styles from './MemberList.module.css';
-import { translateCap } from '@/lib/strings';
-import { Avatar, Icon } from '@components';
-import { UserItem } from './UserItem';
-import { useLayers, useTooltip } from '@/lib/store';
+import { useLayers, useSettings, useTooltip } from "@/lib/store";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { getButtonColor } from "@/lib/colors/getColors";
+import styles from "./MemberList.module.css";
+import { translateCap } from "@/lib/strings";
+import { Avatar, Icon } from "@components";
+import { UserItem } from "./UserItem";
 
 const colors = {
-    ONLINE: '#22A559',
-    IDLE: '#F0B232',
-    DO_NOT_DISTURB: '#F23F43',
-    INVISIBLE: '#80848E',
-    OFFLINE: '#80848E',
+    ONLINE: "#22A559",
+    IDLE: "#F0B232",
+    DO_NOT_DISTURB: "#F23F43",
+    INVISIBLE: "#80848E",
+    OFFLINE: "#80848E",
 };
 
 const masks = {
-    ONLINE: '',
-    IDLE: 'status-mask-idle',
-    DO_NOT_DISTURB: 'status-mask-dnd',
-    INVISIBLE: 'status-mask-offline',
-    OFFLINE: 'status-mask-offline',
+    ONLINE: "",
+    IDLE: "status-mask-idle",
+    DO_NOT_DISTURB: "status-mask-dnd",
+    INVISIBLE: "status-mask-offline",
+    OFFLINE: "status-mask-offline",
 };
 
 interface Props {
@@ -39,13 +38,12 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
 
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(
-        typeof window !== 'undefined' ? window.innerWidth >= 1200 : false
+        typeof window !== "undefined" ? window.innerWidth >= 1200 : false
     );
-    const [note, setNote] = useState<string>('');
+    const [note, setNote] = useState<string>("");
 
-    const { userSettings }: any = useContextHook({ context: 'settings' });
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const settings = useSettings((state) => state.settings);
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,13 +60,13 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
             else setWidthLimitPassed(false);
         };
 
-        window.addEventListener('resize', handleResize);
+        window.addEventListener("resize", handleResize);
 
-        return () => window.removeEventListener('resize', handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     return useMemo(() => {
-        if (!userSettings.showUsers || !widthLimitPassed) return <></>;
+        if (!settings.showUsers || !widthLimitPassed) return <></>;
 
         if (friend) {
             return (
@@ -76,56 +74,56 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                     className={styles.aside}
                     style={
                         {
-                            '--card-primary-color': friend.primaryColor,
-                            '--card-accent-color': friend.accentColor,
-                            '--card-overlay-color': 'hsla(0, 0%, 0%, 0.6)',
-                            '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
-                            '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
-                            '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
-                            '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                            '--card-button-color': getButtonColor(friend.primaryColor, friend.accentColor),
-                            '--card-border-color': friend.primaryColor,
+                            "--card-primary-color": friend.primaryColor,
+                            "--card-accent-color": friend.accentColor,
+                            "--card-overlay-color": "hsla(0, 0%, 0%, 0.6)",
+                            "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
+                            "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
+                            "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
+                            "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
+                            "--card-button-color": getButtonColor(friend.primaryColor, friend.accentColor),
+                            "--card-border-color": friend.primaryColor,
                         } as React.CSSProperties
                     }
                 >
                     <div>
                         <svg
                             className={styles.cardBanner}
-                            viewBox='0 0 340 120'
+                            viewBox="0 0 340 120"
                         >
-                            <mask id='card-banner-mask'>
+                            <mask id="card-banner-mask">
                                 <rect
-                                    fill='white'
-                                    x='0'
-                                    y='0'
-                                    width='100%'
-                                    height='100%'
+                                    fill="white"
+                                    x="0"
+                                    y="0"
+                                    width="100%"
+                                    height="100%"
                                 />
                                 <circle
-                                    fill='black'
-                                    cx='58'
-                                    cy='112'
-                                    r='46'
+                                    fill="black"
+                                    cx="58"
+                                    cy="112"
+                                    r="46"
                                 />
                             </mask>
 
                             <foreignObject
-                                x='0'
-                                y='0'
-                                width='100%'
-                                height='100%'
-                                overflow='visible'
-                                mask='url(#card-banner-mask)'
+                                x="0"
+                                y="0"
+                                width="100%"
+                                height="100%"
+                                overflow="visible"
+                                mask="url(#card-banner-mask)"
                             >
                                 <div>
                                     <div
                                         className={styles.cardBannerBackground}
                                         style={{
-                                            backgroundColor: !friend.banner ? friend.primaryColor : '',
+                                            backgroundColor: !friend.banner ? friend.primaryColor : "",
                                             backgroundImage: friend.banner
                                                 ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.banner}/`
-                                                : '',
-                                            height: '120px',
+                                                : "",
+                                            height: "120px",
                                         }}
                                     />
                                 </div>
@@ -151,18 +149,18 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <div style={{ backgroundColor: 'black' }} />
+                                <div style={{ backgroundColor: "black" }} />
 
                                 <svg>
                                     <rect
-                                        height='100%'
-                                        width='100%'
+                                        height="100%"
+                                        width="100%"
                                         rx={8}
                                         ry={8}
                                         // @ts-ignore
-                                        fill={colors[friend.status ?? 'OFFLINE']}
+                                        fill={colors[friend.status ?? "OFFLINE"]}
                                         // @ts-ignore
-                                        mask={`url(#${masks[friend.status ?? 'OFFLINE']})`}
+                                        mask={`url(#${masks[friend.status ?? "OFFLINE"]})`}
                                     />
                                 </svg>
                             </div>
@@ -194,10 +192,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                             <div className={styles.cardSection}>
                                 <h4>Chat App Member Since</h4>
                                 <div>
-                                    {new Intl.DateTimeFormat('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
+                                    {new Intl.DateTimeFormat("en-US", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
                                     }).format(new Date(friend.createdAt))}
                                 </div>
                             </div>
@@ -208,13 +206,13 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                 <h4>Note</h4>
                                 <div>
                                     <textarea
-                                        className={styles.cardInput + ' scrollbar'}
+                                        className={styles.cardInput + " scrollbar"}
                                         ref={noteRef}
                                         value={note}
-                                        placeholder='Click to add a note'
-                                        aria-label='Note'
+                                        placeholder="Click to add a note"
+                                        aria-label="Note"
                                         maxLength={256}
-                                        autoCorrect='off'
+                                        autoCorrect="off"
                                         onInput={(e) => {
                                             setNote(e.currentTarget.value);
                                         }}
@@ -227,20 +225,20 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                             {mutualGuilds.length > 0 && (
                                 <>
                                     <button
-                                        className={'button'}
+                                        className={"button"}
                                         onClick={() => setShowGuilds((prev) => !prev)}
                                     >
                                         <div>
                                             {mutualGuilds?.length} Mutual Server
-                                            {mutualGuilds?.length > 1 && 's'}
+                                            {mutualGuilds?.length > 1 && "s"}
                                         </div>
 
                                         <div>
                                             <Icon
-                                                name='chevron'
+                                                name="chevron"
                                                 size={24}
                                                 style={{
-                                                    transform: `rotate(${!showGuilds ? '-90deg' : '0deg'})`,
+                                                    transform: `rotate(${!showGuilds ? "-90deg" : "0deg"})`,
                                                 }}
                                             />
                                         </div>
@@ -262,19 +260,19 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                             {mutualFriends.length > 0 && (
                                 <>
                                     <button
-                                        className={'button'}
+                                        className={"button"}
                                         onClick={() => setShowFriends((prev) => !prev)}
                                     >
                                         <div>
                                             {mutualFriends?.length} Mutual Friend
-                                            {mutualFriends?.length > 1 && 's'}
+                                            {mutualFriends?.length > 1 && "s"}
                                         </div>
 
                                         <div>
                                             <Icon
-                                                name='chevron'
+                                                name="chevron"
                                                 size={24}
-                                                style={{ transform: `rotate(${!showFriends ? '-90deg' : '0deg'})` }}
+                                                style={{ transform: `rotate(${!showFriends ? "-90deg" : "0deg"})` }}
                                             />
                                         </div>
                                     </button>
@@ -300,14 +298,14 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
 
             if (guild) {
                 onlineMembers = guild.rawMembers.filter((recipient: any) =>
-                    ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
+                    ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(recipient.status)
                 );
-                offlineMembers = guild.rawMembers.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+                offlineMembers = guild.rawMembers.filter((recipient: TCleanUser) => recipient.status === "OFFLINE");
             } else {
                 onlineMembers = channel.recipients.filter((recipient: any) =>
-                    ['ONLINE', 'IDLE', 'DO_NOT_DISTURB'].includes(recipient.status)
+                    ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(recipient.status)
                 );
-                offlineMembers = channel.recipients?.filter((recipient: TCleanUser) => recipient.status === 'OFFLINE');
+                offlineMembers = channel.recipients?.filter((recipient: TCleanUser) => recipient.status === "OFFLINE");
             }
 
             return (
@@ -343,7 +341,7 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
             );
         }
     }, [
-        userSettings.showUsers,
+        settings.showUsers,
         widthLimitPassed,
         channel,
         user,
@@ -366,7 +364,7 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                 if (!user) return;
                 setLayers({
                     settings: {
-                        type: 'USER_PROFILE',
+                        type: "USER_PROFILE",
                     },
                     content: {
                         user,
@@ -377,11 +375,11 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                 if (!user) return;
                 setLayers({
                     settings: {
-                        type: 'POPUP',
+                        type: "POPUP",
                         event: e,
                     },
                     content: {
-                        type: 'USER',
+                        type: "USER",
                         user: user,
                     },
                 });

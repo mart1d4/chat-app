@@ -97,10 +97,14 @@ export async function middleware(req: NextRequest) {
             body: JSON.stringify({ guildId, channelId }),
         }).then((res) => res.json());
 
+        console.log(res);
+
         if (res.channelId === null) {
             return NextResponse.redirect(new URL("/channels/me", req.url));
         } else if (res.channelId === guildId) {
             return NextResponse.redirect(new URL(`/channels/${guildId}`, req.url));
+        } else if (res.channelId !== channelId) {
+            return NextResponse.redirect(new URL(`/channels/${guildId}/${res.channelId}`, req.url));
         }
     }
 

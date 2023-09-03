@@ -1,11 +1,12 @@
-import { create } from 'zustand';
+import { persist, createJSONStorage } from "zustand/middleware";
+import { create } from "zustand";
 
 // Tooltip
 
 type TTooltip = null | {
     text: string;
     element: HTMLElement;
-    position?: 'TOP' | 'BOTTOM' | 'LEFT' | 'RIGHT';
+    position?: "TOP" | "BOTTOM" | "LEFT" | "RIGHT";
     gap?: number;
     big?: boolean;
     color?: string;
@@ -27,11 +28,11 @@ export const useTooltip = create<TooltipState>()((set) => ({
 // Layers
 
 enum EPopupType {
-    DELETE_MESSAGE = 'DELETE_MESSAGE',
-    PIN_MESSAGE = 'PIN_MESSAGE',
-    UNPIN_MESSAGE = 'UNPIN_MESSAGE',
-    UPDATE_USERNAME = 'UPDATE_USERNAME',
-    UPDATE_PASSWORD = 'UPDATE_PASSWORD',
+    DELETE_MESSAGE = "DELETE_MESSAGE",
+    PIN_MESSAGE = "PIN_MESSAGE",
+    UNPIN_MESSAGE = "UNPIN_MESSAGE",
+    UPDATE_USERNAME = "UPDATE_USERNAME",
+    UPDATE_PASSWORD = "UPDATE_PASSWORD",
 }
 
 type TMenu = null | any;
@@ -53,12 +54,12 @@ type TUserProfile = null | {
 
 type TLayer = {
     settings: {
-        type: 'MENU' | 'POPUP' | 'USER_CARD' | 'USER_PROFILE';
+        type: "MENU" | "POPUP" | "USER_CARD" | "USER_PROFILE";
         setNull?: boolean;
         element?: HTMLElement | null;
         event?: React.MouseEvent;
-        firstSide?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | 'CENTER';
-        secondSide?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | 'CENTER';
+        firstSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
+        secondSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         gap?: number;
     };
     content?: TMenu | TPopup | TUserCard | TUserProfile;
@@ -66,10 +67,10 @@ type TLayer = {
 
 interface LayersState {
     layers: {
-        ['MENU']: TLayer | null;
-        ['POPUP']: TLayer[];
-        ['USER_CARD']: TLayer | null;
-        ['USER_PROFILE']: TLayer | null;
+        ["MENU"]: TLayer | null;
+        ["POPUP"]: TLayer[];
+        ["USER_CARD"]: TLayer | null;
+        ["USER_PROFILE"]: TLayer | null;
     };
     setLayers: (layer: TLayer) => void;
 }
@@ -83,7 +84,7 @@ export const useLayers = create<LayersState>()((set) => ({
     },
     setLayers: (layer) => {
         set((state) => {
-            if (layer.settings.type === 'POPUP') {
+            if (layer.settings.type === "POPUP") {
                 // If add, add to array, otherwise remove last
                 if (!layer.settings.setNull) {
                     // if type already exists in array, don't add it
@@ -99,7 +100,7 @@ export const useLayers = create<LayersState>()((set) => ({
                         layers: {
                             ...state.layers,
                             [layer.settings.type]: [...(state.layers[layer.settings.type] as TLayer[]), layer],
-                            MENU: null
+                            MENU: null,
                         },
                     };
                 } else {
@@ -109,13 +110,13 @@ export const useLayers = create<LayersState>()((set) => ({
                         layers: {
                             ...state.layers,
                             [layer.settings.type]: layers.slice(0, layers.length - 1),
-                            MENU: null
+                            MENU: null,
                         },
                     };
                 }
             }
 
-            if (layer.settings.type !== 'MENU') {
+            if (layer.settings.type !== "MENU") {
                 return {
                     layers: {
                         ...state.layers,
@@ -133,4 +134,343 @@ export const useLayers = create<LayersState>()((set) => ({
             };
         });
     },
+}));
+
+// Data
+
+interface DataState {
+    token: string | null;
+    user: TCleanUser | null;
+
+    channels: TChannel[];
+    guilds: TGuild[];
+    friends: TCleanUser[];
+    blocked: TCleanUser[];
+    blockedBy: TCleanUser[];
+    requestsReceived: TCleanUser[];
+    requestsSent: TCleanUser[];
+
+    setToken: (token: string) => void;
+    setUser: (user: TCleanUser) => void;
+
+    setChannels: (channels: TChannel[]) => void;
+    setGuilds: (guilds: TGuild[]) => void;
+    setFriends: (friends: TCleanUser[]) => void;
+    setBlocked: (blocked: TCleanUser[]) => void;
+    setBlockedBy: (blockedBy: TCleanUser[]) => void;
+    setRequestsReceived: (requestsReceived: TCleanUser[]) => void;
+    setRequestsSent: (requestsSent: TCleanUser[]) => void;
+
+    addFriend: (friend: TCleanUser) => void;
+    removeFriend: (friend: TCleanUser) => void;
+    addBlocked: (blocked: TCleanUser) => void;
+    removeBlocked: (blocked: TCleanUser) => void;
+    addRequestReceived: (request: TCleanUser) => void;
+    addRequestSent: (request: TCleanUser) => void;
+    removeRequests: (request: TCleanUser) => void;
+
+    addChannel: (channel: TChannel) => void;
+    updateChannel: (channel: TChannel) => void;
+    removeChannel: (channel: TChannel) => void;
+    addGuild: (guild: TGuild) => void;
+    removeGuild: (guild: TGuild) => void;
+
+    removeData: () => void;
+}
+
+export const useData = create<DataState>()((set) => ({
+    token: null,
+    user: null,
+
+    channels: [],
+    guilds: [],
+    friends: [],
+    blocked: [],
+    blockedBy: [],
+    requestsReceived: [],
+    requestsSent: [],
+
+    setToken: (token) => set(() => ({ token })),
+    setUser: (user) => set(() => ({ user })),
+
+    setChannels: (channels) => set(() => ({ channels })),
+    setGuilds: (guilds) => set(() => ({ guilds })),
+    setFriends: (friends) => set(() => ({ friends })),
+    setBlocked: (blocked) => set(() => ({ blocked })),
+    setBlockedBy: (blockedBy) => set(() => ({ blockedBy })),
+    setRequestsReceived: (requestsReceived) => set(() => ({ requestsReceived })),
+    setRequestsSent: (requestsSent) => set(() => ({ requestsSent })),
+
+    addFriend: (friend) => set((state) => ({ friends: [...state.friends, friend] })),
+    removeFriend: (friend) => set((state) => ({ friends: state.friends.filter((f) => f.id !== friend.id) })),
+    addBlocked: (blocked) =>
+        set((state) => ({
+            blocked: [...state.blocked, blocked],
+            friends: state.friends.filter((f) => f.id !== blocked.id),
+            requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
+            requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
+        })),
+    removeBlocked: (blocked) => set((state) => ({ blocked: state.blocked.filter((b) => b.id !== blocked.id) })),
+    addRequestReceived: (request) => set((state) => ({ requestsReceived: [...state.requestsReceived, request] })),
+    addRequestSent: (request) => set((state) => ({ requestsSent: [...state.requestsSent, request] })),
+    removeRequests: (request) =>
+        set((state) => ({
+            requestsReceived: state.requestsReceived.filter((r) => r.id !== request.id),
+            requestsSent: state.requestsSent.filter((r) => r.id !== request.id),
+        })),
+
+    addChannel: (channel) => set((state) => ({ channels: [...state.channels, channel] })),
+    updateChannel: (channel) =>
+        set((state) => {
+            if (state.channels.find((c) => c.id === channel.id)) {
+                return {
+                    channels: state.channels.map((c) => {
+                        if (c.id === channel.id) {
+                            return {
+                                ...c,
+                                ...channel,
+                            };
+                        }
+
+                        return c;
+                    }),
+                };
+            } else {
+                return {
+                    channels: [...state.channels, channel],
+                };
+            }
+        }),
+
+    removeChannel: (channel) => set((state) => ({ channels: state.channels.filter((c) => c.id !== channel.id) })),
+    addGuild: (guild) => set((state) => ({ guilds: [...state.guilds, guild] })),
+    removeGuild: (guild) => set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
+
+    removeData: () =>
+        set(() => ({
+            token: null,
+            user: null,
+            channels: [],
+            guilds: [],
+            friends: [],
+            blocked: [],
+            requestsReceived: [],
+            requestsSent: [],
+        })),
+}));
+
+// Settings
+
+type TSettings = {
+    language: "en" | "pl";
+    microphone: boolean;
+    sound: boolean;
+    camera: boolean;
+    appearance: "system" | "light" | "dark";
+    font: "default" | "monospace";
+    theme: "default" | "red" | "green" | "blue" | "purple";
+    friendTab: "online" | "all" | "pending" | "blocked" | "add";
+    sendButton: boolean;
+    spellcheck: boolean;
+    showUsers: boolean;
+};
+
+interface SettingsState {
+    settings: TSettings;
+    setSettings: (key: keyof TSettings, val: any) => void;
+}
+
+export const useSettings = create<SettingsState>()((set) => ({
+    settings: {
+        language: "en",
+        microphone: true,
+        sound: true,
+        camera: true,
+        appearance: "system",
+        font: "default",
+        theme: "default",
+        friendTab: "online",
+        sendButton: true,
+        spellcheck: true,
+        showUsers: true,
+    },
+
+    setSettings: (key, val) =>
+        set((state) => {
+            return {
+                settings: {
+                    ...state.settings,
+                    [key]: val,
+                },
+            };
+        }),
+}));
+
+// Notifications
+
+type TPing = {
+    channelId: TChannel["id"];
+    amount: number;
+};
+
+interface NotificationsState {
+    messages: TChannel["id"][];
+    pings: TPing[];
+
+    addMessage: (channelId: TChannel["id"]) => void;
+    removeMessage: (channelId: TChannel["id"]) => void;
+
+    addPing: (channelId: TChannel["id"]) => void;
+    removePing: (channelId: TChannel["id"]) => void;
+}
+
+export const useNotifications = create<NotificationsState>()((set) => ({
+    messages: [],
+    pings: [],
+
+    addMessage: (channelId) =>
+        set((state) => {
+            if (state.messages.includes(channelId)) return state;
+
+            return {
+                messages: [...state.messages, channelId],
+            };
+        }),
+
+    removeMessage: (channelId) => set((state) => ({ messages: state.messages.filter((id) => id !== channelId) })),
+
+    addPing: (channelId) =>
+        set((state) => {
+            // If ping already exists, increase amount
+            if (state.pings.find((p) => p.channelId === channelId)) {
+                return {
+                    pings: state.pings.map((p) => {
+                        if (p.channelId === channelId) {
+                            return {
+                                ...p,
+                                amount: p.amount + 1,
+                            };
+                        }
+
+                        return p;
+                    }),
+                };
+            } else {
+                return {
+                    pings: [...state.pings, { channelId, amount: 1 }],
+                };
+            }
+        }),
+
+    removePing: (channelId) =>
+        set((state) => {
+            if (!state.pings.find((p) => p.channelId === channelId)) return state;
+
+            return {
+                pings: state.pings.filter((p) => p.channelId !== channelId),
+            };
+        }),
+}));
+
+// Messages
+
+// This state just stores the content of the textarea of specific channels if the user started typing something but didn't send it yet
+// It also needs to store potential attachments such as images
+
+type TAttachment = {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    description: string;
+    dimensions: {
+        width: number;
+        height: number;
+    };
+    isSpoiler: boolean;
+};
+
+type TMessageDraft = {
+    channelId: TChannel["id"];
+    content: string;
+    attachments: TAttachment[];
+};
+
+interface MessagesState {
+    drafts: TMessageDraft[];
+
+    setContent: (channelId: TChannel["id"], content: string) => void;
+    setAttachments: (channelId: TChannel["id"], attachments: TAttachment[]) => void;
+    removeDraft: (channelId: TChannel["id"]) => void;
+}
+
+export const useMessages = create(
+    persist<MessagesState>(
+        (set) => ({
+            drafts: [],
+
+            setContent: (channelId, content) =>
+                set((state) => {
+                    if (state.drafts.find((d) => d.channelId === channelId)) {
+                        return {
+                            drafts: state.drafts.map((d) => {
+                                if (d.channelId === channelId) {
+                                    return {
+                                        ...d,
+                                        content,
+                                    };
+                                }
+
+                                return d;
+                            }),
+                        };
+                    } else {
+                        return {
+                            drafts: [...state.drafts, { channelId, content }],
+                        };
+                    }
+                }),
+
+            setAttachments: (channelId, attachments) =>
+                set((state) => {
+                    if (state.drafts.find((d) => d.channelId === channelId)) {
+                        return {
+                            drafts: state.drafts.map((d) => {
+                                if (d.channelId === channelId) {
+                                    return {
+                                        ...d,
+                                        attachments,
+                                    };
+                                }
+
+                                return d;
+                            }),
+                        };
+                    } else {
+                        return {
+                            drafts: [...state.drafts, { channelId, attachments }],
+                        };
+                    }
+                }),
+
+            removeDraft: (channelId) =>
+                set((state) => ({ drafts: state.drafts.filter((d) => d.channelId !== channelId) })),
+        }),
+        {
+            name: "messages",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
+
+// Text Area Mention
+
+interface MentionState {
+    userId: TCleanUser["id"] | null;
+    setMention: (user: TCleanUser | null) => void;
+}
+
+export const useMention = create<MentionState>()((set) => ({
+    userId: null,
+    setMention: (user) => set(() => ({ userId: user?.id || null })),
 }));

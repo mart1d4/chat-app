@@ -3,9 +3,8 @@
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from "@components";
 import { useState, useEffect, useCallback, ReactElement, useMemo } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
+import { useData, useLayers } from "@/lib/store";
 import styles from "./Channels.module.css";
-import { useLayers } from "@/lib/store";
-import useContextHook from "@/hooks/useContextHook";
 
 interface Props {
     guild: TGuild;
@@ -20,8 +19,8 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [loading, setLoading] = useState<boolean>(false);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
-    const { auth }: any = useContextHook({ context: "auth" });
     const layers = useLayers((state) => state.layers);
+    const token = useData((state) => state.token);
 
     useEffect(() => {
         const setLocalStorage = (data: {}) => {
@@ -62,7 +61,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${auth.token}`,
+                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             }).then((res) => res?.json());
@@ -77,6 +76,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             setLoading(false);
         };
 
+        setLoading(true);
         getMessages();
     }, []);
 
@@ -141,14 +141,17 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                             >
                                 <div className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
-                                        {loading || !channel ? (
+                                        {loading ? (
                                             <MessageSk />
                                         ) : (
                                             <>
                                                 {hasMore ? (
                                                     <MessageSk />
                                                 ) : (
-                                                    <FirstMessage guild={guild} channel={channel} />
+                                                    <FirstMessage
+                                                        guild={guild}
+                                                        channel={channel}
+                                                    />
                                                 )}
 
                                                 {messages?.map((message: TMessage, index: number) => (
@@ -174,6 +177,8 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                                             setEdit={setEdit}
                                                             reply={reply}
                                                             setReply={setReply}
+                                                            channel={channel}
+                                                            guild={guild}
                                                         />
                                                     </div>
                                                 ))}
@@ -186,10 +191,18 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                             </div>
                         </div>
 
-                        <TextArea channel={channel} reply={reply} setReply={setReply} setMessages={setMessages} />
+                        <TextArea
+                            channel={channel}
+                            reply={reply}
+                            setReply={setReply}
+                            setMessages={setMessages}
+                        />
                     </main>
 
-                    <MemberList channel={channel} guild={guild} />
+                    <MemberList
+                        channel={channel}
+                        guild={guild}
+                    />
                 </div>
             </div>
         ),

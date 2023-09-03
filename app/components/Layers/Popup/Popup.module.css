@@ -364,20 +364,20 @@
 }
 
 .warning > div > .icons > div:first-child > div {
-    background-image: url('https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/');
+    background-image: url("https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/");
     animation: animateInLeft 0.8s ease 0s normal forwards;
     animation-delay: 0.115s;
 }
 
 .warning > div > .icons > div:nth-child(2) > div {
-    background-image: url('https://ucarecdn.com/5758cb91-bb49-45d9-9fb3-33010d0ff7d3/');
+    background-image: url("https://ucarecdn.com/5758cb91-bb49-45d9-9fb3-33010d0ff7d3/");
     filter: drop-shadow(0 0 48px rgba(88, 101, 242, 0.5));
     animation: animateInMiddle 0.8s ease 0s normal forwards;
     animation-delay: 0.01s;
 }
 
 .warning > div > .icons > div:last-child > div {
-    background-image: url('https://ucarecdn.com/89c51576-cb47-4ca5-bb08-ff934cd58b92/');
+    background-image: url("https://ucarecdn.com/89c51576-cb47-4ca5-bb08-ff934cd58b92/");
     animation: animateInRight 0.8s ease 0s normal forwards;
     animation-delay: 0.08s;
 }
@@ -509,12 +509,10 @@
     position: relative;
     user-select: text;
     overflow: hidden;
-    max-width: 95dvw;
-    width: fit-content;
 }
 
 .imagePreview > img {
-    max-width: 100%;
+    max-width: 70dvw;
 }
 
 .imageLink {
@@ -707,11 +705,11 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02rem;
-    font-family: 'gg sans';
+    font-family: "gg sans";
 }
 
 .typePick {
-    font-family: 'gg sans';
+    font-family: "gg sans";
     cursor: pointer;
     border-radius: 3px;
     margin-bottom: 8px;
@@ -824,4 +822,30 @@
     font-size: 14px;
     line-height: 20px;
     font-weight: 400;
+}
+
+.ownerChange {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 10px;
+    margin-bottom: 0px !important;
+    user-select: none;
+}
+
+.ownerAvatars {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: no-repeat 50% 0;
+}
+
+.ownerAvatars > :first-child {
+    opacity: 0.3;
+    margin-right: -27px;
+}
+
+.ownerAvatars > :last-child {
+    position: relative;
+    z-index: 1;
 }

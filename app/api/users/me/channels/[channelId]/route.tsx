@@ -1,7 +1,7 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 type Params = {
     params: {
@@ -10,14 +10,14 @@ type Params = {
 };
 
 export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get('X-UserId') || '';
+    const userId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
 
-    if (userId === '') {
+    if (userId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -37,7 +37,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found',
+                    message: "User not found",
                 },
                 { status: 404 }
             );
@@ -47,9 +47,28 @@ export async function DELETE(req: Request, { params }: Params) {
             where: {
                 id: channelId,
             },
-            select: {
-                type: true,
-                recipientIds: true,
+            include: {
+                recipients: {
+                    orderBy: {
+                        username: "asc",
+                    },
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
@@ -57,7 +76,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -67,7 +86,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Unauthorized',
+                    message: "Unauthorized",
                 },
                 { status: 401 }
             );
@@ -86,15 +105,16 @@ export async function DELETE(req: Request, { params }: Params) {
                 },
             });
 
-            await pusher.trigger('chat-app', 'channel-left', {
-                channelId: channelId,
-                recipientId: userId,
+            await pusher.trigger("chat-app", "channel-update", {
+                type: "CHANNEL_REMOVED",
+                channel: channel,
             });
 
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Channel deleted',
+                    message: "Channel deleted",
+                    channelId: channelId,
                 },
                 { status: 200 }
             );
@@ -103,7 +123,7 @@ export async function DELETE(req: Request, { params }: Params) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'Cannot delete group DM',
+                        message: "Cannot delete group DM",
                     },
                     { status: 400 }
                 );
@@ -114,15 +134,16 @@ export async function DELETE(req: Request, { params }: Params) {
                     },
                 });
 
-                await pusher.trigger('chat-app', 'channel-left', {
-                    channelId: channelId,
-                    recipientId: userId,
+                await pusher.trigger("chat-app", "channel-update", {
+                    type: "CHANNEL_REMOVED",
+                    channel: channel,
                 });
 
                 return NextResponse.json(
                     {
                         success: true,
-                        message: 'Channel deleted',
+                        message: "Channel deleted",
+                        channelId: channelId,
                     },
                     { status: 200 }
                 );
@@ -131,7 +152,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Wrong channel type',
+                    message: "Wrong channel type",
                 },
                 { status: 404 }
             );
@@ -141,7 +162,7 @@ export async function DELETE(req: Request, { params }: Params) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: "Something went wrong",
             },
             { status: 500 }
         );

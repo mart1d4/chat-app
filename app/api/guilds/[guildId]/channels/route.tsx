@@ -1,18 +1,18 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function POST(req: Request, { params }: { params: { guildId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const guildId = params.guildId;
     const { name, type, categoryId, locked } = await req.json();
 
-    if (senderId === '') {
+    if (senderId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -22,7 +22,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
         return NextResponse.json(
             {
                 success: false,
-                message: 'No changes were made',
+                message: "No changes were made",
             },
             { status: 400 }
         );
@@ -48,7 +48,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Guild not found',
+                    message: "Guild not found",
                 },
                 { status: 404 }
             );
@@ -58,7 +58,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Unauthorized',
+                    message: "Unauthorized",
                 },
                 { status: 401 }
             );
@@ -79,7 +79,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
                 return NextResponse.json(
                     {
                         success: false,
-                        message: 'Category channel limit reached',
+                        message: "Category channel limit reached",
                     },
                     { status: 400 }
                 );
@@ -223,16 +223,17 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             });
         }
 
-        await pusher.trigger('chat-app', 'channel-create', {
+        await pusher.trigger("chat-app", "channel-create", {
             guildId: guild.id,
             channel: channel,
-            redirect: channel.type === 2,
         });
 
         return NextResponse.json(
             {
                 success: true,
-                message: 'Channel created',
+                message: "Channel created",
+                guildId: guild.id,
+                channelId: channel.type === 2 ? channel.id : null,
             },
             { status: 200 }
         );
@@ -241,7 +242,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

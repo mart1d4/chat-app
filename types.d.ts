@@ -5,11 +5,11 @@ enum EPermissionType {
 }
 
 enum EUserStatus {
-    ONLINE = 'ONLINE',
-    IDLE = 'IDLE',
-    DO_NOT_DISTURB = 'DO_NOT_DISTURB',
-    INVISIBLE = 'INVISIBLE',
-    OFFLINE = 'OFFLINE',
+    ONLINE = "ONLINE",
+    IDLE = "IDLE",
+    DO_NOT_DISTURB = "DO_NOT_DISTURB",
+    INVISIBLE = "INVISIBLE",
+    OFFLINE = "OFFLINE",
 }
 
 enum EChannelType {
@@ -32,16 +32,15 @@ enum EMessageType {
     CHANNEL_NAME_CHANGE = 5,
     CHANNEL_ICON_CHANGE = 6,
     CHANNEL_PINNED_MESSAGE = 7,
-    GUILD_MEMBER_JOIN = 8,
-    OWNER_CHANGE = 9,
+    USER_JOIN = 8,
 }
 
 enum ENotificationType {
-    REQUEST = 'REQUEST',
-    MESSAGE = 'MESSAGE',
-    MENTION = 'MENTION',
-    CALL = 'CALL',
-    OTHER = 'OTHER',
+    REQUEST = "REQUEST",
+    MESSAGE = "MESSAGE",
+    MENTION = "MENTION",
+    CALL = "CALL",
+    OTHER = "OTHER",
 }
 
 // Types
@@ -51,6 +50,7 @@ type TUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+    phone?: string;
 
     avatar: string;
     banner?: string;
@@ -108,6 +108,7 @@ type TCleanUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+    phone?: string;
 
     avatar: string;
     banner?: string;
@@ -188,6 +189,18 @@ type TGuild = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
+};
+
+type TGuildMember = readonly {
+    userId: TUser.id;
+    nickname?: string;
+    avatar?: string;
+    rolesIds: TRole.id[];
+    joinedAt: DateTime;
+    deaf: boolean;
+    mute: boolean;
+    timeoutUntil?: DateTime;
+    permissions: number[];
 };
 
 type TChannel = readonly {

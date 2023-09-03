@@ -20,10 +20,14 @@ const FriendsPage = async () => {
 
     return (
         <>
-            <UserChannels user={user} channels={channels} />
+            <UserChannels
+                user={user}
+                channels={channels}
+                requests={requestsReceived.length}
+            />
 
             <div className={styles.main}>
-                <AppHeader />
+                <AppHeader requests={requestsReceived.length} />
 
                 <div className={styles.content}>
                     <Content

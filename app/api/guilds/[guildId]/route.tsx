@@ -1,18 +1,18 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
-import { removeImage } from '@/lib/api/cdn';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
+import { removeImage } from "@/lib/api/cdn";
 
 export async function DELETE(req: Request, { params }: { params: { guildId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const guildId = params.guildId;
 
-    if (senderId === '') {
+    if (senderId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -29,7 +29,7 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Unauthorized',
+                    message: "Unauthorized",
                 },
                 { status: 401 }
             );
@@ -55,7 +55,7 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Guild not found',
+                    message: "Guild not found",
                 },
                 { status: 404 }
             );
@@ -65,7 +65,7 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Unauthorized',
+                    message: "Unauthorized",
                 },
                 { status: 401 }
             );
@@ -106,23 +106,26 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             },
         });
 
-        await pusher.trigger('chat-app', 'guild-deleted', {
-            guildId,
+        await pusher.trigger("chat-app", "guild-update", {
+            type: "GUILD_DELETED",
+            guild: {
+                id: guildId,
+            },
         });
 
         return NextResponse.json(
             {
                 success: true,
-                message: 'Guild deleted',
+                message: "Guild deleted",
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/guilds/${guildId}/delete: ${error}`);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

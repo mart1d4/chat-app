@@ -1,12 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState, ReactElement, useMemo } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import { shouldDisplayInlined } from '@/lib/message';
-import styles from './Menu.module.css';
-import { Icon } from '@components';
-import { useLayers } from '@/lib/store';
+import { useEffect, useState, ReactElement, useMemo, useCallback } from "react";
+import { useData, useLayers, useMention, useSettings } from "@/lib/store";
+import { shouldDisplayInlined } from "@/lib/message";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import styles from "./Menu.module.css";
+import { Icon } from "@components";
 
 type UserProps = {
     isSelf: boolean;
@@ -31,29 +30,36 @@ type ItemType = {
 };
 
 enum EMenuType {
-    USER = 'USER',
-    USER_SMALL = 'USER_SMALL',
-    USER_GROUP = 'USER_GROUP',
-    CHANNEL = 'CHANNEL',
-    MESSAGE = 'MESSAGE',
-    INPUT = 'INPUT',
-    IMAGE = 'IMAGE',
-    GUILD = 'GUILD',
-    GUILD_ICON = 'GUILD_ICON',
-    GUILD_CHANNEL = 'GUILD_CHANNEL',
-    GUILD_CHANNEL_LIST = 'GUILD_CHANNEL_LIST',
+    USER = "USER",
+    USER_SMALL = "USER_SMALL",
+    USER_GROUP = "USER_GROUP",
+    CHANNEL = "CHANNEL",
+    MESSAGE = "MESSAGE",
+    INPUT = "INPUT",
+    IMAGE = "IMAGE",
+    GUILD = "GUILD",
+    GUILD_ICON = "GUILD_ICON",
+    GUILD_CHANNEL = "GUILD_CHANNEL",
+    GUILD_CHANNEL_LIST = "GUILD_CHANNEL_LIST",
 }
 
-export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[] }): ReactElement => {
-    const [active, setActive] = useState<string>('');
+export const Menu = ({ content }: { content: any }): ReactElement => {
+    const [active, setActive] = useState<string>("");
     const [items, setItems] = useState<ItemType[]>([]);
     const [shift, setShift] = useState<boolean>(false);
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
-    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const requestsReceived = useData((state) => state.requestsReceived);
+    const currentUser = useData((state) => state.user) as TCleanUser;
+    const setSettings = useSettings((state) => state.setSettings);
+    const requestsSent = useData((state) => state.requestsSent);
+    const setMention = useMention((state) => state.setMention);
+    const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
+    const blockedUsers = useData((state) => state.blocked);
+    const friends = useData((state) => state.friends);
+    const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
     const type: EMenuType = content.type;
@@ -66,38 +72,38 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
 
     useEffect(() => {
         const handleShift = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') setShift(true);
+            if (e.key === "Shift") setShift(true);
         };
 
         const handleShiftUp = (e: KeyboardEvent) => {
-            if (e.key === 'Shift') setShift(false);
+            if (e.key === "Shift") setShift(false);
         };
 
-        document.addEventListener('keydown', handleShift);
-        document.addEventListener('keyup', handleShiftUp);
+        document.addEventListener("keydown", handleShift);
+        document.addEventListener("keyup", handleShiftUp);
 
         return () => {
-            document.removeEventListener('keydown', handleShift);
-            document.removeEventListener('keyup', handleShiftUp);
+            document.removeEventListener("keydown", handleShift);
+            document.removeEventListener("keyup", handleShiftUp);
         };
     }, []);
 
     useEffect(() => {
-        setFilteredItems(items?.filter((item) => item.name && item.name !== 'Divider' && !item.disabled) || []);
+        setFilteredItems(items?.filter((item) => item.name && item.name !== "Divider" && !item.disabled) || []);
     }, [items]);
 
     useEffect(() => {
         const handlekeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
                 setLayers({
                     settings: {
-                        type: 'MENU',
+                        type: "MENU",
                         setNull: true,
                     },
                 });
-            } else if (e.key === 'ArrowDown') {
+            } else if (e.key === "ArrowDown") {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -111,7 +117,7 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         setActive(filteredItems[0].name as string);
                     }
                 }
-            } else if (e.key === 'ArrowUp') {
+            } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -125,7 +131,7 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         setActive(filteredItems[filteredItems.length - 1].name as string);
                     }
                 }
-            } else if (e.key === 'Enter') {
+            } else if (e.key === "Enter") {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -134,10 +140,10 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                 if (item) {
                     if (item?.funcShift) item.funcShift();
                     else if (item?.func) item.func();
-                    if ('checked' in item) return;
+                    if ("checked" in item) return;
                     setLayers({
                         settings: {
-                            type: 'MENU',
+                            type: "MENU",
                             setNull: true,
                         },
                     });
@@ -145,75 +151,82 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
             }
         };
 
-        document.addEventListener('keydown', handlekeyDown);
+        document.addEventListener("keydown", handlekeyDown);
 
-        return () => document.removeEventListener('keydown', handlekeyDown);
+        return () => document.removeEventListener("keydown", handlekeyDown);
     }, [filteredItems, active]);
 
     useEffect(() => {
         if (content?.user) {
             setUserProps({
-                isSelf: content.user.id === auth.user.id,
-                isFriend: auth.user.friendIds?.includes(content.user.id),
-                isBlocked: auth.user.blockedUserIds?.includes(content.user.id),
-                sentRequest: auth.user.requestSentIds?.includes(content.user.id),
-                receivedRequest: auth.user.requestReceivedIds?.includes(content.user.id),
+                isSelf: content.user.id === currentUser.id,
+                isFriend: friends.map((f) => f.id).includes(content.user.id),
+                isBlocked: blockedUsers.map((f) => f.id).includes(content.user.id),
+                sentRequest: requestsSent.map((f) => f.id).includes(content.user.id),
+                receivedRequest: requestsReceived.map((f) => f.id).includes(content.user.id),
             });
         } else if (content?.message) {
-            setUserProps({ isSelf: content.message.author.id === auth.user.id });
+            setUserProps({ isSelf: content.message.author.id === currentUser.id });
         } else {
             setUserProps(null);
         }
     }, [content]);
 
+    const canDeleteMessage = useCallback(() => {
+        if (message.authorId === currentUser.id) return true;
+        if (content.guildOwnerId) return content.guildOwnerId === currentUser.id;
+        else if (content.channelType === 1) return content.channelOwnerId === currentUser.id;
+        return false;
+    }, [content, userProps]);
+
     const muteItems = [
         {
-            name: 'For 15 Minutes',
+            name: "For 15 Minutes",
             func: () => {},
         },
         {
-            name: 'For 1 Hour',
+            name: "For 1 Hour",
             func: () => {},
         },
         {
-            name: 'For 3 Hours',
+            name: "For 3 Hours",
             func: () => {},
         },
         {
-            name: 'For 8 Hours',
+            name: "For 8 Hours",
             func: () => {},
         },
         {
-            name: 'For 24 Hours',
+            name: "For 24 Hours",
             func: () => {},
         },
         {
-            name: 'Until I turn it back on',
+            name: "Until I turn it back on",
             func: () => {},
         },
     ];
 
     const notificationItems = [
         {
-            name: 'Use Server Default',
+            name: "Use Server Default",
             checked: true,
             circle: true,
             func: () => {},
         },
         {
-            name: 'All Messages',
+            name: "All Messages",
             checked: false,
             circle: true,
             func: () => {},
         },
         {
-            name: 'Only @mentions',
+            name: "Only @mentions",
             checked: false,
             circle: true,
             func: () => {},
         },
         {
-            name: 'Nothing',
+            name: "Nothing",
             checked: false,
             circle: true,
             func: () => {},
@@ -222,21 +235,21 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
 
     const serverSettingsItems = [
         {
-            name: 'Cool Server Setting',
+            name: "Cool Server Setting",
             func: () => {},
         },
     ];
 
     const serverItems = [
         {
-            name: 'Cool Server',
+            name: "Cool Server",
             func: () => {},
         },
     ];
 
     const reactionItems = [
         {
-            name: 'Cool Reaction',
+            name: "Cool Reaction",
             func: () => {},
         },
     ];
@@ -244,39 +257,39 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
     useEffect(() => {
         if (!type || (user && !userProps)) return;
 
-        if (type === 'GUILD_CHANNEL_LIST') {
+        if (type === "GUILD_CHANNEL_LIST") {
             setItems([
                 {
-                    name: 'Hide Muted Channels',
+                    name: "Hide Muted Channels",
                     checked: false,
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Create Channel',
+                    name: "Create Channel",
                     func: () => {
                         setLayers({
                             settings: {
-                                type: 'POPUP',
+                                type: "POPUP",
                             },
                             content: {
-                                type: 'GUILD_CHANNEL_CREATE',
+                                type: "GUILD_CHANNEL_CREATE",
                                 guild: content.guild.id,
                             },
                         });
                     },
                 },
                 {
-                    name: 'Create Category',
+                    name: "Create Category",
                     func: () => {
                         setLayers({
                             settings: {
-                                type: 'POPUP',
+                                type: "POPUP",
                             },
                             content: {
-                                type: 'GUILD_CHANNEL_CREATE',
+                                type: "GUILD_CHANNEL_CREATE",
                                 guild: content.guild.id,
                                 isCategory: true,
                             },
@@ -284,146 +297,144 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                     },
                 },
                 {
-                    name: 'Invite People',
+                    name: "Invite People",
                     func: () => {},
                 },
             ]);
         }
 
-        if (type === 'GUILD_CHANNEL') {
+        if (type === "GUILD_CHANNEL") {
             if (content.channel.type === 4) {
                 setItems([
                     {
-                        name: 'Mark As Read',
+                        name: "Mark As Read",
                         disabled: true,
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Collapse Category',
+                        name: "Collapse Category",
                         checked: true,
                         func: () => {},
                     },
                     {
-                        name: 'Collapse All Categories',
+                        name: "Collapse All Categories",
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Mute Category',
+                        name: "Mute Category",
                         items: muteItems,
                         func: () => {},
                     },
                     {
-                        name: 'Notifications Settings',
+                        name: "Notifications Settings",
                         items: notificationItems,
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Edit Category',
+                        name: "Edit Category",
                         func: () => {},
                     },
                     {
-                        name: 'Delete Category',
+                        name: "Delete Category",
                         danger: true,
                         func: () => {
                             setLayers({
                                 settings: {
-                                    type: 'POPUP',
+                                    type: "POPUP",
                                 },
                                 content: {
-                                    type: 'GUILD_CHANNEL_DELETE',
+                                    type: "GUILD_CHANNEL_DELETE",
                                     channel: content.channel,
                                 },
                             });
                         },
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Copy Channel ID',
-                        icon: 'id',
+                        name: "Copy Channel ID",
+                        icon: "id",
                         func: () => writeText(content.channel.id),
                     },
                 ]);
             } else {
                 setItems([
                     {
-                        name: 'Mark As Read',
+                        name: "Mark As Read",
                         disabled: true,
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Invite People',
+                        name: "Invite People",
                         func: () => {},
                     },
                     {
-                        name: 'Copy Link',
+                        name: "Copy Link",
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 3 ? 'Divider' : null,
+                        name: content.channel.type === 3 ? "Divider" : null,
                     },
                     {
-                        name: content.channel.type === 3 ? 'Open Chat' : null,
+                        name: content.channel.type === 3 ? "Open Chat" : null,
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 3 ? 'Hide Names' : null,
+                        name: content.channel.type === 3 ? "Hide Names" : null,
                         checked: true,
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Mute Channel',
+                        name: "Mute Channel",
                         items: muteItems,
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 2 ? 'Notifications Settings' : null,
+                        name: content.channel.type === 2 ? "Notifications Settings" : null,
                         items: notificationItems,
                         func: () => {},
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Edit Channel',
+                        name: "Edit Channel",
                         func: () => {},
                     },
                     {
-                        name: 'Duplicate Channel',
+                        name: "Duplicate Channel",
                         func: () => {},
                     },
                     {
-                        name: `Create ${content.channel.type === 2 ? 'Text' : 'Voice'} Channel`,
+                        name: `Create ${content.channel.type === 2 ? "Text" : "Voice"} Channel`,
                         func: () => {
-                            const guild = auth.user.guilds.find(
-                                (guild: TGuild) => guild.id === content.channel.guildId
-                            );
+                            const guild = guilds.find((guild: TGuild) => guild.id === content.channel.guildId);
                             const category = guild?.channels.find(
                                 (channel: TChannel) => channel.id === content.channel?.parentId
                             );
 
                             setLayers({
                                 settings: {
-                                    type: 'POPUP',
+                                    type: "POPUP",
                                 },
                                 content: {
-                                    type: 'GUILD_CHANNEL_CREATE',
+                                    type: "GUILD_CHANNEL_CREATE",
                                     guild: content.channel.guildId,
                                     category: category ?? null,
                                 },
@@ -431,97 +442,97 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                     },
                     {
-                        name: 'Delete Channel',
+                        name: "Delete Channel",
                         danger: true,
                         func: () => {
                             setLayers({
                                 settings: {
-                                    type: 'POPUP',
+                                    type: "POPUP",
                                 },
                                 content: {
-                                    type: 'GUILD_CHANNEL_DELETE',
+                                    type: "GUILD_CHANNEL_DELETE",
                                     channel: content.channel,
                                 },
                             });
                         },
                     },
                     {
-                        name: 'Divider',
+                        name: "Divider",
                     },
                     {
-                        name: 'Copy Channel ID',
-                        icon: 'id',
+                        name: "Copy Channel ID",
+                        icon: "id",
                         func: () => writeText(content.channel.id),
                     },
                 ]);
             }
         }
 
-        if (type === 'GUILD_ICON') {
+        if (type === "GUILD_ICON") {
             setItems([
                 {
-                    name: 'Mark As Read',
+                    name: "Mark As Read",
                     disabled: true,
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Mute Server',
+                    name: "Mute Server",
                     items: muteItems,
                     func: () => {},
                 },
                 {
-                    name: 'Notification Settings',
+                    name: "Notification Settings",
                     items: notificationItems,
                     func: () => {},
                 },
                 {
-                    name: 'Hide Muted Channels',
+                    name: "Hide Muted Channels",
                     checked: true,
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Server Settings',
+                    name: "Server Settings",
                     items: serverSettingsItems,
                     func: () => {},
                 },
                 {
-                    name: 'Privacy Settings',
+                    name: "Privacy Settings",
                     func: () => {},
                 },
                 {
-                    name: 'Edit Server Profile',
+                    name: "Edit Server Profile",
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Create Channel',
+                    name: "Create Channel",
                     func: () => {},
                 },
                 {
-                    name: 'Create Category',
+                    name: "Create Category",
                     func: () => {},
                 },
                 {
-                    name: 'Create Event',
+                    name: "Create Event",
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Delete Guild',
+                    name: "Delete Guild",
                     danger: true,
                     func: () => {
                         sendRequest({
-                            query: 'GUILD_DELETE',
+                            query: "GUILD_DELETE",
                             params: {
                                 guildId: content.guild.id,
                             },
@@ -529,129 +540,125 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                     },
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Copy Server ID',
-                    icon: 'id',
+                    name: "Copy Server ID",
+                    icon: "id",
                     func: () => writeText(content.guild.id),
                 },
             ]);
         }
 
-        if (type === 'GUILD') {
+        if (type === "GUILD") {
             setItems([
                 {
-                    name: 'Server Boost',
-                    icon: 'boost',
+                    name: "Server Boost",
+                    icon: "boost",
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Invite People',
-                    icon: 'addUser',
+                    name: "Invite People",
+                    icon: "addUser",
                     func: () => {},
                 },
                 {
-                    name: 'Invite a Guest',
-                    icon: 'addUser',
+                    name: "Invite a Guest",
+                    icon: "addUser",
                     func: () => {},
                 },
                 {
-                    name: 'Server Settings',
-                    icon: 'settings',
+                    name: "Server Settings",
+                    icon: "settings",
                     func: () => {},
                 },
                 {
-                    name: 'Create Channel',
-                    icon: 'addCircle',
+                    name: "Create Channel",
+                    icon: "addCircle",
                     func: () => {},
                 },
                 {
-                    name: 'Create Category',
-                    icon: 'addFolder',
+                    name: "Create Category",
+                    icon: "addFolder",
                     func: () => {},
                 },
                 {
-                    name: 'Create Event',
-                    icon: 'calendar',
+                    name: "Create Event",
+                    icon: "calendar",
                     func: () => {},
                 },
                 {
-                    name: 'App Directory',
-                    icon: 'bot',
+                    name: "App Directory",
+                    icon: "bot",
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Notification Settings',
-                    icon: 'bell',
+                    name: "Notification Settings",
+                    icon: "bell",
                     func: () => {},
                 },
                 {
-                    name: 'Privacy Settings',
-                    icon: 'policeBadge',
+                    name: "Privacy Settings",
+                    icon: "policeBadge",
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Edit Server Profile',
-                    icon: 'edit',
+                    name: "Edit Server Profile",
+                    icon: "edit",
                     func: () => {},
                 },
                 {
-                    name: 'Hide Muted Channels',
+                    name: "Hide Muted Channels",
                     checked: false,
                     func: () => {},
                 },
                 {
-                    name: 'Divider',
+                    name: "Divider",
                 },
                 {
-                    name: 'Report Raid',
-                    icon: 'shield',
+                    name: "Report Raid",
+                    icon: "shield",
                     func: () => {},
                     danger: true,
                 },
             ]);
         }
 
-        if (type === 'INPUT') {
+        if (type === "INPUT") {
             setItems([
                 {
-                    name: content.sendButton && 'Send Message Button',
-                    checked: userSettings.sendButton,
-                    func: () => {
-                        setUserSettings({
-                            ...userSettings,
-                            sendButton: !userSettings.sendButton,
-                        });
-                    },
+                    name: content.sendButton && "Send Message Button",
+                    checked: settings.sendButton,
+                    func: () => setSettings("sendButton", !settings.sendButton),
                 },
-                { name: content.sendButton && 'Divider' },
+                { name: content.sendButton && "Divider" },
                 {
-                    name: 'Spellcheck',
-                    checked: false,
+                    name: "Spellcheck",
+                    checked: settings.spellcheck,
+                    func: () => setSettings("spellcheck", !settings.spellcheck),
                 },
-                { name: 'Divider' },
+                { name: "Divider" },
                 {
-                    name: 'Paste',
-                    textTip: 'Ctrl+V',
+                    name: "Paste",
+                    textTip: "Ctrl+V",
                     func: () => content?.pasteText(),
                 },
             ]);
         }
 
-        if (type === 'IMAGE') {
+        if (type === "IMAGE") {
             setItems([
                 {
-                    name: content.attachment ? 'Copy Image' : null,
+                    name: content.attachment ? "Copy Image" : null,
                     func: () => {
                         const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
@@ -667,27 +674,27 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                     },
                 },
                 {
-                    name: content.attachment ? 'Save Image' : null,
+                    name: content.attachment ? "Save Image" : null,
                     func: () => {
                         const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
                         fetch(url)
                             .then((res) => res.blob())
                             .then((blob) => {
-                                const a = document.createElement('a');
+                                const a = document.createElement("a");
                                 a.href = URL.createObjectURL(blob);
                                 a.download = content.attachment.name;
                                 a.click();
                             });
                     },
                 },
-                { name: content.attachment ? 'Divider' : null },
+                { name: content.attachment ? "Divider" : null },
                 {
-                    name: content.attachment ? 'Copy Link' : null,
+                    name: content.attachment ? "Copy Link" : null,
                     func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
                 },
                 {
-                    name: content.attachment ? 'Open Link' : null,
+                    name: content.attachment ? "Open Link" : null,
                     func: () => {
                         window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
                     },
@@ -695,51 +702,56 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
             ]);
         }
 
-        if (type === 'MESSAGE') {
+        if (type === "MESSAGE") {
             if (shouldDisplayInlined(message.type)) {
                 setItems([
                     {
-                        name: 'Add Reaction',
+                        name: "Add Reaction",
                         items: reactionItems,
-                        icon: 'addReaction',
+                        icon: "addReaction",
                         func: () => {},
                     },
-                    { name: 'Mark Unread', icon: 'mark', func: () => {} },
                     {
-                        name: 'Copy Message Link',
-                        icon: 'link',
+                        name: message.content ? "Copy Text" : null,
+                        icon: "copy",
+                        func: () => writeText(message.content as string),
+                    },
+                    { name: "Mark Unread", icon: "mark", func: () => {} },
+                    {
+                        name: "Copy Message Link",
+                        icon: "link",
                         func: () => writeText(`/channels/@me/${message.channelId}/${message.id}`),
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Copy Message ID',
-                        icon: 'id',
+                        name: "Copy Message ID",
+                        icon: "id",
                         func: () => writeText(message.id),
                     },
                 ]);
             } else {
                 setItems([
                     {
-                        name: 'Add Reaction',
+                        name: "Add Reaction",
                         items: reactionItems,
-                        icon: 'addReaction',
+                        icon: "addReaction",
                         func: () => {},
                     },
                     {
-                        name: !!userProps?.isSelf ? 'Edit Message' : null,
-                        icon: 'edit',
+                        name: !!userProps?.isSelf ? "Edit Message" : null,
+                        icon: "edit",
                         func: () => content?.functions?.editMessageState(),
                     },
                     {
-                        name: message.pinned ? 'Unpin Message' : 'Pin Message',
-                        icon: 'pin',
+                        name: message.pinned ? "Unpin Message" : "Pin Message",
+                        icon: "pin",
                         func: message?.pinned
                             ? () => content?.functions?.unpinPopup()
                             : () => content?.functions?.pinPopup(),
                         funcShift: message.pinned
                             ? () => {
                                   sendRequest({
-                                      query: 'UNPIN_MESSAGE',
+                                      query: "UNPIN_MESSAGE",
                                       params: {
                                           channelId: message.channelId,
                                           messageId: message.id,
@@ -748,7 +760,7 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                               }
                             : () => {
                                   sendRequest({
-                                      query: 'PIN_MESSAGE',
+                                      query: "PIN_MESSAGE",
                                       params: {
                                           channelId: message.channelId,
                                           messageId: message.id,
@@ -757,24 +769,29 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                               },
                     },
                     {
-                        name: 'Reply',
-                        icon: 'reply',
+                        name: "Reply",
+                        icon: "reply",
                         func: () => content?.functions?.replyToMessageState(),
                     },
                     {
-                        name: message.content !== null ? 'Copy Text' : null,
-                        icon: 'copy',
-                        func: () => writeText(message.content ?? ''),
+                        name: message.content ? "Copy Text" : null,
+                        icon: "copy",
+                        func: () => writeText(message.content as string),
                     },
-                    { name: 'Mark Unread', icon: 'mark', func: () => {} },
                     {
-                        name: 'Copy Message Link',
-                        icon: 'link',
+                        name: message.content !== null ? "Translate" : null,
+                        icon: "translate",
+                        func: () => {},
+                    },
+                    { name: "Mark Unread", icon: "mark", func: () => {} },
+                    {
+                        name: "Copy Message Link",
+                        icon: "link",
                         func: () => writeText(`/channels/@me/${message.channelId}/${message.id}`),
                     },
                     {
-                        name: message.content !== null ? 'Speak Message' : null,
-                        icon: 'speak',
+                        name: message.content !== null ? "Speak Message" : null,
+                        icon: "speak",
                         func: () => {
                             const msg = new SpeechSynthesisUtterance();
                             msg.text = `${message.author.username} said ${message.content}`;
@@ -782,12 +799,12 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                     },
                     {
-                        name: !!userProps?.isSelf ? 'Delete Message' : null,
-                        icon: 'delete',
+                        name: canDeleteMessage() ? "Delete Message" : null,
+                        icon: "delete",
                         func: () => content?.functions?.deletePopup(),
                         funcShift: () =>
                             sendRequest({
-                                query: 'DELETE_MESSAGE',
+                                query: "DELETE_MESSAGE",
                                 params: {
                                     channelId: message.channelId,
                                     messageId: message.id,
@@ -796,14 +813,14 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         danger: true,
                     },
                     {
-                        name: !userProps?.isSelf ? 'Report Message' : null,
-                        icon: 'report',
+                        name: !userProps?.isSelf ? "Report Message" : null,
+                        icon: "report",
                         func: () => {},
                         danger: true,
                     },
-                    { name: content?.attachment ? 'Divider' : null },
+                    { name: content?.attachment ? "Divider" : null },
                     {
-                        name: content?.attachment ? 'Copy Image' : null,
+                        name: content?.attachment ? "Copy Image" : null,
                         func: () => {
                             const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
@@ -819,56 +836,56 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                     },
                     {
-                        name: content?.attachment ? 'Save Image' : null,
+                        name: content?.attachment ? "Save Image" : null,
                         func: () => {
                             const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
 
                             fetch(url)
                                 .then((res) => res.blob())
                                 .then((blob) => {
-                                    const a = document.createElement('a');
+                                    const a = document.createElement("a");
                                     a.href = URL.createObjectURL(blob);
                                     a.download = content.attachment.name;
                                     a.click();
                                 });
                         },
                     },
-                    { name: content?.attachment ? 'Divider' : null },
+                    { name: content?.attachment ? "Divider" : null },
                     {
-                        name: content?.attachment ? 'Copy Link' : null,
+                        name: content?.attachment ? "Copy Link" : null,
                         func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
                     },
                     {
-                        name: content?.attachment ? 'Open Link' : null,
+                        name: content?.attachment ? "Open Link" : null,
                         func: () => {
                             window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
                         },
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Copy Message ID',
-                        icon: 'id',
+                        name: "Copy Message ID",
+                        icon: "id",
                         func: () => writeText(message.id),
                     },
                 ]);
             }
         }
 
-        if (type === 'USER_SMALL') {
+        if (type === "USER_SMALL") {
             setItems([
                 {
-                    name: 'Start Video Call',
+                    name: "Start Video Call",
                     func: () => {},
                 },
                 {
-                    name: 'Start Voice Call',
+                    name: "Start Voice Call",
                     func: () => {},
                 },
                 {
-                    name: 'Remove Friend',
+                    name: "Remove Friend",
                     func: () =>
                         sendRequest({
-                            query: 'REMOVE_FRIEND',
+                            query: "REMOVE_FRIEND",
                             params: {
                                 username: user.username,
                             },
@@ -878,23 +895,23 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
             ]);
         }
 
-        if (type === 'USER' || type === 'CHANNEL') {
+        if (type === "USER" || type === "CHANNEL") {
             if (user) {
                 if (userProps?.isSelf) {
                     setItems([
                         {
-                            name: 'Profile',
+                            name: "Profile",
                             func: () => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                         setNull: true,
                                     },
                                 });
                                 setTimeout(() => {
                                     setLayers({
                                         settings: {
-                                            type: 'USER_PROFILE',
+                                            type: "USER_PROFILE",
                                         },
                                         content: {
                                             user,
@@ -904,14 +921,14 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                             },
                         },
                         {
-                            name: 'Mention',
-                            func: () => {},
+                            name: "Mention",
+                            func: () => setMention(user),
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
-                            name: 'Copy User ID',
+                            name: "Copy User ID",
                             func: () => writeText(user.id),
-                            icon: 'id',
+                            icon: "id",
                         },
                     ]);
                 } else if (content?.userprofile) {
@@ -919,23 +936,23 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         {
                             name: !userProps?.isBlocked
                                 ? userProps?.receivedRequest
-                                    ? 'Accept Friend Request'
+                                    ? "Accept Friend Request"
                                     : userProps?.sentRequest
-                                    ? 'Cancel Friend Request'
+                                    ? "Cancel Friend Request"
                                     : userProps?.isFriend
-                                    ? 'Remove Friend'
-                                    : 'Add Friend'
+                                    ? "Remove Friend"
+                                    : "Add Friend"
                                 : null,
                             func: () =>
                                 userProps?.sentRequest || userProps?.isFriend
                                     ? sendRequest({
-                                          query: 'REMOVE_FRIEND',
+                                          query: "REMOVE_FRIEND",
                                           params: {
                                               username: user.username,
                                           },
                                       })
                                     : sendRequest({
-                                          query: 'ADD_FRIEND',
+                                          query: "ADD_FRIEND",
                                           params: {
                                               username: user.username,
                                           },
@@ -943,17 +960,17 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                             danger: userProps?.sentRequest || userProps?.isFriend,
                         },
                         {
-                            name: userProps?.isBlocked ? 'Unblock' : 'Block',
+                            name: userProps?.isBlocked ? "Unblock" : "Block",
                             func: () =>
                                 userProps?.isBlocked
                                     ? sendRequest({
-                                          query: 'UNBLOCK_USER',
+                                          query: "UNBLOCK_USER",
                                           params: {
                                               username: user.username,
                                           },
                                       })
                                     : sendRequest({
-                                          query: 'BLOCK_USER',
+                                          query: "BLOCK_USER",
                                           params: {
                                               username: user.username,
                                           },
@@ -961,30 +978,30 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                             danger: !userProps?.isBlocked,
                         },
                         {
-                            name: !userProps?.isBlocked ? 'Message' : null,
+                            name: !userProps?.isBlocked ? "Message" : null,
                             func: () =>
                                 sendRequest({
-                                    query: 'CHANNEL_CREATE',
+                                    query: "CHANNEL_CREATE",
                                     data: {
                                         recipients: [user.id],
                                     },
                                 }),
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
-                            name: 'Copy User ID',
+                            name: "Copy User ID",
                             func: () => writeText(user.id),
-                            icon: 'id',
+                            icon: "id",
                         },
                     ]);
                 } else if (userProps?.isBlocked) {
                     setItems([
                         {
-                            name: 'Profile',
+                            name: "Profile",
                             func: () => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                         setNull: true,
                                     },
                                 });
@@ -992,7 +1009,7 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                                     () =>
                                         setLayers({
                                             settings: {
-                                                type: 'USER_PROFILE',
+                                                type: "USER_PROFILE",
                                             },
                                             content: {
                                                 user,
@@ -1003,21 +1020,21 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                             },
                         },
                         {
-                            name: 'Message',
+                            name: "Message",
                             func: () =>
                                 sendRequest({
-                                    query: 'CHANNEL_CREATE',
+                                    query: "CHANNEL_CREATE",
                                     data: {
                                         recipients: [user.id],
                                     },
                                 }),
                         },
                         {
-                            name: 'Add Note',
+                            name: "Add Note",
                             func: () => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                     },
                                     content: {
                                         user,
@@ -1026,38 +1043,38 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                                 });
                             },
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
-                            name: 'Unblock User',
+                            name: "Unblock User",
                             func: () =>
                                 sendRequest({
-                                    query: 'UNBLOCK_USER',
+                                    query: "UNBLOCK_USER",
                                     params: {
                                         username: user.username,
                                     },
                                 }),
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
-                            name: 'Copy User ID',
+                            name: "Copy User ID",
                             func: () => writeText(user.id),
-                            icon: 'id',
+                            icon: "id",
                         },
                     ]);
                 } else {
                     setItems([
                         {
-                            name: content?.channel && 'Mark As Read',
+                            name: content?.channel && "Mark As Read",
                             func: () => {},
                             disabled: true,
                         },
-                        { name: content?.channel && 'Divider' },
+                        { name: content?.channel && "Divider" },
                         {
-                            name: 'Profile',
+                            name: "Profile",
                             func: () => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                     },
                                     content: {
                                         user,
@@ -1066,25 +1083,25 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                             },
                         },
                         {
-                            name: 'Message',
+                            name: "Message",
                             func: () =>
                                 sendRequest({
-                                    query: 'CHANNEL_CREATE',
+                                    query: "CHANNEL_CREATE",
                                     data: {
                                         recipients: [user.id],
                                     },
                                 }),
                         },
                         {
-                            name: !userProps?.sentRequest ? 'Call' : null,
+                            name: !userProps?.sentRequest ? "Call" : null,
                             func: () => {},
                         },
                         {
-                            name: 'Add Note',
+                            name: "Add Note",
                             func: () => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                     },
                                     content: {
                                         user,
@@ -1095,147 +1112,147 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                         {
                             name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
-                                ? 'Add Friend Nickname'
+                                ? "Add Friend Nickname"
                                 : null,
                             func: () => {},
                         },
                         {
-                            name: content?.channel && 'Close DM',
+                            name: content?.channel && "Close DM",
                             func: () =>
                                 sendRequest({
-                                    query: 'CHANNEL_DELETE',
+                                    query: "CHANNEL_DELETE",
                                     params: { channelId: content.channel.id },
                                 }),
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
-                            name: !userProps?.sentRequest ? 'Invite to Server' : null,
+                            name: !userProps?.sentRequest ? "Invite to Server" : null,
                             items: serverItems,
                             func: () => {},
                         },
                         {
                             name: userProps?.receivedRequest
-                                ? 'Accept Friend Request'
+                                ? "Accept Friend Request"
                                 : userProps?.sentRequest
-                                ? 'Cancel Friend Request'
+                                ? "Cancel Friend Request"
                                 : userProps?.isFriend
-                                ? 'Remove Friend'
-                                : 'Add Friend',
+                                ? "Remove Friend"
+                                : "Add Friend",
                             func: () =>
                                 userProps?.sentRequest || userProps?.isFriend
                                     ? sendRequest({
-                                          query: 'REMOVE_FRIEND',
+                                          query: "REMOVE_FRIEND",
                                           params: { username: user.username },
                                       })
                                     : sendRequest({
-                                          query: 'ADD_FRIEND',
+                                          query: "ADD_FRIEND",
                                           params: { username: user.username },
                                       }),
                         },
                         {
-                            name: userProps?.isBlocked ? 'UnuserProps.isBlocked' : 'Block',
+                            name: userProps?.isBlocked ? "UnuserProps.isBlocked" : "Block",
                             func: () =>
                                 userProps?.isBlocked
                                     ? sendRequest({
-                                          query: 'UNBLOCK_USER',
+                                          query: "UNBLOCK_USER",
                                           params: { username: user.username },
                                       })
                                     : sendRequest({
-                                          query: 'BLOCK_USER',
+                                          query: "BLOCK_USER",
                                           params: { username: user.username },
                                       }),
                             danger: !userProps?.isBlocked,
                         },
-                        { name: 'Divider' },
+                        { name: "Divider" },
                         {
                             name: content?.channel && `Mute @${user.username}`,
                             items: muteItems,
                             func: () => {},
                         },
-                        { name: content?.channel && 'Divider' },
+                        { name: content?.channel && "Divider" },
                         {
-                            name: 'Copy User ID',
+                            name: "Copy User ID",
                             func: () => writeText(user.id),
-                            icon: 'id',
+                            icon: "id",
                         },
                         {
-                            name: content?.channel && 'Copy Channel ID',
+                            name: content?.channel && "Copy Channel ID",
                             func: () => writeText(content.channel.id),
-                            icon: 'id',
+                            icon: "id",
                         },
                     ]);
                 }
             } else {
                 setItems([
                     {
-                        name: 'Mark As Read',
+                        name: "Mark As Read",
                         disabled: true,
                         func: () => {},
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
                         func: () => {},
-                        name: 'Invites',
+                        name: "Invites",
                     },
                     {
-                        name: 'Change Icon',
+                        name: "Change Icon",
                         func: () => {},
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Mute Conversation',
+                        name: "Mute Conversation",
                         items: muteItems,
                         func: () => {},
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Leave Group',
+                        name: "Leave Group",
                         func: () => {
                             if (content.channel.recipients.length === 1) {
                                 sendRequest({
-                                    query: 'CHANNEL_DELETE',
+                                    query: "CHANNEL_DELETE",
                                     params: {
                                         channelId: content.channel.id,
                                     },
                                 });
                             } else {
                                 sendRequest({
-                                    query: 'CHANNEL_RECIPIENT_REMOVE',
+                                    query: "CHANNEL_RECIPIENT_REMOVE",
                                     params: {
                                         channelId: content.channel.id,
-                                        recipientId: auth.user.id,
+                                        recipientId: currentUser.id,
                                     },
                                 });
                             }
                         },
                         danger: true,
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Copy Channel ID',
+                        name: "Copy Channel ID",
                         func: () => writeText(content.channel.id),
-                        icon: 'id',
+                        icon: "id",
                     },
                 ]);
             }
         }
 
-        if (type === 'USER_GROUP') {
+        if (type === "USER_GROUP") {
             if (userProps?.isSelf) {
                 setItems([
                     {
-                        name: 'Profile',
+                        name: "Profile",
                         func: () => {
                             setLayers({
                                 settings: {
-                                    type: 'USER_PROFILE',
+                                    type: "USER_PROFILE",
                                     setNull: true,
                                 },
                             });
                             setTimeout(() => {
                                 setLayers({
                                     settings: {
-                                        type: 'USER_PROFILE',
+                                        type: "USER_PROFILE",
                                     },
                                     content: {
                                         user,
@@ -1246,24 +1263,24 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                     },
                     {
-                        name: 'Mention',
-                        func: () => {},
+                        name: "Mention",
+                        func: () => setMention(user),
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: 'Copy User ID',
+                        name: "Copy User ID",
                         func: () => writeText(user.id),
-                        icon: 'id',
+                        icon: "id",
                     },
                 ]);
             } else {
                 setItems([
                     {
-                        name: 'Profile',
+                        name: "Profile",
                         func: () => {
                             setLayers({
                                 settings: {
-                                    type: 'USER_PROFILE',
+                                    type: "USER_PROFILE",
                                 },
                                 content: {
                                     user,
@@ -1273,29 +1290,29 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         },
                     },
                     {
-                        name: 'Mention',
-                        func: () => {},
+                        name: "Mention",
+                        func: () => setMention(user),
                     },
                     {
-                        name: 'Message',
+                        name: "Message",
                         func: () =>
                             sendRequest({
-                                query: 'CHANNEL_CREATE',
+                                query: "CHANNEL_CREATE",
                                 data: {
                                     recipients: [user.id],
                                 },
                             }),
                     },
                     {
-                        name: !userProps?.sentRequest ? 'Call' : null,
+                        name: !userProps?.sentRequest ? "Call" : null,
                         func: () => {},
                     },
                     {
-                        name: 'Add Note',
+                        name: "Add Note",
                         func: () => {
                             setLayers({
                                 settings: {
-                                    type: 'USER_PROFILE',
+                                    type: "USER_PROFILE",
                                 },
                                 content: {
                                     user,
@@ -1306,16 +1323,16 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                     },
                     {
                         name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
-                            ? 'Add Friend Nickname'
+                            ? "Add Friend Nickname"
                             : null,
                         func: () => {},
                     },
-                    { name: 'Divider' },
+                    { name: content.channel.ownerId === currentUser.id ? "Divider" : null },
                     {
-                        name: 'Remove From Group',
+                        name: content.channel.ownerId === currentUser.id ? "Remove From Group" : null,
                         func: () => {
                             sendRequest({
-                                query: 'CHANNEL_RECIPIENT_REMOVE',
+                                query: "CHANNEL_RECIPIENT_REMOVE",
                                 params: {
                                     channelId: content.channel.id,
                                     recipientId: user.id,
@@ -1325,85 +1342,89 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                         danger: true,
                     },
                     {
-                        name: 'Make Group Owner',
-                        func: () => {},
+                        name: content.channel.ownerId === currentUser.id ? "Make Group Owner" : null,
+                        func: () => {
+                            setLayers({
+                                settings: {
+                                    type: "POPUP",
+                                },
+                                content: {
+                                    type: "GROUP_OWNER_CHANGE",
+                                    channelId: content.channel.id,
+                                    recipient: user,
+                                },
+                            });
+                        },
                         danger: true,
                     },
-                    { name: 'Divider' },
+                    { name: "Divider" },
                     {
-                        name: !userProps?.sentRequest ? 'Invite to Server' : null,
+                        name: !userProps?.sentRequest ? "Invite to Server" : null,
                         items: serverItems,
                         func: () => {},
                     },
                     {
                         name: userProps?.receivedRequest
-                            ? 'Accept Friend Request'
+                            ? "Accept Friend Request"
                             : userProps?.sentRequest
-                            ? 'Cancel Friend Request'
+                            ? "Cancel Friend Request"
                             : userProps?.isFriend
-                            ? 'Remove Friend'
-                            : 'Add Friend',
+                            ? "Remove Friend"
+                            : "Add Friend",
                         func: () =>
                             userProps?.sentRequest || userProps?.isFriend
                                 ? sendRequest({
-                                      query: 'REMOVE_FRIEND',
+                                      query: "REMOVE_FRIEND",
                                       params: { username: user.username },
                                   })
                                 : sendRequest({
-                                      query: 'ADD_FRIEND',
+                                      query: "ADD_FRIEND",
                                       params: { username: user.username },
                                   }),
                     },
                     {
-                        name: userProps?.isBlocked ? 'Unblock' : 'Block',
+                        name: userProps?.isBlocked ? "Unblock" : "Block",
                         func: () =>
                             userProps?.isBlocked
                                 ? sendRequest({
-                                      query: 'UNBLOCK_USER',
+                                      query: "UNBLOCK_USER",
                                       params: { username: user.username },
                                   })
                                 : sendRequest({
-                                      query: 'BLOCK_USER',
+                                      query: "BLOCK_USER",
                                       params: { username: user.username },
                                   }),
                     },
-                    { name: content?.channel && 'Divider' },
+                    { name: content?.channel && "Divider" },
                     {
-                        name: 'Copy User ID',
+                        name: "Copy User ID",
                         func: () => writeText(user.id),
-                        icon: 'id',
+                        icon: "id",
                     },
                 ]);
             }
         }
-    }, [
-        userProps,
-        userSettings,
-        auth.user.friendIds,
-        auth.user.requestReceivedIds,
-        auth.user.requestSentIds,
-        auth.user.blockedUserIds,
-        auth.user.blockedByUserIds,
-    ]);
+    }, [userProps, settings.sendButton, settings.spellcheck]);
 
     return useMemo(
         () => (
             <div
-                className={`${styles.menuContainer} ${type === 'GUILD' ? 'big' : ''}`}
-                onMouseLeave={() => setActive('')}
+                className={`${styles.menuContainer} ${type === "GUILD" ? "big" : ""}`}
+                onMouseLeave={() => setActive("")}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                 }}
                 style={{
-                    width: type === 'GUILD' ? 220 : '',
-                    transform: type === 'GUILD' ? 'translateX(+10px)' : '',
+                    width: type === "GUILD" ? 220 : "",
+                    transform: type === "GUILD" ? "translateX(+10px)" : "",
+                    visibility: items?.length ? "visible" : "hidden",
                 }}
             >
                 <div>
                     {items?.map((item, index) => {
                         if (!item.name) return;
-                        else if (item.name === 'Divider')
+                        else if (item.name === "Divider")
                             return (
                                 <div
                                     key={index}
@@ -1429,10 +1450,10 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                                         if (item.disabled) return;
                                         if (shift && item.funcShift) item.funcShift();
                                         else if (item.func) item.func();
-                                        if ('checked' in item) return;
+                                        if ("checked" in item) return;
                                         setLayers({
                                             settings: {
-                                                type: 'MENU',
+                                                type: "MENU",
                                                 setNull: true,
                                             },
                                         });
@@ -1441,27 +1462,33 @@ export const Menu = ({ content, friends }: { content: any, friends: TCleanUser[]
                                 >
                                     <div className={styles.label}>{item.name}</div>
 
-                                    {(item.icon || 'checked' in item || 'items' in item) && (
+                                    {(item.icon || "checked" in item || "items" in item) && (
                                         <div
                                             className={`${styles.icon} ${
-                                                'checked' in item && item.checked ? styles.revert : ''
+                                                "checked" in item && item.checked ? styles.revert : ""
                                             }`}
                                             style={{
-                                                transform: 'items' in item ? 'rotate(-90deg)' : '',
+                                                transform: "items" in item ? "rotate(-90deg)" : "",
                                             }}
                                         >
                                             <Icon
                                                 name={
-                                                    'checked' in item
+                                                    "checked" in item
                                                         ? item.checked
-                                                            ? 'checkboxFilled'
-                                                            : 'checkbox'
-                                                        : 'items' in item
-                                                        ? 'arrow'
-                                                        : item.icon ?? ''
+                                                            ? "checkboxFilled"
+                                                            : "checkbox"
+                                                        : "items" in item
+                                                        ? "arrow"
+                                                        : item.icon ?? ""
                                                 }
-                                                size={item.iconSize ?? type === 'GUILD' ? 18 : 16}
-                                                viewbox={item.icon === 'boost' ? '0 0 8 12' : ''}
+                                                size={item.iconSize ?? type === "GUILD" ? 18 : 16}
+                                                viewbox={
+                                                    item.icon === "boost"
+                                                        ? "0 0 8 12"
+                                                        : item.icon === "translate"
+                                                        ? "0 96 960 960"
+                                                        : ""
+                                                }
                                             />
                                         </div>
                                     )}

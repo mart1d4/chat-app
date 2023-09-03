@@ -12,14 +12,14 @@
         "postinstall": "prisma generate"
     },
     "dependencies": {
-        "@prisma/client": "^5.1.1",
+        "@prisma/client": "^5.2.0",
         "@uploadcare/upload-client": "^6.6.1",
         "@vercel/analytics": "^1.0.2",
         "bcryptjs": "^2.4.3",
         "bufferutil": "^4.0.7",
         "cryptr": "^6.2.0",
         "encoding": "^0.1.13",
-        "framer-motion": "^10.16.0",
+        "framer-motion": "^10.16.1",
         "jose": "^4.14.4",
         "magic-bytes.js": "^1.0.15",
         "next": "^13.4.19",
@@ -62,10 +62,10 @@
     "devDependencies": {
         "@types/bcryptjs": "^2.4.2",
         "@types/cookie": "^0.5.1",
-        "@types/node": "20.5.1",
-        "@types/react": "18.2.20",
+        "@types/node": "20.5.7",
+        "@types/react": "18.2.21",
         "@types/uuid": "^9.0.2",
-        "prisma": "^5.1.1",
-        "typescript": "5.1.6"
+        "prisma": "^5.2.0",
+        "typescript": "5.2.2"
     }
 }

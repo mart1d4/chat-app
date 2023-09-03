@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { ReactElement, useState, SetStateAction, Dispatch } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import styles from './GuildChannels.module.css';
-import { Icon, UserSection } from '@components';
-import { useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useLayers, useTooltip } from '@/lib/store';
+import { ReactElement, useState, SetStateAction, Dispatch } from "react";
+import useContextHook from "@/hooks/useContextHook";
+import styles from "./GuildChannels.module.css";
+import { Icon, UserSection } from "@components";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useLayers, useTooltip } from "@/lib/store";
 
 interface Props {
     user: TCleanUser;
@@ -22,6 +22,8 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
     const layers = useLayers((state) => state.layers);
     const params = useParams();
 
+    const member = guild.members.find((member: TGuildMember) => member.userId === user.id);
+
     return (
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
@@ -31,46 +33,46 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                         if (layers.MENU?.content.guild) return;
                         setLayers({
                             settings: {
-                                type: 'MENU',
+                                type: "MENU",
                                 element: e.currentTarget,
-                                firstSide: 'BOTTOM',
-                                secondSide: 'CENTER',
+                                firstSide: "BOTTOM",
+                                secondSide: "CENTER",
                             },
                             content: {
-                                type: 'GUILD',
+                                type: "GUILD",
                                 guild: guild,
                             },
                         });
                     }}
                     style={{
-                        backgroundColor: layers.MENU?.content.guild ? 'var(--background-hover-1)' : '',
+                        backgroundColor: layers.MENU?.content.type === "GUILD" ? "var(--background-hover-1)" : "",
                     }}
                 >
                     <div>
                         <div>{guild.name}</div>
-                        <div style={{ transform: !layers.MENU?.content.guild ? 'rotate(-90deg)' : '' }}>
-                            {layers.MENU?.content.guild ? (
+                        <div style={{ transform: layers.MENU?.content.type !== "GUILD" ? "rotate(-90deg)" : "" }}>
+                            {layers.MENU?.content.type === "GUILD" ? (
                                 <Icon
-                                    name='close'
+                                    name="close"
                                     size={16}
                                 />
                             ) : (
-                                <Icon name='arrow' />
+                                <Icon name="arrow" />
                             )}
                         </div>
                     </div>
                 </div>
 
                 <div
-                    className={styles.scroller + ' scrollbar'}
+                    className={styles.scroller + " scrollbar"}
                     onContextMenu={(e) => {
                         setLayers({
                             settings: {
-                                type: 'MENU',
+                                type: "MENU",
                                 event: e,
                             },
                             content: {
-                                type: 'GUILD_CHANNEL_LIST',
+                                type: "GUILD_CHANNEL_LIST",
                                 guild: guild,
                             },
                         });
@@ -86,6 +88,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            member={member}
                                             hidden={hiddenCategories.includes(channel.id)}
                                             setHidden={setHiddenCategories}
                                         />
@@ -104,6 +107,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            member={member}
                                         />
                                     );
                                 } else {
@@ -111,14 +115,15 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            member={member}
                                         />
                                     );
                                 }
                             })
                         ) : (
                             <img
-                                src='https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/'
-                                alt='No Channels'
+                                src="https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/"
+                                alt="No Channels"
                             />
                         )}
                     </ul>
@@ -132,11 +137,12 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
 
 type ChannelItemProps = {
     channel: TChannel;
+    member: TCleanUser;
     hidden?: boolean;
     setHidden?: Dispatch<SetStateAction<string[]>>;
 };
 
-const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
+const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const params = useParams();
@@ -144,10 +150,10 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
     if (channel.type === 4) {
         return (
             <motion.li
-                drag='y'
+                drag="y"
                 dragSnapToOrigin={true}
                 draggable={true}
-                className={`${styles.category} ${hidden ? styles.hide : ''}`}
+                className={`${styles.category} ${hidden ? styles.hide : ""}`}
                 onClick={() => {
                     if (!setHidden) return;
                     if (!hidden) {
@@ -161,25 +167,25 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                     e.stopPropagation();
                     setLayers({
                         settings: {
-                            type: 'MENU',
+                            type: "MENU",
                             event: e,
                         },
                         content: {
-                            type: 'GUILD_CHANNEL',
+                            type: "GUILD_CHANNEL",
                             channel: channel,
                         },
                     });
                 }}
             >
                 <div>
-                    <Icon name='arrow' />
+                    <Icon name="arrow" />
                     <h3>{channel.name}</h3>
                 </div>
 
                 <div
                     onMouseEnter={(e) =>
                         setTooltip({
-                            text: 'Create Channel',
+                            text: "Create Channel",
                             element: e.currentTarget,
                         })
                     }
@@ -188,10 +194,10 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                         e.stopPropagation();
                         setLayers({
                             settings: {
-                                type: 'POPUP',
+                                type: "POPUP",
                             },
                             content: {
-                                type: 'GUILD_CHANNEL_CREATE',
+                                type: "GUILD_CHANNEL_CREATE",
                                 guild: channel.guildId,
                                 category: channel,
                             },
@@ -199,9 +205,9 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                     }}
                 >
                     <Icon
-                        name='add'
+                        name="add"
                         size={18}
-                        viewbox='0 0 18 18'
+                        viewbox="0 0 18 18"
                     />
                 </div>
             </motion.li>
@@ -210,7 +216,7 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
 
     return (
         <motion.li
-            drag='y'
+            drag="y"
             dragSnapToOrigin={true}
             draggable={true}
             className={styles.channel}
@@ -219,11 +225,11 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                 e.stopPropagation();
                 setLayers({
                     settings: {
-                        type: 'MENU',
+                        type: "MENU",
                         event: e,
                     },
                     content: {
-                        type: 'GUILD_CHANNEL',
+                        type: "GUILD_CHANNEL",
                         channel: channel,
                     },
                 });
@@ -234,7 +240,7 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                     <Link
                         href={`/channels/${channel.guildId}/${channel.id}`}
                         style={{
-                            backgroundColor: params.channelId === channel.id ? 'var(--background-hover-2)' : '',
+                            backgroundColor: params.channelId === channel.id ? "var(--background-hover-2)" : "",
                         }}
                         onClick={(e) => {
                             if (channel.type === 3) e.preventDefault();
@@ -245,20 +251,20 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                                 className={styles.icon}
                                 onMouseEnter={(e) => {
                                     setTooltip({
-                                        text: channel.type === 2 ? 'Text' : 'Voice',
+                                        text: channel.type === 2 ? "Text" : "Voice",
                                         element: e.currentTarget,
                                         delay: 500,
                                     });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <Icon name={channel.type === 2 ? 'hashtag' : 'voice'} />
+                                <Icon name={channel.type === 2 ? "hashtag" : "voice"} />
                             </div>
 
                             <div
                                 className={styles.name}
                                 style={{
-                                    color: params.channelId === channel.id ? 'var(--foreground-1)' : '',
+                                    color: params.channelId === channel.id ? "var(--foreground-1)" : "",
                                 }}
                             >
                                 {channel.name}
@@ -269,20 +275,20 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                                     <div
                                         onMouseEnter={(e) =>
                                             setTooltip({
-                                                text: 'Open Chat',
+                                                text: "Open Chat",
                                                 element: e.currentTarget,
                                             })
                                         }
                                         onMouseLeave={() => setTooltip(null)}
                                         style={{
-                                            display: params.channelId === channel.id ? 'flex' : '',
-                                            flex: params.channelId === channel.id ? '0 0 auto' : '',
+                                            display: params.channelId === channel.id ? "flex" : "",
+                                            flex: params.channelId === channel.id ? "0 0 auto" : "",
                                         }}
                                     >
                                         <Icon
-                                            name='message'
+                                            name="message"
                                             size={16}
-                                            viewbox='0 0 24 24'
+                                            viewbox="0 0 24 24"
                                         />
                                     </div>
                                 )}
@@ -290,40 +296,40 @@ const ChannelItem = ({ channel, hidden, setHidden }: ChannelItemProps) => {
                                 <div
                                     onMouseEnter={(e) =>
                                         setTooltip({
-                                            text: 'Create Invite',
+                                            text: "Create Invite",
                                             element: e.currentTarget,
                                         })
                                     }
                                     onMouseLeave={() => setTooltip(null)}
                                     style={{
-                                        display: params.channelId === channel.id ? 'flex' : '',
-                                        flex: params.channelId === channel.id ? '0 0 auto' : '',
+                                        display: params.channelId === channel.id ? "flex" : "",
+                                        flex: params.channelId === channel.id ? "0 0 auto" : "",
                                     }}
                                 >
                                     <Icon
-                                        name='addUserSmall'
+                                        name="addUserSmall"
                                         size={16}
-                                        viewbox='0 0 16 16'
+                                        viewbox="0 0 16 16"
                                     />
                                 </div>
 
                                 <div
                                     onMouseEnter={(e) =>
                                         setTooltip({
-                                            text: 'Edit Channel',
+                                            text: "Edit Channel",
                                             element: e.currentTarget,
                                         })
                                     }
                                     onMouseLeave={() => setTooltip(null)}
                                     style={{
-                                        display: params.channelId === channel.id ? 'flex' : '',
-                                        flex: params.channelId === channel.id ? '0 0 auto' : '',
+                                        display: params.channelId === channel.id ? "flex" : "",
+                                        flex: params.channelId === channel.id ? "0 0 auto" : "",
                                     }}
                                 >
                                     <Icon
-                                        name='corkSmall'
+                                        name="corkSmall"
                                         size={16}
-                                        viewbox='0 0 16 16'
+                                        viewbox="0 0 16 16"
                                     />
                                 </div>
                             </div>

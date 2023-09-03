@@ -1,10 +1,10 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function POST(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const username = params.username;
 
     try {
@@ -62,7 +62,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -111,8 +111,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 },
             });
 
-            await pusher.trigger('chat-app', 'relationship-updated', {
-                type: 'USER_BLOCKED',
+            await pusher.trigger("chat-app", "user-relation", {
+                type: "USER_BLOCKED",
                 sender: sender,
                 receiver: user,
             });
@@ -120,7 +120,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Successfuly blocked this user',
+                    message: "Successfuly blocked this user",
                 },
                 { status: 200 }
             );
@@ -128,17 +128,17 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You have already blocked this user.',
+                    message: "You have already blocked this user.",
                 },
                 { status: 400 }
             );
         }
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/users/[username]/block/route.tsx: ${error}`);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Internal server error.',
+                message: "Internal server error.",
             },
             { status: 500 }
         );
@@ -146,9 +146,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const senderId = headers().get("X-userId") || "";
     const username = params.username;
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
 
     try {
         const sender = await prisma.user.findUnique({
@@ -205,7 +204,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -236,8 +235,8 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                 },
             });
 
-            await pusher.trigger('chat-app', 'relationship-updated', {
-                type: 'USER_UNBLOCKED',
+            await pusher.trigger("chat-app", "user-relation", {
+                type: "USER_UNBLOCKED",
                 sender: sender,
                 receiver: user,
             });
@@ -245,7 +244,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Successfuly unblocked this user.',
+                    message: "Successfuly unblocked this user.",
                 },
                 { status: 200 }
             );
@@ -259,11 +258,11 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             );
         }
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/users/[username]/block/route.tsx: ${error}`);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

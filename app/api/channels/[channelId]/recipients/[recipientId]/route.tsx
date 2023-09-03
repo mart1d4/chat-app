@@ -1,7 +1,7 @@
-import pusher from '@/lib/pusher/server-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 type Params = {
     params: {
@@ -11,15 +11,15 @@ type Params = {
 };
 
 export async function PUT(req: Request, { params }: Params) {
-    const userId = headers().get('X-UserId') || '';
+    const userId = headers().get("X-UserId") || "";
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 
-    if (userId === '') {
+    if (userId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -61,7 +61,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found',
+                    message: "User not found",
                 },
                 { status: 404 }
             );
@@ -71,7 +71,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User is not your friend',
+                    message: "User is not your friend",
                 },
                 { status: 403 }
             );
@@ -92,7 +92,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -102,7 +102,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel is not a group dm',
+                    message: "Channel is not a group dm",
                 },
                 { status: 403 }
             );
@@ -112,7 +112,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User is already in this channel',
+                    message: "User is already in this channel",
                 },
                 { status: 403 }
             );
@@ -122,7 +122,7 @@ export async function PUT(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel is full',
+                    message: "Channel is full",
                 },
                 { status: 403 }
             );
@@ -139,13 +139,11 @@ export async function PUT(req: Request, { params }: Params) {
                     },
                 },
             },
-            select: {
-                id: true,
-                type: true,
-                icon: true,
-                ownerId: true,
-                recipientIds: true,
+            include: {
                 recipients: {
+                    orderBy: {
+                        username: "asc",
+                    },
                     select: {
                         id: true,
                         username: true,
@@ -163,22 +161,18 @@ export async function PUT(req: Request, { params }: Params) {
                         createdAt: true,
                     },
                 },
-                createdAt: true,
-                updatedAt: true,
             },
         });
 
-        await pusher.trigger('chat-app', 'channel-recipient-add', {
+        await pusher.trigger("chat-app", "channel-update", {
+            type: "RECIPIENT_ADDED",
             channel: newChannel,
-            recipients: [channel.recipientIds, recipientId],
-            recipient: recipient,
         });
 
         // Create message
         const message = await prisma.message.create({
             data: {
                 type: 2,
-                content: `<@${userId}> added <@${recipientId}> to the group.`,
                 author: {
                     connect: {
                         id: userId,
@@ -190,7 +184,7 @@ export async function PUT(req: Request, { params }: Params) {
                     },
                 },
                 mentions: {
-                    connect: [{ id: userId }, { id: recipientId }],
+                    connect: [{ id: recipientId }],
                 },
             },
             include: {
@@ -282,7 +276,7 @@ export async function PUT(req: Request, { params }: Params) {
             },
         });
 
-        await pusher.trigger('chat-app', 'message-sent', {
+        await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: message,
         });
@@ -290,16 +284,16 @@ export async function PUT(req: Request, { params }: Params) {
         return NextResponse.json(
             {
                 success: true,
-                message: 'User added to channel',
+                message: "User added to channel",
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error("[ERROR] /api/channels/channelId/recipients/recipientId", error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: "Something went wrong",
             },
             { status: 500 }
         );
@@ -307,15 +301,15 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get('X-UserId') || '';
+    const userId = headers().get("X-UserId") || "";
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 
-    if (userId === '') {
+    if (userId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -344,7 +338,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found',
+                    message: "User not found",
                 },
                 { status: 404 }
             );
@@ -365,7 +359,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -375,7 +369,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel is not a group dm',
+                    message: "Channel is not a group dm",
                 },
                 { status: 403 }
             );
@@ -385,7 +379,7 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User is not in this channel',
+                    message: "User is not in this channel",
                 },
                 { status: 403 }
             );
@@ -395,20 +389,29 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Cannot remove last recipient from channel',
+                    message: "Cannot remove last recipient from channel",
+                },
+                { status: 403 }
+            );
+        }
+
+        if (user.id !== recipient.id && channel.ownerId !== user.id) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "You do not have permission to remove this user from the channel",
                 },
                 { status: 403 }
             );
         }
 
         let newOwner;
-
         if (channel.ownerId === recipientId) {
             const randomIndex = Math.floor(Math.random() * channel.recipientIds.length - 1);
             newOwner = channel.recipientIds.filter((id) => id !== recipientId)[randomIndex];
         }
 
-        await prisma.channel.update({
+        const newChannel = await prisma.channel.update({
             where: {
                 id: channelId,
             },
@@ -418,26 +421,41 @@ export async function DELETE(req: Request, { params }: Params) {
                         id: recipientId,
                     },
                 },
-                ownerId: newOwner ?? channel.ownerId,
+                ownerId: newOwner ? channel.ownerId : channel.ownerId,
             },
-            select: {
-                id: true,
+            include: {
+                recipients: {
+                    orderBy: {
+                        username: "asc",
+                    },
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
 
-        await pusher.trigger('chat-app', 'channel-left', {
-            channelId: channelId,
-            recipientId: recipientId,
-            recipients: channel.recipientIds,
-            newOwner: newOwner,
+        await pusher.trigger("chat-app", "channel-update", {
+            type: "RECIPIENT_REMOVED",
+            channel: newChannel,
         });
 
         const message = await prisma.message.create({
             data: {
                 type: 3,
-                content: newOwner
-                    ? `<@${userId}> left the group.`
-                    : `<@${userId}> removed <@${recipientId}> from the group.`,
                 author: {
                     connect: {
                         id: userId,
@@ -449,7 +467,7 @@ export async function DELETE(req: Request, { params }: Params) {
                     },
                 },
                 mentions: {
-                    connect: newOwner ? [{ id: userId }] : [{ id: userId }, { id: recipientId }],
+                    connect: newOwner ? [] : [{ id: recipientId }],
                 },
             },
             include: {
@@ -532,7 +550,7 @@ export async function DELETE(req: Request, { params }: Params) {
             },
         });
 
-        await pusher.trigger('chat-app', 'message-sent', {
+        await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: message,
         });
@@ -540,16 +558,17 @@ export async function DELETE(req: Request, { params }: Params) {
         return NextResponse.json(
             {
                 success: true,
-                message: 'Recipient removed from channel',
+                message: "Recipient removed from channel",
+                channelId: channel.ownerId === recipientId ? channelId : null,
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error("[ERROR] /api/channels/channelId/recipients/recipientId", error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: "Something went wrong",
             },
             { status: 500 }
         );

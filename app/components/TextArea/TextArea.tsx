@@ -1,32 +1,69 @@
 "use client";
 
+import { useData, useLayers, useMention, useMessages, useSettings, useTooltip } from "@/lib/store";
 import { useState, useRef, useMemo, useEffect } from "react";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { Icon, LoadingDots } from "@components";
 import { trimMessage } from "@/lib/strings";
 import styles from "./TextArea.module.css";
 import filetypeinfo from "magic-bytes.js";
 import { v4 as uuidv4 } from "uuid";
-import { useLayers, useTooltip } from "@/lib/store";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng"];
 
 export const TextArea = ({ channel, editContent, setEditContent, reply, setReply, setMessages }: any) => {
-    const [message, setMessage] = useState<string>("");
-    const [files, setFiles] = useState<TImage[]>([]);
-    const [usersTyping, setUsersTyping] = useState<string[]>([]);
-
-    const { userSettings }: any = useContextHook({ context: "settings" });
+    const setAttachments = useMessages((state) => state.setAttachments);
+    const setContent = useMessages((state) => state.setContent);
+    const setTooltip = useTooltip((state) => state.setTooltip);
+    const setMention = useMention((state) => state.setMention);
+    const user = useData((state) => state.user) as TCleanUser;
+    const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
+    const mention = useMention((state) => state.userId);
+    const drafts = useMessages((state) => state.drafts);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: "auth" });
     const { sendRequest } = useFetchHelper();
+
+    const draft = drafts.find((d) => d.channelId === channel.id);
+    const attachments = draft?.attachments
+        .map(async (a) => {
+            const blob = await fetch(a.url)
+                .then((response) => response.blob())
+                .catch((error) => {
+                    console.error(error);
+                    return null;
+                });
+
+            if (!blob) return null;
+            const file = new File([blob], a.name ?? "file.txt", { type: blob.type });
+
+            return {
+                id: a.id,
+                file: file,
+                dimensions: a.dimensions,
+                description: a.description,
+            };
+        })
+        .filter((a) => a !== null);
+
+    console.log(attachments);
+
+    const [usersTyping, setUsersTyping] = useState<string[]>([]);
+    const [message, setMessage] = useState<string>(draft?.content || "");
+    const [files, setFiles] = useState<TImage[]>(attachments || []);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
-    const friend = channel?.recipients?.find((r: any) => r.id !== auth.user.id);
+    const blockedBy = useData((state) => state.blockedBy).map((user) => user.id);
+    const blocked = useData((state) => state.blocked).map((user) => user.id);
+    const friend = channel.recipients?.find((r: any) => r.id !== user.id);
+
+    useEffect(() => {
+        if (!mention) return;
+        setMessage((message) => `${message}<@${mention}>`);
+        setMention(null);
+    }, [mention]);
 
     const setCursorToEnd = () => {
         const input = textAreaRef.current as HTMLInputElement;
@@ -49,17 +86,17 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         sel?.addRange(range);
     };
 
-    useEffect(() => {
-        if (!channel) return;
-        const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}")?.message;
+    // useEffect(() => {
+    //     if (!channel) return;
+    //     const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}")?.message;
 
-        if (message) {
-            setMessage(message);
-            const input = textAreaRef.current as HTMLInputElement;
-            input.innerText = message;
-            setCursorToEnd();
-        }
-    }, [channel]);
+    //     if (message) {
+    //         setMessage(message);
+    //         const input = textAreaRef.current as HTMLInputElement;
+    //         input.innerText = message;
+    //         setCursorToEnd();
+    //     }
+    // }, [channel]);
 
     useEffect(() => {
         const handlePaste = async (e: ClipboardEvent) => {
@@ -170,16 +207,22 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
     }, [layers, files]);
 
     useEffect(() => {
-        if (!channel) return;
-
-        localStorage.setItem(
-            `channel-${channel.id}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
-                message: message,
-            })
-        );
+        setContent(channel.id, message);
     }, [message]);
+
+    useEffect(() => {
+        const attachments = files.map((file) => ({
+            id: file.id,
+            name: file.file.name,
+            type: file.file.type,
+            dimensions: file.dimensions,
+            description: file.description,
+            url: URL.createObjectURL(file.file),
+            isSpoiler: file.file.name.startsWith("SPOILER_"),
+        }));
+
+        setAttachments(channel.id, attachments);
+    }, [files]);
 
     useEffect(() => {
         const input = textAreaRef.current as HTMLInputElement;
@@ -215,13 +258,24 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         let messageContent = trimMessage(message);
         const attachments = files;
 
-        if (messageContent === null && files.length === 0) return;
+        if (!messageContent && files.length === 0) return;
+        if (messageContent && messageContent.length > 4000) {
+            return setLayers({
+                settings: {
+                    type: "POPUP",
+                },
+                content: {
+                    type: "WARNING",
+                    warning: "MESSAGE_LIMIT",
+                },
+            });
+        }
 
         const tempMessage = {
             id: uuidv4(),
             content: messageContent,
             attachments: attachments,
-            author: auth.user,
+            author: user,
             channelId: [channel.id],
             messageReference: reply?.messageId ?? null,
             createdAt: new Date(),
@@ -250,11 +304,16 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
     const textContainer = useMemo(
         () => (
-            <div className={styles.textContainer} style={{ height: textAreaRef?.current?.scrollHeight || 44 }}>
+            <div
+                className={styles.textContainer}
+                style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
+            >
                 <div>
-                    {message.length === 0 && typeof editContent !== "string" && (
+                    {message.length === 0 && (
                         <div className={styles.textContainerPlaceholder}>
-                            Message {`${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`}
+                            {typeof editContent !== "string"
+                                ? `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`
+                                : "Edit Message"}
                         </div>
                     )}
 
@@ -266,7 +325,9 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                         aria-haspopup="listbox"
                         aria-invalid="false"
                         aria-label={
-                            editContent ? "Edit Message" : `Message ${friend ? `@${friend.username}` : channel?.name}`
+                            typeof editContent === "string"
+                                ? "Edit Message"
+                                : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`
                         }
                         aria-multiline="true"
                         aria-required="true"
@@ -276,7 +337,6 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                         onDragStart={() => false}
                         onDrop={() => false}
                         onInput={(e) => {
-                            if (!channel) return;
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
 
@@ -293,23 +353,15 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                         },
                                     })
                                 );
-                            } else {
-                                setMessage(text);
-                            }
+                            } else setMessage(text);
                         }}
                         onKeyDown={(e) => {
-                            if (!channel) return;
-                            if (e.key === "Enter" && !e.shiftKey && typeof editContent === "string") {
-                                return e.preventDefault();
-                            }
-                            if (e.key === "Enter" && !e.shiftKey && typeof editContent !== "string") {
+                            if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
-                                sendMessage();
+                                if (typeof editContent !== "string") sendMessage();
                             }
                         }}
                         onContextMenu={(e) => {
-                            if (!channel) return;
-                            e.preventDefault();
                             setLayers({
                                 settings: {
                                     type: "MENU",
@@ -323,18 +375,23 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                 },
                             });
                         }}
-                        onPaste={(e) => {}}
                     />
                 </div>
             </div>
         ),
-        [message, friend, channel, editContent, reply, files]
+        [friend, channel, editContent, reply, files]
     );
 
     if (typeof editContent === "string") {
         return (
-            <form className={styles.form} style={{ padding: "0 0 0 0", marginTop: "8px" }}>
-                <div className={styles.textArea} style={{ marginBottom: "0" }}>
+            <form
+                className={styles.form}
+                style={{ padding: "0 0 0 0", marginTop: "8px" }}
+            >
+                <div
+                    className={styles.textArea}
+                    style={{ marginBottom: "0" }}
+                >
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div className={styles.input}>
                             {textContainer}
@@ -347,18 +404,25 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                 </div>
             </form>
         );
-    } else if (!auth.user.blockedUserIds?.includes(friend?.id) && !auth.user.blockedByUserIds?.includes(friend?.id)) {
+    } else if (!blocked.includes(friend?.id) && !blockedBy.includes(friend?.id)) {
         return (
             <form className={styles.form}>
-                {channel && reply?.channelId === channel?.id && (
+                {reply?.channelId === channel?.id && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
                             Replying to <span>{reply.author.username || "User"}</span>
                         </div>
 
-                        <div className={styles.replyClose} onClick={() => setReply(null)}>
+                        <div
+                            className={styles.replyClose}
+                            onClick={() => setReply(null)}
+                        >
                             <div>
-                                <Icon name="closeFilled" size={16} viewbox={"0 0 14 14"} />
+                                <Icon
+                                    name="closeFilled"
+                                    size={16}
+                                    viewbox={"0 0 14 14"}
+                                />
                             </div>
                         </div>
                     </div>
@@ -366,14 +430,18 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
                 <div
                     className={styles.textArea}
-                    style={{ borderRadius: channel && reply?.channelId === channel?.id ? "0 0 8px 8px" : "8px" }}
+                    style={{ borderRadius: reply?.channelId === channel.id ? "0 0 8px 8px" : "8px" }}
                 >
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {files.length > 0 && (
                             <>
                                 <ul className={styles.filesList + " scrollbar"}>
                                     {files?.map((file) => (
-                                        <FilePreview key={file.id} file={file} setFiles={setFiles} />
+                                        <FilePreview
+                                            key={file.id}
+                                            file={file}
+                                            setFiles={setFiles}
+                                        />
                                     ))}
                                 </ul>
                                 <div className={styles.formDivider} />
@@ -463,7 +531,6 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                 <button
                                     onClick={(e) => e.preventDefault()}
                                     onDoubleClick={(e) => {
-                                        if (!channel) return;
                                         e.preventDefault();
                                         fileInputRef.current?.click();
                                     }}
@@ -478,7 +545,10 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
                             <div className={styles.toolsContainer}>
                                 <button onClick={(e) => e.preventDefault()}>
-                                    <Icon name="keyboard" size={30} />
+                                    <Icon
+                                        name="keyboard"
+                                        size={30}
+                                    />
                                 </button>
 
                                 <button onClick={(e) => e.preventDefault()}>
@@ -487,7 +557,7 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
                                 <EmojiPicker />
 
-                                {userSettings?.sendButton && (
+                                {settings.sendButton && (
                                     <button
                                         className={
                                             message.length === 0 && files.length === 0
@@ -496,19 +566,24 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (!channel) return;
                                             if (editContent) return;
                                             sendMessage();
                                         }}
                                         disabled={message.length === 0 && files.length === 0}
                                         style={{
-                                            cursor: (message.length === 0 && files.length === 0) ? "not-allowed" : "pointer",
-                                            opacity: (message.length === 0 && files.length === 0) ? 0.3 : 1,
-                                            color: (message.length === 0 && files.length === 0) ? "var(--foreground-5)" : "",
+                                            cursor:
+                                                message.length === 0 && files.length === 0 ? "not-allowed" : "pointer",
+                                            opacity: message.length === 0 && files.length === 0 ? 0.3 : 1,
+                                            color:
+                                                message.length === 0 && files.length === 0 ? "var(--foreground-5)" : "",
                                         }}
                                     >
                                         <div>
-                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                            <svg
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 16 16"
+                                            >
                                                 <path
                                                     d="M8.2738 8.49222L1.99997 9.09877L0.349029 14.3788C0.250591 14.691 0.347154 15.0322 0.595581 15.246C0.843069 15.4597 1.19464 15.5047 1.48903 15.3613L15.2384 8.7032C15.5075 8.57195 15.6781 8.29914 15.6781 8.00007C15.6781 7.70101 15.5074 7.4282 15.2384 7.29694L1.49839 0.634063C1.20401 0.490625 0.852453 0.535625 0.604941 0.749376C0.356493 0.963128 0.259941 1.30344 0.358389 1.61563L2.00932 6.89563L8.27093 7.50312C8.52405 7.52843 8.71718 7.74125 8.71718 7.99531C8.71718 8.24938 8.52406 8.46218 8.27093 8.4875L8.2738 8.49222Z"
                                                     fill="currentColor"
@@ -538,7 +613,19 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                         )}
                     </div>
 
-                    <div className={styles.counterContainer}>
+                    <div
+                        className={styles.counterContainer}
+                        onMouseEnter={(e) =>
+                            setTooltip({
+                                text:
+                                    message.length > 4000
+                                        ? "Message is too long"
+                                        : `${4000 - message.length} characters remaining`,
+                                element: e.currentTarget,
+                            })
+                        }
+                        onMouseLeave={() => setTooltip(null)}
+                    >
                         <span style={{ color: message.length > 4000 ? "var(--error-1)" : "var(--foreground-3)" }}>
                             {message.length}
                         </span>
@@ -570,6 +657,49 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
             </form>
         );
     }
+};
+
+const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
+
+    return (
+        <span
+            className={full ? styles.mention : styles.inlineMention}
+            onClick={(e) => {
+                if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                setLayers({
+                    settings: {
+                        type: "USER_CARD",
+                        element: e.currentTarget,
+                        firstSide: "RIGHT",
+                        gap: 10,
+                    },
+                    content: {
+                        user: user,
+                    },
+                });
+            }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (layers.MENU?.settings.element === e.currentTarget) return;
+                setLayers({
+                    settings: {
+                        type: "MENU",
+                        event: e,
+                    },
+                    content: {
+                        type: "USER",
+                        user: user,
+                    },
+                });
+            }}
+        >
+            {full && "@"}
+            {user.username}
+        </span>
+    );
 };
 
 const emojisPos = [
@@ -751,7 +881,10 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     );
                                 }}
                             >
-                                <Icon name={isSpoiler ? "eyeSlash" : "eye"} size={20} />
+                                <Icon
+                                    name={isSpoiler ? "eyeSlash" : "eye"}
+                                    size={20}
+                                />
                             </div>
                         </div>
 
@@ -780,7 +913,10 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     });
                                 }}
                             >
-                                <Icon name="edit" size={20} />
+                                <Icon
+                                    name="edit"
+                                    size={20}
+                                />
                             </div>
                         </div>
 
@@ -800,7 +936,11 @@ const FilePreview = ({ file, setFiles }: any) => {
                                     setTooltip(null);
                                 }}
                             >
-                                <Icon name="delete" size={20} fill="var(--error-1)" />
+                                <Icon
+                                    name="delete"
+                                    size={20}
+                                    fill="var(--error-1)"
+                                />
                             </div>
                         </div>
                     </div>

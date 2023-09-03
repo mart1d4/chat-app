@@ -1,52 +1,52 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, ReactElement } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { getButtonColor } from '@/lib/colors/getColors';
-import useContextHook from '@/hooks/useContextHook';
-import styles from './UserProfile.module.css';
-import { translateCap } from '@/lib/strings';
-import { Avatar, Icon } from '@components';
-import { useLayers, useTooltip } from '@/lib/store';
+import { useEffect, useRef, useState, ReactElement } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { getButtonColor } from "@/lib/colors/getColors";
+import useContextHook from "@/hooks/useContextHook";
+import styles from "./UserProfile.module.css";
+import { translateCap } from "@/lib/strings";
+import { Avatar, Icon } from "@components";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 
 const colors = {
-    ONLINE: '#22A559',
-    IDLE: '#F0B232',
-    DO_NOT_DISTURB: '#F23F43',
-    INVISIBLE: '#80848E',
-    OFFLINE: '#80848E',
+    ONLINE: "#22A559",
+    IDLE: "#F0B232",
+    DO_NOT_DISTURB: "#F23F43",
+    INVISIBLE: "#80848E",
+    OFFLINE: "#80848E",
 };
 
 const masks = {
-    ONLINE: '',
-    IDLE: 'status-mask-idle',
-    DO_NOT_DISTURB: 'status-mask-dnd',
-    INVISIBLE: 'status-mask-offline',
-    OFFLINE: 'status-mask-offline',
+    ONLINE: "",
+    IDLE: "status-mask-idle",
+    DO_NOT_DISTURB: "status-mask-dnd",
+    INVISIBLE: "status-mask-offline",
+    OFFLINE: "status-mask-offline",
 };
 
 export const UserProfile = ({ content }: any): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
     const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
-    const [note, setNote] = useState<string>('');
+    const [note, setNote] = useState<string>("");
 
-    const { setShowSettings }: any = useContextHook({ context: 'layer' });
+    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const currentUser = useData((state) => state.user) as TCleanUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: 'auth' });
 
     const cardRef = useRef<HTMLDivElement>(null);
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
     const user: null | TCleanUser = content?.user;
-    const isSameUser = () => user?.id === auth.user.id;
+    const isSameUser = () => user?.id === currentUser.id;
 
     useEffect(() => {
         if (!user) return;
 
         if (!isSameUser()) {
-            const friends = auth.user.friends || [];
+            const friends = currentUser.friends || [];
             const mutuals = friends.filter((friend: TCleanUser) => user.friendIds?.includes(friend.id));
             setMutualFriends(mutuals);
         }
@@ -54,27 +54,27 @@ export const UserProfile = ({ content }: any): ReactElement => {
         if (content.focusNote) noteRef.current?.focus();
 
         setActiveNavItem(0);
-        setNote('');
+        setNote("");
     }, [user]);
 
     useEffect(() => {
         const handleClick = (e: KeyboardEvent) => {
             if (layers.USER_PROFILE) return;
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 setLayers({
                     settings: {
-                        type: 'USER_PROFILE',
+                        type: "USER_PROFILE",
                         setNull: true,
                     },
                 });
             }
         };
 
-        window.addEventListener('keydown', handleClick);
-        return () => window.removeEventListener('keydown', handleClick);
+        window.addEventListener("keydown", handleClick);
+        return () => window.removeEventListener("keydown", handleClick);
     }, [content]);
 
-    const sectionNavItems = isSameUser() ? ['User Info'] : ['User Info', 'Mutual Servers', 'Mutual Friends'];
+    const sectionNavItems = isSameUser() ? ["User Info"] : ["User Info", "Mutual Servers", "Mutual Friends"];
     if (!user) return <></>;
 
     return (
@@ -83,15 +83,15 @@ export const UserProfile = ({ content }: any): ReactElement => {
             className={styles.cardContainer}
             style={
                 {
-                    '--card-primary-color': user.primaryColor,
-                    '--card-accent-color': user.accentColor,
-                    '--card-overlay-color': 'hsla(0, 0%, 0%, 0.6)',
-                    '--card-background-color': 'hsla(0, 0%, 0%, 0.45)',
-                    '--card-background-hover': 'hsla(0, 0%, 100%, 0.16)',
-                    '--card-note-background': 'hsla(0, 0%, 0%, 0.3)',
-                    '--card-divider-color': 'hsla(0, 0%, 100%, 0.24)',
-                    '--card-button-color': getButtonColor(user.primaryColor, user.accentColor as string),
-                    '--card-border-color': user.primaryColor,
+                    "--card-primary-color": user.primaryColor,
+                    "--card-accent-color": user.accentColor,
+                    "--card-overlay-color": "hsla(0, 0%, 0%, 0.6)",
+                    "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
+                    "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
+                    "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
+                    "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
+                    "--card-button-color": getButtonColor(user.primaryColor, user.accentColor as string),
+                    "--card-border-color": user.primaryColor,
                 } as React.CSSProperties
             }
         >
@@ -99,11 +99,11 @@ export const UserProfile = ({ content }: any): ReactElement => {
                 {isSameUser() && (
                     <div
                         className={styles.editProfileButton}
-                        aria-label='Edit Profile'
-                        role='button'
+                        aria-label="Edit Profile"
+                        role="button"
                         onMouseEnter={(e) => {
                             setTooltip({
-                                text: 'Edit Profile',
+                                text: "Edit Profile",
                                 element: e.currentTarget,
                             });
                         }}
@@ -111,18 +111,18 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         onClick={() => {
                             setLayers({
                                 settings: {
-                                    type: 'USER_PROFILE',
+                                    type: "USER_PROFILE",
                                     setNull: true,
                                 },
                             });
                             setTooltip(null);
                             setShowSettings({
-                                type: 'Profiles',
+                                type: "Profiles",
                             });
                         }}
                     >
                         <Icon
-                            name='edit'
+                            name="edit"
                             size={24}
                         />
                     </div>
@@ -130,45 +130,45 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
                 <svg
                     className={styles.cardBanner}
-                    viewBox={`0 0 600 ${user.banner ? '212' : '106'}`}
+                    viewBox={`0 0 600 ${user.banner ? "212" : "106"}`}
                     style={{
-                        minHeight: user.banner ? '212px' : '106px',
-                        minWidth: '600px',
+                        minHeight: user.banner ? "212px" : "106px",
+                        minWidth: "600px",
                     }}
                 >
-                    <mask id='card-banner-mask'>
+                    <mask id="card-banner-mask">
                         <rect
-                            fill='white'
-                            x='0'
-                            y='0'
-                            width='100%'
-                            height='100%'
+                            fill="white"
+                            x="0"
+                            y="0"
+                            width="100%"
+                            height="100%"
                         />
                         <circle
-                            fill='black'
-                            cx='82'
+                            fill="black"
+                            cx="82"
                             cy={user.banner ? 207 : 101}
-                            r='68'
+                            r="68"
                         />
                     </mask>
 
                     <foreignObject
-                        x='0'
-                        y='0'
-                        width='100%'
-                        height='100%'
-                        overflow='visible'
-                        mask='url(#card-banner-mask)'
+                        x="0"
+                        y="0"
+                        width="100%"
+                        height="100%"
+                        overflow="visible"
+                        mask="url(#card-banner-mask)"
                     >
                         <div>
                             <div
                                 className={styles.cardBannerBackground}
                                 style={{
-                                    backgroundColor: !user.banner ? user.primaryColor : '',
+                                    backgroundColor: !user.banner ? user.primaryColor : "",
                                     backgroundImage: user.banner
                                         ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
-                                        : '',
-                                    height: user.banner ? '212px' : '106px',
+                                        : "",
+                                    height: user.banner ? "212px" : "106px",
                                 }}
                             />
                         </div>
@@ -177,7 +177,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
                 <div
                     className={styles.cardAvatar}
-                    style={{ top: user.banner ? '151px' : '46px' }}
+                    style={{ top: user.banner ? "151px" : "46px" }}
                 >
                     <div
                         className={styles.avatarImage}
@@ -190,23 +190,23 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         className={styles.cardAvatarStatus}
                         onMouseEnter={(e) => {
                             setTooltip({
-                                text: translateCap(user.status ?? 'Offline'),
+                                text: translateCap(user.status ?? "Offline"),
                                 element: e.currentTarget,
                                 gap: 5,
                             });
                         }}
                         onMouseLeave={() => setTooltip(null)}
                     >
-                        <div style={{ backgroundColor: 'black' }} />
+                        <div style={{ backgroundColor: "black" }} />
 
                         <svg>
                             <rect
-                                height='100%'
-                                width='100%'
+                                height="100%"
+                                width="100%"
                                 rx={12}
                                 ry={12}
-                                fill={colors[user.status ?? 'OFFLINE']}
-                                mask={`url(#${masks[user.status ?? 'OFFLINE']})`}
+                                fill={colors[user.status ?? "OFFLINE"]}
+                                mask={`url(#${masks[user.status ?? "OFFLINE"]})`}
                             />
                         </svg>
                     </div>
@@ -215,7 +215,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                 <div className={styles.cardBadges}></div>
 
                 <div className={styles.cardBody}>
-                    <div className={styles.cardSection + ' ' + styles.name}>
+                    <div className={styles.cardSection + " " + styles.name}>
                         <h4>{user.displayName}</h4>
                         <div>{user.username}</div>
                     </div>
@@ -235,10 +235,10 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         key={index}
                                         style={{
                                             color:
-                                                activeNavItem === index ? 'var(--foreground-1)' : 'var(--foreground-3)',
+                                                activeNavItem === index ? "var(--foreground-1)" : "var(--foreground-3)",
                                             borderColor:
-                                                activeNavItem === index ? 'var(--foreground-1)' : 'transparent',
-                                            cursor: activeNavItem === index ? 'default' : 'pointer',
+                                                activeNavItem === index ? "var(--foreground-1)" : "transparent",
+                                            cursor: activeNavItem === index ? "default" : "pointer",
                                         }}
                                         onClick={() => setActiveNavItem(index)}
                                     >
@@ -252,12 +252,12 @@ export const UserProfile = ({ content }: any): ReactElement => {
                     <div
                         className={
                             styles.scrollContainer +
-                            ' scrollbar ' +
+                            " scrollbar " +
                             (activeNavItem === 2 && mutualFriends.length > 0
                                 ? styles.margin
                                 : activeNavItem === 0
                                 ? styles.padding
-                                : '')
+                                : "")
                         }
                     >
                         {activeNavItem === 0 && (
@@ -272,10 +272,10 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                 <div className={styles.cardSection}>
                                     <h4>Chat App Member Since</h4>
                                     <div>
-                                        {new Intl.DateTimeFormat('en-US', {
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: 'numeric',
+                                        {new Intl.DateTimeFormat("en-US", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
                                         }).format(new Date(user.createdAt))}
                                     </div>
                                 </div>
@@ -284,13 +284,13 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                     <h4>Note</h4>
                                     <div>
                                         <textarea
-                                            className={styles.cardInput + ' scrollbar'}
+                                            className={styles.cardInput + " scrollbar"}
                                             ref={noteRef}
                                             value={note}
-                                            placeholder='Click to add a note'
-                                            aria-label='Note'
+                                            placeholder="Click to add a note"
+                                            aria-label="Note"
                                             maxLength={256}
-                                            autoCorrect='off'
+                                            autoCorrect="off"
                                             onInput={(e) => {
                                                 setNote(e.currentTarget.value);
                                             }}
@@ -317,7 +317,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         />
                                     ))
                                 ) : (
-                                    <div className={styles.empty + ' ' + styles.noFriends}>
+                                    <div className={styles.empty + " " + styles.noFriends}>
                                         <div />
                                         <div>No friends in common</div>
                                     </div>
@@ -447,7 +447,7 @@ const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
             onClick={() => {
                 setLayers({
                     settings: {
-                        type: 'USER_PROFILE',
+                        type: "USER_PROFILE",
                     },
                     content: {
                         user: friend,
@@ -457,11 +457,11 @@ const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
             onContextMenu={(e) => {
                 setLayers({
                     settings: {
-                        type: 'POPUP',
+                        type: "POPUP",
                         event: e,
                     },
                     content: {
-                        type: 'USER',
+                        type: "USER",
                         user: friend,
                     },
                 });
@@ -472,7 +472,7 @@ const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
                     src={friend.avatar}
                     alt={friend.username}
                     size={40}
-                    status={friend.status ?? 'Offline'}
+                    status={friend.status ?? "Offline"}
                 />
             </div>
 

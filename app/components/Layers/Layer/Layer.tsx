@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, ReactElement, KeyboardEvent } from "react";
+import { useEffect, useState, useCallback, ReactElement } from "react";
 import { Menu, Popup, UserCard, UserProfile } from "@components";
 import { useLayers } from "@/lib/store";
 
-export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => {
+export const Layers = (): ReactElement => {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
@@ -32,7 +32,7 @@ export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => 
                 position: "fixed",
                 width: "100dvw",
                 height: "100dvh",
-                zIndex: 1000,
+                zIndex: 999,
                 pointerEvents: darkBackground ? "all" : "none",
                 visibility: shouldDisplay ? "visible" : "hidden",
             }}
@@ -42,7 +42,7 @@ export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => 
                     position: "fixed",
                     width: "100dvw",
                     height: "100dvh",
-                    zIndex: 1001,
+                    zIndex: 1000,
                     pointerEvents: darkBackground ? "all" : "none",
                     backgroundColor: darkBackground ? "rgba(0, 0, 0, 0.80)" : "",
                 }}
@@ -66,7 +66,6 @@ export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => 
                                 key={index}
                                 settings={layers[layer][index]?.settings}
                                 content={layers[layer][index]?.content}
-                                friends={friends}
                             />
                         );
                     });
@@ -74,9 +73,9 @@ export const Layers = ({ friends }: { friends: TCleanUser[] }): ReactElement => 
                     return (
                         <Layer
                             key={layer}
+                            // @ts-expect-error
                             settings={layers[layer]?.settings}
                             content={layers[layer]?.content}
-                            friends={friends}
                         />
                     );
                 }
@@ -136,16 +135,14 @@ type TLayer = {
         gap?: number;
     };
     content: TMenu | TPopup | TUserCard | TUserProfile;
-    friends: TCleanUser[];
 };
 
-const Layer = ({ settings, content, friends }: TLayer) => {
+const Layer = ({ settings, content }: TLayer) => {
     const [positions, setPositions] = useState<TPositions>({});
     const [dimensions, setDimensions] = useState<TDimensions>(null);
     const [currentNode, setCurrentNode] = useState<TNode>(null);
 
     const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
 
     const firstSide = settings?.firstSide;
     const secondSide = settings?.secondSide;
@@ -334,11 +331,13 @@ const Layer = ({ settings, content, friends }: TLayer) => {
     }, [currentNode, settings?.type]);
 
     const index =
-        settings?.type === "POPUP"
+        settings?.type === "USER_PROFILE" || settings?.type === "USER_CARD"
+            ? 1001
+            : settings?.type === "POPUP"
             ? content?.type === "PINNED_MESSAGES" || content?.type === "CREATE_DM"
-                ? 1000
-                : 1002
-            : 1003;
+                ? 1002
+                : 1003
+            : 1004;
 
     return (
         <div
@@ -352,10 +351,10 @@ const Layer = ({ settings, content, friends }: TLayer) => {
             }}
             onMouseDown={(e) => e.stopPropagation()}
         >
-            {settings?.type === "MENU" && <Menu content={content} friends={friends} />}
-            {settings?.type === "POPUP" && <Popup content={content} friends={friends} />}
-            {settings?.type === "USER_CARD" && <UserCard content={content} friends={friends} />}
-            {settings?.type === "USER_PROFILE" && <UserProfile content={content} friends={friends} />}
+            {settings?.type === "MENU" && <Menu content={content} />}
+            {settings?.type === "POPUP" && <Popup content={content} />}
+            {settings?.type === "USER_CARD" && <UserCard content={content} />}
+            {settings?.type === "USER_PROFILE" && <UserProfile content={content} />}
         </div>
     );
 };

@@ -1,23 +1,24 @@
-'use client';
+"use client";
 
-import { FixedMessage, Icon, Avatar } from '@components';
-import useContextHook from '@/hooks/useContextHook';
-import { useEffect, useState, useRef } from 'react';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import { useRouter } from 'next/navigation';
-import styles from './Popout.module.css';
-import { useLayers } from '@/lib/store';
+import { FixedMessage, Icon, Avatar } from "@components";
+import { useEffect, useState, useRef } from "react";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useData, useLayers } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import styles from "./Popout.module.css";
 
-export const Popout = ({ content, friends }: any) => {
+export const Popout = ({ content }: any) => {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
-    const [search, setSearch] = useState<string>('');
+    const [search, setSearch] = useState<string>("");
     const [chosen, setChosen] = useState<TCleanUser[]>([]);
     const [copied, setCopied] = useState<boolean>(false);
     const [placesLeft, setPlacesLeft] = useState<number>(9);
     const [pinned, setPinned] = useState<TMessage[]>([]);
 
     const setLayers = useLayers((state) => state.setLayers);
-    const { auth }: any = useContextHook({ context: 'auth' });
+    const user = useData((state) => state.user) as TUser;
+    const channels = useData((state) => state.channels);
+    const friends = useData((state) => state.friends);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
@@ -25,10 +26,10 @@ export const Popout = ({ content, friends }: any) => {
     const router = useRouter();
 
     useEffect(() => {
-        if (content.type === 'PINNED_MESSAGES') {
+        if (content.type === "PINNED_MESSAGES") {
             const fetchPinned = async () => {
                 const response = await sendRequest({
-                    query: 'CHANNEL_PINNED_MESSAGES',
+                    query: "CHANNEL_PINNED_MESSAGES",
                     params: {
                         channelId: content.channel.id,
                     },
@@ -40,28 +41,22 @@ export const Popout = ({ content, friends }: any) => {
             fetchPinned();
         } else {
             if (content.channel) {
-                const filteredFriends = friends.filter((friend: any) => {
-                    return !content.channel.recipientIds.includes(friend.id);
-                });
-
-                setFilteredList(filteredFriends);
+                const filtered = friends.filter((friend) => !content.channel.recipientIds.includes(friend.id));
+                setFilteredList(filtered);
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
                 setFilteredList(friends);
                 setPlacesLeft(9);
             }
         }
-    }, [content, auth.user]);
+    }, [content]);
 
     useEffect(() => {
-        if (content.type === 'PINNED_MESSAGES') return;
+        if (content.type === "PINNED_MESSAGES") return;
 
         if (content.channel) {
-            if (chosen?.length === 0) {
-                setPlacesLeft(10 - content.channel.recipientIds.length);
-            } else {
-                setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
-            }
+            if (chosen?.length === 0) setPlacesLeft(10 - content.channel.recipientIds.length);
+            else setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
         } else {
             if (chosen.length === 0) setPlacesLeft(9);
             else setPlacesLeft(9 - chosen.length);
@@ -69,66 +64,52 @@ export const Popout = ({ content, friends }: any) => {
     }, [chosen]);
 
     useEffect(() => {
-        if (content?.pinned || !friends) return;
+        if (content.pinned) return;
 
-        if (content?.channel) {
-            const filteredFriends = friends?.filter((friend: any) => {
-                return !content?.channel.recipientIds.includes(friend.id);
-            });
+        if (content.channel) {
+            const filtered = friends.filter((friend: any) => !content.channel.recipientIds.includes(friend.id));
 
-            if (search) {
-                setFilteredList(
-                    filteredFriends?.filter((user: any) => {
-                        return user.username.toLowerCase().includes(search.toLowerCase());
-                    })
-                );
-            } else {
-                setFilteredList(filteredFriends);
-            }
+            if (search)
+                setFilteredList(filtered.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
+            else setFilteredList(filtered);
         } else {
-            if (search) {
-                setFilteredList(
-                    friends?.filter((user: any) => {
-                        return user.username.toLowerCase().includes(search.toLowerCase());
-                    })
-                );
-            } else {
-                setFilteredList(friends);
-            }
+            if (search)
+                setFilteredList(friends.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
+            else setFilteredList(friends);
         }
     }, [search, friends]);
 
     const createChan = async () => {
         const recipients = chosen.map((user) => user.id);
 
-        if (content?.channel) {
+        if (content.channel) {
             if (content.channel.type === 0) {
                 const currentRecipient = content.channel.recipientIds.find(
-                    (recipient: string) => recipient !== auth.user.id
+                    (recipient: string) => recipient !== user.id
                 );
 
                 sendRequest({
-                    query: 'CHANNEL_CREATE',
+                    query: "CHANNEL_CREATE",
                     data: {
                         recipients: [currentRecipient, ...recipients],
                     },
                 });
             } else if (content.channel.type === 1) {
                 const channelExists = (recipients: string[]) => {
-                    const channel = auth.user.channels.find((channel: TChannel) => {
+                    const channel = channels.find((channel) => {
                         return (
                             channel.recipients.length === recipients.length &&
                             channel.recipientIds.every((recipient: string) => recipients.includes(recipient))
                         );
                     });
 
-                    if (channel) return channel;
+                    return channel;
                 };
 
                 const addUsers = () => {
                     recipients.forEach((recipient) => {
                         sendRequest({
-                            query: 'CHANNEL_RECIPIENT_ADD',
+                            query: "CHANNEL_RECIPIENT_ADD",
                             params: {
                                 channelId: content?.channel.id,
                                 recipientId: recipient,
@@ -142,10 +123,10 @@ export const Popout = ({ content, friends }: any) => {
                 if (channel) {
                     setLayers({
                         settings: {
-                            type: 'POPUP',
+                            type: "POPUP",
                         },
                         content: {
-                            type: 'CHANNEL_EXISTS',
+                            type: "CHANNEL_EXISTS",
                             channel: channel,
                             addUsers: addUsers,
                         },
@@ -156,7 +137,7 @@ export const Popout = ({ content, friends }: any) => {
             }
         } else {
             sendRequest({
-                query: 'CHANNEL_CREATE',
+                query: "CHANNEL_CREATE",
                 data: {
                     recipients: recipients,
                 },
@@ -164,7 +145,7 @@ export const Popout = ({ content, friends }: any) => {
         }
     };
 
-    if (content.type === 'PINNED_MESSAGES') {
+    if (content.type === "PINNED_MESSAGES") {
         return (
             <div
                 className={styles.pinContainer}
@@ -174,7 +155,7 @@ export const Popout = ({ content, friends }: any) => {
                     <h1>Pinned Messages</h1>
                 </div>
 
-                <div className='scrollbar'>
+                <div className="scrollbar">
                     {!pinned || pinned.length === 0 ? (
                         <div className={styles.noPinnedContent}>
                             <div />
@@ -204,7 +185,17 @@ export const Popout = ({ content, friends }: any) => {
                         <div>
                             <div>Protip:</div>
 
-                            <div>You and {} can pin a message from its cog content.</div>
+                            <div>
+                                {content.channel.type === 0 &&
+                                    `You and ${
+                                        content.channel.recipients.find(
+                                            (recipient: TCleanUser) => recipient.id !== user.id
+                                        ).username
+                                    } can pin a message from its cog menu.`}
+                                {content.channel.type === 1 && "Any group member can pin a message from its cog menu."}
+                                {content.channel.type === 2 &&
+                                    "Users with 'Manage Messages' can pin from the cog menu."}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -222,8 +213,8 @@ export const Popout = ({ content, friends }: any) => {
                         <>
                             <div>
                                 {placesLeft > 0
-                                    ? `You can add ${placesLeft} more friend${placesLeft > 1 ? 's' : ''}.`
-                                    : 'This group has a 10 member limit.'}
+                                    ? `You can add ${placesLeft} more friend${placesLeft > 1 ? "s" : ""}.`
+                                    : "This group has a 10 member limit."}
                             </div>
 
                             <div className={styles.input}>
@@ -239,7 +230,7 @@ export const Popout = ({ content, friends }: any) => {
                                             >
                                                 {friend.username}
                                                 <Icon
-                                                    name='close'
+                                                    name="close"
                                                     size={12}
                                                 />
                                             </div>
@@ -247,21 +238,21 @@ export const Popout = ({ content, friends }: any) => {
 
                                         <input
                                             ref={inputRef}
-                                            type='text'
+                                            type="text"
                                             placeholder={
                                                 chosen?.length
-                                                    ? 'Find or start a conversation'
-                                                    : 'Type the username of a friend'
+                                                    ? "Find or start a conversation"
+                                                    : "Type the username of a friend"
                                             }
-                                            value={search || ''}
-                                            spellCheck='false'
-                                            role='combobox'
-                                            aria-autocomplete='list'
-                                            aria-expanded='true'
-                                            aria-haspopup='true'
+                                            value={search || ""}
+                                            spellCheck="false"
+                                            role="combobox"
+                                            aria-autocomplete="list"
+                                            aria-expanded="true"
+                                            aria-haspopup="true"
                                             onChange={(e) => setSearch(e.target.value)}
                                             onKeyDown={(e) => {
-                                                if (e.key === 'Backspace' && !search) {
+                                                if (e.key === "Backspace" && !search) {
                                                     setChosen(chosen?.slice(0, -1));
                                                 }
                                             }}
@@ -274,13 +265,13 @@ export const Popout = ({ content, friends }: any) => {
                                 {content.channel?.type === 1 && (
                                     <div className={styles.addButton}>
                                         <button
-                                            className={chosen?.length ? 'blue' : 'blue disabled'}
+                                            className={chosen?.length ? "blue" : "blue disabled"}
                                             onClick={() => {
                                                 if (chosen?.length) {
                                                     createChan();
                                                     setLayers({
                                                         settings: {
-                                                            type: 'POPUP',
+                                                            type: "POPUP",
                                                             setNull: true,
                                                         },
                                                     });
@@ -299,21 +290,21 @@ export const Popout = ({ content, friends }: any) => {
                         onClick={() =>
                             setLayers({
                                 settings: {
-                                    type: 'POPUP',
+                                    type: "POPUP",
                                     setNull: true,
                                 },
                             })
                         }
                     >
                         <svg
-                            viewBox='0 0 24 24'
-                            width='24'
-                            height='24'
-                            role='image'
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            role="image"
                         >
                             <path
-                                fill='currentColor'
-                                d='M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z'
+                                fill="currentColor"
+                                d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
                             />
                         </svg>
                     </button>
@@ -321,7 +312,7 @@ export const Popout = ({ content, friends }: any) => {
 
                 {friends.length > 0 && filteredList.length > 0 && (
                     <>
-                        <div className={styles.scroller + ' scrollbar'}>
+                        <div className={styles.scroller + " scrollbar"}>
                             {filteredList.map((friend) => (
                                 <div
                                     key={friend.id}
@@ -332,7 +323,7 @@ export const Popout = ({ content, friends }: any) => {
                                         } else {
                                             if (placesLeft > 0) {
                                                 setChosen([...chosen, friend]);
-                                                setSearch('');
+                                                setSearch("");
                                             }
                                         }
                                     }}
@@ -353,9 +344,9 @@ export const Popout = ({ content, friends }: any) => {
                                             <div>
                                                 {chosen?.includes(friend) && (
                                                     <Icon
-                                                        name='accept'
+                                                        name="accept"
                                                         size={16}
-                                                        fill='var(--accent-1)'
+                                                        fill="var(--accent-1)"
                                                     />
                                                 )}
                                             </div>
@@ -375,7 +366,7 @@ export const Popout = ({ content, friends }: any) => {
                                     <div>
                                         <input
                                             ref={inputLinkRef}
-                                            type='text'
+                                            type="text"
                                             readOnly
                                             value={`https://chat-app.mart1d4.com/${content.channel.id}`}
                                             onClick={() => inputLinkRef.current?.select()}
@@ -383,7 +374,7 @@ export const Popout = ({ content, friends }: any) => {
                                     </div>
 
                                     <button
-                                        className={copied ? 'green' : 'blue'}
+                                        className={copied ? "green" : "blue"}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
                                                 `https://chat-app.mart1d4.com/${content.channel.id}`
@@ -392,7 +383,7 @@ export const Popout = ({ content, friends }: any) => {
                                             setTimeout(() => setCopied(false), 1000);
                                         }}
                                     >
-                                        {copied ? 'Copied' : 'Copy'}
+                                        {copied ? "Copied" : "Copy"}
                                     </button>
                                 </div>
 
@@ -401,12 +392,12 @@ export const Popout = ({ content, friends }: any) => {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className={'blue ' + (content.channel && !chosen.length ? 'disabled' : '')}
+                                    className={"blue " + (content.channel && !chosen.length ? "disabled" : "")}
                                     onClick={() => {
                                         if (content?.channel && !chosen.length) return;
                                         setLayers({
                                             settings: {
-                                                type: 'POPUP',
+                                                type: "POPUP",
                                                 setNull: true,
                                             },
                                         });
@@ -425,15 +416,15 @@ export const Popout = ({ content, friends }: any) => {
                         <div
                             className={styles.noFriends}
                             style={{
-                                padding: '0 20px',
-                                marginBottom: '20px',
+                                padding: "0 20px",
+                                marginBottom: "20px",
                             }}
                         >
                             <div
                                 style={{
                                     backgroundImage: `url(https://ucarecdn.com/501ad905-28df-4c05-ae41-de0499966f4f/)`,
-                                    width: '85px',
-                                    height: '85px',
+                                    width: "85px",
+                                    height: "85px",
                                 }}
                             />
 
@@ -450,7 +441,7 @@ export const Popout = ({ content, friends }: any) => {
                                     <div>
                                         <input
                                             ref={inputLinkRef}
-                                            type='text'
+                                            type="text"
                                             readOnly
                                             value={`https://chat-app.mart1d4.com/${content.channel.id}`}
                                             onClick={() => inputLinkRef.current?.select()}
@@ -458,7 +449,7 @@ export const Popout = ({ content, friends }: any) => {
                                     </div>
 
                                     <button
-                                        className={copied ? 'green' : 'blue'}
+                                        className={copied ? "green" : "blue"}
                                         onClick={() => {
                                             navigator.clipboard.writeText(
                                                 `https://chat-app.mart1d4.com/${content.channel.id}`
@@ -467,7 +458,7 @@ export const Popout = ({ content, friends }: any) => {
                                             setTimeout(() => setCopied(false), 1000);
                                         }}
                                     >
-                                        {copied ? 'Copied' : 'Copy'}
+                                        {copied ? "Copied" : "Copy"}
                                     </button>
                                 </div>
 
@@ -476,12 +467,12 @@ export const Popout = ({ content, friends }: any) => {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className='blue'
+                                    className="blue"
                                     onClick={() => {
                                         if (chosen.length) {
                                             setLayers({
                                                 settings: {
-                                                    type: 'POPUP',
+                                                    type: "POPUP",
                                                     setNull: true,
                                                 },
                                             });
@@ -503,16 +494,16 @@ export const Popout = ({ content, friends }: any) => {
                         <div>You don't have any friends to add!</div>
 
                         <button
-                            className='green'
+                            className="green"
                             onClick={() => {
                                 setLayers({
                                     settings: {
-                                        type: 'POPUP',
+                                        type: "POPUP",
                                         setNull: true,
                                     },
                                 });
-                                localStorage.setItem('friends-tab', 'add');
-                                router.push('/channels/me');
+                                localStorage.setItem("friends-tab", "add");
+                                router.push("/channels/me");
                             }}
                         >
                             Add Friend

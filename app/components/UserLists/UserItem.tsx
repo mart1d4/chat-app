@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import useContextHook from '@/hooks/useContextHook';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import { ReactElement, useRef } from 'react';
-import { translateCap } from '@/lib/strings';
-import { useRouter } from 'next/navigation';
-import styles from './UserItem.module.css';
-import { Avatar, Icon } from '@components';
-import { useLayers, useTooltip } from '@/lib/store';
+import useContextHook from "@/hooks/useContextHook";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { ReactElement, useRef } from "react";
+import { translateCap } from "@/lib/strings";
+import { useRouter } from "next/navigation";
+import styles from "./UserItem.module.css";
+import { Avatar, Icon } from "@components";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 
 type Props = {
     content: string;
@@ -18,38 +18,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: 'auth' });
     const { sendRequest } = useFetchHelper();
-
-    const router = useRouter();
     const liRef = useRef(null);
-
-    const channelExists = (userId: string) => {
-        const channel = auth.user.channels.find((channel: any) => {
-            return (
-                channel.recipients.length === 2 &&
-                ((channel.recipientIds[0] === userId && channel.recipientIds[1] === auth.user.id) ||
-                    (channel.recipientIds[0] === auth.user.id && channel.recipientIds[1] === userId))
-            );
-        });
-
-        if (channel) return channel.id;
-        else return false;
-    };
 
     return (
         <li
             ref={liRef}
             className={
                 layers.MENU?.content.refElement === liRef.current
-                    ? styles.liContainer + ' ' + styles.active
+                    ? styles.liContainer + " " + styles.active
                     : styles.liContainer
             }
             onClick={() => {
-                if (!['all', 'online'].includes(content)) return;
+                if (!["all", "online"].includes(content)) return;
 
                 sendRequest({
-                    query: 'CHANNEL_CREATE',
+                    query: "CHANNEL_CREATE",
                     data: { recipients: [user.id] },
                 });
             }}
@@ -57,11 +41,11 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                 e.preventDefault();
                 setLayers({
                     settings: {
-                        type: 'MENU',
+                        type: "MENU",
                         event: e,
                     },
                     content: {
-                        type: 'USER',
+                        type: "USER",
                         user: user,
                         refElement: liRef.current,
                     },
@@ -71,7 +55,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                 if (layers.MENU?.content.refElement && layers.MENU?.content.user !== user) {
                     setLayers({
                         settings: {
-                            type: 'MENU',
+                            type: "MENU",
                             setNull: true,
                         },
                     });
@@ -85,7 +69,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             src={user.avatar}
                             alt={user.username}
                             size={32}
-                            status={content !== 'pending' && content !== 'blocked' && user.status}
+                            status={content !== "pending" && content !== "blocked" && user.status}
                         />
                     </div>
                     <div className={styles.text}>
@@ -93,12 +77,12 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
                         <p className={styles.textStatus}>
                             <span>
-                                {user?.req === 'Sent'
-                                    ? 'Outgoing Friend Request'
-                                    : user?.req === 'Received'
-                                    ? 'Incoming Friend Request'
-                                    : content === 'blocked'
-                                    ? 'Blocked'
+                                {user?.req === "Sent"
+                                    ? "Outgoing Friend Request"
+                                    : user?.req === "Received"
+                                    ? "Incoming Friend Request"
+                                    : content === "blocked"
+                                    ? "Blocked"
                                     : user.customStatus
                                     ? user.customStatus
                                     : translateCap(user.status)}
@@ -108,19 +92,19 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                 </div>
 
                 <div className={styles.actions}>
-                    {(content === 'all' || content === 'online') && (
+                    {(content === "all" || content === "online") && (
                         <>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     sendRequest({
-                                        query: 'CHANNEL_CREATE',
+                                        query: "CHANNEL_CREATE",
                                         data: { recipients: [user.id] },
                                     });
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'Message',
+                                        text: "Message",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -128,7 +112,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon
-                                    name='message'
+                                    name="message"
                                     size={20}
                                 />
                             </button>
@@ -138,11 +122,11 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     e.stopPropagation();
                                     setLayers({
                                         settings: {
-                                            type: 'MENU',
+                                            type: "MENU",
                                             event: e,
                                         },
                                         content: {
-                                            type: 'USER_SMALL',
+                                            type: "USER_SMALL",
                                             user: user,
                                             userlist: true,
                                             refElement: liRef.current,
@@ -151,7 +135,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: 'More',
+                                        text: "More",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -159,22 +143,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon
-                                    name='more'
+                                    name="more"
                                     size={20}
                                 />
                             </button>
                         </>
                     )}
 
-                    {content === 'pending' && (
+                    {content === "pending" && (
                         <>
-                            {user.req === 'Received' && (
+                            {user.req === "Received" && (
                                 <button
                                     className={styles.buttonAccept}
                                     onClick={async (e) => {
                                         e.stopPropagation();
                                         sendRequest({
-                                            query: 'ADD_FRIEND',
+                                            query: "ADD_FRIEND",
                                             params: {
                                                 username: user.username,
                                             },
@@ -182,7 +166,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     }}
                                     onMouseEnter={(e) =>
                                         setTooltip({
-                                            text: 'Accept',
+                                            text: "Accept",
                                             element: e.currentTarget,
                                             gap: 3,
                                         })
@@ -190,7 +174,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     onMouseLeave={() => setTooltip(null)}
                                 >
                                     <Icon
-                                        name='accept'
+                                        name="accept"
                                         size={20}
                                     />
                                 </button>
@@ -201,7 +185,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 onClick={async (e) => {
                                     e.stopPropagation();
                                     sendRequest({
-                                        query: 'REMOVE_FRIEND',
+                                        query: "REMOVE_FRIEND",
                                         params: {
                                             username: user.username,
                                         },
@@ -209,7 +193,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 }}
                                 onMouseEnter={(e) =>
                                     setTooltip({
-                                        text: user.req === 'Sent' ? 'Cancel' : 'Ignore',
+                                        text: user.req === "Sent" ? "Cancel" : "Ignore",
                                         element: e.currentTarget,
                                         gap: 3,
                                     })
@@ -217,19 +201,19 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon
-                                    name='cancel'
+                                    name="cancel"
                                     size={20}
                                 />
                             </button>
                         </>
                     )}
 
-                    {content === 'blocked' && (
+                    {content === "blocked" && (
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 sendRequest({
-                                    query: 'UNBLOCK_USER',
+                                    query: "UNBLOCK_USER",
                                     params: {
                                         username: user.username,
                                     },
@@ -237,7 +221,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             }}
                             onMouseEnter={(e) =>
                                 setTooltip({
-                                    text: 'Unblock',
+                                    text: "Unblock",
                                     element: e.currentTarget,
                                     gap: 3,
                                 })
@@ -245,7 +229,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             onMouseLeave={() => setTooltip(null)}
                         >
                             <Icon
-                                name='userDelete'
+                                name="userDelete"
                                 size={20}
                             />
                         </button>

@@ -21,7 +21,7 @@
 }
 
 .messageContainer.reply::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
@@ -113,7 +113,7 @@
 
 .messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp) {
     font-weight: 300;
-    font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     user-select: text;
     font-size: 1rem;
     line-height: 1.375rem;
@@ -207,7 +207,7 @@
 }
 
 .messageReply::before {
-    content: '';
+    content: "";
     box-sizing: border-box;
     display: block;
     position: absolute;
@@ -355,6 +355,10 @@
     color: var(--foreground-3);
 }
 
+.buttons > div.red {
+    color: var(--error-1) !important;
+}
+
 .buttons > div:active > svg {
     transform: translateY(0.5px);
 }
@@ -484,7 +488,7 @@
 }
 
 .image .spoilerButton {
-    font-family: 'gg sans';
+    font-family: "gg sans";
     height: 31px;
     display: flex;
     align-items: center;

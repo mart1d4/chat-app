@@ -1,6 +1,6 @@
 import useContextHook from "./useContextHook";
 import { useRouter } from "next/navigation";
-import { useLayers } from "@/lib/store";
+import { useData, useLayers } from "@/lib/store";
 
 type TQuery =
     | "SEND_MESSAGE"
@@ -18,6 +18,7 @@ type TQuery =
     | "CHANNEL_DELETE"
     | "CHANNEL_RECIPIENT_ADD"
     | "CHANNEL_RECIPIENT_REMOVE"
+    | "CHANNEL_RECIPIENT_OWNER"
     | "CHANNEL_PINNED_MESSAGES"
     | "GUILD_CREATE"
     | "GUILD_DELETE"
@@ -52,6 +53,7 @@ const urls = {
     ["CHANNEL_DELETE"]: "/users/me/channels/:channelId",
     ["CHANNEL_RECIPIENT_ADD"]: "/channels/:channelId/recipients/:recipientId",
     ["CHANNEL_RECIPIENT_REMOVE"]: "/channels/:channelId/recipients/:recipientId",
+    ["CHANNEL_RECIPIENT_OWNER"]: "/channels/:channelId/recipients/:recipientId/owner",
     ["CHANNEL_PINNED_MESSAGES"]: "/channels/:channelId/messages/pinned",
     ["GUILD_CREATE"]: "/guilds",
     ["GUILD_DELETE"]: "/guilds/:guildId",
@@ -76,6 +78,7 @@ const methods = {
     ["CHANNEL_DELETE"]: "DELETE",
     ["CHANNEL_RECIPIENT_ADD"]: "PUT",
     ["CHANNEL_RECIPIENT_REMOVE"]: "DELETE",
+    ["CHANNEL_RECIPIENT_OWNER"]: "PUT",
     ["CHANNEL_PINNED_MESSAGES"]: "GET",
     ["GUILD_CREATE"]: "POST",
     ["GUILD_DELETE"]: "DELETE",
@@ -85,29 +88,29 @@ const methods = {
 };
 
 const useFetchHelper = () => {
-    const { auth, setAuth }: any = useContextHook({ context: "auth" });
     const setLayers = useLayers((state) => state.setLayers);
+    const setToken = useData((state) => state.setToken);
+    const channels = useData((state) => state.channels);
+    const token = useData((state) => state.token);
+    const user = useData((state) => state.user) as TUser;
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
-        const channel = auth.channels.find((channel: TChannel) => {
+        return channels.find((channel: TChannel) => {
             return (
                 channel.recipients.length === recipients.length &&
                 channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
                 (searchDM ? channel.type === 0 : true)
             );
         });
-
-        if (channel) return channel;
-        return true;
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
         if (query === "CHANNEL_CREATE" && !skipCheck) {
             const channel =
                 data?.recipients.length === 1
-                    ? channelExists([...data?.recipients, auth.user.id], true)
-                    : channelExists([...data?.recipients, auth.user.id], false);
+                    ? channelExists([...data?.recipients, user.id], true)
+                    : channelExists([...data?.recipients, user.id], false);
             if (channel) {
                 if (channel.type === 0) {
                     return router.push(`/channels/me/${channel.id}`);
@@ -128,7 +131,7 @@ const useFetchHelper = () => {
 
         const headers = {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${auth.token}`,
+            Authorization: `Bearer ${token}`,
         };
 
         const body = JSON.stringify(data ?? {});
@@ -176,19 +179,24 @@ const useFetchHelper = () => {
                 credentials: "include",
             }).then((res) => res.json());
 
-            if (!response.token) {
-                throw new Error("[useFetchHelper] No token found");
-            }
-
-            setAuth((prev: any) => ({
-                ...prev,
-                token: response.token,
-            }));
+            if (!response.token) throw new Error("[useFetchHelper] No token found");
+            setToken(response.token);
 
             const res: any = await resend({ query, params, data, skipCheck });
             return res;
         } else {
             const res = await response.json();
+
+            if (query === "CHANNEL_CREATE" && res.channelId) {
+                router.push(`/channels/me/${res.channelId}`);
+            } else if (query === "GUILD_CREATE" && res.channelId && res.guildId) {
+                router.push(`/channels/${res.guildId}/${res.channelId}`);
+            } else if (query === "GUILD_CHANNEL_CREATE" && res.channelId && res.guildId) {
+                router.push(`/channels/${res.guildId}/${res.channelId}`);
+            } else if ((query === "CHANNEL_DELETE" || query === "CHANNEL_RECIPIENT_REMOVE") && res.channelId) {
+                router.refresh();
+            }
+
             return res;
         }
     };

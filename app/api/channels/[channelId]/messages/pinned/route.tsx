@@ -1,10 +1,10 @@
-import { decryptMessage } from '@/lib/encryption';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import { decryptMessage } from "@/lib/encryption";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
 
     try {
@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                         pinned: { not: null },
                     },
                     orderBy: {
-                        pinned: 'desc',
+                        pinned: "desc",
                     },
                     include: {
                         author: {
@@ -59,6 +59,42 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                                         createdAt: true,
                                     },
                                 },
+                                mentions: {
+                                    select: {
+                                        id: true,
+                                        username: true,
+                                        displayName: true,
+                                        avatar: true,
+                                        banner: true,
+                                        primaryColor: true,
+                                        accentColor: true,
+                                        description: true,
+                                        customStatus: true,
+                                        status: true,
+                                        guildIds: true,
+                                        channelIds: true,
+                                        friendIds: true,
+                                        createdAt: true,
+                                    },
+                                },
+                            },
+                        },
+                        mentions: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
                             },
                         },
                     },
@@ -79,17 +115,17 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel or user not found',
+                    message: "Channel or user not found",
                 },
                 { status: 404 }
             );
         }
 
-        if (!channel.recipientIds.includes(senderId) && !user.guildIds.includes(channel?.guildId || '')) {
+        if (!channel.recipientIds.includes(senderId) && !user.guildIds.includes(channel?.guildId || "")) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not in this channel',
+                    message: "You are not in this channel",
                 },
                 { status: 401 }
             );
@@ -98,11 +134,15 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully retrieved pinned messages',
+                message: "Successfully retrieved pinned messages",
                 pinned: channel.messages.map((message) => {
                     return {
                         ...message,
                         content: decryptMessage(message.content),
+                        messageReference: {
+                            ...message.messageReference,
+                            content: decryptMessage(message.messageReference?.content || ""),
+                        },
                     };
                 }),
             },
@@ -113,7 +153,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

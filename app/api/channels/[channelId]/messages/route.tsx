@@ -1,9 +1,9 @@
+import { decryptMessage, encryptMessage } from "@/lib/encryption";
 import pusher from "@/lib/pusher/server-connection";
 import { removeImage } from "@/lib/api/cdn";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
-import { decryptMessage, encryptMessage } from "@/lib/encryption";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
@@ -134,6 +134,10 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             return {
                 ...message,
                 content: decryptMessage(message.content),
+                messageReference: {
+                    ...message.messageReference,
+                    content: decryptMessage(message.messageReference?.content ?? ""),
+                },
             };
         });
 
@@ -147,7 +151,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
         return NextResponse.json(
             {
                 success: false,
@@ -257,6 +261,16 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 {
                     success: false,
                     message: "Message can't be blank",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (message.content && message.content.length > 4000) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message must be less than 4000 characters",
                 },
                 { status: 400 }
             );
@@ -504,6 +518,10 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             message: {
                 ...messageToSend,
                 content: prevContent,
+                messageReference: {
+                    ...messageToSend?.messageReference,
+                    content: decryptMessage(messageToSend?.messageReference?.content ?? ""),
+                },
             },
         });
 
@@ -515,13 +533,17 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     message: {
                         ...messageToSend,
                         content: prevContent,
+                        messageReference: {
+                            ...messageToSend?.messageReference,
+                            content: decryptMessage(messageToSend?.messageReference?.content ?? ""),
+                        },
                     },
                 },
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
 
         if (message.attachments) {
             message.attachments.forEach(async (attachment: any) => {

@@ -3,25 +3,29 @@
 import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar } from "@components";
 import { useRef, useEffect, useState, ReactElement } from "react";
 import { getChannelName, getRelativeDate } from "@/lib/strings";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
+import { useData, useLayers } from "@/lib/store";
 import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import useLogout from "@/hooks/useLogout";
 import filetypeinfo from "magic-bytes.js";
 import styles from "./Popup.module.css";
-import { useLayers } from "@/lib/store";
 import Image from "next/image";
 
 export const Popup = ({ content, friends }: any): ReactElement => {
     if (content.type === "PINNED_MESSAGES" || content.type === "CREATE_DM") {
-        return <Popout content={content} friends={friends} />;
+        return (
+            <Popout
+                content={content}
+                friends={friends}
+            />
+        );
     }
 
+    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: "auth" });
 
     const { sendRequest } = useFetchHelper();
     const { logout } = useLogout();
@@ -29,7 +33,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     const type = content.type;
 
     const [isLoading, setIsLoading] = useState(false);
-    const [uid, setUID] = useState(auth.user.username);
+    const [uid, setUID] = useState(user.username);
     const [usernameError, setUsernameError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [password, setPassword] = useState("");
@@ -47,7 +51,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
 
     const [join, setJoin] = useState(false);
     const [guildTemplate, setGuildTemplate] = useState<number>(0);
-    const [guildName, setGuildName] = useState(`${auth.user.username}'s server`);
+    const [guildName, setGuildName] = useState(`${user.username}'s server`);
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
 
     const [channelName, setChannelName] = useState("");
@@ -63,7 +67,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         // Reset all state when popup is closed
         if (!layers.POPUP) {
             setIsLoading(false);
-            setUID(auth.user.username);
+            setUID(user.username);
             setPassword("");
             setPassword1("");
             setNewPassword("");
@@ -113,7 +117,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             return setIsLoading(false);
         }
 
-        if (auth.user.username === uid) {
+        if (user.username === uid) {
             setUsernameError("Username cannot be the same as your current username.");
             return setIsLoading(false);
         }
@@ -382,6 +386,20 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 }
             },
         },
+        GROUP_OWNER_CHANGE: {
+            title: "Transfer Group Ownership",
+            buttonColor: "red",
+            buttonText: "Confirm",
+            function: () => {
+                sendRequest({
+                    query: "CHANNEL_RECIPIENT_OWNER",
+                    params: {
+                        channelId: content.channelId,
+                        recipientId: content.recipient.id,
+                    },
+                });
+            },
+        },
     };
 
     useEffect(() => {
@@ -394,14 +412,11 @@ export const Popup = ({ content, friends }: any): ReactElement => {
 
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
+            if (layers.POPUP.length === 0) return;
+
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-
-                if (type === "CREATE_GUILD") {
-                    if (guildTemplate !== 0) return setGuildTemplate(0);
-                    else if (join) return setJoin(false);
-                }
 
                 setLayers({
                     settings: {
@@ -438,10 +453,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             }
         };
 
-        setTimeout(() => {
-            window.addEventListener("keydown", handleKeyDown);
-        }, 100);
-
+        window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [
         layers.POPUP,
@@ -597,23 +609,17 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                             </div>
 
                             <div className={styles.title}>
-                                {content.warning === "FILE_SIZE"
-                                    ? "Your files are too powerful"
-                                    : content.warning === "FILE_TYPE"
-                                    ? "Oops, something went wrong..."
-                                    : content.warning === "UPLOAD_FAILED"
-                                    ? "Upload Failed"
-                                    : "Too many uploads!"}
+                                {content.warning === "FILE_SIZE" && "Your files are too powerful"}
+                                {content.warning === "FILE_TYPE" && "Invalid File Type"}
+                                {content.warning === "FILE_NUMBER" && "Too many uploads!"}
+                                {content.warning === "UPLOAD_FAILED" && "Upload Failed"}
                             </div>
 
                             <div className={styles.description}>
-                                {content.warning === "FILE_SIZE"
-                                    ? "Max file size is 10.00 MB please."
-                                    : content.warning === "FILE_TYPE"
-                                    ? "Unable to process image"
-                                    : content.warning === "UPLOAD_FAILED"
-                                    ? "Something went wrong. Try again later"
-                                    : "You can only upload 10 files at a time."}
+                                {content.warning === "FILE_SIZE" && "Max file size is 10.00 MB please."}
+                                {content.warning === "FILE_TYPE" && "Hm.. I don't think we support that type of file"}
+                                {content.warning === "FILE_NUMBER" && "You can only upload 10 files at a time!"}
+                                {content.warning === "UPLOAD_FAILED" && "Something went wrong. try again later"}
                             </div>
                         </div>
                     </div>
@@ -667,7 +673,12 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                     })
                                 }
                             >
-                                <svg viewBox="0 0 24 24" width="24" height="24" role="image">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                    height="24"
+                                    role="image"
+                                >
                                     <path
                                         fill="currentColor"
                                         d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -692,7 +703,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
 
                                 {content.message && content.type !== "DELETE_ATTACHMENT" && (
                                     <div className={styles.messagesContainer}>
-                                        <FixedMessage message={content.message} pinned={false} />
+                                        <FixedMessage
+                                            message={content.message}
+                                            pinned={false}
+                                        />
                                     </div>
                                 )}
                             </>
@@ -723,17 +737,72 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                             >
                                 <Avatar
                                     src={content.channel.icon}
-                                    alt={getChannelName(content.channel, auth.user.id)}
+                                    alt={getChannelName(content.channel, user.id)}
                                     size={24}
                                 />
 
-                                <span>{getChannelName(content.channel, auth.user.id)}</span>
+                                <span>{getChannelName(content.channel, user.id)}</span>
                                 <span>{getRelativeDate(content.channel.updatedAt, true)}</span>
+                            </div>
+                        )}
+                        {type === "GROUP_OWNER_CHANGE" && (
+                            <div className={styles.ownerChange}>
+                                <svg
+                                    height="16"
+                                    width="80"
+                                    viewBox="0 0 80 16"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <g
+                                        fill="none"
+                                        fill-rule="evenodd"
+                                        opacity=".6"
+                                    >
+                                        <path d="m0 0h80v16h-80z" />
+                                        <g
+                                            stroke="var(--foreground-3)"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="m71 1h4v4.16" />
+                                            <path
+                                                d="m2 1h4v4.16"
+                                                transform="matrix(-1 0 0 1 8 0)"
+                                            />
+                                            <path d="m51 1h4m6 0h4m-24 0h4m-14 0h4m-14 0h4m-23 11v-2m9-9h4" />
+                                            <path d="m72.13 10.474 2.869 3.12 2.631-3.12" />
+                                        </g>
+                                    </g>
+                                </svg>
+
+                                <div className={styles.ownerAvatars}>
+                                    <div>
+                                        <Avatar
+                                            src={user.avatar}
+                                            alt={user.username}
+                                            size={80}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Avatar
+                                            src={content.recipient.avatar}
+                                            alt={content.recipient.username}
+                                            size={80}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>Transfer ownership of this group to {content.recipient.username}?</div>
                             </div>
                         )}
                         {type === "CREATE_GUILD" && !guildTemplate && !join && (
                             <>
-                                <button className={styles.serverTemplate} onClick={() => setGuildTemplate(1)}>
+                                <button
+                                    className={styles.serverTemplate}
+                                    onClick={() => setGuildTemplate(1)}
+                                >
                                     <img
                                         src="https://ucarecdn.com/2699b806-e43b-4fea-aa0b-da3bde1972b4/"
                                         alt="Create My Own"
@@ -757,7 +826,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                         className={styles.serverTemplate}
                                         onClick={() => setGuildTemplate(index + 2)}
                                     >
-                                        <img src={`https://ucarecdn.com/${template[1]}/`} alt={template[0]} />
+                                        <img
+                                            src={`https://ucarecdn.com/${template[1]}/`}
+                                            alt={template[0]}
+                                        />
                                         <div>{template[0]} </div>
                                         <Icon name="arrow" />
                                     </button>
@@ -780,7 +852,11 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                                 }}
                                             />
                                         ) : (
-                                            <Icon name="fileUpload" size={80} viewbox="0 0 80 80" />
+                                            <Icon
+                                                name="fileUpload"
+                                                size={80}
+                                                viewbox="0 0 80 80"
+                                            />
                                         )}
 
                                         <div
@@ -1051,7 +1127,12 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                     <input type="checkbox" />
 
                                     <div style={{ borderColor: isSpoiler ? "var(--accent-border)" : "" }}>
-                                        {isSpoiler && <Icon name="accept" fill="var(--accent-1)" />}
+                                        {isSpoiler && (
+                                            <Icon
+                                                name="accept"
+                                                fill="var(--accent-1)"
+                                            />
+                                        )}
                                     </div>
 
                                     <div>
@@ -1157,7 +1238,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                     </div>
                                 </div>
 
-                                <div className={styles.input} style={{ marginBottom: "20px" }}>
+                                <div
+                                    className={styles.input}
+                                    style={{ marginBottom: "20px" }}
+                                >
                                     <label
                                         htmlFor="newPassword"
                                         style={{

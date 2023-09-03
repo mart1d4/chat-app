@@ -111,7 +111,6 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         const pinnedNotification = await prisma.message.create({
             data: {
                 type: 7,
-                content: encryptMessage(`<@${senderId}> pinned <-${message.id}> to this channel. See all <*pinned>.`),
                 author: {
                     connect: {
                         id: senderId,
@@ -122,17 +121,14 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         id: channelId,
                     },
                 },
-                mentions: {
-                    connect: [{ id: senderId }],
+                messageReference: {
+                    connect: {
+                        id: messageId,
+                    },
                 },
             },
             include: {
                 author: {
-                    select: {
-                        id: true,
-                    },
-                },
-                mentions: {
                     select: {
                         id: true,
                         username: true,
@@ -166,7 +162,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error("[ERROR] /api/channels/[channelId]/messages/[messageId]/pin/route.tsx", error);
         return NextResponse.json(
             {
                 success: false,
@@ -289,7 +285,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error("[ERROR] /api/channels/[channelId]/messages/[messageId]/pin/route.tsx", error);
         return NextResponse.json(
             {
                 success: false,

@@ -1,18 +1,21 @@
-'use client';
+"use client";
 
-import useContextHook from '@/hooks/useContextHook';
-import { useRef, ReactElement } from 'react';
-import { translateCap } from '@/lib/strings';
-import styles from './UserSection.module.css';
-import { Avatar, Icon } from '@components';
-import { useLayers, useTooltip } from '@/lib/store';
+import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
+import useContextHook from "@/hooks/useContextHook";
+import styles from "./UserSection.module.css";
+import { useRef, ReactElement } from "react";
+import { translateCap } from "@/lib/strings";
+import { Avatar, Icon } from "@components";
 
-export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
-    const { setShowSettings }: any = useContextHook({ context: 'layer' });
-    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+export const UserSection = (): ReactElement => {
+    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const setSettings = useSettings((state) => state.setSettings);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+    const settings = useSettings((state) => state.settings);
     const layers = useLayers((state) => state.layers);
+    const user = useData((state) => state.user) as TUser;
+
     const userSection = useRef<HTMLDivElement>(null);
 
     return (
@@ -25,23 +28,23 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                         if (layers.USER_CARD?.settings.element === e.currentTarget) return;
                         setLayers({
                             settings: {
-                                type: 'USER_CARD',
+                                type: "USER_CARD",
                                 element: e.currentTarget,
-                                firstSide: 'TOP',
-                                secondSide: 'RIGHT',
+                                firstSide: "TOP",
+                                secondSide: "RIGHT",
                                 gap: 14,
                             },
                             content: {
                                 user: user,
-                                animation: 'off',
+                                animation: "off",
                             },
                         });
                     }}
                     style={{
                         backgroundColor:
                             layers.USER_CARD?.settings.element === userSection.current
-                                ? 'var(--background-hover-1)'
-                                : '',
+                                ? "var(--background-hover-1)"
+                                : "",
                     }}
                 >
                     <div>
@@ -63,7 +66,7 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                     <button
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: userSettings.microphone ? 'Mute' : 'Unmute',
+                                text: settings.microphone ? "Mute" : "Unmute",
                                 element: e.currentTarget,
                                 gap: 3,
                             })
@@ -71,37 +74,31 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                         onMouseLeave={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
-                                text: !userSettings.microphone ? 'Mute' : 'Unmute',
+                                text: !settings.microphone ? "Mute" : "Unmute",
                                 element: e.currentTarget,
                                 gap: 3,
                             });
 
-                            if (!userSettings?.microphone && !userSettings?.sound) {
-                                setUserSettings({
-                                    ...userSettings,
-                                    microphone: true,
-                                    sound: true,
-                                });
-                                const audio = new Audio('/assets/sounds/undeafen.mp3');
+                            if (!settings.microphone && !settings.sound) {
+                                setSettings("microphone", true);
+                                setSettings("sound", true);
+                                const audio = new Audio("/assets/sounds/undeafen.mp3");
                                 audio.volume = 0.5;
                                 audio.play();
                             } else {
-                                setUserSettings({
-                                    ...userSettings,
-                                    microphone: !userSettings?.microphone,
-                                });
+                                setSettings("microphone", !settings.microphone);
                                 const audio = new Audio(`
-                                    /assets/sounds/${userSettings?.microphone ? 'mute' : 'unmute'}.mp3
+                                    /assets/sounds/${settings.microphone ? "mute" : "unmute"}.mp3
                                 `);
                                 audio.volume = 0.5;
                                 audio.play();
                             }
                         }}
-                        className={userSettings?.microphone ? '' : styles.cut}
+                        className={settings.microphone ? "" : styles.cut}
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={userSettings?.microphone ? 'mic' : 'micSlash'}
+                                name={settings.microphone ? "mic" : "micSlash"}
                                 size={20}
                             />
                         </div>
@@ -110,7 +107,7 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                     <button
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: userSettings.sound ? 'Deafen' : 'Undeafen',
+                                text: settings.sound ? "Deafen" : "Undeafen",
                                 element: e.currentTarget,
                                 gap: 3,
                             })
@@ -118,35 +115,29 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                         onMouseLeave={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
-                                text: !userSettings.sound ? 'Deafen' : 'Undeafen',
+                                text: !settings.sound ? "Deafen" : "Undeafen",
                                 element: e.currentTarget,
                                 gap: 3,
                             });
 
-                            if (userSettings?.microphone && userSettings?.sound) {
-                                setUserSettings({
-                                    ...userSettings,
-                                    microphone: false,
-                                    sound: false,
-                                });
+                            if (settings.microphone && settings.sound) {
+                                setSettings("microphone", false);
+                                setSettings("sound", false);
                             } else {
-                                setUserSettings({
-                                    ...userSettings,
-                                    sound: !userSettings?.sound,
-                                });
+                                setSettings("sound", !settings.sound);
                             }
 
                             const audio = new Audio(`
-                                    /assets/sounds/${userSettings?.sound ? 'deafen' : 'undeafen'}.mp3
+                                    /assets/sounds/${settings.sound ? "deafen" : "undeafen"}.mp3
                                 `);
                             audio.volume = 0.5;
                             audio.play();
                         }}
-                        className={userSettings?.sound ? '' : styles.cut}
+                        className={settings.sound ? "" : styles.cut}
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={userSettings?.sound ? 'headset' : 'headsetSlash'}
+                                name={settings.sound ? "headset" : "headsetSlash"}
                                 size={20}
                             />
                         </div>
@@ -155,7 +146,7 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                     <button
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: 'User Settings',
+                                text: "User Settings",
                                 element: e.currentTarget,
                                 gap: 3,
                             })
@@ -165,7 +156,7 @@ export const UserSection = ({ user }: { user: TCleanUser }): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name='settings'
+                                name="settings"
                                 size={20}
                             />
                         </div>

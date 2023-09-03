@@ -6,9 +6,10 @@ import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 import { trimMessage } from "@/lib/strings";
 import styles from "./Message.module.css";
+import { v4 } from "uuid";
 
 type Props = {
     message: TMessage;
@@ -19,75 +20,79 @@ type Props = {
     setEdit?: React.Dispatch<React.SetStateAction<MessageEditObject | null>>;
     reply?: MessageReplyObject | null;
     setReply?: React.Dispatch<React.SetStateAction<MessageReplyObject | null>>;
+    channel: TChannel;
+    guild?: TGuild;
 };
 
-export const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply }: Props) => {
+export const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply, channel, guild }: Props) => {
     const [editContent, setEditContent] = useState<string>(message.content || "");
     const [fileProgress, setFileProgress] = useState<number>(0);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
+    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: "auth" });
     const { sendRequest } = useFetchHelper();
 
     const inline = shouldDisplayInlined(message.type);
-
     const controller = useMemo(() => new AbortController(), []);
     const hasRendered = useRef(false);
 
-    const channel = auth.user.channels?.find((channel: TChannel) => channel.id === message.channelId);
-    const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === channel?.guildId);
-    const userRegex: RegExp = /<([@#\-*])([a-zA-Z0-9]{6,24})>/g;
+    const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
+        return (
+            <span
+                className={full ? styles.mention : styles.inlineMention}
+                onClick={(e) => {
+                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                    setLayers({
+                        settings: {
+                            type: "USER_CARD",
+                            element: e.currentTarget,
+                            firstSide: "RIGHT",
+                            gap: 10,
+                        },
+                        content: {
+                            user: user,
+                        },
+                    });
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (layers.MENU?.settings.element === e.currentTarget) return;
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "USER",
+                            user: user,
+                        },
+                    });
+                }}
+            >
+                {full && "@"}
+                {user.username}
+            </span>
+        );
+    };
+
+    const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
 
     let messageContent: JSX.Element | null = null;
-    if (message.content) {
-        const userIds: string[] = (message.content?.match(userRegex) || []).map((match: string) => match.slice(2, -1));
-
+    if (message.content && !inline) {
         messageContent = (
             <span>
-                {message.content.split(userRegex).map((part, index) => {
-                    if (userIds.includes(part)) {
-                        const mentionUser = message.mentions?.find((user) => user.id === part);
-
-                        return mentionUser ? (
-                            <span
-                                className={inline ? styles.inlineMention : styles.mention}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_CARD",
-                                            element: e.currentTarget,
-                                            firstSide: "RIGHT",
-                                            gap: 10,
-                                        },
-                                        content: {
-                                            user: mentionUser,
-                                        },
-                                    });
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (layers.MENU?.settings.element === e.currentTarget) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
-                                        content: {
-                                            type: "USER",
-                                            user: mentionUser,
-                                        },
-                                    });
-                                }}
-                            >
-                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
-                            </span>
-                        ) : (
-                            <span className={inline ? styles.inlineMention : styles.mention}>@Unknown</span>
+                {message.content.split(userRegex).map((part) => {
+                    if (message.mentionIds?.includes(part.substring(1))) {
+                        const user = message.mentions.find((user) => user.id === part.substring(1)) as TCleanUser;
+                        return (
+                            <UserMention
+                                key={v4()}
+                                user={user}
+                                full={true}
+                            />
                         );
                     } else {
                         return part;
@@ -98,56 +103,20 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     }
 
     let referencedContent: JSX.Element | null = null;
-    if (message.messageReference?.content) {
-        const userIds: string[] = (message.messageReference.content?.match(userRegex) || []).map((match: string) =>
-            match.slice(2, -1)
-        );
+    if (message.messageReference?.content && !inline) {
         referencedContent = (
             <span>
                 {message.messageReference?.content.split(userRegex).map((part, index) => {
-                    if (userIds.includes(part)) {
-                        const mentionUser = message.mentions?.find((user) => user.id === part);
-                        return mentionUser ? (
-                            <span
-                                key={index}
-                                className={inline ? styles.inlineMention : styles.mention}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_CARD",
-                                            element: e.currentTarget,
-                                            firstSide: "RIGHT",
-                                            gap: 10,
-                                        },
-                                        content: {
-                                            user: mentionUser,
-                                        },
-                                    });
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (layers.MENU?.settings.element === e.currentTarget) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
-                                        content: {
-                                            type: "USER",
-                                            user: mentionUser,
-                                        },
-                                    });
-                                }}
-                            >
-                                {inline ? `${mentionUser.username}` : `@${mentionUser.username}`}
-                            </span>
-                        ) : (
-                            <span key={index} className={inline ? styles.inlineMention : styles.mention}>
-                                @Unknown
-                            </span>
+                    if (message.messageReference.mentionIds?.includes(part.substring(1))) {
+                        const user = message.messageReference.mentions?.find(
+                            (user) => user.id === part.substring(1)
+                        ) as TCleanUser;
+                        return (
+                            <UserMention
+                                key={v4()}
+                                user={user}
+                                full={true}
+                            />
                         );
                     } else {
                         return part;
@@ -169,10 +138,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             }
         };
 
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [edit]);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [edit, editContent]);
 
     const deleteLocalMessage = async () => {
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
@@ -372,10 +340,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
     const sendEditedMessage = async () => {
         if (!setEdit) return;
-        const content = trimMessage(editContent) ?? null;
+        const content = trimMessage(editContent);
 
-        if (content === null && message.attachments.length === 0) {
-            setLayers({
+        if (!content && message.attachments.length === 0) {
+            return setLayers({
                 settings: {
                     type: "POPUP",
                 },
@@ -385,11 +353,18 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     message: message,
                 },
             });
+        }
 
-            return setTimeout(() => {
-                setEdit(null);
-                setLocalStorage({ edit: null });
-            }, 1000);
+        if (content && content.length > 4000) {
+            return setLayers({
+                settings: {
+                    type: "POPUP",
+                },
+                content: {
+                    type: "WARNING",
+                    warning: "MESSAGE_LIMIT",
+                },
+            });
         }
 
         try {
@@ -466,6 +441,18 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
         retrySendMessage,
     };
 
+    const messageIcons = [
+        "",
+        "",
+        "834fd250-08b6-4009-be66-284b1e593abd",
+        "a03e8741-1662-46ba-9870-839c54a5d7f0",
+        "Call",
+        "979c692b-3889-48b5-81e3-a2fe80f42bad",
+        "979c692b-3889-48b5-81e3-a2fe80f42bad",
+        "938d46b0-fd11-411e-a891-42571825cd11",
+        "834fd250-08b6-4009-be66-284b1e593abd",
+    ];
+
     if (inline) {
         return (
             <li
@@ -489,6 +476,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 ...message,
                                 inline: true,
                             },
+                            channelType: channel.type,
+                            channelOwnerId: channel.ownerId,
+                            guildOwnerId: guild?.ownerId,
                             deletePopup,
                             replyToMessageState,
                         },
@@ -499,21 +489,20 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                <MessageMenu message={message} large={false} functions={functions} />
+                <MessageMenu
+                    message={message}
+                    large={false}
+                    functions={functions}
+                    channel={channel}
+                    guild={guild}
+                    inline={inline}
+                />
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
                         <div
                             style={{
-                                backgroundImage: `url(https://ucarecdn.com/${
-                                    message.type === 2
-                                        ? "834fd250-08b6-4009-be66-284b1e593abd"
-                                        : message.type === 3
-                                        ? "la03e8741-1662-46ba-9870-839c54a5d7f0"
-                                        : message.type === 7
-                                        ? "938d46b0-fd11-411e-a891-42571825cd11"
-                                        : "979c692b-3889-48b5-81e3-a2fe80f42bad"
-                                }/)`,
+                                backgroundImage: `url(https://ucarecdn.com/${messageIcons[message.type]}/)`,
                                 width: "1rem",
                                 height: "1rem",
                                 backgroundSize: "1rem 1rem",
@@ -530,7 +519,63 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 color: message.error ? "var(--error-1)" : "",
                             }}
                         >
-                            {messageContent ? messageContent : ""}{" "}
+                            {(message.type === 2 || message.type === 3) && (
+                                <span>
+                                    <UserMention user={message.author} />{" "}
+                                    {message.mentions.length > 0 ? (
+                                        <>
+                                            {message.type === 2 ? "added " : "removed "}
+                                            <UserMention user={message.mentions[0]} />{" "}
+                                            {message.type === 2 ? "to " : "from "}the group.{" "}
+                                        </>
+                                    ) : (
+                                        " left the group."
+                                    )}
+                                </span>
+                            )}
+
+                            {message.type === 4 && <span></span>}
+
+                            {message.type === 5 && <span></span>}
+
+                            {message.type === 6 && <span></span>}
+
+                            {message.type === 7 && (
+                                <span>
+                                    <UserMention user={message.author} /> pinned{" "}
+                                    <span
+                                        className={styles.inlineMention}
+                                        onClick={(e) => {}}
+                                    >
+                                        a message
+                                    </span>{" "}
+                                    to this channel. See all{" "}
+                                    <span
+                                        className={styles.inlineMention}
+                                        onClick={(e) => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "POPUP",
+                                                    element: e.currentTarget,
+                                                    firstSide: "BOTTOM",
+                                                    secondSide: "LEFT",
+                                                    gap: 10,
+                                                },
+                                                content: {
+                                                    type: "PINNED_MESSAGES",
+                                                    channel: channel,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        pinned messages
+                                    </span>
+                                    .{" "}
+                                </span>
+                            )}
+
+                            {message.type === 8 && <span></span>}
+
                             <span
                                 className={styles.contentTimestamp}
                                 onMouseEnter={(e) =>
@@ -577,6 +622,9 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                             content: {
                                 type: "MESSAGE",
                                 message: message,
+                                channelType: channel.type,
+                                channelOwnerId: channel.ownerId,
+                                guildOwnerId: guild?.ownerId,
                                 functions: functions,
                             },
                         });
@@ -586,7 +634,14 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                             layers.MENU?.content?.message?.id === message.id ? "var(--background-hover-4)" : "",
                     }}
                 >
-                    <MessageMenu message={message} large={large} functions={functions} />
+                    <MessageMenu
+                        message={message}
+                        large={large}
+                        functions={functions}
+                        channel={channel}
+                        guild={guild}
+                        inline={inline}
+                    />
 
                     <div className={styles.message}>
                         {message.type === 1 && (
@@ -598,7 +653,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (!message.messageReference) return;
-                                            if (layers.MENU?.settings.e.currentTarget === e.currentTarget) {
+                                            if (layers.MENU?.settings.event?.currentTarget === e.currentTarget) {
                                                 setLayers({
                                                     settings: {
                                                         type: "USER_CARD",
@@ -643,7 +698,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     </div>
                                 ) : (
                                     <div className={styles.noReplyBadge}>
-                                        <svg width="12" height="8" viewBox="0 0 12 8">
+                                        <svg
+                                            width="12"
+                                            height="8"
+                                            viewBox="0 0 12 8"
+                                        >
                                             <path
                                                 d="M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z"
                                                 fill="currentColor"
@@ -726,14 +785,19 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                     </div>
                                 )}
 
-                                {message.messageReference?.attachments?.length > 0 && <Icon name="image" size={20} />}
+                                {message.messageReference?.attachments?.length > 0 && (
+                                    <Icon
+                                        name="image"
+                                        size={20}
+                                    />
+                                )}
                             </div>
                         )}
 
                         <div
                             className={styles.messageContent}
                             onDoubleClick={() => {
-                                if (message.author.id === auth.user.id) {
+                                if (message.author.id === user.id) {
                                     editMessageState();
                                 } else {
                                     if (reply?.messageId === message.id) return;
@@ -780,7 +844,11 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                         });
                                     }}
                                 >
-                                    <Avatar src={message.author.avatar} alt={message.author.username} size={40} />
+                                    <Avatar
+                                        src={message.author.avatar}
+                                        alt={message.author.username}
+                                        size={40}
+                                    />
                                 </div>
                             )}
 
@@ -932,7 +1000,10 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 )}
 
                                 {message.attachments.length > 0 && !(message.error || message.waiting) && (
-                                    <MessageAttachments message={message} functions={functions} />
+                                    <MessageAttachments
+                                        message={message}
+                                        functions={functions}
+                                    />
                                 )}
 
                                 {message.attachments.length > 0 && (message.waiting || message.error) && (
@@ -1028,8 +1099,15 @@ const MessageAttachments = ({ message, functions }: any) => {
             <div>
                 {message.attachments.length === 1 &&
                     message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
-                        <div key={attachment.id} className={styles.gridOneBig}>
-                            <Image attachment={attachment} message={message} functions={functions} />
+                        <div
+                            key={attachment.id}
+                            className={styles.gridOneBig}
+                        >
+                            <Image
+                                attachment={attachment}
+                                message={message}
+                                functions={functions}
+                            />
                         </div>
                     ))}
 
@@ -1238,20 +1316,23 @@ type MenuProps = {
     message: TMessage;
     large: boolean;
     functions: any;
+    channel: TChannel;
+    guild?: TGuild | null;
+    inline: boolean;
 };
 
-const MessageMenu = ({ message, large, functions }: MenuProps) => {
+const MessageMenu = ({ message, large, functions, channel, guild, inline }: MenuProps) => {
     const [menuSender, setMenuSender] = useState<boolean | null>(null);
     const [shift, setShift] = useState<boolean>(false);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
+    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
-    const { auth }: any = useContextHook({ context: "auth" });
+    const { sendRequest } = useFetchHelper();
 
     useEffect(() => {
-        if (message.author.id === auth.user.id) setMenuSender(true);
-        else setMenuSender(false);
+        setMenuSender(message.author.id === user.id);
     }, [message]);
 
     useEffect(() => {
@@ -1274,6 +1355,10 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
 
     if (message.waiting || typeof menuSender !== "boolean") return null;
 
+    const writeText = async (text: string) => {
+        await navigator.clipboard.writeText(text);
+    };
+
     return (
         <div
             className={styles.buttonContainer}
@@ -1281,10 +1366,231 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                 visibility: layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
             }}
         >
-            <div className={styles.buttonWrapper} style={{ top: large ? "-16px" : "-25px" }}>
+            <div
+                className={styles.buttonWrapper}
+                style={{ top: large ? "-16px" : "-25px" }}
+            >
                 <div className={styles.buttons}>
                     {!message.error ? (
                         <>
+                            {shift && !inline && (
+                                <>
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Copy Message ID",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {
+                                            writeText(message.id);
+                                        }}
+                                    >
+                                        <Icon name="id" />
+                                    </div>
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: `${message.pinned ? "Unpin" : "Pin"} Message`,
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {
+                                            message.pinned
+                                                ? () => {
+                                                      sendRequest({
+                                                          query: "UNPIN_MESSAGE",
+                                                          params: {
+                                                              channelId: message.channelId,
+                                                              messageId: message.id,
+                                                          },
+                                                      });
+                                                  }
+                                                : () => {
+                                                      sendRequest({
+                                                          query: "PIN_MESSAGE",
+                                                          params: {
+                                                              channelId: message.channelId,
+                                                              messageId: message.id,
+                                                          },
+                                                      });
+                                                  };
+                                        }}
+                                    >
+                                        <Icon name="pin" />
+                                    </div>
+
+                                    {message.content && (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Copy Text",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                writeText(message.content as string);
+                                            }}
+                                        >
+                                            <Icon name="copy" />
+                                        </div>
+                                    )}
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Translate",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {}}
+                                    >
+                                        <Icon
+                                            name="translate"
+                                            viewbox="0 96 960 960"
+                                        />
+                                    </div>
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Mark Unread",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {}}
+                                    >
+                                        <Icon name="mark" />
+                                    </div>
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Copy Message Link",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {
+                                            writeText(`/channels/@me/${message.channelId}/${message.id}`);
+                                        }}
+                                    >
+                                        <Icon name="link" />
+                                    </div>
+
+                                    {message.content && (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Speak Message",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                const msg = new SpeechSynthesisUtterance();
+                                                msg.text = `${message.author.username} said ${message.content}`;
+                                                window.speechSynthesis.speak(msg);
+                                            }}
+                                        >
+                                            <Icon name="speak" />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {inline && shift && (
+                                <>
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Copy Message ID",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {
+                                            writeText(message.id);
+                                        }}
+                                    >
+                                        <Icon name="id" />
+                                    </div>
+
+                                    {message.content && (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Copy Text",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                writeText(message.content as string);
+                                            }}
+                                        >
+                                            <Icon name="copy" />
+                                        </div>
+                                    )}
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Mark Unread",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {}}
+                                    >
+                                        <Icon name="mark" />
+                                    </div>
+
+                                    <div
+                                        role="button"
+                                        onMouseEnter={(e) =>
+                                            setTooltip({
+                                                text: "Copy Message Link",
+                                                element: e.currentTarget,
+                                                gap: 3,
+                                            })
+                                        }
+                                        onMouseLeave={() => setTooltip(null)}
+                                        onClick={() => {
+                                            writeText(`/channels/@me/${message.channelId}/${message.id}`);
+                                        }}
+                                    >
+                                        <Icon name="link" />
+                                    </div>
+                                </>
+                            )}
+
                             <div
                                 role="button"
                                 onMouseEnter={(e) =>
@@ -1299,83 +1605,138 @@ const MessageMenu = ({ message, large, functions }: MenuProps) => {
                                 <Icon name="addReaction" />
                             </div>
 
-                            {menuSender ? (
-                                <div
-                                    role="button"
-                                    onMouseEnter={(e) =>
-                                        setTooltip({
-                                            text: "Edit",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        })
-                                    }
-                                    onMouseLeave={() => setTooltip(null)}
-                                    onClick={() => {
-                                        setTooltip(null);
-                                        functions.editMessageState();
-                                    }}
-                                >
-                                    <Icon name="edit" />
-                                </div>
-                            ) : (
-                                <div
-                                    role="button"
-                                    onMouseEnter={(e) =>
-                                        setTooltip({
-                                            text: "Reply",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        })
-                                    }
-                                    onMouseLeave={() => setTooltip(null)}
-                                    onClick={() => {
-                                        setTooltip(null);
-                                        functions.replyToMessageState();
-                                    }}
-                                >
-                                    <Icon name="reply" />
-                                </div>
+                            {!inline && (
+                                <>
+                                    {menuSender ? (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Edit",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                setTooltip(null);
+                                                functions.editMessageState();
+                                            }}
+                                        >
+                                            <Icon name="edit" />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Reply",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                setTooltip(null);
+                                                functions.replyToMessageState();
+                                            }}
+                                        >
+                                            <Icon name="reply" />
+                                        </div>
+                                    )}
+                                </>
                             )}
 
-                            <div
-                                role="button"
-                                onMouseEnter={(e) =>
-                                    setTooltip({
-                                        text: "More",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    })
-                                }
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (layers.MENU?.settings.element === e.currentTarget) {
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                setNull: true,
-                                            },
-                                        });
-                                    } else {
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                element: e.currentTarget,
-                                                firstSide: "LEFT",
-                                                gap: 5,
-                                            },
-                                            content: {
-                                                type: "MESSAGE",
-                                                message: message,
-                                                functions: functions,
-                                            },
-                                        });
-                                        setTooltip(null);
+                            {!shift || inline ? (
+                                <div
+                                    role="button"
+                                    onMouseEnter={(e) =>
+                                        setTooltip({
+                                            text: "More",
+                                            element: e.currentTarget,
+                                            gap: 3,
+                                        })
                                     }
-                                }}
-                            >
-                                <Icon name="dots" />
-                            </div>
+                                    onMouseLeave={() => setTooltip(null)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (layers.MENU?.settings.element === e.currentTarget) {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    setNull: true,
+                                                },
+                                            });
+                                        } else {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    element: e.currentTarget,
+                                                    firstSide: "LEFT",
+                                                    gap: 5,
+                                                },
+                                                content: {
+                                                    type: "MESSAGE",
+                                                    message: message,
+                                                    channelType: channel.type,
+                                                    channelOwnerId: channel.ownerId,
+                                                    guildOwnerId: guild?.ownerId,
+                                                    functions: functions,
+                                                },
+                                            });
+                                            setTooltip(null);
+                                        }
+                                    }}
+                                >
+                                    <Icon name="dots" />
+                                </div>
+                            ) : (
+                                <>
+                                    {menuSender ? (
+                                        <div
+                                            className={styles.red}
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Delete",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                sendRequest({
+                                                    query: "DELETE_MESSAGE",
+                                                    params: {
+                                                        channelId: message.channelId,
+                                                        messageId: message.id,
+                                                    },
+                                                });
+                                            }}
+                                        >
+                                            <Icon name="delete" />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className={styles.red}
+                                            role="button"
+                                            onMouseEnter={(e) =>
+                                                setTooltip({
+                                                    text: "Report Message",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                })
+                                            }
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                // functions.reportPopup();
+                                            }}
+                                        >
+                                            <Icon name="report" />
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </>
                     ) : message.waiting ? (
                         <></>
@@ -1435,19 +1796,19 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
+    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
-    const { auth }: any = useContextHook({ context: "auth" });
 
     return useMemo(
         () => (
             <div
                 className={styles.image}
                 onMouseEnter={() => {
-                    if (auth.user.id !== message.author.id) return;
+                    if (user.id !== message.author.id) return;
                     setShowDelete(true);
                 }}
                 onMouseLeave={() => {
-                    if (auth.user.id !== message.author.id) return;
+                    if (user.id !== message.author.id) return;
                     setShowDelete(false);
                 }}
                 onClick={() => {
@@ -1516,7 +1877,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                         onMouseLeave={() => setTooltip(null)}
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (auth.user.id !== message.author.id) return;
+                            if (user.id !== message.author.id) return;
 
                             if (message.attachments.length === 1 && !message.content) {
                                 return setLayers({
@@ -1547,7 +1908,10 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             });
                         }}
                     >
-                        <Icon name="delete" size={20} />
+                        <Icon
+                            name="delete"
+                            size={20}
+                        />
                     </div>
                 )}
 
@@ -1556,7 +1920,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                     <button
                         className={styles.imageAlt}
                         onMouseEnter={(e) => {
-                            e.stopPropagation();
+                            if (!attachment.description) return;
                             setTooltip({
                                 text: attachment.description,
                                 element: e.currentTarget,

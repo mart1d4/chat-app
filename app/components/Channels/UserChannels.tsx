@@ -1,77 +1,49 @@
 "use client";
 
+import { useData, useLayers, useTooltip } from "@/lib/store";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactElement, useEffect, useMemo } from "react";
 import { Icon, Avatar, UserSection } from "@components";
-import useContextHook from "@/hooks/useContextHook";
-import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserChannels.module.css";
+import { ReactElement } from "react";
 import Link from "next/link";
-import { useLayers, useTooltip } from "@/lib/store";
 
-interface Props {
-    user: TCleanUser;
-    channels: TChannel[];
-}
+export const UserChannels = (): ReactElement => {
+    const channels = useData((state) => state.channels);
 
-export const UserChannels = ({ user, channels }: Props): ReactElement => {
-    const { setAuth }: any = useContextHook({ context: "auth" });
-
-    // useEffect(() => {
-    //     pusher.bind("channel-created", (data: any) => {});
-    //     pusher.bind("channel-left", (data: any) => {});
-    //     pusher.bind("channel-recipient-add", (data: any) => {});
-    //     pusher.bind("message-sent", (data: any) => {});
-
-    //     return () => {
-    //         pusher.unbind("channel-created");
-    //         pusher.unbind("channel-left");
-    //         pusher.unbind("channel-recipient-add");
-    //         pusher.unbind("message-sent");
-    //     };
-    // }, []);
-
-    useEffect(() => {
-        setAuth((auth: any) => ({
-            ...auth,
-            channels,
-        }));
-    }, []);
-
-    return useMemo(
-        () => (
-            <div className={styles.nav}>
-                <div className={styles.privateChannels}>
-                    <div className={styles.searchContainer}>
-                        <button>Find or start a conversation</button>
-                    </div>
-
-                    <div className={styles.scroller + " scrollbar"}>
-                        <ul className={styles.channelList}>
-                            <div></div>
-
-                            <ChannelItem special />
-                            <Title />
-
-                            {channels.length > 0 ? (
-                                channels.map((channel: TChannel) => (
-                                    <ChannelItem key={channel.id} channel={channel} currentUser={user} />
-                                ))
-                            ) : (
-                                <img
-                                    src="https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/"
-                                    alt="No Channels"
-                                />
-                            )}
-                        </ul>
-                    </div>
+    return (
+        <div className={styles.nav}>
+            <div className={styles.privateChannels}>
+                <div className={styles.searchContainer}>
+                    <button>Find or start a conversation</button>
                 </div>
 
-                <UserSection user={user} />
+                <div className={styles.scroller + " scrollbar"}>
+                    <ul className={styles.channelList}>
+                        <div />
+
+                        <ChannelItem special />
+                        <Title />
+
+                        {channels.length > 0 ? (
+                            channels.map((channel: TChannel) => (
+                                <ChannelItem
+                                    key={channel.id}
+                                    channel={channel}
+                                />
+                            ))
+                        ) : (
+                            <img
+                                src="https://ucarecdn.com/c65d6610-8a49-4133-a0c0-eb69f977c6b5/"
+                                alt="No Channels"
+                            />
+                        )}
+                    </ul>
+                </div>
             </div>
-        ),
-        [channels, user]
+
+            <UserSection />
+        </div>
     );
 };
 
@@ -123,7 +95,11 @@ const Title = () => {
                     }
                 }}
             >
-                <Icon name="add" size={16} viewbox="0 0 18 18" />
+                <Icon
+                    name="add"
+                    size={16}
+                    viewbox="0 0 18 18"
+                />
             </div>
         </h2>
     );
@@ -132,23 +108,17 @@ const Title = () => {
 interface ChannelItemProps {
     special?: boolean;
     channel?: TChannel;
-    currentUser?: TCleanUser;
 }
 
-const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
+const ChannelItem = ({ special, channel }: ChannelItemProps) => {
+    const requests = useData((state) => state.requestsReceived).length;
+    const currentUser = useData((state) => state.user) as TUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
     const pathname = usePathname();
     const router = useRouter();
-
-    const badgeCount = 90;
-
-    let user: TCleanUser | null = null;
-    if (channel?.type === 0 && currentUser) {
-        user = channel.recipients.find((user) => user.id !== currentUser.id) || null;
-    }
 
     if (special) {
         return (
@@ -177,106 +147,117 @@ const ChannelItem = ({ special, channel, currentUser }: ChannelItemProps) => {
                             </div>
                         </div>
 
-                        {badgeCount > 0 && <div className={styles.friendsPending}>{badgeCount}</div>}
+                        {requests > 0 && <div className={styles.friendsPending}>{requests}</div>}
                     </div>
                 </div>
             </Link>
         );
-    } else if (channel) {
-        // console.log(channel);
-        return useMemo(
-            () => (
-                <Link
-                    className={styles.liContainer}
-                    href={`/channels/me/${channel.id}`}
-                    onContextMenu={(e) => {
-                        e.preventDefault();
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                event: e,
-                            },
-                            content: {
-                                type: "CHANNEL",
-                                user: user,
-                                channel: channel || null,
-                            },
-                        });
-                    }}
-                    style={{
-                        backgroundColor: pathname.includes(channel.id) ? "var(--background-5)" : "",
-                        color: pathname.includes(channel.id) ? "var(--foreground-1)" : "",
-                    }}
-                >
-                    <div className={styles.liWrapper}>
-                        <div className={styles.link}>
-                            <div className={styles.layout}>
-                                <div className={styles.layoutAvatar}>
-                                    <div>
-                                        <Avatar
-                                            src={channel.icon || ""}
-                                            alt={channel.name || ""}
-                                            size={32}
-                                            status={user?.status}
-                                            tooltip={user ? true : false}
-                                        />
-                                    </div>
-                                </div>
+    }
 
-                                <div className={styles.layoutContent}>
-                                    <div className={styles.contentName}>
-                                        <div className={styles.nameWrapper}>{channel.name}</div>
-                                    </div>
+    if (channel) {
+        const user = channel.type === 0 ? channel.recipients.find((user) => user.id !== currentUser.id) : null;
 
-                                    {user?.customStatus && channel.type !== 1 && (
-                                        <div
-                                            className={styles.contentStatus}
-                                            onMouseEnter={(e) => {
-                                                e.stopPropagation();
-                                                setTooltip({
-                                                    text: user?.customStatus,
-                                                    element: e.currentTarget,
-                                                    delay: 500,
-                                                });
-                                            }}
-                                            onMouseLeave={(e) => setTooltip(null)}
-                                        >
-                                            {user.customStatus}
-                                        </div>
-                                    )}
-
-                                    {channel.type === 1 && (
-                                        <div className={styles.contentStatus}>
-                                            {channel.recipients.length} Member
-                                            {channel.recipients.length > 1 && "s"}
-                                        </div>
-                                    )}
+        return (
+            <Link
+                className={styles.liContainer}
+                href={`/channels/me/${channel.id}`}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "CHANNEL",
+                            user: user,
+                            channel: channel || null,
+                        },
+                    });
+                }}
+                style={{
+                    backgroundColor: pathname.includes(channel.id) ? "var(--background-5)" : "",
+                    color: pathname.includes(channel.id) ? "var(--foreground-1)" : "",
+                }}
+            >
+                <div className={styles.liWrapper}>
+                    <div className={styles.link}>
+                        <div className={styles.layout}>
+                            <div className={styles.layoutAvatar}>
+                                <div>
+                                    <Avatar
+                                        src={channel.icon || ""}
+                                        alt={channel.name || ""}
+                                        size={32}
+                                        status={user?.status}
+                                        tooltip={user ? true : false}
+                                    />
                                 </div>
                             </div>
+
+                            <div className={styles.layoutContent}>
+                                <div className={styles.contentName}>
+                                    <div className={styles.nameWrapper}>{channel.name}</div>
+                                </div>
+
+                                {user?.customStatus && channel.type !== 1 && (
+                                    <div
+                                        className={styles.contentStatus}
+                                        onMouseEnter={(e) => {
+                                            e.stopPropagation();
+                                            setTooltip({
+                                                text: user?.customStatus || "OFFLINE",
+                                                element: e.currentTarget,
+                                                delay: 500,
+                                            });
+                                        }}
+                                        onMouseLeave={(e) => setTooltip(null)}
+                                    >
+                                        {user.customStatus}
+                                    </div>
+                                )}
+
+                                {channel.type === 1 && (
+                                    <div className={styles.contentStatus}>
+                                        {channel.recipients.length} Member
+                                        {channel.recipients.length > 1 && "s"}
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                    </div>
 
-                        <div
-                            className={styles.closeButton}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
+                    <div
+                        className={styles.closeButton}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
 
+                            if (channel.type === 0) {
                                 sendRequest({
                                     query: "CHANNEL_DELETE",
                                     params: { channelId: channel.id },
                                 });
+                            } else {
+                                sendRequest({
+                                    query: "CHANNEL_RECIPIENT_REMOVE",
+                                    params: {
+                                        channelId: channel.id,
+                                        recipientId: currentUser.id,
+                                    },
+                                });
+                            }
 
-                                if (pathname.includes(channel.id)) {
-                                    router.push("/channels/me");
-                                }
-                            }}
-                        >
-                            <Icon name="close" size={16} />
-                        </div>
+                            if (pathname.includes(channel.id)) router.push("/channels/me");
+                        }}
+                    >
+                        <Icon
+                            name="close"
+                            size={16}
+                        />
                     </div>
-                </Link>
-            ),
-            [channel, user]
+                </div>
+            </Link>
         );
     }
 };

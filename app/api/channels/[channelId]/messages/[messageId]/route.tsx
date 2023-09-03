@@ -1,5 +1,5 @@
 import pusher from "@/lib/pusher/server-connection";
-import { encryptMessage } from "@/lib/encryption";
+import { decryptMessage, encryptMessage } from "@/lib/encryption";
 import { removeImage } from "@/lib/api/cdn";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
@@ -59,47 +59,26 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             where: {
                 id: messageId,
             },
-        });
-
-        if (!message) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Message not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        await prisma.message.update({
-            where: {
-                id: messageId,
-            },
-            data: {
-                content: encryptMessage(content),
-                attachments: attachments
-                    ? message.attachments.filter((file) => attachments.includes(file.id))
-                    : message.attachments,
-                edited: true,
-            },
-        });
-
-        if (attachments && message.attachments.length !== attachments.length) {
-            const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
-
-            if (toDelete.length > 0) {
-                toDelete.forEach(async (file) => {
-                    await removeImage(file.id);
-                });
-            }
-        }
-
-        const messageToSend = await prisma.message.findUnique({
-            where: {
-                id: messageId,
-            },
             include: {
                 author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+                mentions: {
                     select: {
                         id: true,
                         username: true,
@@ -137,14 +116,70 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
                                 createdAt: true,
                             },
                         },
+                        mentions: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
                     },
                 },
             },
         });
 
+        if (!message) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message not found",
+                },
+                { status: 404 }
+            );
+        }
+
+        await prisma.message.update({
+            where: {
+                id: messageId,
+            },
+            data: {
+                content: encryptMessage(content),
+                attachments: attachments
+                    ? message.attachments.filter((file) => attachments.includes(file.id))
+                    : message.attachments,
+                edited: true,
+            },
+        });
+
+        if (attachments && message.attachments.length !== attachments.length) {
+            const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
+
+            if (toDelete.length > 0) {
+                toDelete.forEach(async (file) => {
+                    await removeImage(file.id);
+                });
+            }
+        }
+
         await pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
-            message: messageToSend,
+            message: {
+                ...message,
+                content: content ? content : message.content,
+                attachments: attachments ? attachments : message.attachments,
+                edited: true,
+            },
         });
 
         return NextResponse.json(

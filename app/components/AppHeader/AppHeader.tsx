@@ -1,22 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect, ReactElement } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import { useLayers, useTooltip } from '@/lib/store';
-import styles from './AppHeader.module.css';
-import { Icon, Avatar } from '@components';
+import { useState, useMemo, useEffect, ReactElement } from "react";
+import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
+import styles from "./AppHeader.module.css";
+import { Icon, Avatar } from "@components";
 
 interface Props {
     channel?: TChannel;
     friend?: TCleanUser | null;
+    requests?: number;
 }
 
 export const AppHeader = ({ channel, friend }: Props): ReactElement => {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
-    const { userSettings, setUserSettings }: any = useContextHook({ context: 'settings' });
+    const setSettings = useSettings((state) => state.setSettings);
+    const requests = useData((state) => state.requestsReceived);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+    const settings = useSettings((state) => state.settings);
 
     useEffect(() => {
         const width: number = window.innerWidth;
@@ -31,48 +33,45 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
             else setWidthLimitPassed(false);
         };
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     const tabs = [
-        { name: 'Online', func: 'online' },
-        { name: 'All', func: 'all' },
-        { name: 'Pending', func: 'pending' },
-        { name: 'Blocked', func: 'blocked' },
-        { name: 'Add Friend', func: 'add' },
+        { name: "Online", func: "online" },
+        { name: "All", func: "all" },
+        { name: "Pending", func: "pending" },
+        { name: "Blocked", func: "blocked" },
+        { name: "Add Friend", func: "add" },
     ];
 
-    const badgeCount = 900;
-
     const toolbarItems = channel
-        ? channel?.guildId
+        ? channel.guildId
             ? [
                   {
-                      name: 'Threads',
-                      icon: 'threads',
+                      name: "Threads",
+                      icon: "threads",
                       func: {},
                   },
                   {
-                      name: 'Notification Settings',
-                      icon: 'bell',
+                      name: "Notification Settings",
+                      icon: "bell",
                       func: {},
                   },
                   {
-                      name: 'Pinned Messages',
-                      icon: 'pin',
-                      func: (e: MouseEvent) => {
-                          if (!channel) return;
+                      name: "Pinned Messages",
+                      icon: "pin",
+                      func: (e: any) => {
                           setLayers({
                               settings: {
-                                  type: 'POPUP',
+                                  type: "POPUP",
                                   element: e.currentTarget,
-                                  firstSide: 'BOTTOM',
-                                  secondSide: 'LEFT',
+                                  firstSide: "BOTTOM",
+                                  secondSide: "LEFT",
                                   gap: 10,
                               },
                               content: {
-                                  type: 'PINNED_MESSAGES',
+                                  type: "PINNED_MESSAGES",
                                   channel: channel,
                               },
                           });
@@ -80,56 +79,52 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                   },
                   {
                       name:
-                          userSettings.showUsers && widthLimitPassed
-                              ? 'Hide User Profile'
-                              : `Show ${channel?.type === 0 ? ' User Profile' : 'Member List'}`,
-                      icon: channel?.type === 0 ? 'userProfile' : 'memberList',
-                      active: userSettings.showUsers,
+                          settings.showUsers && widthLimitPassed
+                              ? "Hide User Profile"
+                              : `Show ${channel.type === 0 ? " User Profile" : "Member List"}`,
+                      icon: channel.type === 0 ? "userProfile" : "memberList",
+                      active: settings.showUsers,
                       disabled: widthLimitPassed === false,
-                      func: () => {
-                          if (!channel) return;
-                          setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers });
-                      },
+                      func: () => setSettings("showUsers", !settings.showUsers),
                   },
               ]
             : [
-                  { name: 'Start Voice Call', icon: 'call', func: () => {} },
-                  { name: 'Start Video Call', icon: 'video', func: () => {} },
+                  { name: "Start Voice Call", icon: "call", func: () => {} },
+                  { name: "Start Video Call", icon: "video", func: () => {} },
                   {
-                      name: 'Pinned Messages',
-                      icon: 'pin',
-                      func: (e: MouseEvent) => {
+                      name: "Pinned Messages",
+                      icon: "pin",
+                      func: (e: any) => {
                           if (!channel) return;
                           setLayers({
                               settings: {
-                                  type: 'POPUP',
+                                  type: "POPUP",
                                   element: e.currentTarget,
-                                  firstSide: 'BOTTOM',
-                                  secondSide: 'LEFT',
+                                  firstSide: "BOTTOM",
+                                  secondSide: "LEFT",
                                   gap: 10,
                               },
                               content: {
-                                  type: 'PINNED_MESSAGES',
+                                  type: "PINNED_MESSAGES",
                                   channel: channel,
                               },
                           });
                       },
                   },
                   {
-                      name: 'Add Friends to DM',
-                      icon: 'addUser',
-                      func: (e: MouseEvent) => {
-                          if (!channel) return;
+                      name: "Add Friends to DM",
+                      icon: "addUser",
+                      func: (e: any) => {
                           setLayers({
                               settings: {
-                                  type: 'POPUP',
+                                  type: "POPUP",
                                   element: e.currentTarget,
-                                  firstSide: 'BOTTOM',
-                                  secondSide: 'RIGHT',
+                                  firstSide: "BOTTOM",
+                                  secondSide: "RIGHT",
                                   gap: 10,
                               },
                               content: {
-                                  type: 'CREATE_DM',
+                                  type: "CREATE_DM",
                                   channel: channel,
                               },
                           });
@@ -137,19 +132,36 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                   },
                   {
                       name:
-                          userSettings.showUsers && widthLimitPassed
-                              ? 'Hide User Profile'
-                              : `Show ${channel?.type === 0 ? ' User Profile' : 'Member List'}`,
-                      icon: channel?.type === 0 ? 'userProfile' : 'memberList',
-                      active: userSettings.showUsers,
+                          settings.showUsers && widthLimitPassed
+                              ? "Hide User Profile"
+                              : `Show ${channel.type === 0 ? " User Profile" : "Member List"}`,
+                      icon: channel.type === 0 ? "userProfile" : "memberList",
+                      active: settings.showUsers,
                       disabled: widthLimitPassed === false,
-                      func: () => {
-                          if (!channel) return;
-                          setUserSettings({ ...userSettings, showUsers: !userSettings?.showUsers });
-                      },
+                      func: () => setSettings("showUsers", !settings.showUsers),
                   },
               ]
-        : [{ name: 'New Group DM', icon: 'newDM', func: () => {} }];
+        : [
+              {
+                  name: "New Group DM",
+                  icon: "newDM",
+                  func: (e: any) => {
+                      setLayers({
+                          settings: {
+                              type: "POPUP",
+                              element: e.currentTarget,
+                              firstSide: "BOTTOM",
+                              secondSide: "RIGHT",
+                              gap: 10,
+                          },
+                          content: {
+                              type: "CREATE_DM",
+                              channel: channel,
+                          },
+                      });
+                  },
+              },
+          ];
 
     return useMemo(
         () => (
@@ -159,8 +171,8 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                         <>
                             <div className={styles.icon}>
                                 <Icon
-                                    name='friends'
-                                    fill='var(--foreground-5)'
+                                    name="friends"
+                                    fill="var(--foreground-5)"
                                 />
                             </div>
                             <h1 className={styles.title}>Friends</h1>
@@ -169,25 +181,20 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                                 {tabs.map((tab, index) => (
                                     <li
                                         key={index}
-                                        onClick={() =>
-                                            setUserSettings({
-                                                ...userSettings,
-                                                friendTab: tab.func,
-                                            })
-                                        }
+                                        onClick={() => setSettings("friendTab", tab.func)}
                                         className={
-                                            tab.name === 'Add Friend'
-                                                ? userSettings?.friendTab === tab.func
+                                            tab.name === "Add Friend"
+                                                ? settings.friendTab === tab.func
                                                     ? styles.itemAddActive
                                                     : styles.itemAdd
-                                                : userSettings?.friendTab === tab.func
+                                                : settings.friendTab === tab.func
                                                 ? styles.itemActive
                                                 : styles.item
                                         }
                                     >
                                         {tab.name}
-                                        {tab.name === 'Pending' && badgeCount > 0 && (
-                                            <div className={styles.badge}>{badgeCount}</div>
+                                        {tab.name === "Pending" && requests.length > 0 && (
+                                            <div className={styles.badge}>{requests.length}</div>
                                         )}
                                     </li>
                                 ))}
@@ -196,13 +203,13 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                     ) : (
                         <>
                             <div className={styles.icon}>
-                                {channel?.guildId ? (
-                                    <Icon name='hashtag' />
+                                {channel.guildId ? (
+                                    <Icon name="hashtag" />
                                 ) : (
                                     <Avatar
-                                        src={channel.icon || ''}
+                                        src={channel.icon || ""}
                                         relativeSrc={!channel}
-                                        alt={channel.name || ''}
+                                        alt={channel.name || ""}
                                         size={24}
                                         status={friend ? friend.status : undefined}
                                     />
@@ -212,20 +219,20 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                             <h1
                                 className={styles.titleFriend}
                                 onMouseEnter={(e) => {
-                                    if (channel?.guildId) return;
+                                    if (channel.guildId) return;
                                     setTooltip({
-                                        text: channel.name || '',
+                                        text: channel.name || "",
                                         element: e.currentTarget,
-                                        position: 'BOTTOM',
+                                        position: "BOTTOM",
                                         gap: 5,
                                     });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    if (channel?.type !== 0) return;
+                                    if (channel.type !== 0) return;
                                     setLayers({
                                         settings: {
-                                            type: 'USER_PROFILE',
+                                            type: "USER_PROFILE",
                                         },
                                         content: {
                                             user: friend,
@@ -233,10 +240,10 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                                     });
                                 }}
                                 style={{
-                                    cursor: channel?.guildId ? 'default' : '',
+                                    cursor: channel.guildId ? "default" : "",
                                 }}
                             >
-                                {channel?.name || ''}
+                                {channel.name || ""}
                             </h1>
                         </>
                     )}
@@ -250,23 +257,23 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                         />
                     ))}
 
-                    {typeof channel === 'undefined' ? (
+                    {!channel ? (
                         <div className={styles.divider} />
                     ) : (
                         <div className={styles.search}>
                             <div
-                                role='combobox'
-                                aria-expanded='false'
-                                aria-haspopup='listbox'
-                                aria-label='Search'
-                                autoCorrect='off'
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                aria-label="Search"
+                                autoCorrect="off"
                             >
                                 Search
                             </div>
 
                             <div>
                                 <Icon
-                                    name='search'
+                                    name="search"
                                     size={16}
                                 />
                             </div>
@@ -277,81 +284,63 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                         className={styles.toolbarIcon}
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: 'Inbox',
+                                text: "Inbox",
                                 element: e.currentTarget,
-                                position: 'BOTTOM',
+                                position: "BOTTOM",
                                 gap: 5,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
                     >
-                        <Icon name='inbox' />
+                        <Icon name="inbox" />
                     </div>
 
                     <a
-                        href='/en-US/support'
+                        href="/en-US/support"
                         className={styles.toolbarIcon}
                         onMouseEnter={(e) =>
                             setTooltip({
-                                text: 'Help',
+                                text: "Help",
                                 element: e.currentTarget,
-                                position: 'BOTTOM',
+                                position: "BOTTOM",
                                 gap: 5,
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
                     >
-                        <Icon name='help' />
+                        <Icon name="help" />
                     </a>
                 </div>
             </div>
         ),
-        [channel, friend, badgeCount, userSettings, widthLimitPassed]
+        [channel, friend, requests, settings, widthLimitPassed]
     );
 };
 
 const ToolbarIcon = ({ item }: any) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
 
     return (
         <div
             className={`${styles.toolbarIcon} ${item.disabled && styles.disabled}`}
             onMouseEnter={(e) => {
-                if (layers?.POPUP?.settings?.element === e.currentTarget) return;
                 setTooltip({
-                    text: item.disabled ? item.name + ' (Unavailable)' : item.name,
+                    text: item.disabled ? item.name + " (Unavailable)" : item.name,
                     element: e.currentTarget,
-                    position: 'BOTTOM',
+                    position: "BOTTOM",
                     gap: 5,
                 });
             }}
             onMouseLeave={() => setTooltip(null)}
             onClick={(e) => {
                 if (item.disabled) return;
-                if (layers?.POPUP?.settings?.element === e.currentTarget) {
-                    setTooltip({
-                        text: item.disabled ? item.name + ' (Unavailable)' : item.name,
-                        element: e.currentTarget,
-                        position: 'BOTTOM',
-                        gap: 5,
-                    });
-                    setLayers({
-                        settings: {
-                            type: 'POPUP',
-                            setNull: true,
-                        },
-                    });
-                } else {
-                    setTooltip(null);
-                    item.func(e);
-                }
+                setTooltip(null);
+                item.func(e);
             }}
         >
             <Icon
                 name={item.icon}
-                fill={item.active && !item.disabled && 'var(--foreground-2)'}
+                fill={item.active && !item.disabled && "var(--foreground-2)"}
             />
         </div>
     );

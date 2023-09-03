@@ -1,12 +1,22 @@
-'use client';
+"use client";
 
-import { AppHeader, Message, TextArea, MemberList, MessageSk, Avatar } from '@components';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { shouldDisplayInlined } from '@/lib/message';
-import useContextHook from '@/hooks/useContextHook';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import styles from './Channels.module.css';
-import { useLayers } from '@/lib/store';
+import { AppHeader, Message, TextArea, MemberList, MessageSk, Avatar } from "@components";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { shouldDisplayInlined } from "@/lib/message";
+import pusher from "@/lib/pusher/client-connection";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useData, useLayers } from "@/lib/store";
+import styles from "./Channels.module.css";
+
+type TMessageData = {
+    channelId: TChannel["id"];
+    message: TMessage;
+};
+
+type TMessageIdData = {
+    channelId: TChannel["id"];
+    messageId: TMessage["id"];
+};
 
 type Props = {
     channel: TChannel;
@@ -20,28 +30,62 @@ const Content = ({ channel, user, friend }: Props) => {
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
+    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
+    const [scrollContainerNode, setScrollContainerNode] = useState<HTMLDivElement | null>(null);
 
-    const { auth }: any = useContextHook({ context: 'auth' });
     const layers = useLayers((state) => state.layers);
+    const token = useData((state) => state.token);
 
     useEffect(() => {
         document.title = `Chat App | @${channel.name}`;
     }, []);
 
     useEffect(() => {
+        if (!user) return;
+
+        pusher.bind("message-sent", (data: TMessageData) => {
+            if (data.channelId === channel.id && data.message.author.id !== user.id) {
+                setMessages((prev) => [...prev, data.message]);
+            }
+        });
+
+        pusher.bind("message-edited", (data: TMessageData) => {
+            if (data.channelId === channel.id) {
+                setMessages((prev) =>
+                    prev.map((message) => {
+                        if (message.id === data.message.id) return data.message;
+                        return message;
+                    })
+                );
+            }
+        });
+
+        pusher.bind("message-deleted", (data: TMessageIdData) => {
+            if (data.channelId === channel.id) {
+                setMessages((prev) => prev.filter((message) => message.id !== data.messageId));
+            }
+        });
+
+        return () => {
+            pusher.unbind("message-sent");
+            pusher.unbind("message-edited");
+            pusher.unbind("message-deleted");
+        };
+    }, [user]);
+
+    useEffect(() => {
         const setLocalStorage = (data: {}) => {
             localStorage.setItem(
                 `channel-${channel.id}`,
                 JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}'),
+                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
                     ...data,
                 })
             );
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 if (edit && !layers.MENU) {
                     setEdit(null);
                     setLocalStorage({ edit: null });
@@ -54,22 +98,22 @@ const Content = ({ channel, user, friend }: Props) => {
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit, reply, layers]);
 
     useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || '{}');
+        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}");
 
         if (localChannel?.edit) setEdit(localChannel.edit);
         if (localChannel?.reply) setReply(localChannel.reply);
 
         const getMessages = async () => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
                 },
             }).then((res) => res?.json());
 
@@ -87,13 +131,27 @@ const Content = ({ channel, user, friend }: Props) => {
         getMessages();
     }, []);
 
-    const scrollableContainer = useCallback(
+    const scrollContainer = useCallback(
         (node: HTMLDivElement) => {
-            if (node) {
-                node.scrollTop = node.scrollHeight;
-            }
+            if (node === null) return;
+            setScrollContainerNode(node);
+            const resizeObserver = new ResizeObserver(() => {
+                if (isAtBottom) node.scrollTop = node.scrollHeight;
+            });
+            resizeObserver.observe(node);
         },
-        [loading, scrollToBottom]
+        [isAtBottom]
+    );
+
+    const scrollContainerChild = useCallback(
+        (node: HTMLDivElement) => {
+            if (node === null || !scrollContainerNode) return;
+            const resizeObserver = new ResizeObserver(() => {
+                if (isAtBottom) scrollContainerNode.scrollTop = scrollContainerNode.scrollHeight;
+            });
+            resizeObserver.observe(node);
+        },
+        [isAtBottom, scrollContainerNode]
     );
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
@@ -131,6 +189,10 @@ const Content = ({ channel, user, friend }: Props) => {
         );
     };
 
+    useEffect(() => {
+        console.log(isAtBottom);
+    }, [isAtBottom]);
+
     return useMemo(
         () => (
             <div className={styles.container}>
@@ -143,12 +205,25 @@ const Content = ({ channel, user, friend }: Props) => {
                     <main className={styles.main}>
                         <div className={styles.messagesWrapper}>
                             <div
-                                ref={scrollableContainer}
-                                className={styles.messagesScrollableContainer + ' scrollbar'}
+                                ref={scrollContainer}
+                                className={styles.messagesScrollableContainer + " scrollbar"}
+                                onScroll={(e) => {
+                                    if (
+                                        e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
+                                        e.currentTarget.scrollHeight
+                                    ) {
+                                        if (!isAtBottom) setIsAtBottom(true);
+                                    } else if (isAtBottom) {
+                                        setIsAtBottom(false);
+                                    }
+                                }}
                             >
-                                <div className={styles.scrollContent}>
+                                <div
+                                    ref={scrollContainerChild}
+                                    className={styles.scrollContent}
+                                >
                                     <ol className={styles.scrollContentInner}>
-                                        {loading || !channel ? (
+                                        {loading ? (
                                             <MessageSk />
                                         ) : (
                                             <>
@@ -167,11 +242,11 @@ const Content = ({ channel, user, friend }: Props) => {
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
-                                                                    {new Intl.DateTimeFormat('en-US', {
-                                                                        weekday: 'long',
-                                                                        year: 'numeric',
-                                                                        month: 'long',
-                                                                        day: 'numeric',
+                                                                    {new Intl.DateTimeFormat("en-US", {
+                                                                        weekday: "long",
+                                                                        year: "numeric",
+                                                                        month: "long",
+                                                                        day: "numeric",
                                                                     }).format(new Date(message.createdAt))}
                                                                 </span>
                                                             </div>
@@ -185,6 +260,7 @@ const Content = ({ channel, user, friend }: Props) => {
                                                             setEdit={setEdit}
                                                             reply={reply}
                                                             setReply={setReply}
+                                                            channel={channel}
                                                         />
                                                     </div>
                                                 ))}
@@ -250,10 +326,10 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                     <div className={styles.descriptionActions}>
                         {user.friendIds.includes(friend.id) ? (
                             <button
-                                className='grey'
+                                className="grey"
                                 onClick={() =>
                                     sendRequest({
-                                        query: 'REMOVE_FRIEND',
+                                        query: "REMOVE_FRIEND",
                                         params: { username: friend.username },
                                     })
                                 }
@@ -261,13 +337,13 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                                 Remove Friend
                             </button>
                         ) : user.requestSentIds?.includes(friend.id) ? (
-                            <button className='blue disabled'>Friend Request Sent</button>
+                            <button className="blue disabled">Friend Request Sent</button>
                         ) : user.requestReceivedIds?.includes(friend.id) ? (
                             <button
-                                className='grey'
+                                className="grey"
                                 onClick={() =>
                                     sendRequest({
-                                        query: 'ADD_FRIEND',
+                                        query: "ADD_FRIEND",
                                         params: { username: friend.username },
                                     })
                                 }
@@ -277,10 +353,10 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                         ) : (
                             !user.blockedUserIds?.includes(friend.id) && (
                                 <button
-                                    className='blue'
+                                    className="blue"
                                     onClick={() =>
                                         sendRequest({
-                                            query: 'ADD_FRIEND',
+                                            query: "ADD_FRIEND",
                                             params: {
                                                 username: friend.username,
                                             },
@@ -294,10 +370,10 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
 
                         {!user.blockedUserIds?.includes(friend.id) ? (
                             <button
-                                className='grey'
+                                className="grey"
                                 onClick={() =>
                                     sendRequest({
-                                        query: 'BLOCK_USER',
+                                        query: "BLOCK_USER",
                                         params: { username: friend.username },
                                     })
                                 }
@@ -306,10 +382,10 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                             </button>
                         ) : (
                             <button
-                                className='grey'
+                                className="grey"
                                 onClick={() =>
                                     sendRequest({
-                                        query: 'UNBLOCK_USER',
+                                        query: "UNBLOCK_USER",
                                         params: { username: friend.username },
                                     })
                                 }
