@@ -1,16 +1,17 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { cookies } from 'next/headers';
-import { SignJWT } from 'jose';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { cookies } from "next/headers";
+import { SignJWT } from "jose";
 
 export async function GET(req: Request): Promise<NextResponse> {
-    const token = cookies().get('token')?.value;
+    const token = cookies().get("token")?.value;
 
     if (!token) {
+        console.error(`[REFRESH] No token.`);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -30,10 +31,11 @@ export async function GET(req: Request): Promise<NextResponse> {
         });
 
         if (!user) {
+            console.error(`[REFRESH] User not found.`);
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Forbidden',
+                    message: "Forbidden",
                 },
                 { status: 401 }
             );
@@ -42,9 +44,9 @@ export async function GET(req: Request): Promise<NextResponse> {
         const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
 
         const accessToken = await new SignJWT({ id: user.id })
-            .setProtectedHeader({ alg: 'HS256' })
+            .setProtectedHeader({ alg: "HS256" })
             .setIssuedAt()
-            .setExpirationTime('1h')
+            .setExpirationTime("1h")
             .setIssuer(process.env.ISSUER as string)
             .setAudience(process.env.ISSUER as string)
             .sign(accessSecret);
@@ -52,7 +54,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully refreshed token.',
+                message: "Successfully refreshed token.",
                 token: accessToken,
             },
             { status: 200 }
@@ -62,7 +64,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
