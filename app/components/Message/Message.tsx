@@ -1,12 +1,11 @@
 "use client";
 
 import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from "@uploadcare/upload-client";
+import { useData, useLayers, useMessages, useTooltip } from "@/lib/store";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers, useTooltip } from "@/lib/store";
 import { trimMessage } from "@/lib/strings";
 import styles from "./Message.module.css";
 import { v4 } from "uuid";
@@ -15,68 +14,29 @@ type Props = {
     message: TMessage;
     setMessages: React.Dispatch<React.SetStateAction<TMessage[]>>;
     large: boolean;
-    last?: boolean;
-    edit?: MessageEditObject | null;
-    setEdit?: React.Dispatch<React.SetStateAction<MessageEditObject | null>>;
-    reply?: MessageReplyObject | null;
-    setReply?: React.Dispatch<React.SetStateAction<MessageReplyObject | null>>;
     channel: TChannel;
     guild?: TGuild;
 };
 
-export const Message = ({ message, setMessages, large, edit, setEdit, reply, setReply, channel, guild }: Props) => {
-    const [editContent, setEditContent] = useState<string>(message.content || "");
+export const Message = ({ message, setMessages, large, channel, guild }: Props) => {
     const [fileProgress, setFileProgress] = useState<number>(0);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
+    const setReply = useMessages((state) => state.setReply);
+    const replies = useMessages((state) => state.replies);
+    const setEdit = useMessages((state) => state.setEdit);
     const layers = useLayers((state) => state.layers);
+    const edits = useMessages((state) => state.edits);
     const { sendRequest } = useFetchHelper();
 
-    const inline = shouldDisplayInlined(message.type);
-    const controller = useMemo(() => new AbortController(), []);
-    const hasRendered = useRef(false);
+    const reply = replies.find((r) => r.messageId === message.id);
+    const edit = edits.find((e) => e.messageId === message.id);
 
-    const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
-        return (
-            <span
-                className={full ? styles.mention : styles.inlineMention}
-                onClick={(e) => {
-                    if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                    setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            element: e.currentTarget,
-                            firstSide: "RIGHT",
-                            gap: 10,
-                        },
-                        content: {
-                            user: user,
-                        },
-                    });
-                }}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (layers.MENU?.settings.element === e.currentTarget) return;
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "USER",
-                            user: user,
-                        },
-                    });
-                }}
-            >
-                {full && "@"}
-                {user.username}
-            </span>
-        );
-    };
+    const controller = useMemo(() => new AbortController(), []);
+    const inline = shouldDisplayInlined(message.type);
+    const hasRendered = useRef(false);
 
     const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
 
@@ -127,8 +87,6 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     }
 
     useEffect(() => {
-        if (!setEdit || !setReply) return;
-
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 if (!edit || edit?.messageId !== message.id) return;
@@ -140,7 +98,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [edit, editContent]);
+    }, [edit]);
 
     const deleteLocalMessage = async () => {
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
@@ -173,7 +131,15 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     if ("value" in props) setFileProgress(props.value);
                 };
 
-                const filesToAdd = prevMessage.attachments.map((file) => file.file);
+                const filesToAdd = await Promise.all(
+                    prevMessage.attachments.map(async (a) => {
+                        // a.url is a blob, so we need to convert it to a file
+                        const response = await fetch(a.url);
+                        const blob = await response.blob();
+                        const file = new File([blob], a.name, { type: blob.type });
+                        return file;
+                    })
+                );
 
                 await uploadFileGroup(filesToAdd, {
                     publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
@@ -184,9 +150,12 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     uploadedFiles = result.files.map((file, index) => {
                         return {
                             id: file.uuid,
+                            url: `https://ucarecdn.com/${file.uuid}/`,
+                            name: prevMessage.attachments[index].name,
                             dimensions: prevMessage.attachments[index].dimensions,
-                            name: prevMessage.attachments[index].file.name,
-                            isSpoiler: prevMessage.attachments[index].file.name.startsWith("SPOILER_"),
+                            size: prevMessage.attachments[index].size,
+                            isSpoiler: prevMessage.attachments[index].isSpoiler,
+                            isImage: prevMessage.attachments[index].isImage,
                             description: prevMessage.attachments[index].description,
                         };
                     });
@@ -206,7 +175,6 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             });
 
             if (!response.success) {
-                // @ts-expect-error
                 setMessages((prev: TMessage[]) => {
                     return prev.map((message) =>
                         message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
@@ -234,7 +202,6 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
             setMessages((messages: TMessage[]) => [...messages, message]);
         } catch (error) {
             console.error(error);
-            // @ts-expect-error
             setMessages((messages) => {
                 return messages.map((message) => {
                     return message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message;
@@ -323,24 +290,12 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
     };
 
     const editMessageState = async () => {
-        if (!setEdit) return;
-
-        setEdit({
-            messageId: message.id,
-            content: message.content || "",
-        });
-
-        setLocalStorage({
-            edit: {
-                messageId: message.id,
-                content: message.content || "",
-            },
-        });
+        setEdit(channel.id, message.id, message.content || "");
     };
 
     const sendEditedMessage = async () => {
-        if (!setEdit) return;
-        const content = trimMessage(editContent);
+        if (edit?.messageId !== message.id) return;
+        const content = trimMessage(edit?.content || "");
 
         if (!content && message.attachments.length === 0) {
             return setLayers({
@@ -377,29 +332,15 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                 data: { content: content },
             });
 
-            setEdit(null);
-            setLocalStorage({ edit: null });
+            setEdit(channel.id, null);
         } catch (error) {
             console.error(error);
         }
     };
 
     const replyToMessageState = () => {
-        if (!setReply) return;
-
-        setReply({
-            channelId: message.channelId,
-            messageId: message.id,
-            author: message.author,
-        });
-
-        setLocalStorage({
-            reply: {
-                channelId: message.channelId,
-                messageId: message.id,
-                author: message.author,
-            },
-        });
+        console.log(message.author.username);
+        setReply(channel.id, message.id, message.author.username);
     };
 
     const getLongDate = (date: Date) => {
@@ -955,23 +896,13 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                 {edit?.messageId === message.id ? (
                                     <>
                                         <TextArea
-                                            channel={message.channelId}
-                                            editContent={editContent}
-                                            setEditContent={setEditContent}
+                                            channel={channel}
+                                            editing={true}
                                         />
 
                                         <div className={styles.editHint}>
-                                            escape to{" "}
-                                            <span
-                                                onClick={() => {
-                                                    if (!setEdit) return;
-                                                    setEdit(null);
-                                                    setLocalStorage({ edit: null });
-                                                }}
-                                            >
-                                                cancel{" "}
-                                            </span>
-                                            • enter to <span onClick={() => sendEditedMessage()}>save </span>
+                                            escape to <span onClick={() => setEdit(channel.id, null)}>cancel </span>•
+                                            enter to <span onClick={() => sendEditedMessage()}>save </span>
                                         </div>
                                     </>
                                 ) : (
@@ -1021,7 +952,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                     <>
                                                         <div>
                                                             {message.attachments.length === 1
-                                                                ? message.attachments[0].file.name
+                                                                ? message.attachments[0].name
                                                                 : `${message.attachments.length} files`}
                                                         </div>
 
@@ -1030,7 +961,7 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                                                             {(
                                                                 message.attachments.reduce(
                                                                     (acc: number, attachment: any) =>
-                                                                        acc + attachment.file.size,
+                                                                        acc + attachment.size,
                                                                     0
                                                                 ) / 1000000
                                                             ).toFixed(2)}{" "}
@@ -1089,37 +1020,79 @@ export const Message = ({ message, setMessages, large, edit, setEdit, reply, set
                     </div>
                 </li>
             ),
-        [message, edit, reply, editContent, layers.MENU, fileProgress]
+        [message, edit, reply, layers.MENU, fileProgress]
+    );
+};
+
+const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
+    const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
+
+    return (
+        <span
+            className={full ? styles.mention : styles.inlineMention}
+            onClick={(e) => {
+                if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                setLayers({
+                    settings: {
+                        type: "USER_CARD",
+                        element: e.currentTarget,
+                        firstSide: "RIGHT",
+                        gap: 10,
+                    },
+                    content: {
+                        user: user,
+                    },
+                });
+            }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (layers.MENU?.settings.element === e.currentTarget) return;
+                setLayers({
+                    settings: {
+                        type: "MENU",
+                        event: e,
+                    },
+                    content: {
+                        type: "USER",
+                        user: user,
+                    },
+                });
+            }}
+        >
+            {full && "@"}
+            {user.username}
+        </span>
     );
 };
 
 const MessageAttachments = ({ message, functions }: any) => {
+    const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
+        <Image
+            attachment={attachment}
+            message={message}
+            functions={functions}
+        />
+    );
+
     return (
         <div className={styles.attachments}>
             <div>
                 {message.attachments.length === 1 &&
-                    message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                    message.attachments.slice(0, 1).map((attachment: TAttachment) => (
                         <div
                             key={attachment.id}
                             className={styles.gridOneBig}
                         >
-                            <Image
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                            <ImageComponent attachment={attachment} />
                         </div>
                     ))}
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
-                        {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                        {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1127,37 +1100,22 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 3 && (
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridTwoColumn}>
                             <div>
                                 <div>
-                                    {message.attachments.slice(1, 2).map((attachment: TImageUpload) => (
-                                        <Image
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                            message={message}
-                                            functions={functions}
-                                        />
+                                    {message.attachments.slice(1, 2).map((attachment: TAttachment) => (
+                                        <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
 
                                 <div>
-                                    {message.attachments.slice(2, 3).map((attachment: TImageUpload) => (
-                                        <Image
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                            message={message}
-                                            functions={functions}
-                                        />
+                                    {message.attachments.slice(2, 3).map((attachment: TAttachment) => (
+                                        <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
                             </div>
@@ -1167,13 +1125,8 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
-                        {message.attachments.slice(0, 4).map((attachment: TImageUpload) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                        {message.attachments.slice(0, 4).map((attachment: TAttachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1181,24 +1134,14 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 5 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(2, 5).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1206,13 +1149,8 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 6).map((attachment: TImageUpload) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                        {message.attachments.slice(0, 6).map((attachment: TAttachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1220,24 +1158,14 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 7 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(1, 7).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1246,24 +1174,14 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 8 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(2, 8).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1271,13 +1189,8 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 9).map((attachment: TImageUpload) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                                functions={functions}
-                            />
+                        {message.attachments.slice(0, 9).map((attachment: TAttachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1285,24 +1198,14 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 10 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment: TImageUpload) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                    functions={functions}
-                                />
+                            {message.attachments.slice(1, 10).map((attachment: TAttachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1328,6 +1231,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
     const setTooltip = useTooltip((state) => state.setTooltip);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
+    const setEdit = useMessages((state) => state.setEdit);
     const layers = useLayers((state) => state.layers);
     const { sendRequest } = useFetchHelper();
 
@@ -1620,7 +1524,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 setTooltip(null);
-                                                functions.editMessageState();
+                                                setEdit(message.channelId, message.id, message.content || "");
                                             }}
                                         >
                                             <Icon name="edit" />
@@ -1786,7 +1690,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 };
 
 type ImageComponent = {
-    attachment: TImageUpload;
+    attachment: TAttachment;
     message: TMessage;
     functions: any;
 };

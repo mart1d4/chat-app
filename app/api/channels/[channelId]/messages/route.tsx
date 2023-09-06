@@ -546,7 +546,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
 
         if (message.attachments) {
-            message.attachments.forEach(async (attachment: any) => {
+            message.attachments.forEach(async (attachment: TAttachment) => {
                 await removeImage(attachment.id);
             });
         }

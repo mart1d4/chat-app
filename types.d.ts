@@ -270,52 +270,24 @@ type TMessage = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
-} &
-    (
-        | {
-              error?: false;
-              waiting?: false;
-              needsToBeSent?: false;
-              attachments: TImageUpload[];
-          }
-        | {
-              waiting: false;
-              error: true;
-              needsToBeSent: false;
-              attachments: TImage[];
-          }
-        | {
-              waiting: true;
-              error: false;
-              needsToBeSent: false;
-              attachments: TImage[];
-          }
-        | {
-              waiting: false;
-              error: false;
-              needsToBeSent: true;
-              attachments: TImage[];
-          }
-    );
 
-type TImage = {
-    id: string;
-    file: File;
-    dimensions: {
-        width: number;
-        height: number;
-    };
-    description?: string;
+    error?: boolean;
+    waiting?: boolean;
+    needsToBeSent?: boolean;
+    attachments: TAttachment[];
 };
 
-type TImageUpload = {
+type TAttachment = {
     id: string;
+    url: string;
     name: string;
     dimensions: {
         width: number;
         height: number;
     };
+    size: number;
     isSpoiler: boolean;
+    isImage: boolean;
     description?: string;
 };
 

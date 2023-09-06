@@ -50,36 +50,42 @@ export const UserChannels = (): ReactElement => {
 const Title = () => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
 
     return (
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <div
+                tabIndex={0}
                 onMouseEnter={(e) => {
-                    if (layers.POPUP.map((layer) => layer.content.type).includes("CREATE_DM")) {
-                        return;
-                    }
                     setTooltip({
                         text: "Create DM",
                         element: e.currentTarget,
                     });
                 }}
                 onMouseLeave={() => setTooltip(null)}
+                onFocus={(e) => {
+                    setTooltip({
+                        text: "Create DM",
+                        element: e.currentTarget,
+                    });
+                }}
+                onBlur={() => setTooltip(null)}
                 onClick={(e) => {
-                    if (layers.POPUP.map((layer) => layer.content.type).includes("CREATE_DM")) {
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                                setNull: true,
-                            },
-                        });
-                        setTooltip({
-                            text: "Create DM",
+                    setLayers({
+                        settings: {
+                            type: "POPUP",
                             element: e.currentTarget,
-                        });
-                    } else {
-                        setTooltip(null);
+                            firstSide: "BOTTOM",
+                            secondSide: "RIGHT",
+                            gap: 5,
+                        },
+                        content: {
+                            type: "CREATE_DM",
+                        },
+                    });
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
                         setLayers({
                             settings: {
                                 type: "POPUP",
@@ -228,6 +234,7 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                     </div>
 
                     <div
+                        tabIndex={0}
                         className={styles.closeButton}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -249,6 +256,29 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                             }
 
                             if (pathname.includes(channel.id)) router.push("/channels/me");
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.stopPropagation();
+                                e.preventDefault();
+
+                                if (channel.type === 0) {
+                                    sendRequest({
+                                        query: "CHANNEL_DELETE",
+                                        params: { channelId: channel.id },
+                                    });
+                                } else {
+                                    sendRequest({
+                                        query: "CHANNEL_RECIPIENT_REMOVE",
+                                        params: {
+                                            channelId: channel.id,
+                                            recipientId: currentUser.id,
+                                        },
+                                    });
+                                }
+
+                                if (pathname.includes(channel.id)) router.push("/channels/me");
+                            }
                         }}
                     >
                         <Icon

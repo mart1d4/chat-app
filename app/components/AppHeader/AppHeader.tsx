@@ -95,7 +95,6 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                       name: "Pinned Messages",
                       icon: "pin",
                       func: (e: any) => {
-                          if (!channel) return;
                           setLayers({
                               settings: {
                                   type: "POPUP",
@@ -181,7 +180,13 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                                 {tabs.map((tab, index) => (
                                     <li
                                         key={index}
+                                        tabIndex={0}
                                         onClick={() => setSettings("friendTab", tab.func)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                setSettings("friendTab", tab.func);
+                                            }
+                                        }}
                                         className={
                                             tab.name === "Add Friend"
                                                 ? settings.friendTab === tab.func
@@ -281,6 +286,7 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                     )}
 
                     <div
+                        tabIndex={0}
                         className={styles.toolbarIcon}
                         onMouseEnter={(e) =>
                             setTooltip({
@@ -291,6 +297,15 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) =>
+                            setTooltip({
+                                text: "Inbox",
+                                element: e.currentTarget,
+                                position: "BOTTOM",
+                                gap: 5,
+                            })
+                        }
+                        onBlur={() => setTooltip(null)}
                     >
                         <Icon name="inbox" />
                     </div>
@@ -307,6 +322,15 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) =>
+                            setTooltip({
+                                text: "Help",
+                                element: e.currentTarget,
+                                position: "BOTTOM",
+                                gap: 5,
+                            })
+                        }
+                        onBlur={() => setTooltip(null)}
                     >
                         <Icon name="help" />
                     </a>
@@ -322,6 +346,7 @@ const ToolbarIcon = ({ item }: any) => {
 
     return (
         <div
+            tabIndex={0}
             className={`${styles.toolbarIcon} ${item.disabled && styles.disabled}`}
             onMouseEnter={(e) => {
                 setTooltip({
@@ -334,8 +359,23 @@ const ToolbarIcon = ({ item }: any) => {
             onMouseLeave={() => setTooltip(null)}
             onClick={(e) => {
                 if (item.disabled) return;
-                setTooltip(null);
                 item.func(e);
+            }}
+            onFocus={(e) => {
+                setTooltip({
+                    text: item.disabled ? item.name + " (Unavailable)" : item.name,
+                    element: e.currentTarget,
+                    position: "BOTTOM",
+                    gap: 5,
+                });
+            }}
+            onBlur={() => setTooltip(null)}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    if (item.disabled) return;
+                    item.func(e);
+                    e.currentTarget.focus();
+                }
             }}
         >
             <Icon

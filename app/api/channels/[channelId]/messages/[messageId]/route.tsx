@@ -59,6 +59,29 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             where: {
                 id: messageId,
             },
+        });
+
+        if (!message) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message not found",
+                },
+                { status: 404 }
+            );
+        }
+
+        const newMessage = await prisma.message.update({
+            where: {
+                id: messageId,
+            },
+            data: {
+                content: encryptMessage(content),
+                attachments: attachments
+                    ? message.attachments.filter((file) => attachments.includes(file.id))
+                    : message.attachments,
+                edited: true,
+            },
             include: {
                 author: {
                     select: {
@@ -139,29 +162,6 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        if (!message) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Message not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        await prisma.message.update({
-            where: {
-                id: messageId,
-            },
-            data: {
-                content: encryptMessage(content),
-                attachments: attachments
-                    ? message.attachments.filter((file) => attachments.includes(file.id))
-                    : message.attachments,
-                edited: true,
-            },
-        });
-
         if (attachments && message.attachments.length !== attachments.length) {
             const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
 
@@ -175,10 +175,12 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         await pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
             message: {
-                ...message,
-                content: content ? content : message.content,
-                attachments: attachments ? attachments : message.attachments,
-                edited: true,
+                ...newMessage,
+                content: decryptMessage(newMessage.content),
+                messageReference: {
+                    ...newMessage.messageReference,
+                    content: decryptMessage(newMessage.messageReference?.content || ""),
+                },
             },
         });
 
@@ -268,14 +270,17 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             );
         }
 
-        if (message.authorId !== senderId) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not the author of this message",
-                },
-                { status: 403 }
-            );
+        if (!channel.guildId) {
+            // If channel is DM or Group DM, user must be the author
+            if (message.authorId !== senderId) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "You are not the author of this message",
+                    },
+                    { status: 403 }
+                );
+            }
         }
 
         await prisma.message.updateMany({

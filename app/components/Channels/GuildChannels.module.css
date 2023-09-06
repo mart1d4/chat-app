@@ -50,6 +50,11 @@
     padding: 12px 16px;
     transition: background-color 0.1s linear;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05), 0 2px 0 rgba(0, 0, 0, 0.05);
+    outline-offset: -5px;
+}
+
+.guildSettings:focus-visible {
+    border-radius: 4px;
 }
 
 .guildSettings:hover {
@@ -65,7 +70,7 @@
 
 .guildSettings > div > div:first-child {
     flex: 1;
-    font-family: 'gg sans';
+    font-family: "gg sans";
     font-size: 16px;
     line-height: 20px;
     font-weight: 600;
@@ -322,13 +327,13 @@
     cursor: pointer;
 }
 
-.category > div:first-child {
+.category > div {
     flex: 1 1 auto;
     overflow: hidden;
     color: var(--foreground-5);
 }
 
-.category > div:first-child > svg {
+.category > div > svg {
     position: absolute;
     left: 2px;
     top: 6px;
@@ -337,12 +342,12 @@
     transition: transform 0.2s ease-out;
 }
 
-.category.hide > div:first-child > svg {
+.category.hide > div > svg {
     transform: rotate(-90deg);
 }
 
-.category > div:first-child > h3 {
-    font-family: 'gg sans';
+.category > div > h3 {
+    font-family: "gg sans";
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -354,11 +359,11 @@
     cursor: pointer;
 }
 
-.category:hover > div:first-child {
+.category:hover > div {
     color: var(--foreground-1);
 }
 
-.category > div:last-child {
+.category > button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -366,9 +371,10 @@
     width: 18px;
     height: 18px;
     color: var(--foreground-4);
+    padding: 0;
 }
 
-.category > div:last-child:hover {
+.category > button:hover {
     color: var(--foreground-1);
 }
 
@@ -397,6 +403,16 @@
 
 .channel a:hover {
     background-color: var(--background-hover-1);
+}
+
+.channel a:focus-visible,
+.channel a:focus-within {
+    background-color: var(--background-hover-1);
+}
+
+.channel a:focus-visible .name,
+.channel a:focus-within .name {
+    color: var(--foreground-2);
 }
 
 .channel a > div {
@@ -443,7 +459,7 @@
     flex: 0 0 auto;
 }
 
-.channel .tools > div {
+.channel .tools > button {
     display: none;
     margin-left: 4px;
     position: relative;
@@ -451,14 +467,16 @@
     line-height: 0;
     align-items: center;
     justify-content: center;
+    padding: 0;
+    height: auto;
 }
 
-.channel a:hover .tools > div {
+.channel a:hover .tools > button {
     display: flex;
     flex: 0 0 auto;
 }
 
-.channel .tools > div > svg {
+.channel .tools > button > svg {
     color: var(--foreground-4);
     width: 16px;
     height: 16px;

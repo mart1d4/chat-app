@@ -3,8 +3,19 @@
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from "@components";
 import { useState, useEffect, useCallback, ReactElement, useMemo } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
-import { useData, useLayers } from "@/lib/store";
+import pusher from "@/lib/pusher/client-connection";
+import { useData, useLayers, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
+
+type TMessageData = {
+    channelId: TChannel["id"];
+    message: TMessage;
+};
+
+type TMessageIdData = {
+    channelId: TChannel["id"];
+    messageId: TMessage["id"];
+};
 
 interface Props {
     guild: TGuild;
@@ -12,50 +23,52 @@ interface Props {
 }
 
 const Content = ({ guild, channel }: Props): ReactElement => {
-    const [edit, setEdit] = useState<MessageEditObject | null>(null);
-    const [reply, setReply] = useState<MessageReplyObject | null>(null);
+    const [scrollerNode, setScrollerNode] = useState<HTMLDivElement | null>(null);
+    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const layers = useLayers((state) => state.layers);
+    const setGuildUrl = useUrls((state) => state.setGuild);
     const token = useData((state) => state.token);
+    const user = useData((state) => state.user);
 
     useEffect(() => {
-        const setLocalStorage = (data: {}) => {
-            localStorage.setItem(
-                `channel-${channel.id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
-                    ...data,
-                })
-            );
-        };
+        if (!user) return;
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                if (edit && !layers.MENU) {
-                    setEdit(null);
-                    setLocalStorage({ edit: null });
-                }
-
-                if (reply && !layers.MENU) {
-                    setReply(null);
-                    setLocalStorage({ reply: null });
-                }
+        pusher.bind("message-sent", (data: TMessageData) => {
+            if (data.channelId === channel.id && data.message.author.id !== user.id) {
+                setMessages((prev) => [...prev, data.message]);
             }
-        };
+        });
 
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [edit, reply, layers.MENU]);
+        pusher.bind("message-edited", (data: TMessageData) => {
+            if (data.channelId === channel.id) {
+                setMessages((prev) =>
+                    prev.map((message) => {
+                        if (message.id === data.message.id) return data.message;
+                        return message;
+                    })
+                );
+            }
+        });
+
+        pusher.bind("message-deleted", (data: TMessageIdData) => {
+            if (data.channelId === channel.id) {
+                setMessages((prev) => prev.filter((message) => message.id !== data.messageId));
+            }
+        });
+
+        return () => {
+            pusher.unbind("message-sent");
+            pusher.unbind("message-edited");
+            pusher.unbind("message-deleted");
+        };
+    }, [user]);
 
     useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}");
-
-        if (localChannel?.edit) setEdit(localChannel.edit);
-        if (localChannel?.reply) setReply(localChannel.reply);
+        document.title = `Chat App | #${channel.name} | ${guild.name}`;
+        setGuildUrl(guild.id, channel.id);
 
         const getMessages = async () => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
@@ -64,11 +77,9 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-            }).then((res) => res?.json());
+            }).then((res) => res.json());
 
-            if (response.error) {
-                console.log(response.error);
-            } else {
+            if (!response.error) {
                 setMessages(response.messages);
                 setHasMore(response.hasMore);
             }
@@ -76,21 +87,30 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             setLoading(false);
         };
 
-        setLoading(true);
         getMessages();
     }, []);
 
-    useEffect(() => {
-        setScrollToBottom((prev) => !prev);
-    }, [messages]);
-
-    const scrollableContainer = useCallback(
+    const scrollContainer = useCallback(
         (node: HTMLDivElement) => {
-            if (node) {
-                node.scrollTop = node.scrollHeight;
-            }
+            if (node === null) return;
+            setScrollerNode(node);
+            const resizeObserver = new ResizeObserver(() => {
+                if (isAtBottom) node.scrollTop = node.scrollHeight;
+            });
+            resizeObserver.observe(node);
         },
-        [loading, scrollToBottom]
+        [isAtBottom]
+    );
+
+    const scrollContainerChild = useCallback(
+        (node: HTMLDivElement) => {
+            if (node === null || !scrollerNode) return;
+            const resizeObserver = new ResizeObserver(() => {
+                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
+            });
+            resizeObserver.observe(node);
+        },
+        [isAtBottom, scrollerNode]
     );
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
@@ -127,6 +147,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         );
     };
 
+    useEffect(() => {
+        console.log(isAtBottom);
+    }, [isAtBottom]);
+
     return useMemo(
         () => (
             <div className={styles.container}>
@@ -136,10 +160,23 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                     <main className={styles.main}>
                         <div className={styles.messagesWrapper}>
                             <div
-                                ref={scrollableContainer}
+                                ref={scrollContainer}
                                 className={styles.messagesScrollableContainer + " scrollbar"}
+                                onScroll={(e) => {
+                                    if (
+                                        e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
+                                        e.currentTarget.scrollHeight
+                                    ) {
+                                        if (!isAtBottom) setIsAtBottom(true);
+                                    } else if (isAtBottom) {
+                                        setIsAtBottom(false);
+                                    }
+                                }}
                             >
-                                <div className={styles.scrollContent}>
+                                <div
+                                    ref={scrollContainerChild}
+                                    className={styles.scrollContent}
+                                >
                                     <ol className={styles.scrollContentInner}>
                                         {loading ? (
                                             <MessageSk />
@@ -173,10 +210,6 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                                             message={message}
                                                             setMessages={setMessages}
                                                             large={shouldBeLarge(index)}
-                                                            edit={edit}
-                                                            setEdit={setEdit}
-                                                            reply={reply}
-                                                            setReply={setReply}
                                                             channel={channel}
                                                             guild={guild}
                                                         />
@@ -193,8 +226,6 @@ const Content = ({ guild, channel }: Props): ReactElement => {
 
                         <TextArea
                             channel={channel}
-                            reply={reply}
-                            setReply={setReply}
                             setMessages={setMessages}
                         />
                     </main>
@@ -206,7 +237,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                 </div>
             </div>
         ),
-        [channel, loading, messages, hasMore, edit, reply]
+        [channel, loading, messages, hasMore]
     );
 };
 

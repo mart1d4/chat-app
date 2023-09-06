@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, ReactElement, ReactNode } from "react";
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
 import { useRouter, usePathname } from "next/navigation";
 import styles from "./AppNav.module.css";
 import { motion } from "framer-motion";
@@ -25,7 +25,18 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
     const requests = useData((state) => state.requestsReceived);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
+    const guildUrls = useUrls((state) => state.guilds);
+    const meUrl = useUrls((state) => state.me);
+
+    let url;
+    if (special) {
+        url = !meUrl ? "/channels/me" : `/channels/me/${meUrl}`;
+    } else if (guild) {
+        const guildUrl = guildUrls.find((obj) => obj.guildId === guild.id);
+        url = guildUrl ? `/channels/${guild.id}/${guildUrl.channelId}` : `/channels/${guild.id}`;
+    } else {
+        url = link;
+    }
 
     const pathname = usePathname();
     const router = useRouter();
@@ -70,7 +81,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
 
             {name !== "Add a Server" ? (
                 <Link
-                    href={link}
+                    href={url}
                     className={active ? styles.wrapperActive : styles.wrapper}
                     onMouseEnter={(e) => {
                         setTooltip({
@@ -114,6 +125,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                                     ? "12px"
                                     : "10px"
                                 : "",
+                        backgroundColor: src ? "transparent" : "",
                     }}
                 >
                     {((requests.length > 0 && special) || (count !== undefined && count > 0)) && (
@@ -147,7 +159,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                     )}
                 </Link>
             ) : (
-                <div
+                <button
                     className={active ? styles.wrapperActive : styles.wrapper}
                     onMouseEnter={(e) => {
                         setTooltip({
@@ -175,7 +187,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                     }}
                 >
                     {svg && svg}
-                </div>
+                </button>
             )}
         </div>
     );

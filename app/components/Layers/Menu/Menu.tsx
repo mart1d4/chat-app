@@ -170,12 +170,11 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
         } else {
             setUserProps(null);
         }
-    }, [content]);
+    }, [content, friends, blockedUsers, requestsSent, requestsReceived]);
 
     const canDeleteMessage = useCallback(() => {
         if (message.authorId === currentUser.id) return true;
         if (content.guildOwnerId) return content.guildOwnerId === currentUser.id;
-        else if (content.channelType === 1) return content.channelOwnerId === currentUser.id;
         return false;
     }, [content, userProps]);
 
@@ -528,7 +527,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: "Divider",
                 },
                 {
-                    name: "Delete Guild",
+                    name: content.guild.ownerId === currentUser.id ? "Delete Server" : null,
                     danger: true,
                     func: () => {
                         sendRequest({

@@ -601,7 +601,7 @@ const Profiles = () => {
                     mask="url(#card-banner-mask)"
                 >
                     <div>
-                        <div
+                        <button
                             className={styles.cardBannerBackground}
                             style={{
                                 backgroundColor: !banner ? primaryColor : "",
@@ -636,7 +636,7 @@ const Profiles = () => {
                 className={styles.cardAvatar}
                 style={{ top: banner ? "76px" : "46px" }}
             >
-                <div
+                <button
                     className={styles.avatarImage}
                     style={{
                         backgroundImage: `url(${
@@ -714,6 +714,7 @@ const Profiles = () => {
                 </AnimatePresence>
 
                 <input
+                    tabIndex={-1}
                     ref={avatarInputRef}
                     className={styles.hiddenInput}
                     type="file"
@@ -763,6 +764,7 @@ const Profiles = () => {
                 />
 
                 <input
+                    tabIndex={-1}
                     ref={bannerInputRef}
                     className={styles.hiddenInput}
                     type="file"
@@ -812,6 +814,7 @@ const Profiles = () => {
                 />
 
                 <input
+                    tabIndex={-1}
                     ref={primaryColorInputRef}
                     className={styles.hiddenInput}
                     type="color"
@@ -819,6 +822,7 @@ const Profiles = () => {
                 />
 
                 <input
+                    tabIndex={-1}
                     ref={accentColorInputRef}
                     className={styles.hiddenInput}
                     type="color"
@@ -1067,7 +1071,7 @@ const Profiles = () => {
                                             </div>
                                         </div>
 
-                                        <button>Example Button</button>
+                                        <button tabIndex={-1}>Example Button</button>
                                     </div>
                                 </div>
                             </div>

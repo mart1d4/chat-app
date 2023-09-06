@@ -80,7 +80,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
 
             setJoin(false);
             setGuildTemplate(0);
-            setGuildName("`${auth.user.username}'s server`");
+            setGuildName(`${user.username}'s server`);
             setGuildIcon(null);
 
             setChannelName("");
@@ -92,16 +92,11 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     useEffect(() => {
         if (!content.file) return;
 
-        const imageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng", "image/apng"];
-
-        const isFileImage = async () => {
-            const fileBytes = new Uint8Array(await content.file.file.arrayBuffer());
-            const fileType = filetypeinfo(fileBytes)?.[0]?.mime?.toString();
-            setIsImage(imageTypes.includes(fileType ?? ""));
-        };
-
-        isFileImage();
-    }, [content.file]);
+        setIsImage(content.attachment.isImage);
+        setFilename(content.attachment.name);
+        setDescription(content.attachment.description ?? "");
+        setIsSpoiler(content.attachment.isSpoiler);
+    }, [content.attachment]);
 
     const handleUsernameSubmit = async () => {
         if (isLoading) return;
@@ -328,9 +323,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             },
         },
         FILE_EDIT: {
-            title: content.file?.file?.name.startsWith("SPOILER_")
-                ? content.file.file.name.slice(8)
-                : content?.file?.file?.name,
+            title: content?.attachment?.isSpoiler ? content?.attachment?.name.slice(8) : content?.attachment?.name,
             description: "",
             buttonColor: "blue",
             buttonText: "Save",
@@ -403,12 +396,12 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     };
 
     useEffect(() => {
-        if (!content?.file) return;
-        const name = content.file.file.name;
-        setFilename(name.startsWith("SPOILER_") ? name.slice(8) : name);
-        setDescription(content.file.description ?? "");
-        setIsSpoiler(content.file.file.name.startsWith("SPOILER_"));
-    }, [content.file]);
+        if (!content.attachment) return;
+        setIsImage(content.attachment.isImage);
+        setFilename(content.attachment.name);
+        setDescription(content.attachment.description ?? "");
+        setIsSpoiler(content.attachment.isSpoiler);
+    }, [content.attachment]);
 
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
@@ -634,20 +627,17 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     }}
                     onContextMenu={(e) => e.preventDefault()}
                 >
-                    {type === "FILE_EDIT" &&
-                        (isImage ? (
-                            <img
-                                className={styles.imagePopup}
-                                src={URL.createObjectURL(content.file.file)}
-                                alt={content.file.file.name}
-                            />
-                        ) : (
-                            <img
-                                className={styles.imagePopup}
-                                src="https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
-                                alt={content.file.file.name}
-                            />
-                        ))}
+                    {type === "FILE_EDIT" && (
+                        <img
+                            className={styles.imagePopup}
+                            src={
+                                isImage
+                                    ? content.attachment.url
+                                    : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
+                            }
+                            alt={content.attachment.name}
+                        />
+                    )}
 
                     {!prop?.centered ? (
                         <div
@@ -711,6 +701,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 )}
                             </>
                         )}
+
                         {(type === "DELETE_MESSAGE" || type === "UNPIN_MESSAGE") && (
                             <div className={styles.protip}>
                                 <div>Protip:</div>
@@ -722,6 +713,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 </div>
                             </div>
                         )}
+
                         {type === "CHANNEL_EXISTS" && (
                             <div
                                 className={styles.channelItem}
@@ -745,6 +737,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 <span>{getRelativeDate(content.channel.updatedAt, true)}</span>
                             </div>
                         )}
+
                         {type === "GROUP_OWNER_CHANGE" && (
                             <div className={styles.ownerChange}>
                                 <svg
@@ -797,6 +790,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 <div>Transfer ownership of this group to {content.recipient.username}?</div>
                             </div>
                         )}
+
                         {type === "CREATE_GUILD" && !guildTemplate && !join && (
                             <>
                                 <button
@@ -936,6 +930,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 </div>
                             </>
                         )}
+
                         {type === "GUILD_CHANNEL_CREATE" && (
                             <>
                                 {!content.isCategory && (
@@ -1051,6 +1046,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 </div>
                             </>
                         )}
+
                         {type === "FILE_EDIT" && (
                             <>
                                 <div className={styles.input}>
@@ -1141,6 +1137,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 </label>
                             </>
                         )}
+
                         {type === "UPDATE_USERNAME" && (
                             <>
                                 <div className={styles.input}>
@@ -1205,6 +1202,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 </div>
                             </>
                         )}
+
                         {type === "UPDATE_PASSWORD" && (
                             <>
                                 <div className={styles.input}>
@@ -1308,11 +1306,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         )}
                     </div>
 
-                    <div
-                        style={{
-                            margin: type === "FILE_EDIT" ? "0 -4px" : "",
-                        }}
-                    >
+                    <div style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}>
                         <button
                             className="underline"
                             onClick={() => {

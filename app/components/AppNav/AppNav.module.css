@@ -41,8 +41,10 @@
     border-radius: 50%;
     cursor: pointer;
     background-color: var(--background-4);
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out, color 0.15s ease-in-out;
     text-decoration: none;
+    padding: 0;
+    outline-offset: 2px;
 }
 
 .wrapperActive,

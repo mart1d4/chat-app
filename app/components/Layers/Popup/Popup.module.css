@@ -513,6 +513,7 @@
 
 .imagePreview > img {
     max-width: 70dvw;
+    max-height: 70dvh;
 }
 
 .imageLink {
@@ -525,8 +526,10 @@
     text-decoration: none;
     line-height: 30px;
     opacity: 0.5;
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease, text-decoration 0.2s ease;
     width: 100px;
+    border-radius: 4px;
+    outline-offset: 0px;
 }
 
 .imageLink:hover {

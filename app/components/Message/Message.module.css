@@ -546,10 +546,18 @@
     max-height: 350px;
 }
 
+.gridOneBig img {
+    max-height: 350px;
+}
+
 .gridOne {
     display: flex;
     max-height: 280px;
     width: 100%;
+}
+
+.gridOne img {
+    max-height: 280px;
 }
 
 .gridOneSolo {
@@ -561,6 +569,11 @@
     gap: 4px;
     display: flex;
     max-height: 350px;
+}
+
+.gridTwo img {
+    max-height: 350px;
+    aspect-ratio: 1;
 }
 
 .gridTwoColumn {
@@ -587,11 +600,19 @@
     max-height: 350px;
 }
 
+.gridFour img {
+    max-height: 350px;
+}
+
 .gridThree {
     margin-top: 4px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
+}
+
+.gridThree img {
+    aspect-ratio: 1;
 }
 
 /* .gridThree .image {
@@ -603,6 +624,10 @@
     flex-direction: row;
     gap: 4px;
     display: flex;
+}
+
+.gridThreeBig img {
+    max-height: 350px;
 }
 
 /* MENTIONS */

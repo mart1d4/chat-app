@@ -1,10 +1,10 @@
-import { removeImage } from '@/lib/api/cdn';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import { removeImage } from "@/lib/api/cdn";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function DELETE(req: Request): Promise<NextResponse> {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const { attachments } = await req.json();
 
     try {
@@ -18,7 +18,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -28,20 +28,20 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'No attachments found.',
+                    message: "No attachments found.",
                 },
                 { status: 404 }
             );
         }
 
-        attachments.forEach(async (attachment: TImageUpload) => {
+        attachments.forEach(async (attachment: TAttachment) => {
             await removeImage(attachment.id);
         });
 
         return NextResponse.json(
             {
                 success: true,
-                message: 'Attachments deleted.',
+                message: "Attachments deleted.",
             },
             { status: 200 }
         );
@@ -50,7 +50,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

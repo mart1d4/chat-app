@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, ReactElement } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
+import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserProfile.module.css";
 import { translateCap } from "@/lib/strings";
 import { Avatar, Icon } from "@components";
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 const colors = {
     ONLINE: "#22A559",
@@ -27,32 +28,31 @@ const masks = {
 
 export const UserProfile = ({ content }: any): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
-    const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
     const [note, setNote] = useState<string>("");
 
     const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const requestsReceived = useData((state) => state.requestsReceived);
     const currentUser = useData((state) => state.user) as TCleanUser;
+    const requestsSent = useData((state) => state.requestsSent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
+    const friends = useData((state) => state.friends);
+    const blocked = useData((state) => state.blocked);
+    const guilds = useData((state) => state.guilds);
+    const { sendRequest } = useFetchHelper();
+
+    const user = content.user;
+    const mutualFriends = friends.filter((friend: TCleanUser) => user.friendIds.includes(friend.id));
+    const mutualGuilds = guilds.filter((guild: TGuild) => user.guildIds.includes(guild.id));
 
     const cardRef = useRef<HTMLDivElement>(null);
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
-    const user: null | TCleanUser = content?.user;
     const isSameUser = () => user?.id === currentUser.id;
 
     useEffect(() => {
-        if (!user) return;
-
-        if (!isSameUser()) {
-            const friends = currentUser.friends || [];
-            const mutuals = friends.filter((friend: TCleanUser) => user.friendIds?.includes(friend.id));
-            setMutualFriends(mutuals);
-        }
-
         if (content.focusNote) noteRef.current?.focus();
-
         setActiveNavItem(0);
         setNote("");
     }, [user]);
@@ -97,7 +97,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
         >
             <div>
                 {isSameUser() && (
-                    <div
+                    <button
                         className={styles.editProfileButton}
                         aria-label="Edit Profile"
                         role="button"
@@ -108,6 +108,13 @@ export const UserProfile = ({ content }: any): ReactElement => {
                             });
                         }}
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) => {
+                            setTooltip({
+                                text: "Edit Profile",
+                                element: e.currentTarget,
+                            });
+                        }}
+                        onBlur={() => setTooltip(null)}
                         onClick={() => {
                             setLayers({
                                 settings: {
@@ -125,14 +132,14 @@ export const UserProfile = ({ content }: any): ReactElement => {
                             name="edit"
                             size={24}
                         />
-                    </div>
+                    </button>
                 )}
 
                 <svg
                     className={styles.cardBanner}
-                    viewBox={`0 0 600 ${user.banner ? "212" : "106"}`}
+                    viewBox={`0 0 600 ${user.banner ? "212" : "108"}`}
                     style={{
-                        minHeight: user.banner ? "212px" : "106px",
+                        minHeight: user.banner ? "212px" : "108px",
                         minWidth: "600px",
                     }}
                 >
@@ -205,14 +212,132 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                 width="100%"
                                 rx={12}
                                 ry={12}
-                                fill={colors[user.status ?? "OFFLINE"]}
-                                mask={`url(#${masks[user.status ?? "OFFLINE"]})`}
+                                // @ts-ignore
+                                fill={colors[user.status || "OFFLINE"]}
+                                // @ts-ignore
+                                mask={`url(#${masks[user.status || "OFFLINE"]})`}
                             />
                         </svg>
                     </div>
                 </div>
 
-                <div className={styles.cardBadges}></div>
+                <div className={styles.cardHeader}>
+                    <div className={styles.cardBadges}></div>
+
+                    {!isSameUser() && (
+                        <div className={styles.cardTools}>
+                            {!blocked.map((u) => u.id).includes(user.id) && (
+                                <>
+                                    {requestsReceived.map((u) => u.id).includes(user.id) ? (
+                                        <>
+                                            <button
+                                                className="green"
+                                                onClick={() =>
+                                                    sendRequest({
+                                                        query: "ADD_FRIEND",
+                                                        params: {
+                                                            username: user.username,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                Accept
+                                            </button>
+
+                                            <button
+                                                className="grey"
+                                                onClick={() =>
+                                                    sendRequest({
+                                                        query: "REMOVE_FRIEND",
+                                                        params: {
+                                                            username: user.username,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                Ignore
+                                            </button>
+                                        </>
+                                    ) : friends.map((u) => u.id).includes(user.id) ? (
+                                        <button
+                                            className="green"
+                                            onClick={() => {
+                                                sendRequest({
+                                                    query: "CHANNEL_CREATE",
+                                                    data: {
+                                                        recipients: [user.id],
+                                                    },
+                                                });
+                                                setLayers({
+                                                    settings: {
+                                                        type: "USER_PROFILE",
+                                                        setNull: true,
+                                                    },
+                                                });
+                                            }}
+                                        >
+                                            Send Message
+                                        </button>
+                                    ) : (
+                                        <div>
+                                            <button
+                                                className={
+                                                    requestsSent.map((u) => u.id).includes(user.id)
+                                                        ? "green disabled"
+                                                        : "green"
+                                                }
+                                                onClick={() => {
+                                                    if (requestsSent.map((u) => u.id).includes(user.id)) {
+                                                        return;
+                                                    }
+                                                    sendRequest({
+                                                        query: "ADD_FRIEND",
+                                                        params: {
+                                                            username: user.username,
+                                                        },
+                                                    });
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!requestsSent.map((u) => u.id).includes(user.id)) return;
+                                                    setTooltip({
+                                                        text: "You sent a friend request to this user.",
+                                                        element: e.currentTarget,
+                                                        gap: 5,
+                                                    });
+                                                }}
+                                                onMouseLeave={() => setTooltip(null)}
+                                            >
+                                                {requestsSent.map((u) => u.id).includes(user.id)
+                                                    ? "Friend Request Sent"
+                                                    : "Send Friend Request"}
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            <button
+                                className={styles.moreButton}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLayers({
+                                        settings: {
+                                            type: "MENU",
+                                            event: e,
+                                        },
+                                        content: {
+                                            type: "USER",
+                                            user: user,
+                                            userprofile: true,
+                                        },
+                                    });
+                                }}
+                            >
+                                <Icon name="more" />
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 <div className={styles.cardBody}>
                     <div className={styles.cardSection + " " + styles.name}>
@@ -230,7 +355,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         <div className={styles.contentNav}>
                             <div>
                                 {sectionNavItems.map((item, index) => (
-                                    <div
+                                    <button
                                         className={styles.contentNavItem}
                                         key={index}
                                         style={{
@@ -243,7 +368,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         onClick={() => setActiveNavItem(index)}
                                     >
                                         {item}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         </div>
@@ -253,7 +378,8 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         className={
                             styles.scrollContainer +
                             " scrollbar " +
-                            (activeNavItem === 2 && mutualFriends.length > 0
+                            ((activeNavItem === 2 && mutualFriends.length > 0) ||
+                            (activeNavItem === 1 && mutualGuilds.length > 0)
                                 ? styles.margin
                                 : activeNavItem === 0
                                 ? styles.padding
@@ -282,7 +408,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
                                 <div className={styles.cardSection}>
                                     <h4>Note</h4>
-                                    <div>
+                                    <div style={{ overflow: "visible" }}>
                                         <textarea
                                             className={styles.cardInput + " scrollbar"}
                                             ref={noteRef}
@@ -301,10 +427,21 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         )}
 
                         {activeNavItem === 1 && (
-                            <div className={styles.empty}>
-                                <div />
-                                <div>No servers in common</div>
-                            </div>
+                            <>
+                                {mutualGuilds.length > 0 ? (
+                                    mutualGuilds.map((guild) => (
+                                        <FriendItem
+                                            key={guild.id}
+                                            guild={guild}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className={styles.empty + " " + styles.noFriends}>
+                                        <div />
+                                        <div>No servers in common</div>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {activeNavItem === 2 && (
@@ -331,152 +468,85 @@ export const UserProfile = ({ content }: any): ReactElement => {
     );
 };
 
-{
-    /* <div className={styles.topSectionToolbar}>
-                                <div></div>
-
-                                {!isSameUser() && (
-                                    <div>
-                                        {!auth.user.blockedUserIds.includes(user.id) && (
-                                            <>
-                                                {auth.user.requestReceivedIds.includes(user.id) ? (
-                                                    <>
-                                                        <button
-                                                            className='green'
-                                                            onClick={async () =>
-                                                                await addFriend(
-                                                                    token,
-                                                                    user.username
-                                                                )
-                                                            }
-                                                        >
-                                                            Accept
-                                                        </button>
-
-                                                        <button
-                                                            className='grey'
-                                                            onClick={async () =>
-                                                                await removeFriend(
-                                                                    token,
-                                                                    user.username
-                                                                )
-                                                            }
-                                                        >
-                                                            Ignore
-                                                        </button>
-                                                    </>
-                                                ) : auth.user.friendIds.includes(user.id) ? (
-                                                    <button
-                                                        className='green'
-                                                        onClick={async () =>
-                                                            await createChannel(token, [user.id])
-                                                        }
-                                                    >
-                                                        Send Message
-                                                    </button>
-                                                ) : (
-                                                    <div>
-                                                        <button
-                                                            className={
-                                                                auth.user.requestSentIds.includes(
-                                                                    user.id
-                                                                )
-                                                                    ? 'green disabled'
-                                                                    : 'green'
-                                                            }
-                                                            onClick={async () => {
-                                                                if (
-                                                                    auth.user.requestSentIds?.includes(
-                                                                        user.id
-                                                                    )
-                                                                ) {
-                                                                    return;
-                                                                }
-                                                                await addFriend(
-                                                                    token,
-                                                                    user.username
-                                                                );
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                if (
-                                                                    !auth.user.requestSentIds?.includes(
-                                                                        user.id
-                                                                    )
-                                                                )
-                                                                    return;
-                                                                setTooltip({
-                                                                    text: 'You sent a friend request to this user.',
-                                                                    element: e.currentTarget,
-                                                                    gap: 5,
-                                                                });
-                                                            }}
-                                                            onMouseLeave={() => setTooltip(null)}
-                                                        >
-                                                            Send Friend Request
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-
-                                        <div
-                                            className={styles.moreButton}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setLayers({
-                                                    type: 'MENU',
-                                                    event: e,
-                                                    user: user,
-                                                    userprofile: true,
-                                                });
-                                            }}
-                                        >
-                                            <Icon name='more' />
-                                        </div>
-                                    </div>
-                                )}
-                            </div> */
-}
-
-const FriendItem = ({ friend }: { friend: TCleanUser }): ReactElement => {
+const FriendItem = ({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }): ReactElement => {
+    if (!friend && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
+    const router = useRouter();
 
     return (
-        <div
+        <button
             className={styles.userItem}
             onClick={() => {
-                setLayers({
-                    settings: {
-                        type: "USER_PROFILE",
-                    },
-                    content: {
-                        user: friend,
-                    },
-                });
+                if (friend) {
+                    setLayers({
+                        settings: {
+                            type: "USER_PROFILE",
+                        },
+                        content: {
+                            user: friend,
+                        },
+                    });
+                } else if (guild) {
+                    router.push(`/channels/${guild.id}`);
+                    setLayers({
+                        settings: {
+                            type: "USER_PROFILE",
+                            setNull: true,
+                        },
+                    });
+                }
             }}
             onContextMenu={(e) => {
                 setLayers({
                     settings: {
-                        type: "POPUP",
+                        type: "MENU",
                         event: e,
                     },
                     content: {
-                        type: "USER",
+                        type: friend ? "USER" : "GUILD_ICON",
                         user: friend,
+                        guild: guild,
                     },
                 });
             }}
         >
             <div>
-                <Avatar
-                    src={friend.avatar}
-                    alt={friend.username}
-                    size={40}
-                    status={friend.status ?? "Offline"}
-                />
+                {friend && (
+                    <Avatar
+                        src={friend.avatar}
+                        alt={friend.username}
+                        size={40}
+                        status={friend.status ?? "Offline"}
+                    />
+                )}
+
+                {guild && (
+                    <div
+                        className={styles.guildIcon}
+                        style={{
+                            backgroundColor: guild.icon ? "transparent" : "",
+                        }}
+                    >
+                        {guild.icon ? (
+                            <Avatar
+                                src={guild.icon}
+                                alt={guild.name}
+                                size={40}
+                            />
+                        ) : (
+                            guild.name
+                                .toLowerCase()
+                                .match(/\b(\w)/g)
+                                ?.join("") ?? ""
+                        )}
+                    </div>
+                )}
             </div>
 
-            <div>{friend?.username}</div>
-        </div>
+            <div>
+                {friend && friend.username}
+                {guild && guild.name}
+            </div>
+        </button>
     );
 };

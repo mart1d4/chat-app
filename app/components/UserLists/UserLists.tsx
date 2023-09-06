@@ -81,7 +81,7 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
 
     useEffect(() => {
         if (content === "online") {
-            setList(friends.filter((user) => user.status === "ONLINE"));
+            setList(friends.filter((user) => user.status !== "OFFLINE"));
         } else if (content === "all") {
             setList(friends);
         } else if (content === "pending") {

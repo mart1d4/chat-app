@@ -22,6 +22,7 @@ export const UserSection = (): ReactElement => {
         <div className={styles.userSectionContainer}>
             <div className={styles.userSection}>
                 <div
+                    tabIndex={0}
                     ref={userSection}
                     className={styles.avatarWrapper}
                     onClick={(e) => {
@@ -39,6 +40,24 @@ export const UserSection = (): ReactElement => {
                                 animation: "off",
                             },
                         });
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                            setLayers({
+                                settings: {
+                                    type: "USER_CARD",
+                                    element: e.currentTarget,
+                                    firstSide: "TOP",
+                                    secondSide: "RIGHT",
+                                    gap: 14,
+                                },
+                                content: {
+                                    user: user,
+                                    animation: "off",
+                                },
+                            });
+                        }
                     }}
                     style={{
                         backgroundColor:
@@ -72,6 +91,14 @@ export const UserSection = (): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) =>
+                            setTooltip({
+                                text: settings.microphone ? "Mute" : "Unmute",
+                                element: e.currentTarget,
+                                gap: 3,
+                            })
+                        }
+                        onBlur={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
                                 text: !settings.microphone ? "Mute" : "Unmute",
@@ -94,6 +121,30 @@ export const UserSection = (): ReactElement => {
                                 audio.play();
                             }
                         }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                setTooltip({
+                                    text: !settings.microphone ? "Mute" : "Unmute",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                });
+
+                                if (!settings.microphone && !settings.sound) {
+                                    setSettings("microphone", true);
+                                    setSettings("sound", true);
+                                    const audio = new Audio("/assets/sounds/undeafen.mp3");
+                                    audio.volume = 0.5;
+                                    audio.play();
+                                } else {
+                                    setSettings("microphone", !settings.microphone);
+                                    const audio = new Audio(`
+                                        /assets/sounds/${settings.microphone ? "mute" : "unmute"}.mp3
+                                    `);
+                                    audio.volume = 0.5;
+                                    audio.play();
+                                }
+                            }
+                        }}
                         className={settings.microphone ? "" : styles.cut}
                     >
                         <div className={styles.toolbar}>
@@ -113,6 +164,14 @@ export const UserSection = (): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) =>
+                            setTooltip({
+                                text: settings.sound ? "Deafen" : "Undeafen",
+                                element: e.currentTarget,
+                                gap: 3,
+                            })
+                        }
+                        onBlur={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
                                 text: !settings.sound ? "Deafen" : "Undeafen",
@@ -133,6 +192,28 @@ export const UserSection = (): ReactElement => {
                             audio.volume = 0.5;
                             audio.play();
                         }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                setTooltip({
+                                    text: !settings.sound ? "Deafen" : "Undeafen",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                });
+
+                                if (settings.microphone && settings.sound) {
+                                    setSettings("microphone", false);
+                                    setSettings("sound", false);
+                                } else {
+                                    setSettings("sound", !settings.sound);
+                                }
+
+                                const audio = new Audio(`
+                                        /assets/sounds/${settings.sound ? "deafen" : "undeafen"}.mp3
+                                    `);
+                                audio.volume = 0.5;
+                                audio.play();
+                            }
+                        }}
                         className={settings.sound ? "" : styles.cut}
                     >
                         <div className={styles.toolbar}>
@@ -152,7 +233,20 @@ export const UserSection = (): ReactElement => {
                             })
                         }
                         onMouseLeave={() => setTooltip(null)}
+                        onFocus={(e) =>
+                            setTooltip({
+                                text: "User Settings",
+                                element: e.currentTarget,
+                                gap: 3,
+                            })
+                        }
+                        onBlur={() => setTooltip(null)}
                         onClick={() => setShowSettings(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                setShowSettings(true);
+                            }
+                        }}
                     >
                         <div className={styles.toolbar}>
                             <Icon

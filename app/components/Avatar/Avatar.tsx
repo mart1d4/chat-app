@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import useContextHook from '@/hooks/useContextHook';
-import { translateCap } from '@/lib/strings';
-import styles from './Avatar.module.css';
-import { useEffect } from 'react';
-import Image from 'next/image';
-import { useTooltip } from '@/lib/store';
+import useContextHook from "@/hooks/useContextHook";
+import { translateCap } from "@/lib/strings";
+import styles from "./Avatar.module.css";
+import { useEffect } from "react";
+import Image from "next/image";
+import { useTooltip } from "@/lib/store";
 
 type Props = {
     src: string;
-    srcAs?: 'png' | 'jpeg' | 'gif' | 'webp';
+    srcAs?: "png" | "jpeg" | "gif" | "webp";
     alt: string;
     size: 16 | 24 | 32 | 40 | 80 | 120;
     status?: EUserStatus | undefined;
@@ -19,11 +19,11 @@ type Props = {
 };
 
 const colors = {
-    ONLINE: '#22A559',
-    IDLE: '#F0B232',
-    DO_NOT_DISTURB: '#F23F43',
-    INVISIBLE: '#80848E',
-    OFFLINE: '#80848E',
+    ONLINE: "#22A559",
+    IDLE: "#F0B232",
+    DO_NOT_DISTURB: "#F23F43",
+    INVISIBLE: "#80848E",
+    OFFLINE: "#80848E",
 };
 
 const rectSizes = {
@@ -45,11 +45,11 @@ const rectPlacements = {
 };
 
 const masks = {
-    ONLINE: '',
-    IDLE: 'status-mask-idle',
-    DO_NOT_DISTURB: 'status-mask-dnd',
-    INVISIBLE: 'status-mask-offline',
-    OFFLINE: 'status-mask-offline',
+    ONLINE: "",
+    IDLE: "status-mask-idle",
+    DO_NOT_DISTURB: "status-mask-dnd",
+    INVISIBLE: "status-mask-offline",
+    OFFLINE: "status-mask-offline",
 };
 
 export const Avatar = (props: Props) => {
@@ -70,168 +70,168 @@ export const Avatar = (props: Props) => {
                 width={props.size + 8}
                 height={props.size + 8}
                 viewBox={`0 0 ${props.size + 8} ${props.size + 8}`}
-                aria-hidden='true'
+                aria-hidden="true"
                 className={styles.svg}
             >
                 <mask
-                    id='status-mask-24'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-24"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
 
                     <circle
-                        fill='black'
-                        cx='0.85'
-                        cy='0.85'
-                        r='0.275'
+                        fill="black"
+                        cx="0.85"
+                        cy="0.85"
+                        r="0.275"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-32'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-32"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
 
                     <circle
-                        fill='black'
-                        cx='0.85'
-                        cy='0.85'
-                        r='0.25'
+                        fill="black"
+                        cx="0.85"
+                        cy="0.85"
+                        r="0.25"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-40'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-40"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
 
                     <circle
-                        fill='black'
-                        cx='0.85'
-                        cy='0.85'
-                        r='0.240'
+                        fill="black"
+                        cx="0.85"
+                        cy="0.85"
+                        r="0.240"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-80'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-80"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
 
                     <circle
-                        fill='black'
-                        cx='0.85'
-                        cy='0.85'
-                        r='0.175'
+                        fill="black"
+                        cx="0.85"
+                        cy="0.85"
+                        r="0.175"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-120'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-120"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
 
                     <circle
-                        fill='black'
-                        cx='0.85'
-                        cy='0.85'
-                        r='0.16'
+                        fill="black"
+                        cx="0.85"
+                        cy="0.85"
+                        r="0.16"
                     />
                 </mask>
 
                 {/* Inner Masks */}
 
                 <mask
-                    id='status-mask-offline'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-offline"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
                     <circle
-                        fill='black'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.25'
+                        fill="black"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.25"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-dnd'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-dnd"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
                     <rect
-                        fill='black'
-                        x='0.125'
-                        y='0.375'
-                        width='0.75'
-                        height='0.25'
-                        rx='0.125'
-                        ry='0.125'
+                        fill="black"
+                        x="0.125"
+                        y="0.375"
+                        width="0.75"
+                        height="0.25"
+                        rx="0.125"
+                        ry="0.125"
                     />
                 </mask>
 
                 <mask
-                    id='status-mask-idle'
-                    maskContentUnits='objectBoundingBox'
-                    viewBox='0 0 1 1'
+                    id="status-mask-idle"
+                    maskContentUnits="objectBoundingBox"
+                    viewBox="0 0 1 1"
                 >
                     <circle
-                        fill='white'
-                        cx='0.5'
-                        cy='0.5'
-                        r='0.5'
+                        fill="white"
+                        cx="0.5"
+                        cy="0.5"
+                        r="0.5"
                     />
                     <circle
-                        fill='black'
-                        cx='0.25'
-                        cy='0.25'
-                        r='0.375'
+                        fill="black"
+                        cx="0.25"
+                        cy="0.25"
+                        r="0.375"
                     />
                 </mask>
 
@@ -240,7 +240,7 @@ export const Avatar = (props: Props) => {
                     y={0}
                     width={props.size}
                     height={props.size}
-                    overflow='visible'
+                    overflow="visible"
                     mask={`url(#status-mask-${props.size})`}
                 >
                     <div className={styles.container}>
@@ -263,6 +263,7 @@ export const Avatar = (props: Props) => {
                         if (!props.tooltip) return;
                         setTooltip({
                             text: translateCap(props.status),
+                            // @ts-ignore
                             element: e.currentTarget,
                             gap: props.tooltipGap || 0,
                         });

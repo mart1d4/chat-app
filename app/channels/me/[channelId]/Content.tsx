@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers } from "@/lib/store";
+import { useData, useLayers, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 
 type TMessageData = {
@@ -25,20 +25,14 @@ type Props = {
 };
 
 const Content = ({ channel, user, friend }: Props) => {
-    const [edit, setEdit] = useState<MessageEditObject | null>(null);
-    const [reply, setReply] = useState<MessageReplyObject | null>(null);
+    const [scrollerNode, setScrollerNode] = useState<HTMLDivElement | null>(null);
+    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
     const [messages, setMessages] = useState<TMessage[]>([]);
     const [hasMore, setHasMore] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
-    const [scrollContainerNode, setScrollContainerNode] = useState<HTMLDivElement | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const layers = useLayers((state) => state.layers);
+    const setChannelUrl = useUrls((state) => state.setMe);
     const token = useData((state) => state.token);
-
-    useEffect(() => {
-        document.title = `Chat App | @${channel.name}`;
-    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -74,39 +68,8 @@ const Content = ({ channel, user, friend }: Props) => {
     }, [user]);
 
     useEffect(() => {
-        const setLocalStorage = (data: {}) => {
-            localStorage.setItem(
-                `channel-${channel.id}`,
-                JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
-                    ...data,
-                })
-            );
-        };
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                if (edit && !layers.MENU) {
-                    setEdit(null);
-                    setLocalStorage({ edit: null });
-                }
-
-                if (reply && !layers.MENU) {
-                    setReply(null);
-                    setLocalStorage({ reply: null });
-                }
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [edit, reply, layers]);
-
-    useEffect(() => {
-        const localChannel = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}");
-
-        if (localChannel?.edit) setEdit(localChannel.edit);
-        if (localChannel?.reply) setReply(localChannel.reply);
+        document.title = `Chat App | @${channel.name}`;
+        setChannelUrl(channel.id);
 
         const getMessages = async () => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
@@ -115,11 +78,9 @@ const Content = ({ channel, user, friend }: Props) => {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-            }).then((res) => res?.json());
+            }).then((res) => res.json());
 
-            if (response.error) {
-                console.log(response.error);
-            } else {
+            if (!response.error) {
                 setMessages(response.messages);
                 setHasMore(response.hasMore);
             }
@@ -127,14 +88,13 @@ const Content = ({ channel, user, friend }: Props) => {
             setLoading(false);
         };
 
-        setLoading(true);
         getMessages();
     }, []);
 
     const scrollContainer = useCallback(
         (node: HTMLDivElement) => {
             if (node === null) return;
-            setScrollContainerNode(node);
+            setScrollerNode(node);
             const resizeObserver = new ResizeObserver(() => {
                 if (isAtBottom) node.scrollTop = node.scrollHeight;
             });
@@ -145,18 +105,17 @@ const Content = ({ channel, user, friend }: Props) => {
 
     const scrollContainerChild = useCallback(
         (node: HTMLDivElement) => {
-            if (node === null || !scrollContainerNode) return;
+            if (node === null || !scrollerNode) return;
             const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) scrollContainerNode.scrollTop = scrollContainerNode.scrollHeight;
+                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
             });
             resizeObserver.observe(node);
         },
-        [isAtBottom, scrollContainerNode]
+        [isAtBottom, scrollerNode]
     );
 
     const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
         const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
-
         return diff / (1000 * 60) >= 5;
     };
 
@@ -256,10 +215,6 @@ const Content = ({ channel, user, friend }: Props) => {
                                                             message={message}
                                                             setMessages={setMessages}
                                                             large={shouldBeLarge(index)}
-                                                            edit={edit}
-                                                            setEdit={setEdit}
-                                                            reply={reply}
-                                                            setReply={setReply}
                                                             channel={channel}
                                                         />
                                                     </div>
@@ -276,8 +231,6 @@ const Content = ({ channel, user, friend }: Props) => {
                         <TextArea
                             channel={channel}
                             friend={friend}
-                            reply={reply}
-                            setReply={setReply}
                             setMessages={setMessages}
                         />
                     </main>
@@ -290,7 +243,7 @@ const Content = ({ channel, user, friend }: Props) => {
                 </div>
             </div>
         ),
-        [channel, friend, messages, loading, hasMore, edit, reply]
+        [channel, friend, messages, loading, hasMore]
     );
 };
 

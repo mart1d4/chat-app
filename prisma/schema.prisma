@@ -31,11 +31,14 @@ type TDimensions {
     height Int
 }
 
-type TImage {
+type TAttachment {
     id          String
+    url         String
     name        String
     dimensions  TDimensions
+    size        Int
     isSpoiler   Boolean
+    isImage     Boolean
     description String?
 }
 
@@ -286,10 +289,10 @@ model Channel {
 }
 
 model Message {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    id          String        @id @default(auto()) @map("_id") @db.ObjectId
     type        Int
     content     String?
-    attachments TImage[]
+    attachments TAttachment[]
     embeds      TEmbed[]
 
     edited Boolean   @default(false)

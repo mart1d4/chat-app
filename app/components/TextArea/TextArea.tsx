@@ -11,46 +11,29 @@ import { v4 as uuidv4 } from "uuid";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng"];
 
-export const TextArea = ({ channel, editContent, setEditContent, reply, setReply, setMessages }: any) => {
-    const setAttachments = useMessages((state) => state.setAttachments);
+export const TextArea = ({ channel, setMessages, editing }: any) => {
+    const setMessageAttachment = useMessages((state) => state.setAttachments);
     const setContent = useMessages((state) => state.setContent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setMention = useMention((state) => state.setMention);
     const user = useData((state) => state.user) as TCleanUser;
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
+    const setReply = useMessages((state) => state.setReply);
+    const replies = useMessages((state) => state.replies);
+    const setEdit = useMessages((state) => state.setEdit);
     const mention = useMention((state) => state.userId);
     const drafts = useMessages((state) => state.drafts);
-    const layers = useLayers((state) => state.layers);
+    const edits = useMessages((state) => state.edits);
     const { sendRequest } = useFetchHelper();
 
+    const reply = replies.find((r) => r.channelId === channel.id);
     const draft = drafts.find((d) => d.channelId === channel.id);
-    const attachments = draft?.attachments
-        .map(async (a) => {
-            const blob = await fetch(a.url)
-                .then((response) => response.blob())
-                .catch((error) => {
-                    console.error(error);
-                    return null;
-                });
+    const edit = edits.find((e) => e.channelId === channel.id);
 
-            if (!blob) return null;
-            const file = new File([blob], a.name ?? "file.txt", { type: blob.type });
-
-            return {
-                id: a.id,
-                file: file,
-                dimensions: a.dimensions,
-                description: a.description,
-            };
-        })
-        .filter((a) => a !== null);
-
-    console.log(attachments);
-
+    const [attachments, setAttachments] = useState<TAttachment[]>(draft?.attachments || []);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
     const [message, setMessage] = useState<string>(draft?.content || "");
-    const [files, setFiles] = useState<TImage[]>(attachments || []);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
@@ -60,7 +43,7 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
     const friend = channel.recipients?.find((r: any) => r.id !== user.id);
 
     useEffect(() => {
-        if (!mention) return;
+        if (!mention || editing) return;
         setMessage((message) => `${message}<@${mention}>`);
         setMention(null);
     }, [mention]);
@@ -87,178 +70,153 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
     };
 
     // useEffect(() => {
-    //     if (!channel) return;
-    //     const message = JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}")?.message;
+    //     const handlePaste = async (e: ClipboardEvent) => {
+    //         if (layers) return;
+    //         e.preventDefault();
 
-    //     if (message) {
-    //         setMessage(message);
-    //         const input = textAreaRef.current as HTMLInputElement;
-    //         input.innerText = message;
-    //         setCursorToEnd();
-    //     }
-    // }, [channel]);
+    //         const clipboardData = e.clipboardData;
+    //         const items = clipboardData?.items;
+
+    //         if (!items) return;
+
+    //         for (const item of items) {
+    //             if (item.type.includes("image")) {
+    //                 const file = item.getAsFile();
+    //                 if (file) {
+    //                     if (attachments.length >= 10) {
+    //                         return setLayers({
+    //                             settings: {
+    //                                 type: "POPUP",
+    //                             },
+    //                             content: {
+    //                                 type: "WARNING",
+    //                                 warning: "FILE_LIMIT",
+    //                             },
+    //                         });
+    //                     }
+
+    //                     const maxFileSize = 1024 * 1024 * 10; // 10MB
+
+    //                     if (file.size > maxFileSize) {
+    //                         return setLayers({
+    //                             settings: {
+    //                                 type: "POPUP",
+    //                             },
+    //                             content: {
+    //                                 type: "WARNING",
+    //                                 warning: "FILE_SIZE",
+    //                             },
+    //                         });
+    //                     }
+
+    //                     const fileBytes = new Uint8Array(await file.arrayBuffer());
+    //                     const fileType = filetypeinfo(fileBytes);
+
+    //                     if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
+    //                         return setLayers({
+    //                             settings: {
+    //                                 type: "POPUP",
+    //                             },
+    //                             content: {
+    //                                 type: "WARNING",
+    //                                 warning: "FILE_TYPE",
+    //                             },
+    //                         });
+    //                     }
+
+    //                     // Check image dimensions
+    //                     const image = await new Promise<HTMLImageElement>((resolve) => {
+    //                         const img = new Image();
+    //                         img.onload = () => resolve(img);
+    //                         img.src = URL.createObjectURL(file);
+    //                     });
+
+    //                     const dimensions = {
+    //                         height: image.height,
+    //                         width: image.width,
+    //                     };
+
+    //                     setAttachments((attachments) => [...attachments, { id: uuidv4(), file, dimensions }]);
+    //                 }
+    //             } else if (item.type === "text/plain") {
+    //                 const text = clipboardData?.getData("text/plain") || "";
+    //                 if (text) {
+    //                     const input = textAreaRef.current as HTMLInputElement;
+
+    //                     const selection = window.getSelection();
+    //                     const range = selection?.getRangeAt(0);
+    //                     if (!range) return;
+
+    //                     const start = range.startOffset;
+    //                     const end = range.endOffset;
+
+    //                     const textBefore = input.innerText.slice(0, start);
+    //                     const textAfter = input.innerText.slice(end);
+
+    //                     input.innerText = textBefore + text + textAfter;
+
+    //                     // Set cursor to the end of the pasted text, and don't forget there can be line breaks thus multiple text nodes
+    //                     const textNodes = input.childNodes;
+    //                     const lastTextNode = textNodes[textNodes.length - 1];
+    //                     if (!lastTextNode) return;
+
+    //                     const range2 = document.createRange();
+    //                     const sel = window.getSelection();
+    //                     range2.setStart(lastTextNode, lastTextNode.textContent!.length);
+    //                     range2.collapse(true);
+    //                     sel?.removeAllRanges();
+    //                     sel?.addRange(range2);
+
+    //                     setMessage(input.innerText);
+    //                 }
+    //             }
+    //         }
+    //     };
+
+    //     window.addEventListener("paste", handlePaste);
+    //     return () => window.removeEventListener("paste", handlePaste);
+    // }, [layers, attachments]);
 
     useEffect(() => {
-        const handlePaste = async (e: ClipboardEvent) => {
-            if (layers) return;
-            e.preventDefault();
-
-            const clipboardData = e.clipboardData;
-            const items = clipboardData?.items;
-
-            if (!items) return;
-
-            for (const item of items) {
-                if (item.type.includes("image")) {
-                    const file = item.getAsFile();
-                    if (file) {
-                        if (files.length >= 10) {
-                            return setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_LIMIT",
-                                },
-                            });
-                        }
-
-                        const maxFileSize = 1024 * 1024 * 10; // 10MB
-
-                        if (file.size > maxFileSize) {
-                            return setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_SIZE",
-                                },
-                            });
-                        }
-
-                        const fileBytes = new Uint8Array(await file.arrayBuffer());
-                        const fileType = filetypeinfo(fileBytes);
-
-                        if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
-                            return setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_TYPE",
-                                },
-                            });
-                        }
-
-                        // Check image dimensions
-                        const image = await new Promise<HTMLImageElement>((resolve) => {
-                            const img = new Image();
-                            img.onload = () => resolve(img);
-                            img.src = URL.createObjectURL(file);
-                        });
-
-                        const dimensions = {
-                            height: image.height,
-                            width: image.width,
-                        };
-
-                        setFiles((files) => [...files, { id: uuidv4(), file, dimensions }]);
-                    }
-                } else if (item.type === "text/plain") {
-                    const text = clipboardData?.getData("text/plain") || "";
-                    if (text) {
-                        const input = textAreaRef.current as HTMLInputElement;
-
-                        const selection = window.getSelection();
-                        const range = selection?.getRangeAt(0);
-                        if (!range) return;
-
-                        const start = range.startOffset;
-                        const end = range.endOffset;
-
-                        const textBefore = input.innerText.slice(0, start);
-                        const textAfter = input.innerText.slice(end);
-
-                        input.innerText = textBefore + text + textAfter;
-
-                        // Set cursor to the end of the pasted text, and don't forget there can be line breaks thus multiple text nodes
-                        const textNodes = input.childNodes;
-                        const lastTextNode = textNodes[textNodes.length - 1];
-                        if (!lastTextNode) return;
-
-                        const range2 = document.createRange();
-                        const sel = window.getSelection();
-                        range2.setStart(lastTextNode, lastTextNode.textContent!.length);
-                        range2.collapse(true);
-                        sel?.removeAllRanges();
-                        sel?.addRange(range2);
-
-                        setMessage(input.innerText);
-                    }
-                }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setEdit(channel.id, null);
+                setReply(channel.id, null, "");
             }
         };
 
-        window.addEventListener("paste", handlePaste);
-        return () => window.removeEventListener("paste", handlePaste);
-    }, [layers, files]);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [edit, reply]);
 
     useEffect(() => {
         setContent(channel.id, message);
+        const input = textAreaRef.current as HTMLInputElement;
+        if (message !== input.innerText) {
+            input.innerText = message;
+            setCursorToEnd();
+        }
     }, [message]);
 
     useEffect(() => {
-        const attachments = files.map((file) => ({
-            id: file.id,
-            name: file.file.name,
-            type: file.file.type,
-            dimensions: file.dimensions,
-            description: file.description,
-            url: URL.createObjectURL(file.file),
-            isSpoiler: file.file.name.startsWith("SPOILER_"),
-        }));
-
-        setAttachments(channel.id, attachments);
-    }, [files]);
-
-    useEffect(() => {
+        setMessageAttachment(channel.id, attachments);
         const input = textAreaRef.current as HTMLInputElement;
         if (input !== document.activeElement) setCursorToEnd();
-    }, [files]);
+    }, [attachments]);
 
     useEffect(() => {
-        if (!editContent) return;
+        if (!edit || !editing) return;
         const input = textAreaRef.current as HTMLInputElement;
 
-        if (input?.innerText !== editContent) {
-            setMessage(editContent);
-            input.innerText = editContent;
-            setCursorToEnd();
+        if (input?.innerText !== edit.content) {
+            setMessage(edit.content || "");
         }
-    }, [editContent]);
-
-    useEffect(() => {
-        if (!channel) return;
-
-        localStorage.setItem(
-            `channel-${channel.id}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
-                reply: reply,
-            })
-        );
-
-        if (reply?.messageId) setCursorToEnd();
-    }, [reply]);
+    }, [edit, editing]);
 
     const sendMessage = async () => {
         let messageContent = trimMessage(message);
-        const attachments = files;
 
-        if (!messageContent && files.length === 0) return;
+        if (!messageContent && attachments.length === 0) return;
         if (messageContent && messageContent.length > 4000) {
             return setLayers({
                 settings: {
@@ -283,22 +241,15 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         };
 
         setMessage("");
-        setFiles([]);
-        const input = textAreaRef.current as HTMLInputElement;
-        input.innerText = "";
+        setAttachments([]);
         setMessages((messages: TMessage[]) => [...messages, tempMessage]);
-        if (reply?.messageId) setReply(null);
+
+        if (reply?.messageId) setReply(channel.id, null, "");
     };
 
     const pasteText = () => {
         navigator.clipboard.readText().then((content) => {
-            if (!channel) return;
-            const input = textAreaRef.current;
-            if (!input) return;
-
-            input.innerText += content;
-            input.focus();
-            setMessage(input.innerText.toString());
+            setMessage((message) => `${message}${content}`);
         });
     };
 
@@ -306,26 +257,26 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
         () => (
             <div
                 className={styles.textContainer}
-                style={{ height: textAreaRef?.current?.scrollHeight || 44 }}
+                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
             >
                 <div>
-                    {message.length === 0 && (
-                        <div className={styles.textContainerPlaceholder}>
-                            {typeof editContent !== "string"
-                                ? `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`
-                                : "Edit Message"}
+                    {(editing ? edit?.content?.length === 0 : message.length === 0) && (
+                        <div className={styles.placeholder}>
+                            {edit?.messageId && editing
+                                ? "Edit Message"
+                                : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`}
                         </div>
                     )}
 
                     <div
                         ref={textAreaRef}
-                        className={styles.textContainerInner}
+                        className={styles.textbox}
                         role="textbox"
                         spellCheck="true"
                         aria-haspopup="listbox"
                         aria-invalid="false"
                         aria-label={
-                            typeof editContent === "string"
+                            edit?.messageId
                                 ? "Edit Message"
                                 : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`
                         }
@@ -340,25 +291,13 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
 
-                            if (typeof editContent === "string") {
-                                setEditContent(text);
-                                localStorage.setItem(
-                                    `channel-${channel.id}`,
-                                    JSON.stringify({
-                                        ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}"),
-                                        editContent: {
-                                            ...JSON.parse(localStorage.getItem(`channel-${channel.id}`) || "{}")
-                                                .editContent,
-                                            content: text,
-                                        },
-                                    })
-                                );
-                            } else setMessage(text);
+                            if (edit?.messageId && editing) setEdit(channel.id, edit.messageId, undefined, text);
+                            else setMessage(text);
                         }}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
-                                if (typeof editContent !== "string") sendMessage();
+                                if (!editing) sendMessage();
                             }
                         }}
                         onContextMenu={(e) => {
@@ -379,10 +318,10 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                 </div>
             </div>
         ),
-        [friend, channel, editContent, reply, files]
+        [channel, friend, edit, reply, editing, attachments, message]
     );
 
-    if (typeof editContent === "string") {
+    if (edit?.messageId && editing) {
         return (
             <form
                 className={styles.form}
@@ -407,15 +346,15 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
     } else if (!blocked.includes(friend?.id) && !blockedBy.includes(friend?.id)) {
         return (
             <form className={styles.form}>
-                {reply?.channelId === channel?.id && (
+                {reply?.messageId && !editing && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
-                            Replying to <span>{reply.author.username || "User"}</span>
+                            Replying to <span>{reply?.username || "User"}</span>
                         </div>
 
                         <div
                             className={styles.replyClose}
-                            onClick={() => setReply(null)}
+                            onClick={() => setReply(channel.id, null, "")}
                         >
                             <div>
                                 <Icon
@@ -430,17 +369,17 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
 
                 <div
                     className={styles.textArea}
-                    style={{ borderRadius: reply?.channelId === channel.id ? "0 0 8px 8px" : "8px" }}
+                    style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
                     <div className={styles.scrollableContainer + " scrollbar"}>
-                        {files.length > 0 && (
+                        {attachments.length > 0 && (
                             <>
                                 <ul className={styles.filesList + " scrollbar"}>
-                                    {files?.map((file) => (
+                                    {attachments.map((a) => (
                                         <FilePreview
-                                            key={file.id}
-                                            file={file}
-                                            setFiles={setFiles}
+                                            key={a.id}
+                                            attachment={a}
+                                            setAttachments={setAttachments}
                                         />
                                     ))}
                                 </ul>
@@ -458,14 +397,14 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                     onChange={async (e) => {
                                         const newFiles = Array.from(e.target.files as FileList);
 
-                                        if (files.length + newFiles.length > 10) {
+                                        if (attachments.length + newFiles.length > 10) {
                                             setLayers({
                                                 settings: {
                                                     type: "POPUP",
                                                 },
                                                 content: {
                                                     type: "WARNING",
-                                                    warning: "FILE_LIMIT",
+                                                    warning: "FILE_NUMBER",
                                                 },
                                             });
 
@@ -519,10 +458,19 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                                 width: image.width,
                                             };
 
-                                            checkedFiles.push({ id: uuidv4(), file, dimensions });
+                                            checkedFiles.push({
+                                                id: uuidv4(),
+                                                url: URL.createObjectURL(file),
+                                                name: file.name ?? "file",
+                                                dimensions,
+                                                size: file.size,
+                                                isSpoiler: file.name ? file.name.startsWith("SPOILER_") : false,
+                                                isImage: allowedFileTypes.includes(fileType[0]?.mime ?? ""),
+                                                description: "",
+                                            });
                                         }
 
-                                        setFiles([...files, ...checkedFiles]);
+                                        setAttachments([...attachments, ...checkedFiles]);
                                         e.target.value = "";
                                     }}
                                     style={{ display: "none" }}
@@ -560,22 +508,26 @@ export const TextArea = ({ channel, editContent, setEditContent, reply, setReply
                                 {settings.sendButton && (
                                     <button
                                         className={
-                                            message.length === 0 && files.length === 0
+                                            message.length === 0 && attachments.length === 0
                                                 ? styles.sendButton + " " + styles.empty
                                                 : styles.sendButton
                                         }
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (editContent) return;
+                                            if (edit?.messageId) return;
                                             sendMessage();
                                         }}
-                                        disabled={message.length === 0 && files.length === 0}
+                                        disabled={message.length === 0 && attachments.length === 0}
                                         style={{
                                             cursor:
-                                                message.length === 0 && files.length === 0 ? "not-allowed" : "pointer",
-                                            opacity: message.length === 0 && files.length === 0 ? 0.3 : 1,
+                                                message.length === 0 && attachments.length === 0
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                            opacity: message.length === 0 && attachments.length === 0 ? 0.3 : 1,
                                             color:
-                                                message.length === 0 && files.length === 0 ? "var(--foreground-5)" : "",
+                                                message.length === 0 && attachments.length === 0
+                                                    ? "var(--foreground-5)"
+                                                    : "",
                                         }}
                                     >
                                         <div>
@@ -774,39 +726,29 @@ export const EmojiPicker = () => {
     );
 };
 
-const FilePreview = ({ file, setFiles }: any) => {
+const FilePreview = ({ attachment, setAttachments }: any) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
-    const [isImage, setIsImage] = useState<boolean | null>(null);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
 
-    useEffect(() => {
-        const imageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng", "image/apng"];
-
-        const isFileImage = async () => {
-            const fileBytes = new Uint8Array(await file.file.arrayBuffer());
-            const fileType = filetypeinfo(fileBytes)?.[0]?.mime?.toString();
-            setIsImage(imageTypes.includes(fileType ?? ""));
-        };
-
-        isFileImage();
-    }, [file]);
+    const isSpoiler = attachment.isSpoiler;
+    const isImage = attachment.isImage;
 
     const handleFileChange = (data: any) => {
-        const editedFile = {
-            file: new File([file.file], data.isSpoiler ? `SPOILER_${data.filename}` : data.filename, {
-                type: file.file.type,
-            }),
-            id: file.id,
-            dimensions: file.dimensions,
-            description: data.description,
-        };
-
-        setFiles((files: any) => files.map((f: any) => (f.id === file.id ? editedFile : f)));
+        setAttachments((attachments: TAttachment[]) =>
+            attachments.map((a) =>
+                a.id === a.id
+                    ? {
+                          ...a,
+                          name: data.filename,
+                          isSpoiler: data.isSpoiler,
+                          description: data.description,
+                      }
+                    : a
+            )
+        );
     };
-
-    const isSpoiler = file.file.name.startsWith("SPOILER_");
 
     return useMemo(() => {
         if (typeof isImage !== "boolean") {
@@ -826,28 +768,22 @@ const FilePreview = ({ file, setFiles }: any) => {
                     >
                         {isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
 
-                        {isImage ? (
-                            <img
-                                src={URL.createObjectURL(file.file)}
-                                alt="File Preview"
-                                style={{ filter: isSpoiler && !hideSpoiler ? "blur(44px)" : "none" }}
-                            />
-                        ) : (
-                            <img
-                                src="https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
-                                alt="File Preview"
-                                style={{ filter: isSpoiler && !hideSpoiler ? "blur(44px)" : "none" }}
-                            />
-                        )}
+                        <img
+                            src={
+                                isImage ? attachment.url : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
+                            }
+                            alt="File Preview"
+                            style={{ filter: isSpoiler && !hideSpoiler ? "blur(44px)" : "none" }}
+                        />
 
                         <div className={styles.imageTags}>
-                            {file.description && <span>Alt</span>}
+                            {attachment.description && <span>Alt</span>}
                             {isSpoiler && hideSpoiler && <span>Spoiler</span>}
                         </div>
                     </div>
 
                     <div className={styles.fileName}>
-                        <div>{isSpoiler ? file.file.name.slice(8) : file.file.name}</div>
+                        <div>{isSpoiler ? attachment.name.slice(8) : attachment.name}</div>
                     </div>
                 </div>
 
@@ -865,19 +801,16 @@ const FilePreview = ({ file, setFiles }: any) => {
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    const editedFile = {
-                                        file: new File(
-                                            [file.file],
-                                            isSpoiler ? file.file.name.slice(8) : "SPOILER_" + file.file.name,
-                                            { type: file.file.type }
-                                        ),
-                                        id: file.id,
-                                        dimensions: file.dimensions,
-                                        description: file.description,
-                                    };
-
-                                    setFiles((files: any) =>
-                                        files.map((f: any) => (f.id === file.id ? editedFile : f))
+                                    setAttachments((attachments: TAttachment[]) =>
+                                        attachments.map((a) =>
+                                            a.id === attachment.id
+                                                ? {
+                                                      ...a,
+                                                      name: isSpoiler ? a.name.slice(8) : `SPOILER_${a.name}`,
+                                                      isSpoiler: !isSpoiler,
+                                                  }
+                                                : a
+                                        )
                                     );
                                 }}
                             >
@@ -907,7 +840,7 @@ const FilePreview = ({ file, setFiles }: any) => {
                                         },
                                         content: {
                                             type: "FILE_EDIT",
-                                            file: file,
+                                            attachment,
                                             handleFileChange,
                                         },
                                     });
@@ -932,7 +865,9 @@ const FilePreview = ({ file, setFiles }: any) => {
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
-                                    setFiles((files: any) => files.filter((f: any) => f.id !== file.id));
+                                    setAttachments((attachments: TAttachment[]) =>
+                                        attachments.filter((a) => a.id !== attachment.id)
+                                    );
                                     setTooltip(null);
                                 }}
                             >
@@ -947,5 +882,5 @@ const FilePreview = ({ file, setFiles }: any) => {
                 </div>
             </li>
         );
-    }, [file, isImage, hideSpoiler]);
+    }, [attachment, hideSpoiler]);
 };

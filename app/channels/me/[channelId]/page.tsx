@@ -1,6 +1,6 @@
-import { useUser, getChannel, getChannels } from '@/lib/auth';
-import { UserChannels } from '@components';
-import Content from './Content';
+import { useUser, getChannel } from "@/lib/auth";
+import { UserChannels } from "@components";
+import Content from "./Content";
 
 const getData = async (channelId: string) => {
     const channel = (await getChannel(channelId)) as TChannel;
@@ -10,7 +10,6 @@ const getData = async (channelId: string) => {
 
 const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
     const { channel, user } = await getData(params.channelId);
-    const channels = await getChannels();
 
     let friend: TCleanUser | null = null;
     if (channel.type === 0) {
@@ -19,10 +18,7 @@ const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
 
     return (
         <>
-            <UserChannels
-                user={user}
-                channels={channels}
-            />
+            <UserChannels />
 
             <Content
                 channel={channel}

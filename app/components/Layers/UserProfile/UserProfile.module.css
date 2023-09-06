@@ -15,7 +15,7 @@
 }
 
 .cardContainer > div::before {
-    content: '';
+    content: "";
     border-radius: 4px;
     height: calc(100% - 8px);
     width: calc(100% - 8px);
@@ -91,10 +91,41 @@
     height: 24px;
 }
 
-.cardBadges {
+.cardHeader {
     position: relative;
     top: 12px;
-    right: 16px;
+    right: -160px;
+    width: calc(100% - 176px);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+.cardTools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.moreButton {
+    display: flex;
+    align-items: center;
+    color: var(--foreground-3);
+    cursor: pointer;
+    height: 30px;
+    padding: 0;
+}
+
+.moreButton:hover {
+    color: var(--foreground-2);
+}
+
+.moreButton:active {
+    color: var(--foreground-1);
+}
+
+.cardBadges {
     width: fit-content;
     align-self: flex-end;
     border-radius: 8px;
@@ -106,7 +137,7 @@
     align-items: center;
     gap: 2px;
     min-height: 30px;
-    height: 60px;
+    height: 30px;
     width: 102px;
     background-color: var(--card-background-color);
 }
@@ -120,14 +151,14 @@
     flex: 0 1 385px;
     max-height: 385px;
     flex-direction: column;
-    overflow: hidden;
+    /* overflow: hidden; */
     background-color: var(--card-background-color);
 }
 
 .cardBody > .scrollContainer {
     display: flex;
     flex-direction: column;
-    overflow: hidden scroll;
+    overflow-y: scroll;
     flex: 1 1 auto;
     margin-right: -12px;
 }
@@ -185,7 +216,7 @@
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    overflow: hidden;
+    /* overflow: hidden; */
     color: var(--foreground-1);
 }
 
@@ -301,16 +332,15 @@
     padding: 4px;
     resize: none;
     width: 100%;
-    outline: none;
 }
 
 .cardInput::placeholder {
     color: var(--foreground-3);
 }
 
-.cardInput:focus {
+/* .cardInput:focus-visible {
     background-color: var(--card-note-background);
-}
+} */
 
 .cardInput::-webkit-scrollbar {
     width: 8px;
@@ -343,6 +373,7 @@
     position: absolute;
     top: 14px;
     right: 16px;
+    height: auto;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -373,7 +404,8 @@
 
 .contentNavItem {
     border-bottom: 2px solid transparent;
-    display: inline;
+    display: flex;
+    align-items: flex-start;
     height: 40px;
     font-size: 14px;
     position: relative;
@@ -384,11 +416,17 @@
     overflow: hidden;
     flex-shrink: 0;
     user-select: none;
+    padding: 0;
+    border-radius: 0;
 }
 
 .contentNavItem:hover {
     color: var(--foreground-1) !important;
     border-color: var(--foreground-1) !important;
+}
+
+.contentNavItem:focus-visible {
+    border-radius: 4px;
 }
 
 .empty {
@@ -401,7 +439,7 @@
 }
 
 .empty > div:first-child {
-    background-image: url('https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/');
+    background-image: url("https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/");
     width: 240px;
     height: 130px;
     background-position: 50%;
@@ -410,7 +448,7 @@
 }
 
 .empty.noFriends > div:first-child {
-    background-image: url('https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/');
+    background-image: url("https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/");
 }
 
 .empty > div:last-child {
@@ -427,6 +465,8 @@
     display: flex;
     font-weight: 500;
     align-items: center;
+    justify-content: flex-start;
+    height: auto;
     cursor: pointer;
     line-height: 30px;
     padding: 4px;
@@ -454,4 +494,14 @@
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.guildIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 33%;
+    background-color: var(--accent-1);
 }

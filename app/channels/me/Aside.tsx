@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import styles from './Aside.module.css';
+import { useState, useEffect } from "react";
+import styles from "./Aside.module.css";
 
 const Aside = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -16,15 +16,14 @@ const Aside = () => {
 
         handleResize();
 
-        window.addEventListener('resize', handleResize);
-
-        return () => window.removeEventListener('resize', handleResize);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     if (!isOpen) return null;
 
     return (
-        <aside className={styles.aside + ' scrollbar'}>
+        <aside className={styles.aside + " scrollbar"}>
             <h2>Active Now</h2>
 
             <div>

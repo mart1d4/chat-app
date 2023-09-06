@@ -28,6 +28,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
                 <div
+                    tabIndex={0}
                     className={styles.guildSettings}
                     onClick={(e) => {
                         if (layers.MENU?.content.guild) return;
@@ -43,6 +44,23 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                 guild: guild,
                             },
                         });
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            if (layers.MENU?.content.guild) return;
+                            setLayers({
+                                settings: {
+                                    type: "MENU",
+                                    element: e.currentTarget,
+                                    firstSide: "BOTTOM",
+                                    secondSide: "CENTER",
+                                },
+                                content: {
+                                    type: "GUILD",
+                                    guild: guild,
+                                },
+                            });
+                        }
                     }}
                     style={{
                         backgroundColor: layers.MENU?.content.type === "GUILD" ? "var(--background-hover-1)" : "",
@@ -130,7 +148,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                 </div>
             </div>
 
-            <UserSection user={user} />
+            <UserSection />
         </div>
     );
 };
@@ -150,6 +168,7 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
     if (channel.type === 4) {
         return (
             <motion.li
+                tabIndex={0}
                 drag="y"
                 dragSnapToOrigin={true}
                 draggable={true}
@@ -182,13 +201,13 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                     <h3>{channel.name}</h3>
                 </div>
 
-                <div
-                    onMouseEnter={(e) =>
+                <button
+                    onMouseEnter={(e) => {
                         setTooltip({
                             text: "Create Channel",
                             element: e.currentTarget,
-                        })
-                    }
+                        });
+                    }}
                     onMouseLeave={() => setTooltip(null)}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -203,13 +222,20 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                             },
                         });
                     }}
+                    onFocus={(e) => {
+                        setTooltip({
+                            text: "Create Channel",
+                            element: e.currentTarget,
+                        });
+                    }}
+                    onBlur={() => setTooltip(null)}
                 >
                     <Icon
                         name="add"
                         size={18}
                         viewbox="0 0 18 18"
                     />
-                </div>
+                </button>
             </motion.li>
         );
     }
@@ -272,14 +298,21 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
 
                             <div className={styles.tools}>
                                 {channel.type === 3 && (
-                                    <div
-                                        onMouseEnter={(e) =>
+                                    <button
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Open Chat",
                                                 element: e.currentTarget,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
+                                        onFocus={(e) => {
+                                            setTooltip({
+                                                text: "Open Chat",
+                                                element: e.currentTarget,
+                                            });
+                                        }}
+                                        onBlur={() => setTooltip(null)}
                                         style={{
                                             display: params.channelId === channel.id ? "flex" : "",
                                             flex: params.channelId === channel.id ? "0 0 auto" : "",
@@ -290,17 +323,24 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                                             size={16}
                                             viewbox="0 0 24 24"
                                         />
-                                    </div>
+                                    </button>
                                 )}
 
-                                <div
-                                    onMouseEnter={(e) =>
+                                <button
+                                    onMouseEnter={(e) => {
                                         setTooltip({
                                             text: "Create Invite",
                                             element: e.currentTarget,
-                                        })
-                                    }
+                                        });
+                                    }}
                                     onMouseLeave={() => setTooltip(null)}
+                                    onFocus={(e) => {
+                                        setTooltip({
+                                            text: "Create Invite",
+                                            element: e.currentTarget,
+                                        });
+                                    }}
+                                    onBlur={() => setTooltip(null)}
                                     style={{
                                         display: params.channelId === channel.id ? "flex" : "",
                                         flex: params.channelId === channel.id ? "0 0 auto" : "",
@@ -311,16 +351,23 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                                         size={16}
                                         viewbox="0 0 16 16"
                                     />
-                                </div>
+                                </button>
 
-                                <div
-                                    onMouseEnter={(e) =>
+                                <button
+                                    onMouseEnter={(e) => {
                                         setTooltip({
                                             text: "Edit Channel",
                                             element: e.currentTarget,
-                                        })
-                                    }
+                                        });
+                                    }}
                                     onMouseLeave={() => setTooltip(null)}
+                                    onFocus={(e) => {
+                                        setTooltip({
+                                            text: "Edit Channel",
+                                            element: e.currentTarget,
+                                        });
+                                    }}
+                                    onBlur={() => setTooltip(null)}
                                     style={{
                                         display: params.channelId === channel.id ? "flex" : "",
                                         flex: params.channelId === channel.id ? "0 0 auto" : "",
@@ -331,7 +378,7 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                                         size={16}
                                         viewbox="0 0 16 16"
                                     />
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </Link>

@@ -1,4 +1,5 @@
 import { persist, createJSONStorage } from "zustand/middleware";
+import { getChannelIcon, getChannelName } from "./strings";
 import { create } from "zustand";
 
 // Tooltip
@@ -56,7 +57,7 @@ type TLayer = {
     settings: {
         type: "MENU" | "POPUP" | "USER_CARD" | "USER_PROFILE";
         setNull?: boolean;
-        element?: HTMLElement | null;
+        element?: any | null;
         event?: React.MouseEvent;
         firstSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         secondSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
@@ -219,7 +220,22 @@ export const useData = create<DataState>()((set) => ({
             requestsSent: state.requestsSent.filter((r) => r.id !== request.id),
         })),
 
-    addChannel: (channel) => set((state) => ({ channels: [...state.channels, channel] })),
+    addChannel: (channel) =>
+        set((state) => {
+            if (!state.user) return state;
+            else {
+                return {
+                    channels: [
+                        {
+                            ...channel,
+                            name: getChannelName(channel, state?.user.id),
+                            icon: getChannelIcon(channel, state?.user.id),
+                        },
+                        ...state.channels,
+                    ],
+                };
+            }
+        }),
     updateChannel: (channel) =>
         set((state) => {
             if (state.channels.find((c) => c.id === channel.id)) {
@@ -377,40 +393,47 @@ export const useNotifications = create<NotificationsState>()((set) => ({
 // This state just stores the content of the textarea of specific channels if the user started typing something but didn't send it yet
 // It also needs to store potential attachments such as images
 
-type TAttachment = {
-    id: string;
-    name: string;
-    url: string;
-    type: string;
-    description: string;
-    dimensions: {
-        width: number;
-        height: number;
-    };
-    isSpoiler: boolean;
-};
-
-type TMessageDraft = {
-    channelId: TChannel["id"];
-    content: string;
-    attachments: TAttachment[];
-};
-
 interface MessagesState {
-    drafts: TMessageDraft[];
+    drafts: {
+        channelId: TChannel["id"];
+        content: string;
+        attachments: TAttachment[];
+    }[];
+    edits: {
+        channelId: TChannel["id"];
+        messageId: TMessage["id"] | null;
+        initialContent?: string;
+        content?: string;
+    }[];
+    replies: {
+        channelId: TChannel["id"];
+        messageId: TMessage["id"] | null;
+        username: string;
+    }[];
 
     setContent: (channelId: TChannel["id"], content: string) => void;
     setAttachments: (channelId: TChannel["id"], attachments: TAttachment[]) => void;
     removeDraft: (channelId: TChannel["id"]) => void;
+
+    setEdit: (
+        channelId: TChannel["id"],
+        messageId: TMessage["id"] | null,
+        initialContent?: string,
+        content?: string
+    ) => void;
+    setReply: (channelId: TChannel["id"], messageId: TMessage["id"] | null, username: string) => void;
 }
 
 export const useMessages = create(
     persist<MessagesState>(
         (set) => ({
             drafts: [],
+            edits: [],
+            replies: [],
 
-            setContent: (channelId, content) =>
+            setContent: (channelId, content) => {
                 set((state) => {
+                    if (channelId.length !== 24) return state;
                     if (state.drafts.find((d) => d.channelId === channelId)) {
                         return {
                             drafts: state.drafts.map((d) => {
@@ -426,12 +449,13 @@ export const useMessages = create(
                         };
                     } else {
                         return {
-                            drafts: [...state.drafts, { channelId, content }],
+                            drafts: [...state.drafts, { channelId, content, attachments: [] }],
                         };
                     }
-                }),
+                });
+            },
 
-            setAttachments: (channelId, attachments) =>
+            setAttachments: (channelId, attachments) => {
                 set((state) => {
                     if (state.drafts.find((d) => d.channelId === channelId)) {
                         return {
@@ -448,13 +472,82 @@ export const useMessages = create(
                         };
                     } else {
                         return {
-                            drafts: [...state.drafts, { channelId, attachments }],
+                            drafts: [...state.drafts, { channelId, content: "", attachments }],
                         };
                     }
-                }),
+                });
+            },
 
-            removeDraft: (channelId) =>
-                set((state) => ({ drafts: state.drafts.filter((d) => d.channelId !== channelId) })),
+            removeDraft: (channelId) => {
+                set((state) => ({ drafts: state.drafts.filter((d) => d.channelId !== channelId) }));
+            },
+
+            setEdit: (channelId, messageId, initialContent, content) => {
+                set((state) => {
+                    if (state.edits.find((e) => e.channelId === channelId)) {
+                        return {
+                            edits: state.edits.map((e) => {
+                                if (e.channelId === channelId) {
+                                    if (typeof initialContent === "string" && e.initialContent !== initialContent) {
+                                        return {
+                                            ...e,
+                                            messageId,
+                                            initialContent,
+                                            content: initialContent,
+                                        };
+                                    } else if (typeof content === "string" && e.content !== content) {
+                                        return {
+                                            ...e,
+                                            messageId,
+                                            content,
+                                        };
+                                    }
+                                }
+
+                                return {
+                                    ...e,
+                                    messageId: messageId,
+                                };
+                            }),
+                        };
+                    } else {
+                        return {
+                            edits: [
+                                ...state.edits,
+                                {
+                                    channelId,
+                                    messageId,
+                                    initialContent: initialContent || "",
+                                    content: initialContent || "",
+                                },
+                            ],
+                        };
+                    }
+                });
+            },
+
+            setReply: (channelId, messageId, username) => {
+                set((state) => {
+                    if (state.replies.find((r) => r.channelId === channelId)) {
+                        return {
+                            replies: state.replies.map((r) => {
+                                if (r.channelId === channelId) {
+                                    return {
+                                        ...r,
+                                        messageId,
+                                    };
+                                }
+
+                                return r;
+                            }),
+                        };
+                    } else {
+                        return {
+                            replies: [...state.replies, { channelId, messageId, username }],
+                        };
+                    }
+                });
+            },
         }),
         {
             name: "messages",
@@ -474,3 +567,53 @@ export const useMention = create<MentionState>()((set) => ({
     userId: null,
     setMention: (user) => set(() => ({ userId: user?.id || null })),
 }));
+
+// Urls store
+
+interface UrlsState {
+    me: string;
+    guilds: {
+        guildId: string;
+        channelId: string;
+    }[];
+
+    setMe: (me: string) => void;
+    setGuild: (guildId: string, channelId: string) => void;
+}
+
+export const useUrls = create(
+    persist<UrlsState>(
+        (set) => ({
+            me: "",
+            guilds: [],
+
+            setMe: (me) => set(() => ({ me })),
+            setGuild: (guildId, channelId) => {
+                set((state) => {
+                    if (state.guilds.find((g) => g.guildId === guildId)) {
+                        return {
+                            guilds: state.guilds.map((g) => {
+                                if (g.guildId === guildId) {
+                                    return {
+                                        ...g,
+                                        channelId,
+                                    };
+                                }
+
+                                return g;
+                            }),
+                        };
+                    } else {
+                        return {
+                            guilds: [...state.guilds, { guildId, channelId }],
+                        };
+                    }
+                });
+            },
+        }),
+        {
+            name: "urls",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);

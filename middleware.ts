@@ -83,26 +83,23 @@ export async function middleware(req: NextRequest) {
         const guildId = pathname.split("/")[2];
         const channelId = pathname.split("/")[3];
 
-        const response = await fetch(`${process.env.BASE_URL}/api/middleware/user`, {
-            method: "POST",
-            body: JSON.stringify({ token: refreshToken }),
-        }).then((res) => res.json());
-
-        if (!response?.user?.guildIds.includes(guildId)) {
-            return NextResponse.redirect(new URL("/channels/me", req.url));
-        }
-
         const res = await fetch(`${process.env.BASE_URL}/api/middleware/channel`, {
             method: "POST",
-            body: JSON.stringify({ guildId, channelId }),
+            body: JSON.stringify({ token: refreshToken, guildId, channelId }),
         }).then((res) => res.json());
 
-        console.log(res);
+        console.log(`Middleware guild channel choice: ${res.channelId}`);
 
-        if (res.channelId === null) {
+        if (res.user === null) {
+            return NextResponse.redirect(new URL("/login", req.url));
+        } else if (res.guild === null) {
             return NextResponse.redirect(new URL("/channels/me", req.url));
         } else if (res.channelId === guildId) {
-            return NextResponse.redirect(new URL(`/channels/${guildId}`, req.url));
+            if (channelId) {
+                return NextResponse.redirect(new URL(`/channels/${guildId}`, req.url));
+            } else {
+                return NextResponse.next();
+            }
         } else if (res.channelId !== channelId) {
             return NextResponse.redirect(new URL(`/channels/${guildId}/${res.channelId}`, req.url));
         }

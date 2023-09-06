@@ -1,50 +1,71 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
 
 export async function POST(req: Request): Promise<NextResponse> {
-    const { guildId, channelId } = await req.json();
+    const { token, guildId, channelId } = await req.json();
 
-    if (!guildId) {
+    if (!guildId || !token) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'A guild id is required',
+                message: "Bad request.",
             },
             { status: 400 }
         );
     }
 
     try {
+        const user = await prisma.user.findFirst({
+            where: {
+                refreshTokens: {
+                    has: token,
+                },
+            },
+            select: {
+                id: true,
+                guildIds: true,
+            },
+        });
+
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: true,
+                    user: null,
+                },
+                { status: 401 }
+            );
+        }
+
         const guild = await prisma.guild.findUnique({
             where: {
-                id: guildId
+                id: guildId,
             },
             select: {
                 id: true,
             },
         });
-        
-        if (!guild) {
+
+        if (!guild || !user.guildIds.includes(guild.id)) {
             return NextResponse.json(
                 {
                     success: true,
-                    channelId: null,
+                    guild: null,
                 },
                 { status: 200 }
             );
         }
 
         if (!channelId) {
-
             const firstChannel = await prisma.channel.findFirst({
                 where: {
                     guildId: guild.id,
-                    type: 2
+                    type: 2,
                 },
                 select: {
                     id: true,
                 },
-            })
+            });
 
             return NextResponse.json(
                 {
@@ -57,7 +78,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
         const requestedChannel = await prisma.channel.findUnique({
             where: {
-                id: channelId
+                id: channelId,
             },
             select: {
                 id: true,
@@ -68,12 +89,12 @@ export async function POST(req: Request): Promise<NextResponse> {
             const firstChannel = await prisma.channel.findFirst({
                 where: {
                     guildId: guild.id,
-                    type: 2
+                    type: 2,
                 },
                 select: {
                     id: true,
                 },
-            })
+            });
 
             return NextResponse.json(
                 {
@@ -96,7 +117,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

@@ -32,7 +32,7 @@ export const Layers = (): ReactElement => {
                 position: "fixed",
                 width: "100dvw",
                 height: "100dvh",
-                zIndex: 999,
+                zIndex: 1000,
                 pointerEvents: darkBackground ? "all" : "none",
                 visibility: shouldDisplay ? "visible" : "hidden",
             }}
@@ -42,7 +42,7 @@ export const Layers = (): ReactElement => {
                     position: "fixed",
                     width: "100dvw",
                     height: "100dvh",
-                    zIndex: 1000,
+                    zIndex: 1002,
                     pointerEvents: darkBackground ? "all" : "none",
                     backgroundColor: darkBackground ? "rgba(0, 0, 0, 0.80)" : "",
                 }}
@@ -331,11 +331,13 @@ const Layer = ({ settings, content }: TLayer) => {
     }, [currentNode, settings?.type]);
 
     const index =
-        settings?.type === "USER_PROFILE" || settings?.type === "USER_CARD"
+        settings?.type === "USER_CARD"
             ? 1001
+            : settings?.type === "USER_PROFILE"
+            ? 1003
             : settings?.type === "POPUP"
             ? content?.type === "PINNED_MESSAGES" || content?.type === "CREATE_DM"
-                ? 1002
+                ? 1001
                 : 1003
             : 1004;
 

@@ -1,46 +1,46 @@
 @font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/400.woff2') format('woff2');
+    font-family: "gg sans";
+    src: url("../public/fonts/ggsans/400.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/500.woff2') format('woff2');
+    font-family: "gg sans";
+    src: url("../public/fonts/ggsans/500.woff2") format("woff2");
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/600.woff2') format('woff2');
+    font-family: "gg sans";
+    src: url("../public/fonts/ggsans/600.woff2") format("woff2");
     font-weight: 600;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/700.woff2') format('woff2');
+    font-family: "gg sans";
+    src: url("../public/fonts/ggsans/700.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'gg sans';
-    src: url('../public/fonts/ggsans/800.woff2') format('woff2');
+    font-family: "gg sans";
+    src: url("../public/fonts/ggsans/800.woff2") format("woff2");
     font-weight: 800;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'Ginto Nord';
-    src: url('../public/fonts/ginto/GintoNord.woff2') format('woff2');
+    font-family: "Ginto Nord";
+    src: url("../public/fonts/ginto/GintoNord.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -98,8 +98,8 @@
         --elevation-high-dark: 0 2px 10px hsla(0, 0%, 0%, 0.2);
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter',
-            'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New',
+        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter",
+            "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New",
             Courier, monospace;
     }
 }
@@ -156,8 +156,8 @@
         --elevation-high-dark: 0 2px 10px hsla(0, 0%, 0%, 0.2);
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: 'Consolas', 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter',
-            'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New',
+        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter",
+            "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New",
             Courier, monospace;
     }
 }
@@ -211,6 +211,7 @@
     font-size: 100%;
     vertical-align: baseline;
     box-sizing: border-box;
+    outline: 0px solid var(--accent-light);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -221,7 +222,7 @@
 html,
 body {
     font-size: 16px;
-    font-family: 'gg sans', 'Noto sans', sans-serif;
+    font-family: "gg sans", "Noto sans", sans-serif;
     scroll-behavior: smooth;
     background-color: var(--background-1);
 }

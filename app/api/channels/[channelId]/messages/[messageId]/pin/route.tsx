@@ -1,5 +1,5 @@
 import pusher from "@/lib/pusher/server-connection";
-import { encryptMessage } from "@/lib/encryption";
+import { decryptMessage, encryptMessage } from "@/lib/encryption";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
@@ -56,9 +56,45 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         createdAt: true,
                     },
                 },
+                mentions: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
                 messageReference: {
                     include: {
                         author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                        mentions: {
                             select: {
                                 id: true,
                                 username: true,
@@ -89,6 +125,14 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 },
                 { status: 404 }
             );
+        } else if (message.pinned) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message is already pinned",
+                },
+                { status: 400 }
+            );
         }
 
         await prisma.message.update({
@@ -104,6 +148,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             channelId: channelId,
             message: {
                 ...message,
+                content: decryptMessage(message.content),
+                messageReference: {
+                    ...message.messageReference,
+                    content: decryptMessage(message.messageReference?.content || ""),
+                },
                 pinned: new Date(),
             },
         });
@@ -258,6 +307,14 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
                 },
                 { status: 404 }
             );
+        } else if (!message.pinned) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Message is not pinned",
+                },
+                { status: 400 }
+            );
         }
 
         await prisma.message.update({
@@ -273,6 +330,11 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             channelId: channelId,
             message: {
                 ...message,
+                content: decryptMessage(message.content),
+                messageReference: {
+                    ...message.messageReference,
+                    content: decryptMessage(message.messageReference?.content || ""),
+                },
                 pinned: null,
             },
         });

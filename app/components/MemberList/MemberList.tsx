@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayers, useSettings, useTooltip } from "@/lib/store";
+import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { getButtonColor } from "@/lib/colors/getColors";
 import styles from "./MemberList.module.css";
@@ -32,19 +32,18 @@ interface Props {
 }
 
 export const MemberList = ({ channel, guild, user, friend }: Props) => {
-    const [mutualFriends, setMutualFriends] = useState<TCleanUser[]>([]);
-    const [mutualGuilds, setMutualGuilds] = useState<TGuild[]>([]);
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
+    const [note, setNote] = useState<string>("");
 
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(
         typeof window !== "undefined" ? window.innerWidth >= 1200 : false
     );
-    const [note, setNote] = useState<string>("");
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const settings = useSettings((state) => state.settings);
-
+    const friends = useData((state) => state.friends);
+    const guilds = useData((state) => state.guilds);
     const noteRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
@@ -61,7 +60,6 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
         };
 
         window.addEventListener("resize", handleResize);
-
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
@@ -69,6 +67,9 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
         if (!settings.showUsers || !widthLimitPassed) return <></>;
 
         if (friend) {
+            const mutualFriends = friends.filter((f: TCleanUser) => friend.friendIds.includes(f.id));
+            const mutualGuilds = guilds.filter((g: TGuild) => friend.guildIds.includes(g.id));
+
             return (
                 <aside
                     className={styles.aside}
@@ -91,7 +92,7 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                             className={styles.cardBanner}
                             viewBox="0 0 340 120"
                         >
-                            <mask id="card-banner-mask">
+                            <mask id="card-banner-mask-1">
                                 <rect
                                     fill="white"
                                     x="0"
@@ -113,7 +114,7 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                 width="100%"
                                 height="100%"
                                 overflow="visible"
-                                mask="url(#card-banner-mask)"
+                                mask="url(#card-banner-mask-1)"
                             >
                                 <div>
                                     <div
@@ -264,8 +265,8 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                         onClick={() => setShowFriends((prev) => !prev)}
                                     >
                                         <div>
-                                            {mutualFriends?.length} Mutual Friend
-                                            {mutualFriends?.length > 1 && "s"}
+                                            {mutualFriends.length} Mutual Friend
+                                            {mutualFriends.length > 1 && "s"}
                                         </div>
 
                                         <div>
@@ -340,17 +341,7 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                 </aside>
             );
         }
-    }, [
-        settings.showUsers,
-        widthLimitPassed,
-        channel,
-        user,
-        note,
-        mutualFriends,
-        mutualGuilds,
-        showFriends,
-        showGuilds,
-    ]);
+    }, [settings.showUsers, widthLimitPassed, channel, user, note, friends, guilds, showFriends, showGuilds]);
 };
 
 const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
@@ -359,6 +350,7 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
 
     return (
         <div
+            tabIndex={0}
             className={styles.mutualItem}
             onClick={() => {
                 if (!user) return;
@@ -372,17 +364,68 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                 });
             }}
             onContextMenu={(e) => {
-                if (!user) return;
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        event: e,
-                    },
-                    content: {
-                        type: "USER",
-                        user: user,
-                    },
-                });
+                if (user) {
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "USER",
+                            user: user,
+                        },
+                    });
+                } else if (guild) {
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "GUILD_ICON",
+                            guild: guild,
+                        },
+                    });
+                }
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    if (!user) return;
+                    setLayers({
+                        settings: {
+                            type: "USER_PROFILE",
+                        },
+                        content: {
+                            user,
+                        },
+                    });
+                } else if (e.key === "Enter") {
+                    if (user) {
+                        setLayers({
+                            settings: {
+                                type: "MENU",
+                                element: e.currentTarget,
+                                firstSide: "LEFT",
+                            },
+                            content: {
+                                type: "USER",
+                                user: user,
+                            },
+                        });
+                    } else if (guild) {
+                        setLayers({
+                            settings: {
+                                type: "MENU",
+                                element: e.currentTarget,
+                                firstSide: "LEFT",
+                            },
+                            content: {
+                                type: "GUILD_ICON",
+                                guild: guild,
+                            },
+                        });
+                    }
+                }
             }}
         >
             <div>
@@ -395,12 +438,26 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
                     />
                 )}
 
-                {guild?.icon && (
-                    <Avatar
-                        src={guild.icon}
-                        alt={guild.name}
-                        size={40}
-                    />
+                {guild && (
+                    <div
+                        className={styles.guildIcon}
+                        style={{
+                            backgroundColor: guild.icon ? "transparent" : "",
+                        }}
+                    >
+                        {guild.icon ? (
+                            <Avatar
+                                src={guild.icon}
+                                alt={guild.name}
+                                size={40}
+                            />
+                        ) : (
+                            guild.name
+                                .toLowerCase()
+                                .match(/\b(\w)/g)
+                                ?.join("") ?? ""
+                        )}
+                    </div>
                 )}
             </div>
 

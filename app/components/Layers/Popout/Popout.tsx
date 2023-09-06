@@ -3,9 +3,15 @@
 import { FixedMessage, Icon, Avatar } from "@components";
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import pusher from "@/lib/pusher/client-connection";
 import { useData, useLayers } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import styles from "./Popout.module.css";
+
+type TMessageData = {
+    channelId: TChannel["id"];
+    message: TMessage;
+};
 
 export const Popout = ({ content }: any) => {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
@@ -24,6 +30,35 @@ export const Popout = ({ content }: any) => {
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        if (!user || content.type !== "PINNED_MESSAGES") return;
+
+        pusher.bind("message-edited", (data: TMessageData) => {
+            if (data.channelId === content.channel.id) {
+                if (pinned.map((m) => m.id).includes(data.message.id)) {
+                    if (!data.message.pinned) {
+                        setPinned(pinned.filter((m) => m.id !== data.message.id));
+                    } else {
+                        setPinned(
+                            pinned.map((m) => {
+                                if (m.id === data.message.id) return data.message;
+                                else return m;
+                            })
+                        );
+                    }
+                } else {
+                    if (data.message.pinned) {
+                        setPinned([...pinned, data.message]);
+                    }
+                }
+            }
+        });
+
+        return () => {
+            pusher.unbind("message-edited");
+        };
+    }, [user, pinned]);
 
     useEffect(() => {
         if (content.type === "PINNED_MESSAGES") {

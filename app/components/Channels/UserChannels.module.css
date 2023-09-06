@@ -161,6 +161,13 @@
     color: var(--foreground-1);
 }
 
+.liContainer:focus-visible,
+.liContainer:focus-within {
+    margin-right: 5px;
+    background-color: var(--background-4);
+    color: var(--foreground-2);
+}
+
 .liWrapper {
     display: flex;
     align-items: center;
@@ -259,6 +266,14 @@
     height: 16px;
     margin: 2px;
     padding-right: 8px;
+    border-radius: 4px;
+}
+
+.liContainer:focus-visible .closeButton,
+.liContainer:focus-within .closeButton {
+    display: block;
+    padding-right: 0;
+    margin-right: 5px;
 }
 
 .closeButton path {

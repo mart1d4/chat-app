@@ -273,7 +273,7 @@ const MessageAttachments = ({ message, functions }: any) => {
         <div className={styles.attachments}>
             <div>
                 {message.attachments.length === 1 &&
-                    message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                    message.attachments.slice(0, 1).map((attachment: TAttachment) => (
                         <div
                             key={attachment.id}
                             className={styles.gridOneBig}
@@ -287,7 +287,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
-                        {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                        {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
                             <Image
                                 key={attachment.id}
                                 attachment={attachment}
@@ -300,7 +300,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 3 && (
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -312,7 +312,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                         <div className={styles.gridTwoColumn}>
                             <div>
                                 <div>
-                                    {message.attachments.slice(1, 2).map((attachment: TImageUpload) => (
+                                    {message.attachments.slice(1, 2).map((attachment: TAttachment) => (
                                         <Image
                                             key={attachment.id}
                                             attachment={attachment}
@@ -322,7 +322,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                                 </div>
 
                                 <div>
-                                    {message.attachments.slice(2, 3).map((attachment: TImageUpload) => (
+                                    {message.attachments.slice(2, 3).map((attachment: TAttachment) => (
                                         <Image
                                             key={attachment.id}
                                             attachment={attachment}
@@ -337,7 +337,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
-                        {message.attachments.slice(0, 4).map((attachment: TImageUpload) => (
+                        {message.attachments.slice(0, 4).map((attachment: TAttachment) => (
                             <Image
                                 key={attachment.id}
                                 attachment={attachment}
@@ -350,7 +350,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 5 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -360,7 +360,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(2, 5).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -373,7 +373,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 6).map((attachment: TImageUpload) => (
+                        {message.attachments.slice(0, 6).map((attachment: TAttachment) => (
                             <Image
                                 key={attachment.id}
                                 attachment={attachment}
@@ -386,7 +386,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 7 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -396,7 +396,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(1, 7).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -410,7 +410,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 8 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -420,7 +420,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(2, 8).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -433,7 +433,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 9).map((attachment: TImageUpload) => (
+                        {message.attachments.slice(0, 9).map((attachment: TAttachment) => (
                             <Image
                                 key={attachment.id}
                                 attachment={attachment}
@@ -446,7 +446,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 10 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -456,7 +456,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment: TImageUpload) => (
+                            {message.attachments.slice(1, 10).map((attachment: TAttachment) => (
                                 <Image
                                     key={attachment.id}
                                     attachment={attachment}
@@ -472,7 +472,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 };
 
 type ImageComponent = {
-    attachment: TImageUpload;
+    attachment: TAttachment;
     message: TMessage;
 };
 

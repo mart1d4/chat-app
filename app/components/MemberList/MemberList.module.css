@@ -19,7 +19,7 @@
 }
 
 .aside > div::before {
-    content: '';
+    content: "";
     height: 100%;
     width: 100%;
     pointer-events: none;
@@ -295,7 +295,6 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     background-color: var(--card-background-color);
 }
 
@@ -306,9 +305,15 @@
     padding: 13px 12px 11px;
     border-radius: 0;
     justify-content: left;
+    border-radius: 8px;
+}
+
+.cardMutuals > button:not(:first-child):focus-visible {
+    border-radius: 8px;
 }
 
 .cardMutuals > button:not(:first-child) {
+    border-radius: 0;
     border-top: 1px solid var(--card-divider-color);
 }
 
@@ -354,6 +359,16 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.guildIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 33%;
+    background-color: var(--accent-1);
 }
 
 /* GROUP */
