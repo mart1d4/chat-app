@@ -430,14 +430,16 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                <MessageMenu
-                    message={message}
-                    large={false}
-                    functions={functions}
-                    channel={channel}
-                    guild={guild}
-                    inline={inline}
-                />
+                {edit?.messageId !== message.id && (
+                    <MessageMenu
+                        message={message}
+                        large={false}
+                        functions={functions}
+                        channel={channel}
+                        guild={guild}
+                        inline={inline}
+                    />
+                )}
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
@@ -572,17 +574,21 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     }}
                     style={{
                         backgroundColor:
-                            layers.MENU?.content?.message?.id === message.id ? "var(--background-hover-4)" : "",
+                            layers.MENU?.content?.message?.id === message.id || edit?.messageId === message.id
+                                ? "var(--background-hover-4)"
+                                : "",
                     }}
                 >
-                    <MessageMenu
-                        message={message}
-                        large={large}
-                        functions={functions}
-                        channel={channel}
-                        guild={guild}
-                        inline={inline}
-                    />
+                    {edit?.messageId !== message.id && (
+                        <MessageMenu
+                            message={message}
+                            large={large}
+                            functions={functions}
+                            channel={channel}
+                            guild={guild}
+                            inline={inline}
+                        />
+                    )}
 
                     <div className={styles.message}>
                         {message.type === 1 && (

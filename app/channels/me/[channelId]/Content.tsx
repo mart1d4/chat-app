@@ -1,11 +1,11 @@
 "use client";
 
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Avatar } from "@components";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers, useUrls } from "@/lib/store";
+import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 
 type TMessageData = {
@@ -21,7 +21,7 @@ type TMessageIdData = {
 type Props = {
     channel: TChannel;
     user: TCleanUser;
-    friend: TCleanUser | null;
+    friend?: TCleanUser;
 };
 
 const Content = ({ channel, user, friend }: Props) => {
@@ -32,7 +32,9 @@ const Content = ({ channel, user, friend }: Props) => {
     const [loading, setLoading] = useState<boolean>(true);
 
     const setChannelUrl = useUrls((state) => state.setMe);
+    const setToken = useData((state) => state.setToken);
     const token = useData((state) => state.token);
+    const hasRendered = useRef<boolean>(false);
 
     useEffect(() => {
         if (!user) return;
@@ -80,7 +82,16 @@ const Content = ({ channel, user, friend }: Props) => {
                 },
             }).then((res) => res.json());
 
-            if (!response.error) {
+            console.log("[ChannelContent] ", response);
+            if (response.status === 401) {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+                    method: "GET",
+                    credentials: "include",
+                }).then((res) => res.json());
+
+                if (!response.token) throw new Error("[ChannelContent] No token found");
+                setToken(response.token);
+            } else if (!response.error) {
                 setMessages(response.messages);
                 setHasMore(response.hasMore);
             }
@@ -88,7 +99,15 @@ const Content = ({ channel, user, friend }: Props) => {
             setLoading(false);
         };
 
-        getMessages();
+        const env = process.env.NODE_ENV;
+        if (env == "development") {
+            if (hasRendered.current) getMessages();
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == "production") {
+            getMessages();
+        }
     }, []);
 
     const scrollContainer = useCallback(

@@ -1,10 +1,10 @@
 "use client";
 
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from "@components";
-import { useState, useEffect, useCallback, ReactElement, useMemo } from "react";
+import { useState, useEffect, useCallback, ReactElement, useMemo, useRef } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
-import { useData, useLayers, useUrls } from "@/lib/store";
+import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 
 type TMessageData = {
@@ -30,8 +30,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true);
 
     const setGuildUrl = useUrls((state) => state.setGuild);
+    const setToken = useData((state) => state.setToken);
     const token = useData((state) => state.token);
     const user = useData((state) => state.user);
+    const hasRendered = useRef<boolean>(false);
 
     useEffect(() => {
         if (!user) return;
@@ -79,7 +81,16 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                 },
             }).then((res) => res.json());
 
-            if (!response.error) {
+            console.log("[ChannelContent] ", response);
+            if (response.status === 401) {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+                    method: "GET",
+                    credentials: "include",
+                }).then((res) => res.json());
+
+                if (!response.token) throw new Error("[ChannelContent] No token found");
+                setToken(response.token);
+            } else if (!response.error) {
                 setMessages(response.messages);
                 setHasMore(response.hasMore);
             }
@@ -87,7 +98,15 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             setLoading(false);
         };
 
-        getMessages();
+        const env = process.env.NODE_ENV;
+        if (env == "development") {
+            if (hasRendered.current) getMessages();
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == "production") {
+            getMessages();
+        }
     }, []);
 
     const scrollContainer = useCallback(

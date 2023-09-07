@@ -18,6 +18,12 @@ export const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactE
     const viewBox = viewbox || "0 0 24 24";
 
     const icons = {
+        upload: (
+            <path
+                fill={fillColor}
+                d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"
+            />
+        ),
         translate: (
             <path
                 fill={fillColor}

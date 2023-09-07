@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, ReactElement } from "react";
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -471,7 +471,14 @@ export const UserProfile = ({ content }: any): ReactElement => {
 const FriendItem = ({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }): ReactElement => {
     if (!friend && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
+    const urls = useUrls((state) => state.guilds);
     const router = useRouter();
+
+    let url: string | null = null;
+    if (guild) {
+        const guildUrl = urls.find((u) => u.guildId === guild.id);
+        if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
+    }
 
     return (
         <button
@@ -487,7 +494,7 @@ const FriendItem = ({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }):
                         },
                     });
                 } else if (guild) {
-                    router.push(`/channels/${guild.id}`);
+                    router.push(url || `/channels/${guild.id}`);
                     setLayers({
                         settings: {
                             type: "USER_PROFILE",

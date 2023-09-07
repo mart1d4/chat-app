@@ -1,14 +1,18 @@
 import { getGuild, getGuildChannels, useUser } from "@/lib/auth";
 import { GuildChannels } from "@components";
-import styles from "./page.module.css";
 import { redirect } from "next/navigation";
+import styles from "./page.module.css";
 
-const Page = async ({ params }: { params: { guildId: string } }) => {
-    const guild = (await getGuild(params.guildId)) as TGuild;
-    if (!guild) redirect("/channels/me");
+const GuildPage = async ({ params }: { params: { guildId: string } }) => {
+    const user = await useUser();
+    if (!user) redirect("/login");
 
-    const user = (await useUser()) as TCleanUser;
+    const guild = await getGuild(params.guildId);
+    if (!guild || !user.guildIds.includes(guild.id)) redirect("/channels/me");
+
     const channels = await getGuildChannels(guild.id);
+    const textChannel = channels.find((c) => c.type === 2);
+    if (textChannel) redirect(`/channels/${guild.id}/${textChannel.id}`);
 
     channels.sort((a, b) => (a.position as number) - (b.position as number));
 
@@ -35,4 +39,4 @@ const Page = async ({ params }: { params: { guildId: string } }) => {
     );
 };
 
-export default Page;
+export default GuildPage;

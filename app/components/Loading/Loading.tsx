@@ -65,6 +65,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
 
     const updateChannel = useData((state) => state.updateChannel);
     const removeChannel = useData((state) => state.removeChannel);
+    const moveChannelUp = useData((state) => state.moveChannelUp);
     const removeGuild = useData((state) => state.removeGuild);
     const addChannel = useData((state) => state.addChannel);
     const addGuild = useData((state) => state.addGuild);
@@ -116,10 +117,12 @@ export const Loading = ({ children, data }: Props): ReactElement => {
         if (!user) return;
 
         pusher.bind("message-sent", (data: TMessageData) => {
-            console.log(data);
-            if (channels.map((c) => c.id).includes(data.channelId) && !pathname.includes(data.channelId)) {
+            if (channels.map((c) => c.id).includes(data.channelId)) {
+                moveChannelUp(data.channelId);
+
+                if (pathname.includes(data.channelId)) return;
                 addPing(data.channelId);
-                // Play sound
+
                 const audio = new Audio("/assets/sounds/ping.mp3");
                 audio.volume = 0.5;
                 audio.play();

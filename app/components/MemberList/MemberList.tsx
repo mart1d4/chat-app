@@ -1,12 +1,13 @@
 "use client";
 
-import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
+import { useData, useLayers, useSettings, useTooltip, useUrls } from "@/lib/store";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { getButtonColor } from "@/lib/colors/getColors";
 import styles from "./MemberList.module.css";
 import { translateCap } from "@/lib/strings";
 import { Avatar, Icon } from "@components";
 import { UserItem } from "./UserItem";
+import { useRouter } from "next/navigation";
 
 const colors = {
     ONLINE: "#22A559",
@@ -347,21 +348,32 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
 const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
     if (!user && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
+    const urls = useUrls((state) => state.guilds);
+    const router = useRouter();
+
+    let url: string | null = null;
+    if (guild) {
+        const guildUrl = urls.find((u) => u.guildId === guild.id);
+        if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
+    }
 
     return (
         <div
             tabIndex={0}
             className={styles.mutualItem}
             onClick={() => {
-                if (!user) return;
-                setLayers({
-                    settings: {
-                        type: "USER_PROFILE",
-                    },
-                    content: {
-                        user,
-                    },
-                });
+                if (user) {
+                    setLayers({
+                        settings: {
+                            type: "USER_PROFILE",
+                        },
+                        content: {
+                            user,
+                        },
+                    });
+                } else if (guild) {
+                    router.push(url || `/channels/${guild.id}`);
+                }
             }}
             onContextMenu={(e) => {
                 if (user) {
@@ -390,15 +402,18 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
             }}
             onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
-                    if (!user) return;
-                    setLayers({
-                        settings: {
-                            type: "USER_PROFILE",
-                        },
-                        content: {
-                            user,
-                        },
-                    });
+                    if (user) {
+                        setLayers({
+                            settings: {
+                                type: "USER_PROFILE",
+                            },
+                            content: {
+                                user,
+                            },
+                        });
+                    } else if (guild) {
+                        router.push(url || `/channels/${guild.id}`);
+                    }
                 } else if (e.key === "Enter") {
                     if (user) {
                         setLayers({

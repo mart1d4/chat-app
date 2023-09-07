@@ -1,9 +1,9 @@
 "use client";
 
+import { getChannelIcon, getChannelName } from "@/lib/strings";
 import { useData, useNotifications } from "@/lib/store";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
-import { getChannelIcon, getChannelName } from "@/lib/strings";
 
 export const AppNav = () => {
     const user = useData((state) => state.user) as TCleanUser;
@@ -12,7 +12,6 @@ export const AppNav = () => {
     const guilds = useData((state) => state.guilds);
 
     const filteredChannels = channels.filter((channel) => pings.map((ping) => ping.channelId).includes(channel.id));
-    console.log(filteredChannels);
 
     const chatAppIcon = (
         <svg
@@ -61,6 +60,13 @@ export const AppNav = () => {
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
+                <NavIcon
+                    special={true}
+                    name="Direct Messages"
+                    link={"/channels/me"}
+                    svg={chatAppIcon}
+                />
+
                 {filteredChannels.map((channel) => (
                     <NavIcon
                         key={channel.id}
@@ -70,13 +76,6 @@ export const AppNav = () => {
                         count={pings.find((ping) => ping.channelId === channel.id)?.amount}
                     />
                 ))}
-
-                <NavIcon
-                    special={true}
-                    name="Direct Messages"
-                    link={"/channels/me"}
-                    svg={chatAppIcon}
-                />
 
                 <div className={styles.listItem}>
                     <div className={styles.separator} />

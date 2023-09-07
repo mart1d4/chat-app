@@ -173,7 +173,8 @@ export const Settings = (): ReactElement => {
 
                                     {tabs.map((tab) => (
                                         <div
-                                            key={uuidv4()}
+                                            tabIndex={tab.name === "separator" || tab.type === "title" ? -1 : 0}
+                                            key={tab.name}
                                             className={
                                                 tab.type === "title"
                                                     ? styles.title
@@ -197,6 +198,23 @@ export const Settings = (): ReactElement => {
                                                     });
                                                 setActiveTab(tab.name);
                                                 if (minified) setHideNav(true);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    if (tab.name === "separator" || tab.type === "title") return;
+                                                    if (tab.name === "Log Out")
+                                                        return setLayers({
+                                                            settings: {
+                                                                type: "POPUP",
+                                                            },
+                                                            content: {
+                                                                type: "LOGOUT",
+                                                            },
+                                                        });
+                                                    setActiveTab(tab.name);
+                                                    if (minified) setHideNav(true);
+                                                }
                                             }}
                                         >
                                             {tab.name !== "separator" && tab.name}

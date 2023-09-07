@@ -173,6 +173,7 @@ interface DataState {
     addChannel: (channel: TChannel) => void;
     updateChannel: (channel: TChannel) => void;
     removeChannel: (channel: TChannel) => void;
+    moveChannelUp: (channelId: TChannel["id"]) => void;
     addGuild: (guild: TGuild) => void;
     removeGuild: (guild: TGuild) => void;
 
@@ -259,6 +260,18 @@ export const useData = create<DataState>()((set) => ({
         }),
 
     removeChannel: (channel) => set((state) => ({ channels: state.channels.filter((c) => c.id !== channel.id) })),
+    moveChannelUp: (channelId) => {
+        set((state) => {
+            const channel = state.channels.find((c) => c.id === channelId);
+
+            if (channel) {
+                const newChannels = [channel, ...state.channels.filter((c) => c.id !== channelId)];
+                return { channels: newChannels };
+            }
+
+            return state;
+        });
+    },
     addGuild: (guild) => set((state) => ({ guilds: [...state.guilds, guild] })),
     removeGuild: (guild) => set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
 

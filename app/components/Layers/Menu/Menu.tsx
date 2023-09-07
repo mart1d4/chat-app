@@ -17,8 +17,11 @@ type UserProps = {
 
 type ItemType = {
     name: string | null;
+    tip?: string;
+    tipIcon?: string;
     icon?: string;
     iconSize?: number;
+    leftIcon?: string;
     textTip?: string;
     func?: () => void;
     funcShift?: () => void;
@@ -41,10 +44,11 @@ enum EMenuType {
     GUILD_ICON = "GUILD_ICON",
     GUILD_CHANNEL = "GUILD_CHANNEL",
     GUILD_CHANNEL_LIST = "GUILD_CHANNEL_LIST",
+    FILE_INPUT = "FILE_INPUT",
 }
 
 export const Menu = ({ content }: { content: any }): ReactElement => {
-    const [active, setActive] = useState<string>("");
+    const [hover, setHover] = useState<string>("");
     const [items, setItems] = useState<ItemType[]>([]);
     const [shift, setShift] = useState<boolean>(false);
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
@@ -59,6 +63,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     const setLayers = useLayers((state) => state.setLayers);
     const blockedUsers = useData((state) => state.blocked);
     const friends = useData((state) => state.friends);
+    const layers = useLayers((state) => state.layers);
     const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
@@ -95,8 +100,6 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     useEffect(() => {
         const handlekeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                e.preventDefault();
-                e.stopPropagation();
                 setLayers({
                     settings: {
                         type: "MENU",
@@ -104,39 +107,29 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     },
                 });
             } else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (active === null) {
-                    setActive(filteredItems[0].name as string);
+                if (hover === null) {
+                    setHover(filteredItems[0].name as string);
                 } else {
-                    const index = filteredItems.findIndex((item) => item.name === active);
+                    const index = filteredItems.findIndex((item) => item.name === hover);
                     if (index < filteredItems.length - 1) {
-                        setActive(filteredItems[index + 1].name as string);
+                        setHover(filteredItems[index + 1].name as string);
                     } else {
-                        setActive(filteredItems[0].name as string);
+                        setHover(filteredItems[0].name as string);
                     }
                 }
             } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (active === null) {
-                    setActive(filteredItems[filteredItems.length - 1].name as string);
+                if (hover === null) {
+                    setHover(filteredItems[filteredItems.length - 1].name as string);
                 } else {
-                    const index = filteredItems.findIndex((item) => item.name === active);
+                    const index = filteredItems.findIndex((item) => item.name === hover);
                     if (index > 0) {
-                        setActive(filteredItems[index - 1].name as string);
+                        setHover(filteredItems[index - 1].name as string);
                     } else {
-                        setActive(filteredItems[filteredItems.length - 1].name as string);
+                        setHover(filteredItems[filteredItems.length - 1].name as string);
                     }
                 }
             } else if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const item = filteredItems.find((item) => item.name === active);
-
+                const item = filteredItems.find((item) => item.name === hover);
                 if (item) {
                     if (item?.funcShift) item.funcShift();
                     else if (item?.func) item.func();
@@ -151,10 +144,9 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             }
         };
 
-        document.addEventListener("keydown", handlekeyDown);
-
-        return () => document.removeEventListener("keydown", handlekeyDown);
-    }, [filteredItems, active]);
+        window.addEventListener("keydown", handlekeyDown);
+        return () => window.removeEventListener("keydown", handlekeyDown);
+    }, [filteredItems, hover]);
 
     useEffect(() => {
         if (content?.user) {
@@ -255,6 +247,23 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
 
     useEffect(() => {
         if (!type || (user && !userProps)) return;
+
+        if (type === "FILE_INPUT") {
+            setItems([
+                {
+                    name: "Upload a File",
+                    tip: "Tip: Double click the ",
+                    tipIcon: "attach",
+                    leftIcon: "upload",
+                    func: () => content?.openInput(),
+                },
+                {
+                    name: "Send Voice Message",
+                    leftIcon: "mic",
+                    func: () => {},
+                },
+            ]);
+        }
 
         if (type === "GUILD_CHANNEL_LIST") {
             setItems([
@@ -1403,17 +1412,13 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 ]);
             }
         }
-    }, [userProps, settings.sendButton, settings.spellcheck]);
+    }, [userProps, settings.sendButton, settings.spellcheck, layers]);
 
     return useMemo(
         () => (
             <div
-                className={`${styles.menuContainer} ${type === "GUILD" ? "big" : ""}`}
-                onMouseLeave={() => setActive("")}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
+                className={`${styles.container} ${type === "GUILD" ? "big" : ""}`}
+                onMouseLeave={() => setHover("")}
                 style={{
                     width: type === "GUILD" ? 220 : "",
                     transform: type === "GUILD" ? "translateX(+10px)" : "",
@@ -1434,17 +1439,9 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                             return (
                                 <div
                                     key={index}
-                                    className={
-                                        item.disabled
-                                            ? styles.menuItemDisabled
-                                            : item.danger
-                                            ? active === item.name
-                                                ? styles.menuItemDangerActive
-                                                : styles.menuItemDanger
-                                            : active === item.name
-                                            ? styles.menuItemActive
-                                            : styles.menuItem
-                                    }
+                                    className={`${item.danger ? styles.itemDanger : styles.item} ${
+                                        item.disabled ? styles.disabled : ""
+                                    } ${hover === item.name ? styles.hover : ""}`}
                                     onClick={() => {
                                         if (item.disabled) return;
                                         if (shift && item.funcShift) item.funcShift();
@@ -1457,48 +1454,71 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                             },
                                         });
                                     }}
-                                    onMouseEnter={() => setActive(item.name as string)}
+                                    onMouseEnter={() => setHover(item.name as string)}
                                 >
-                                    <div className={styles.label}>{item.name}</div>
+                                    <div style={{ justifyContent: item.leftIcon ? "flex-start" : "" }}>
+                                        {item.leftIcon && (
+                                            <div style={{ marginRight: "8px" }}>
+                                                <Icon name={item.leftIcon} />
+                                            </div>
+                                        )}
 
-                                    {(item.icon || "checked" in item || "items" in item) && (
                                         <div
-                                            className={`${styles.icon} ${
-                                                "checked" in item && item.checked ? styles.revert : ""
-                                            }`}
-                                            style={{
-                                                transform: "items" in item ? "rotate(-90deg)" : "",
-                                            }}
+                                            className={styles.label}
+                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
                                         >
-                                            <Icon
-                                                name={
-                                                    "checked" in item
-                                                        ? item.checked
-                                                            ? "checkboxFilled"
-                                                            : "checkbox"
-                                                        : "items" in item
-                                                        ? "arrow"
-                                                        : item.icon ?? ""
-                                                }
-                                                size={item.iconSize ?? type === "GUILD" ? 18 : 16}
-                                                viewbox={
-                                                    item.icon === "boost"
-                                                        ? "0 0 8 12"
-                                                        : item.icon === "translate"
-                                                        ? "0 96 960 960"
-                                                        : ""
-                                                }
-                                            />
+                                            {item.name}
+                                        </div>
+
+                                        {(item.icon || "checked" in item || "items" in item) && (
+                                            <div
+                                                className={`${styles.icon} ${
+                                                    "checked" in item && item.checked ? styles.revert : ""
+                                                }`}
+                                                style={{ transform: "items" in item ? "rotate(-90deg)" : "" }}
+                                            >
+                                                <Icon
+                                                    name={
+                                                        "checked" in item
+                                                            ? item.checked
+                                                                ? "checkboxFilled"
+                                                                : "checkbox"
+                                                            : "items" in item
+                                                            ? "arrow"
+                                                            : item.icon ?? ""
+                                                    }
+                                                    size={item.iconSize ?? type === "GUILD" ? 18 : 16}
+                                                    viewbox={
+                                                        item.icon === "boost"
+                                                            ? "0 0 8 12"
+                                                            : item.icon === "translate"
+                                                            ? "0 96 960 960"
+                                                            : ""
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
+                                        {item.textTip && <div className={styles.text}>{item.textTip}</div>}
+                                    </div>
+
+                                    {item.tip && (
+                                        <div className={styles.tip}>
+                                            {item.tip}
+                                            {item.tipIcon && (
+                                                <Icon
+                                                    name={item.tipIcon}
+                                                    size={16}
+                                                />
+                                            )}
                                         </div>
                                     )}
-
-                                    {item.textTip && <div className={styles.text}>{item.textTip}</div>}
                                 </div>
                             );
                     })}
                 </div>
             </div>
         ),
-        [items, shift, active]
+        [items, shift, hover]
     );
 };

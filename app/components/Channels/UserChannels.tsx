@@ -1,6 +1,6 @@
 "use client";
 
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers, useNotifications, useTooltip } from "@/lib/store";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon, Avatar, UserSection } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -121,7 +121,10 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
     const currentUser = useData((state) => state.user) as TUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+    const pings = useNotifications((state) => state.pings);
     const { sendRequest } = useFetchHelper();
+
+    const isPinged = (pings.find((ping) => ping.channelId === channel?.id)?.amount || 0) > 0;
 
     const pathname = usePathname();
     const router = useRouter();
@@ -183,7 +186,7 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                 }}
                 style={{
                     backgroundColor: pathname.includes(channel.id) ? "var(--background-5)" : "",
-                    color: pathname.includes(channel.id) ? "var(--foreground-1)" : "",
+                    color: pathname.includes(channel.id) || isPinged ? "var(--foreground-1)" : "",
                 }}
             >
                 <div className={styles.liWrapper}>

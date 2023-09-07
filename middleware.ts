@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { getGuild, useUser } from "./lib/auth";
 
 export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
@@ -12,7 +11,6 @@ export async function middleware(req: NextRequest) {
 
     const token = req.headers.get("Authorization")?.split(" ")[1];
     const refreshToken = req.cookies.get("token")?.value;
-
     const { pathname } = req.nextUrl;
 
     // Return early with 200 for CORS preflight
@@ -70,38 +68,20 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    if (pathname.match(/^\/channels\/me\/[0-9a-f]{24}\/?$/)) {
-        const response = await fetch(`${process.env.BASE_URL}/api/middleware/user`, {
-            method: "POST",
-            body: JSON.stringify({ token: refreshToken }),
-        }).then((res) => res.json());
+    const paths = ["/", "/login", "/register", "/download", "/channels/me", "/channels/discover"];
+    const regex = [/^\/channels\/me\/[0-9a-f]{24}\/?$/, /^\/channels\/[0-9a-f]{24}(\/[0-9a-f]{24})?\/?$/];
 
-        if (!response.user?.channelIds.includes(pathname.split("/")[3])) {
-            return NextResponse.redirect(new URL("/channels/me", req.url));
-        }
-    } else if (pathname.match(/^\/channels\/[0-9a-f]{24}(\/[0-9a-f]{24})?\/?$/)) {
-        const guildId = pathname.split("/")[2];
-        const channelId = pathname.split("/")[3];
-
-        const res = await fetch(`${process.env.BASE_URL}/api/middleware/channel`, {
-            method: "POST",
-            body: JSON.stringify({ token: refreshToken, guildId, channelId }),
-        }).then((res) => res.json());
-
-        console.log(`Middleware guild channel choice: ${res.channelId}`);
-
-        if (res.user === null) {
-            return NextResponse.redirect(new URL("/login", req.url));
-        } else if (res.guild === null) {
-            return NextResponse.redirect(new URL("/channels/me", req.url));
-        } else if (res.channelId === guildId) {
-            if (channelId) {
-                return NextResponse.redirect(new URL(`/channels/${guildId}`, req.url));
-            } else {
-                return NextResponse.next();
+    if (!paths.includes(pathname) && !regex.some((r) => pathname.match(r))) {
+        if (!refreshToken) {
+            if (pathname.startsWith("/channels")) {
+                return NextResponse.redirect(new URL("/login", req.url));
             }
-        } else if (res.channelId !== channelId) {
-            return NextResponse.redirect(new URL(`/channels/${guildId}/${res.channelId}`, req.url));
+            return NextResponse.redirect(new URL("/", req.url));
+        } else {
+            if (pathname.startsWith("/channels")) {
+                return NextResponse.redirect(new URL("/channels/me", req.url));
+            }
+            return NextResponse.redirect(new URL("/", req.url));
         }
     }
 

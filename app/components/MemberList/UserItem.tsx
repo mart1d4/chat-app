@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import useContextHook from '@/hooks/useContextHook';
-import { ReactElement, useRef } from 'react';
-import styles from './UserItem.module.css';
-import { Avatar, Icon } from '@components';
-import { useLayers, useTooltip } from '@/lib/store';
+import useContextHook from "@/hooks/useContextHook";
+import { ReactElement, useRef } from "react";
+import styles from "./UserItem.module.css";
+import { Avatar, Icon } from "@components";
+import { useLayers, useTooltip } from "@/lib/store";
 
 type Props = {
     user: TCleanUser;
@@ -21,6 +21,7 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
 
     return (
         <li
+            tabIndex={0}
             ref={liRef}
             className={styles.liContainer}
             onClick={(e) => {
@@ -28,14 +29,14 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                 else {
                     return setLayers({
                         settings: {
-                            type: 'USER_CARD',
+                            type: "USER_CARD",
                             element: e.currentTarget,
-                            firstSide: 'LEFT',
+                            firstSide: "LEFT",
                             gap: 16,
                         },
                         content: {
                             user: user,
-                            animation: 'LEFT',
+                            animation: "LEFT",
                         },
                     });
                 }
@@ -44,11 +45,11 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                 e.preventDefault();
                 setLayers({
                     settings: {
-                        type: 'MENU',
+                        type: "MENU",
                         event: e,
                     },
                     content: {
-                        type: 'USER_GROUP',
+                        type: "USER_GROUP",
                         user: user,
                         channel: channel,
                     },
@@ -56,8 +57,8 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
             }}
             style={{
                 opacity: offline && layers.USER_CARD?.settings.element !== liRef.current ? 0.3 : 1,
-                backgroundColor: layers.USER_CARD?.settings.element === liRef.current ? 'var(--background-5)' : '',
-                color: layers.USER_CARD?.settings.element === liRef.current ? 'var(--foreground-2)' : '',
+                backgroundColor: layers.USER_CARD?.settings.element === liRef.current ? "var(--background-5)" : "",
+                color: layers.USER_CARD?.settings.element === liRef.current ? "var(--foreground-2)" : "",
             }}
         >
             <div className={styles.liWrapper}>
@@ -82,7 +83,7 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                                     onMouseEnter={(e) => {
                                         e.stopPropagation();
                                         setTooltip({
-                                            text: `${channel.guildId ? 'Server' : 'Group'} Owner`,
+                                            text: `${channel.guildId ? "Server" : "Group"} Owner`,
                                             element: e.currentTarget,
                                         });
                                     }}
@@ -90,9 +91,9 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                                 >
                                     {isOwner && (
                                         <Icon
-                                            name='crown'
+                                            name="crown"
                                             size={18}
-                                            viewbox='0 0 20 20'
+                                            viewbox="0 0 20 20"
                                         />
                                     )}
                                 </span>

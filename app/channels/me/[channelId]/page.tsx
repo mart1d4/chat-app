@@ -1,20 +1,16 @@
 import { useUser, getChannel } from "@/lib/auth";
 import { UserChannels } from "@components";
+import { redirect } from "next/navigation";
 import Content from "./Content";
 
-const getData = async (channelId: string) => {
-    const channel = (await getChannel(channelId)) as TChannel;
-    const user = (await useUser()) as TCleanUser;
-    return { channel, user };
-};
-
 const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
-    const { channel, user } = await getData(params.channelId);
+    const user = await useUser();
+    if (!user) redirect("/login");
 
-    let friend: TCleanUser | null = null;
-    if (channel.type === 0) {
-        friend = channel.recipients.find((u) => u.id !== user.id) || null;
-    }
+    const channel = await getChannel(params.channelId);
+    if (!channel || !user.channelIds.includes(channel.id)) redirect("/channels/me");
+
+    const friend = channel.type === 0 ? channel.recipients.find((u) => u.id !== user.id) : undefined;
 
     return (
         <>

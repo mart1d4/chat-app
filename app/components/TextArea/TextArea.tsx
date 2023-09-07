@@ -190,13 +190,12 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     }, [edit, reply]);
 
     useEffect(() => {
+        if (editing) return;
         setContent(channel.id, message);
         const input = textAreaRef.current as HTMLInputElement;
-        if (message !== input.innerText) {
-            input.innerText = message;
-            setCursorToEnd();
-        }
-    }, [message]);
+        input.innerText = message;
+        setCursorToEnd();
+    }, [message, editing]);
 
     useEffect(() => {
         setMessageAttachment(channel.id, attachments);
@@ -477,10 +476,31 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                 />
 
                                 <button
-                                    onClick={(e) => e.preventDefault()}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setLayers({
+                                            settings: {
+                                                type: "MENU",
+                                                element: e.currentTarget,
+                                                firstSide: "TOP",
+                                                secondSide: "RIGHT",
+                                                gap: 10,
+                                            },
+                                            content: {
+                                                type: "FILE_INPUT",
+                                                openInput: () => fileInputRef.current?.click(),
+                                            },
+                                        });
+                                    }}
                                     onDoubleClick={(e) => {
                                         e.preventDefault();
                                         fileInputRef.current?.click();
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            fileInputRef.current?.click();
+                                        }
                                     }}
                                 >
                                     <div>
