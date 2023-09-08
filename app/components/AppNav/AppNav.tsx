@@ -74,6 +74,7 @@ export const AppNav = () => {
                         link={`/channels/me/${channel.id}`}
                         src={`${process.env.NEXT_PUBLIC_CDN_URL}/${getChannelIcon(channel, user.id)}/`}
                         count={pings.find((ping) => ping.channelId === channel.id)?.amount}
+                        user={channel.recipients.find((recipient) => recipient.id !== user.id)}
                     />
                 ))}
 

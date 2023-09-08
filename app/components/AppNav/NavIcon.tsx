@@ -16,9 +16,10 @@ type Props = {
     src?: string;
     svg?: ReactNode;
     count?: number;
+    user?: TUser;
 };
 
-const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props): ReactElement => {
+const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: Props): ReactElement => {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
@@ -108,6 +109,17 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count }: Props):
                                 content: {
                                     type: "GUILD_ICON",
                                     guild: guild,
+                                },
+                            });
+                        } else if (user) {
+                            setLayers({
+                                settings: {
+                                    type: "MENU",
+                                    event: e,
+                                },
+                                content: {
+                                    type: "USER",
+                                    user: user
                                 },
                             });
                         }
