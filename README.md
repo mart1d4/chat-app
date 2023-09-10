@@ -31,15 +31,15 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [x] [Prisma Relations] disconnecting a channel from a user removes the user from the channel
 -   [x] Need to recreate dm notification implementation in AppNav
 -   [x] Not always receiving websockets when sending a message to the channel the user is currently in
--   [ ] Channel receiving a `message-sent` websocket needs to display the channel item as active
+-   [x] Channel receiving a `message-sent` websocket needs to display the channel item as active
 -   [x] `FixedLayer` components are being rerendered when clicking the buttons to close them
 -   [x] Editing an image data using `enter` to submit the form doesn't always work
--   [ ] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
+-   [x] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
 -   [x] Requesting a friend adds the user twice to the friends list (only way to fix is to refresh the page)
 -   [ ] Clicking on an image to preview it sometimes takes a while to load and messes up the layout
 -   [ ] Textarea still needs improvements; e.g. pasting text while having text selected doesn't always work as expected
 -   [x] Textarea content doesn't get cleared when sending a message
--   [ ] Clicking an element that rerenders in a `FixedLayer` component closes the layer
+-   [x] Clicking an element that rerenders in a `FixedLayer` component closes the layer
 -   [ ] Deleting a large message doesn't make the one below large if it needs to be
 
 Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).

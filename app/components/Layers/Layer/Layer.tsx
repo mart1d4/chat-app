@@ -143,6 +143,7 @@ const Layer = ({ settings, content }: TLayer) => {
     const [currentNode, setCurrentNode] = useState<TNode>(null);
 
     const setLayers = useLayers((state) => state.setLayers);
+    const layers = useLayers((state) => state.layers);
 
     const firstSide = settings?.firstSide;
     const secondSide = settings?.secondSide;
@@ -312,6 +313,8 @@ const Layer = ({ settings, content }: TLayer) => {
 
         const handleEscKey = (e: any) => {
             if (e.key === "Escape") {
+                if (settings.type === "POPUP") return;
+                if (settings.type !== "MENU" && layers.MENU) return;
                 setLayers({
                     settings: {
                         type: settings.type,
@@ -328,7 +331,7 @@ const Layer = ({ settings, content }: TLayer) => {
             window.removeEventListener("mousedown", handleOutsideClick);
             window.removeEventListener("keydown", handleEscKey);
         };
-    }, [currentNode, settings?.type]);
+    }, [currentNode, settings?.type, layers]);
 
     const index =
         settings?.type === "USER_CARD"

@@ -408,9 +408,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             if (layers.POPUP.length === 0) return;
 
             if (e.key === "Escape") {
-                e.preventDefault();
-                e.stopPropagation();
-
+                if (layers.MENU) return;
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -420,9 +418,6 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             }
 
             if (e.key === "Enter" && !e.shiftKey && content.type) {
-                e.preventDefault();
-                e.stopPropagation();
-
                 if (isLoading) return;
 
                 if (type === "CREATE_GUILD") {
@@ -449,7 +444,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [
-        layers.POPUP,
+        layers,
         type,
         uid,
         password,

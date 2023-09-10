@@ -56,10 +56,12 @@ export const Loading = ({ children, data }: Props): ReactElement => {
     const setUser = useData((state) => state.setUser);
 
     const addRequestReceived = useData((state) => state.addRequestReceived);
+    const removeBlockedBy = useData((state) => state.removeBlockedBy);
     const removeRequests = useData((state) => state.removeRequests);
     const addRequestSent = useData((state) => state.addRequestSent);
     const removeBlocked = useData((state) => state.removeBlocked);
     const removeFriend = useData((state) => state.removeFriend);
+    const addBlockedBy = useData((state) => state.addBlockedBy);
     const addBlocked = useData((state) => state.addBlocked);
     const addFriend = useData((state) => state.addFriend);
 
@@ -146,9 +148,17 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                         addRequestSent(toAdd);
                     }
                 } else if (data.type === "USER_BLOCKED") {
-                    addBlocked(toAdd);
+                    if (data.receiver.id === user.id) {
+                        addBlockedBy(toAdd);
+                    } else {
+                        addBlocked(toAdd);
+                    }
                 } else if (data.type === "USER_UNBLOCKED") {
-                    removeBlocked(toAdd);
+                    if (data.receiver.id === user.id) {
+                        removeBlockedBy(toAdd);
+                    } else {
+                        removeBlocked(toAdd);
+                    }
                 }
             }
         });

@@ -39,7 +39,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         if (!user) return;
 
         pusher.bind("message-sent", (data: TMessageData) => {
-            if (data.channelId === channel.id && data.message.author.id !== user.id) {
+            if (
+                data.channelId === channel.id &&
+                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type))
+            ) {
                 setMessages((prev) => [...prev, data.message]);
             }
         });

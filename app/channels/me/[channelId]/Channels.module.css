@@ -160,3 +160,34 @@
     color: var(--foreground-3);
     background-color: var(--background-4);
 }
+
+.mutualGuildIcons {
+    margin-right: 8px;
+    display: flex;
+}
+
+.mutualGuildText {
+    cursor: pointer;
+    color: var(--foreground-3);
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+}
+
+.mutualGuildText:hover {
+    color: var(--foreground-1);
+}
+
+.mutualGuildDot {
+    width: 4px;
+    height: 4px;
+    margin: 0 16px;
+    border-radius: 50%;
+    background-color: var(--background-5);
+}
+
+.mutualGuildIcons > img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}

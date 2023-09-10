@@ -193,7 +193,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         if (editing) return;
         setContent(channel.id, message);
         const input = textAreaRef.current as HTMLInputElement;
-        input.innerText = message;
+        if (input) input.innerText = message;
         setCursorToEnd();
     }, [message, editing]);
 
@@ -342,7 +342,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                 </div>
             </form>
         );
-    } else if (!blocked.includes(friend?.id) && !blockedBy.includes(friend?.id)) {
+    } else if (!blocked.includes(friend?.id)) {
         return (
             <form className={styles.form}>
                 {reply?.messageId && !editing && (

@@ -98,6 +98,20 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: P
                         setTooltip(null);
                         if (!active) setMarkHeight(count ? 7 : 0);
                     }}
+                    onFocus={(e) => {
+                        setTooltip({
+                            text: name,
+                            element: e.currentTarget,
+                            position: "RIGHT",
+                            gap: 15,
+                            big: true,
+                        });
+                        if (!active) setMarkHeight(20);
+                    }}
+                    onBlur={() => {
+                        setTooltip(null);
+                        if (!active) setMarkHeight(count ? 7 : 0);
+                    }}
                     onClick={() => router.push(link)}
                     onContextMenu={(e) => {
                         if (guild) {
@@ -119,7 +133,7 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: P
                                 },
                                 content: {
                                     type: "USER",
-                                    user: user
+                                    user: user,
                                 },
                             });
                         }

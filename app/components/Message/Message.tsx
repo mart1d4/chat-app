@@ -21,6 +21,7 @@ type Props = {
 export const Message = ({ message, setMessages, large, channel, guild }: Props) => {
     const [fileProgress, setFileProgress] = useState<number>(0);
 
+    const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
@@ -200,6 +201,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
 
             setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== prevMessage.id));
             setMessages((messages: TMessage[]) => [...messages, message]);
+            moveChannelUp(message.channelId);
         } catch (error) {
             console.error(error);
             setMessages((messages) => {
@@ -1073,9 +1075,10 @@ const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
     );
 };
 
-const MessageAttachments = ({ message, functions }: any) => {
+const MessageAttachments = ({ message, functions }: { message: TMessage; functions: any }) => {
     const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
         <Image
+            key={attachment.id}
             attachment={attachment}
             message={message}
             functions={functions}
@@ -1085,19 +1088,15 @@ const MessageAttachments = ({ message, functions }: any) => {
     return (
         <div className={styles.attachments}>
             <div>
-                {message.attachments.length === 1 &&
-                    message.attachments.slice(0, 1).map((attachment: TAttachment) => (
-                        <div
-                            key={attachment.id}
-                            className={styles.gridOneBig}
-                        >
-                            <ImageComponent attachment={attachment} />
-                        </div>
-                    ))}
+                {message.attachments.length === 1 && (
+                    <div className={styles.gridOneBig}>
+                        <ImageComponent attachment={message.attachments[0]} />
+                    </div>
+                )}
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
-                        {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                        {message.attachments.map((attachment) => (
                             <ImageComponent attachment={attachment} />
                         ))}
                     </div>
@@ -1106,7 +1105,7 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 3 && (
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                            {message.attachments.slice(0, 1).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
@@ -1114,13 +1113,13 @@ const MessageAttachments = ({ message, functions }: any) => {
                         <div className={styles.gridTwoColumn}>
                             <div>
                                 <div>
-                                    {message.attachments.slice(1, 2).map((attachment: TAttachment) => (
+                                    {message.attachments.slice(1, 2).map((attachment) => (
                                         <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
 
                                 <div>
-                                    {message.attachments.slice(2, 3).map((attachment: TAttachment) => (
+                                    {message.attachments.slice(2, 3).map((attachment) => (
                                         <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
@@ -1131,7 +1130,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
-                        {message.attachments.slice(0, 4).map((attachment: TAttachment) => (
+                        {message.attachments.map((attachment) => (
                             <ImageComponent attachment={attachment} />
                         ))}
                     </div>
@@ -1140,13 +1139,13 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 5 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                            {message.attachments.slice(0, 2).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment: TAttachment) => (
+                            {message.attachments.slice(2, 5).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
@@ -1155,7 +1154,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 6).map((attachment: TAttachment) => (
+                        {message.attachments.map((attachment) => (
                             <ImageComponent attachment={attachment} />
                         ))}
                     </div>
@@ -1164,13 +1163,13 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 7 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                            {message.attachments.slice(0, 1).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment: TAttachment) => (
+                            {message.attachments.slice(1, 7).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
@@ -1180,13 +1179,13 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 8 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
+                            {message.attachments.slice(0, 2).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment: TAttachment) => (
+                            {message.attachments.slice(2, 8).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
@@ -1195,7 +1194,7 @@ const MessageAttachments = ({ message, functions }: any) => {
 
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 9).map((attachment: TAttachment) => (
+                        {message.attachments.map((attachment) => (
                             <ImageComponent attachment={attachment} />
                         ))}
                     </div>
@@ -1204,13 +1203,13 @@ const MessageAttachments = ({ message, functions }: any) => {
                 {message.attachments.length == 10 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
+                            {message.attachments.slice(0, 1).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment: TAttachment) => (
+                            {message.attachments.slice(1, 10).map((attachment) => (
                                 <ImageComponent attachment={attachment} />
                             ))}
                         </div>
@@ -1847,3 +1846,6 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
         [attachment, showDelete, hideSpoiler]
     );
 };
+function moveChannelUp(channelId: any) {
+    throw new Error("Function not implemented.");
+}

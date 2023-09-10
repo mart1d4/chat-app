@@ -1,3 +1,30 @@
+.disclaimer {
+    position: fixed;
+    z-index: 100;
+    bottom: 20px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background-color: var(--error-1);
+    font-weight: 600;
+    color: var(--foreground-1);
+    display: flex;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 28px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    max-width: clamp(300px, 90vw, 800px);
+    width: 100%;
+}
+
+.disclaimer a {
+    color: var(--foreground-1);
+    font-weight: 700;
+}
+
 .wrapper {
     width: 100dvw;
     height: 100dvh;
@@ -193,6 +220,11 @@
         padding: 32px;
         border-radius: 5px;
         animation: popIn 0.25s ease-in-out;
+    }
+
+    .disclaimer {
+        top: 20px;
+        bottom: auto;
     }
 }
 

@@ -7,8 +7,8 @@ import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserProfile.module.css";
 import { translateCap } from "@/lib/strings";
-import { Avatar, Icon } from "@components";
 import { useRouter } from "next/navigation";
+import { Avatar, Icon } from "@components";
 
 const colors = {
     ONLINE: "#22A559",
@@ -56,23 +56,6 @@ export const UserProfile = ({ content }: any): ReactElement => {
         setActiveNavItem(0);
         setNote("");
     }, [user]);
-
-    useEffect(() => {
-        const handleClick = (e: KeyboardEvent) => {
-            if (layers.USER_PROFILE) return;
-            if (e.key === "Escape") {
-                setLayers({
-                    settings: {
-                        type: "USER_PROFILE",
-                        setNull: true,
-                    },
-                });
-            }
-        };
-
-        window.addEventListener("keydown", handleClick);
-        return () => window.removeEventListener("keydown", handleClick);
-    }, [content]);
 
     const sectionNavItems = isSameUser() ? ["User Info"] : ["User Info", "Mutual Servers", "Mutual Friends"];
     if (!user) return <></>;

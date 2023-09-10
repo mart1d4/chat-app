@@ -180,7 +180,7 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                         content: {
                             type: "CHANNEL",
                             user: user,
-                            channel: channel || null,
+                            channel: channel,
                         },
                     });
                 }}

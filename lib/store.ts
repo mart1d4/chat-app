@@ -165,7 +165,9 @@ interface DataState {
     addFriend: (friend: TCleanUser) => void;
     removeFriend: (friend: TCleanUser) => void;
     addBlocked: (blocked: TCleanUser) => void;
+    addBlockedBy: (blocked: TCleanUser) => void;
     removeBlocked: (blocked: TCleanUser) => void;
+    removeBlockedBy: (blocked: TCleanUser) => void;
     addRequestReceived: (request: TCleanUser) => void;
     addRequestSent: (request: TCleanUser) => void;
     removeRequests: (request: TCleanUser) => void;
@@ -212,7 +214,15 @@ export const useData = create<DataState>()((set) => ({
             requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
             requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
         })),
+    addBlockedBy: (blocked) =>
+        set((state) => ({
+            blockedBy: [...state.blockedBy, blocked],
+            friends: state.friends.filter((f) => f.id !== blocked.id),
+            requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
+            requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
+        })),
     removeBlocked: (blocked) => set((state) => ({ blocked: state.blocked.filter((b) => b.id !== blocked.id) })),
+    removeBlockedBy: (blocked) => set((state) => ({ blockedBy: state.blockedBy.filter((b) => b.id !== blocked.id) })),
     addRequestReceived: (request) => set((state) => ({ requestsReceived: [...state.requestsReceived, request] })),
     addRequestSent: (request) => set((state) => ({ requestsSent: [...state.requestsSent, request] })),
     removeRequests: (request) =>

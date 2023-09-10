@@ -7,6 +7,7 @@ import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
+import Image from "next/image";
 
 type TMessageData = {
     channelId: TChannel["id"];
@@ -40,7 +41,10 @@ const Content = ({ channel, user, friend }: Props) => {
         if (!user) return;
 
         pusher.bind("message-sent", (data: TMessageData) => {
-            if (data.channelId === channel.id && data.message.author.id !== user.id) {
+            if (
+                data.channelId === channel.id &&
+                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type))
+            ) {
                 setMessages((prev) => [...prev, data.message]);
             }
         });
@@ -215,7 +219,7 @@ const Content = ({ channel, user, friend }: Props) => {
                                                     />
                                                 )}
 
-                                                {messages?.map((message: TMessage, index: number) => (
+                                                {messages.map((message, index) => (
                                                     <div key={message.id}>
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
@@ -262,12 +266,20 @@ const Content = ({ channel, user, friend }: Props) => {
                 </div>
             </div>
         ),
-        [channel, friend, messages, loading, hasMore]
+        [channel, user, friend, messages, loading, hasMore]
     );
 };
 
-const FirstMessage = ({ channel, user, friend }: Props) => {
+const FirstMessage = ({ channel, friend }: Props) => {
+    const requestsR = useData((state) => state.requestsReceived).map((u) => u.id);
+    const requestsS = useData((state) => state.requestsSent).map((u) => u.id);
+    const friends = useData((state) => state.friends).map((u) => u.id);
+    const blocked = useData((state) => state.blocked).map((u) => u.id);
+    const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
+
+    const mutualGuilds = guilds.filter((guild) => guild.rawMemberIds.includes(friend?.id));
+    const guildIcons = guilds.filter((guild) => !!guild.icon);
 
     return (
         <div className={styles.firstTimeMessageContainer}>
@@ -296,7 +308,31 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
 
                 {friend && (
                     <div className={styles.descriptionActions}>
-                        {user.friendIds.includes(friend.id) ? (
+                        {mutualGuilds.length > 0 && (
+                            <div className={styles.mutualGuildIcons}>
+                                {guildIcons
+                                    .map((guild) => (
+                                        <Image
+                                            key={guild.id}
+                                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`}
+                                            alt={guild.name}
+                                            width={24}
+                                            height={24}
+                                        />
+                                    ))
+                                    .slice(0, 3)}
+                            </div>
+                        )}
+
+                        {mutualGuilds.length > 0 && (
+                            <div className={styles.mutualGuildText}>
+                                {mutualGuilds.length} Mutual Server{mutualGuilds.length > 1 && "s"}
+                            </div>
+                        )}
+
+                        {mutualGuilds.length > 0 && <div className={styles.mutualGuildDot} />}
+
+                        {friends.includes(friend.id) ? (
                             <button
                                 className="grey"
                                 onClick={() =>
@@ -308,9 +344,9 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                             >
                                 Remove Friend
                             </button>
-                        ) : user.requestSentIds?.includes(friend.id) ? (
+                        ) : requestsS.includes(friend.id) ? (
                             <button className="blue disabled">Friend Request Sent</button>
-                        ) : user.requestReceivedIds?.includes(friend.id) ? (
+                        ) : requestsR.includes(friend.id) ? (
                             <button
                                 className="grey"
                                 onClick={() =>
@@ -323,7 +359,7 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                                 Accept Friend Request
                             </button>
                         ) : (
-                            !user.blockedUserIds?.includes(friend.id) && (
+                            !blocked.includes(friend.id) && (
                                 <button
                                     className="blue"
                                     onClick={() =>
@@ -340,7 +376,7 @@ const FirstMessage = ({ channel, user, friend }: Props) => {
                             )
                         )}
 
-                        {!user.blockedUserIds?.includes(friend.id) ? (
+                        {!blocked.includes(friend.id) ? (
                             <button
                                 className="grey"
                                 onClick={() =>

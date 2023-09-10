@@ -268,66 +268,51 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
     );
 };
 
-const MessageAttachments = ({ message, functions }: any) => {
+const MessageAttachments = ({ message }: { message: TMessage }) => {
+    const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
+        <Image
+            key={attachment.id}
+            attachment={attachment}
+            message={message}
+        />
+    );
+
     return (
         <div className={styles.attachments}>
             <div>
-                {message.attachments.length === 1 &&
-                    message.attachments.slice(0, 1).map((attachment: TAttachment) => (
-                        <div
-                            key={attachment.id}
-                            className={styles.gridOneBig}
-                        >
-                            <Image
-                                attachment={attachment}
-                                message={message}
-                            />
-                        </div>
-                    ))}
+                {message.attachments.length === 1 && (
+                    <div className={styles.gridOneBig}>
+                        <ImageComponent attachment={message.attachments[0]} />
+                    </div>
+                )}
 
-                {message.attachments.length == 2 && (
+                {message.attachments.length === 2 && (
                     <div className={styles.gridTwo}>
-                        {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                            />
+                        {message.attachments.map((attachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
 
-                {message.attachments.length == 3 && (
+                {message.attachments.length === 3 && (
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridTwoColumn}>
                             <div>
                                 <div>
-                                    {message.attachments.slice(1, 2).map((attachment: TAttachment) => (
-                                        <Image
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                            message={message}
-                                        />
+                                    {message.attachments.slice(1, 2).map((attachment) => (
+                                        <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
 
                                 <div>
-                                    {message.attachments.slice(2, 3).map((attachment: TAttachment) => (
-                                        <Image
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                            message={message}
-                                        />
+                                    {message.attachments.slice(2, 3).map((attachment) => (
+                                        <ImageComponent attachment={attachment} />
                                     ))}
                                 </div>
                             </div>
@@ -335,133 +320,89 @@ const MessageAttachments = ({ message, functions }: any) => {
                     </div>
                 )}
 
-                {message.attachments.length == 4 && (
+                {message.attachments.length === 4 && (
                     <div className={styles.gridFour}>
-                        {message.attachments.slice(0, 4).map((attachment: TAttachment) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                            />
+                        {message.attachments.map((attachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
 
-                {message.attachments.length == 5 && (
+                {message.attachments.length === 5 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(0, 2).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(2, 5).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
                 )}
 
-                {message.attachments.length == 6 && (
+                {message.attachments.length === 6 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 6).map((attachment: TAttachment) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                            />
+                        {message.attachments.map((attachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
 
-                {message.attachments.length == 7 && (
+                {message.attachments.length === 7 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(1, 7).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
                 )}
 
-                {message.attachments.length == 8 && (
+                {message.attachments.length === 8 && (
                     <>
                         <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(0, 2).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(2, 8).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
                 )}
 
-                {message.attachments.length == 9 && (
+                {message.attachments.length === 9 && (
                     <div className={styles.gridThree}>
-                        {message.attachments.slice(0, 9).map((attachment: TAttachment) => (
-                            <Image
-                                key={attachment.id}
-                                attachment={attachment}
-                                message={message}
-                            />
+                        {message.attachments.map((attachment) => (
+                            <ImageComponent attachment={attachment} />
                         ))}
                     </div>
                 )}
 
-                {message.attachments.length == 10 && (
+                {message.attachments.length === 10 && (
                     <>
                         <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(0, 1).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment: TAttachment) => (
-                                <Image
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    message={message}
-                                />
+                            {message.attachments.slice(1, 10).map((attachment) => (
+                                <ImageComponent attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -476,59 +417,43 @@ type ImageComponent = {
     message: TMessage;
 };
 
-const Image = ({ attachment, message }: ImageComponent) => {
+const Image = ({ attachment }: ImageComponent) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
-
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const setLayers = useLayers((state) => state.setLayers);
+    const isHidden = attachment.isSpoiler && !hideSpoiler;
 
     return useMemo(
         () => (
             <div
                 className={styles.image}
                 onClick={() => {
-                    if (attachment.isSpoiler && !hideSpoiler) {
-                        return setHideSpoiler(true);
+                    if (isHidden) {
+                        setHideSpoiler(true);
                     }
-
-                    const index = message.attachments.findIndex((a) => a.id === attachment.id);
-
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                        },
-                        content: {
-                            type: "ATTACHMENT_PREVIEW",
-                            attachments: message.attachments,
-                            current: index,
-                        },
-                    });
                 }}
+                style={{ cursor: isHidden ? "pointer" : "default" }}
             >
                 <div>
                     <div>
-                        <div>
+                        <div style={{ cursor: isHidden ? "pointer" : "default" }}>
                             <div>
                                 <img
                                     src={`${process.env.NEXT_PUBLIC_CDN_URL}${attachment.id}/-/resize/x${
                                         attachment.dimensions.height >= 350 ? 350 : attachment.dimensions.height
                                     }/-/format/webp/`}
                                     alt={attachment?.name}
-                                    style={{
-                                        filter: attachment.isSpoiler && !hideSpoiler ? "blur(44px)" : "none",
-                                    }}
+                                    style={{ filter: isHidden ? "blur(44px)" : "none" }}
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {attachment.isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+                {isHidden && <div className={styles.spoilerButton}>Spoiler</div>}
                 {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
                     <button
                         className={styles.imageAlt}
                         onMouseEnter={(e) => {
-                            e.stopPropagation();
                             if (!attachment.description) return;
                             setTooltip({
                                 text: attachment.description,

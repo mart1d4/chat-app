@@ -24,6 +24,7 @@ export const Popout = ({ content }: any) => {
     const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user) as TUser;
     const channels = useData((state) => state.channels);
+    const layers = useLayers((state) => state.layers);
     const friends = useData((state) => state.friends);
     const { sendRequest } = useFetchHelper();
 
@@ -59,6 +60,25 @@ export const Popout = ({ content }: any) => {
             pusher.unbind("message-edited");
         };
     }, [user, pinned]);
+
+    useEffect(() => {
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                if (layers.POPUP.length > 2 || layers.MENU) {
+                    return;
+                }
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [layers]);
 
     useEffect(() => {
         if (content.type === "PINNED_MESSAGES") {
@@ -102,7 +122,7 @@ export const Popout = ({ content }: any) => {
         if (content.pinned) return;
 
         if (content.channel) {
-            const filtered = friends.filter((friend: any) => !content.channel.recipientIds.includes(friend.id));
+            const filtered = friends.filter((friend: any) => !content.channel.recipientIds?.includes(friend.id));
 
             if (search)
                 setFilteredList(filtered.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));

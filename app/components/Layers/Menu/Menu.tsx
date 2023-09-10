@@ -536,15 +536,18 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: "Divider",
                 },
                 {
-                    name: content.guild.ownerId === currentUser.id ? "Delete Server" : null,
+                    name: content.guild.ownerId === currentUser.id ? "Delete Server" : "Leave Server",
                     danger: true,
                     func: () => {
-                        sendRequest({
-                            query: "GUILD_DELETE",
-                            params: {
-                                guildId: content.guild.id,
-                            },
-                        });
+                        if (content.guild.ownerId === currentUser.id) {
+                            sendRequest({
+                                query: "GUILD_DELETE",
+                                params: {
+                                    guildId: content.guild.id,
+                                },
+                            });
+                        } else {
+                        }
                     },
                 },
                 {
@@ -913,19 +916,11 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                 setLayers({
                                     settings: {
                                         type: "USER_PROFILE",
-                                        setNull: true,
+                                    },
+                                    content: {
+                                        user,
                                     },
                                 });
-                                setTimeout(() => {
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_PROFILE",
-                                        },
-                                        content: {
-                                            user,
-                                        },
-                                    });
-                                }, 50);
                             },
                         },
                         {
@@ -987,13 +982,20 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         },
                         {
                             name: !userProps?.isBlocked ? "Message" : null,
-                            func: () =>
+                            func: () => {
                                 sendRequest({
                                     query: "CHANNEL_CREATE",
                                     data: {
                                         recipients: [user.id],
                                     },
-                                }),
+                                });
+                                setLayers({
+                                    settings: {
+                                        type: "USER_PROFILE",
+                                        setNull: true,
+                                    },
+                                });
+                            },
                         },
                         { name: "Divider" },
                         {
@@ -1004,6 +1006,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     ]);
                 } else if (userProps?.isBlocked) {
                     setItems([
+                        {
+                            name: content?.channel && "Mark As Read",
+                            func: () => {},
+                            disabled: true,
+                        },
+                        { name: content?.channel && "Divider" },
                         {
                             name: "Profile",
                             func: () => {
@@ -1051,7 +1059,20 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                 });
                             },
                         },
+                        {
+                            name: content?.channel && "Close DM",
+                            func: () =>
+                                sendRequest({
+                                    query: "CHANNEL_DELETE",
+                                    params: { channelId: content.channel.id },
+                                }),
+                        },
                         { name: "Divider" },
+                        {
+                            name: "Add Friend",
+                            disabled: true,
+                            func: () => {},
+                        },
                         {
                             name: "Unblock User",
                             func: () =>
@@ -1064,8 +1085,19 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                         },
                         { name: "Divider" },
                         {
+                            name: content?.channel && `Mute @${user.username}`,
+                            items: muteItems,
+                            func: () => {},
+                        },
+                        { name: content?.channel && "Divider" },
+                        {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
+                            icon: "id",
+                        },
+                        {
+                            name: content?.channel && "Copy Channel ID",
+                            func: () => writeText(content.channel.id),
                             icon: "id",
                         },
                     ]);
@@ -1158,7 +1190,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                       }),
                         },
                         {
-                            name: userProps?.isBlocked ? "UnuserProps.isBlocked" : "Block",
+                            name: userProps?.isBlocked ? "Unblock" : "Block",
                             func: () =>
                                 userProps?.isBlocked
                                     ? sendRequest({
