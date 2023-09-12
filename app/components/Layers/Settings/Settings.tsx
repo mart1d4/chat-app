@@ -174,7 +174,7 @@ export const Settings = (): ReactElement => {
                                     {tabs.map((tab) => (
                                         <div
                                             tabIndex={tab.name === "separator" || tab.type === "title" ? -1 : 0}
-                                            key={tab.name}
+                                            key={uuidv4()}
                                             className={
                                                 tab.type === "title"
                                                     ? styles.title

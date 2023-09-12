@@ -111,7 +111,7 @@
     user-select: text;
 }
 
-.messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp, .messageAccessories) {
+.messageContent > .mainContent {
     font-weight: 300;
     font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     user-select: text;
@@ -820,6 +820,19 @@
     background-clip: padding-box;
 }
 
+.guildInvite > .content > .headline > .inviteAcronym {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-4);
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    color: var(--foreground-2);
+    user-select: none;
+}
+
 .guildInvite > .content > .headline > div:last-child {
     flex: 1 1 auto;
     display: flex;
@@ -837,6 +850,11 @@
     font-size: 16px;
     font-weight: 600;
     line-height: 20px;
+}
+
+.guildInvite > .content > .headline > div:last-child > h3.link:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .guildInvite > .content > .headline > div:last-child > strong {

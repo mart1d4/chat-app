@@ -7,6 +7,7 @@ import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { trimMessage } from "@/lib/strings";
+import { useRouter } from "next/navigation";
 import styles from "./Message.module.css";
 import Link from "next/link";
 import { v4 } from "uuid";
@@ -43,6 +44,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
 
     const controller = useMemo(() => new AbortController(), []);
     const inline = shouldDisplayInlined(message.type);
+    const router = useRouter();
     const hasRendered = useRef(false);
 
     const userRegex = /<([@][a-zA-Z0-9]{24})>/g;
@@ -960,6 +962,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             )}
 
                             <div
+                                className={styles.mainContent}
                                 style={{
                                     whiteSpace: "pre-line",
                                     opacity: message.waiting && message?.attachments?.length === 0 ? 0.5 : 1,
@@ -1097,7 +1100,32 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                             key={invite.code || v4()}
                                             className={styles.guildInvite}
                                         >
-                                            <h3>
+                                            <h3
+                                                className={
+                                                    !("type" in invite) &&
+                                                    guilds.find((guild) => guild.id === invite.guild.id)
+                                                        ? styles.link
+                                                        : ""
+                                                }
+                                                onClick={() => {
+                                                    if (!("type" in invite)) {
+                                                        if (guilds.find((guild) => guild.id === invite.guild.id)) {
+                                                            router.push(`/channels/${invite.guild.id}`);
+                                                        } else {
+                                                            // setLayers({
+                                                            //     settings: {
+                                                            //         type: "POPUP",
+                                                            //     },
+                                                            //     content: {
+                                                            //         type: "WARNING",
+                                                            //         warning: "JOIN_SERVER",
+                                                            //         invite: invite,
+                                                            //     },
+                                                            // });
+                                                        }
+                                                    }
+                                                }}
+                                            >
                                                 {!("type" in invite)
                                                     ? user.id === invite.inviter.id
                                                         ? "You sent an invite to join a server"
@@ -1111,15 +1139,29 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                 <div className={styles.headline}>
                                                     <div
                                                         className={
-                                                            "type" in invite ? styles.inviteIcon : styles.inviteIconPoop
+                                                            "type" in invite
+                                                                ? styles.inviteIconPoop
+                                                                : invite.guild.icon
+                                                                ? styles.inviteIcon
+                                                                : styles.inviteAcronym
                                                         }
                                                         style={{
                                                             backgroundImage:
                                                                 "type" in invite
-                                                                    ? "https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/"
-                                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/`,
+                                                                    ? "url(https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/)"
+                                                                    : invite.guild.icon
+                                                                    ? `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
+                                                                    : "",
                                                         }}
-                                                    />
+                                                    >
+                                                        {!("type" in invite) &&
+                                                            !invite.guild.icon &&
+                                                            (invite.guild.name
+                                                                .toLowerCase()
+                                                                .match(/\b(\w)/g)
+                                                                ?.join("") ??
+                                                                "")}
+                                                    </div>
 
                                                     <div>
                                                         <h3
