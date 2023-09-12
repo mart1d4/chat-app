@@ -36,7 +36,6 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const requestsSent = useData((state) => state.requestsSent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
     const friends = useData((state) => state.friends);
     const blocked = useData((state) => state.blocked);
     const guilds = useData((state) => state.guilds);
@@ -53,7 +52,8 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
     useEffect(() => {
         if (content.focusNote) noteRef.current?.focus();
-        setActiveNavItem(0);
+        if (content.guilds) setActiveNavItem(1);
+        else setActiveNavItem(0);
         setNote("");
     }, [user]);
 
@@ -419,7 +419,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         />
                                     ))
                                 ) : (
-                                    <div className={styles.empty + " " + styles.noFriends}>
+                                    <div className={styles.empty}>
                                         <div />
                                         <div>No servers in common</div>
                                     </div>

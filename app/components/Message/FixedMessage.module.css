@@ -625,3 +625,7 @@
 .imagesUpload > div:last-of-type:hover {
     color: var(--foreground-1);
 }
+
+.messageLink {
+    color: var(--accent-light);
+}

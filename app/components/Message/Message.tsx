@@ -1,13 +1,14 @@
 "use client";
 
 import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from "@uploadcare/upload-client";
-import { useData, useLayers, useMessages, useTooltip } from "@/lib/store";
+import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { trimMessage } from "@/lib/strings";
 import styles from "./Message.module.css";
+import Link from "next/link";
 import { v4 } from "uuid";
 
 type Props = {
@@ -18,11 +19,15 @@ type Props = {
     guild?: TGuild;
 };
 
+type TInvites = TInvite[] | { code: string; type: string }[];
+
 export const Message = ({ message, setMessages, large, channel, guild }: Props) => {
     const [fileProgress, setFileProgress] = useState<number>(0);
+    const [invites, setInvites] = useState<TInvites>([]);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
+    const setMention = useMention((state) => state.setMention);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
@@ -30,6 +35,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     const setEdit = useMessages((state) => state.setEdit);
     const layers = useLayers((state) => state.layers);
     const edits = useMessages((state) => state.edits);
+    const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
     const reply = replies.find((r) => r.messageId === message.id);
@@ -39,21 +45,45 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     const inline = shouldDisplayInlined(message.type);
     const hasRendered = useRef(false);
 
-    const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
+    const userRegex = /<([@][a-zA-Z0-9]{24})>/g;
+    const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
+    const inviteRegex = /https?:\/\/chat-app.mart1d4.dev\/([a-zA-Z0-9]{8})/g;
+
+    let guildInvites: string[] = [];
 
     let messageContent: JSX.Element | null = null;
     if (message.content && !inline) {
         messageContent = (
             <span>
-                {message.content.split(userRegex).map((part) => {
-                    if (message.mentionIds?.includes(part.substring(1))) {
-                        const user = message.mentions.find((user) => user.id === part.substring(1)) as TCleanUser;
+                {message.content.split(/(\s+)/).map((part, index) => {
+                    if (userRegex.test(part)) {
+                        const userId = part.substring(2).slice(0, -1);
+                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
                                 user={user}
                                 full={true}
                             />
+                        );
+                    } else if (urlRegex.test(part)) {
+                        if (inviteRegex.test(part)) {
+                            const code = part.substring(part.length - 8);
+                            if (!guildInvites.includes(code)) {
+                                guildInvites.push(code);
+                            }
+                        }
+
+                        return (
+                            <Link
+                                href={part}
+                                key={v4()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.messageLink}
+                            >
+                                {part}
+                            </Link>
                         );
                     } else {
                         return part;
@@ -67,17 +97,28 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     if (message.messageReference?.content && !inline) {
         referencedContent = (
             <span>
-                {message.messageReference?.content.split(userRegex).map((part, index) => {
-                    if (message.messageReference.mentionIds?.includes(part.substring(1))) {
-                        const user = message.messageReference.mentions?.find(
-                            (user) => user.id === part.substring(1)
-                        ) as TCleanUser;
+                {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
+                    if (userRegex.test(part)) {
+                        const userId = part.substring(2).slice(0, -1);
+                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
                                 user={user}
                                 full={true}
                             />
+                        );
+                    } else if (urlRegex.test(part)) {
+                        return (
+                            <Link
+                                href={part}
+                                key={v4()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.messageLink}
+                            >
+                                {part}
+                            </Link>
                         );
                     } else {
                         return part;
@@ -86,6 +127,30 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
             </span>
         );
     }
+
+    useEffect(() => {
+        if (guildInvites.length === 0) return;
+        console.log(guildInvites);
+
+        guildInvites.forEach(async (code) => {
+            if (invites.find((invite) => invite.code === code)) return;
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/invites/${code}`, {
+                method: "GET",
+            });
+
+            const data = await response.json();
+            if (!data.invite && data.invite !== null) {
+                // @ts-expect-error
+                return setInvites((invites) => [...invites, { code: code, type: "error" }]);
+            }
+
+            setInvites((invites) => [
+                ...invites,
+                data.invite === null ? { code: code, type: "notfound" } : data.invite,
+            ]);
+        });
+    }, [guildInvites]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -1024,15 +1089,114 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 )}
                             </div>
+
+                            {invites.length > 0 && (
+                                <div className={styles.messageAccessories}>
+                                    {invites.map((invite) => (
+                                        <div
+                                            key={invite.code || v4()}
+                                            className={styles.guildInvite}
+                                        >
+                                            <h3>
+                                                {!("type" in invite)
+                                                    ? user.id === invite.inviter.id
+                                                        ? "You sent an invite to join a server"
+                                                        : "You've been invited to join a server"
+                                                    : user.id === message.author.id
+                                                    ? "You sent an invite, but..."
+                                                    : "You received an invite, but..."}
+                                            </h3>
+
+                                            <div className={styles.content}>
+                                                <div className={styles.headline}>
+                                                    <div
+                                                        className={
+                                                            "type" in invite ? styles.inviteIcon : styles.inviteIconPoop
+                                                        }
+                                                        style={{
+                                                            backgroundImage:
+                                                                "type" in invite
+                                                                    ? "https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/"
+                                                                    : `${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/`,
+                                                        }}
+                                                    />
+
+                                                    <div>
+                                                        <h3
+                                                            style={{
+                                                                color:
+                                                                    "type" in invite && invite.type === "notfound"
+                                                                        ? "var(--error-1)"
+                                                                        : "",
+                                                            }}
+                                                        >
+                                                            {"type" in invite
+                                                                ? invite.type === "notfound"
+                                                                    ? "Invalid Invite"
+                                                                    : "Something Went Wrong"
+                                                                : invite.guild.name}
+                                                        </h3>
+                                                        <strong>
+                                                            {"type" in invite ? (
+                                                                invite.type === "notfound" ? (
+                                                                    user.id === message.author.id ? (
+                                                                        "Try sending a new invite!"
+                                                                    ) : (
+                                                                        `Ask ${message.author.username} for a new invite!`
+                                                                    )
+                                                                ) : (
+                                                                    "Try again later"
+                                                                )
+                                                            ) : (
+                                                                <>
+                                                                    <span>
+                                                                        {invite.guild.rawMemberIds.length} Online
+                                                                    </span>
+
+                                                                    <span>
+                                                                        {invite.guild.rawMemberIds.length} Member
+                                                                        {invite.guild.rawMemberIds.length > 1 && "s"}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+
+                                                {!("type" in invite) && (
+                                                    <button className="button green">
+                                                        {guilds.find((guild) => guild.id === invite.guildId)
+                                                            ? "Joined"
+                                                            : "Join"}
+                                                    </button>
+                                                )}
+
+                                                {"type" in invite &&
+                                                    invite.type === "notfound" &&
+                                                    user.id !== message.author.id && (
+                                                        <button
+                                                            className="button blue"
+                                                            onClick={() => setMention(message.author)}
+                                                        >
+                                                            Mention
+                                                        </button>
+                                                    )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </li>
             ),
-        [message, edit, reply, layers.MENU, fileProgress]
+        [message, edit, reply, layers.MENU, fileProgress, invites]
     );
 };
 
 const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
+    if (!user) return <></>;
+
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 

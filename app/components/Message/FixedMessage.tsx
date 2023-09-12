@@ -33,24 +33,36 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
     };
 
     const UserMention = ({ user, full }: { user: TCleanUser; full: boolean }) => {
+        if (!user) return null;
         return <span className={full ? styles.mention : styles.inlineMention}>@{user.username}</span>;
     };
 
     const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
+    const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
 
     let messageContent: JSX.Element | null = null;
     if (message.content) {
         messageContent = (
             <span>
-                {message.content.split(userRegex).map((part) => {
-                    if (message.mentionIds.includes(part.substring(1))) {
-                        const user = message.mentions.find((user) => user.id === part.substring(1)) as TCleanUser;
+                {message.content.split(/(\s+)/).map((part, index) => {
+                    if (userRegex.test(part)) {
+                        const userId = part.substring(2).slice(0, -1);
+                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
                                 user={user}
                                 full={true}
                             />
+                        );
+                    } else if (urlRegex.test(part)) {
+                        return (
+                            <span
+                                key={v4()}
+                                className={styles.messageLink}
+                            >
+                                {part}
+                            </span>
                         );
                     } else {
                         return part;
@@ -64,17 +76,25 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
     if (message.messageReference?.content) {
         referencedContent = (
             <span>
-                {message.messageReference?.content.split(userRegex).map((part, index) => {
-                    if (message.messageReference.mentionIds.includes(part.substring(1))) {
-                        const user = message.messageReference.mentions?.find(
-                            (user) => user.id === part.substring(1)
-                        ) as TCleanUser;
+                {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
+                    if (userRegex.test(part)) {
+                        const userId = part.substring(2).slice(0, -1);
+                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
                                 user={user}
                                 full={true}
                             />
+                        );
+                    } else if (urlRegex.test(part)) {
+                        return (
+                            <span
+                                key={v4()}
+                                className={styles.messageLink}
+                            >
+                                {part}
+                            </span>
                         );
                     } else {
                         return part;

@@ -6,6 +6,8 @@ export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
 };
 
+const allowedAPIPaths = ["/api/auth", "/api/invites"];
+
 export async function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
 
@@ -21,7 +23,14 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith("/api")) {
+        // allowedAPIPaths.forEach((path) => {
+        //     if (pathname.startsWith(path)) {
+        //         return NextResponse.next();
+        //     }
+        // });
+
         if (pathname.startsWith("/api/auth")) return NextResponse.next();
+        if (pathname.startsWith("/api/invites")) return NextResponse.next();
 
         if (!token) {
             return new NextResponse(null, {

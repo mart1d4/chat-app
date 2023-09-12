@@ -68,14 +68,6 @@ type TWelcomeScreen {
     backgroundUrl String?
 }
 
-type TInvite {
-    code      String
-    uses      Int
-    maxUses   Int
-    expiresAt DateTime
-    createdAt DateTime @default(now()) @db.Date
-}
-
 type TEmbed {
     author      TEmbedAuthor?
     title       String?
@@ -196,6 +188,10 @@ model User {
     blockedByUserIds String[] @db.ObjectId
     blockedByUsers   User[]   @relation("Blocked", fields: [blockedByUserIds], references: [id])
 
+    // That's so dumb that you have to do that
+    inviteSentIds String[] @db.ObjectId
+    invitesSent   Invite[] @relation("InviteSent")
+
     createdAt DateTime @default(now()) @db.Date
     updatedAt DateTime @default(now()) @updatedAt @db.Date
     v         Int      @default(0) @map("__v") @ignore
@@ -211,7 +207,8 @@ model Guild {
     welcomeScreen TWelcomeScreen?
     vanityUrl     String?
     vanityUrlUses Int?
-    invites       TInvite[]
+    inviteIds     String[]        @db.ObjectId
+    invites       Invite[]        @relation("GuildInvite")
 
     systemChannelId String? @db.ObjectId
     afkChannelId    String? @db.ObjectId
@@ -250,6 +247,27 @@ model Role {
     v         Int      @default(0) @map("__v") @ignore
 }
 
+model Invite {
+    id        String  @id @default(auto()) @map("_id") @db.ObjectId
+    code      String
+    uses      Int     @default(0)
+    maxUses   Int
+    maxAge    Int
+    temporary Boolean
+
+    inviterId String @db.ObjectId
+    inviter   User   @relation("InviteSent", fields: [inviterId], references: [id])
+
+    guildId String @db.ObjectId
+    guild   Guild  @relation("GuildInvite", fields: [guildId], references: [id], onDelete: Cascade)
+
+    channelId String  @db.ObjectId
+    channel   Channel @relation("ChannelInvite", fields: [channelId], references: [id], onDelete: Cascade)
+
+    expiresAt DateTime?
+    createdAt DateTime  @default(now()) @db.Date
+}
+
 model Channel {
     id    String  @id @default(auto()) @map("_id") @db.ObjectId
     type  Int
@@ -278,6 +296,9 @@ model Channel {
 
     recipientIds String[] @db.ObjectId
     recipients   User[]   @relation("UserChannel", fields: [recipientIds], references: [id])
+
+    inviteIds String[] @db.ObjectId
+    invites   Invite[] @relation("ChannelInvite")
 
     messages Message[] @relation("ChannelMessage")
 

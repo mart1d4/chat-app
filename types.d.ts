@@ -316,11 +316,24 @@ type TEmbed = readonly {
 };
 
 type TInvite = readonly {
+    id: string;
     code: string;
     uses: number;
     maxUses: number;
-    expiresAt: Date;
-    createdAt: Date;
+    maxAge: number;
+    temporary: boolean;
+
+    inviterId: TUser.id;
+    inviter: TUser;
+
+    guildId: TGuild.id;
+    guild: TGuild;
+
+    channelId: TChannel.id;
+    channel: TChannel;
+
+    expiresAt: DateTime?;
+    createdAt: DateTime;
 };
 
 type TRole = readonly {

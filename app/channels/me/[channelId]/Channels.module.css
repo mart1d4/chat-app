@@ -75,7 +75,6 @@
     justify-content: flex-end;
     margin: 16px;
     user-select: none;
-    pointer-events: none;
 }
 
 .imageWrapper {
@@ -120,7 +119,6 @@
     width: auto;
     height: 24px;
     min-width: 52px;
-    pointer-events: all;
 }
 
 .scrollerSpacer {

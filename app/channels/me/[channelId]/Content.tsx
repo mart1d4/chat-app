@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useUrls } from "@/lib/store";
+import { useData, useLayers, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 import Image from "next/image";
 
@@ -275,6 +275,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
     const requestsS = useData((state) => state.requestsSent).map((u) => u.id);
     const friends = useData((state) => state.friends).map((u) => u.id);
     const blocked = useData((state) => state.blocked).map((u) => u.id);
+    const setLayers = useLayers((state) => state.setLayers);
     const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
@@ -325,7 +326,20 @@ const FirstMessage = ({ channel, friend }: Props) => {
                         )}
 
                         {mutualGuilds.length > 0 && (
-                            <div className={styles.mutualGuildText}>
+                            <div
+                                className={styles.mutualGuildText}
+                                onClick={(e) => {
+                                    setLayers({
+                                        settings: {
+                                            type: "USER_PROFILE",
+                                        },
+                                        content: {
+                                            user: friend,
+                                            guilds: true,
+                                        },
+                                    });
+                                }}
+                            >
                                 {mutualGuilds.length} Mutual Server{mutualGuilds.length > 1 && "s"}
                             </div>
                         )}

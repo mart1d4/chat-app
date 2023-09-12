@@ -111,7 +111,7 @@
     user-select: text;
 }
 
-.messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp) {
+.messageContent > div:not(.editHint, .specialIcon, .userAvatar, .contentTimestamp, .messageAccessories) {
     font-weight: 300;
     font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     user-select: text;
@@ -302,6 +302,15 @@
     font-style: italic;
     /* Padding right so end of message isn't cropped */
     padding-right: 5px;
+}
+
+.messageLink {
+    text-decoration: none;
+    color: var(--accent-light);
+}
+
+.messageLink:hover {
+    text-decoration: underline;
 }
 
 /* Message menu */
@@ -734,4 +743,104 @@
 
 .imagesUpload > div:last-of-type:hover {
     color: var(--foreground-1);
+}
+
+/* GUILD INVITES */
+
+.messageAccessories {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+    position: relative;
+    gap: 0.25rem;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+}
+
+.guildInvite {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    max-width: 432px;
+    min-width: 160px;
+    width: 100%;
+    border-radius: 4px;
+    background-color: var(--background-3);
+}
+
+.guildInvite > h3 {
+    font-weight: 700;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: var(--foreground-3);
+    font-size: 12px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+}
+
+.guildInvite > .content {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 16px;
+}
+
+.guildInvite > .content > .headline {
+    display: flex;
+    flex: 1000 0 auto;
+    align-items: center;
+    max-width: 100%;
+    gap: 16px;
+}
+
+.guildInvite > .content > button {
+    height: 40px;
+    align-self: center;
+}
+
+.guildInvite > .content > .headline > .inviteIconPoop {
+    background-size: 50% 26px;
+    background-repeat: no-repeat;
+    border-radius: 12px;
+    background-position: 50%;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+}
+
+.guildInvite > .content > .headline > .inviteIcon {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 15px;
+    background-position: 50%;
+    width: 50px;
+    height: 50px;
+    flex: 0 0 auto;
+    background-clip: padding-box;
+}
+
+.guildInvite > .content > .headline > div:last-child {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: stretch;
+    min-width: 1px;
+}
+
+.guildInvite > .content > .headline > div:last-child > h3 {
+    color: var(--foreground-2);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.guildInvite > .content > .headline > div:last-child > strong {
+    color: var(--foreground-3);
+    user-select: none;
+    font-size: 14px;
 }

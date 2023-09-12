@@ -85,6 +85,11 @@ export const useLayers = create<LayersState>()((set) => ({
     },
     setLayers: (layer) => {
         set((state) => {
+            if (!layer.settings.setNull) {
+                const setTooltip = useTooltip.getState().setTooltip;
+                setTooltip(null);
+            }
+
             if (layer.settings.type === "POPUP") {
                 // If add, add to array, otherwise remove last
                 if (!layer.settings.setNull) {
