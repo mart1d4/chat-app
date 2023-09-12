@@ -8,6 +8,7 @@ export { UserCard } from "./Layers/UserCard/UserCard";
 export { UserProfile } from "./Layers/UserProfile/UserProfile";
 export { Popout } from "./Layers/Popout/Popout";
 export { Popup } from "./Layers/Popup/Popup";
+export { Invite } from "./Layers/Invite/Invite";
 
 export { Icon } from "./Icon/Icon";
 

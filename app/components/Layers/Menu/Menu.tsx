@@ -574,7 +574,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 {
                     name: "Invite People",
                     icon: "addUser",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_INVITE",
+                                guild: content.guild,
+                            },
+                        });
+                    },
                 },
                 {
                     name: "Invite a Guest",

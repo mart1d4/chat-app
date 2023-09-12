@@ -51,23 +51,12 @@ export async function middleware(req: NextRequest) {
                     });
                 }
 
-                const response = await fetch(`${process.env.BASE_URL}/api/auth`, {
-                    method: "POST",
-                    body: JSON.stringify({ requesterId: payload.id }),
-                }).then((res) => res.json());
-
-                if (!response.success) {
-                    return new NextResponse(null, {
-                        status: 401,
-                    });
-                } else {
-                    requestHeaders.set("X-UserId", response.userId);
-                    return NextResponse.next({
-                        request: {
-                            headers: requestHeaders,
-                        },
-                    });
-                }
+                requestHeaders.set("X-UserId", payload.id as string);
+                return NextResponse.next({
+                    request: {
+                        headers: requestHeaders,
+                    },
+                });
             } catch (error) {
                 console.log(error);
                 return new NextResponse(null, {

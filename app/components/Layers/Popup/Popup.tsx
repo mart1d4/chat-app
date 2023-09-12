@@ -1,6 +1,6 @@
 "use client";
 
-import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar } from "@components";
+import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite } from "@components";
 import { useRef, useEffect, useState, ReactElement } from "react";
 import { getChannelName, getRelativeDate } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -21,6 +21,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 friends={friends}
             />
         );
+    }
+
+    if (content.type === "GUILD_INVITE") {
+        return <Invite />;
     }
 
     const user = useData((state) => state.user) as TCleanUser;

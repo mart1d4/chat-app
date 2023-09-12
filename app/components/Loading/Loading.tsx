@@ -94,6 +94,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
 
             if (response.token) {
                 setUser(data.user);
+                console.log(data.user);
                 setToken(response.token);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
