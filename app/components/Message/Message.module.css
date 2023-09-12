@@ -861,4 +861,21 @@
     color: var(--foreground-3);
     user-select: none;
     font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.guildInvite > .content > .headline > div:last-child > strong .onlineDot,
+.guildInvite > .content > .headline > div:last-child > strong .offlineDot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    background-color: var(--success-1);
+}
+
+.guildInvite > .content > .headline > div:last-child > strong .offlineDot {
+    background-color: var(--background-5);
 }

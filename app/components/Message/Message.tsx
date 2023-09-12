@@ -1254,10 +1254,12 @@ export const Message = ({
                               ) : (
                                 <>
                                   <span>
+                                    <span className={styles.onlineDot} />
                                     {invite.guild.rawMemberIds.length} Online
                                   </span>
 
                                   <span>
+                                    <span className={styles.offlineDot} />
                                     {invite.guild.rawMemberIds.length} Member
                                     {invite.guild.rawMemberIds.length > 1 &&
                                       "s"}
