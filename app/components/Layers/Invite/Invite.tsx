@@ -3,29 +3,28 @@
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useData, useLayers } from "@/lib/store";
-import { useRouter } from "next/navigation";
-import { Icon, Avatar } from "@components";
 import styles from "./Invite.module.css";
-import Link from "next/link";
+import { Avatar } from "@components";
 
-export const Invite = () => {
-    const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
+type TContent = {
+    guild: TGuild;
+    channel?: TChannel;
+};
+
+export const Invite = ({ content }: { content: TContent }) => {
+    const [filteredList, setFilteredList] = useState<TChannel[]>([]);
     const [search, setSearch] = useState<string>("");
-    const [chosen, setChosen] = useState<TCleanUser[]>([]);
     const [copied, setCopied] = useState<boolean>(false);
-    const [placesLeft, setPlacesLeft] = useState<number>(9);
-    const [pinned, setPinned] = useState<TMessage[]>([]);
+    const [inviteLink, setInviteLink] = useState<string>("");
 
     const setLayers = useLayers((state) => state.setLayers);
-    const user = useData((state) => state.user) as TUser;
     const channels = useData((state) => state.channels);
-    const layers = useLayers((state) => state.layers);
-    const friends = useData((state) => state.friends);
+    const token = useData((state) => state.token);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const router = useRouter();
 
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
@@ -44,63 +43,56 @@ export const Invite = () => {
     }, []);
 
     useEffect(() => {
-        setFilteredList(friends);
-        setPlacesLeft(9);
+        setFilteredList(channels);
     }, []);
 
     useEffect(() => {
-        if (chosen.length === 0) setPlacesLeft(9);
-        else setPlacesLeft(9 - chosen.length);
-    }, [chosen]);
+        if (search) setFilteredList(channels.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase())));
+        else setFilteredList(channels);
+    }, [search, channels]);
 
     useEffect(() => {
-        if (search)
-            setFilteredList(friends.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
-        else setFilteredList(friends);
-    }, [search, friends]);
+        const getLink = async () => {
+            const response = await fetch(`/api/guilds/${content.guild.id}/invites`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    channelId: content.channel?.id,
+                    maxUses: 100,
+                    maxAge: 86400,
+                    temporary: false,
+                    inviterId: user?.id as string,
+                }),
+            });
+
+            const data = await response.json();
+            if (!data.success) return;
+            else {
+                setInviteLink(data.invite.code);
+            }
+        };
+
+        getLink();
+    }, []);
 
     return (
-        <div
-            className={styles.popup}
-            onContextMenu={(e) => e.preventDefault()}
-        >
+        <div className={styles.popup} onContextMenu={(e) => e.preventDefault()}>
             <div className={styles.header}>
                 <h1>Select Friends</h1>
-                {friends.length > 0 && (
+                {channels.length > 0 && (
                     <>
-                        <div>
-                            {placesLeft > 0
-                                ? `You can add ${placesLeft} more friend${placesLeft > 1 ? "s" : ""}.`
-                                : "This group has a 10 member limit."}
-                        </div>
+                        <div>Invite someone</div>
 
                         <div className={styles.input}>
                             <div>
                                 <div>
-                                    {chosen?.map((friend) => (
-                                        <div
-                                            key={friend.username}
-                                            className={styles.friendChip}
-                                            onClick={() => {
-                                                setChosen(chosen?.filter((user) => user.id !== friend.id));
-                                            }}
-                                        >
-                                            {friend.username}
-                                            <Icon
-                                                name="close"
-                                                size={12}
-                                            />
-                                        </div>
-                                    ))}
-
                                     <input
                                         ref={inputRef}
                                         type="text"
-                                        placeholder={
-                                            chosen?.length
-                                                ? "Find or start a conversation"
-                                                : "Type the username of a friend"
-                                        }
+                                        placeholder={"Search for friends"}
                                         value={search || ""}
                                         spellCheck="false"
                                         role="combobox"
@@ -108,33 +100,10 @@ export const Invite = () => {
                                         aria-expanded="true"
                                         aria-haspopup="true"
                                         onChange={(e) => setSearch(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Backspace" && !search) {
-                                                setChosen(chosen?.slice(0, -1));
-                                            }
-                                        }}
                                     />
 
                                     <div></div>
                                 </div>
-                            </div>
-
-                            <div className={styles.addButton}>
-                                <button
-                                    className={chosen?.length ? "blue" : "blue disabled"}
-                                    onClick={() => {
-                                        if (chosen?.length) {
-                                            setLayers({
-                                                settings: {
-                                                    type: "POPUP",
-                                                    setNull: true,
-                                                },
-                                            });
-                                        }
-                                    }}
-                                >
-                                    Add
-                                </button>
                             </div>
                         </div>
                     </>
@@ -150,12 +119,7 @@ export const Invite = () => {
                         })
                     }
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        role="image"
-                    >
+                    <svg viewBox="0 0 24 24" width="24" height="24" role="image">
                         <path
                             fill="currentColor"
                             d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -164,47 +128,45 @@ export const Invite = () => {
                 </button>
             </div>
 
-            {friends.length > 0 && filteredList.length > 0 && (
+            {channels.length > 0 && filteredList.length > 0 && (
                 <>
                     <div className={styles.scroller + " scrollbar"}>
-                        {filteredList.map((friend) => (
-                            <div
-                                key={friend.id}
-                                className={styles.friend}
-                                onClick={() => {
-                                    if (chosen.includes(friend)) {
-                                        setChosen(chosen?.filter((user) => user.id !== friend.id));
-                                    } else {
-                                        if (placesLeft > 0) {
-                                            setChosen([...chosen, friend]);
-                                            setSearch("");
-                                        }
-                                    }
-                                }}
-                            >
+                        {filteredList.map((channel) => (
+                            <div key={channel.id} className={styles.friend} onClick={() => {}}>
                                 <div>
                                     <div className={styles.friendAvatar}>
-                                        <Avatar
-                                            src={friend.avatar}
-                                            alt={friend.username}
-                                            size={32}
-                                            status={friend.status}
-                                        />
+                                        <Avatar src={channel.icon as string} alt={channel.name as string} size={32} />
                                     </div>
 
-                                    <div className={styles.friendUsername}>{friend.username}</div>
+                                    <div className={styles.friendUsername}>{channel.name}</div>
 
-                                    <div className={styles.friendCheck}>
-                                        <div>
-                                            {chosen?.includes(friend) && (
-                                                <Icon
-                                                    name="accept"
-                                                    size={16}
-                                                    fill="var(--accent-1)"
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
+                                    <button
+                                        className={`button ${styles.inviteButton}`}
+                                        onClick={async () => {
+                                            try {
+                                                const response = await sendRequest({
+                                                    query: "SEND_MESSAGE",
+                                                    params: {
+                                                        channelId:
+                                                            channel.id ||
+                                                            (content.guild.channels.find((c) => c.type === 0)
+                                                                ?.id as string),
+                                                    },
+                                                    data: {
+                                                        message: {
+                                                            content: `https://chat-app.mart1d4.dev/${inviteLink}`,
+                                                            attachments: [],
+                                                            messageReference: null,
+                                                        },
+                                                    },
+                                                });
+                                            } catch (error) {
+                                                console.error(error);
+                                            }
+                                        }}
+                                    >
+                                        Invite
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -221,7 +183,7 @@ export const Invite = () => {
                                     ref={inputLinkRef}
                                     type="text"
                                     readOnly
-                                    value={`eee`}
+                                    value={`https://chat-app.mart1d4.dev/${inviteLink}`}
                                     onClick={() => inputLinkRef.current?.select()}
                                 />
                             </div>
@@ -229,7 +191,7 @@ export const Invite = () => {
                             <button
                                 className={copied ? "green" : "blue"}
                                 onClick={() => {
-                                    navigator.clipboard.writeText(`eee`);
+                                    navigator.clipboard.writeText(`https://chat-app.mart1d4.dev/${inviteLink}`);
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 1000);
                                 }}
@@ -239,14 +201,14 @@ export const Invite = () => {
                         </div>
 
                         <div>
-                            Your invite link expires in 24 hours.
-                            <span>Edit invite link.</span>
+                            Your invite link expires in 24 hours.{" "}
+                            <span className={styles.editLink}>Edit invite link.</span>
                         </div>
                     </div>
                 </>
             )}
 
-            {friends.length > 0 && filteredList.length === 0 && (
+            {channels.length > 0 && filteredList.length === 0 && (
                 <>
                     <div
                         className={styles.noFriends}
@@ -277,7 +239,7 @@ export const Invite = () => {
                                     ref={inputLinkRef}
                                     type="text"
                                     readOnly
-                                    value={`ee`}
+                                    value={`https://chat-app.mart1d4.dev/${inviteLink}`}
                                     onClick={() => inputLinkRef.current?.select()}
                                 />
                             </div>
@@ -285,6 +247,7 @@ export const Invite = () => {
                             <button
                                 className={copied ? "green" : "blue"}
                                 onClick={() => {
+                                    navigator.clipboard.writeText(`https://chat-app.mart1d4.dev/${inviteLink}`);
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 1000);
                                 }}
@@ -298,7 +261,7 @@ export const Invite = () => {
                 </>
             )}
 
-            {friends.length === 0 && (
+            {/* {friends.length === 0 && (
                 <div className={styles.noFriends}>
                     <div />
 
@@ -320,7 +283,7 @@ export const Invite = () => {
                         Add Friend
                     </button>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

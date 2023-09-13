@@ -24,7 +24,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     }
 
     if (content.type === "GUILD_INVITE") {
-        return <Invite />;
+        return <Invite content={content} />;
     }
 
     const user = useData((state) => state.user) as TCleanUser;

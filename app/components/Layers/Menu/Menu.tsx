@@ -487,6 +487,24 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: "Divider",
                 },
                 {
+                    name: "Invite People",
+                    icon: "addUser",
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_INVITE",
+                                guild: content.guild,
+                            },
+                        });
+                    },
+                },
+                {
+                    name: "Divider",
+                },
+                {
                     name: "Mute Server",
                     items: muteItems,
                     func: () => {},
@@ -1377,7 +1395,9 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                             : null,
                         func: () => {},
                     },
-                    { name: content.channel.ownerId === currentUser.id ? "Divider" : null },
+                    {
+                        name: content.channel.ownerId === currentUser.id ? "Divider" : null,
+                    },
                     {
                         name: content.channel.ownerId === currentUser.id ? "Remove From Group" : null,
                         func: () => {
@@ -1470,13 +1490,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 <div>
                     {items?.map((item, index) => {
                         if (!item.name) return;
-                        else if (item.name === "Divider")
-                            return (
-                                <div
-                                    key={index}
-                                    className={styles.divider}
-                                />
-                            );
+                        else if (item.name === "Divider") return <div key={index} className={styles.divider} />;
                         else
                             return (
                                 <div
@@ -1498,17 +1512,18 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     }}
                                     onMouseEnter={() => setHover(item.name as string)}
                                 >
-                                    <div style={{ justifyContent: item.leftIcon ? "flex-start" : "" }}>
+                                    <div
+                                        style={{
+                                            justifyContent: item.leftIcon ? "flex-start" : "",
+                                        }}
+                                    >
                                         {item.leftIcon && (
                                             <div style={{ marginRight: "8px" }}>
                                                 <Icon name={item.leftIcon} />
                                             </div>
                                         )}
 
-                                        <div
-                                            className={styles.label}
-                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
-                                        >
+                                        <div className={styles.label} style={{ fontSize: item.leftIcon ? "12px" : "" }}>
                                             {item.name}
                                         </div>
 
@@ -1517,7 +1532,9 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                                 className={`${styles.icon} ${
                                                     "checked" in item && item.checked ? styles.revert : ""
                                                 }`}
-                                                style={{ transform: "items" in item ? "rotate(-90deg)" : "" }}
+                                                style={{
+                                                    transform: "items" in item ? "rotate(-90deg)" : "",
+                                                }}
                                             >
                                                 <Icon
                                                     name={
@@ -1547,12 +1564,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     {item.tip && (
                                         <div className={styles.tip}>
                                             {item.tip}
-                                            {item.tipIcon && (
-                                                <Icon
-                                                    name={item.tipIcon}
-                                                    size={16}
-                                                />
-                                            )}
+                                            {item.tipIcon && <Icon name={item.tipIcon} size={16} />}
                                         </div>
                                     )}
                                 </div>
