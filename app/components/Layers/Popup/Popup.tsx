@@ -62,6 +62,8 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     const [channelType, setChannelType] = useState(2);
     const [channelLocked, setChannelLocked] = useState(false);
 
+    const [imgIndex, setImgIndex] = useState(content.current ?? 0);
+
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
@@ -543,6 +545,22 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     className={styles.container}
                     onContextMenu={(e) => e.preventDefault()}
                 >
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == 0) {
+                                    setImgIndex(length - 1);
+                                } else {
+                                    setImgIndex((prev: number) => prev - 1);
+                                }
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
+
                     <div
                         className={styles.imagePreview}
                         onContextMenu={(e) => {
@@ -553,27 +571,41 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 },
                                 content: {
                                     type: "IMAGE",
-                                    attachment: content.attachments[content.current],
+                                    attachment: content.attachments[imgIndex],
                                 },
                             });
                         }}
                     >
                         <img
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
-                                content.attachments[content.current].id
-                            }/-/resize/${
-                                content.attachments[content.current].dimensions.width >= window.innerWidth
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/-/resize/${
+                                content.attachments[imgIndex].dimensions.width >= window.innerWidth
                                     ? Math.ceil(window.innerWidth * 0.9)
-                                    : content.attachments[content.current].dimensions.width
+                                    : content.attachments[imgIndex].dimensions.width
                             }x/`}
-                            alt={content.attachments[content.current]?.description ?? "Image"}
+                            alt={content.attachments[imgIndex]?.description ?? "Image"}
                         />
                     </div>
+
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == length - 1) {
+                                    setImgIndex(0);
+                                } else {
+                                    setImgIndex((prev: number) => prev + 1);
+                                }
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
 
                     <a
                         target="_blank"
                         className={styles.imageLink}
-                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[content.current].id}/`}
+                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/`}
                     >
                         Open in new tab
                     </a>

@@ -186,49 +186,45 @@
 }
 
 .input {
+    position: relative;
     flex: 1 1 auto;
     margin-top: 20px;
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
     flex-wrap: nowrap;
-}
-
-.input > div:first-child {
-    display: flex;
-    flex: 1;
     border-radius: 4px;
     overflow: hidden;
     background-color: var(--background-1);
+    height: 32px;
 }
 
-.addButton {
-    margin-left: 8px;
-}
-
-.input > div > div {
-    overflow: hidden scroll;
-    padding-right: 0px;
-    position: relative;
-    flex: 1 1 auto;
-    flex-wrap: wrap;
-    padding: 1px;
+.input > div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
     display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
 }
 
-.input > div > div::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
+.input > div > svg {
+    color: var(--foreground-2);
+    width: 16px;
+    height: 16px;
 }
 
-.input input {
+.input > input {
     font-size: 16px;
     line-height: 32px;
     height: 30px;
     min-width: 48px;
     appearance: none;
     margin: 1px;
-    padding: 0 8px;
+    padding: 0 32px 0 8px;
     box-sizing: border-box;
     background-color: transparent;
     border: none;
@@ -237,11 +233,11 @@
     color: var(--foreground-3);
 }
 
-.input input:focus {
+.input > input:focus {
     outline: none;
 }
 
-.input input::placeholder {
+.input > input::placeholder {
     font-size: 14px;
     font-weight: 400;
     color: var(--foreground-4);
@@ -487,4 +483,3 @@
         visibility: visible;
     }
 }
-

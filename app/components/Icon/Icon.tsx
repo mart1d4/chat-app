@@ -18,6 +18,13 @@ export const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactE
     const viewBox = viewbox || "0 0 24 24";
 
     const icons = {
+        arrowBig: (
+            <polygon
+                fill={fillColor}
+                fillRule="nonzero"
+                points="13 20 11 20 11 8 5.5 13.5 4.08 12.08 12 4.16 19.92 12.08 18.5 13.5 13 8"
+            />
+        ),
         upload: (
             <path
                 fill={fillColor}

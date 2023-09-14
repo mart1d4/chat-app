@@ -75,6 +75,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
                         id: true,
                         type: true,
                         name: true,
+                        recipientIds: true,
                     },
                 },
                 inviter: {
@@ -188,6 +189,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         id: true,
                         type: true,
                         name: true,
+                        recipientIds: true,
                     },
                 },
                 inviter: {
@@ -232,6 +234,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                             id: true,
                             type: true,
                             name: true,
+                            recipientIds: true,
                         },
                     },
                 },

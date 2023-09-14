@@ -94,7 +94,6 @@ export const Loading = ({ children, data }: Props): ReactElement => {
 
             if (response.token) {
                 setUser(data.user);
-                console.log(data.user);
                 setToken(response.token);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
@@ -123,7 +122,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
             if (channels.map((c) => c.id).includes(data.channelId)) {
                 moveChannelUp(data.channelId);
 
-                if (pathname.includes(data.channelId)) return;
+                if (pathname.includes(data.channelId) || data.message.authorId === user.id) return;
                 addPing(data.channelId);
 
                 const audio = new Audio("/assets/sounds/ping.mp3");

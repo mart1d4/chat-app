@@ -497,6 +497,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
         }
 
         if (type === "GUILD_ICON") {
+            const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
             setItems([
                 {
                     name: "Mark As Read",
@@ -507,7 +508,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: "Divider",
                 },
                 {
-                    name: "Invite People",
+                    name: textChan ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -517,6 +518,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                             content: {
                                 type: "GUILD_INVITE",
                                 guild: content.guild,
+                                channel: textChan,
                             },
                         });
                     },
@@ -600,6 +602,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
         }
 
         if (type === "GUILD") {
+            const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
             setItems([
                 {
                     name: "Server Boost",
@@ -610,7 +613,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: "Divider",
                 },
                 {
-                    name: "Invite People",
+                    name: textChan ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -620,6 +623,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                             content: {
                                 type: "GUILD_INVITE",
                                 guild: content.guild,
+                                channel: textChan,
                             },
                         });
                     },
@@ -1510,7 +1514,13 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 <div>
                     {items?.map((item, index) => {
                         if (!item.name) return;
-                        else if (item.name === "Divider") return <div key={index} className={styles.divider} />;
+                        else if (item.name === "Divider")
+                            return (
+                                <div
+                                    key={index}
+                                    className={styles.divider}
+                                />
+                            );
                         else
                             return (
                                 <div
@@ -1543,7 +1553,10 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                             </div>
                                         )}
 
-                                        <div className={styles.label} style={{ fontSize: item.leftIcon ? "12px" : "" }}>
+                                        <div
+                                            className={styles.label}
+                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
+                                        >
                                             {item.name}
                                         </div>
 
@@ -1584,7 +1597,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     {item.tip && (
                                         <div className={styles.tip}>
                                             {item.tip}
-                                            {item.tipIcon && <Icon name={item.tipIcon} size={16} />}
+                                            {item.tipIcon && (
+                                                <Icon
+                                                    name={item.tipIcon}
+                                                    size={16}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </div>

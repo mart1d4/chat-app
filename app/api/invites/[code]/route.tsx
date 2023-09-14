@@ -24,6 +24,7 @@ export async function GET(req: Request, { params }: { params: { code: string } }
                         id: true,
                         type: true,
                         name: true,
+                        recipientIds: true,
                     },
                 },
                 inviter: {

@@ -852,3 +852,39 @@
     position: relative;
     z-index: 1;
 }
+
+.imageNav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    right: 4px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    columns: var(--foreground-3);
+    opacity: 0.6;
+    z-index: 1;
+    margin-right: -200px;
+}
+
+.imageNav > svg {
+    width: 26px;
+    height: 26px;
+}
+
+.imageNav:first-child {
+    left: 4px;
+    transform: translateY(-50%) rotate(-90deg);
+    margin-left: -200px;
+}
+
+.imageNav:hover {
+    opacity: 1;
+}
+
+.imageNav:active {
+    color: var(--foreground-1);
+}

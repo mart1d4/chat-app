@@ -8,6 +8,8 @@ import useContextHook from "@/hooks/useContextHook";
 import { translateCap } from "@/lib/strings";
 import styles from "./UserCard.module.css";
 import { Icon } from "@components";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRouter } from "next/navigation";
 
 const colors = {
     ONLINE: "#22A559",
@@ -33,10 +35,13 @@ export const UserCard = ({ content }: any): ReactElement => {
     const currentUser = useData((state) => state.user) as TCleanUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+    const channels = useData((state) => state.channels);
+    const { sendRequest } = useFetchHelper();
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const animation = content?.animation;
     const user = content?.user;
+    const router = useRouter();
 
     useEffect(() => {
         if (!noteRef.current) return;
@@ -50,6 +55,53 @@ export const UserCard = ({ content }: any): ReactElement => {
             noteRef.current.style.height = "auto";
         }
     }, [noteRef, note]);
+
+    useEffect(() => {
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            if (e.key === "Enter" && e.shiftKey === false) {
+                e.preventDefault();
+                if (message.length > 0) {
+                    setLayers({
+                        settings: {
+                            type: "USER_CARD",
+                            setNull: true,
+                        },
+                    });
+
+                    const channel = channels.find(
+                        (channel) => channel.type === 0 && channel.recipientIds.includes(user.id)
+                    );
+
+                    let data;
+                    if (!channel) {
+                        data = await sendRequest({
+                            query: "CHANNEL_CREATE",
+                            data: { recipients: [user.id] },
+                        });
+                    }
+
+                    const response = await sendRequest({
+                        query: "SEND_MESSAGE",
+                        params: {
+                            channelId: channel?.id || (data?.channelId as string),
+                        },
+                        data: {
+                            message: {
+                                content: message,
+                                attachments: [],
+                                messageReference: null,
+                            },
+                        },
+                    });
+
+                    if (channel) router.push(`/channels/me/${channel.id}`);
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [message]);
 
     return (
         <AnimatePresence>

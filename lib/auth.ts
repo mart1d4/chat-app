@@ -364,6 +364,16 @@ export const getGuilds = async (): Promise<TGuild[]> => {
                     members: true,
                     roles: true,
                     emotes: true,
+                    channels: {
+                        select: {
+                            id: true,
+                            type: true,
+                            name: true,
+                            position: true,
+                            parentId: true,
+                            guildId: true,
+                        },
+                    },
                 },
             },
         },
@@ -388,6 +398,11 @@ export const getGuild = async (id: string): Promise<TGuild | null> => {
             channels: {
                 select: {
                     id: true,
+                    type: true,
+                    name: true,
+                    position: true,
+                    parentId: true,
+                    guildId: true,
                 },
             },
             members: true,

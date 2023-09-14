@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { trimMessage } from "@/lib/strings";
+import { getChannelIcon, getChannelName, trimMessage } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import styles from "./Message.module.css";
 import Link from "next/link";
@@ -34,6 +34,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
     const setEdit = useMessages((state) => state.setEdit);
+    const channels = useData((state) => state.channels);
     const layers = useLayers((state) => state.layers);
     const edits = useMessages((state) => state.edits);
     const guilds = useData((state) => state.guilds);
@@ -334,16 +335,6 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
             }
         }
     }, []);
-
-    const setLocalStorage = (data: {}) => {
-        localStorage.setItem(
-            `channel-${message.channelId}`,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(`channel-${message.channelId}`) || "{}"),
-                ...data,
-            })
-        );
-    };
 
     const deletePopup = () => {
         setLayers({
@@ -1123,14 +1114,18 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                 <div className={styles.messageAccessories}>
                                     {invites.map((invite) => (
                                         <div
-                                            key={invite.code || v4()}
+                                            key={v4()}
                                             className={styles.guildInvite}
                                         >
                                             <h3>
                                                 {!("type" in invite)
                                                     ? user.id === invite.inviter.id
-                                                        ? "You sent an invite to join a server"
-                                                        : "You've been invited to join a server"
+                                                        ? `You sent an invite to join a ${
+                                                              invite.guild ? "server" : "group dm"
+                                                          }`
+                                                        : `You've been invited to join a ${
+                                                              invite.guild ? "server" : "group dm"
+                                                          }`
                                                     : user.id === message.author.id
                                                     ? "You sent an invite, but..."
                                                     : "You received an invite, but..."}
@@ -1142,7 +1137,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                         className={
                                                             "type" in invite
                                                                 ? styles.inviteIconPoop
-                                                                : invite.guild.icon
+                                                                : !invite.guild || invite.guild.icon
                                                                 ? styles.inviteIcon
                                                                 : styles.inviteAcronym
                                                         }
@@ -1150,13 +1145,23 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                             backgroundImage:
                                                                 "type" in invite
                                                                     ? "url(https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/)"
-                                                                    : invite.guild.icon
-                                                                    ? `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
-                                                                    : "",
+                                                                    : invite.guild
+                                                                    ? invite.guild.icon &&
+                                                                      `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
+                                                                    : `url(${
+                                                                          process.env.NEXT_PUBLIC_CDN_URL
+                                                                      }/${getChannelIcon(
+                                                                          channels.find(
+                                                                              (c: TChannel) =>
+                                                                                  c.id === invite.channel.id
+                                                                          ) as TChannel,
+                                                                          user.id
+                                                                      )}/)`,
                                                         }}
                                                     >
                                                         {!("type" in invite) &&
-                                                            !invite.guild.icon &&
+                                                            invite.guild &&
+                                                            !invite.guild?.icon &&
                                                             (invite.guild.name
                                                                 .toLowerCase()
                                                                 .match(/\b(\w)/g)
@@ -1174,19 +1179,27 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                             }}
                                                             className={
                                                                 !("type" in invite) &&
-                                                                guilds.find((guild) => guild.id === invite.guild.id)
+                                                                (guilds.find(
+                                                                    (guild) => guild.id === invite.guild?.id
+                                                                ) ||
+                                                                    channels.find(
+                                                                        (channel) => channel.id === invite.channel.id
+                                                                    ))
                                                                     ? styles.link
                                                                     : ""
                                                             }
                                                             onClick={() => {
                                                                 if (!("type" in invite)) {
                                                                     if (
+                                                                        invite.guild &&
                                                                         guilds.find(
-                                                                            (guild) => guild.id === invite.guild.id
+                                                                            (guild) => guild.id === invite.guild?.id
                                                                         )
                                                                     ) {
-                                                                        router.push(`/channels/${invite.guild.id}`);
-                                                                    } else {
+                                                                        router.push(
+                                                                            `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                        );
+                                                                    } else if (invite.guild) {
                                                                         // setLayers({
                                                                         //     settings: {
                                                                         //         type: "POPUP",
@@ -1197,6 +1210,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                         //         invite: invite,
                                                                         //     },
                                                                         // });
+                                                                    } else {
+                                                                        router.push(
+                                                                            `/channels/me/${invite.channel.id}`
+                                                                        );
                                                                     }
                                                                 }
                                                             }}
@@ -1205,7 +1222,13 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                 ? invite.type === "notfound"
                                                                     ? "Invalid Invite"
                                                                     : "Something Went Wrong"
-                                                                : invite.guild.name}
+                                                                : invite.guild?.name ??
+                                                                  getChannelName(
+                                                                      channels.find(
+                                                                          (c: TChannel) => c.id === invite.channel.id
+                                                                      ) as TChannel,
+                                                                      user.id
+                                                                  )}
                                                         </h3>
                                                         <strong>
                                                             {"type" in invite ? (
@@ -1222,13 +1245,22 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                 <>
                                                                     <span>
                                                                         <span className={styles.onlineDot} />
-                                                                        {invite.guild.rawMemberIds.length} Online
+                                                                        {invite.guild
+                                                                            ? invite.guild?.rawMemberIds.length
+                                                                            : invite.channel.recipientIds.length}{" "}
+                                                                        Online
                                                                     </span>
 
                                                                     <span>
                                                                         <span className={styles.offlineDot} />
-                                                                        {invite.guild.rawMemberIds.length} Member
-                                                                        {invite.guild.rawMemberIds.length > 1 && "s"}
+                                                                        {invite.guild
+                                                                            ? invite.guild?.rawMemberIds.length
+                                                                            : invite.channel.recipientIds.length}{" "}
+                                                                        Member
+                                                                        {(invite.guild
+                                                                            ? invite.guild?.rawMemberIds.length
+                                                                            : invite.channel.recipientIds.length) > 1 &&
+                                                                            "s"}
                                                                     </span>
                                                                 </>
                                                             )}
@@ -1239,9 +1271,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                 {!("type" in invite) && (
                                                     <button
                                                         onClick={() => {
-                                                            if (guilds.find((guild) => guild.id === invite.guild.id)) {
-                                                                router.push(`/channels/${invite.guild.id}`);
-                                                            } else {
+                                                            if (
+                                                                invite.guild &&
+                                                                guilds.find((guild) => guild.id === invite.guild?.id)
+                                                            ) {
+                                                                router.push(
+                                                                    `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                );
+                                                            } else if (invite.guild) {
                                                                 // setLayers({
                                                                 //     settings: {
                                                                 //         type: "POPUP",
@@ -1252,11 +1289,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                 //         invite: invite,
                                                                 //     },
                                                                 // });
+                                                            } else {
+                                                                router.push(`/channels/me/${invite.channel.id}`);
                                                             }
                                                         }}
                                                         className="button green"
                                                     >
-                                                        {guilds.find((guild) => guild.id === invite.guildId)
+                                                        {guilds.find((guild) => guild.id === invite.guildId) ||
+                                                        channels.find((channel) => channel.id === invite.channelId)
                                                             ? "Joined"
                                                             : "Join"}
                                                     </button>

@@ -38,6 +38,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const setLayers = useLayers((state) => state.setLayers);
     const friends = useData((state) => state.friends);
     const blocked = useData((state) => state.blocked);
+    const layers = useLayers((state) => state.layers);
     const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
@@ -58,7 +59,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
     }, [user]);
 
     const sectionNavItems = isSameUser() ? ["User Info"] : ["User Info", "Mutual Servers", "Mutual Friends"];
-    if (!user) return <></>;
+    if (!user || layers.POPUP.length > 0) return <></>;
 
     return (
         <div

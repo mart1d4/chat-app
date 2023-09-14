@@ -50,7 +50,7 @@ export const Layers = (): ReactElement => {
                     if (layers.USER_PROFILE || layers.POPUP.length > 0) {
                         setLayers({
                             settings: {
-                                type: layers.USER_PROFILE ? "USER_PROFILE" : "POPUP",
+                                type: layers.POPUP.length > 0 ? "POPUP" : "USER_PROFILE",
                                 setNull: true,
                             },
                         });
