@@ -326,8 +326,8 @@ type TInvite = readonly {
     inviterId: TUser.id;
     inviter: TUser;
 
-    guildId: TGuild.id;
-    guild: TGuild;
+    guildId?: TGuild.id;
+    guild?: TGuild;
 
     channelId: TChannel.id;
     channel: TChannel;

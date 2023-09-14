@@ -306,7 +306,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 },
                 {
                     name: "Invite People",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_INVITE",
+                                guild: content.guild,
+                            },
+                        });
+                    },
                 },
             ]);
         }
@@ -387,7 +397,17 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     },
                     {
                         name: "Invite People",
-                        func: () => {},
+                        func: () => {
+                            setLayers({
+                                settings: {
+                                    type: "POPUP",
+                                },
+                                content: {
+                                    type: "GUILD_INVITE",
+                                    guild: content.guild,
+                                },
+                            });
+                        },
                     },
                     {
                         name: "Copy Link",

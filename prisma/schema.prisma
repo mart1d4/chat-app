@@ -258,8 +258,8 @@ model Invite {
     inviterId String @db.ObjectId
     inviter   User   @relation("InviteSent", fields: [inviterId], references: [id])
 
-    guildId String @db.ObjectId
-    guild   Guild  @relation("GuildInvite", fields: [guildId], references: [id], onDelete: Cascade)
+    guildId String? @db.ObjectId
+    guild   Guild?  @relation("GuildInvite", fields: [guildId], references: [id], onDelete: Cascade)
 
     channelId String  @db.ObjectId
     channel   Channel @relation("ChannelInvite", fields: [channelId], references: [id], onDelete: Cascade)
