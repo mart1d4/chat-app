@@ -399,6 +399,32 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 });
             },
         },
+        LEAVE_CONFIRM: {
+            title: `Leave '${content.channel ? getChannelName(content.channel, user.id) : content.guild?.name}'`,
+            description: `Are you sure you want to leave ${
+                content.channel ? getChannelName(content.channel, user.id) : content.guild?.name
+            }? You won't be able to rejoin this ${content.guild ? "server" : "group"} unless your are re-invited.`,
+            buttonColor: "red",
+            buttonText: `Leave ${content.channel ? "Group" : "Server"}`,
+            function: () => {
+                if (content.channel) {
+                    sendRequest({
+                        query: "CHANNEL_RECIPIENT_REMOVE",
+                        params: {
+                            channelId: content.channel?.id,
+                            recipientId: user.id,
+                        },
+                    });
+                } else if (content.guild && content.isOwner) {
+                    sendRequest({
+                        query: "GUILD_DELETE",
+                        params: {
+                            guildId: content.guild?.id,
+                        },
+                    });
+                }
+            },
+        },
     };
 
     useEffect(() => {
@@ -537,6 +563,44 @@ export const Popup = ({ content, friends }: any): ReactElement => {
 
     return (
         <AnimatePresence>
+            {content.type === "ATTACHMENT_PREVIEW" && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100dvw",
+                        height: "100dvh",
+                    }}
+                >
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == 0) setImgIndex(length - 1);
+                                else setImgIndex((prev: number) => prev - 1);
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
+
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == length - 1) setImgIndex(0);
+                                else setImgIndex((prev: number) => prev + 1);
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
+                </div>
+            )}
+
             {content.type === "ATTACHMENT_PREVIEW" ? (
                 <div
                     ref={popupRef}
@@ -545,22 +609,6 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     className={styles.container}
                     onContextMenu={(e) => e.preventDefault()}
                 >
-                    {content.attachments.length > 1 && (
-                        <button
-                            className={styles.imageNav}
-                            onClick={() => {
-                                const length = content.attachments.length;
-                                if (imgIndex == 0) {
-                                    setImgIndex(length - 1);
-                                } else {
-                                    setImgIndex((prev: number) => prev - 1);
-                                }
-                            }}
-                        >
-                            <Icon name="arrowBig" />
-                        </button>
-                    )}
-
                     <div
                         className={styles.imagePreview}
                         onContextMenu={(e) => {
@@ -577,6 +625,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         }}
                     >
                         <img
+                            style={{
+                                maxWidth: `minmax(${content.attachments[imgIndex].dimensions.width}px, 80dvw)`,
+                                maxHeight: `minmax(${content.attachments[imgIndex].dimensions.height}px, 80dvh)`,
+                            }}
                             src={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/-/resize/${
                                 content.attachments[imgIndex].dimensions.width >= window.innerWidth
                                     ? Math.ceil(window.innerWidth * 0.9)
@@ -585,22 +637,6 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                             alt={content.attachments[imgIndex]?.description ?? "Image"}
                         />
                     </div>
-
-                    {content.attachments.length > 1 && (
-                        <button
-                            className={styles.imageNav}
-                            onClick={() => {
-                                const length = content.attachments.length;
-                                if (imgIndex == length - 1) {
-                                    setImgIndex(0);
-                                } else {
-                                    setImgIndex((prev: number) => prev + 1);
-                                }
-                            }}
-                        >
-                            <Icon name="arrowBig" />
-                        </button>
-                    )}
 
                     <a
                         target="_blank"

@@ -28,6 +28,7 @@ const masks = {
 
 export const UserProfile = ({ content }: any): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState<number>(0);
+    const [originalNote, setOriginalNote] = useState<string>("");
     const [note, setNote] = useState<string>("");
 
     const { setShowSettings }: any = useContextHook({ context: "layer" });
@@ -46,8 +47,9 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const mutualFriends = friends.filter((friend: TCleanUser) => user.friendIds.includes(friend.id));
     const mutualGuilds = guilds.filter((guild: TGuild) => user.guildIds.includes(guild.id));
 
-    const cardRef = useRef<HTMLDivElement>(null);
     const noteRef = useRef<HTMLTextAreaElement>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
+    const hasRendered = useRef<boolean>(false);
 
     const isSameUser = () => user?.id === currentUser.id;
 
@@ -57,6 +59,33 @@ export const UserProfile = ({ content }: any): ReactElement => {
         else setActiveNavItem(0);
         setNote("");
     }, [user]);
+
+    useEffect(() => {
+        const getNote = async () => {
+            const response = await sendRequest({
+                query: "GET_NOTE",
+                params: {
+                    userId: user.id,
+                },
+            });
+
+            if (response.success) {
+                setNote(response.note);
+                setOriginalNote(response.note);
+            }
+        };
+
+        const env = process.env.NODE_ENV;
+
+        if (env == "development") {
+            if (hasRendered.current) getNote();
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == "production") {
+            getNote();
+        }
+    }, []);
 
     const sectionNavItems = isSameUser() ? ["User Info"] : ["User Info", "Mutual Servers", "Mutual Friends"];
     if (!user || layers.POPUP.length > 0) return <></>;
@@ -403,6 +432,23 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             autoCorrect="off"
                                             onInput={(e) => {
                                                 setNote(e.currentTarget.value);
+                                            }}
+                                            onBlur={async () => {
+                                                if (note !== originalNote) {
+                                                    const response = await sendRequest({
+                                                        query: "SET_NOTE",
+                                                        params: {
+                                                            userId: user.id,
+                                                        },
+                                                        data: {
+                                                            newNote: note,
+                                                        },
+                                                    });
+
+                                                    if (response.success) {
+                                                        setOriginalNote(note);
+                                                    }
+                                                }
                                             }}
                                         />
                                     </div>

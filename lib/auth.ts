@@ -379,6 +379,10 @@ export const getGuilds = async (): Promise<TGuild[]> => {
         },
     })) as TCleanUser | null;
 
+    user?.guilds?.map((guild) => ({
+        ...guild,
+        channels: guild.channels.sort((a, b) => (a.position as number) - (b.position as number)),
+    }));
     return user?.guilds ?? [];
 };
 

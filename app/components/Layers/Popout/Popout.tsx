@@ -439,7 +439,7 @@ export const Popout = ({ content }: any) => {
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
-                                <div>
+                                <div style={{ marginTop: "0px" }}>
                                     <div>
                                         <input
                                             ref={inputLinkRef}
@@ -562,7 +562,11 @@ export const Popout = ({ content }: any) => {
                                 }}
                             />
 
-                            <div>No friends found that are not already in this DM.</div>
+                            <div>
+                                {content.channel
+                                    ? "No friends found that are not already in this DM."
+                                    : "No friends found."}
+                            </div>
                         </div>
 
                         <div className={styles.separator} />
@@ -571,32 +575,89 @@ export const Popout = ({ content }: any) => {
                             <div className={styles.footer}>
                                 <h1>Or, send an invite link to a friend!</h1>
 
-                                <div>
+                                <div style={{ marginTop: "0px" }}>
                                     <div>
                                         <input
                                             ref={inputLinkRef}
                                             type="text"
                                             readOnly
-                                            value={`https://chat-app.mart1d4.com/${content.channel.id}`}
-                                            onClick={() => inputLinkRef.current?.select()}
+                                            placeholder="https://chat-app.mart1d4.dev/example"
+                                            value={inviteLink && `https://chat-app.mart1d4.dev/${inviteLink}`}
+                                            onClick={async () => {
+                                                const getLink = async () => {
+                                                    const response = await fetch(
+                                                        `/api/channels/${content.channel.id}/invites`,
+                                                        {
+                                                            method: "POST",
+                                                            headers: {
+                                                                "Content-Type": "application/json",
+                                                                Authorization: `Bearer ${token}`,
+                                                            },
+                                                            body: JSON.stringify({
+                                                                maxUses: 100,
+                                                                maxAge: 86400,
+                                                                temporary: false,
+                                                                inviterId: user.id,
+                                                            }),
+                                                        }
+                                                    );
+
+                                                    const data = await response.json();
+                                                    if (!data.success) return;
+                                                    else setInviteLink(data.invite.code);
+                                                };
+
+                                                if (!inviteLink) {
+                                                    await getLink();
+                                                }
+
+                                                inputLinkRef.current?.select();
+                                            }}
                                         />
                                     </div>
 
                                     <button
                                         className={copied ? "green" : "blue"}
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(
-                                                `https://chat-app.mart1d4.com/${content.channel.id}`
-                                            );
-                                            setCopied(true);
-                                            setTimeout(() => setCopied(false), 1000);
+                                        onClick={async () => {
+                                            const getLink = async () => {
+                                                const response = await fetch(
+                                                    `/api/channels/${content.channel.id}/invites`,
+                                                    {
+                                                        method: "POST",
+                                                        headers: {
+                                                            "Content-Type": "application/json",
+                                                            Authorization: `Bearer ${token}`,
+                                                        },
+                                                        body: JSON.stringify({
+                                                            maxUses: 100,
+                                                            maxAge: 86400,
+                                                            temporary: false,
+                                                            inviterId: user.id,
+                                                        }),
+                                                    }
+                                                );
+
+                                                const data = await response.json();
+                                                if (!data.success) return;
+                                                else setInviteLink(data.invite.code);
+                                            };
+
+                                            if (!inviteLink) {
+                                                await getLink();
+                                            } else {
+                                                navigator.clipboard.writeText(
+                                                    `https://chat-app.mart1d4.dev/${inviteLink}`
+                                                );
+                                                setCopied(true);
+                                                setTimeout(() => setCopied(false), 1000);
+                                            }
                                         }}
                                     >
-                                        {copied ? "Copied" : "Copy"}
+                                        {!inviteLink ? "Create" : copied ? "Copied" : "Copy"}
                                     </button>
                                 </div>
 
-                                <div>Your invite link expires in 24 hours.</div>
+                                {inviteLink && <div>Your invite link expires in 24 hours.</div>}
                             </div>
                         ) : (
                             <div className={styles.footer}>

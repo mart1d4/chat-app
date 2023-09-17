@@ -24,7 +24,9 @@ type TQuery =
     | "GUILD_DELETE"
     | "GUILD_CHANNEL_CREATE"
     | "GUILD_CHANNEL_UPDATE"
-    | "GUILD_CHANNEL_DELETE";
+    | "GUILD_CHANNEL_DELETE"
+    | "GET_NOTE"
+    | "SET_NOTE";
 
 type Props = {
     query: TQuery;
@@ -60,6 +62,8 @@ const urls = {
     ["GUILD_CHANNEL_CREATE"]: "/guilds/:guildId/channels",
     ["GUILD_CHANNEL_UPDATE"]: "/channels/:channelId",
     ["GUILD_CHANNEL_DELETE"]: "/channels/:channelId",
+    ["GET_NOTE"]: "/users/me/notes/:userId",
+    ["SET_NOTE"]: "/users/me/notes/:userId",
 };
 
 const methods = {
@@ -85,6 +89,8 @@ const methods = {
     ["GUILD_CHANNEL_CREATE"]: "POST",
     ["GUILD_CHANNEL_UPDATE"]: "PUT",
     ["GUILD_CHANNEL_DELETE"]: "DELETE",
+    ["GET_NOTE"]: "GET",
+    ["SET_NOTE"]: "PUT",
 };
 
 const useFetchHelper = () => {
@@ -163,6 +169,7 @@ const useFetchHelper = () => {
         url = url.replace(":messageId", params?.messageId ?? "");
         url = url.replace(":username", params?.username ?? "");
         url = url.replace(":recipientId", params?.recipientId ?? "");
+        url = url.replace(":userId", params?.userId ?? "");
         url = url.replace(":guildId", params?.guildId ?? "");
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
@@ -193,7 +200,7 @@ const useFetchHelper = () => {
                 router.push(`/channels/${res.guildId}/${res.channelId}`);
             } else if (query === "GUILD_CHANNEL_CREATE" && res.channelId && res.guildId) {
                 router.push(`/channels/${res.guildId}/${res.channelId}`);
-            } else if ((query === "CHANNEL_DELETE" || query === "CHANNEL_RECIPIENT_REMOVE") && res.channelId) {
+            } else if (query === "CHANNEL_RECIPIENT_REMOVE" && res.channelId) {
                 router.refresh();
             }
 

@@ -512,8 +512,8 @@
 }
 
 .imagePreview > img {
-    max-width: 70dvw;
-    max-height: 70dvh;
+    max-width: 80dvw;
+    max-height: 80dvh;
 }
 
 .imageLink {

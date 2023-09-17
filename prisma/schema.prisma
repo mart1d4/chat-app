@@ -115,6 +115,11 @@ type TPermissionOverwrite {
     deny  String[]
 }
 
+type TNote {
+    userId String @db.ObjectId
+    note   String
+}
+
 // Enums
 
 enum EUserStatus {
@@ -155,6 +160,8 @@ model User {
     status   EUserStatus @default(OFFLINE)
     system   Boolean     @default(false)
     verified Boolean     @default(false)
+
+    notes TNote[]
 
     notifications TNotification[]
 

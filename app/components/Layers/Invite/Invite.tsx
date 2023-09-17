@@ -16,6 +16,7 @@ export const Invite = ({ content }: { content: TContent }) => {
     const [search, setSearch] = useState<string>("");
     const [copied, setCopied] = useState<boolean>(false);
     const [inviteLink, setInviteLink] = useState<string>("");
+    const [error, setError] = useState<string>("");
 
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
@@ -54,32 +55,33 @@ export const Invite = ({ content }: { content: TContent }) => {
 
     useEffect(() => {
         const getLink = async () => {
-            const response = await fetch(`/api/channels/${content.channel.id}/invites`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    maxUses: 100,
-                    maxAge: 86400,
-                    temporary: false,
-                    inviterId: user.id,
-                }),
-            });
+            try {
+                const response = await fetch(`/api/channels/${content.channel.id}/invites`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        maxUses: 100,
+                        maxAge: 86400,
+                        temporary: false,
+                        inviterId: user.id,
+                    }),
+                });
 
-            const data = await response.json();
-            if (!data.success) return;
-            else setInviteLink(data.invite.code);
+                const data = await response.json();
+                if (!data.success) setError("You are being rate limited.");
+                else setInviteLink(data.invite.code);
+            } catch (error) {
+                setError("Something went wrong. Please try again later.");
+            }
         };
 
         const env = process.env.NODE_ENV;
 
         if (env == "development") {
-            if (hasRendered.current) {
-                getLink();
-            }
-
+            if (hasRendered.current) getLink();
             return () => {
                 hasRendered.current = true;
             };
@@ -94,7 +96,7 @@ export const Invite = ({ content }: { content: TContent }) => {
                 <h1>Invite Friends to {content.guild.name}</h1>
                 {channels.length > 0 && (
                     <>
-                        <div>Invite someone</div>
+                        <div># {content.channel.name}</div>
 
                         <div className={styles.input}>
                             <input
@@ -143,7 +145,7 @@ export const Invite = ({ content }: { content: TContent }) => {
 
             {channels.length > 0 && (
                 <>
-                    {filteredList.length > 0 ? (
+                    {filteredList.length > 0 && !error ? (
                         <div className={styles.scroller + " scrollbar"}>
                             {filteredList.map((channel) => (
                                 <div
@@ -160,35 +162,35 @@ export const Invite = ({ content }: { content: TContent }) => {
                                         </div>
 
                                         <div className={styles.friendUsername}>{channel.name}</div>
-
-                                        <button
-                                            className={`button ${styles.inviteButton}`}
-                                            onClick={async () => {
-                                                try {
-                                                    const response = await sendRequest({
-                                                        query: "SEND_MESSAGE",
-                                                        params: {
-                                                            channelId:
-                                                                channel.id ||
-                                                                (content.guild.channels.find((c) => c.type === 0)
-                                                                    ?.id as string),
-                                                        },
-                                                        data: {
-                                                            message: {
-                                                                content: `https://chat-app.mart1d4.dev/${inviteLink}`,
-                                                                attachments: [],
-                                                                messageReference: null,
-                                                            },
-                                                        },
-                                                    });
-                                                } catch (error) {
-                                                    console.error(error);
-                                                }
-                                            }}
-                                        >
-                                            Invite
-                                        </button>
                                     </div>
+
+                                    <button
+                                        className={`button ${styles.inviteButton}`}
+                                        onClick={async () => {
+                                            try {
+                                                const response = await sendRequest({
+                                                    query: "SEND_MESSAGE",
+                                                    params: {
+                                                        channelId:
+                                                            channel.id ||
+                                                            (content.guild.channels.find((c) => c.type === 0)
+                                                                ?.id as string),
+                                                    },
+                                                    data: {
+                                                        message: {
+                                                            content: `https://chat-app.mart1d4.dev/${inviteLink}`,
+                                                            attachments: [],
+                                                            messageReference: null,
+                                                        },
+                                                    },
+                                                });
+                                            } catch (error) {
+                                                console.error(error);
+                                            }
+                                        }}
+                                    >
+                                        Invite
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -208,7 +210,7 @@ export const Invite = ({ content }: { content: TContent }) => {
                                 }}
                             />
 
-                            <div>No results found</div>
+                            <div>{error ? "Something went wrong" : "No results found"}</div>
                         </div>
                     )}
 
@@ -240,10 +242,14 @@ export const Invite = ({ content }: { content: TContent }) => {
                             </button>
                         </div>
 
-                        <div>
-                            Your invite link expires in 24 hours.{" "}
-                            <span className={styles.editLink}>Edit invite link.</span>
-                        </div>
+                        {error && <div style={{ color: "var(--error-1)" }}>{error}</div>}
+
+                        {!error && (
+                            <div>
+                                Your invite link expires in 24 hours.{" "}
+                                <span className={styles.editLink}>Edit invite link.</span>
+                            </div>
+                        )}
                     </div>
                 </>
             )}

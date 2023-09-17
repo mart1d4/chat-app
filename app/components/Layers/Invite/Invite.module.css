@@ -161,7 +161,6 @@
     width: 24px;
     height: 24px;
     color: var(--foreground-3);
-    visibility: hidden;
 }
 
 .header > button:hover {
@@ -243,30 +242,6 @@
     color: var(--foreground-4);
 }
 
-.friendChip {
-    font-size: 16px;
-    line-height: 32px;
-    height: 30px;
-    padding: 0 8px;
-    display: flex;
-    align-items: center;
-    border-radius: 2px;
-    text-align: center;
-    margin: 1px;
-    cursor: pointer;
-    background-color: var(--background-4);
-    color: var(--foreground-3);
-    text-transform: none;
-}
-
-.friendChip:hover {
-    opacity: 0.9;
-}
-
-.friendChip svg {
-    margin-left: 4px;
-}
-
 .scroller {
     overflow: hidden scroll;
     padding-right: 0px;
@@ -294,26 +269,31 @@
 }
 
 .friend {
-    cursor: pointer;
-    padding: 1px 0;
-    margin: 0 4px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 3px;
+    height: 44px;
+    padding: 6px 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 1px 4px 1px 12px;
+    overflow: hidden;
+    transition: none;
+}
+
+.friend:hover {
+    background-color: var(--background-5);
+}
+
+.friend:hover > .inviteButton {
+    background-color: var(--success-1);
 }
 
 .friend > div {
     display: flex;
-    border-radius: 4px;
-    height: 40px;
-    padding: 6px 8px;
-    flex-wrap: nowrap;
     align-items: center;
-}
-
-.friend:hover > div {
-    background-color: var(--background-5);
-}
-
-.friend:hover > div > .inviteButton {
-    background-color: var(--success-1);
+    margin-right: 4px;
+    overflow: hidden;
 }
 
 .friendAvatar {
@@ -333,29 +313,30 @@
     flex: 1 1 auto;
     margin-left: 10px;
     margin-right: 10px;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 18px;
     font-weight: 400;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--foreground-1);
     text-transform: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .inviteButton {
+    min-width: 72px;
     transition: all 0s;
     border: 1px solid var(--success-1);
 }
 
-.friend:hover > div > .inviteButton:hover {
+.friend:hover > .inviteButton:hover {
     background-color: var(--success-2);
-    border-color: transparent;
+    border-color: var(--success-2);
 }
 
-.friend:hover > div > .inviteButton:active {
+.friend:hover > .inviteButton:active {
     background-color: var(--success-3);
-    border-color: transparent;
+    border-color: var(--success-3);
 }
 
 .separator {
@@ -477,9 +458,5 @@
         width: 100dvw;
         min-height: 100dvh;
         border-radius: 0;
-    }
-
-    .header > button {
-        visibility: visible;
     }
 }

@@ -12,6 +12,7 @@ import Image from "next/image";
 type TMessageData = {
     channelId: TChannel["id"];
     message: TMessage;
+    notSentByAuthor?: boolean;
 };
 
 type TMessageIdData = {
@@ -41,10 +42,12 @@ const Content = ({ channel, user, friend }: Props) => {
         if (!user) return;
 
         pusher.bind("message-sent", (data: TMessageData) => {
+            console.log("[ChannelContent] message-sent", data);
             if (
                 data.channelId === channel.id &&
-                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type))
+                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type) || data.notSentByAuthor)
             ) {
+                console.log("[ChannelContent] message-sent", data);
                 setMessages((prev) => [...prev, data.message]);
             }
         });

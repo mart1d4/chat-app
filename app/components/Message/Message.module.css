@@ -766,6 +766,7 @@
     width: 100%;
     border-radius: 4px;
     background-color: var(--background-3);
+    overflow: hidden;
 }
 
 .guildInvite > h3 {
@@ -782,8 +783,10 @@
 
 .guildInvite > .content {
     display: flex;
-    flex-flow: row wrap;
-    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
 .guildInvite > .content > .headline {
@@ -792,11 +795,14 @@
     align-items: center;
     max-width: 100%;
     gap: 16px;
+    margin-right: 16px;
 }
 
 .guildInvite > .content > button {
     height: 40px;
     align-self: center;
+    min-width: 72px;
+    flex: 1 1 auto;
 }
 
 .guildInvite > .content > .headline > .inviteIconPoop {
@@ -847,6 +853,7 @@
     color: var(--foreground-2);
     text-overflow: ellipsis;
     overflow: hidden;
+    white-space: nowrap;
     font-size: 16px;
     font-weight: 600;
     line-height: 20px;

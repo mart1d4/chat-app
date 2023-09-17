@@ -10,6 +10,7 @@ import styles from "./Channels.module.css";
 type TMessageData = {
     channelId: TChannel["id"];
     message: TMessage;
+    notSentByAuthor?: boolean;
 };
 
 type TMessageIdData = {
@@ -41,7 +42,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         pusher.bind("message-sent", (data: TMessageData) => {
             if (
                 data.channelId === channel.id &&
-                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type))
+                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type) || data.notSentByAuthor)
             ) {
                 setMessages((prev) => [...prev, data.message]);
             }

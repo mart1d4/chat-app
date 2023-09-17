@@ -1,23 +1,22 @@
 "use client";
 
 import { ReactElement, useState, SetStateAction, Dispatch } from "react";
-import useContextHook from "@/hooks/useContextHook";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 import styles from "./GuildChannels.module.css";
 import { Icon, UserSection } from "@components";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useLayers, useTooltip } from "@/lib/store";
 
 interface Props {
     user: TCleanUser;
-    channels: TChannel[];
     guild: TGuild;
 }
 
-export const GuildChannels = ({ user, channels, guild }: Props): ReactElement => {
+export const GuildChannels = ({ user, guild }: Props): ReactElement => {
     const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
+    const channels = useData((state) => state.guilds).find((g) => g.id === guild.id)?.channels || [];
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const params = useParams();
@@ -106,6 +105,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            guild={guild}
                                             member={member}
                                             hidden={hiddenCategories.includes(channel.id)}
                                             setHidden={setHiddenCategories}
@@ -125,6 +125,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            guild={guild}
                                             member={member}
                                         />
                                     );
@@ -133,6 +134,7 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            guild={guild}
                                             member={member}
                                         />
                                     );
@@ -155,12 +157,13 @@ export const GuildChannels = ({ user, channels, guild }: Props): ReactElement =>
 
 type ChannelItemProps = {
     channel: TChannel;
+    guild: TGuild;
     member: TCleanUser;
     hidden?: boolean;
     setHidden?: Dispatch<SetStateAction<string[]>>;
 };
 
-const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) => {
+const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemProps) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const params = useParams();
@@ -191,6 +194,7 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                         },
                         content: {
                             type: "GUILD_CHANNEL",
+                            guild: guild,
                             channel: channel,
                         },
                     });
@@ -256,6 +260,7 @@ const ChannelItem = ({ channel, member, hidden, setHidden }: ChannelItemProps) =
                     },
                     content: {
                         type: "GUILD_CHANNEL",
+                        guild: guild,
                         channel: channel,
                     },
                 });

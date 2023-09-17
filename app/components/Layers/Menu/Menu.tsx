@@ -405,6 +405,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                 content: {
                                     type: "GUILD_INVITE",
                                     guild: content.guild,
+                                    channel: content.channel,
                                 },
                             });
                         },
@@ -505,7 +506,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     func: () => {},
                 },
                 {
-                    name: "Divider",
+                    name: textChan ? "Divider" : null,
                 },
                 {
                     name: textChan ? "Invite People" : null,
@@ -579,15 +580,16 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     name: content.guild.ownerId === currentUser.id ? "Delete Server" : "Leave Server",
                     danger: true,
                     func: () => {
-                        if (content.guild.ownerId === currentUser.id) {
-                            sendRequest({
-                                query: "GUILD_DELETE",
-                                params: {
-                                    guildId: content.guild.id,
-                                },
-                            });
-                        } else {
-                        }
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "LEAVE_CONFIRM",
+                                guild: content.guild,
+                                isOwner: content.guild.ownerId === currentUser.id,
+                            },
+                        });
                     },
                 },
                 {
@@ -1308,11 +1310,13 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     },
                                 });
                             } else {
-                                sendRequest({
-                                    query: "CHANNEL_RECIPIENT_REMOVE",
-                                    params: {
-                                        channelId: content.channel.id,
-                                        recipientId: currentUser.id,
+                                setLayers({
+                                    settings: {
+                                        type: "POPUP",
+                                    },
+                                    content: {
+                                        type: "LEAVE_CONFIRM",
+                                        channel: content.channel,
                                     },
                                 });
                             }

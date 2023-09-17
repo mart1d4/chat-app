@@ -15,16 +15,6 @@ export async function PUT(req: Request, { params }: Params) {
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 
-    if (userId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
-
     try {
         const user = await prisma.user.findUnique({
             where: {
@@ -279,6 +269,7 @@ export async function PUT(req: Request, { params }: Params) {
         await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: message,
+            notSentByAuthor: true,
         });
 
         return NextResponse.json(
@@ -302,18 +293,10 @@ export async function PUT(req: Request, { params }: Params) {
 
 export async function DELETE(req: Request, { params }: Params) {
     const userId = headers().get("X-UserId") || "";
+    const { withoutMessage } = await req.json();
+
     const recipientId = params.recipientId;
     const channelId = params.channelId;
-
-    if (userId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
 
     try {
         const user = await prisma.user.findUnique({
@@ -451,7 +434,19 @@ export async function DELETE(req: Request, { params }: Params) {
         await pusher.trigger("chat-app", "channel-update", {
             type: "RECIPIENT_REMOVED",
             channel: newChannel,
+            recipientId: recipientId,
         });
+
+        if (withoutMessage) {
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: "Recipient removed from channel",
+                    channelId: channel.ownerId === recipientId ? channelId : null,
+                },
+                { status: 200 }
+            );
+        }
 
         const message = await prisma.message.create({
             data: {
@@ -467,7 +462,7 @@ export async function DELETE(req: Request, { params }: Params) {
                     },
                 },
                 mentions: {
-                    connect: newOwner ? [] : [{ id: recipientId }],
+                    connect: newOwner || userId === recipientId ? [] : [{ id: recipientId }],
                 },
             },
             include: {
@@ -553,6 +548,7 @@ export async function DELETE(req: Request, { params }: Params) {
         await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: message,
+            notSentByAuthor: true,
         });
 
         return NextResponse.json(

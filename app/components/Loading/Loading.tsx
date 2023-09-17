@@ -1,10 +1,11 @@
 "use client";
 
 import { ReactElement, useEffect, useRef } from "react";
-import pusher from "@/lib/pusher/client-connection";
-import styles from "./Loading.module.css";
 import { useData, useNotifications } from "@/lib/store";
-import { usePathname } from "next/navigation";
+import pusher from "@/lib/pusher/client-connection";
+import { usePathname, useRouter } from "next/navigation";
+import styles from "./Loading.module.css";
+import { getChannelName } from "@/lib/strings";
 
 type TRelationData = {
     type: "FRIEND_ADDED" | "FRIEND_REMOVED" | "REQUEST_SENT";
@@ -23,11 +24,15 @@ type TChannelData = {
 type TGuildData = {
     type: "GUILD_ADDED" | "GUILD_REMOVED";
     guild: TGuild;
+    guildId?: TGuild["id"];
+    channelId?: TChannel["id"];
+    channel?: TChannel;
 };
 
 type TMessageData = {
     channelId: TChannel["id"];
     message: TMessage;
+    notSentByAuthor?: boolean;
 };
 
 type Props = {
@@ -82,6 +87,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
 
     const hasRendered = useRef(false);
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         const env = process.env.NODE_ENV;
@@ -122,7 +128,8 @@ export const Loading = ({ children, data }: Props): ReactElement => {
             if (channels.map((c) => c.id).includes(data.channelId)) {
                 moveChannelUp(data.channelId);
 
-                if (pathname.includes(data.channelId) || data.message.authorId === user.id) return;
+                if (pathname.includes(data.channelId) || (data.message.authorId === user.id && !data.notSentByAuthor))
+                    return;
                 addPing(data.channelId);
 
                 const audio = new Audio("/assets/sounds/ping.mp3");
@@ -164,24 +171,47 @@ export const Loading = ({ children, data }: Props): ReactElement => {
         });
 
         pusher.bind("channel-update", (data: TChannelData) => {
-            if (data.channel.recipientIds.includes(user.id)) {
+            if (data.type === "RECIPIENT_REMOVED" && user.id === data.recipientId) {
+                removeChannel(data.channel);
+                if (pathname.includes(data.channel.id)) router.refresh();
+            } else if (data.channel.recipientIds.includes(user.id)) {
                 if (data.type === "CHANNEL_REMOVED") {
                     removeChannel(data.channel);
+                    if (pathname.includes(data.channel.id)) router.refresh();
                 } else if (data.type === "CHANNEL_ADDED") {
                     addChannel(data.channel);
                 } else if (data.type === "RECIPIENT_ADDED" || data.type === "RECIPIENT_REMOVED") {
-                    updateChannel(data.channel);
+                    updateChannel({
+                        ...data.channel,
+                        name: getChannelName(data.channel, user.id),
+                    });
                 }
             }
         });
 
         pusher.bind("guild-update", (data: TGuildData) => {
-            if (data.guild.rawMemberIds.includes(user.id)) {
+            if (data.guild?.rawMemberIds.includes(user.id)) {
                 if (data.type === "GUILD_REMOVED") {
                     removeGuild(data.guild);
                 } else if (data.type === "GUILD_ADDED") {
                     addGuild(data.guild);
                 }
+            } else if (data.guildId && data.channelId && guilds.map((g) => g.id).includes(data.guildId)) {
+                const newGuilds = guilds.map((g) => ({
+                    ...g,
+                    channels: g.channels
+                        .filter((c) => c.id !== data.channelId)
+                        .sort((a, b) => (a.position as number) - (b.position as number)),
+                }));
+                setGuilds(newGuilds);
+            } else if (data.guildId && data.channel && guilds.map((g) => g.id).includes(data.guildId)) {
+                const newGuilds = guilds.map((g) => ({
+                    ...g,
+                    channels: [data.channel as TChannel, ...g.channels].sort(
+                        (a, b) => (a.position as number) - (b.position as number)
+                    ),
+                }));
+                setGuilds(newGuilds);
             }
         });
 

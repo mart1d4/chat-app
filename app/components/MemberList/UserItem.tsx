@@ -1,10 +1,9 @@
 "use client";
 
-import useContextHook from "@/hooks/useContextHook";
+import { useLayers, useTooltip } from "@/lib/store";
 import { ReactElement, useRef } from "react";
 import styles from "./UserItem.module.css";
 import { Avatar, Icon } from "@components";
-import { useLayers, useTooltip } from "@/lib/store";
 
 type Props = {
     user: TCleanUser;
@@ -68,7 +67,7 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                             <div>
                                 <Avatar
                                     src={user.avatar}
-                                    alt={user.username}
+                                    alt={`${user.username}'s avatar`}
                                     size={32}
                                     status={offline ? undefined : user.status}
                                     tooltip={true}
@@ -78,7 +77,7 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
 
                         <div className={styles.layoutContent}>
                             <div className={styles.contentName}>
-                                <div>{user.username}</div>
+                                <div>{user.displayName}</div>
                                 <span
                                     onMouseEnter={(e) => {
                                         e.stopPropagation();

@@ -8,6 +8,7 @@ import { translateCap } from "@/lib/strings";
 import { Avatar, Icon } from "@components";
 import { UserItem } from "./UserItem";
 import { useRouter } from "next/navigation";
+import useFetchHelper from "@/hooks/useFetchHelper";
 
 const colors = {
     ONLINE: "#22A559",
@@ -35,6 +36,7 @@ interface Props {
 export const MemberList = ({ channel, guild, user, friend }: Props) => {
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
+    const [originalNote, setOriginalNote] = useState<string>("");
     const [note, setNote] = useState<string>("");
 
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(
@@ -43,9 +45,17 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
 
     const setTooltip = useTooltip((state) => state.setTooltip);
     const settings = useSettings((state) => state.settings);
+    const channels = useData((state) => state.channels);
     const friends = useData((state) => state.friends);
-    const guilds = useData((state) => state.guilds);
     const noteRef = useRef<HTMLTextAreaElement>(null);
+    const guilds = useData((state) => state.guilds);
+    const hasRendered = useRef<boolean>(false);
+    const { sendRequest } = useFetchHelper();
+
+    let recipients: TCleanUser[];
+    if (!guild) {
+        recipients = channels.find((c: TChannel) => c.id === channel.id)?.recipients ?? [];
+    }
 
     useEffect(() => {
         const width: number = window.innerWidth;
@@ -62,6 +72,35 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (!friend) return;
+
+        const getNote = async () => {
+            const response = await sendRequest({
+                query: "GET_NOTE",
+                params: {
+                    userId: friend.id,
+                },
+            });
+
+            if (response.success) {
+                setNote(response.note);
+                setOriginalNote(response.note);
+            }
+        };
+
+        const env = process.env.NODE_ENV;
+
+        if (env == "development") {
+            if (hasRendered.current) getNote();
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == "production") {
+            getNote();
+        }
     }, []);
 
     return useMemo(() => {
@@ -218,6 +257,23 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                         onInput={(e) => {
                                             setNote(e.currentTarget.value);
                                         }}
+                                        onBlur={async () => {
+                                            if (note !== originalNote) {
+                                                const response = await sendRequest({
+                                                    query: "SET_NOTE",
+                                                    params: {
+                                                        userId: friend.id,
+                                                    },
+                                                    data: {
+                                                        newNote: note,
+                                                    },
+                                                });
+
+                                                if (response.success) {
+                                                    setOriginalNote(note);
+                                                }
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -304,10 +360,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                 );
                 offlineMembers = guild.rawMembers.filter((recipient: TCleanUser) => recipient.status === "OFFLINE");
             } else {
-                onlineMembers = channel.recipients.filter((recipient: any) =>
+                onlineMembers = recipients.filter((recipient: any) =>
                     ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(recipient.status)
                 );
-                offlineMembers = channel.recipients?.filter((recipient: TCleanUser) => recipient.status === "OFFLINE");
+                offlineMembers = recipients.filter((recipient: TCleanUser) => recipient.status === "OFFLINE");
             }
 
             return (
@@ -342,7 +398,18 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                 </aside>
             );
         }
-    }, [settings.showUsers, widthLimitPassed, channel, user, note, friends, guilds, showFriends, showGuilds]);
+    }, [
+        settings.showUsers,
+        widthLimitPassed,
+        channel,
+        user,
+        note,
+        originalNote,
+        friends,
+        guilds,
+        showFriends,
+        showGuilds,
+    ]);
 };
 
 const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {

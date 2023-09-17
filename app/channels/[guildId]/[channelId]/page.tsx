@@ -18,13 +18,10 @@ const Page = async ({ params }: { params: { guildId: string; channelId: string }
         redirect(`/channels/${guild.id}`);
     }
 
-    channels.sort((a, b) => (a.position as number) - (b.position as number));
-
     return (
         <>
             <GuildChannels
                 guild={guild}
-                channels={channels}
                 user={user}
             />
 

@@ -14,13 +14,10 @@ const GuildPage = async ({ params }: { params: { guildId: string } }) => {
     const textChannel = channels.find((c) => c.type === 2);
     if (textChannel) redirect(`/channels/${guild.id}/${textChannel.id}`);
 
-    channels.sort((a, b) => (a.position as number) - (b.position as number));
-
     return (
         <>
             <GuildChannels
                 guild={guild}
-                channels={channels}
                 user={user}
             />
 

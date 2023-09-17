@@ -29,6 +29,7 @@ const masks = {
 
 export const UserCard = ({ content }: any): ReactElement => {
     const [note, setNote] = useState<string>("");
+    const [originalNote, setOriginalNote] = useState<string>("");
     const [message, setMessage] = useState<string>("");
 
     const { setShowSettings }: any = useContextHook({ context: "layer" });
@@ -39,6 +40,7 @@ export const UserCard = ({ content }: any): ReactElement => {
     const { sendRequest } = useFetchHelper();
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
+    const hasRendered = useRef<boolean>(false);
     const animation = content?.animation;
     const user = content?.user;
     const router = useRouter();
@@ -102,6 +104,33 @@ export const UserCard = ({ content }: any): ReactElement => {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [message]);
+
+    useEffect(() => {
+        const getNote = async () => {
+            const response = await sendRequest({
+                query: "GET_NOTE",
+                params: {
+                    userId: user.id,
+                },
+            });
+
+            if (response.success) {
+                setNote(response.note);
+                setOriginalNote(response.note);
+            }
+        };
+
+        const env = process.env.NODE_ENV;
+
+        if (env == "development") {
+            if (hasRendered.current) getNote();
+            return () => {
+                hasRendered.current = true;
+            };
+        } else if (env == "production") {
+            getNote();
+        }
+    }, []);
 
     return (
         <AnimatePresence>
@@ -304,6 +333,23 @@ export const UserCard = ({ content }: any): ReactElement => {
                                         autoCorrect="off"
                                         onInput={(e) => {
                                             setNote(e.currentTarget.value);
+                                        }}
+                                        onBlur={async () => {
+                                            if (note !== originalNote) {
+                                                const response = await sendRequest({
+                                                    query: "SET_NOTE",
+                                                    params: {
+                                                        userId: user.id,
+                                                    },
+                                                    data: {
+                                                        newNote: note,
+                                                    },
+                                                });
+
+                                                if (response.success) {
+                                                    setOriginalNote(note);
+                                                }
+                                            }
                                         }}
                                     />
                                 </div>

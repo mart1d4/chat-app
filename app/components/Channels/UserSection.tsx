@@ -112,6 +112,23 @@ export const UserSection = (): ReactElement => {
                                 const audio = new Audio("/assets/sounds/undeafen.mp3");
                                 audio.volume = 0.5;
                                 audio.play();
+
+                                // Speech
+                                // const SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+                                // const recognition = new SpeechRecognition();
+
+                                // recognition.continous = true;
+                                // recognition.interimResults = true;
+                                // recognition.lang = "en-US";
+                                // recognition.start();
+
+                                // recognition.onresult = function () {
+                                //     console.log("Speech result");
+                                // };
+
+                                // recognition.onspeechend = function () {
+                                //     console.log("Speech ended");
+                                // };
                             } else {
                                 setSettings("microphone", !settings.microphone);
                                 const audio = new Audio(`

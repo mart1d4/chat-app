@@ -327,7 +327,7 @@ interface SettingsState {
 export const useSettings = create<SettingsState>()((set) => ({
     settings: {
         language: "en",
-        microphone: true,
+        microphone: false,
         sound: true,
         camera: true,
         appearance: "system",

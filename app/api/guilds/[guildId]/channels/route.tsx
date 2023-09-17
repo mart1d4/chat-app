@@ -223,7 +223,7 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             });
         }
 
-        await pusher.trigger("chat-app", "channel-create", {
+        await pusher.trigger("chat-app", "guild-update", {
             guildId: guild.id,
             channel: channel,
         });

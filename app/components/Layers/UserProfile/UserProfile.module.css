@@ -161,6 +161,7 @@
     overflow-y: scroll;
     flex: 1 1 auto;
     margin-right: -12px;
+    padding-bottom: 8px;
 }
 
 .cardBody > .scrollContainer.margin {
@@ -474,6 +475,8 @@
     border-radius: 4px;
     margin: 1px 0;
     user-select: none;
+    min-height: 48px;
+    transition: none;
 }
 
 .userItem:hover {
