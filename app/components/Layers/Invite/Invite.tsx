@@ -56,23 +56,21 @@ export const Invite = ({ content }: { content: TContent }) => {
     useEffect(() => {
         const getLink = async () => {
             try {
-                const response = await fetch(`/api/channels/${content.channel.id}/invites`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
+                const response = await sendRequest({
+                    query: "CREATE_INVITE",
+                    params: {
+                        channelId: content.channel.id,
                     },
-                    body: JSON.stringify({
+                    data: {
                         maxUses: 100,
                         maxAge: 86400,
                         temporary: false,
                         inviterId: user.id,
-                    }),
+                    },
                 });
 
-                const data = await response.json();
-                if (!data.success) setError("You are being rate limited.");
-                else setInviteLink(data.invite.code);
+                if (!response.success) setError("You are being rate limited.");
+                else setInviteLink(response.invite.code);
             } catch (error) {
                 setError("Something went wrong. Please try again later.");
             }

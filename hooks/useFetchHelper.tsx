@@ -26,7 +26,11 @@ type TQuery =
     | "GUILD_CHANNEL_UPDATE"
     | "GUILD_CHANNEL_DELETE"
     | "GET_NOTE"
-    | "SET_NOTE";
+    | "SET_NOTE"
+    | "GET_INVITE"
+    | "CREATE_INVITE"
+    | "ACCEPT_INVITE"
+    | "DELETE_INVITE";
 
 type Props = {
     query: TQuery;
@@ -64,6 +68,10 @@ const urls = {
     ["GUILD_CHANNEL_DELETE"]: "/channels/:channelId",
     ["GET_NOTE"]: "/users/me/notes/:userId",
     ["SET_NOTE"]: "/users/me/notes/:userId",
+    ["GET_INVITE"]: "/invites/:inviteId",
+    ["CREATE_INVITE"]: "/channels/:channelId/invites",
+    ["ACCEPT_INVITE"]: "/invites/:inviteId",
+    ["DELETE_INVITE"]: "/invites/:inviteId",
 };
 
 const methods = {
@@ -91,6 +99,10 @@ const methods = {
     ["GUILD_CHANNEL_DELETE"]: "DELETE",
     ["GET_NOTE"]: "GET",
     ["SET_NOTE"]: "PUT",
+    ["GET_INVITE"]: "GET",
+    ["CREATE_INVITE"]: "POST",
+    ["ACCEPT_INVITE"]: "POST",
+    ["DELETE_INVITE"]: "DELETE",
 };
 
 const useFetchHelper = () => {
@@ -171,6 +183,7 @@ const useFetchHelper = () => {
         url = url.replace(":recipientId", params?.recipientId ?? "");
         url = url.replace(":userId", params?.userId ?? "");
         url = url.replace(":guildId", params?.guildId ?? "");
+        url = url.replace(":inviteId", params?.inviteId ?? "");
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
             method: method,
@@ -179,8 +192,6 @@ const useFetchHelper = () => {
         });
 
         if (response.status === 401) {
-            const { sendRequest: resend } = useFetchHelper();
-
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
@@ -189,6 +200,7 @@ const useFetchHelper = () => {
             if (!response.token) throw new Error("[useFetchHelper] No token found");
             setToken(response.token);
 
+            const { sendRequest: resend } = useFetchHelper();
             const res: any = await resend({ query, params, data, skipCheck });
             return res;
         } else {

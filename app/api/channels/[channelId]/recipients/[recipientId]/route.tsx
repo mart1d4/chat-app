@@ -118,47 +118,6 @@ export async function PUT(req: Request, { params }: Params) {
             );
         }
 
-        const newChannel = await prisma.channel.update({
-            where: {
-                id: channelId,
-            },
-            data: {
-                recipients: {
-                    connect: {
-                        id: recipientId,
-                    },
-                },
-            },
-            include: {
-                recipients: {
-                    orderBy: {
-                        username: "asc",
-                    },
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-            },
-        });
-
-        await pusher.trigger("chat-app", "channel-update", {
-            type: "RECIPIENT_ADDED",
-            channel: newChannel,
-        });
-
         // Create message
         const message = await prisma.message.create({
             data: {
@@ -257,13 +216,46 @@ export async function PUT(req: Request, { params }: Params) {
             },
         });
 
-        await prisma.channel.update({
+        const newChannel = await prisma.channel.update({
             where: {
                 id: channelId,
             },
             data: {
+                recipients: {
+                    connect: {
+                        id: recipientId,
+                    },
+                },
                 updatedAt: new Date(),
             },
+            include: {
+                recipients: {
+                    orderBy: {
+                        username: "asc",
+                    },
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatar: true,
+                        banner: true,
+                        primaryColor: true,
+                        accentColor: true,
+                        description: true,
+                        customStatus: true,
+                        status: true,
+                        guildIds: true,
+                        channelIds: true,
+                        friendIds: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+
+        await pusher.trigger("chat-app", "channel-update", {
+            type: "RECIPIENT_ADDED",
+            channel: newChannel,
         });
 
         await pusher.trigger("chat-app", "message-sent", {

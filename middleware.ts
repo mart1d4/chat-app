@@ -30,7 +30,6 @@ export async function middleware(req: NextRequest) {
         // });
 
         if (pathname.startsWith("/api/auth")) return NextResponse.next();
-        if (pathname.startsWith("/api/invites")) return NextResponse.next();
 
         if (!token) {
             return new NextResponse(null, {

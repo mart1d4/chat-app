@@ -34,26 +34,6 @@ export const Popout = ({ content }: any) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const getLink = async () => {
-        const response = await fetch(`/api/channels/${content.channel.id}/invites`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                maxUses: 100,
-                maxAge: 86400,
-                temporary: false,
-                inviterId: user.id,
-            }),
-        });
-
-        const data = await response.json();
-        if (!data.success) return;
-        else setInviteLink(data.invite.code);
-    };
-
     useEffect(() => {
         if (!user || content.type !== "PINNED_MESSAGES") return;
 
@@ -449,26 +429,21 @@ export const Popout = ({ content }: any) => {
                                             value={inviteLink && `https://chat-app.mart1d4.dev/${inviteLink}`}
                                             onClick={async () => {
                                                 const getLink = async () => {
-                                                    const response = await fetch(
-                                                        `/api/channels/${content.channel.id}/invites`,
-                                                        {
-                                                            method: "POST",
-                                                            headers: {
-                                                                "Content-Type": "application/json",
-                                                                Authorization: `Bearer ${token}`,
-                                                            },
-                                                            body: JSON.stringify({
-                                                                maxUses: 100,
-                                                                maxAge: 86400,
-                                                                temporary: false,
-                                                                inviterId: user.id,
-                                                            }),
-                                                        }
-                                                    );
+                                                    const response = await sendRequest({
+                                                        query: "CREATE_INVITE",
+                                                        params: {
+                                                            channelId: content.channel.id,
+                                                        },
+                                                        data: {
+                                                            maxUses: 100,
+                                                            maxAge: 86400,
+                                                            temporary: false,
+                                                            inviterId: user.id,
+                                                        },
+                                                    });
 
-                                                    const data = await response.json();
-                                                    if (!data.success) return;
-                                                    else setInviteLink(data.invite.code);
+                                                    if (!response.success) return;
+                                                    else setInviteLink(response.invite.code);
                                                 };
 
                                                 if (!inviteLink) {
@@ -484,26 +459,21 @@ export const Popout = ({ content }: any) => {
                                         className={copied ? "green" : "blue"}
                                         onClick={async () => {
                                             const getLink = async () => {
-                                                const response = await fetch(
-                                                    `/api/channels/${content.channel.id}/invites`,
-                                                    {
-                                                        method: "POST",
-                                                        headers: {
-                                                            "Content-Type": "application/json",
-                                                            Authorization: `Bearer ${token}`,
-                                                        },
-                                                        body: JSON.stringify({
-                                                            maxUses: 100,
-                                                            maxAge: 86400,
-                                                            temporary: false,
-                                                            inviterId: user.id,
-                                                        }),
-                                                    }
-                                                );
+                                                const response = await sendRequest({
+                                                    query: "CREATE_INVITE",
+                                                    params: {
+                                                        channelId: content.channel.id,
+                                                    },
+                                                    data: {
+                                                        maxUses: 100,
+                                                        maxAge: 86400,
+                                                        temporary: false,
+                                                        inviterId: user.id,
+                                                    },
+                                                });
 
-                                                const data = await response.json();
-                                                if (!data.success) return;
-                                                else setInviteLink(data.invite.code);
+                                                if (!response.success) return;
+                                                else setInviteLink(response.invite.code);
                                             };
 
                                             if (!inviteLink) {
@@ -585,26 +555,21 @@ export const Popout = ({ content }: any) => {
                                             value={inviteLink && `https://chat-app.mart1d4.dev/${inviteLink}`}
                                             onClick={async () => {
                                                 const getLink = async () => {
-                                                    const response = await fetch(
-                                                        `/api/channels/${content.channel.id}/invites`,
-                                                        {
-                                                            method: "POST",
-                                                            headers: {
-                                                                "Content-Type": "application/json",
-                                                                Authorization: `Bearer ${token}`,
-                                                            },
-                                                            body: JSON.stringify({
-                                                                maxUses: 100,
-                                                                maxAge: 86400,
-                                                                temporary: false,
-                                                                inviterId: user.id,
-                                                            }),
-                                                        }
-                                                    );
+                                                    const response = await sendRequest({
+                                                        query: "CREATE_INVITE",
+                                                        params: {
+                                                            channelId: content.channel.id,
+                                                        },
+                                                        data: {
+                                                            maxUses: 100,
+                                                            maxAge: 86400,
+                                                            temporary: false,
+                                                            inviterId: user.id,
+                                                        },
+                                                    });
 
-                                                    const data = await response.json();
-                                                    if (!data.success) return;
-                                                    else setInviteLink(data.invite.code);
+                                                    if (!response.success) return;
+                                                    else setInviteLink(response.invite.code);
                                                 };
 
                                                 if (!inviteLink) {

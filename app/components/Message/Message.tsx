@@ -2,11 +2,11 @@
 
 import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from "@uploadcare/upload-client";
 import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
+import { getChannelIcon, getChannelName, trimMessage } from "@/lib/strings";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { getChannelIcon, getChannelName, trimMessage } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import styles from "./Message.module.css";
 import Link from "next/link";
@@ -132,27 +132,34 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     }
 
     useEffect(() => {
+        if (message.waiting) return;
         const env = process.env.NODE_ENV;
+
+        const getInvite = async (code: string) => {
+            const response = await sendRequest({
+                query: "GET_INVITE",
+                params: {
+                    inviteId: code,
+                },
+            });
+
+            if (!response.invite && response.invite !== null) {
+                // @ts-expect-error
+                return setInvites((invites) => [...invites, { code: code, type: "error" }]);
+            }
+
+            setInvites((invites) => [
+                ...invites,
+                response.invite === null ? { code: code, type: "notfound" } : response.invite,
+            ]);
+        };
 
         if (env == "development") {
             if (hasRendered.current) {
                 if (guildInvites.length === 0 || message.waiting) return;
 
                 guildInvites.forEach(async (code) => {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/invites/${code}`, {
-                        method: "GET",
-                    });
-
-                    const data = await response.json();
-                    if (!data.invite && data.invite !== null) {
-                        // @ts-expect-error
-                        return setInvites((invites) => [...invites, { code: code, type: "error" }]);
-                    }
-
-                    setInvites((invites) => [
-                        ...invites,
-                        data.invite === null ? { code: code, type: "notfound" } : data.invite,
-                    ]);
+                    await getInvite(code);
                 });
             }
 
@@ -163,23 +170,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
             if (guildInvites.length === 0 || message.waiting) return;
 
             guildInvites.forEach(async (code) => {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/invites/${code}`, {
-                    method: "GET",
-                });
-
-                const data = await response.json();
-                if (!data.invite && data.invite !== null) {
-                    // @ts-expect-error
-                    return setInvites((invites) => [...invites, { code: code, type: "error" }]);
-                }
-
-                setInvites((invites) => [
-                    ...invites,
-                    data.invite === null ? { code: code, type: "notfound" } : data.invite,
-                ]);
+                await getInvite(code);
             });
         }
-    }, []);
+    }, [message.waiting]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -1150,13 +1144,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                       `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
                                                                     : `url(${
                                                                           process.env.NEXT_PUBLIC_CDN_URL
-                                                                      }/${getChannelIcon(
-                                                                          channels.find(
-                                                                              (c: TChannel) =>
-                                                                                  c.id === invite.channel.id
-                                                                          ) as TChannel,
-                                                                          user.id
-                                                                      )}/)`,
+                                                                      }/${getChannelIcon(invite.channel, user.id)}/)`,
                                                         }}
                                                     >
                                                         {!("type" in invite) &&
@@ -1190,30 +1178,41 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                             }
                                                             onClick={() => {
                                                                 if (!("type" in invite)) {
-                                                                    if (
-                                                                        invite.guild &&
-                                                                        guilds.find(
-                                                                            (guild) => guild.id === invite.guild?.id
-                                                                        )
-                                                                    ) {
-                                                                        router.push(
-                                                                            `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                        );
-                                                                    } else if (invite.guild) {
-                                                                        // setLayers({
-                                                                        //     settings: {
-                                                                        //         type: "POPUP",
-                                                                        //     },
-                                                                        //     content: {
-                                                                        //         type: "WARNING",
-                                                                        //         warning: "JOIN_SERVER",
-                                                                        //         invite: invite,
-                                                                        //     },
-                                                                        // });
+                                                                    if (invite.guild) {
+                                                                        if (
+                                                                            guilds.find(
+                                                                                (guild) => guild.id === invite.guild?.id
+                                                                            )
+                                                                        ) {
+                                                                            router.push(
+                                                                                `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                            );
+                                                                        } else {
+                                                                            sendRequest({
+                                                                                query: "ACCEPT_INVITE",
+                                                                                params: {
+                                                                                    inviteId: invite.code,
+                                                                                },
+                                                                            });
+                                                                        }
                                                                     } else {
-                                                                        router.push(
-                                                                            `/channels/me/${invite.channel.id}`
-                                                                        );
+                                                                        if (
+                                                                            channels.find(
+                                                                                (channel) =>
+                                                                                    channel.id === invite.channelId
+                                                                            )
+                                                                        ) {
+                                                                            router.push(
+                                                                                `/channels/me/${invite.channel.id}`
+                                                                            );
+                                                                        } else {
+                                                                            sendRequest({
+                                                                                query: "ACCEPT_INVITE",
+                                                                                params: {
+                                                                                    inviteId: invite.code,
+                                                                                },
+                                                                            });
+                                                                        }
                                                                     }
                                                                 }
                                                             }}
@@ -1223,12 +1222,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                     ? "Invalid Invite"
                                                                     : "Something Went Wrong"
                                                                 : invite.guild?.name ??
-                                                                  getChannelName(
-                                                                      channels.find(
-                                                                          (c: TChannel) => c.id === invite.channel.id
-                                                                      ) as TChannel,
-                                                                      user.id
-                                                                  )}
+                                                                  getChannelName(invite.channel, user.id)}
                                                         </h3>
                                                         <strong>
                                                             {"type" in invite ? (
@@ -1271,26 +1265,38 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                 {!("type" in invite) && (
                                                     <button
                                                         onClick={() => {
-                                                            if (
-                                                                invite.guild &&
-                                                                guilds.find((guild) => guild.id === invite.guild?.id)
-                                                            ) {
-                                                                router.push(
-                                                                    `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                );
-                                                            } else if (invite.guild) {
-                                                                // setLayers({
-                                                                //     settings: {
-                                                                //         type: "POPUP",
-                                                                //     },
-                                                                //     content: {
-                                                                //         type: "WARNING",
-                                                                //         warning: "JOIN_SERVER",
-                                                                //         invite: invite,
-                                                                //     },
-                                                                // });
+                                                            if (invite.guild) {
+                                                                if (
+                                                                    guilds.find(
+                                                                        (guild) => guild.id === invite.guild?.id
+                                                                    )
+                                                                ) {
+                                                                    router.push(
+                                                                        `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                    );
+                                                                } else {
+                                                                    sendRequest({
+                                                                        query: "ACCEPT_INVITE",
+                                                                        params: {
+                                                                            inviteId: invite.code,
+                                                                        },
+                                                                    });
+                                                                }
                                                             } else {
-                                                                router.push(`/channels/me/${invite.channel.id}`);
+                                                                if (
+                                                                    channels.find(
+                                                                        (channel) => channel.id === invite.channelId
+                                                                    )
+                                                                ) {
+                                                                    router.push(`/channels/me/${invite.channel.id}`);
+                                                                } else {
+                                                                    sendRequest({
+                                                                        query: "ACCEPT_INVITE",
+                                                                        params: {
+                                                                            inviteId: invite.code,
+                                                                        },
+                                                                    });
+                                                                }
                                                             }
                                                         }}
                                                         className="button green"
