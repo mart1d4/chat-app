@@ -40,6 +40,7 @@ export const UserCard = ({ content }: any): ReactElement => {
     const { sendRequest } = useFetchHelper();
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const hasRendered = useRef<boolean>(false);
     const animation = content?.animation;
     const user = content?.user;
@@ -106,6 +107,26 @@ export const UserCard = ({ content }: any): ReactElement => {
     }, [message]);
 
     useEffect(() => {
+        if (!user) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setLayers({
+                    settings: {
+                        type: "USER_CARD",
+                        setNull: true,
+                    },
+                });
+            }
+        };
+
+        window.addEventListener("mousedown", handleClickOutside);
+        return () => window.removeEventListener("mousedown", handleClickOutside);
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+
         const getNote = async () => {
             const response = await sendRequest({
                 query: "GET_NOTE",
@@ -130,12 +151,13 @@ export const UserCard = ({ content }: any): ReactElement => {
         } else if (env == "production") {
             getNote();
         }
-    }, []);
+    }, [user]);
 
     return (
         <AnimatePresence>
             {content?.user && (
                 <motion.div
+                    ref={containerRef}
                     className={styles.cardContainer}
                     style={
                         {
@@ -367,11 +389,96 @@ export const UserCard = ({ content }: any): ReactElement => {
                                         style={{
                                             borderColor: user.primaryColor,
                                         }}
-                                        onChange={(e) => {
-                                            setMessage(e.currentTarget.value);
-                                        }}
+                                        onChange={(e) => setMessage(e.currentTarget.value)}
                                     />
                                 </div>
+                            )}
+
+                            {content.settings && (
+                                <>
+                                    <div className={styles.cardDivider + " " + styles.double} />
+
+                                    <div
+                                        className={styles.button}
+                                        // onMouseEnter={(e) => {
+                                        //     setLayers({
+                                        //         settings: {
+                                        //             type: "MENU",
+                                        //             element: e.currentTarget,
+                                        //             firstSide: "RIGHT",
+                                        //         },
+                                        //         content: {
+                                        //             type: "USER",
+                                        //             user,
+                                        //         },
+                                        //     });
+                                        // }}
+                                        // onMouseLeave={() => {
+                                        //     setLayers({
+                                        //         settings: {
+                                        //             type: "MENU",
+                                        //             setNull: true,
+                                        //         },
+                                        //     });
+                                        // }}
+                                    >
+                                        <svg className={styles.settingStatus}>
+                                            <rect
+                                                height="12px"
+                                                width="12px"
+                                                rx={8}
+                                                ry={8}
+                                                fill={colors[user.status as EUserStatus]}
+                                                mask={`url(#${masks[user.status as EUserStatus]})`}
+                                            />
+                                        </svg>
+                                        <div>{translateCap(user.status)}</div>
+                                        <Icon name="arrow" />
+                                    </div>
+
+                                    <div
+                                        className={styles.button}
+                                        onClick={() => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "USER_CARD",
+                                                    setNull: true,
+                                                },
+                                            });
+                                            setLayers({
+                                                settings: {
+                                                    type: "POPUP",
+                                                },
+                                                content: {
+                                                    type: "USER_STATUS",
+                                                    user,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        <Icon name="smiling" />
+                                        <div>{user.customStatus ? "Edit " : "Set "}Custom Status</div>
+                                    </div>
+
+                                    <div className={styles.cardDivider + " " + styles.double} />
+
+                                    <div
+                                        className={styles.button}
+                                        style={{ marginBottom: "8px" }}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(user.id);
+                                            setLayers({
+                                                settings: {
+                                                    type: "USER_CARD",
+                                                    setNull: true,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        <Icon name="id" />
+                                        <div>Copy User ID</div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

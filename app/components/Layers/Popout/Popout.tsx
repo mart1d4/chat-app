@@ -31,8 +31,27 @@ export const Popout = ({ content }: any) => {
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        if (layers.POPUP.length !== 1) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+            }
+        };
+
+        window.addEventListener("mousedown", handleClickOutside);
+        return () => window.removeEventListener("mousedown", handleClickOutside);
+    }, [layers]);
 
     useEffect(() => {
         if (!user || content.type !== "PINNED_MESSAGES") return;
@@ -205,6 +224,7 @@ export const Popout = ({ content }: any) => {
     if (content.type === "PINNED_MESSAGES") {
         return (
             <div
+                ref={containerRef}
                 className={styles.pinContainer}
                 onContextMenu={(e) => e.preventDefault()}
             >
@@ -261,6 +281,7 @@ export const Popout = ({ content }: any) => {
     } else {
         return (
             <div
+                ref={containerRef}
                 className={styles.popup}
                 onContextMenu={(e) => e.preventDefault()}
             >

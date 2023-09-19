@@ -166,6 +166,7 @@ interface DataState {
     setBlockedBy: (blockedBy: TCleanUser[]) => void;
     setRequestsReceived: (requestsReceived: TCleanUser[]) => void;
     setRequestsSent: (requestsSent: TCleanUser[]) => void;
+    modifyUser: (user: TCleanUser) => void;
 
     addFriend: (friend: TCleanUser) => void;
     removeFriend: (friend: TCleanUser) => void;
@@ -209,6 +210,97 @@ export const useData = create<DataState>()((set) => ({
     setBlockedBy: (blockedBy) => set(() => ({ blockedBy })),
     setRequestsReceived: (requestsReceived) => set(() => ({ requestsReceived })),
     setRequestsSent: (requestsSent) => set(() => ({ requestsSent })),
+    modifyUser: (user) =>
+        set((state) => ({
+            friends: state.friends.map((f) => {
+                if (f.id === user.id) {
+                    return {
+                        ...f,
+                        ...user,
+                    };
+                }
+
+                return f;
+            }),
+            blocked: state.blocked.map((b) => {
+                if (b.id === user.id) {
+                    return {
+                        ...b,
+                        ...user,
+                    };
+                }
+
+                return b;
+            }),
+            blockedBy: state.blockedBy.map((b) => {
+                if (b.id === user.id) {
+                    return {
+                        ...b,
+                        ...user,
+                    };
+                }
+
+                return b;
+            }),
+            requestsReceived: state.requestsReceived.map((r) => {
+                if (r.id === user.id) {
+                    return {
+                        ...r,
+                        ...user,
+                    };
+                }
+
+                return r;
+            }),
+            requestsSent: state.requestsSent.map((r) => {
+                if (r.id === user.id) {
+                    return {
+                        ...r,
+                        ...user,
+                    };
+                }
+
+                return r;
+            }),
+            channels: state.channels.map((c) => {
+                if (c.recipientIds.includes(user.id)) {
+                    return {
+                        ...c,
+                        recipients: c.recipients.map((r) => {
+                            if (r.id === user.id) {
+                                return {
+                                    ...r,
+                                    ...user,
+                                };
+                            }
+
+                            return r;
+                        }),
+                    };
+                }
+
+                return c;
+            }),
+            guilds: state.guilds.map((g) => {
+                if (g.rawMemberIds.includes(user.id)) {
+                    return {
+                        ...g,
+                        members: g.members.map((m) => {
+                            if (m.id === user.id) {
+                                return {
+                                    ...m,
+                                    ...user,
+                                };
+                            }
+
+                            return m;
+                        }),
+                    };
+                }
+
+                return g;
+            }),
+        })),
 
     addFriend: (friend) => set((state) => ({ friends: [...state.friends, friend] })),
     removeFriend: (friend) => set((state) => ({ friends: state.friends.filter((f) => f.id !== friend.id) })),

@@ -1379,7 +1379,6 @@ const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
 const MessageAttachments = ({ message, functions }: { message: TMessage; functions: any }) => {
     const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
         <Image
-            key={attachment.id}
             attachment={attachment}
             message={message}
             functions={functions}
@@ -1391,14 +1390,20 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
             <div>
                 {message.attachments.length === 1 && (
                     <div className={styles.gridOneBig}>
-                        <ImageComponent attachment={message.attachments[0]} />
+                        <ImageComponent
+                            key={message.attachments[0].id}
+                            attachment={message.attachments[0]}
+                        />
                     </div>
                 )}
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1407,7 +1412,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
@@ -1415,13 +1423,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                             <div>
                                 <div>
                                     {message.attachments.slice(1, 2).map((attachment) => (
-                                        <ImageComponent attachment={attachment} />
+                                        <ImageComponent
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                        />
                                     ))}
                                 </div>
 
                                 <div>
                                     {message.attachments.slice(2, 3).map((attachment) => (
-                                        <ImageComponent attachment={attachment} />
+                                        <ImageComponent
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -1432,7 +1446,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1441,13 +1458,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(2, 5).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>
@@ -1456,7 +1479,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1465,13 +1491,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 7).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>
@@ -1481,7 +1513,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
@@ -1496,7 +1531,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1505,13 +1543,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 10).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>

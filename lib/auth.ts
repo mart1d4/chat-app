@@ -427,6 +427,7 @@ export const getGuild = async (id: string): Promise<TGuild | null> => {
                     createdAt: true,
                 },
             },
+            rawMemberIds: true,
             systemChannelId: true,
         },
     })) as TGuild | null;

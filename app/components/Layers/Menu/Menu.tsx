@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ReactElement, useMemo, useCallback } from "react";
+import { useEffect, useState, ReactElement, useMemo, useCallback, useRef } from "react";
 import { useData, useLayers, useMention, useSettings } from "@/lib/store";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -70,6 +70,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     const type: EMenuType = content.type;
     const user: TCleanUser = content.user;
     const message: TMessage = content.message;
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const writeText = async (text: string) => {
         await navigator.clipboard.writeText(text);
@@ -84,12 +85,25 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             if (e.key === "Shift") setShift(false);
         };
 
-        document.addEventListener("keydown", handleShift);
-        document.addEventListener("keyup", handleShiftUp);
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setLayers({
+                    settings: {
+                        type: "MENU",
+                        setNull: true,
+                    },
+                });
+            }
+        };
+
+        window.addEventListener("keydown", handleShift);
+        window.addEventListener("keyup", handleShiftUp);
+        window.addEventListener("mousedown", handleClickOutside);
 
         return () => {
-            document.removeEventListener("keydown", handleShift);
-            document.removeEventListener("keyup", handleShiftUp);
+            window.removeEventListener("keydown", handleShift);
+            window.removeEventListener("keyup", handleShiftUp);
+            window.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
 
@@ -1507,6 +1521,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     return useMemo(
         () => (
             <div
+                ref={menuRef}
                 className={`${styles.container} ${type === "GUILD" ? "big" : ""}`}
                 onMouseLeave={() => setHover("")}
                 style={{

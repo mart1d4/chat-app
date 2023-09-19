@@ -162,12 +162,17 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                         type: 2,
                         author: {
                             connect: {
-                                id: user.id,
+                                id: invite.inviter.id,
                             },
                         },
                         channel: {
                             connect: {
                                 id: invite.channel.id,
+                            },
+                        },
+                        mentions: {
+                            connect: {
+                                id: user.id,
                             },
                         },
                     },
@@ -288,21 +293,22 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                     },
                 });
 
-                await pusher.trigger("chat-app", "channel-update", {
-                    type: "RECIPIENT_ADDED",
-                    channel: newChannel,
-                });
-
                 await pusher.trigger("chat-app", "message-sent", {
                     channelId: invite.channel.id,
                     message: message,
                     notSentByAuthor: true,
                 });
 
+                await pusher.trigger("chat-app", "channel-update", {
+                    type: "RECIPIENT_ADDED",
+                    channel: newChannel,
+                });
+
                 return NextResponse.json(
                     {
                         success: true,
                         message: "Invite accepted",
+                        channelId: invite.channel.id,
                     },
                     { status: 200 }
                 );

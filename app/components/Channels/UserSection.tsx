@@ -38,6 +38,7 @@ export const UserSection = (): ReactElement => {
                             content: {
                                 user: user,
                                 animation: "off",
+                                settings: true,
                             },
                         });
                     }}
@@ -76,8 +77,8 @@ export const UserSection = (): ReactElement => {
                     </div>
 
                     <div className={styles.contentWrapper}>
-                        <div>{user?.username}</div>
-                        <div>{translateCap(user?.status)}</div>
+                        <div>{user.displayName}</div>
+                        <div>{user.displayName === user.username ? translateCap(user?.status) : user.username}</div>
                     </div>
                 </div>
 

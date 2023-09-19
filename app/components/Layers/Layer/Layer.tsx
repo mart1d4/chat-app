@@ -297,20 +297,6 @@ const Layer = ({ settings, content }: TLayer) => {
     useEffect(() => {
         if (!settings?.type || !currentNode) return;
 
-        const handleOutsideClick = (e: MouseEvent) => {
-            e.stopPropagation();
-            console.log(currentNode);
-            // @ts-expect-error
-            if (currentNode.contains(e)) return;
-
-            setLayers({
-                settings: {
-                    type: settings.type,
-                    setNull: true,
-                },
-            });
-        };
-
         const handleEscKey = (e: any) => {
             if (e.key === "Escape") {
                 if (settings.type === "POPUP") return;
@@ -324,13 +310,8 @@ const Layer = ({ settings, content }: TLayer) => {
             }
         };
 
-        window.addEventListener("mousedown", handleOutsideClick);
         window.addEventListener("keydown", handleEscKey);
-
-        return () => {
-            window.removeEventListener("mousedown", handleOutsideClick);
-            window.removeEventListener("keydown", handleEscKey);
-        };
+        return () => window.removeEventListener("keydown", handleEscKey);
     }, [currentNode, settings?.type, layers]);
 
     const index =

@@ -206,7 +206,7 @@ const useFetchHelper = () => {
         } else {
             const res = await response.json();
 
-            if (query === "CHANNEL_CREATE" && res.channelId) {
+            if ((query === "CHANNEL_CREATE" || query === "ACCEPT_INVITE") && res.channelId) {
                 router.push(`/channels/me/${res.channelId}`);
             } else if (query === "GUILD_CREATE" && res.channelId && res.guildId) {
                 router.push(`/channels/${res.guildId}/${res.channelId}`);

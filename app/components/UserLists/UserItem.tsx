@@ -73,7 +73,10 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                         />
                     </div>
                     <div className={styles.text}>
-                        <p className={styles.textUsername}>{user.username}</p>
+                        <div className={styles.usernames}>
+                            <p>{user.displayName}</p>
+                            <p>{user.username}</p>
+                        </div>
 
                         <p className={styles.textStatus}>
                             <span>

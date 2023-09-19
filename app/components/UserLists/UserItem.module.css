@@ -53,7 +53,7 @@
     user-select: none;
 }
 
-.textUsername {
+.usernames {
     display: flex;
     overflow: hidden;
     flex-grow: 1;
@@ -65,6 +65,19 @@
     overflow: hidden;
     color: var(--foreground-1);
     font-weight: 600;
+}
+
+.usernames > p:last-child {
+    font-size: 14px;
+    line-height: 16px;
+    visibility: hidden;
+    color: var(--foreground-3);
+    margin-left: 5px;
+}
+
+.liContainer:hover .usernames > p:last-child,
+.active .usernames > p:last-child {
+    visibility: visible;
 }
 
 .textStatus {

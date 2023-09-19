@@ -1,8 +1,8 @@
 "use client";
 
-import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite } from "@components";
+import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite, EmojiPicker } from "@components";
 import { useRef, useEffect, useState, ReactElement } from "react";
-import { getChannelName, getRelativeDate } from "@/lib/strings";
+import { getChannelName, getRelativeDate, translateCap } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
 import { useData, useLayers } from "@/lib/store";
@@ -12,6 +12,29 @@ import useLogout from "@/hooks/useLogout";
 import filetypeinfo from "magic-bytes.js";
 import styles from "./Popup.module.css";
 import Image from "next/image";
+
+const colors = {
+    ONLINE: "#22A559",
+    IDLE: "#F0B232",
+    DO_NOT_DISTURB: "#F23F43",
+    INVISIBLE: "#80848E",
+    OFFLINE: "#80848E",
+};
+
+const masks = {
+    ONLINE: "",
+    IDLE: "status-mask-idle",
+    DO_NOT_DISTURB: "status-mask-dnd",
+    INVISIBLE: "status-mask-offline",
+    OFFLINE: "status-mask-offline",
+};
+
+const statuses = {
+    Online: "ONLINE",
+    Idle: "IDLE",
+    "Do Not Disturb": "DO_NOT_DISTURB",
+    Offline: "OFFLINE",
+};
 
 export const Popup = ({ content, friends }: any): ReactElement => {
     if (content.type === "PINNED_MESSAGES" || content.type === "CREATE_DM") {
@@ -62,7 +85,11 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     const [channelType, setChannelType] = useState(2);
     const [channelLocked, setChannelLocked] = useState(false);
 
-    const [imgIndex, setImgIndex] = useState(content.current ?? 0);
+    const [imgIndex, setImgIndex] = useState<number>(content.current ?? 0);
+
+    const [status, setStatus] = useState<string>(translateCap(user.status));
+    const [customStatus, setCustomStatus] = useState<string>(user.customStatus ?? "");
+    const [showOptions, setShowOptions] = useState<(EventTarget & HTMLDivElement) | null>(null);
 
     const popupRef = useRef<HTMLDivElement>(null);
     const uidInputRef = useRef<HTMLInputElement>(null);
@@ -601,7 +628,194 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 </div>
             )}
 
-            {content.type === "ATTACHMENT_PREVIEW" ? (
+            {content.type === "USER_STATUS" ? (
+                <div
+                    ref={popupRef}
+                    role="dialog"
+                    aria-modal="true"
+                    className={styles.cardContainer}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <img
+                        className={styles.imagePopup}
+                        src="https://ucarecdn.com/2735d6c0-b301-438c-add6-3d116e0ddb45/"
+                        alt="Status"
+                        style={{
+                            top: "0",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            width: "200px",
+                            height: "120px",
+                        }}
+                    />
+
+                    <div
+                        className={styles.titleBlock}
+                        style={{
+                            alignSelf: "center",
+                            paddingTop: "68px",
+                        }}
+                    >
+                        <h1>Set a custom status</h1>
+                    </div>
+
+                    <div className={styles.popupContent + " scrollbar"}>
+                        <div className={styles.input}>
+                            <label>What's cookin', {user.username}?</label>
+                            <div>
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "2px",
+                                        transform: "translateY(-50%)",
+                                    }}
+                                >
+                                    <EmojiPicker />
+                                </div>
+
+                                <input
+                                    type="text"
+                                    maxLength={100}
+                                    value={customStatus}
+                                    placeholder="Support has arrived!"
+                                    onChange={(e) => setCustomStatus(e.target.value)}
+                                    style={{ padding: "10px 36px 10px 42px" }}
+                                />
+
+                                {customStatus && (
+                                    <div
+                                        onClick={() => setCustomStatus("")}
+                                        className={styles.clearInput}
+                                    >
+                                        <Icon
+                                            name="closeFilled"
+                                            viewbox="0 0 14 14"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={styles.divider} />
+
+                        <div className={styles.input}>
+                            <label>Status</label>
+                            <div
+                                className={styles.divInput}
+                                style={{ borderRadius: showOptions ? "4px 4px 0 0" : "" }}
+                                onClick={(e) => {
+                                    if (showOptions) setShowOptions(null);
+                                    else setShowOptions(e.currentTarget);
+                                }}
+                            >
+                                {status}
+
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        right: "8px",
+                                        transform: showOptions
+                                            ? "translateY(-50%) rotate(-180deg)"
+                                            : "translateY(-50%)",
+                                        display: "flex",
+                                    }}
+                                >
+                                    <Icon name="arrow" />
+                                </div>
+
+                                {showOptions && (
+                                    <ul
+                                        className={styles.options}
+                                        style={{
+                                            top: showOptions.getBoundingClientRect().bottom / 2.6,
+                                            left: showOptions.getBoundingClientRect().left / 40,
+                                            width: showOptions.getBoundingClientRect().width,
+                                        }}
+                                    >
+                                        {["Online", "Idle", "Do Not Disturb", "Offline"].map((s) => (
+                                            <li
+                                                className={status === s ? styles.selected : ""}
+                                                key={s}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setStatus(s);
+                                                    setShowOptions(null);
+                                                }}
+                                            >
+                                                <div>
+                                                    <svg className={styles.settingStatus}>
+                                                        <rect
+                                                            height="10px"
+                                                            width="10px"
+                                                            rx={8}
+                                                            ry={8}
+                                                            // @ts-ignore
+                                                            fill={colors[statuses[s] as EUserStatus]}
+                                                            // @ts-ignore
+                                                            mask={`url(#${masks[statuses[s] as EUserStatus]})`}
+                                                        />
+                                                    </svg>
+                                                    {s}
+                                                </div>
+
+                                                {status === s && (
+                                                    <Icon
+                                                        name="selected"
+                                                        fill="var(--accent-1)"
+                                                    />
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            className="underline"
+                            onClick={() => {
+                                setLayers({
+                                    settings: {
+                                        type: "POPUP",
+                                        setNull: true,
+                                    },
+                                });
+                            }}
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            className="blue"
+                            onClick={async () => {
+                                setLayers({
+                                    settings: {
+                                        type: "POPUP",
+                                        setNull: true,
+                                    },
+                                });
+
+                                const correctStatus = statuses[status as keyof typeof statuses];
+                                if (correctStatus !== user.status || customStatus !== user.customStatus) {
+                                    const response = await sendRequest({
+                                        query: "UPDATE_USER",
+                                        data: {
+                                            status: correctStatus === user.status ? null : correctStatus,
+                                            customStatus: customStatus === user.customStatus ? null : customStatus,
+                                        },
+                                    });
+                                }
+                            }}
+                        >
+                            {isLoading ? <LoadingDots /> : "Save"}
+                        </button>
+                    </div>
+                </div>
+            ) : content.type === "ATTACHMENT_PREVIEW" ? (
                 <div
                     ref={popupRef}
                     role="dialog"
@@ -815,7 +1029,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 >
                                     <g
                                         fill="none"
-                                        fill-rule="evenodd"
+                                        fillRule="evenodd"
                                         opacity=".6"
                                     >
                                         <path d="m0 0h80v16h-80z" />

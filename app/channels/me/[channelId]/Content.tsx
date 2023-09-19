@@ -2,10 +2,10 @@
 
 import { AppHeader, Message, TextArea, MemberList, MessageSk, Avatar } from "@components";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useData, useLayers, useUrls } from "@/lib/store";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 import Image from "next/image";
 
@@ -18,6 +18,10 @@ type TMessageData = {
 type TMessageIdData = {
     channelId: TChannel["id"];
     messageId: TMessage["id"];
+};
+
+type TUserUpdateData = {
+    user: TCleanUser;
 };
 
 type Props = {
@@ -33,8 +37,10 @@ const Content = ({ channel, user, friend }: Props) => {
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
+    const modifyUser = useData((state) => state.modifyUser);
     const setChannelUrl = useUrls((state) => state.setMe);
     const setToken = useData((state) => state.setToken);
+    const setUser = useData((state) => state.setUser);
     const token = useData((state) => state.token);
     const hasRendered = useRef<boolean>(false);
 
@@ -43,11 +49,7 @@ const Content = ({ channel, user, friend }: Props) => {
 
         pusher.bind("message-sent", (data: TMessageData) => {
             console.log("[ChannelContent] message-sent", data);
-            if (
-                data.channelId === channel.id &&
-                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type) || data.notSentByAuthor)
-            ) {
-                console.log("[ChannelContent] message-sent", data);
+            if (data.channelId === channel.id && (data.message.author.id !== user.id || data.notSentByAuthor)) {
                 setMessages((prev) => [...prev, data.message]);
             }
         });
@@ -69,10 +71,33 @@ const Content = ({ channel, user, friend }: Props) => {
             }
         });
 
+        pusher.bind("user-updated", (data: TUserUpdateData) => {
+            if (data.user.id === user.id) {
+                setUser(data.user);
+            } else {
+                modifyUser(data.user);
+            }
+
+            if (channel.recipientIds.includes(data.user.id)) {
+                setMessages((prev) =>
+                    prev.map((message) => {
+                        if (message.author.id === data.user.id) {
+                            return {
+                                ...message,
+                                author: data.user as TUser,
+                            };
+                        }
+                        return message;
+                    })
+                );
+            }
+        });
+
         return () => {
             pusher.unbind("message-sent");
             pusher.unbind("message-edited");
             pusher.unbind("message-deleted");
+            pusher.unbind("user-updated");
         };
     }, [user]);
 
@@ -173,10 +198,6 @@ const Content = ({ channel, user, friend }: Props) => {
             firstDate.getFullYear() !== secondDate.getFullYear()
         );
     };
-
-    useEffect(() => {
-        console.log(isAtBottom);
-    }, [isAtBottom]);
 
     return useMemo(
         () => (

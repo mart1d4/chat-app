@@ -35,6 +35,10 @@ type TMessageData = {
     notSentByAuthor?: boolean;
 };
 
+type TUserUpdateData = {
+    user: TCleanUser;
+};
+
 type Props = {
     children: ReactElement;
     data: {
@@ -67,6 +71,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
     const removeBlocked = useData((state) => state.removeBlocked);
     const removeFriend = useData((state) => state.removeFriend);
     const addBlockedBy = useData((state) => state.addBlockedBy);
+    const modifyUser = useData((state) => state.modifyUser);
     const addBlocked = useData((state) => state.addBlocked);
     const addFriend = useData((state) => state.addFriend);
 
@@ -128,13 +133,13 @@ export const Loading = ({ children, data }: Props): ReactElement => {
             if (channels.map((c) => c.id).includes(data.channelId)) {
                 moveChannelUp(data.channelId);
 
-                if (pathname.includes(data.channelId) || (data.message.authorId === user.id && !data.notSentByAuthor))
-                    return;
-                addPing(data.channelId);
+                if (!pathname.includes(data.channelId) && (data.message.authorId !== user.id || data.notSentByAuthor)) {
+                    addPing(data.channelId);
 
-                const audio = new Audio("/assets/sounds/ping.mp3");
-                audio.volume = 0.5;
-                audio.play();
+                    const audio = new Audio("/assets/sounds/ping.mp3");
+                    audio.volume = 0.5;
+                    audio.play();
+                }
             }
         });
 
@@ -215,11 +220,25 @@ export const Loading = ({ children, data }: Props): ReactElement => {
             }
         });
 
+        if (!pathname.match(/^[a-f\d]{24}$/i)) {
+            pusher.bind("user-updated", (data: TUserUpdateData) => {
+                if (data.user.id === user.id) {
+                    setUser(data.user);
+                } else {
+                    modifyUser(data.user);
+                }
+            });
+        }
+
         return () => {
             pusher.unbind("user-relation");
             pusher.unbind("channel-update");
             pusher.unbind("guild-update");
             pusher.unbind("message-sent");
+
+            if (!pathname.match(/^[a-f\d]{24}$/i)) {
+                pusher.unbind("user-updated");
+            }
         };
     }, [user, channels, guilds, pathname]);
 

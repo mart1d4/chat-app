@@ -18,6 +18,10 @@ type TMessageIdData = {
     messageId: TMessage["id"];
 };
 
+type TUserUpdateData = {
+    user: TCleanUser;
+};
+
 interface Props {
     guild: TGuild;
     channel: TChannel;
@@ -30,8 +34,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
+    const modifyUser = useData((state) => state.modifyUser);
     const setGuildUrl = useUrls((state) => state.setGuild);
     const setToken = useData((state) => state.setToken);
+    const setUser = useData((state) => state.setUser);
     const token = useData((state) => state.token);
     const user = useData((state) => state.user);
     const hasRendered = useRef<boolean>(false);
@@ -40,10 +46,8 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         if (!user) return;
 
         pusher.bind("message-sent", (data: TMessageData) => {
-            if (
-                data.channelId === channel.id &&
-                (data.message.author.id !== user.id || ![0, 1].includes(data.message.type) || data.notSentByAuthor)
-            ) {
+            console.log("[ChannelContent] message-sent", data);
+            if (data.channelId === channel.id && (data.message.author.id !== user.id || data.notSentByAuthor)) {
                 setMessages((prev) => [...prev, data.message]);
             }
         });
@@ -65,12 +69,35 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             }
         });
 
+        pusher.bind("user-updated", (data: TUserUpdateData) => {
+            if (data.user.id === user.id) {
+                setUser(data.user);
+            } else {
+                modifyUser(data.user);
+            }
+
+            if (guild.rawMemberIds.includes(data.user.id)) {
+                setMessages((prev) =>
+                    prev.map((message) => {
+                        if (message.author.id === data.user.id) {
+                            return {
+                                ...message,
+                                author: data.user as TUser,
+                            };
+                        }
+                        return message;
+                    })
+                );
+            }
+        });
+
         return () => {
             pusher.unbind("message-sent");
             pusher.unbind("message-edited");
             pusher.unbind("message-deleted");
+            pusher.unbind("user-updated");
         };
-    }, [user]);
+    }, [user, messages, guild]);
 
     useEffect(() => {
         document.title = `Chat App | #${channel.name} | ${guild.name}`;
@@ -169,10 +196,6 @@ const Content = ({ guild, channel }: Props): ReactElement => {
             firstDate.getFullYear() !== secondDate.getFullYear()
         );
     };
-
-    useEffect(() => {
-        console.log(isAtBottom);
-    }, [isAtBottom]);
 
     return useMemo(
         () => (
