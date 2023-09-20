@@ -5,7 +5,6 @@ import { useData, useLayers, useTooltip } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
-import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { translateCap } from "@/lib/strings";
 import { useRouter } from "next/navigation";
@@ -413,19 +412,19 @@ export const UserCard = ({ content }: any): ReactElement => {
 
                                     <div
                                         className={styles.button}
-                                        // onMouseEnter={(e) => {
-                                        //     setLayers({
-                                        //         settings: {
-                                        //             type: "MENU",
-                                        //             element: e.currentTarget,
-                                        //             firstSide: "RIGHT",
-                                        //         },
-                                        //         content: {
-                                        //             type: "USER",
-                                        //             user,
-                                        //         },
-                                        //     });
-                                        // }}
+                                        onMouseEnter={(e) => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    element: e.currentTarget,
+                                                    gap: 20,
+                                                    firstSide: "RIGHT",
+                                                },
+                                                content: {
+                                                    type: "STATUS",
+                                                },
+                                            });
+                                        }}
                                         // onMouseLeave={() => {
                                         //     setLayers({
                                         //         settings: {

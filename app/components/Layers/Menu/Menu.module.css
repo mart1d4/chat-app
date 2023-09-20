@@ -138,3 +138,11 @@
 .tip > svg {
     margin: 0 4px;
 }
+
+.statusIcon {
+    margin-right: 8px;
+}
+
+.item.hover .statusIcon rect {
+    fill: var(--foreground-1);
+}

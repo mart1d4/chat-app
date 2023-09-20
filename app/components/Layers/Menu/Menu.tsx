@@ -7,6 +7,9 @@ import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Menu.module.css";
 import { Icon } from "@components";
 
+const colors = ["#22A559", "", "#F0B232", "#F23F43", "#80848E"];
+const masks = ["", "", "status-mask-idle", "status-mask-dnd", "status-mask-offline"];
+
 type UserProps = {
     isSelf: boolean;
     isFriend?: boolean;
@@ -45,6 +48,7 @@ enum EMenuType {
     GUILD_CHANNEL = "GUILD_CHANNEL",
     GUILD_CHANNEL_LIST = "GUILD_CHANNEL_LIST",
     FILE_INPUT = "FILE_INPUT",
+    STATUS = "STATUS",
 }
 
 export const Menu = ({ content }: { content: any }): ReactElement => {
@@ -1515,6 +1519,82 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                     },
                 ]);
             }
+        } else if (type === "STATUS") {
+            setItems([
+                {
+                    name: "Online",
+                    func: async () => {
+                        setLayers({
+                            settings: {
+                                type: "USER_CARD",
+                                setNull: true,
+                            },
+                        });
+                        await sendRequest({
+                            query: "UPDATE_USER",
+                            data: {
+                                status: "ONLINE",
+                            },
+                        });
+                    },
+                },
+                {
+                    name: "Divider",
+                },
+                {
+                    name: "Idle",
+                    func: async () => {
+                        setLayers({
+                            settings: {
+                                type: "USER_CARD",
+                                setNull: true,
+                            },
+                        });
+                        await sendRequest({
+                            query: "UPDATE_USER",
+                            data: {
+                                status: "IDLE",
+                            },
+                        });
+                    },
+                },
+                {
+                    name: "Do Not Disturb",
+                    tip: "You will not receive any desktop notifications.",
+                    func: async () => {
+                        setLayers({
+                            settings: {
+                                type: "USER_CARD",
+                                setNull: true,
+                            },
+                        });
+                        await sendRequest({
+                            query: "UPDATE_USER",
+                            data: {
+                                status: "DO_NOT_DISTURB",
+                            },
+                        });
+                    },
+                },
+                {
+                    name: "Invisible",
+                    tip: "You will not appear online, but will have all access to all of Chat App.",
+                    func: async () => {
+                        setLayers({
+                            settings: {
+                                type: "USER_CARD",
+                                setNull: true,
+                            },
+                        });
+                        await sendRequest({
+                            query: "UPDATE_USER",
+                            data: {
+                                status: "INVISIBLE",
+                            },
+                        });
+                    },
+                },
+            ]);
         }
     }, [userProps, settings.sendButton, settings.spellcheck, layers]);
 
@@ -1572,6 +1652,24 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                             </div>
                                         )}
 
+                                        {content.type === "STATUS" && (
+                                            <div className={styles.statusIcon}>
+                                                <svg
+                                                    width={10}
+                                                    height={10}
+                                                >
+                                                    <rect
+                                                        height="10px"
+                                                        width="10px"
+                                                        rx={8}
+                                                        ry={8}
+                                                        fill={colors[index]}
+                                                        mask={`url(#${masks[index]})`}
+                                                    />
+                                                </svg>
+                                            </div>
+                                        )}
+
                                         <div
                                             className={styles.label}
                                             style={{ fontSize: item.leftIcon ? "12px" : "" }}
@@ -1614,7 +1712,10 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     </div>
 
                                     {item.tip && (
-                                        <div className={styles.tip}>
+                                        <div
+                                            className={styles.tip}
+                                            style={{ marginLeft: content.type === "STATUS" ? "18px" : "" }}
+                                        >
                                             {item.tip}
                                             {item.tipIcon && (
                                                 <Icon
