@@ -5,11 +5,12 @@ import { useData, useLayers, useTooltip } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
+import pusher from "@/lib/pusher/client-connection";
+import useFetchHelper from "@/hooks/useFetchHelper";
 import { translateCap } from "@/lib/strings";
+import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
 import { Icon } from "@components";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { useRouter } from "next/navigation";
 
 const colors = {
     ONLINE: "#22A559",
@@ -31,6 +32,7 @@ export const UserCard = ({ content }: any): ReactElement => {
     const [note, setNote] = useState<string>("");
     const [originalNote, setOriginalNote] = useState<string>("");
     const [message, setMessage] = useState<string>("");
+    const [user, setUser] = useState<TCleanUser>(content.user);
 
     const { setShowSettings }: any = useContextHook({ context: "layer" });
     const currentUser = useData((state) => state.user) as TCleanUser;
@@ -43,8 +45,19 @@ export const UserCard = ({ content }: any): ReactElement => {
     const containerRef = useRef<HTMLDivElement>(null);
     const hasRendered = useRef<boolean>(false);
     const animation = content?.animation;
-    const user = content?.user;
     const router = useRouter();
+
+    // useEffect(() => {
+    //     pusher.bind("user-updated", (data: { user: TCleanUser }) => {
+    //         if (data.user.id === user.id) {
+    //             setUser(data.user);
+    //         }
+    //     });
+
+    //     return () => {
+    //         pusher.unbind("user-updated");
+    //     };
+    // }, []);
 
     useEffect(() => {
         if (!noteRef.current) return;
@@ -458,6 +471,26 @@ export const UserCard = ({ content }: any): ReactElement => {
                                     >
                                         <Icon name="smiling" />
                                         <div>{user.customStatus ? "Edit " : "Set "}Custom Status</div>
+
+                                        {user.customStatus && (
+                                            <div
+                                                className={styles.deleteStatus}
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    const response = await sendRequest({
+                                                        query: "UPDATE_USER",
+                                                        data: {
+                                                            customStatus: "",
+                                                        },
+                                                    });
+                                                }}
+                                            >
+                                                <Icon
+                                                    name="closeFilled"
+                                                    viewbox="0 0 14 14"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className={styles.cardDivider + " " + styles.double} />

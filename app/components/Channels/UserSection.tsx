@@ -78,7 +78,10 @@ export const UserSection = (): ReactElement => {
 
                     <div className={styles.contentWrapper}>
                         <div>{user.displayName}</div>
-                        <div>{user.displayName === user.username ? translateCap(user?.status) : user.username}</div>
+                        <div className={styles.hoverContent}>
+                            <div>{user.username}</div>
+                            <div>{user.customStatus ? user.customStatus : translateCap(user?.status)}</div>
+                        </div>
                     </div>
                 </div>
 

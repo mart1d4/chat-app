@@ -83,7 +83,7 @@
     color: var(--foreground-1);
 }
 
-.contentWrapper > div:last-child {
+.hoverContent {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -91,6 +91,39 @@
     font-size: 12px;
     font-weight: 400;
     color: var(--foreground-3);
+    position: relative;
+}
+
+.hoverContent > div {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+    width: 100%;
+    pointer-events: none;
+    transition: all 0.22s ease;
+    transform-style: preserve-3d;
+    user-select: none;
+}
+
+.hoverContent > div:first-child {
+    opacity: 0;
+    transform: translate3d(0, 107%, 0);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.userSection:hover .hoverContent > div:first-child {
+    transform: translateZ(0);
+    opacity: 1;
+}
+
+.userSection:hover .hoverContent > div:last-child {
+    transform: translate3d(0, -107%, 0);
+    opacity: 0;
 }
 
 .toolbar {

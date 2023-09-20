@@ -264,7 +264,7 @@ export const useData = create<DataState>()((set) => ({
             }),
             channels: state.channels.map((c) => {
                 if (c.recipientIds.includes(user.id)) {
-                    return {
+                    const newChannel = {
                         ...c,
                         recipients: c.recipients.map((r) => {
                             if (r.id === user.id) {
@@ -276,6 +276,12 @@ export const useData = create<DataState>()((set) => ({
 
                             return r;
                         }),
+                    };
+
+                    return {
+                        ...newChannel,
+                        name: getChannelName(newChannel, state.user?.id as string),
+                        icon: getChannelIcon(newChannel, state.user?.id as string),
                     };
                 }
 

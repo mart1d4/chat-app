@@ -1,11 +1,11 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import { ReactElement, useEffect, useRef } from "react";
 import { useData, useNotifications } from "@/lib/store";
 import pusher from "@/lib/pusher/client-connection";
-import { usePathname, useRouter } from "next/navigation";
-import styles from "./Loading.module.css";
 import { getChannelName } from "@/lib/strings";
+import styles from "./Loading.module.css";
 
 type TRelationData = {
     type: "FRIEND_ADDED" | "FRIEND_REMOVED" | "REQUEST_SENT";

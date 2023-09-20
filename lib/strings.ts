@@ -38,13 +38,13 @@ export const getChannelName = (channel: TChannel, userId: TUser["id"]): string =
 
     if (channel.type === 0) {
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
-        name = user.username;
+        name = user.displayName;
     } else if (channel.type === 1 && !channel.name) {
         if (channel.recipients.length > 1) {
             const filtered = channel.recipients?.filter((user) => user.id !== userId);
-            name = filtered.map((user) => user.username).join(", ");
+            name = filtered.map((user) => user.displayName).join(", ");
         } else {
-            name = `${channel.recipients[0].username}'s Group`;
+            name = `${channel.recipients[0].displayName}'s Group`;
         }
     } else {
         name = channel.name as string;
