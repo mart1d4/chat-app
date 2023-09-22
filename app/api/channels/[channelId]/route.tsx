@@ -1,17 +1,17 @@
-import pusher from '@/lib/pusher/api-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
 
-    if (senderId === '') {
+    if (senderId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             include: {
                 recipients: {
                     orderBy: {
-                        username: 'asc',
+                        username: "asc",
                     },
                     select: {
                         id: true,
@@ -51,7 +51,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -61,7 +61,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not in this channel',
+                    message: "You are not in this channel",
                 },
                 { status: 401 }
             );
@@ -70,7 +70,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully retrieved channel',
+                message: "Successfully retrieved channel",
                 channel: channel,
             },
             { status: 200 }
@@ -80,7 +80,7 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -88,15 +88,15 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function PUT(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
     const { name, icon } = await req.json();
 
-    if (senderId === '') {
+    if (senderId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -106,7 +106,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'No changes were made',
+                message: "No changes were made",
             },
             { status: 400 }
         );
@@ -130,7 +130,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -140,7 +140,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not in this channel',
+                    message: "You are not in this channel",
                 },
                 { status: 401 }
             );
@@ -150,7 +150,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You cannot edit this channel',
+                    message: "You cannot edit this channel",
                 },
                 { status: 401 }
             );
@@ -170,7 +170,8 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             },
         });
 
-        await pusher.trigger('chat-app', 'channel-updated', {
+        await pusher.trigger("chat-app", "guild-update", {
+            type: "CHANNEL_UPDATED",
             channelId: channelId,
             name: updatedChannel.name,
             icon: updatedChannel.icon,
@@ -179,7 +180,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully retrieved channel',
+                message: "Successfully retrieved channel",
                 channel: channel,
             },
             { status: 200 }
@@ -189,7 +190,7 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -197,14 +198,14 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
-    const userId = headers().get('userId') || '';
+    const userId = headers().get("X-UserId") || "";
     const channelId = params.channelId;
 
-    if (userId === '') {
+    if (userId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -224,7 +225,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found',
+                    message: "User not found",
                 },
                 { status: 404 }
             );
@@ -258,7 +259,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Channel not found',
+                    message: "Channel not found",
                 },
                 { status: 404 }
             );
@@ -400,7 +401,8 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             });
         }
 
-        await pusher.trigger('chat-app', 'channel-deleted', {
+        await pusher.trigger("chat-app", "guild-update", {
+            type: "CHANNEL_REMOVED",
             guildId: channel.guildId,
             channelId: channelId,
         });
@@ -408,7 +410,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: true,
-                message: 'Successfully deleted channel',
+                message: "Successfully deleted channel",
             },
             { status: 200 }
         );
@@ -417,7 +419,7 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong',
+                message: "Something went wrong",
             },
             { status: 500 }
         );

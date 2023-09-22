@@ -1,0 +1,424 @@
+.aside {
+    position: relative;
+    min-width: 340px;
+    width: 340px;
+    height: 100%;
+    background: linear-gradient(var(--card-primary-color), var(--card-accent-color));
+}
+
+.aside > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden scroll;
+    padding-right: 0px;
+}
+
+.aside > div::-webkit-scrollbar {
+    width: 0px;
+}
+
+.aside > div::before {
+    content: "";
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    position: absolute;
+    background-color: var(--card-overlay-color);
+}
+
+.cardBanner {
+    min-width: 340px;
+    min-height: 120px;
+    z-index: 0;
+    contain: paint;
+    overflow: hidden;
+}
+
+.cardBanner foreignObject > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    font-size: 12px;
+}
+
+.cardBannerBackground {
+    position: inherit;
+    width: 100%;
+    display: inline-block;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+}
+
+.cardAvatar {
+    position: absolute;
+    top: 72px;
+    left: 18px;
+    z-index: 1;
+}
+
+.avatarImage {
+    width: 80px;
+    height: 80px;
+    display: inline-block;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.cardAvatarStatus {
+    width: 28px;
+    height: 28px;
+    position: absolute;
+    border-radius: 50%;
+    top: 54px;
+    left: 54px;
+    background-color: var(--card-border-color);
+}
+
+.cardAvatarStatus > div {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    opacity: 0.45;
+}
+
+.cardAvatarStatus > svg {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: 16px;
+    height: 16px;
+}
+
+.cardBadges {
+    position: relative;
+    top: 12px;
+    right: 16px;
+    width: fit-content;
+    align-self: flex-end;
+    border-radius: 8px;
+    max-width: 190px;
+    padding: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+    min-height: 30px;
+    width: 102px;
+    background-color: var(--card-background-color);
+}
+
+.cardBody {
+    padding: 0 12px;
+    margin: 28px 16px 16px;
+    position: relative;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--card-background-color);
+}
+
+.cardBody > .cardSection {
+    padding-top: 12px;
+}
+
+.cardBody > .cardSection:last-child {
+    padding-bottom: 12px;
+}
+
+.cardBody > div:first-child > h4 {
+    word-break: break-word;
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    user-select: text;
+    cursor: auto;
+    color: var(--foreground-1);
+}
+
+.cardBody > div:first-child > div {
+    line-height: 18px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--foreground-1);
+}
+
+.cardBody > .cardSection:not(:first-child) > h4 {
+    display: flex;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--foreground-1);
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.cardBody > .cardSection:not(:first-child) > div {
+    line-height: 1.375rem;
+    white-space: break-spaces;
+    word-wrap: break-word;
+    user-select: text;
+    display: -webkit-box;
+    line-clamp: 6;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    font-size: 14px;
+    line-height: 18px;
+    overflow: hidden;
+    color: var(--foreground-2);
+}
+
+.cardBody > .cardDivider {
+    margin-top: 12px;
+    height: 1px;
+    position: sticky;
+    top: 0;
+    background-color: var(--card-divider-color);
+}
+
+.cardBody > .cardSectionLarge > h4 {
+    font-weight: 700;
+    color: var(--foreground-1);
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.cardBody > .cardSectionLarge > div {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    user-select: none;
+}
+
+.cardBody > .cardSectionLarge > div > div:first-child {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    width: 64px;
+    flex: 0 0 auto;
+    justify-content: center;
+    border-radius: 8px;
+    margin-right: 16px;
+    background-color: var(--accent-3);
+}
+
+.cardTime {
+    flex: 1 1 auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.cardTime > div:first-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child > span {
+    font-family: var(--font-code);
+}
+
+.cardBody > .cardSectionLarge > button {
+    width: 100%;
+    margin-top: 12px;
+    background-color: var(--card-button-color);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.cardBody > .cardSectionLarge > button:hover {
+    opacity: 0.8;
+}
+
+.cardBody > .cardSectionLarge > button:active {
+    opacity: 0.7;
+}
+
+.cardInput {
+    background-color: transparent;
+    border: none;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    font-size: 12px;
+    line-height: 14px;
+    max-height: 92px;
+    padding: 4px;
+    resize: none;
+    width: 100%;
+    outline: none;
+}
+
+.cardInput::placeholder {
+    color: var(--foreground-3);
+}
+
+.cardInput:focus {
+    background-color: var(--card-note-background);
+}
+
+.cardInput::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cardInput::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    background-color: var(--card-accent-color);
+}
+
+.cardInput::-webkit-scrollbar-track {
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+.cardMutuals {
+    margin: 6px 16px;
+    position: relative;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-background-color);
+}
+
+.cardMutuals > button {
+    cursor: pointer;
+    background-color: transparent;
+    height: 48px;
+    padding: 13px 12px 11px;
+    border-radius: 0;
+    justify-content: left;
+    border-radius: 8px;
+}
+
+.cardMutuals > button:not(:first-child):focus-visible {
+    border-radius: 8px;
+}
+
+.cardMutuals > button:not(:first-child) {
+    border-radius: 0;
+    border-top: 1px solid var(--card-divider-color);
+}
+
+.cardMutuals > button > div:last-child {
+    display: flex;
+    justify-content: right;
+    flex: 1;
+}
+
+.mutualItems {
+    margin: 0 8px 12px 0;
+    list-style: none;
+}
+
+.mutualItem {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    line-height: 30px;
+    padding: 4px;
+    border-radius: 4px;
+    margin: 1px 0px 1px 8px;
+    color: var(--foreground-3);
+    cursor: pointer;
+    user-select: none;
+}
+
+.mutualItem:hover {
+    background-color: var(--card-background-hover);
+}
+
+.mutualItem > div:first-child {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.mutualItem > div:last-child {
+    font-size: 16px;
+    line-height: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.guildIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 33%;
+    background-color: var(--accent-1);
+}
+
+/* GROUP */
+
+.memberList {
+    width: 240px;
+    position: relative;
+    display: flex;
+    background-color: var(--background-3);
+}
+
+.memberList > div {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    width: 240px;
+    padding: 0 0 20px;
+    flex: 0 0 auto;
+    height: auto;
+    position: relative;
+    list-style: none;
+}
+
+.memberList > div::-webkit-scrollbar {
+    width: 8px;
+}
+
+.memberList > div::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.memberList > div::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.memberList > div:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.memberList > div > h2 {
+    padding: 24px 8px 0 16px;
+    height: 40px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    color: var(--foreground-4);
+    font-weight: 600;
+}

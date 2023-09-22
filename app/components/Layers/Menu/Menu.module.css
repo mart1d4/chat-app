@@ -1,0 +1,149 @@
+.container {
+    min-width: 188px;
+    max-width: 320px;
+    display: flex;
+    cursor: default;
+    max-height: calc(100vh - 32px);
+    border-radius: 4px;
+    background-color: var(--background-dark);
+    box-shadow: var(--elevation-high);
+    position: relative;
+}
+
+.container > div {
+    max-width: 320px;
+    padding: 6px 8px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.item,
+.itemDanger {
+    color: var(--foreground-4);
+    min-height: 32px;
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.itemDanger {
+    color: var(--error-1);
+}
+
+.item > div,
+.itemDanger > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.item.disabled,
+.itemDanger.disabled {
+    opacity: 0.5;
+    cursor: default;
+    color: var(--foreground-3) !important;
+    background-color: transparent !important;
+}
+
+.item.hover {
+    background-color: var(--accent-1);
+    color: var(--foreground-2);
+}
+
+.item.hover:active {
+    background-color: var(--accent-2);
+    color: var(--foreground-1);
+}
+
+.itemDanger.hover {
+    background-color: var(--error-1);
+    color: var(--foreground-2);
+}
+
+.itemDanger.hover:active {
+    background-color: var(--error-2);
+    color: var(--foreground-1);
+}
+
+.label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: 500;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    height: 18px;
+    width: 18px;
+    margin-left: 8px;
+}
+
+.icon.revert {
+    color: var(--accent-1);
+}
+
+.icon.revert path:last-child {
+    color: var(--foreground-1);
+}
+
+.item.hover .icon.revert {
+    color: var(--foreground-1);
+}
+
+.item.hover .icon.revert path:last-child {
+    color: var(--accent-1);
+}
+
+.text {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    max-height: 18px;
+}
+
+.divider {
+    margin: 4px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.item .tip {
+    font-size: 12px;
+    line-height: 16px;
+    margin-top: 2px;
+    white-space: normal;
+    color: var(--foreground-4);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.item.hover .tip {
+    color: var(--foreground-2);
+}
+
+.iter.hover:active .tip {
+    color: var(--foreground-1);
+}
+
+.tip > svg {
+    margin: 0 4px;
+}
+
+.statusIcon {
+    margin-right: 8px;
+}
+
+.item.hover .statusIcon rect {
+    fill: var(--foreground-1);
+}

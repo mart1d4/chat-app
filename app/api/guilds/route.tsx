@@ -1,19 +1,19 @@
-import { defaultPermissions } from '@/lib/permissions/data';
-import pusher from '@/lib/pusher/api-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
-import { removeImage } from '@/lib/api/cdn';
+import { defaultPermissions } from "@/lib/permissions/data";
+import pusher from "@/lib/pusher/server-connection";
+import { removeImage } from "@/lib/api/cdn";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function POST(req: Request) {
-    const senderId = headers().get('userId') || '';
+    const senderId = headers().get("X-UserId") || "";
     const { name, icon } = await req.json();
 
-    if (senderId === '') {
+    if (senderId === "") {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Unauthorized',
+                message: "Unauthorized",
             },
             { status: 401 }
         );
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Unauthorized',
+                    message: "Unauthorized",
                 },
                 { status: 401 }
             );
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         const role = await prisma.role.create({
             data: {
                 id: guild.id,
-                name: 'everyone',
+                name: "everyone",
                 position: 0,
                 hoist: false,
                 mentionable: false,
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
         const textCategory = await prisma.channel.create({
             data: {
                 type: 4,
-                name: 'Text Channels',
+                name: "Text Channels",
                 position: 0,
                 guild: {
                     connect: {
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
         const voiceCategory = await prisma.channel.create({
             data: {
                 type: 4,
-                name: 'Voice Channels',
+                name: "Voice Channels",
                 position: 2,
                 guild: {
                     connect: {
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
         const textChannel = await prisma.channel.create({
             data: {
                 type: 2,
-                name: 'general',
+                name: "general",
                 position: 1,
                 parentId: textCategory.id,
                 guild: {
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
         const voiceChannel = await prisma.channel.create({
             data: {
                 type: 3,
-                name: 'General',
+                name: "General",
                 position: 3,
                 parentId: voiceCategory.id,
                 guild: {
@@ -166,14 +166,15 @@ export async function POST(req: Request) {
             },
         });
 
-        await pusher.trigger('chat-app', 'guild-created', {
-            userId: user.id,
+        await pusher.trigger("chat-app", "guild-update", {
+            type: "GUILD_ADDED",
             guild: {
                 ...guild,
                 channels: [textCategory, textChannel, voiceCategory, voiceChannel],
                 systemChannelId: textChannel.id,
                 roles: [role],
                 rawMembers: [user],
+                rawMemberIds: [user.id],
                 members: [memberObject],
             },
         });
@@ -181,19 +182,19 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                message: 'Guild created.',
+                message: "Guild created.",
+                guildId: guild.id,
+                channelId: textChannel.id,
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
-
+        console.error(`[ERROR] /api/guilds/create: ${error}`);
         if (icon) await removeImage(icon);
-
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

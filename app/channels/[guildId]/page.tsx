@@ -1,39 +1,39 @@
-'use client';
+import { getGuild, getGuildChannels, useUser } from "@/lib/auth";
+import { GuildChannels } from "@components";
+import { redirect } from "next/navigation";
+import styles from "./page.module.css";
 
-import useContextHook from '@/hooks/useContextHook';
-import { ReactElement, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+const GuildPage = async ({ params }: { params: { guildId: string } }) => {
+    const user = await useUser();
+    if (!user) redirect("/login");
 
-const ChannelPage = ({ params }: { params: { guildId: string } }): ReactElement => {
-    const { auth }: any = useContextHook({ context: 'auth' });
-    const router = useRouter();
+    const guild = await getGuild(params.guildId);
+    if (!guild || !user.guildIds.includes(guild.id)) redirect("/channels/me");
 
-    useEffect(() => {
-        const guild = auth.user.guilds?.find((guild: TGuild) => guild.id === params.guildId);
+    const channels = await getGuildChannels(guild.id);
+    const textChannel = channels.find((c) => c.type === 2);
+    if (textChannel) redirect(`/channels/${guild.id}/${textChannel.id}`);
 
-        console.log(guild);
+    return (
+        <>
+            <GuildChannels
+                guild={guild}
+                user={user}
+            />
 
-        if (!guild) {
-            const channelUrl = localStorage.getItem('channel-url');
+            <div className={styles.container}>
+                <div />
 
-            if (channelUrl) router.push(channelUrl);
-            else router.push('/channels/me');
-
-            return;
-        }
-
-        const channelId = JSON.parse(localStorage.getItem(`guild-${guild.id}`) ?? '{}')?.channelId;
-
-        if (channelId) {
-            router.push(`/channels/${guild.id}/${channelId}`);
-        } else {
-            const channel = guild.channels.find((channel: TChannel) => channel.type === 2);
-            if (channel) router.push(`/channels/${guild.id}/${channel.id}`);
-            else router.push(`/channels/me`);
-        }
-    }, [params.guildId, auth.user.guilds]);
-
-    return <></>;
+                <div className={styles.content}>
+                    <h2>No Text Channels</h2>
+                    <div>
+                        You find yourself in a strange place. You don't have access to any text channels, or there are
+                        none in this server.
+                    </div>
+                </div>
+            </div>
+        </>
+    );
 };
 
-export default ChannelPage;
+export default GuildPage;

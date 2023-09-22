@@ -1,0 +1,127 @@
+.liContainer {
+    position: relative;
+    height: 62px;
+    opacity: 1;
+    display: flex;
+    margin: 0 20px 0 30px;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 20px;
+    border-top: 1px solid var(--border-light);
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.liContainer:hover,
+.active {
+    border-radius: 8px;
+    margin: 0 10px 0 20px;
+    padding: 16px 10px;
+    background-color: var(--background-hover-1);
+    border-color: transparent;
+}
+
+.liContainer:hover + .liContainer,
+.active + .liContainer {
+    border-color: transparent;
+}
+
+.li {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 100%;
+}
+
+.userInfo {
+    display: flex;
+    overflow: hidden;
+}
+
+.avatarWrapper {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    position: relative;
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+}
+
+.usernames {
+    display: flex;
+    overflow: hidden;
+    flex-grow: 1;
+    align-items: flex-end;
+    line-height: 1.1;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: var(--foreground-1);
+    font-weight: 600;
+}
+
+.usernames > p:last-child {
+    font-size: 14px;
+    line-height: 16px;
+    visibility: hidden;
+    color: var(--foreground-3);
+    margin-left: 5px;
+}
+
+.liContainer:hover .usernames > p:last-child,
+.active .usernames > p:last-child {
+    visibility: visible;
+}
+
+.textStatus {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 14px;
+    color: var(--foreground-4);
+}
+
+.actions {
+    margin-left: 8px;
+    display: flex;
+    gap: 10px;
+}
+
+.actions > button {
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
+    transition: none;
+}
+
+.liContainer:hover .actions > button,
+.active .actions > button {
+    background-color: var(--background-1);
+}
+
+.actions > button:hover {
+    color: var(--foreground-1);
+}
+
+.actions > button.buttonAccept:hover {
+    color: var(--success-light);
+}
+
+.actions > button.buttonCancel:hover {
+    color: var(--error-1);
+}
+
+.liContainer:hover .actions > button:active {
+    background-color: var(--background-dark);
+}

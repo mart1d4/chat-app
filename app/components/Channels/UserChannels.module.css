@@ -1,0 +1,312 @@
+.nav {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    min-height: 0;
+    flex: 0 0 auto;
+    background-color: var(--background-3);
+}
+
+.privateChannels {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    flex: 1;
+    flex-direction: column;
+}
+
+.searchContainer {
+    z-index: 2;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    height: 48px;
+    align-items: center;
+    position: relative;
+    display: flex;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05), 0 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.searchContainer > button {
+    width: 100%;
+    height: 28px;
+    justify-content: start;
+    overflow: hidden;
+    border-radius: 4px;
+    text-align: left;
+    text-overflow: ellipsis;
+    line-height: 24px;
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 1px 6px;
+    color: var(--foreground-4);
+    background-color: var(--background-1);
+}
+
+.scroller {
+    overflow: hidden scroll;
+    padding-right: 0px;
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+}
+
+.scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroller::-webkit-scrollbar-track {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.scroller::-webkit-scrollbar-thumb {
+    border: 2px var(--background-3) solid;
+    background-color: transparent;
+}
+
+.scroller:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.channelList {
+    position: relative;
+    list-style: none;
+}
+
+.channelList > div:first-child {
+    height: 8px;
+}
+
+.channelList > img {
+    padding: 16px;
+    box-sizing: content-box;
+}
+
+.title {
+    display: flex;
+    padding: 18px 8px 4px 18px;
+    height: 40px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02rem;
+    font-weight: 600;
+}
+
+.title > span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground-4);
+}
+
+.title:hover span {
+    color: var(--foreground-2);
+}
+
+.title > div {
+    flex: 0;
+    width: 16px;
+    height: 16px;
+    margin: 0 8px;
+    margin-left: 0;
+    margin-right: 2px;
+    position: relative;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.title svg {
+    margin-left: 0;
+    margin-right: 2px;
+    display: block;
+    color: var(--foreground-3);
+    cursor: pointer;
+}
+
+.title svg:hover polygon {
+    color: var(--foreground-1);
+}
+
+/* ChannelItem */
+
+.liContainer {
+    display: flex;
+    position: relative;
+    max-width: 224px;
+    margin: 0 0 2px 8px;
+    border-radius: 4px;
+    color: var(--foreground-4);
+    text-decoration: none;
+}
+
+.liContainer:hover {
+    background-color: var(--background-4) !important;
+    color: var(--foreground-2) !important;
+}
+
+.liContainer:hover .closeButton {
+    display: block;
+}
+
+.liContainer:active {
+    background-color: var(--background-5);
+    color: var(--foreground-1);
+}
+
+.liContainer:focus-visible,
+.liContainer:focus-within {
+    background-color: var(--background-4);
+    color: var(--foreground-2);
+}
+
+.liContainer:focus-visible {
+    margin-right: 5px;
+}
+
+.liWrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: 4px;
+}
+
+.link,
+.linkFriends {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    align-items: center;
+    cursor: pointer;
+}
+
+.linkFriends {
+    padding-right: 8px;
+}
+
+.layout,
+.layoutFriends {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 42px;
+    padding: 0 8px;
+    border-radius: 4px;
+}
+
+.layoutFriends {
+    flex-grow: 1;
+}
+
+.layoutAvatar {
+    display: flex;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    align-items: center;
+    position: relative;
+}
+
+.layoutAvatar > div {
+    position: relative;
+    border-radius: 50%;
+    height: 32px;
+    width: 32px;
+}
+
+.layoutAvatar img {
+    border-radius: 50%;
+}
+
+.layoutContent {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.contentName {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.nameWrapper {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contentStatus {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+.closeButton {
+    display: none;
+    box-sizing: content-box;
+    width: 16px;
+    height: 16px;
+    margin: 2px;
+    padding-right: 8px;
+    border-radius: 2px;
+    outline-offset: 3px;
+    color: var(--foreground-4);
+}
+
+.liContainer:focus-visible .closeButton,
+.closeButton:focus-visible {
+    display: block;
+    padding-right: 0;
+    margin-right: 5px;
+    color: var(--foreground-2);
+}
+
+.liContainer:focus-within .closeButton {
+    display: block;
+}
+
+.closeButton:hover {
+    cursor: pointer;
+    color: var(--foreground-2);
+}
+
+.friendsPending {
+    background-color: var(--error-1);
+    width: 16px;
+    height: 16px;
+    padding-right: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    min-height: 16px;
+    min-width: 16px;
+    color: var(--foreground-1);
+    text-align: center;
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}

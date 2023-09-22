@@ -1,7 +1,6 @@
 import AuthButton from '../AuthButton/AuthButton';
 import styles from './Footer.module.css';
 import { ReactElement } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import Language from './Language';
 import Link from 'next/link';
 
@@ -144,14 +143,14 @@ const Footer = (): ReactElement => {
 
                 {routes.map((route) => (
                     <div
-                        key={uuidv4()}
+                        key={route.title}
                         className={styles.footerColumn}
                     >
                         <h5>{route.title}</h5>
                         {route.children.map((child) => (
                             <Link
+                                key={child.name}
                                 href={child.link}
-                                key={uuidv4()}
                             >
                                 {child.name}
                             </Link>

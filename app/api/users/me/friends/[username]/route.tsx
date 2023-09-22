@@ -1,12 +1,11 @@
-import pusher from '@/lib/pusher/api-connection';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import pusher from "@/lib/pusher/server-connection";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { headers } from "next/headers";
 
 export async function POST(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const senderId = headers().get("X-UserId") || "";
     const username = params.username;
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
 
     try {
         const sender = await prisma.user.findUnique({
@@ -27,9 +26,10 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 guildIds: true,
                 channelIds: true,
                 friendIds: true,
-                requestReceivedIds: true,
-                requestSentIds: true,
                 blockedUserIds: true,
+                blockedByUserIds: true,
+                requestSentIds: true,
+                requestReceivedIds: true,
                 createdAt: true,
             },
         });
@@ -52,9 +52,6 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 guildIds: true,
                 channelIds: true,
                 friendIds: true,
-                requestReceivedIds: true,
-                requestSentIds: true,
-                blockedUserIds: true,
                 createdAt: true,
             },
         });
@@ -73,25 +70,23 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You cannot add yourself as a friend.',
+                    message: "You cannot add yourself as a friend.",
                 },
                 { status: 400 }
             );
         }
 
         const isBlocked = sender.blockedUserIds.find((blocked) => blocked === user.id);
-        const isBlockedBy = user.blockedUserIds.find((blocked) => blocked === sender.id);
+        const isBlockedBy = sender.blockedByUserIds.find((blocked) => blocked === user.id);
         const isFriend = sender.friendIds.find((friend) => friend === user.id);
         const sentRequest = sender.requestSentIds.find((request) => request === user.id);
         const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
-
-        console.log('Requests sent: ', sender.requestSentIds);
 
         if (isBlocked || isBlockedBy) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You cannot add this user as a friend.',
+                    message: "You cannot add this user as a friend.",
                 },
                 { status: 400 }
             );
@@ -101,7 +96,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are already friends with this user.',
+                    message: "You are already friends with this user.",
                 },
                 { status: 400 }
             );
@@ -111,7 +106,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You have already sent a friend request to this user.',
+                    message: "You have already sent a friend request to this user.",
                 },
                 { status: 400 }
             );
@@ -146,8 +141,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
                 },
             });
 
-            await pusher.trigger('chat-app', 'relationship-updated', {
-                type: 'FRIEND_ADDED',
+            await pusher.trigger("chat-app", "user-relation", {
+                type: "FRIEND_ADDED",
                 sender: sender,
                 receiver: user,
             });
@@ -155,7 +150,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'You are now friends with this user.',
+                    message: "You are now friends with this user.",
                 },
                 { status: 200 }
             );
@@ -183,8 +178,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
             },
         });
 
-        await pusher.trigger('chat-app', 'relationship-updated', {
-            type: 'FRIEND_REQUEST',
+        await pusher.trigger("chat-app", "user-relation", {
+            type: "REQUEST_SENT",
             sender: sender,
             receiver: user,
         });
@@ -197,11 +192,11 @@ export async function POST(req: Request, { params }: { params: { username: strin
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/users/me/friends/[username]`, error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
@@ -209,9 +204,8 @@ export async function POST(req: Request, { params }: { params: { username: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
+    const senderId = headers().get("X-UserId") || "";
     const username = params.username;
-    const headersList = headers();
-    const senderId = headersList.get('userId') || '';
 
     try {
         const sender = await prisma.user.findUnique({
@@ -232,9 +226,10 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                 guildIds: true,
                 channelIds: true,
                 friendIds: true,
-                requestReceivedIds: true,
-                requestSentIds: true,
                 blockedUserIds: true,
+                blockedByUserIds: true,
+                requestSentIds: true,
+                requestReceivedIds: true,
                 createdAt: true,
             },
         });
@@ -257,9 +252,6 @@ export async function DELETE(req: Request, { params }: { params: { username: str
                 guildIds: true,
                 channelIds: true,
                 friendIds: true,
-                requestReceivedIds: true,
-                requestSentIds: true,
-                blockedUserIds: true,
                 createdAt: true,
             },
         });
@@ -268,7 +260,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -278,7 +270,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You cannot remove yourself as a friend.',
+                    message: "You cannot remove yourself as a friend.",
                 },
                 { status: 400 }
             );
@@ -292,7 +284,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'You are not friends with this user.',
+                    message: "You are not friends with this user.",
                 },
                 { status: 200 }
             );
@@ -332,10 +324,10 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             },
         });
 
-        const message = isFriend ? 'Friend removed' : 'Request cancelled';
+        const message = isFriend ? "Friend removed" : "Request cancelled";
 
-        await pusher.trigger('chat-app', 'relationship-updated', {
-            type: 'FRIEND_REMOVED',
+        await pusher.trigger("chat-app", "user-relation", {
+            type: "FRIEND_REMOVED",
             sender: sender,
             receiver: user,
         });
@@ -348,11 +340,11 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
+        console.error(`[ERROR] /api/users/me/friends/[username]`, error);
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

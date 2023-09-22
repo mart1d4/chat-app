@@ -1,13 +1,10 @@
-'use client';
-
-import useContextHook from '@/hooks/useContextHook';
-import { ReactElement } from 'react';
+import { isLoggedIn } from '@/lib/auth';
 import Link from 'next/link';
 
-const AuthButton = ({ link }: { link: string }): ReactElement => {
-    const { auth }: any = useContextHook({ context: 'auth' });
+const AuthButton = async ({ link }: { link: string }) => {
+    const isLogged = await isLoggedIn();
 
-    return <Link href={link}>{auth?.accessToken ? 'Open Chat App' : link === 'register' ? 'Sign up' : 'Login'}</Link>;
+    return <Link href={link}>{isLogged ? 'Open Chat App' : link === 'register' ? 'Sign up' : 'Login'}</Link>;
 };
 
 export default AuthButton;

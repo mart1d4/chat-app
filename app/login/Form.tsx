@@ -1,34 +1,31 @@
-'use client';
+"use client";
 
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
-import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import useContextHook from '@/hooks/useContextHook';
-import { LoadingDots } from '../app-components';
-import { useRouter } from 'next/navigation';
-import styles from '../Auth.module.css';
-import Link from 'next/link';
+import { useRef, useState, useEffect, ReactElement, MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import { LoadingDots } from "@components";
+import styles from "../Auth.module.css";
+import Link from "next/link";
 
 const Form = (): ReactElement => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [username, setUsername] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string>('');
+    const [username, setUsername] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [error, setError] = useState<string>("");
 
-    const { setAuth }: any = useContextHook({ context: 'auth' });
     const usernameInputRef = useRef<HTMLInputElement>(null);
-    const router: AppRouterInstance = useRouter();
+    const router = useRouter();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
             e.stopPropagation();
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 handleSubmit(e as unknown as MouseEvent);
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
 
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [username, password, isLoading]);
 
     useEffect(() => {
@@ -36,7 +33,7 @@ const Form = (): ReactElement => {
     }, []);
 
     useEffect(() => {
-        setError('');
+        setError("");
     }, [username, password]);
 
     const handleSubmit = async (e: MouseEvent): Promise<void> => {
@@ -45,37 +42,32 @@ const Form = (): ReactElement => {
         if (isLoading || !username || !password) return;
         setIsLoading(true);
 
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
+        const response = await fetch("/api/auth/login", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({ username, password }),
         }).then((res) => res.json());
 
         if (!response.success) {
-            setError(response.message || 'An error occurred');
-            setIsLoading(false);
+            setError(response.message || "An error occurred");
         } else {
-            setAuth({
-                accessToken: response.accessToken,
-                user: response.user,
-            });
-
-            setUsername('');
-            setPassword('');
-            setIsLoading(false);
-            router.push('/channels/me');
+            setUsername("");
+            setPassword("");
+            router.refresh();
         }
+
+        setIsLoading(false);
     };
 
     return (
         <div className={styles.loginBlock}>
             <div>
                 <label
-                    htmlFor='username'
+                    htmlFor="username"
                     style={{
-                        color: error.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                        color: error.length ? "var(--error-light)" : "var(--foreground-3)",
                     }}
                 >
                     Username
@@ -84,16 +76,16 @@ const Form = (): ReactElement => {
                 <div className={styles.inputContainer}>
                     <input
                         ref={usernameInputRef}
-                        id='username'
-                        type='text'
-                        name='username'
-                        aria-label='Username'
-                        autoCapitalize='off'
-                        autoComplete='off'
-                        autoCorrect='off'
-                        spellCheck='false'
-                        aria-labelledby='username'
-                        aria-describedby='username'
+                        id="username"
+                        type="text"
+                        name="username"
+                        aria-label="Username"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        aria-labelledby="username"
+                        aria-describedby="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
@@ -102,9 +94,9 @@ const Form = (): ReactElement => {
 
             <div style={{ marginBottom: 0 }}>
                 <label
-                    htmlFor='password'
+                    htmlFor="password"
                     style={{
-                        color: error.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                        color: error.length ? "var(--error-light)" : "var(--foreground-3)",
                     }}
                 >
                     Password
@@ -112,16 +104,16 @@ const Form = (): ReactElement => {
                 </label>
                 <div className={styles.inputContainer}>
                     <input
-                        id='password'
-                        type='password'
-                        name='password'
-                        aria-label='Password'
-                        autoCapitalize='off'
-                        autoComplete='off'
-                        autoCorrect='off'
-                        spellCheck='false'
-                        aria-labelledby='password'
-                        aria-describedby='password'
+                        id="password"
+                        type="password"
+                        name="password"
+                        aria-label="Password"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        aria-labelledby="password"
+                        aria-describedby="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -129,27 +121,27 @@ const Form = (): ReactElement => {
             </div>
 
             <button
-                type='button'
+                type="button"
                 className={styles.passwordForgot}
                 onClick={(e) => {
                     e.preventDefault();
-                    router.push('/forgot-password');
+                    router.push("/forgot-password");
                 }}
             >
                 Forgot your password?
             </button>
 
             <button
-                type='submit'
+                type="submit"
                 className={styles.buttonSubmit}
                 onClick={(e) => handleSubmit(e)}
             >
-                {isLoading ? <LoadingDots /> : 'Log In'}
+                {isLoading ? <LoadingDots /> : "Log In"}
             </button>
 
             <div className={styles.bottomText}>
                 <span>Need an account?</span>
-                <Link href='/register'>Register</Link>
+                <Link href="/register">Register</Link>
             </div>
         </div>
     );

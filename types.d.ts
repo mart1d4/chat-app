@@ -5,11 +5,11 @@ enum EPermissionType {
 }
 
 enum EUserStatus {
-    ONLINE = 'ONLINE',
-    IDLE = 'IDLE',
-    DO_NOT_DISTURB = 'DO_NOT_DISTURB',
-    INVISIBLE = 'INVISIBLE',
-    OFFLINE = 'OFFLINE',
+    ONLINE = "ONLINE",
+    IDLE = "IDLE",
+    DO_NOT_DISTURB = "DO_NOT_DISTURB",
+    INVISIBLE = "INVISIBLE",
+    OFFLINE = "OFFLINE",
 }
 
 enum EChannelType {
@@ -32,16 +32,15 @@ enum EMessageType {
     CHANNEL_NAME_CHANGE = 5,
     CHANNEL_ICON_CHANGE = 6,
     CHANNEL_PINNED_MESSAGE = 7,
-    GUILD_MEMBER_JOIN = 8,
-    OWNER_CHANGE = 9,
+    USER_JOIN = 8,
 }
 
 enum ENotificationType {
-    REQUEST = 'REQUEST',
-    MESSAGE = 'MESSAGE',
-    MENTION = 'MENTION',
-    CALL = 'CALL',
-    OTHER = 'OTHER',
+    REQUEST = "REQUEST",
+    MESSAGE = "MESSAGE",
+    MENTION = "MENTION",
+    CALL = "CALL",
+    OTHER = "OTHER",
 }
 
 // Types
@@ -51,6 +50,7 @@ type TUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+    phone?: string;
 
     avatar: string;
     banner?: string;
@@ -108,6 +108,7 @@ type TCleanUser = readonly {
     username: string;
     displayName: string;
     email?: string;
+    phone?: string;
 
     avatar: string;
     banner?: string;
@@ -190,6 +191,18 @@ type TGuild = readonly {
     updatedAt: DateTime;
 };
 
+type TGuildMember = readonly {
+    userId: TUser.id;
+    nickname?: string;
+    avatar?: string;
+    rolesIds: TRole.id[];
+    joinedAt: DateTime;
+    deaf: boolean;
+    mute: boolean;
+    timeoutUntil?: DateTime;
+    permissions: number[];
+};
+
 type TChannel = readonly {
     id: string;
     type: EChannelType;
@@ -257,52 +270,24 @@ type TMessage = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
-} &
-    (
-        | {
-              error?: false;
-              waiting?: false;
-              needsToBeSent?: false;
-              attachments: TImageUpload[];
-          }
-        | {
-              waiting: false;
-              error: true;
-              needsToBeSent: false;
-              attachments: TImage[];
-          }
-        | {
-              waiting: true;
-              error: false;
-              needsToBeSent: false;
-              attachments: TImage[];
-          }
-        | {
-              waiting: false;
-              error: false;
-              needsToBeSent: true;
-              attachments: TImage[];
-          }
-    );
 
-type TImage = {
-    id: string;
-    file: File;
-    dimensions: {
-        width: number;
-        height: number;
-    };
-    description?: string;
+    error?: boolean;
+    waiting?: boolean;
+    needsToBeSent?: boolean;
+    attachments: TAttachment[];
 };
 
-type TImageUpload = {
+type TAttachment = {
     id: string;
+    url: string;
     name: string;
     dimensions: {
         width: number;
         height: number;
     };
+    size: number;
     isSpoiler: boolean;
+    isImage: boolean;
     description?: string;
 };
 
@@ -331,11 +316,24 @@ type TEmbed = readonly {
 };
 
 type TInvite = readonly {
+    id: string;
     code: string;
     uses: number;
     maxUses: number;
-    expiresAt: Date;
-    createdAt: Date;
+    maxAge: number;
+    temporary: boolean;
+
+    inviterId: TUser.id;
+    inviter: TUser;
+
+    guildId?: TGuild.id;
+    guild?: TGuild;
+
+    channelId: TChannel.id;
+    channel: TChannel;
+
+    expiresAt: DateTime?;
+    createdAt: DateTime;
 };
 
 type TRole = readonly {

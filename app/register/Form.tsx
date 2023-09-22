@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import { LoadingDots } from '../app-components';
 import { useRouter } from 'next/navigation';
+import { LoadingDots } from '@components';
 import styles from '../Auth.module.css';
 import Link from 'next/link';
 
@@ -62,20 +62,17 @@ const Register = (): ReactElement => {
 
         if (!v1) {
             setUsernameError('Userame must be between 3 and 32 characters');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (!v2) {
             setPasswordError('Password must be between 8 and 256 characters');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         if (password !== passwordMatch) {
             setPasswordError('Passwords do not match');
-            setIsLoading(false);
-            return;
+            return setIsLoading(false);
         }
 
         const response = await fetch('/api/auth/register', {

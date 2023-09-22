@@ -1,9 +1,9 @@
 export const translateCap = (str?: string) => {
     if (!str) {
-        return '';
+        return "";
     }
 
-    return str.replace(/_/g, ' ').replace(/\w\S*/g, (txt) => {
+    return str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => {
         return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
     });
 };
@@ -15,45 +15,54 @@ export const trimMessage = (message: string) => {
 
     const notAllowedUnicode: string[] = [];
 
-    while (message.startsWith('\n')) {
+    while (message.startsWith("\n")) {
         message = message.substring(1);
     }
 
-    while (message.endsWith('\n')) {
+    while (message.endsWith("\n")) {
         message = message.substring(0, message.length - 1);
     }
 
     for (const char of notAllowedUnicode) {
         while (message.includes(char)) {
-            message = message.replace(char, '');
+            message = message.replace(char, "");
         }
     }
 
     return message;
 };
 
-export const getChannelName = (channel: TChannel, userId: TUser['id']): string => {
+export const getChannelName = (channel: TChannel, userId: TUser["id"]): string => {
+    if (!channel) return "";
     let name;
-
-    if (!channel) {
-        return '';
-    }
 
     if (channel.type === 0) {
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
-        name = user.username;
+        name = user.displayName;
     } else if (channel.type === 1 && !channel.name) {
         if (channel.recipients.length > 1) {
             const filtered = channel.recipients?.filter((user) => user.id !== userId);
-            name = filtered.map((user) => user.username).join(', ');
+            name = filtered.map((user) => user.displayName).join(", ");
         } else {
-            name = `${channel.recipients[0].username}'s Group`;
+            name = `${channel.recipients[0].displayName}'s Group`;
         }
     } else {
         name = channel.name as string;
     }
 
-    return name;
+    return name || "";
+};
+
+export const getChannelIcon = (channel: TChannel, userId: TUser["id"]): string => {
+    if (!channel) return "";
+    let src = channel.icon;
+
+    if (channel.type === 0) {
+        const user = channel.recipients.find((user: TCleanUser) => user.id !== userId) as TUser;
+        src = user.avatar;
+    }
+
+    return src || "";
 };
 
 export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
@@ -73,18 +82,18 @@ export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
             return `${Math.round(diffInHours)} hours ago`;
         }
 
-        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-        return `Yesterday at ${date.toLocaleString('en-US', options as Intl.DateTimeFormatOptions)}`;
+        const options = { hour: "numeric", minute: "numeric", hour12: true };
+        return `Yesterday at ${date.toLocaleString("en-US", options as Intl.DateTimeFormatOptions)}`;
     }
 
     const options = {
-        month: 'numeric',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
         hour12: true,
     };
 
-    return date.toLocaleString('en-US', options as Intl.DateTimeFormatOptions);
+    return date.toLocaleString("en-US", options as Intl.DateTimeFormatOptions);
 };

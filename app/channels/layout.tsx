@@ -1,44 +1,52 @@
-import {
-    AppNav,
-    Channels,
-    Settings,
-    UserProfile,
-    Popup,
-    FixedLayer,
-    Loading,
-    TooltipLayer,
-} from '@/app/app-components';
-import { ReactElement, ReactNode } from 'react';
-import styles from './Layout.module.css';
-import { Metadata } from 'next';
+import { getBlocked, getBlockedBy, getChannels, getFriends, getGuilds, getRequests, useUser } from "@/lib/auth";
+import { AppNav, Settings, Layers, Tooltip, Loading } from "@components";
+import { redirect } from "next/navigation";
+import styles from "./Layout.module.css";
+import { ReactElement } from "react";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: 'Chat App | Friends',
+    title: "Chat App | Friends",
 };
 
-const Layout = ({ children }: { children: ReactNode }): ReactElement => {
-    return (
-        <Loading>
-            <>
-                <div className={styles.appContainer}>
-                    <AppNav />
+const Layout = async ({ children }: { children: ReactElement }) => {
+    const user = await useUser();
+    if (!user) return redirect("/login");
 
-                    <div className={styles.appWrapper}>
-                        <div className={styles.channelsContainer}>
-                            <Channels />
-                            {children}
-                        </div>
-                    </div>
+    const friends = await getFriends();
+    const blocked = await getBlocked();
+    const blockedBy = await getBlockedBy();
+    const received = await getRequests(0);
+    const sent = await getRequests(1);
+    const channels = await getChannels();
+    const guilds = await getGuilds();
+
+    return (
+        <Loading
+            data={{
+                user,
+                friends,
+                blocked,
+                blockedBy,
+                received,
+                sent,
+                channels,
+                guilds,
+            }}
+        >
+            <div className={styles.appContainer}>
+                <AppNav />
+
+                <div className={styles.appWrapper}>
+                    <div className={styles.channelsContainer}>{children}</div>
                 </div>
 
                 <div className={styles.layers}>
-                    <Popup />
                     <Settings />
-                    <FixedLayer />
-                    <UserProfile />
-                    <TooltipLayer />
+                    <Layers />
+                    <Tooltip />
                 </div>
-            </>
+            </div>
         </Loading>
     );
 };
