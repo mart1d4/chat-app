@@ -388,12 +388,14 @@
     align-items: center;
     justify-content: space-between;
     transition: none;
+    position: relative;
 }
 
 .button:hover {
     background-color: var(--background-hover-dark-1);
     color: var(--foreground-2);
 }
+
 
 .button > div:not(.deleteStatus) {
     flex: 1;

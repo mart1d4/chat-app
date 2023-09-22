@@ -1613,13 +1613,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 <div>
                     {items?.map((item, index) => {
                         if (!item.name) return;
-                        else if (item.name === "Divider")
-                            return (
-                                <div
-                                    key={index}
-                                    className={styles.divider}
-                                />
-                            );
+                        else if (item.name === "Divider") return <div key={index} className={styles.divider} />;
                         else
                             return (
                                 <div
@@ -1654,10 +1648,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
 
                                         {content.type === "STATUS" && (
                                             <div className={styles.statusIcon}>
-                                                <svg
-                                                    width={10}
-                                                    height={10}
-                                                >
+                                                <svg width={10} height={10}>
                                                     <rect
                                                         height="10px"
                                                         width="10px"
@@ -1670,10 +1661,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                             </div>
                                         )}
 
-                                        <div
-                                            className={styles.label}
-                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
-                                        >
+                                        <div className={styles.label} style={{ fontSize: item.leftIcon ? "12px" : "" }}>
                                             {item.name}
                                         </div>
 
@@ -1717,12 +1705,7 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                             style={{ marginLeft: content.type === "STATUS" ? "18px" : "" }}
                                         >
                                             {item.tip}
-                                            {item.tipIcon && (
-                                                <Icon
-                                                    name={item.tipIcon}
-                                                    size={16}
-                                                />
-                                            )}
+                                            {item.tipIcon && <Icon name={item.tipIcon} size={16} />}
                                         </div>
                                     )}
                                 </div>

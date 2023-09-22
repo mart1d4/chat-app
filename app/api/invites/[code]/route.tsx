@@ -32,6 +32,7 @@ export async function GET(req: Request, { params }: { params: { code: string } }
                             select: {
                                 id: true,
                                 username: true,
+                                displayName: true,
                             },
                         },
                     },
@@ -40,6 +41,7 @@ export async function GET(req: Request, { params }: { params: { code: string } }
                     select: {
                         id: true,
                         username: true,
+                        displayName: true,
                     },
                 },
             },
@@ -324,6 +326,13 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                 );
             } else {
                 // Add user to guild
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Not currently available",
+                    },
+                    { status: 400 }
+                );
             }
         }
     } catch (error) {
