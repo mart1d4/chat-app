@@ -132,7 +132,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     }
 
     useEffect(() => {
-        if (message.waiting) return;
+        if (message.waiting || message.needsToBeSent || message.error) return;
         const env = process.env.NODE_ENV;
 
         const getInvite = async (code: string) => {

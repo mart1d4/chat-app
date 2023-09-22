@@ -235,7 +235,11 @@ export const Popout = ({ content }: any) => {
                 <div className="scrollbar">
                     {!pinned || pinned.length === 0 ? (
                         <div className={styles.noPinnedContent}>
-                            <div />
+                            <div
+                                style={{
+                                    backgroundImage: `url("https://ucarecdn.com/c56ac798-38b6-481d-b920-2c4ee270f53d/")`,
+                                }}
+                            />
 
                             <div>
                                 This direct message doesn't have <br />

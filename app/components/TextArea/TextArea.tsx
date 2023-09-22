@@ -739,6 +739,7 @@ export const EmojiPicker = () => {
             <div
                 className={styles.emoji}
                 style={{
+                    backgroundImage: "url('https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/')",
                     backgroundPosition: `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`,
                 }}
             />

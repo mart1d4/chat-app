@@ -51,6 +51,7 @@ Please report any issues or bugs on the [GitHub Issue Tracker](https://github.co
 -   MongoDB
 -   Prisma
 -   Pusher
+-   Zustand
 
 ## License
 
