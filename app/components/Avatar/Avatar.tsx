@@ -262,7 +262,7 @@ export const Avatar = (props: Props) => {
                     onMouseEnter={(e) => {
                         if (!props.tooltip) return;
                         setTooltip({
-                            text: translateCap(props.status),
+                            text: translateCap(props.status as EUserStatus),
                             // @ts-ignore
                             element: e.currentTarget,
                             gap: props.tooltipGap || 0,
