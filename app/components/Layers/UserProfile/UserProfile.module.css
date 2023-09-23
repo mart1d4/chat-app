@@ -160,16 +160,8 @@
     flex-direction: column;
     overflow-y: scroll;
     flex: 1 1 auto;
-    margin-right: -12px;
-    padding-bottom: 8px;
-}
-
-.cardBody > .scrollContainer.margin {
-    margin-left: -4px;
-}
-
-.cardBody > .scrollContainer.padding {
-    padding-right: 4px;
+    padding: 0 4px 8px 4px;
+    margin: 0 -12px 0 -4px;
 }
 
 .cardBody > .scrollContainer::-webkit-scrollbar {
@@ -217,7 +209,6 @@
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    /* overflow: hidden; */
     color: var(--foreground-1);
 }
 
@@ -327,21 +318,22 @@
     border: none;
     border-radius: 3px;
     color: var(--foreground-2);
-    font-size: 12px;
-    line-height: 14px;
-    max-height: 92px;
+    font-size: 14px;
+    line-height: 18px;
+    max-height: 88px;
     padding: 4px;
     resize: none;
     width: 100%;
+    outline: none;
 }
 
 .cardInput::placeholder {
     color: var(--foreground-3);
 }
 
-/* .cardInput:focus-visible {
+.cardInput:focus-visible {
     background-color: var(--card-note-background);
-} */
+}
 
 .cardInput::-webkit-scrollbar {
     width: 8px;

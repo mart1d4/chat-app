@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, ReactElement, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
+import { trimMessage } from "@/lib/strings";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
@@ -47,7 +48,7 @@ const Form = (): ReactElement => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username: trimMessage(username), password }),
         }).then((res) => res.json());
 
         if (!response.success) {

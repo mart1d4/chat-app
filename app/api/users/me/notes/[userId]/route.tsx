@@ -51,7 +51,7 @@ export async function PUT(req: Request, { params }: { params: { userId: string }
     const { newNote } = await req.json();
     const userId = params.userId;
 
-    if (!newNote || typeof newNote !== "string" || newNote.length > 256) {
+    if (typeof newNote !== "string" || newNote.length > 256) {
         return NextResponse.json(
             {
                 success: false,

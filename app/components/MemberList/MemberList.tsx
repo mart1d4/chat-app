@@ -1,14 +1,14 @@
 "use client";
 
 import { useData, useLayers, useSettings, useTooltip, useUrls } from "@/lib/store";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { translateCap, trimMessage } from "@/lib/strings";
 import { getButtonColor } from "@/lib/colors/getColors";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useState, useEffect, useRef } from "react";
 import styles from "./MemberList.module.css";
-import { translateCap } from "@/lib/strings";
+import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
 import { UserItem } from "./UserItem";
-import { useRouter } from "next/navigation";
-import useFetchHelper from "@/hooks/useFetchHelper";
 
 const colors = {
     ONLINE: "#22A559",
@@ -261,12 +261,12 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                                     userId: friend.id,
                                                 },
                                                 data: {
-                                                    newNote: note,
+                                                    newNote: trimMessage(note),
                                                 },
                                             });
 
                                             if (response.success) {
-                                                setOriginalNote(note);
+                                                setOriginalNote(trimMessage(note));
                                             }
                                         }
                                     }}

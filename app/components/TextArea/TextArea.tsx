@@ -38,7 +38,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
-    const blockedBy = useData((state) => state.blockedBy).map((user) => user.id);
     const blocked = useData((state) => state.blocked).map((user) => user.id);
     const friend = channel.recipients?.find((r: any) => r.id !== user.id);
 

@@ -96,7 +96,7 @@
     margin-top: 16px;
     border-radius: 50%;
     background-color: var(--background-hover-2);
-    background-image: url('https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/');
+    background-image: url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/");
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -198,7 +198,7 @@
     text-align: center;
     font-weight: 700;
     color: var(--foreground-1);
-    font-family: 'gg sans';
+    font-family: "gg sans";
     font-size: 32px;
     line-height: 40px;
 }
@@ -208,7 +208,7 @@
     margin-top: 8px;
     margin-bottom: 12px;
     text-align: center;
-    font-family: 'gg sans';
+    font-family: "gg sans";
     font-size: 14px;
     line-height: 20px;
     user-select: none;
@@ -246,22 +246,6 @@
     height: 40px;
     background-size: contain;
     background-repeat: no-repeat;
-}
-
-.welcomeCard:nth-child(2) > div:first-child {
-    background-image: url('https://ucarecdn.com/e6a37780-7436-41eb-b818-fdb19e16bb0d/');
-}
-
-.welcomeCard:nth-child(3) > div:first-child {
-    background-image: url('https://ucarecdn.com/07a4b38b-38ae-4000-b7ad-68571a2806c6/');
-}
-
-.welcomeCard:nth-child(4) > div:first-child {
-    background-image: url('https://ucarecdn.com/c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1/');
-}
-
-.welcomeCard:nth-child(5) > div:first-child {
-    background-image: url('https://ucarecdn.com/d5bce184-683e-4746-ae9c-68904a4a876e/');
 }
 
 .welcomeCard > div:last-of-type {

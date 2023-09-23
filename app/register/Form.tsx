@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useRef, useState, useEffect, ReactElement, MouseEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { LoadingDots } from '@components';
-import styles from '../Auth.module.css';
-import Link from 'next/link';
+import { useRef, useState, useEffect, ReactElement, MouseEvent } from "react";
+import { trimMessage } from "@/lib/strings";
+import { useRouter } from "next/navigation";
+import { LoadingDots } from "@components";
+import styles from "../Auth.module.css";
+import Link from "next/link";
 
 const USER_REGEX = /^.{3,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
@@ -12,12 +13,12 @@ const PWD_REGEX = /^.{8,256}$/;
 const Register = (): ReactElement => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const [username, setUsername] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [passwordMatch, setPasswordMatch] = useState<string>('');
+    const [username, setUsername] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [passwordMatch, setPasswordMatch] = useState<string>("");
 
-    const [usernameError, setUsernameError] = useState<string>('');
-    const [passwordError, setPasswordError] = useState<string>('');
+    const [usernameError, setUsernameError] = useState<string>("");
+    const [passwordError, setPasswordError] = useState<string>("");
 
     const uidInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -25,14 +26,14 @@ const Register = (): ReactElement => {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
             e.stopPropagation();
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 handleSubmit(e as unknown as MouseEvent);
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
 
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [username, password, passwordMatch, isLoading]);
 
     useEffect(() => {
@@ -44,11 +45,11 @@ const Register = (): ReactElement => {
     }, [usernameError]);
 
     useEffect(() => {
-        setUsernameError('');
+        setUsernameError("");
     }, [username]);
 
     useEffect(() => {
-        setPasswordError('');
+        setPasswordError("");
     }, [password, passwordMatch]);
 
     const handleSubmit = async (e: MouseEvent): Promise<void> => {
@@ -61,32 +62,32 @@ const Register = (): ReactElement => {
         const v2: boolean = PWD_REGEX.test(password);
 
         if (!v1) {
-            setUsernameError('Userame must be between 3 and 32 characters');
+            setUsernameError("Userame must be between 3 and 32 characters");
             return setIsLoading(false);
         }
 
         if (!v2) {
-            setPasswordError('Password must be between 8 and 256 characters');
+            setPasswordError("Password must be between 8 and 256 characters");
             return setIsLoading(false);
         }
 
         if (password !== passwordMatch) {
-            setPasswordError('Passwords do not match');
+            setPasswordError("Passwords do not match");
             return setIsLoading(false);
         }
 
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
+        const response = await fetch("/api/auth/register", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username: trimMessage(username), password }),
         }).then((res) => res.json());
 
         if (!response.success) {
-            if (response.message.includes('Username')) {
+            if (response.message.includes("Username")) {
                 setUsernameError(response.message);
-            } else if (response.message.includes('Password')) {
+            } else if (response.message.includes("Password")) {
                 setPasswordError(response.message);
             } else {
                 setUsernameError(response.message);
@@ -94,11 +95,11 @@ const Register = (): ReactElement => {
             }
             setIsLoading(false);
         } else {
-            setUsername('');
-            setPassword('');
-            setPasswordMatch('');
+            setUsername("");
+            setPassword("");
+            setPasswordMatch("");
             setIsLoading(false);
-            router.push('/login');
+            router.push("/login");
         }
     };
 
@@ -106,9 +107,9 @@ const Register = (): ReactElement => {
         <div className={styles.loginBlock}>
             <div>
                 <label
-                    htmlFor='uid'
+                    htmlFor="uid"
                     style={{
-                        color: usernameError.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                        color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
                     }}
                 >
                     Username
@@ -117,18 +118,18 @@ const Register = (): ReactElement => {
                 <div className={styles.inputContainer}>
                     <input
                         ref={uidInputRef}
-                        id='uid'
-                        type='text'
-                        name='username'
-                        aria-label='Username'
-                        autoCapitalize='off'
-                        autoComplete='off'
-                        autoCorrect='off'
+                        id="uid"
+                        type="text"
+                        name="username"
+                        aria-label="Username"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
                         minLength={2}
                         maxLength={32}
-                        spellCheck='false'
-                        aria-labelledby='uid'
-                        aria-describedby='uid'
+                        spellCheck="false"
+                        aria-labelledby="uid"
+                        aria-describedby="uid"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
@@ -137,9 +138,9 @@ const Register = (): ReactElement => {
 
             <div>
                 <label
-                    htmlFor='password'
+                    htmlFor="password"
                     style={{
-                        color: passwordError.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
                     }}
                 >
                     Password
@@ -147,17 +148,17 @@ const Register = (): ReactElement => {
                 </label>
                 <div className={styles.inputContainer}>
                     <input
-                        id='password'
-                        type='password'
-                        name='password'
-                        aria-label='Password'
-                        autoCapitalize='off'
-                        autoComplete='off'
-                        autoCorrect='off'
+                        id="password"
+                        type="password"
+                        name="password"
+                        aria-label="Password"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
                         maxLength={256}
-                        spellCheck='false'
-                        aria-labelledby='password'
-                        aria-describedby='password'
+                        spellCheck="false"
+                        aria-labelledby="password"
+                        aria-describedby="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -166,9 +167,9 @@ const Register = (): ReactElement => {
 
             <div>
                 <label
-                    htmlFor='password-match'
+                    htmlFor="password-match"
                     style={{
-                        color: passwordError.length ? 'var(--error-light)' : 'var(--foreground-3)',
+                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
                     }}
                 >
                     Password Match
@@ -176,17 +177,17 @@ const Register = (): ReactElement => {
                 </label>
                 <div className={styles.inputContainer}>
                     <input
-                        id='password-match'
-                        type='password'
-                        name='password-match'
-                        aria-label='Password Match'
-                        autoCapitalize='off'
-                        autoComplete='off'
-                        autoCorrect='off'
+                        id="password-match"
+                        type="password"
+                        name="password-match"
+                        aria-label="Password Match"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
                         maxLength={256}
-                        spellCheck='false'
-                        aria-labelledby='password-match'
-                        aria-describedby='password-match'
+                        spellCheck="false"
+                        aria-labelledby="password-match"
+                        aria-describedby="password-match"
                         value={passwordMatch}
                         onChange={(e) => setPasswordMatch(e.target.value)}
                     />
@@ -194,15 +195,15 @@ const Register = (): ReactElement => {
             </div>
 
             <button
-                type='submit'
+                type="submit"
                 className={styles.buttonSubmit}
                 onClick={(e) => handleSubmit(e)}
             >
-                {isLoading ? <LoadingDots /> : 'Register'}
+                {isLoading ? <LoadingDots /> : "Register"}
             </button>
 
             <div className={styles.bottomText}>
-                <Link href='/login'>Already have an account?</Link>
+                <Link href="/login">Already have an account?</Link>
             </div>
         </div>
     );

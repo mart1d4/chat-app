@@ -667,7 +667,12 @@ const Profiles = () => {
                 />
 
                 <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
-                <div className={styles.imageUpload}></div>
+                <div
+                    className={styles.imageUpload}
+                    style={{
+                        backgroundImage: `url('https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/')`,
+                    }}
+                />
 
                 <div className={styles.cardAvatarStatus}>
                     <div style={{ backgroundColor: "black" }} />

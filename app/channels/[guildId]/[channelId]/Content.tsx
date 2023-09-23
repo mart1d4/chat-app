@@ -306,25 +306,41 @@ const FirstMessage = ({ guild, channel }: Props) => {
                         </div>
 
                         <div className={styles.welcomeCard}>
-                            <div></div>
+                            <div
+                                style={{
+                                    backgroundImage: `url("https://ucarecdn.com/e6a37780-7436-41eb-b818-fdb19e16bb0d/")`,
+                                }}
+                            />
                             <div>Invite your friends</div>
                             <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
-                            <div></div>
+                            <div
+                                style={{
+                                    backgroundImage: `url("https://ucarecdn.com/07a4b38b-38ae-4000-b7ad-68571a2806c6/")`,
+                                }}
+                            />
                             <div>Personalize your server with an icon</div>
                             <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
-                            <div></div>
+                            <div
+                                style={{
+                                    backgroundImage: `url("https://ucarecdn.com/c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1/")`,
+                                }}
+                            />
                             <div>Send your first message</div>
                             <Icon name="arrow" />
                         </div>
 
                         <div className={styles.welcomeCard}>
-                            <div></div>
+                            <div
+                                style={{
+                                    backgroundImage: `url("https://ucarecdn.com/d5bce184-683e-4746-ae9c-68904a4a876e/")`,
+                                }}
+                            />
                             <div>Add your first app</div>
                             <Icon name="arrow" />
                         </div>
@@ -336,7 +352,10 @@ const FirstMessage = ({ guild, channel }: Props) => {
 
     return (
         <div className={styles.firstTimeMessageContainer}>
-            <div className={styles.channelIcon} />
+            <div
+                className={styles.channelIcon}
+                style={{ backgroundImage: `url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/")` }}
+            />
             <h3 className={styles.friendUsername}>Welcome to #{channel.name}!</h3>
             <div className={styles.descriptionContainer}>This is the start of the #{channel.name} channel.</div>
         </div>

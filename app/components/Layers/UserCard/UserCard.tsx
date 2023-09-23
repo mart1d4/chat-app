@@ -2,11 +2,11 @@
 
 import { useState, ReactElement, useRef, useEffect } from "react";
 import { useData, useLayers, useTooltip } from "@/lib/store";
+import { translateCap, trimMessage } from "@/lib/strings";
 import { AnimatePresence, motion } from "framer-motion";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { translateCap } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
 import { Icon } from "@components";
@@ -102,7 +102,7 @@ export const UserCard = ({ content }: any): ReactElement => {
                         },
                         data: {
                             message: {
-                                content: message,
+                                content: trimMessage(message),
                                 attachments: [],
                                 messageReference: null,
                             },
@@ -215,14 +215,31 @@ export const UserCard = ({ content }: any): ReactElement => {
                                     });
                                 }}
                             >
-                                <Icon name="edit" size={18} />
+                                <Icon
+                                    name="edit"
+                                    size={18}
+                                />
                             </div>
                         )}
 
-                        <svg className={styles.cardBanner} viewBox={`0 0 340 ${user.banner ? "120" : "90"}`}>
+                        <svg
+                            className={styles.cardBanner}
+                            viewBox={`0 0 340 ${user.banner ? "120" : "90"}`}
+                        >
                             <mask id="card-banner-mask">
-                                <rect fill="white" x="0" y="0" width="100%" height="100%" />
-                                <circle fill="black" cx="58" cy={user.banner ? 112 : 82} r="46" />
+                                <rect
+                                    fill="white"
+                                    x="0"
+                                    y="0"
+                                    width="100%"
+                                    height="100%"
+                                />
+                                <circle
+                                    fill="black"
+                                    cx="58"
+                                    cy={user.banner ? 112 : 82}
+                                    r="46"
+                                />
                             </mask>
 
                             <foreignObject
@@ -248,7 +265,10 @@ export const UserCard = ({ content }: any): ReactElement => {
                             </foreignObject>
                         </svg>
 
-                        <div className={styles.cardAvatar} style={{ top: user.banner ? "76px" : "46px" }}>
+                        <div
+                            className={styles.cardAvatar}
+                            style={{ top: user.banner ? "76px" : "46px" }}
+                        >
                             <div
                                 className={styles.avatarImage}
                                 style={{
@@ -356,12 +376,12 @@ export const UserCard = ({ content }: any): ReactElement => {
                                                         userId: user.id,
                                                     },
                                                     data: {
-                                                        newNote: note,
+                                                        newNote: trimMessage(note),
                                                     },
                                                 });
 
                                                 if (response.success) {
-                                                    setOriginalNote(note);
+                                                    setOriginalNote(trimMessage(note));
                                                 }
                                             }
                                         }}
@@ -456,7 +476,10 @@ export const UserCard = ({ content }: any): ReactElement => {
                                                     });
                                                 }}
                                             >
-                                                <Icon name="closeFilled" viewbox="0 0 14 14" />
+                                                <Icon
+                                                    name="closeFilled"
+                                                    viewbox="0 0 14 14"
+                                                />
                                             </div>
                                         )}
                                     </div>

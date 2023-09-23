@@ -1,8 +1,8 @@
 "use client";
 
 import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite, EmojiPicker } from "@components";
+import { getChannelName, getRelativeDate, translateCap, trimMessage } from "@/lib/strings";
 import { useRef, useEffect, useState, ReactElement } from "react";
-import { getChannelName, getRelativeDate, translateCap } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
 import { useData, useLayers } from "@/lib/store";
@@ -135,17 +135,19 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         if (isLoading) return;
         setIsLoading(true);
 
-        if (!uid) {
+        const username = trimMessage(uid);
+
+        if (!username) {
             setUsernameError("Username cannot be empty.");
             return setIsLoading(false);
         }
 
-        if (uid.length < 3 || uid.length > 32) {
+        if (username.length < 3 || username.length > 32) {
             setUsernameError("Username must be between 3 and 32 characters.");
             return setIsLoading(false);
         }
 
-        if (user.username === uid) {
+        if (user.username === username) {
             setUsernameError("Username cannot be the same as your current username.");
             return setIsLoading(false);
         }
@@ -159,13 +161,12 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             const response = await sendRequest({
                 query: "UPDATE_USER",
                 data: {
-                    username: uid,
+                    username: username,
                     password: password,
                 },
             });
 
             if (!response.success) return setUsernameError(response.message ?? "Couldn't update username.");
-            setPassword("");
             setLayers({
                 settings: {
                     type: "POPUP",
@@ -805,7 +806,8 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                         query: "UPDATE_USER",
                                         data: {
                                             status: correctStatus === user.status ? null : correctStatus,
-                                            customStatus: customStatus === user.customStatus ? null : customStatus,
+                                            customStatus:
+                                                customStatus === user.customStatus ? null : trimMessage(customStatus),
                                         },
                                     });
                                 }

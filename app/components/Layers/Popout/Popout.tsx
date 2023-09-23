@@ -1,11 +1,11 @@
 "use client";
 
+import { useData, useLayers, useSettings } from "@/lib/store";
 import { FixedMessage, Icon, Avatar } from "@components";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import pusher from "@/lib/pusher/client-connection";
-import { useData, useLayers } from "@/lib/store";
-import { useRouter } from "next/navigation";
 import styles from "./Popout.module.css";
 
 type TMessageData = {
@@ -22,6 +22,7 @@ export const Popout = ({ content }: any) => {
     const [pinned, setPinned] = useState<TMessage[]>([]);
     const [inviteLink, setInviteLink] = useState<string>("");
 
+    const setSettings = useSettings((state) => state.setSettings);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
@@ -33,6 +34,7 @@ export const Popout = ({ content }: any) => {
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const pathname = usePathname();
     const router = useRouter();
 
     useEffect(() => {
@@ -547,6 +549,7 @@ export const Popout = ({ content }: any) => {
                             style={{
                                 padding: "0 20px",
                                 marginBottom: "20px",
+                                backgroundImage: `url("https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/")`,
                             }}
                         >
                             <div
@@ -674,7 +677,11 @@ export const Popout = ({ content }: any) => {
 
                 {friends.length === 0 && (
                     <div className={styles.noFriends}>
-                        <div />
+                        <div
+                            style={{
+                                backgroundImage: `url("https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/")`,
+                            }}
+                        />
 
                         <div>You don't have any friends to add!</div>
 
@@ -687,8 +694,10 @@ export const Popout = ({ content }: any) => {
                                         setNull: true,
                                     },
                                 });
-                                localStorage.setItem("friends-tab", "add");
-                                router.push("/channels/me");
+                                setSettings("friendTab", "add");
+                                if (pathname !== "/channels/me") {
+                                    router.push("/channels/me");
+                                }
                             }}
                         >
                             Add Friend

@@ -1,6 +1,6 @@
-export const translateCap = (str?: string) => {
-    if (!str) {
-        return "";
+export const translateCap = (str: string) => {
+    if (typeof str !== "string") {
+        throw new Error(`translateCap expected a string, but got ${typeof str}`);
     }
 
     return str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => {
@@ -9,17 +9,31 @@ export const translateCap = (str?: string) => {
 };
 
 export const trimMessage = (message: string) => {
-    if (!message) {
-        return null;
+    if (typeof message !== "string") {
+        throw new Error(`trimMessage expected a string, but got ${typeof message}`);
     }
 
     const notAllowedUnicode: string[] = [];
 
-    while (message.startsWith("\n")) {
+    while (
+        message.startsWith("\n") ||
+        message.startsWith("\r") ||
+        message.startsWith("\t") ||
+        message.startsWith("\b") ||
+        message.startsWith("a") ||
+        message.startsWith(" ")
+    ) {
         message = message.substring(1);
     }
 
-    while (message.endsWith("\n")) {
+    while (
+        message.endsWith("\n") ||
+        message.endsWith("\r") ||
+        message.endsWith("\t") ||
+        message.endsWith("\b") ||
+        message.endsWith("a") ||
+        message.endsWith(" ")
+    ) {
         message = message.substring(0, message.length - 1);
     }
 
@@ -33,8 +47,7 @@ export const trimMessage = (message: string) => {
 };
 
 export const getChannelName = (channel: TChannel, userId: TUser["id"]): string => {
-    if (!channel) return "";
-    let name;
+    let name = "";
 
     if (channel.type === 0) {
         const user = channel.recipients.find((user) => user.id !== userId) as TUser;
@@ -50,19 +63,18 @@ export const getChannelName = (channel: TChannel, userId: TUser["id"]): string =
         name = channel.name as string;
     }
 
-    return name || "";
+    return name;
 };
 
 export const getChannelIcon = (channel: TChannel, userId: TUser["id"]): string => {
-    if (!channel) return "";
-    let src = channel.icon;
+    let src = channel.icon || "";
 
     if (channel.type === 0) {
         const user = channel.recipients.find((user: TCleanUser) => user.id !== userId) as TUser;
         src = user.avatar;
     }
 
-    return src || "";
+    return src;
 };
 
 export const getRelativeDate = (timestamp: Date, hours?: boolean) => {

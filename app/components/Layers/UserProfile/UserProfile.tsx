@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, ReactElement } from "react";
 import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
+import { useEffect, useRef, useState, ReactElement } from "react";
+import { translateCap, trimMessage } from "@/lib/strings";
 import { getButtonColor } from "@/lib/colors/getColors";
 import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserProfile.module.css";
-import { translateCap } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
 
@@ -421,7 +421,13 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
                                 <div className={styles.cardSection}>
                                     <h4>Note</h4>
-                                    <div style={{ overflow: "visible" }}>
+                                    <div
+                                        style={{
+                                            margin: "0 -4px",
+                                            height: noteRef.current?.scrollHeight || 44,
+                                            display: "flex",
+                                        }}
+                                    >
                                         <textarea
                                             className={styles.cardInput + " scrollbar"}
                                             ref={noteRef}
@@ -430,24 +436,17 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             aria-label="Note"
                                             maxLength={256}
                                             autoCorrect="off"
-                                            onInput={(e) => {
-                                                setNote(e.currentTarget.value);
-                                            }}
+                                            onInput={(e) => setNote(e.currentTarget.value)}
                                             onBlur={async () => {
                                                 if (note !== originalNote) {
+                                                    const trimmed = trimMessage(note);
                                                     const response = await sendRequest({
                                                         query: "SET_NOTE",
-                                                        params: {
-                                                            userId: user.id,
-                                                        },
-                                                        data: {
-                                                            newNote: note,
-                                                        },
+                                                        params: { userId: user.id },
+                                                        data: { newNote: trimmed },
                                                     });
 
-                                                    if (response.success) {
-                                                        setOriginalNote(note);
-                                                    }
+                                                    if (response.success) setOriginalNote(trimmed);
                                                 }
                                             }}
                                         />
@@ -467,7 +466,11 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                     ))
                                 ) : (
                                     <div className={styles.empty}>
-                                        <div />
+                                        <div
+                                            style={{
+                                                backgroundImage: `url("https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/")`,
+                                            }}
+                                        />
                                         <div>No servers in common</div>
                                     </div>
                                 )}
@@ -485,7 +488,11 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                     ))
                                 ) : (
                                     <div className={styles.empty + " " + styles.noFriends}>
-                                        <div />
+                                        <div
+                                            style={{
+                                                backgroundImage: `url("https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/")`,
+                                            }}
+                                        />
                                         <div>No friends in common</div>
                                     </div>
                                 )}
