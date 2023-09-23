@@ -549,7 +549,6 @@ export const Popout = ({ content }: any) => {
                             style={{
                                 padding: "0 20px",
                                 marginBottom: "20px",
-                                backgroundImage: `url("https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/")`,
                             }}
                         >
                             <div
