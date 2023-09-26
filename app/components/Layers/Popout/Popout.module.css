@@ -368,7 +368,7 @@
 }
 
 .footer {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -483,5 +483,9 @@
 
     .header > button {
         visibility: visible;
+    }
+
+    .scroller {
+        max-height: unset;
     }
 }

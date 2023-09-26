@@ -346,7 +346,7 @@
 }
 
 .footer {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -452,11 +452,12 @@
 
 @media screen and (max-width: 487px) {
     .popup {
-        position: fixed;
-        top: 0;
-        left: 0;
         width: 100dvw;
         min-height: 100dvh;
         border-radius: 0;
+    }
+
+    .scroller {
+        max-height: unset;
     }
 }
