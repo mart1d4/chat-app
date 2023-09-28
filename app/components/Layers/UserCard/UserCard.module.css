@@ -168,7 +168,7 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* overflow: hidden; */
     background-color: var(--card-background-color);
 }
 
@@ -396,6 +396,14 @@
     color: var(--foreground-2);
 }
 
+.button > .separator {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    background-color: red;
+}
 
 .button > div:not(.deleteStatus) {
     flex: 1;

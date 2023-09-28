@@ -232,6 +232,30 @@ export const Popout = ({ content }: any) => {
             >
                 <div>
                     <h1>Pinned Messages</h1>
+
+                    <button
+                        className={styles.closeButton}
+                        onClick={() =>
+                            setLayers({
+                                settings: {
+                                    type: "POPUP",
+                                    setNull: true,
+                                },
+                            })
+                        }
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            role="image"
+                        >
+                            <path
+                                fill="currentColor"
+                                d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
+                            />
+                        </svg>
+                    </button>
                 </div>
 
                 <div className="scrollbar">
@@ -371,6 +395,7 @@ export const Popout = ({ content }: any) => {
                     )}
 
                     <button
+                        className={styles.closeButton}
                         onClick={() =>
                             setLayers({
                                 settings: {

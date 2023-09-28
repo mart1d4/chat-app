@@ -24,7 +24,11 @@ export const UserSection = (): ReactElement => {
                 <div
                     tabIndex={0}
                     ref={userSection}
-                    className={styles.avatarWrapper}
+                    className={
+                        styles.avatarWrapper +
+                        " " +
+                        (layers.USER_CARD?.settings.element === userSection.current && styles.active)
+                    }
                     onClick={(e) => {
                         if (layers.USER_CARD?.settings.element === e.currentTarget) return;
                         setLayers({
@@ -59,12 +63,6 @@ export const UserSection = (): ReactElement => {
                                 },
                             });
                         }
-                    }}
-                    style={{
-                        backgroundColor:
-                            layers.USER_CARD?.settings.element === userSection.current
-                                ? "var(--background-hover-1)"
-                                : "",
                     }}
                 >
                     <div>

@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styles from "./Message.module.css";
 import Link from "next/link";
 import { v4 } from "uuid";
@@ -45,8 +45,9 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
 
     const controller = useMemo(() => new AbortController(), []);
     const inline = shouldDisplayInlined(message.type);
-    const router = useRouter();
     const hasRendered = useRef(false);
+    const pathname = usePathname();
+    const router = useRouter();
 
     const userRegex = /<([@][a-zA-Z0-9]{24})>/g;
     const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
@@ -1184,9 +1185,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                                 (guild) => guild.id === invite.guild?.id
                                                                             )
                                                                         ) {
-                                                                            router.push(
+                                                                            if (
+                                                                                pathname !==
                                                                                 `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                            );
+                                                                            ) {
+                                                                                router.push(
+                                                                                    `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                                );
+                                                                            }
                                                                         } else {
                                                                             sendRequest({
                                                                                 query: "ACCEPT_INVITE",
@@ -1202,9 +1208,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                                     channel.id === invite.channelId
                                                                             )
                                                                         ) {
-                                                                            router.push(
+                                                                            if (
+                                                                                pathname !==
                                                                                 `/channels/me/${invite.channel.id}`
-                                                                            );
+                                                                            ) {
+                                                                                router.push(
+                                                                                    `/channels/me/${invite.channel.id}`
+                                                                                );
+                                                                            }
                                                                         } else {
                                                                             sendRequest({
                                                                                 query: "ACCEPT_INVITE",
@@ -1271,9 +1282,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                         (guild) => guild.id === invite.guild?.id
                                                                     )
                                                                 ) {
-                                                                    router.push(
+                                                                    if (
+                                                                        pathname !==
                                                                         `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                    );
+                                                                    ) {
+                                                                        router.push(
+                                                                            `/channels/${invite.guild.id}/${invite.channel.id}`
+                                                                        );
+                                                                    }
                                                                 } else {
                                                                     sendRequest({
                                                                         query: "ACCEPT_INVITE",
@@ -1288,7 +1304,13 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                                                         (channel) => channel.id === invite.channelId
                                                                     )
                                                                 ) {
-                                                                    router.push(`/channels/me/${invite.channel.id}`);
+                                                                    if (
+                                                                        pathname !== `/channels/me/${invite.channel.id}`
+                                                                    ) {
+                                                                        router.push(
+                                                                            `/channels/me/${invite.channel.id}`
+                                                                        );
+                                                                    }
                                                                 } else {
                                                                     sendRequest({
                                                                         query: "ACCEPT_INVITE",

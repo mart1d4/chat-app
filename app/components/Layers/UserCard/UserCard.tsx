@@ -398,9 +398,7 @@ export const UserCard = ({ content }: any): ReactElement => {
                                         aria-label={`Message @${user.username}`}
                                         maxLength={4000}
                                         autoCorrect="off"
-                                        style={{
-                                            borderColor: user.primaryColor,
-                                        }}
+                                        style={{ borderColor: user.primaryColor }}
                                         onChange={(e) => setMessage(e.currentTarget.value)}
                                     />
                                 </div>
@@ -425,7 +423,16 @@ export const UserCard = ({ content }: any): ReactElement => {
                                                 },
                                             });
                                         }}
+                                        onMouseLeave={() => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    setNull: true,
+                                                },
+                                            });
+                                        }}
                                     >
+                                        <div className={styles.separator} />
                                         <svg className={styles.settingStatus}>
                                             <rect
                                                 height="12px"

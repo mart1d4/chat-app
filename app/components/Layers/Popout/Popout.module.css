@@ -152,7 +152,7 @@
     z-index: 2;
 }
 
-.header > button {
+.closeButton {
     position: absolute;
     top: 16px;
     right: 16px;
@@ -163,7 +163,7 @@
     visibility: hidden;
 }
 
-.header > button:hover {
+.closeButton:hover {
     color: var(--foreground-1);
 }
 
@@ -472,7 +472,8 @@
 }
 
 @media screen and (max-width: 487px) {
-    .popup {
+    .popup,
+    .pinContainer {
         position: fixed;
         top: 0;
         left: 0;
@@ -481,7 +482,7 @@
         border-radius: 0;
     }
 
-    .header > button {
+    .closeButton {
         visibility: visible;
     }
 

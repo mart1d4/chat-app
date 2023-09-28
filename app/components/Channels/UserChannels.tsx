@@ -206,19 +206,34 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
 
                             <div className={styles.layoutContent}>
                                 <div className={styles.contentName}>
-                                    <div className={styles.nameWrapper}>{channel.name}</div>
+                                    <div
+                                        className={styles.nameWrapper}
+                                        onMouseEnter={(e) => {
+                                            if (e.currentTarget.offsetWidth >= 136) {
+                                                setTooltip({
+                                                    text: channel.name as string,
+                                                    element: e.currentTarget,
+                                                    delay: 750,
+                                                });
+                                            }
+                                        }}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    >
+                                        {channel.name}
+                                    </div>
                                 </div>
 
                                 {user?.customStatus && channel.type !== 1 && (
                                     <div
                                         className={styles.contentStatus}
                                         onMouseEnter={(e) => {
-                                            e.stopPropagation();
-                                            setTooltip({
-                                                text: user?.customStatus || "OFFLINE",
-                                                element: e.currentTarget,
-                                                delay: 500,
-                                            });
+                                            if (e.currentTarget.offsetWidth >= 136) {
+                                                setTooltip({
+                                                    text: user.customStatus as string,
+                                                    element: e.currentTarget,
+                                                    delay: 750,
+                                                });
+                                            }
                                         }}
                                         onMouseLeave={(e) => setTooltip(null)}
                                     >

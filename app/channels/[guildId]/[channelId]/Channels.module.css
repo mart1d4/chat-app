@@ -233,7 +233,7 @@
     align-items: center;
     align-self: stretch;
     cursor: pointer;
-    transition: background-color 0.1s ease-in-out;
+    transition: background-color 0.075s ease-in-out;
     user-select: none;
 }
 

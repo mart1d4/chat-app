@@ -27,7 +27,8 @@
     border-radius: 4px;
 }
 
-.avatarWrapper:hover {
+.avatarWrapper:hover,
+.avatarWrapper.active {
     background-color: var(--background-hover-1);
 }
 
@@ -116,12 +117,14 @@
     right: 0;
 }
 
-.userSection:hover .hoverContent > div:first-child {
+.userSection:hover .hoverContent > div:first-child,
+.avatarWrapper.active .hoverContent > div:first-child {
     transform: translateZ(0);
     opacity: 1;
 }
 
-.userSection:hover .hoverContent > div:last-child {
+.userSection:hover .hoverContent > div:last-child,
+.avatarWrapper.active .hoverContent > div:last-child {
     transform: translate3d(0, -107%, 0);
     opacity: 0;
 }
