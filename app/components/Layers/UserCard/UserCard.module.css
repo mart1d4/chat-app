@@ -402,7 +402,6 @@
     top: 0;
     width: 20px;
     height: 100%;
-    background-color: red;
 }
 
 .button > div:not(.deleteStatus) {

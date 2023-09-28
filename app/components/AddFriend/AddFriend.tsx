@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import useFetchHelper from '@/hooks/useFetchHelper';
-import styles from './AddFriend.module.css';
-import { useLayers } from '@/lib/store';
-import Image from 'next/image';
+import { useEffect, useState, useRef } from "react";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import styles from "./AddFriend.module.css";
+import { useLayers } from "@/lib/store";
+import Image from "next/image";
 
 export const AddFriend = () => {
-    const [input, setInput] = useState<string>('');
-    const [error, setError] = useState<string>('');
-    const [valid, setValid] = useState<string>('');
+    const [input, setInput] = useState<string>("");
+    const [error, setError] = useState<string>("");
+    const [valid, setValid] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
 
     const setLayers = useLayers((state) => state.setLayers);
@@ -28,8 +28,8 @@ export const AddFriend = () => {
     }, []);
 
     useEffect(() => {
-        if (error.length > 0) setValid('');
-        if (valid.length > 0) setError('');
+        if (error.length > 0) setValid("");
+        if (valid.length > 0) setError("");
     }, [error, valid]);
 
     return (
@@ -37,7 +37,7 @@ export const AddFriend = () => {
             <header className={styles.header}>
                 <h2>Add Friend</h2>
 
-                <form autoComplete='off'>
+                <form autoComplete="off">
                     <div className={styles.description}>You can add friends with their Chat App username.</div>
 
                     <div
@@ -45,29 +45,29 @@ export const AddFriend = () => {
                         style={{
                             outline:
                                 error.length > 0
-                                    ? '1px solid var(--error-1)'
+                                    ? "1px solid var(--error-1)"
                                     : valid.length > 0
-                                    ? '1px solid var(--success-1)'
-                                    : '',
+                                    ? "1px solid var(--success-1)"
+                                    : "",
                         }}
                     >
                         <div>
                             <input
                                 ref={inputRef}
-                                type='text'
-                                autoComplete='off'
-                                placeholder='You can add friends with their Chat App username.'
-                                aria-label='username'
+                                type="text"
+                                autoComplete="off"
+                                placeholder="You can add friends with their Chat App username."
+                                aria-label="username"
                                 minLength={2}
                                 maxLength={32}
                                 value={input}
                                 onChange={(e) => {
                                     setInput(e.target.value);
-                                    setError('');
-                                    setValid('');
+                                    setError("");
+                                    setValid("");
                                 }}
                                 onKeyDown={async (e) => {
-                                    if (e.key === 'Enter') {
+                                    if (e.key === "Enter") {
                                         if (!input.length || loading) {
                                             return inputRef.current?.focus();
                                         }
@@ -75,14 +75,14 @@ export const AddFriend = () => {
                                         setLoading(true);
 
                                         const res = await sendRequest({
-                                            query: 'ADD_FRIEND',
+                                            query: "ADD_FRIEND",
                                             params: { username: input },
                                         });
 
                                         if (!res.success) setError(res.message);
                                         else {
                                             setValid(res.message);
-                                            setInput('');
+                                            setInput("");
                                         }
 
                                         setLoading(false);
@@ -92,11 +92,11 @@ export const AddFriend = () => {
                                     e.preventDefault();
                                     setLayers({
                                         settings: {
-                                            type: 'MENU',
+                                            type: "MENU",
                                             event: e,
                                         },
                                         content: {
-                                            type: 'INPUT',
+                                            type: "INPUT",
                                             input: true,
                                             pasteText,
                                         },
@@ -106,7 +106,7 @@ export const AddFriend = () => {
                         </div>
 
                         <button
-                            className={input.length > 0 ? 'blue' : 'blue disabled'}
+                            className={input.length > 0 ? "blue" : "blue disabled"}
                             onClick={async (e) => {
                                 e.preventDefault();
                                 if (!input.length || loading) {
@@ -116,14 +116,14 @@ export const AddFriend = () => {
                                 setLoading(true);
 
                                 const res = await sendRequest({
-                                    query: 'ADD_FRIEND',
+                                    query: "ADD_FRIEND",
                                     params: { username: input },
                                 });
 
                                 if (!res.success) setError(res.message);
                                 else {
                                     setValid(res.message);
-                                    setInput('');
+                                    setInput("");
                                 }
 
                                 setLoading(false);
@@ -142,8 +142,8 @@ export const AddFriend = () => {
             <div className={styles.content}>
                 <div className={styles.noData}>
                     <Image
-                        src='https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/'
-                        alt='Add Friend'
+                        src="https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/"
+                        alt="Add Friend"
                         width={376}
                         height={162}
                         priority

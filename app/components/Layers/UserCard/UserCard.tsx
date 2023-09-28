@@ -423,14 +423,14 @@ export const UserCard = ({ content }: any): ReactElement => {
                                                 },
                                             });
                                         }}
-                                        onMouseLeave={() => {
-                                            setLayers({
-                                                settings: {
-                                                    type: "MENU",
-                                                    setNull: true,
-                                                },
-                                            });
-                                        }}
+                                        // onMouseLeave={() => {
+                                        //     setLayers({
+                                        //         settings: {
+                                        //             type: "MENU",
+                                        //             setNull: true,
+                                        //         },
+                                        //     });
+                                        // }}
                                     >
                                         <div className={styles.separator} />
                                         <svg className={styles.settingStatus}>
