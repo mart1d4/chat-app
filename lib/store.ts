@@ -183,6 +183,7 @@ interface DataState {
     removeChannel: (channel: TChannel) => void;
     moveChannelUp: (channelId: TChannel["id"]) => void;
     addGuild: (guild: TGuild) => void;
+    updateGuild: (guild: TGuild) => void;
     removeGuild: (guild: TGuild) => void;
 
     removeData: () => void;
@@ -295,6 +296,16 @@ export const useData = create<DataState>()((set) => ({
                             if (m.id === user.id) {
                                 return {
                                     ...m,
+                                    username: user.username,
+                                };
+                            }
+
+                            return m;
+                        }),
+                        rawMembers: g.rawMembers.map((m) => {
+                            if (m.id === user.id) {
+                                return {
+                                    ...m,
                                     ...user,
                                 };
                             }
@@ -367,7 +378,7 @@ export const useData = create<DataState>()((set) => ({
                 };
             } else {
                 return {
-                    channels: [...state.channels, channel],
+                    channels: [channel, ...state.channels],
                 };
             }
         }),
@@ -386,6 +397,7 @@ export const useData = create<DataState>()((set) => ({
         });
     },
     addGuild: (guild) => set((state) => ({ guilds: [...state.guilds, guild] })),
+    updateGuild: (guild) => set((state) => ({ guilds: state.guilds.map((g) => (g.id === guild.id ? guild : g)) })),
     removeGuild: (guild) => set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
 
     removeData: () =>

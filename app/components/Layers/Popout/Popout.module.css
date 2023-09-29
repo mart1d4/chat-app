@@ -327,7 +327,8 @@
     border-radius: 50%;
 }
 
-.friendUsername {
+.username {
+    display: flex;
     flex: 1 1 auto;
     margin-left: 10px;
     margin-right: 10px;
@@ -339,6 +340,20 @@
     text-overflow: ellipsis;
     color: var(--foreground-3);
     text-transform: none;
+}
+
+.username > :first-child {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+    margin-right: 4px;
+}
+
+.username > :last-child {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    color: var(--foreground-4);
 }
 
 .friendCheck {

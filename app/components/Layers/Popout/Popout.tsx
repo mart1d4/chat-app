@@ -225,11 +225,7 @@ export const Popout = ({ content }: any) => {
 
     if (content.type === "PINNED_MESSAGES") {
         return (
-            <div
-                ref={containerRef}
-                className={styles.pinContainer}
-                onContextMenu={(e) => e.preventDefault()}
-            >
+            <div ref={containerRef} className={styles.pinContainer} onContextMenu={(e) => e.preventDefault()}>
                 <div>
                     <h1>Pinned Messages</h1>
 
@@ -244,12 +240,7 @@ export const Popout = ({ content }: any) => {
                             })
                         }
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            role="image"
-                        >
+                        <svg viewBox="0 0 24 24" width="24" height="24" role="image">
                             <path
                                 fill="currentColor"
                                 d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -274,14 +265,8 @@ export const Popout = ({ content }: any) => {
                         </div>
                     ) : (
                         pinned.map((message) => (
-                            <div
-                                key={message.id}
-                                className={styles.messageContainer}
-                            >
-                                <FixedMessage
-                                    message={message}
-                                    pinned={true}
-                                />
+                            <div key={message.id} className={styles.messageContainer}>
+                                <FixedMessage message={message} pinned={true} />
                             </div>
                         ))
                     )}
@@ -310,11 +295,7 @@ export const Popout = ({ content }: any) => {
         );
     } else {
         return (
-            <div
-                ref={containerRef}
-                className={styles.popup}
-                onContextMenu={(e) => e.preventDefault()}
-            >
+            <div ref={containerRef} className={styles.popup} onContextMenu={(e) => e.preventDefault()}>
                 <div className={styles.header}>
                     <h1>Select Friends</h1>
                     {friends.length > 0 && (
@@ -337,10 +318,7 @@ export const Popout = ({ content }: any) => {
                                                 }}
                                             >
                                                 {friend.username}
-                                                <Icon
-                                                    name="close"
-                                                    size={12}
-                                                />
+                                                <Icon name="close" size={12} />
                                             </div>
                                         ))}
 
@@ -405,12 +383,7 @@ export const Popout = ({ content }: any) => {
                             })
                         }
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            role="image"
-                        >
+                        <svg viewBox="0 0 24 24" width="24" height="24" role="image">
                             <path
                                 fill="currentColor"
                                 d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -447,16 +420,15 @@ export const Popout = ({ content }: any) => {
                                             />
                                         </div>
 
-                                        <div className={styles.friendUsername}>{friend.username}</div>
+                                        <div className={styles.username}>
+                                            <div>{friend.displayName}</div>
+                                            <div>{friend.username}</div>
+                                        </div>
 
                                         <div className={styles.friendCheck}>
                                             <div>
                                                 {chosen?.includes(friend) && (
-                                                    <Icon
-                                                        name="accept"
-                                                        size={16}
-                                                        fill="var(--accent-1)"
-                                                    />
+                                                    <Icon name="accept" size={16} fill="var(--accent-1)" />
                                                 )}
                                             </div>
                                         </div>

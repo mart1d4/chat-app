@@ -1,3 +1,4 @@
+import { defaultPermissions } from "@/lib/permissions/data";
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
@@ -316,16 +317,108 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                 );
             }
         } else {
-            if (!invite.guildId || user.guildIds.includes(invite.guildId)) {
+            if (!invite.guildId) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Invalid invite",
+                        message: "Guild ID missing.",
+                    },
+                    { status: 400 }
+                );
+            } else if (user.guildIds.includes(invite.guildId)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Already in guild.",
                     },
                     { status: 400 }
                 );
             } else {
-                // Add user to guild
+                const guild = await prisma.guild.findFirst({
+                    where: {
+                        id: invite.guildId,
+                    },
+                    include: {
+                        rawMembers: {
+                            select: {
+                                id: true,
+                                username: true,
+                                displayName: true,
+                                avatar: true,
+                                banner: true,
+                                primaryColor: true,
+                                accentColor: true,
+                                description: true,
+                                customStatus: true,
+                                status: true,
+                                guildIds: true,
+                                channelIds: true,
+                                friendIds: true,
+                                createdAt: true,
+                            },
+                        },
+                        channels: {
+                            select: {
+                                id: true,
+                                type: true,
+                                name: true,
+                                parentId: true,
+                                position: true,
+                            },
+                        },
+                    },
+                });
+
+                if (!guild) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message: "Guild not found.",
+                        },
+                        { status: 400 }
+                    );
+                }
+
+                const memberObject = {
+                    userId: user.id,
+                    permissions: defaultPermissions,
+                    joinedAt: new Date(),
+                };
+
+                await prisma.guild.update({
+                    where: {
+                        id: guild.id,
+                    },
+                    data: {
+                        members: {
+                            push: memberObject,
+                        },
+                    },
+                });
+
+                await prisma.user.update({
+                    where: {
+                        id: user.id,
+                    },
+                    data: {
+                        guilds: {
+                            connect: {
+                                id: guild.id,
+                            },
+                        },
+                    },
+                });
+
+                await pusher.trigger("chat-app", "guild-update", {
+                    type: "GUILD_ADDED",
+                    guild: {
+                        ...guild,
+                        rawMembers: [...guild.rawMembers, user],
+                        rawMemberIds: [...guild.rawMemberIds, user.id],
+                        members: [...guild.members, memberObject],
+                    },
+                });
+
                 return NextResponse.json(
                     {
                         success: false,

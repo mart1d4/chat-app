@@ -63,13 +63,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
-                        return (
-                            <UserMention
-                                key={v4()}
-                                user={user}
-                                full={true}
-                            />
-                        );
+                        return <UserMention key={v4()} user={user} full={true} />;
                     } else if (urlRegex.test(part)) {
                         if (inviteRegex.test(part)) {
                             const code = part.substring(part.length - 8);
@@ -105,13 +99,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
-                        return (
-                            <UserMention
-                                key={v4()}
-                                user={user}
-                                full={true}
-                            />
-                        );
+                        return <UserMention key={v4()} user={user} full={true} />;
                     } else if (urlRegex.test(part)) {
                         return (
                             <Link
@@ -567,10 +555,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             {message.type === 7 && (
                                 <span>
                                     <UserMention user={message.author} /> pinned{" "}
-                                    <span
-                                        className={styles.inlineMention}
-                                        onClick={(e) => {}}
-                                    >
+                                    <span className={styles.inlineMention} onClick={(e) => {}}>
                                         a message
                                     </span>{" "}
                                     to this channel. See all{" "}
@@ -726,11 +711,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 ) : (
                                     <div className={styles.noReplyBadge}>
-                                        <svg
-                                            width="12"
-                                            height="8"
-                                            viewBox="0 0 12 8"
-                                        >
+                                        <svg width="12" height="8" viewBox="0 0 12 8">
                                             <path
                                                 d="M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z"
                                                 fill="currentColor"
@@ -813,12 +794,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 )}
 
-                                {message.messageReference?.attachments?.length > 0 && (
-                                    <Icon
-                                        name="image"
-                                        size={20}
-                                    />
-                                )}
+                                {message.messageReference?.attachments?.length > 0 && <Icon name="image" size={20} />}
                             </div>
                         )}
 
@@ -872,11 +848,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                         });
                                     }}
                                 >
-                                    <Avatar
-                                        src={message.author.avatar}
-                                        alt={message.author.username}
-                                        size={40}
-                                    />
+                                    <Avatar src={message.author.avatar} alt={message.author.username} size={40} />
                                 </div>
                             )}
 
@@ -983,10 +955,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             >
                                 {edit?.messageId === message.id ? (
                                     <>
-                                        <TextArea
-                                            channel={channel}
-                                            editing={true}
-                                        />
+                                        <TextArea channel={channel} editing={true} />
 
                                         <div className={styles.editHint}>
                                             escape to <span onClick={() => setEdit(channel.id, null)}>cancel </span>•
@@ -1019,10 +988,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                 )}
 
                                 {message.attachments.length > 0 && !(message.error || message.waiting) && (
-                                    <MessageAttachments
-                                        message={message}
-                                        functions={functions}
-                                    />
+                                    <MessageAttachments message={message} functions={functions} />
                                 )}
 
                                 {message.attachments.length > 0 && (message.waiting || message.error) && (
@@ -1108,10 +1074,7 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             {invites.length > 0 && (
                                 <div className={styles.messageAccessories}>
                                     {invites.map((invite) => (
-                                        <div
-                                            key={v4()}
-                                            className={styles.guildInvite}
-                                        >
+                                        <div key={v4()} className={styles.guildInvite}>
                                             <h3>
                                                 {!("type" in invite)
                                                     ? user.id === invite.inviter.id
@@ -1400,11 +1363,7 @@ const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
 
 const MessageAttachments = ({ message, functions }: { message: TMessage; functions: any }) => {
     const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
-        <Image
-            attachment={attachment}
-            message={message}
-            functions={functions}
-        />
+        <Image attachment={attachment} message={message} functions={functions} />
     );
 
     return (
@@ -1412,20 +1371,14 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
             <div>
                 {message.attachments.length === 1 && (
                     <div className={styles.gridOneBig}>
-                        <ImageComponent
-                            key={message.attachments[0].id}
-                            attachment={message.attachments[0]}
-                        />
+                        <ImageComponent key={message.attachments[0].id} attachment={message.attachments[0]} />
                     </div>
                 )}
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
+                            <ImageComponent key={attachment.id} attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1434,10 +1387,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
 
@@ -1445,19 +1395,13 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                             <div>
                                 <div>
                                     {message.attachments.slice(1, 2).map((attachment) => (
-                                        <ImageComponent
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                        />
+                                        <ImageComponent key={attachment.id} attachment={attachment} />
                                     ))}
                                 </div>
 
                                 <div>
                                     {message.attachments.slice(2, 3).map((attachment) => (
-                                        <ImageComponent
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                        />
+                                        <ImageComponent key={attachment.id} attachment={attachment} />
                                     ))}
                                 </div>
                             </div>
@@ -1468,10 +1412,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
+                            <ImageComponent key={attachment.id} attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1480,19 +1421,13 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(2, 5).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1501,10 +1436,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
+                            <ImageComponent key={attachment.id} attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1513,19 +1445,13 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 7).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1535,10 +1461,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
 
@@ -1553,10 +1476,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
+                            <ImageComponent key={attachment.id} attachment={attachment} />
                         ))}
                     </div>
                 )}
@@ -1565,19 +1485,13 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 10).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
+                                <ImageComponent key={attachment.id} attachment={attachment} />
                             ))}
                         </div>
                     </>
@@ -1642,10 +1556,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                 visibility: layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
             }}
         >
-            <div
-                className={styles.buttonWrapper}
-                style={{ top: large ? "-16px" : "-25px" }}
-            >
+            <div className={styles.buttonWrapper} style={{ top: large ? "-16px" : "-25px" }}>
                 <div className={styles.buttons}>
                     {!message.error ? (
                         <>
@@ -1734,10 +1645,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {}}
                                     >
-                                        <Icon
-                                            name="translate"
-                                            viewbox="0 96 960 960"
-                                        />
+                                        <Icon name="translate" viewbox="0 96 960 960" />
                                     </div>
 
                                     <div
@@ -2184,10 +2092,7 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             });
                         }}
                     >
-                        <Icon
-                            name="delete"
-                            size={20}
-                        />
+                        <Icon name="delete" size={20} />
                     </div>
                 )}
 

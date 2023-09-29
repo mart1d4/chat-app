@@ -79,6 +79,7 @@ export const Loading = ({ children, data }: Props): ReactElement => {
     const removeChannel = useData((state) => state.removeChannel);
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const removeGuild = useData((state) => state.removeGuild);
+    const updateGuild = useData((state) => state.updateGuild);
     const addChannel = useData((state) => state.addChannel);
     const addGuild = useData((state) => state.addGuild);
 
@@ -199,7 +200,11 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                 if (data.type === "GUILD_REMOVED") {
                     removeGuild(data.guild);
                 } else if (data.type === "GUILD_ADDED") {
-                    addGuild(data.guild);
+                    if (!guilds.map((g) => g.id).includes(data.guild.id)) {
+                        addGuild(data.guild);
+                    } else {
+                        updateGuild(data.guild);
+                    }
                 }
             } else if (data.guildId && data.channelId && guilds.map((g) => g.id).includes(data.guildId)) {
                 const newGuilds = guilds.map((g) => ({
@@ -254,14 +259,8 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                 children
             ) : (
                 <div className={styles.container}>
-                    <video
-                        autoPlay
-                        loop
-                    >
-                        <source
-                            src="/assets/app/spinner.webm"
-                            type="video/webm"
-                        />
+                    <video autoPlay loop>
+                        <source src="/assets/app/spinner.webm" type="video/webm" />
                     </video>
 
                     <div className={styles.textContent}>
