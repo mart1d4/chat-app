@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect, ReactElement, MouseEvent } from "react";
+import { useRef, useState, useEffect, MouseEvent } from "react";
 import { trimMessage } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
 
-const USER_REGEX = /^.{3,32}$/;
+const USER_REGEX = /^.{2,32}$/;
 const PWD_REGEX = /^.{8,256}$/;
 
-const Register = (): ReactElement => {
+export default function Register() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [username, setUsername] = useState<string>("");
@@ -31,14 +31,9 @@ const Register = (): ReactElement => {
             }
         };
 
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => document.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, [username, password, passwordMatch, isLoading]);
-
-    useEffect(() => {
-        uidInputRef.current?.focus();
-    }, []);
 
     useEffect(() => {
         uidInputRef.current?.focus();
@@ -62,7 +57,7 @@ const Register = (): ReactElement => {
         const v2: boolean = PWD_REGEX.test(password);
 
         if (!v1) {
-            setUsernameError("Userame must be between 3 and 32 characters");
+            setUsernameError("Userame must be between 2 and 32 characters");
             return setIsLoading(false);
         }
 
@@ -107,10 +102,8 @@ const Register = (): ReactElement => {
         <div className={styles.loginBlock}>
             <div>
                 <label
-                    htmlFor="uid"
-                    style={{
-                        color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
-                    }}
+                    htmlFor="username"
+                    style={{ color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
                     Username
                     {usernameError.length > 0 && <span className={styles.errorLabel}>- {usernameError}</span>}
@@ -118,7 +111,7 @@ const Register = (): ReactElement => {
                 <div className={styles.inputContainer}>
                     <input
                         ref={uidInputRef}
-                        id="uid"
+                        id="username"
                         type="text"
                         name="username"
                         aria-label="Username"
@@ -128,9 +121,10 @@ const Register = (): ReactElement => {
                         minLength={2}
                         maxLength={32}
                         spellCheck="false"
-                        aria-labelledby="uid"
-                        aria-describedby="uid"
+                        aria-labelledby="username"
+                        aria-describedby="username"
                         value={username}
+                        autoFocus
                         onChange={(e) => setUsername(e.target.value)}
                     />
                 </div>
@@ -139,9 +133,7 @@ const Register = (): ReactElement => {
             <div>
                 <label
                     htmlFor="password"
-                    style={{
-                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
-                    }}
+                    style={{ color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
                     Password
                     {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
@@ -168,11 +160,9 @@ const Register = (): ReactElement => {
             <div>
                 <label
                     htmlFor="password-match"
-                    style={{
-                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
-                    }}
+                    style={{ color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
-                    Password Match
+                    Confirm Password
                     {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
                 </label>
                 <div className={styles.inputContainer}>
@@ -180,7 +170,7 @@ const Register = (): ReactElement => {
                         id="password-match"
                         type="password"
                         name="password-match"
-                        aria-label="Password Match"
+                        aria-label="Confirm Password"
                         autoCapitalize="off"
                         autoComplete="off"
                         autoCorrect="off"
@@ -207,6 +197,4 @@ const Register = (): ReactElement => {
             </div>
         </div>
     );
-};
-
-export default Register;
+}

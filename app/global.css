@@ -273,6 +273,10 @@ input::placeholder {
     user-select: none;
 }
 
+button:focus-visible {
+    outline-offset: 2px;
+}
+
 button.blue {
     background-color: var(--accent-1);
 }
@@ -377,4 +381,12 @@ button.disabled {
     transform: translateY(2px);
     padding-bottom: 2px;
     height: 21px;
+}
+
+a {
+    border-radius: 3px;
+}
+
+input:focus-visible {
+    outline: 4px solid var(--accent-light);
 }

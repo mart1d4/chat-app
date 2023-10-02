@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         locale: "en_US",
         images: [
             {
-                url: "https://ucarecdn.com/7ba4e655-043d-4bf9-8c1f-7cbff20b6157/",
+                url: "https://chat-app.mart1d4.dev/assets/icon.webp",
                 width: 128,
                 height: 128,
                 alt: "Chat App Logo",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     },
 };
 
-const HomePage = () => {
+export default function HomePage() {
     return (
         <div className={styles.mainContainer}>
             <div className={styles.heading}>
@@ -160,6 +160,4 @@ const HomePage = () => {
             <Footer />
         </div>
     );
-};
-
-export default HomePage;
+}

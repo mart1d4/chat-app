@@ -133,7 +133,7 @@
     background-color: transparent;
     padding: 10px;
     height: 40px;
-    outline: none;
+    border-radius: 3px;
     color: var(--foreground-3);
 }
 

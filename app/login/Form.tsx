@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState, useEffect, ReactElement, MouseEvent } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { trimMessage } from "@/lib/strings";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
 
-const Form = (): ReactElement => {
+export default function Form() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -17,37 +17,28 @@ const Form = (): ReactElement => {
     const router = useRouter();
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent): void => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             e.stopPropagation();
             if (e.key === "Enter") {
-                handleSubmit(e as unknown as MouseEvent);
+                handleSubmit();
             }
         };
 
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => document.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, [username, password, isLoading]);
-
-    useEffect(() => {
-        usernameInputRef.current?.focus();
-    }, []);
 
     useEffect(() => {
         setError("");
     }, [username, password]);
 
-    const handleSubmit = async (e: MouseEvent): Promise<void> => {
-        e.preventDefault();
-
+    const handleSubmit = async () => {
         if (isLoading || !username || !password) return;
         setIsLoading(true);
 
         const response = await fetch("/api/auth/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: trimMessage(username), password }),
         }).then((res) => res.json());
 
@@ -67,11 +58,9 @@ const Form = (): ReactElement => {
             <div>
                 <label
                     htmlFor="username"
-                    style={{
-                        color: error.length ? "var(--error-light)" : "var(--foreground-3)",
-                    }}
+                    style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
-                    Username
+                    Email or Username
                     {error.length ? <span className={styles.errorLabel}> - {error}</span> : <span> *</span>}
                 </label>
                 <div className={styles.inputContainer}>
@@ -80,14 +69,15 @@ const Form = (): ReactElement => {
                         id="username"
                         type="text"
                         name="username"
-                        aria-label="Username"
+                        aria-label="Email or Username"
                         autoCapitalize="off"
-                        autoComplete="off"
+                        autoComplete="email username"
                         autoCorrect="off"
                         spellCheck="false"
-                        aria-labelledby="username"
-                        aria-describedby="username"
+                        aria-labelledby="username-email"
+                        aria-describedby="username-email"
                         value={username}
+                        autoFocus
                         onChange={(e) => setUsername(e.target.value)}
                     />
                 </div>
@@ -96,9 +86,7 @@ const Form = (): ReactElement => {
             <div style={{ marginBottom: 0 }}>
                 <label
                     htmlFor="password"
-                    style={{
-                        color: error.length ? "var(--error-light)" : "var(--foreground-3)",
-                    }}
+                    style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
                     Password
                     {error.length ? <span className={styles.errorLabel}>- {error}</span> : <span>*</span>}
@@ -126,7 +114,6 @@ const Form = (): ReactElement => {
                 className={styles.passwordForgot}
                 onClick={(e) => {
                     e.preventDefault();
-                    router.push("/forgot-password");
                 }}
             >
                 Forgot your password?
@@ -135,7 +122,10 @@ const Form = (): ReactElement => {
             <button
                 type="submit"
                 className={styles.buttonSubmit}
-                onClick={(e) => handleSubmit(e)}
+                onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit();
+                }}
             >
                 {isLoading ? <LoadingDots /> : "Log In"}
             </button>
@@ -146,6 +136,4 @@ const Form = (): ReactElement => {
             </div>
         </div>
     );
-};
-
-export default Form;
+}

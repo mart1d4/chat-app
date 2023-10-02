@@ -4,12 +4,9 @@ import { isLoggedIn } from "@/lib/auth";
 import Link from "next/link";
 import Form from "./Form";
 
-const Register = async () => {
+export default async function Register() {
     const isLogged = await isLoggedIn();
-
-    if (isLogged) {
-        redirect("/channels/me");
-    }
+    if (isLogged) redirect("/channels/me");
 
     return (
         <div className={styles.wrapper}>
@@ -39,6 +36,4 @@ const Register = async () => {
             </form>
         </div>
     );
-};
-
-export default Register;
+}

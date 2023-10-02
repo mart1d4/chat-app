@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     },
 };
 
-const RootLayout = ({ children }: { children: ReactElement }) => {
+export default function RootLayout({ children }: { children: ReactElement }) {
     return (
         <LayerProvider>
             <html lang="en">
@@ -24,6 +24,4 @@ const RootLayout = ({ children }: { children: ReactElement }) => {
             </html>
         </LayerProvider>
     );
-};
-
-export default RootLayout;
+}
