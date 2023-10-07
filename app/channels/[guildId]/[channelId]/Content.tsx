@@ -6,6 +6,7 @@ import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
+import Link from "next/link";
 
 type TMessageData = {
     channelId: TChannel["id"];
@@ -301,7 +302,7 @@ const FirstMessage = ({ guild, channel }: Props) => {
 
                             <div>
                                 This is your brand new, shiny server. Here are some steps to help you get started. For
-                                more, check out our <a href="">Getting Started guide</a>.
+                                more, check out our <Link href="/forum/getting-started">Getting Started guide</Link>.
                             </div>
                         </div>
 

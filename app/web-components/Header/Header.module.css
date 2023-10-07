@@ -1,12 +1,12 @@
 .disclaimer {
     width: 100%;
-    padding: 8px 12px;
+    padding: 4px 12px;
     background-color: var(--error-1);
     font-weight: 600;
     color: var(--foreground-1);
     display: flex;
     font-size: 14px;
-    line-height: 18px;
+    line-height: 24px;
     align-items: center;
     justify-content: center;
     border-radius: 0 0 8px 8px;
@@ -29,7 +29,7 @@
 .brand {
     display: flex;
     align-items: center;
-    padding-right: 66px;
+    margin-right: 66px;
 }
 
 .navLinks {
@@ -74,7 +74,7 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .appButton > a:hover {
@@ -102,7 +102,7 @@
 }
 
 .heroText > h1 {
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Ginto Nord", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 56px;
     font-weight: 800;
     line-height: 95%;
@@ -139,7 +139,7 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .heroButtons > a:first-child {

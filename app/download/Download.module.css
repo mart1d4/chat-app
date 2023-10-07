@@ -33,7 +33,7 @@
 .hero > div:first-child > div:first-child > h1 {
     font-size: 56px;
     font-weight: 800;
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Ginto Nord", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 95%;
     text-transform: uppercase;
     text-rendering: geometricPrecision;
@@ -71,7 +71,7 @@
     font-weight: 500;
     align-items: center;
     text-decoration: none;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .hero > div:first-child > div:last-child > a:hover {
@@ -179,7 +179,7 @@
     align-items: center;
     text-decoration: none;
     display: inline-flex;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .card:not(:last-child) > div > div > button > svg {
@@ -242,7 +242,7 @@
     font-weight: 500;
     align-items: center;
     display: inline-flex;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .card:last-child > div:last-child > button:hover {

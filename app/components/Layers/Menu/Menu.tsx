@@ -102,12 +102,12 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
 
         window.addEventListener("keydown", handleShift);
         window.addEventListener("keyup", handleShiftUp);
-        window.addEventListener("mousedown", handleClickOutside);
+        window.addEventListener("click", handleClickOutside);
 
         return () => {
             window.removeEventListener("keydown", handleShift);
             window.removeEventListener("keyup", handleShiftUp);
-            window.removeEventListener("mousedown", handleClickOutside);
+            window.removeEventListener("click", handleClickOutside);
         };
     }, []);
 
@@ -149,8 +149,8 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             } else if (e.key === "Enter") {
                 const item = filteredItems.find((item) => item.name === hover);
                 if (item) {
-                    if (item?.funcShift) item.funcShift();
-                    else if (item?.func) item.func();
+                    if (item.funcShift && e.shiftKey) item.funcShift();
+                    else if (item.func) item.func();
                     if ("checked" in item) return;
                     setLayers({
                         settings: {
@@ -162,8 +162,8 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             }
         };
 
-        window.addEventListener("keydown", handlekeyDown);
-        return () => window.removeEventListener("keydown", handlekeyDown);
+        document.addEventListener("keydown", handlekeyDown);
+        return () => document.removeEventListener("keydown", handlekeyDown);
     }, [filteredItems, hover]);
 
     useEffect(() => {

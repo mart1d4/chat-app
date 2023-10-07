@@ -259,6 +259,7 @@
     background-color: var(--background-4);
     color: var(--foreground-3);
     text-transform: none;
+    outline-offset: -2px;
 }
 
 .friendChip:hover {
@@ -299,6 +300,7 @@
     cursor: pointer;
     padding: 1px 0;
     margin: 0 4px 0 12px;
+    outline: none;
 }
 
 .friend > div {
@@ -310,7 +312,8 @@
     align-items: center;
 }
 
-.friend:hover > div {
+.friend:hover > div,
+.friend:focus-visible > div {
     background-color: var(--background-5);
 }
 

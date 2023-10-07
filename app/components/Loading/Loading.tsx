@@ -22,7 +22,7 @@ type TChannelData = {
 };
 
 type TGuildData = {
-    type: "GUILD_ADDED" | "GUILD_REMOVED";
+    type: "GUILD_ADDED" | "GUILD_DELETED";
     guild: TGuild;
     guildId?: TGuild["id"];
     channelId?: TChannel["id"];
@@ -197,8 +197,9 @@ export const Loading = ({ children, data }: Props): ReactElement => {
 
         pusher.bind("guild-update", (data: TGuildData) => {
             if (data.guild?.rawMemberIds.includes(user.id)) {
-                if (data.type === "GUILD_REMOVED") {
+                if (data.type === "GUILD_DELETED") {
                     removeGuild(data.guild);
+                    if (pathname.includes(data.guild.id)) router.refresh();
                 } else if (data.type === "GUILD_ADDED") {
                     if (!guilds.map((g) => g.id).includes(data.guild.id)) {
                         addGuild(data.guild);
@@ -259,8 +260,14 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                 children
             ) : (
                 <div className={styles.container}>
-                    <video autoPlay loop>
-                        <source src="/assets/app/spinner.webm" type="video/webm" />
+                    <video
+                        autoPlay
+                        loop
+                    >
+                        <source
+                            src="/assets/app/spinner.webm"
+                            type="video/webm"
+                        />
                     </video>
 
                     <div className={styles.textContent}>

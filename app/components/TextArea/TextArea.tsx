@@ -184,8 +184,50 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        const handleDragEnter = (e: DragEvent) => {
+            e.preventDefault();
+            console.log("enter");
+            // setLayers({
+            //     settings: {
+            //         type: "POPUP",
+            //     },
+            //     content: {
+            //         type: "WARNING",
+            //         warning: "DRAG_FILE",
+            //         channel: channel,
+            //     },
+            // });
+        };
+
+        const handleDragLeave = (e: DragEvent) => {
+            // setLayers({
+            //     settings: {
+            //         type: "POPUP",
+            //         setNull: true,
+            //     },
+            // });
+            e.preventDefault();
+            console.log("leave");
+        };
+
+        const handleDrop = (e: DragEvent) => {
+            e.preventDefault();
+            console.log("drop");
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("dragenter", handleDragEnter);
+        document.addEventListener("dragleave", handleDragLeave);
+        document.addEventListener("drop", handleDrop);
+        document.addEventListener("dragover", (e) => e.preventDefault());
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("dragenter", handleDragEnter);
+            document.removeEventListener("dragleave", handleDragLeave);
+            document.removeEventListener("drop", handleDrop);
+            document.removeEventListener("dragover", (e) => e.preventDefault());
+        };
     }, [edit, reply]);
 
     useEffect(() => {

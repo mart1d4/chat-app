@@ -23,6 +23,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
     return (
         <li
+            tabIndex={0}
             ref={liRef}
             className={
                 layers.MENU?.content.refElement === liRef.current
@@ -57,6 +58,28 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                         settings: {
                             type: "MENU",
                             setNull: true,
+                        },
+                    });
+                }
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    if (!["all", "online"].includes(content)) return;
+
+                    sendRequest({
+                        query: "CHANNEL_CREATE",
+                        data: { recipients: [user.id] },
+                    });
+                } else if (e.key === "Enter" && e.shiftKey) {
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "USER",
+                            user: user,
+                            refElement: liRef.current,
                         },
                     });
                 }
@@ -105,14 +128,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                         data: { recipients: [user.id] },
                                     });
                                 }}
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: "Message",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
+                                onFocus={(e) => {
+                                    setTooltip({
+                                        text: "Message",
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    });
+                                }}
+                                onBlur={() => setTooltip(null)}
                             >
                                 <Icon
                                     name="message"
@@ -136,14 +167,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                         },
                                     });
                                 }}
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: "More",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
+                                onFocus={(e) => {
+                                    setTooltip({
+                                        text: "More",
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    });
+                                }}
+                                onBlur={() => setTooltip(null)}
                             >
                                 <Icon
                                     name="more"
@@ -167,14 +206,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                             },
                                         });
                                     }}
-                                    onMouseEnter={(e) =>
+                                    onMouseEnter={(e) => {
                                         setTooltip({
                                             text: "Accept",
                                             element: e.currentTarget,
                                             gap: 3,
-                                        })
-                                    }
+                                        });
+                                    }}
                                     onMouseLeave={() => setTooltip(null)}
+                                    onFocus={(e) => {
+                                        setTooltip({
+                                            text: "Accept",
+                                            element: e.currentTarget,
+                                            gap: 3,
+                                        });
+                                    }}
+                                    onBlur={() => setTooltip(null)}
                                 >
                                     <Icon
                                         name="accept"
@@ -194,14 +241,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                         },
                                     });
                                 }}
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: user.req === "Sent" ? "Cancel" : "Ignore",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
+                                onFocus={(e) => {
+                                    setTooltip({
+                                        text: user.req === "Sent" ? "Cancel" : "Ignore",
+                                        element: e.currentTarget,
+                                        gap: 3,
+                                    });
+                                }}
+                                onBlur={() => setTooltip(null)}
                             >
                                 <Icon
                                     name="cancel"
@@ -222,14 +277,22 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     },
                                 });
                             }}
-                            onMouseEnter={(e) =>
+                            onMouseEnter={(e) => {
                                 setTooltip({
                                     text: "Unblock",
                                     element: e.currentTarget,
                                     gap: 3,
-                                })
-                            }
+                                });
+                            }}
                             onMouseLeave={() => setTooltip(null)}
+                            onFocus={(e) => {
+                                setTooltip({
+                                    text: "Unblock",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                });
+                            }}
+                            onBlur={() => setTooltip(null)}
                         >
                             <Icon
                                 name="userDelete"

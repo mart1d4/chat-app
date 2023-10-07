@@ -85,21 +85,23 @@ export const UserSection = (): ReactElement => {
 
                 <div className={styles.toolbar}>
                     <button
-                        onMouseEnter={(e) =>
+                        onMouseEnter={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: settings.microphone ? "Mute" : "Unmute",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) =>
+                        onFocus={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: settings.microphone ? "Mute" : "Unmute",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onBlur={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
@@ -175,21 +177,23 @@ export const UserSection = (): ReactElement => {
                     </button>
 
                     <button
-                        onMouseEnter={(e) =>
+                        onMouseEnter={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: settings.sound ? "Deafen" : "Undeafen",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) =>
+                        onFocus={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: settings.sound ? "Deafen" : "Undeafen",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onBlur={() => setTooltip(null)}
                         onClick={(e) => {
                             setTooltip({
@@ -244,21 +248,23 @@ export const UserSection = (): ReactElement => {
                     </button>
 
                     <button
-                        onMouseEnter={(e) =>
+                        onMouseEnter={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: "User Settings",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) =>
+                        onFocus={(e) => {
+                            setTooltip(null);
                             setTooltip({
                                 text: "User Settings",
                                 element: e.currentTarget,
                                 gap: 3,
-                            })
-                        }
+                            });
+                        }}
                         onBlur={() => setTooltip(null)}
                         onClick={() => setShowSettings(true)}
                         onKeyDown={(e) => {

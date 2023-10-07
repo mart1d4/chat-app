@@ -48,6 +48,7 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
                         id: true,
                     },
                 },
+                rawMemberIds: true,
             },
         });
 
@@ -110,6 +111,7 @@ export async function DELETE(req: Request, { params }: { params: { guildId: stri
             type: "GUILD_DELETED",
             guild: {
                 id: guildId,
+                rawMemberIds: guild.rawMemberIds,
             },
         });
 

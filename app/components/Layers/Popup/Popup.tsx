@@ -37,19 +37,6 @@ const statuses = {
 };
 
 export const Popup = ({ content, friends }: any): ReactElement => {
-    if (content.type === "PINNED_MESSAGES" || content.type === "CREATE_DM") {
-        return (
-            <Popout
-                content={content}
-                friends={friends}
-            />
-        );
-    }
-
-    if (content.type === "GUILD_INVITE") {
-        return <Invite content={content} />;
-    }
-
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
@@ -96,6 +83,19 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     const passwordRef = useRef<HTMLInputElement>(null);
     const guildIconInput = useRef<HTMLInputElement>(null);
 
+    if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
+        return (
+            <Popout
+                content={content}
+                friends={friends}
+            />
+        );
+    }
+
+    if (type === "GUILD_INVITE") {
+        return <Invite content={content} />;
+    }
+
     useEffect(() => {
         // Reset all state when popup is closed
         if (!layers.POPUP) {
@@ -132,7 +132,6 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     }, [content.attachment]);
 
     const handleUsernameSubmit = async () => {
-        if (isLoading) return;
         setIsLoading(true);
 
         const username = trimMessage(uid);
@@ -142,8 +141,8 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             return setIsLoading(false);
         }
 
-        if (username.length < 3 || username.length > 32) {
-            setUsernameError("Username must be between 3 and 32 characters.");
+        if (username.length < 2 || username.length > 32) {
+            setUsernameError("Username must be between 2 and 32 characters.");
             return setIsLoading(false);
         }
 
@@ -157,31 +156,29 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             return setIsLoading(false);
         }
 
-        try {
-            const response = await sendRequest({
-                query: "UPDATE_USER",
-                data: {
-                    username: username,
-                    password: password,
-                },
-            });
+        const response = await sendRequest({
+            query: "UPDATE_USER",
+            data: {
+                username: username,
+                password: password,
+            },
+        });
 
-            if (!response.success) return setUsernameError(response.message ?? "Couldn't update username.");
+        if (!response.success) {
+            setUsernameError(response.message ?? "Couldn't update username.");
+        } else {
             setLayers({
                 settings: {
                     type: "POPUP",
                     setNull: true,
                 },
             });
-        } catch (err) {
-            console.error(err);
         }
 
         setIsLoading(false);
     };
 
     const handlePasswordSubmit = async () => {
-        if (isLoading) return;
         setIsLoading(true);
 
         if (!password1) {
@@ -195,33 +192,72 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         }
 
         if (newPassword.length < 8 || newPassword.length > 256) {
-            setNewPasswordError("New password must be between 8 and 256 characters.");
-            return setIsLoading(false);
-        }
-
-        if (!confirmPassword) {
-            setNewPasswordError("Confirm password cannot be empty.");
+            setNewPasswordError("Must be between 8 and 256 characters.");
             return setIsLoading(false);
         }
 
         if (newPassword !== confirmPassword) {
-            setNewPasswordError("New password and confirm password must match.");
+            setNewPasswordError("Passwords do not match.");
             return setIsLoading(false);
         }
 
-        try {
-            const response = await sendRequest({
-                query: "UPDATE_USER",
-                data: {
-                    password: password1,
-                    newPassword: newPassword,
-                },
-            });
+        const response = await sendRequest({
+            query: "UPDATE_USER",
+            data: {
+                password: password1,
+                newPassword: newPassword,
+            },
+        });
 
-            if (!response.success) return setPassword1Error(response.message ?? "Couldn't update password.");
+        if (!response.success) {
+            setPassword1Error(response.message || "Couldn't update password.");
+        } else {
             setPassword1("");
             setNewPassword("");
             setConfirmPassword("");
+            setLayers({
+                settings: {
+                    type: "POPUP",
+                    setNull: true,
+                },
+            });
+        }
+
+        setIsLoading(false);
+    };
+
+    const createGuild = async () => {
+        if (!guildTemplate || !guildName) return;
+        setIsLoading(true);
+        let uploadedIcon = null;
+
+        try {
+            const getIcon = async () => {
+                if (!guildIcon) return null;
+
+                const result = await base(guildIcon, {
+                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
+                    store: "auto",
+                });
+
+                if (!result.file) console.error(result);
+                else uploadedIcon = result.file;
+            };
+
+            await getIcon();
+            const response = await sendRequest({
+                query: "GUILD_CREATE",
+                data: {
+                    name: guildName,
+                    icon: uploadedIcon,
+                    template: guildTemplate,
+                },
+            });
+
+            if (!response.success) {
+                return alert(response.message ?? "Something went wrong. Try again later.");
+            }
+
             setLayers({
                 settings: {
                     type: "POPUP",
@@ -255,6 +291,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 }
             },
             centered: true,
+            skipClose: true,
         },
         GUILD_CHANNEL_CREATE: {
             title: `Create ${content.isCategory ? "Category" : "Channel"}`,
@@ -455,6 +492,8 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         },
     };
 
+    const prop = props[type as keyof typeof props];
+
     useEffect(() => {
         if (!content.attachment) return;
         setIsImage(content.attachment.isImage);
@@ -464,11 +503,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
     }, [content.attachment]);
 
     useEffect(() => {
-        const handleKeyDown = async (e: KeyboardEvent) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             if (layers.POPUP.length === 0) return;
 
-            if (e.key === "Escape") {
-                if (layers.MENU) return;
+            if (e.key === "Escape" && !layers.MENU) {
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -477,160 +515,30 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 });
             }
 
-            if (e.key === "Enter" && !e.shiftKey && content.type) {
+            if (e.key === "Enter" && !e.shiftKey && prop) {
                 if (isLoading) return;
 
-                if (type === "CREATE_GUILD") {
-                    if (!guildTemplate && !join) {
-                        setGuildTemplate(1);
-                    } else if (guildTemplate) {
-                        await createGuild();
-                    } else if (join) {
-                        // Join server with invite code
-                    }
-                    return;
+                prop.function();
+                if (!prop.skipClose) {
+                    setLayers({
+                        settings: {
+                            type: "POPUP",
+                            setNull: true,
+                        },
+                    });
                 }
-
-                props[content.type as keyof typeof props].function();
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [
-        layers,
-        type,
-        uid,
-        password,
-        password1,
-        newPassword,
-        confirmPassword,
-        isLoading,
-        filename,
-        description,
-        isSpoiler,
-        guildTemplate,
-        guildName,
-        guildIcon,
-        join,
-    ]);
-
-    const createGuild = async () => {
-        if (!guildTemplate || !guildName) return;
-        setIsLoading(true);
-        let uploadedIcon = null;
-
-        try {
-            const getIcon = async () => {
-                if (!guildIcon) return null;
-
-                const result = await base(guildIcon, {
-                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                    store: "auto",
-                });
-
-                if (!result.file) console.error(result);
-                else uploadedIcon = result.file;
-            };
-
-            await getIcon();
-            const response = await sendRequest({
-                query: "GUILD_CREATE",
-                data: {
-                    name: guildName,
-                    icon: uploadedIcon,
-                    template: guildTemplate,
-                },
-            });
-
-            if (!response.success) {
-                return alert(response.message ?? "Something went wrong. Try again later.");
-            }
-
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
-        } catch (err) {
-            console.error(err);
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        uidInputRef?.current?.focus();
-        passwordRef?.current?.focus();
-    }, [layers.POPUP]);
-
-    useEffect(() => {
-        setUsernameError("");
-    }, [uid]);
-
-    useEffect(() => {
-        setPasswordError("");
-    }, [password]);
-
-    useEffect(() => {
-        setPassword1Error("");
-    }, [password1]);
-
-    useEffect(() => {
-        setNewPasswordError("");
-    }, [newPassword, confirmPassword]);
-
-    let prop: any;
-    if (content?.type && content.type !== "WARNING") prop = props[content.type as keyof typeof props];
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [layers, isLoading, prop]);
 
     return (
         <AnimatePresence>
-            {content.type === "ATTACHMENT_PREVIEW" && (
+            {type === "USER_STATUS" ? (
                 <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        width: "100dvw",
-                        height: "100dvh",
-                    }}
-                >
-                    {content.attachments.length > 1 && (
-                        <button
-                            className={styles.imageNav}
-                            onClick={() => {
-                                const length = content.attachments.length;
-                                if (imgIndex == 0) setImgIndex(length - 1);
-                                else setImgIndex((prev: number) => prev - 1);
-                            }}
-                        >
-                            <Icon name="arrowBig" />
-                        </button>
-                    )}
-
-                    {content.attachments.length > 1 && (
-                        <button
-                            className={styles.imageNav}
-                            onClick={() => {
-                                const length = content.attachments.length;
-                                if (imgIndex == length - 1) setImgIndex(0);
-                                else setImgIndex((prev: number) => prev + 1);
-                            }}
-                        >
-                            <Icon name="arrowBig" />
-                        </button>
-                    )}
-                </div>
-            )}
-
-            {content.type === "USER_STATUS" ? (
-                <div
+                    autoFocus
                     ref={popupRef}
                     role="dialog"
                     aria-modal="true"
@@ -817,8 +725,86 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         </button>
                     </div>
                 </div>
-            ) : content.type === "ATTACHMENT_PREVIEW" ? (
+            ) : type === "ATTACHMENT_PREVIEW" ? (
                 <div
+                    autoFocus
+                    ref={popupRef}
+                    role="dialog"
+                    aria-modal="true"
+                    className={styles.container}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <div className={styles.attachmentContainer}>
+                        {content.attachments.length > 1 && (
+                            <button
+                                className={styles.imageNav}
+                                onClick={() => {
+                                    const length = content.attachments.length;
+                                    if (imgIndex == 0) setImgIndex(length - 1);
+                                    else setImgIndex((prev: number) => prev - 1);
+                                }}
+                            >
+                                <Icon name="arrowBig" />
+                            </button>
+                        )}
+
+                        <div className={styles.imagePreview}>
+                            <div
+                                onContextMenu={(e) => {
+                                    setLayers({
+                                        settings: {
+                                            type: "MENU",
+                                            event: e,
+                                        },
+                                        content: {
+                                            type: "IMAGE",
+                                            attachment: content.attachments[imgIndex],
+                                        },
+                                    });
+                                }}
+                            >
+                                <img
+                                    style={{
+                                        maxWidth: `minmax(${content.attachments[imgIndex].dimensions.width}px, 80dvw)`,
+                                        maxHeight: `minmax(${content.attachments[imgIndex].dimensions.height}px, 80dvh)`,
+                                    }}
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
+                                        content.attachments[imgIndex].id
+                                    }/-/resize/${
+                                        content.attachments[imgIndex].dimensions.width >= window.innerWidth
+                                            ? Math.ceil(window.innerWidth * 0.9)
+                                            : content.attachments[imgIndex].dimensions.width
+                                    }x/`}
+                                    alt={content.attachments[imgIndex]?.description ?? "Image"}
+                                />
+                            </div>
+
+                            <a
+                                target="_blank"
+                                className={styles.imageLink}
+                                href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/`}
+                            >
+                                Open in new tab
+                            </a>
+                        </div>
+
+                        {content.attachments.length > 1 && (
+                            <button
+                                className={styles.imageNav}
+                                onClick={() => {
+                                    const length = content.attachments.length;
+                                    if (imgIndex == length - 1) setImgIndex(0);
+                                    else setImgIndex((prev: number) => prev + 1);
+                                }}
+                            >
+                                <Icon name="arrowBig" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            ) : type === "WARNING" ? (
+                <div
+                    autoFocus
                     ref={popupRef}
                     role="dialog"
                     aria-modal="true"
@@ -826,51 +812,11 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     onContextMenu={(e) => e.preventDefault()}
                 >
                     <div
-                        className={styles.imagePreview}
-                        onContextMenu={(e) => {
-                            setLayers({
-                                settings: {
-                                    type: "MENU",
-                                    event: e,
-                                },
-                                content: {
-                                    type: "IMAGE",
-                                    attachment: content.attachments[imgIndex],
-                                },
-                            });
+                        className={styles.warning}
+                        style={{
+                            backgroundColor: content.warning === "DRAG_FILE" ? "var(--accent-1)" : "",
                         }}
                     >
-                        <img
-                            style={{
-                                maxWidth: `minmax(${content.attachments[imgIndex].dimensions.width}px, 80dvw)`,
-                                maxHeight: `minmax(${content.attachments[imgIndex].dimensions.height}px, 80dvh)`,
-                            }}
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/-/resize/${
-                                content.attachments[imgIndex].dimensions.width >= window.innerWidth
-                                    ? Math.ceil(window.innerWidth * 0.9)
-                                    : content.attachments[imgIndex].dimensions.width
-                            }x/`}
-                            alt={content.attachments[imgIndex]?.description ?? "Image"}
-                        />
-                    </div>
-
-                    <a
-                        target="_blank"
-                        className={styles.imageLink}
-                        href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/`}
-                    >
-                        Open in new tab
-                    </a>
-                </div>
-            ) : content.type === "WARNING" ? (
-                <div
-                    ref={popupRef}
-                    role="dialog"
-                    aria-modal="true"
-                    className={styles.container}
-                    onContextMenu={(e) => e.preventDefault()}
-                >
-                    <div className={styles.warning}>
                         <div>
                             <div className={styles.icons}>
                                 <div>
@@ -889,6 +835,10 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 {content.warning === "FILE_TYPE" && "Invalid File Type"}
                                 {content.warning === "FILE_NUMBER" && "Too many uploads!"}
                                 {content.warning === "UPLOAD_FAILED" && "Upload Failed"}
+                                {content.warning === "DRAG_FILE" &&
+                                    `Upload to ${
+                                        content.channel?.type === 0 ? "@" : content.channel?.type === 2 ? "#" : ""
+                                    }${getChannelName(content.channel, user.id)}`}
                             </div>
 
                             <div className={styles.description}>
@@ -896,12 +846,20 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                 {content.warning === "FILE_TYPE" && "Hm.. I don't think we support that type of file"}
                                 {content.warning === "FILE_NUMBER" && "You can only upload 10 files at a time!"}
                                 {content.warning === "UPLOAD_FAILED" && "Something went wrong. try again later"}
+                                {content.warning === "DRAG_FILE" && (
+                                    <>
+                                        You can add comments before uploading.
+                                        <br />
+                                        Hold shift to upload directly.
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
-            ) : content.type ? (
+            ) : prop ? (
                 <div
+                    autoFocus
                     ref={popupRef}
                     className={styles.cardContainer}
                     style={{
@@ -922,7 +880,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         />
                     )}
 
-                    {!prop?.centered ? (
+                    {!prop.centered ? (
                         <div
                             className={styles.titleBlock}
                             style={{
@@ -937,14 +895,15 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                             <div>{prop.description}</div>
 
                             <button
-                                onClick={() =>
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     setLayers({
                                         settings: {
                                             type: "POPUP",
                                             setNull: true,
                                         },
-                                    })
-                                }
+                                    });
+                                }}
                             >
                                 <svg
                                     viewBox="0 0 24 24"
@@ -962,7 +921,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     )}
 
                     <div className={styles.popupContent + " scrollbar"}>
-                        {!prop?.centered && (
+                        {!prop.centered && (
                             <>
                                 {prop.description && (
                                     <div
@@ -974,7 +933,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                     </div>
                                 )}
 
-                                {content.message && content.type !== "DELETE_ATTACHMENT" && (
+                                {content.message && type !== "DELETE_ATTACHMENT" && (
                                     <div className={styles.messagesContainer}>
                                         <FixedMessage
                                             message={content.message}
@@ -1549,6 +1508,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                             aria-labelledby="password"
                                             aria-describedby="password"
                                             value={newPassword}
+                                            maxLength={256}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                         />
                                     </div>
@@ -1581,6 +1541,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                                             aria-labelledby="password"
                                             aria-describedby="password"
                                             value={confirmPassword}
+                                            maxLength={256}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                         />
                                     </div>
@@ -1589,14 +1550,20 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         )}
                     </div>
 
-                    <div style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}>
+                    <div
+                        className={styles.footerButtons}
+                        style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}
+                    >
                         <button
                             className="underline"
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
+
                                 if (type === "CREATE_GUILD") {
                                     if (guildTemplate !== 0) return setGuildTemplate(0);
                                     else if (join) return setJoin(false);
                                 }
+
                                 setLayers({
                                     settings: {
                                         type: "POPUP",
@@ -1609,23 +1576,20 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                         </button>
 
                         <button
-                            className={`${prop.buttonColor} ${prop?.buttonDisabled ? "disabled" : ""}`}
-                            onClick={async () => {
-                                if (prop?.buttonDisabled) return;
-                                if (type === "CREATE_GUILD") {
-                                    if (!guildTemplate && !join) setJoin(true);
-                                    else if (join) console.log("Join server with invite code");
-                                    else if (guildTemplate) await createGuild();
-                                    return;
-                                }
+                            className={`${prop.buttonColor} ${prop.buttonDisabled ? "disabled" : ""}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (isLoading) return;
 
                                 prop.function();
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                        setNull: true,
-                                    },
-                                });
+                                if (!prop.skipClose) {
+                                    setLayers({
+                                        settings: {
+                                            type: "POPUP",
+                                            setNull: true,
+                                        },
+                                    });
+                                }
                             }}
                         >
                             {isLoading ? <LoadingDots /> : prop.buttonText}

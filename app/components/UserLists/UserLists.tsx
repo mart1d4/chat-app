@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import useContextHook from "@/hooks/useContextHook";
 import { useData, useLayers } from "@/lib/store";
 import { Icon, UserItem } from "@components";
 import styles from "./UserLists.module.css";
@@ -126,12 +125,14 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
                         />
 
                         <div
-                            className={styles.inputButton}
                             role="button"
+                            className={styles.inputButton}
                             style={{ cursor: search.length ? "pointer" : "text" }}
                             onClick={() => {
-                                setSearch("");
-                                searchBar.current?.focus();
+                                if (search.length) {
+                                    setSearch("");
+                                    searchBar.current?.focus();
+                                }
                             }}
                         >
                             <Icon

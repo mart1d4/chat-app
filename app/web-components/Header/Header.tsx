@@ -9,9 +9,9 @@ type Link = {
 
 const links: Link[] = [
     { name: "Download", href: "/download" },
-    { name: "Discover", href: "" },
-    { name: "Support", href: "" },
-    { name: "Blog", href: "" },
+    { name: "Discover", href: "/" },
+    { name: "Support", href: "/" },
+    { name: "Blog", href: "/" },
 ];
 
 const Header = () => {
@@ -26,6 +26,7 @@ const Header = () => {
                 <nav>
                     <Link
                         href="/"
+                        aria-label="Home"
                         className={styles.brand}
                     >
                         <svg

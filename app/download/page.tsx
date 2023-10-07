@@ -3,44 +3,54 @@ import Header from "../web-components/Header/Header";
 import Footer from "../web-components/Footer/Footer";
 import styles from "./Download.module.css";
 import type { Metadata } from "next";
-import { ReactElement } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
     title: "Download Chat App to Talk, Chat and Hang Out",
 };
 
-const cardItems: string[] = ["iOS", "Android", "Linux", "Mac", "Feeling experimental?"];
-
-const assets = {
-    iOS: "19dadf2d-b78c-47e7-b3c5-aa19402832de",
-    Android: "6d7ad58c-9235-4667-bc42-31ee3698bf22",
-    Linux: "ec81e85f-b758-400f-bb7a-4e24924dcbd2",
-    Mac: "d326513a-bcfc-4522-ae57-0fa44bb962ce",
-    "Feeling experimental?": "",
-};
-
-const links: (
-    | string
-    | {
-          [key: string]: string;
-      }
-)[] = [
-    "",
-    "",
+const cardItems: {
+    name: string;
+    image: string;
+    urls: string[][] | string;
+}[] = [
     {
-        deb: "",
-        "tar.gz": "",
+        name: "iOS",
+        image: "19dadf2d-b78c-47e7-b3c5-aa19402832de",
+        urls: "",
     },
-    "",
     {
-        Windows: "",
-        "Linux deb": "",
-        "Linux tar.gz": "",
-        Mac: "",
+        name: "Android",
+        image: "6d7ad58c-9235-4667-bc42-31ee3698bf22",
+        urls: "",
+    },
+    {
+        name: "Linux",
+        image: "ec81e85f-b758-400f-bb7a-4e24924dcbd2",
+        urls: [
+            ["deb", ""],
+            ["tar.gz", ""],
+        ],
+    },
+    {
+        name: "Mac",
+        image: "d326513a-bcfc-4522-ae57-0fa44bb962ce",
+        urls: "",
+    },
+    {
+        name: "Feeling experimental?",
+        image: "",
+        urls: [
+            ["Windows", ""],
+            ["Linux deb", ""],
+            ["Linux tar.gz", ""],
+            ["Mac", ""],
+        ],
     },
 ];
 
-const DownloadPage = (): ReactElement => {
+export default function DownloadPage() {
     return (
         <div className={styles.mainContainer}>
             <div className={styles.heading}>
@@ -58,7 +68,10 @@ const DownloadPage = (): ReactElement => {
                         </div>
 
                         <div>
-                            <a href="">
+                            <a
+                                href="/app/download/latest/ChatApp-Setup.exe"
+                                download="ChatApp-Setup.exe"
+                            >
                                 <svg
                                     width="24"
                                     height="24"
@@ -77,7 +90,10 @@ const DownloadPage = (): ReactElement => {
                     </div>
 
                     <div>
-                        <img src="" />
+                        <img
+                            src="https://ucarecdn.com/f326c4c9-e67f-4971-9461-9b76dce08c3b/"
+                            alt="People hanging out in voice chat."
+                        />
                     </div>
                 </div>
             </div>
@@ -87,10 +103,10 @@ const DownloadPage = (): ReactElement => {
                     <div>
                         {cardItems.map((item, index) => (
                             <div
+                                key={item.name}
                                 className={styles.card}
-                                key={index}
                             >
-                                {index === 4 ? (
+                                {index === 4 && typeof item.urls === "object" ? (
                                     <>
                                         <h3>Ready to experiment?</h3>
 
@@ -98,21 +114,26 @@ const DownloadPage = (): ReactElement => {
                                             Discover new features before they launch with Chat App's Public Test Build.
                                         </div>
 
-                                        <PopoverButton links={links[index]} />
+                                        <PopoverButton links={item.urls} />
                                     </>
                                 ) : (
                                     <>
                                         <div>
-                                            <h3>{item}</h3>
-                                            {index === 2 ? (
-                                                <PopoverButton links={links[index]} />
+                                            <h3>{item.name}</h3>
+                                            {typeof item.urls === "object" ? (
+                                                <PopoverButton links={item.urls} />
                                             ) : (
-                                                <a href={links[index].toString()}>Download</a>
+                                                <Link href={item.urls}>Download</Link>
                                             )}
                                         </div>
 
-                                        {/* @ts-ignore */}
-                                        <img src={`https://ucarecdn.com/${assets[item]}/`} />
+                                        {item.image !== "" && (
+                                            <img
+                                                src={`https://ucarecdn.com/${item.image}/`}
+                                                alt={item.name}
+                                                loading="lazy"
+                                            />
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -124,6 +145,4 @@ const DownloadPage = (): ReactElement => {
             <Footer />
         </div>
     );
-};
-
-export default DownloadPage;
+}

@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState, ReactElement, useMemo } from "react";
+import { useEffect, useState, ReactElement, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import useContextHook from "@/hooks/useContextHook";
 import styles from "./Tooltip.module.css";
 import { useTooltip } from "@/lib/store";
 
 export const Tooltip = (): ReactElement => {
     const [positions, setPositions] = useState<any>({});
+    const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
     const [arrowPositions, setArrowPositions] = useState<any>({});
 
     const tooltip = useTooltip((state) => state.tooltip);
     const text = tooltip?.text || null;
     const element = tooltip?.element || null;
-    const position = tooltip?.position || "top";
+    const position = tooltip?.position || "TOP";
     const gap = tooltip?.gap || 0;
     const big = tooltip?.big || false;
     const color = tooltip?.color || "var(--background-dark)";
@@ -21,11 +21,14 @@ export const Tooltip = (): ReactElement => {
     const arrow = tooltip?.arrow || true;
     const wide = tooltip?.wide || false;
 
-    useEffect(() => {
-        if (!tooltip) {
-            setPositions({});
-            return setArrowPositions({});
+    const tooltipRef = useCallback((node: HTMLElement | null) => {
+        if (node) {
+            setCurrentNode(node);
         }
+    }, []);
+
+    useEffect(() => {
+        if (!tooltip || !currentNode) return;
 
         let pos: any = {};
         let arrowPos: any = {};
@@ -36,7 +39,7 @@ export const Tooltip = (): ReactElement => {
 
         if (!container) return;
 
-        if (position === "top") {
+        if (position === "TOP") {
             pos = {
                 bottom: screenY - container.top + gap + 6,
                 left: container.left + container.width / 2,
@@ -90,15 +93,24 @@ export const Tooltip = (): ReactElement => {
             };
         }
 
+        const tooltipWidth = currentNode.offsetWidth;
+        const tooltipHeight = currentNode.offsetHeight;
+        // Not enough space to the right, set right to 14
+        if (screenX - 10 - pos.left < tooltipWidth) {
+            pos.left = screenX - tooltipWidth - 14;
+            arrowPos.left = tooltipWidth - 14;
+        }
+
         setPositions(pos);
         setArrowPositions(arrowPos);
-    }, [text, element, position, gap, big, color, delay, arrow]);
+    }, [currentNode, tooltip, position, gap, color, text, wide]);
 
     return useMemo(
         () => (
             <AnimatePresence>
-                {tooltip && positions?.transform && (
+                {tooltip && (
                     <div
+                        ref={tooltipRef}
                         style={{ ...positions }}
                         className={styles.container}
                     >

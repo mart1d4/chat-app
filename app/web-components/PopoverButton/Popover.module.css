@@ -20,7 +20,8 @@
     text-decoration: none;
 }
 
-.popup > div > a:hover {
+.popup > div > a:hover,
+.popup > div > a:focus-within {
     color: hsl(235, 86%, 65%);
     text-decoration: underline;
 }

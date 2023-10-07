@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import styles from './Footer.module.css';
-import { Icon } from '@components';
+import { useState, useEffect, useRef } from "react";
+import styles from "./Footer.module.css";
+import { Icon } from "@components";
 
 type Language = {
     name: string;
@@ -10,35 +10,35 @@ type Language = {
 };
 
 const languages: Language[] = [
-    { name: 'български', flag: 'blg' },
-    { name: 'Čeština', flag: 'cze' },
-    { name: 'Dansk', flag: 'den' },
-    { name: 'Deutsch', flag: 'ger' },
-    { name: 'Ελληνικά', flag: 'gre' },
-    { name: 'English, USA', flag: 'usa' },
-    { name: 'Español', flag: 'esp' },
-    { name: 'Suomi', flag: 'fin' },
-    { name: 'Français', flag: 'fra' },
-    { name: 'हिंदी', flag: 'ind' },
-    { name: 'Hrvatski', flag: 'cro' },
-    { name: 'Magyar', flag: 'hun' },
-    { name: 'Italiano', flag: 'ita' },
-    { name: '日本語', flag: 'jpn' },
-    { name: '한국어', flag: 'kor' },
-    { name: 'Lietuviškai', flag: 'lit' },
-    { name: 'Nederlands', flag: 'ned' },
-    { name: 'Norwegian', flag: 'nor' },
-    { name: 'Polski', flag: 'pol' },
-    { name: 'Português do Brasil', flag: 'bra' },
-    { name: 'Română', flag: 'rom' },
-    { name: 'Pyccĸий', flag: 'rus' },
-    { name: 'Svenska', flag: 'swe' },
-    { name: 'ไทย', flag: 'tha' },
-    { name: 'Türkçe', flag: 'tur' },
-    { name: 'Українська', flag: 'ukr' },
-    { name: 'Tiếng Việt', flag: 'vie' },
-    { name: '中文', flag: 'chn' },
-    { name: '繁體中文', flag: 'twn' },
+    { name: "български", flag: "blg" },
+    { name: "Čeština", flag: "cze" },
+    { name: "Dansk", flag: "den" },
+    { name: "Deutsch", flag: "ger" },
+    { name: "Ελληνικά", flag: "gre" },
+    { name: "English, USA", flag: "usa" },
+    { name: "Español", flag: "esp" },
+    { name: "Suomi", flag: "fin" },
+    { name: "Français", flag: "fra" },
+    { name: "हिंदी", flag: "ind" },
+    { name: "Hrvatski", flag: "cro" },
+    { name: "Magyar", flag: "hun" },
+    { name: "Italiano", flag: "ita" },
+    { name: "日本語", flag: "jpn" },
+    { name: "한국어", flag: "kor" },
+    { name: "Lietuviškai", flag: "lit" },
+    { name: "Nederlands", flag: "ned" },
+    { name: "Norwegian", flag: "nor" },
+    { name: "Polski", flag: "pol" },
+    { name: "Português do Brasil", flag: "bra" },
+    { name: "Română", flag: "rom" },
+    { name: "Pyccĸий", flag: "rus" },
+    { name: "Svenska", flag: "swe" },
+    { name: "ไทย", flag: "tha" },
+    { name: "Türkçe", flag: "tur" },
+    { name: "Українська", flag: "ukr" },
+    { name: "Tiếng Việt", flag: "vie" },
+    { name: "中文", flag: "chn" },
+    { name: "繁體中文", flag: "twn" },
 ];
 
 const Language = () => {
@@ -55,8 +55,8 @@ const Language = () => {
             }
         };
 
-        document.addEventListener('click', handleClick);
-        return () => document.removeEventListener('click', handleClick);
+        document.addEventListener("click", handleClick);
+        return () => document.removeEventListener("click", handleClick);
     }, []);
 
     return (
@@ -78,7 +78,10 @@ const Language = () => {
                                     }}
                                 >
                                     <div>
-                                        <img src={`/assets/flags/${language.flag}.png`} />
+                                        <img
+                                            src={`/assets/flags/${language.flag}.png`}
+                                            alt={`${language.name} flag`}
+                                        />
                                         <div>{language.name}</div>
                                     </div>
                                 </div>
@@ -96,7 +99,7 @@ const Language = () => {
                         <div>{lang?.name}</div>
                     </div>
 
-                    <Icon name='arrow' />
+                    <Icon name="arrow" />
                 </div>
             </div>
         </div>

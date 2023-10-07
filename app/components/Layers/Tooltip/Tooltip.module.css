@@ -9,7 +9,7 @@
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    word-break: break-word;
+    /* word-break: break-word; */
     align-items: center;
     font-size: 14px;
     line-height: 16px;

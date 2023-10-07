@@ -58,7 +58,7 @@ type TLayer = {
         type: "MENU" | "POPUP" | "USER_CARD" | "USER_PROFILE";
         setNull?: boolean;
         element?: any | null;
-        event?: React.MouseEvent;
+        event?: React.MouseEvent | React.KeyboardEvent;
         firstSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         secondSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         gap?: number;

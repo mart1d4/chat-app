@@ -138,7 +138,7 @@ export default function HomePage() {
 
                 <div className={styles.contentGrid}>
                     <div>
-                        <h4>Ready to begin on your journey?</h4>
+                        <h3>Ready to begin on your journey?</h3>
 
                         <Link href="/download">
                             <svg

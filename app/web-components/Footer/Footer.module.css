@@ -29,7 +29,7 @@
 
 .infoBox > h4 {
     color: #5865f2;
-    font-family: 'Ginto Nord', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Ginto Nord", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 800;
     font-size: 32px;
     line-height: 95%;
@@ -206,7 +206,7 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
     text-decoration: none;
 }
 

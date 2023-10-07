@@ -469,9 +469,11 @@
     user-select: none;
     min-height: 48px;
     transition: none;
+    outline: none;
 }
 
-.userItem:hover {
+.userItem:hover,
+.userItem:focus-visible {
     background-color: var(--card-background-color);
 }
 

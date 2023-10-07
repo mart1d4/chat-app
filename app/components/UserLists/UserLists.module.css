@@ -71,9 +71,7 @@
 
 .listContainer {
     overflow: hidden scroll;
-    padding-right: 0px;
-    padding-bottom: 8px;
-    margin-top: 8px;
+    padding: 8px 0;
     position: relative;
     box-sizing: border-box;
     flex: 1 1 auto;

@@ -13,7 +13,8 @@
 }
 
 .liContainer:hover,
-.active {
+.active,
+.liContainer:focus-within {
     border-radius: 8px;
     margin: 0 10px 0 20px;
     padding: 16px 10px;
@@ -22,7 +23,8 @@
 }
 
 .liContainer:hover + .liContainer,
-.active + .liContainer {
+.active + .liContainer,
+.liContainer:focus-within + .liContainer {
     border-color: transparent;
 }
 
@@ -76,7 +78,8 @@
 }
 
 .liContainer:hover .usernames > p:last-child,
-.active .usernames > p:last-child {
+.active .usernames > p:last-child,
+.liContainer:focus-within .usernames > p:last-child {
     visibility: visible;
 }
 
@@ -106,19 +109,23 @@
 }
 
 .liContainer:hover .actions > button,
-.active .actions > button {
+.active .actions > button,
+.liContainer:focus-within .actions > button {
     background-color: var(--background-1);
 }
 
-.actions > button:hover {
+.actions > button:hover,
+.actions > button:focus {
     color: var(--foreground-1);
 }
 
-.actions > button.buttonAccept:hover {
+.actions > button.buttonAccept:hover,
+.actions > button.buttonAccept:focus {
     color: var(--success-light);
 }
 
-.actions > button.buttonCancel:hover {
+.actions > button.buttonCancel:hover,
+.actions > button.buttonCancel:focus {
     color: var(--error-1);
 }
 
