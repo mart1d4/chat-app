@@ -13,6 +13,19 @@ import filetypeinfo from "magic-bytes.js";
 import styles from "./Popup.module.css";
 import Image from "next/image";
 
+type TProps = {
+    [key: string]: {
+        title: string;
+        description?: string;
+        buttonColor: string;
+        buttonText: string;
+        buttonDisabled?: boolean;
+        function: () => void;
+        centered?: boolean;
+        skipClose?: boolean;
+    };
+};
+
 const colors = {
     ONLINE: "#22A559",
     IDLE: "#F0B232",
@@ -271,7 +284,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         setIsLoading(false);
     };
 
-    const props = {
+    const props: TProps = {
         CREATE_GUILD: {
             title: join || guildTemplate ? "Customize your server" : "Create a server",
             description:
@@ -280,7 +293,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                     : "Your server is where you and your friends hang out. Make yours and start talking.",
             buttonColor: join || guildTemplate ? "blue" : "grey",
             buttonText: join ? "Join server" : guildTemplate ? "Create" : "Join a server",
-            buttonDisabled: guildTemplate && !guildName,
+            buttonDisabled: guildTemplate && !guildName ? true : false,
             function: async () => {
                 if (!guildTemplate && !join) {
                     setGuildTemplate(1);
@@ -295,7 +308,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         },
         GUILD_CHANNEL_CREATE: {
             title: `Create ${content.isCategory ? "Category" : "Channel"}`,
-            description: content.category ? `in ${content.category.name}` : content.isCategory ? null : " ",
+            description: content.category ? `in ${content.category.name}` : content.isCategory ? undefined : " ",
             buttonColor: "blue",
             buttonText: channelLocked ? "Next" : `Create ${content.isCategory ? "Category" : "Channel"}`,
             buttonDisabled: !channelName || channelLocked,
@@ -492,7 +505,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
         },
     };
 
-    const prop = props[type as keyof typeof props];
+    const prop = props[type as keyof typeof props] ?? null;
 
     useEffect(() => {
         if (!content.attachment) return;
@@ -515,7 +528,7 @@ export const Popup = ({ content, friends }: any): ReactElement => {
                 });
             }
 
-            if (e.key === "Enter" && !e.shiftKey && prop) {
+            if (e.key === "Enter" && !e.shiftKey && prop !== null) {
                 if (isLoading) return;
 
                 prop.function();
