@@ -8,6 +8,11 @@
     border-radius: 8px;
     box-shadow: 0 1px 1px hsla(0, 0%, 0%, 0.1);
     overflow: hidden;
+    visibility: hidden;
+}
+
+.popup.show {
+    visibility: visible;
 }
 
 .popup > div:hover {

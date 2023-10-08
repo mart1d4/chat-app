@@ -23,19 +23,25 @@ export default function PopoverButton({ links }: { links: TLinks }) {
             }
         };
 
-        const handleEnter = (e: KeyboardEvent) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!showPopover) return;
+
             if (e.key === "Enter" && document.activeElement !== buttonRef.current) {
                 setShowPopover(false);
+            } else if (e.key === "Escape") {
+                setShowPopover(false);
+                buttonRef.current?.focus();
             }
         };
 
-        window.addEventListener("mousedown", handleClick);
-        window.addEventListener("keydown", handleEnter);
+        document.addEventListener("click", handleClick);
+        document.addEventListener("keydown", handleKeyDown);
+
         return () => {
-            window.removeEventListener("mousedown", handleClick);
-            window.removeEventListener("keydown", handleEnter);
+            document.removeEventListener("click", handleClick);
+            document.removeEventListener("keydown", handleKeyDown);
         };
-    }, []);
+    }, [showPopover]);
 
     return (
         <div>
@@ -59,20 +65,29 @@ export default function PopoverButton({ links }: { links: TLinks }) {
                 </svg>
             </button>
 
-            {showPopover && (
-                <div
-                    className={styles.popup}
-                    ref={popoverRef}
-                >
-                    {links.map((item) => (
-                        <div key={item[0]}>
-                            <Link href={item[1]}>
-                                <div>{item[0]}</div>
-                            </Link>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div
+                ref={popoverRef}
+                className={styles.popup + " " + (showPopover ? styles.show : "")}
+                aria-label="Download links"
+                aria-expanded={showPopover}
+                aria-haspopup="true"
+                role="menu"
+                aria-orientation="vertical"
+                aria-hidden={!showPopover}
+                tabIndex={-1}
+            >
+                {links.map((item, index) => (
+                    <div key={item[0]}>
+                        <Link
+                            href={item[1]}
+                            aria-label={item[0]}
+                            autoFocus={index === 0 ? true : undefined}
+                        >
+                            <div>{item[0]}</div>
+                        </Link>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

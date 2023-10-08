@@ -1,7 +1,7 @@
 "use client";
 
-import { ReactElement, useEffect, useState, useRef, useMemo } from "react";
 import { Avatar, Icon, LoadingDots, EmojiPicker } from "@components";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useData, useLayers, useTooltip } from "@/lib/store";
 import { getButtonColor } from "@/lib/colors/getColors";
 import { AnimatePresence, motion } from "framer-motion";
@@ -28,7 +28,7 @@ const getRandomAvatar = (): string => {
     return avatars[index];
 };
 
-export const Settings = (): ReactElement => {
+export function Settings() {
     const [activeTab, setActiveTab] = useState<string>("My Account");
     const [minified, setMinified] = useState<boolean>(false);
     const [hideNav, setHideNav] = useState<boolean>(false);
@@ -283,11 +283,9 @@ export const Settings = (): ReactElement => {
             )}
         </AnimatePresence>
     );
-};
+}
 
-export default Settings;
-
-const MyAccount = ({ setActiveTab }: any) => {
+function MyAccount({ setActiveTab }: any) {
     const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
@@ -486,9 +484,9 @@ const MyAccount = ({ setActiveTab }: any) => {
             </div>
         </>
     );
-};
+}
 
-const Profiles = () => {
+function Profiles() {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
@@ -1104,9 +1102,9 @@ const Profiles = () => {
             </div>
         </>
     );
-};
+}
 
-const StopWatch = () => {
+function StopWatch() {
     const [time, setTime] = useState<{
         hours: number;
         minutes: number;
@@ -1155,9 +1153,9 @@ const StopWatch = () => {
             {" elapsed"}
         </div>
     );
-};
+}
 
-const FriendRequests = () => {
+function FriendRequests() {
     return (
         <>
             <div>
@@ -1169,4 +1167,4 @@ const FriendRequests = () => {
             </div>
         </>
     );
-};
+}

@@ -17,32 +17,32 @@ const routes: Route[] = [
         title: "Product",
         children: [
             { name: "Download", link: "/download" },
-            { name: "Status", link: "" },
+            { name: "Status", link: "/" },
         ],
     },
     {
         title: "Company",
         children: [
-            { name: "About", link: "" },
-            { name: "Brand", link: "" },
+            { name: "About", link: "/" },
+            { name: "Brand", link: "/" },
         ],
     },
     {
         title: "Resources",
         children: [
-            { name: "Support", link: "" },
-            { name: "Safety", link: "" },
-            { name: "Blog", link: "" },
-            { name: "Feedback", link: "" },
+            { name: "Support", link: "/" },
+            { name: "Safety", link: "/" },
+            { name: "Blog", link: "/" },
+            { name: "Feedback", link: "/" },
         ],
     },
     {
         title: "Policies",
         children: [
-            { name: "Terms", link: "" },
-            { name: "Privacy", link: "" },
-            { name: "Licenses", link: "" },
-            { name: "Moderation", link: "" },
+            { name: "Terms", link: "/" },
+            { name: "Privacy", link: "/" },
+            { name: "Licenses", link: "/" },
+            { name: "Moderation", link: "/" },
         ],
     },
 ];

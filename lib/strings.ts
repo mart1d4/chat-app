@@ -20,7 +20,6 @@ export const trimMessage = (message: string) => {
         message.startsWith("\r") ||
         message.startsWith("\t") ||
         message.startsWith("\b") ||
-        message.startsWith("a") ||
         message.startsWith(" ")
     ) {
         message = message.substring(1);
@@ -31,7 +30,6 @@ export const trimMessage = (message: string) => {
         message.endsWith("\r") ||
         message.endsWith("\t") ||
         message.endsWith("\b") ||
-        message.endsWith("a") ||
         message.endsWith(" ")
     ) {
         message = message.substring(0, message.length - 1);

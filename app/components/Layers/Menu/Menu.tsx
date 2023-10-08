@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ReactElement, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useData, useLayers, useMention, useSettings } from "@/lib/store";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -51,10 +51,9 @@ enum EMenuType {
     STATUS = "STATUS",
 }
 
-export const Menu = ({ content }: { content: any }): ReactElement => {
+export function Menu({ content }: { content: any }) {
     const [hover, setHover] = useState<string>("");
     const [items, setItems] = useState<ItemType[]>([]);
-    const [shift, setShift] = useState<boolean>(false);
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
@@ -81,14 +80,6 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
     };
 
     useEffect(() => {
-        const handleShift = (e: KeyboardEvent) => {
-            if (e.key === "Shift") setShift(true);
-        };
-
-        const handleShiftUp = (e: KeyboardEvent) => {
-            if (e.key === "Shift") setShift(false);
-        };
-
         const handleClickOutside = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setLayers({
@@ -100,15 +91,8 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
             }
         };
 
-        window.addEventListener("keydown", handleShift);
-        window.addEventListener("keyup", handleShiftUp);
-        window.addEventListener("click", handleClickOutside);
-
-        return () => {
-            window.removeEventListener("keydown", handleShift);
-            window.removeEventListener("keyup", handleShiftUp);
-            window.removeEventListener("click", handleClickOutside);
-        };
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
     useEffect(() => {
@@ -1635,9 +1619,9 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                                     className={`${item.danger ? styles.itemDanger : styles.item} ${
                                         item.disabled ? styles.disabled : ""
                                     } ${hover === item.name ? styles.hover : ""}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
                                         if (item.disabled) return;
-                                        if (shift && item.funcShift) item.funcShift();
+                                        if (e.shiftKey && item.funcShift) item.funcShift();
                                         else if (item.func) item.func();
                                         if ("checked" in item) return;
                                         setLayers({
@@ -1739,6 +1723,6 @@ export const Menu = ({ content }: { content: any }): ReactElement => {
                 </div>
             </div>
         ),
-        [items, shift, hover]
+        [items, hover]
     );
-};
+}

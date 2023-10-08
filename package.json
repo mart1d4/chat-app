@@ -14,7 +14,6 @@
     "dependencies": {
         "@prisma/client": "^5.4.1",
         "@uploadcare/upload-client": "^6.6.1",
-        "@vercel/analytics": "^1.1.0",
         "bcryptjs": "^2.4.3",
         "bufferutil": "^4.0.7",
         "cryptr": "^6.3.0",

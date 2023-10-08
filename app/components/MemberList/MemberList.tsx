@@ -33,7 +33,7 @@ interface Props {
     friend?: TCleanUser | null;
 }
 
-export const MemberList = ({ channel, guild, user, friend }: Props) => {
+export function MemberList({ channel, guild, user, friend }: Props) {
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
     const [originalNote, setOriginalNote] = useState<string>("");
@@ -126,10 +126,24 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                 }
             >
                 <div>
-                    <svg className={styles.cardBanner} viewBox="0 0 340 120">
+                    <svg
+                        className={styles.cardBanner}
+                        viewBox="0 0 340 120"
+                    >
                         <mask id="card-banner-mask-1">
-                            <rect fill="white" x="0" y="0" width="100%" height="100%" />
-                            <circle fill="black" cx="58" cy="112" r="46" />
+                            <rect
+                                fill="white"
+                                x="0"
+                                y="0"
+                                width="100%"
+                                height="100%"
+                            />
+                            <circle
+                                fill="black"
+                                cx="58"
+                                cy="112"
+                                r="46"
+                            />
                         </mask>
 
                         <foreignObject
@@ -266,7 +280,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                     <div className={styles.cardMutuals}>
                         {mutualGuilds.length > 0 && (
                             <>
-                                <button className={"button"} onClick={() => setShowGuilds((prev) => !prev)}>
+                                <button
+                                    className={"button"}
+                                    onClick={() => setShowGuilds((prev) => !prev)}
+                                >
                                     <div>
                                         {mutualGuilds?.length} Mutual Server
                                         {mutualGuilds?.length > 1 && "s"}
@@ -286,7 +303,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                 {showGuilds && (
                                     <ul className={styles.mutualItems}>
                                         {mutualGuilds.map((guild: TGuild) => (
-                                            <MutualItem key={guild.id} guild={guild} />
+                                            <MutualItem
+                                                key={guild.id}
+                                                guild={guild}
+                                            />
                                         ))}
                                     </ul>
                                 )}
@@ -295,7 +315,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
 
                         {mutualFriends.length > 0 && (
                             <>
-                                <button className={"button"} onClick={() => setShowFriends((prev) => !prev)}>
+                                <button
+                                    className={"button"}
+                                    onClick={() => setShowFriends((prev) => !prev)}
+                                >
                                     <div>
                                         {mutualFriends.length} Mutual Friend
                                         {mutualFriends.length > 1 && "s"}
@@ -313,7 +336,10 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
                                 {showFriends && (
                                     <ul className={styles.mutualItems}>
                                         {mutualFriends.map((friend: TCleanUser) => (
-                                            <MutualItem key={friend.id} user={friend} />
+                                            <MutualItem
+                                                key={friend.id}
+                                                user={friend}
+                                            />
                                         ))}
                                     </ul>
                                 )}
@@ -366,9 +392,9 @@ export const MemberList = ({ channel, guild, user, friend }: Props) => {
             </aside>
         );
     }
-};
+}
 
-const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
+function MutualItem({ user, guild }: { user?: TCleanUser; guild?: TGuild }) {
     if (!user && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
     const urls = useUrls((state) => state.guilds);
@@ -467,12 +493,26 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
             }}
         >
             <div>
-                {user && <Avatar src={user.avatar} alt={user.username} size={40} status={user.status} />}
+                {user && (
+                    <Avatar
+                        src={user.avatar}
+                        alt={user.username}
+                        size={40}
+                        status={user.status}
+                    />
+                )}
 
                 {guild && (
-                    <div className={styles.guildIcon} style={{ backgroundColor: guild.icon ? "transparent" : "" }}>
+                    <div
+                        className={styles.guildIcon}
+                        style={{ backgroundColor: guild.icon ? "transparent" : "" }}
+                    >
                         {guild.icon ? (
-                            <Avatar src={guild.icon} alt={guild.name} size={40} />
+                            <Avatar
+                                src={guild.icon}
+                                alt={guild.name}
+                                size={40}
+                            />
                         ) : (
                             guild.name
                                 .toLowerCase()
@@ -489,4 +529,4 @@ const MutualItem = ({ user, guild }: { user?: TCleanUser; guild?: TGuild }) => {
             </div>
         </div>
     );
-};
+}

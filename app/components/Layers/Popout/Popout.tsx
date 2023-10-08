@@ -13,7 +13,7 @@ type TMessageData = {
     message: TMessage;
 };
 
-export const Popout = ({ content }: any) => {
+export function Popout({ content }: any) {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
     const [search, setSearch] = useState<string>("");
     const [chosen, setChosen] = useState<TCleanUser[]>([]);
@@ -51,8 +51,8 @@ export const Popout = ({ content }: any) => {
             }
         };
 
-        window.addEventListener("mousedown", handleClickOutside);
-        return () => window.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [layers]);
 
     useEffect(() => {
@@ -99,8 +99,8 @@ export const Popout = ({ content }: any) => {
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [layers]);
 
     useEffect(() => {
@@ -754,4 +754,4 @@ export const Popout = ({ content }: any) => {
             </div>
         );
     }
-};
+}

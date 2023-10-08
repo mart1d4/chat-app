@@ -2,7 +2,7 @@
 
 import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite, EmojiPicker } from "@components";
 import { getChannelName, getRelativeDate, translateCap, trimMessage } from "@/lib/strings";
-import { useRef, useEffect, useState, ReactElement } from "react";
+import { useRef, useEffect, useState } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
 import { useData, useLayers } from "@/lib/store";
@@ -49,7 +49,7 @@ const statuses = {
     Offline: "OFFLINE",
 };
 
-export const Popup = ({ content, friends }: any): ReactElement => {
+export function Popup({ content, friends }: any) {
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
@@ -1614,4 +1614,4 @@ export const Popup = ({ content, friends }: any): ReactElement => {
             )}
         </AnimatePresence>
     );
-};
+}

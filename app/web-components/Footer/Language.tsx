@@ -95,7 +95,10 @@ const Language = () => {
                     ref={langButton}
                 >
                     <div>
-                        <img src={`/assets/flags/${lang?.flag}.png`} />
+                        <img
+                            src={`/assets/flags/${lang?.flag}.png`}
+                            alt={`${lang?.name} flag`}
+                        />
                         <div>{lang?.name}</div>
                     </div>
 

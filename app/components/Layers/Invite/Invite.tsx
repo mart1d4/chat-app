@@ -11,7 +11,7 @@ type TContent = {
     channel: TChannel;
 };
 
-export const Invite = ({ content }: { content: TContent }) => {
+export function Invite({ content }: { content: TContent }) {
     const [filteredList, setFilteredList] = useState<TChannel[]>([]);
     const [search, setSearch] = useState<string>("");
     const [copied, setCopied] = useState<boolean>(false);
@@ -21,7 +21,6 @@ export const Invite = ({ content }: { content: TContent }) => {
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
-    const token = useData((state) => state.token);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
@@ -40,8 +39,8 @@ export const Invite = ({ content }: { content: TContent }) => {
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     useEffect(() => {
@@ -253,4 +252,4 @@ export const Invite = ({ content }: { content: TContent }) => {
             )}
         </div>
     );
-};
+}

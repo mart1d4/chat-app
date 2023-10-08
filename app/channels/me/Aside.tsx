@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./Aside.module.css";
 
-const Aside = () => {
+export default function Aside() {
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
     useEffect(() => {
@@ -34,6 +34,4 @@ const Aside = () => {
             </div>
         </aside>
     );
-};
-
-export default Aside;
+}

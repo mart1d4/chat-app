@@ -22,8 +22,9 @@ type Props = {
 
 type TInvites = TInvite[] | { code: string; type: string }[];
 
-export const Message = ({ message, setMessages, large, channel, guild }: Props) => {
+export function Message({ message, setMessages, large, channel, guild }: Props) {
     const [fileProgress, setFileProgress] = useState<number>(0);
+    const [hovered, setHovered] = useState<boolean>(false);
     const [invites, setInvites] = useState<TInvites>([]);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
@@ -63,7 +64,13 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
-                        return <UserMention key={v4()} user={user} full={true} />;
+                        return (
+                            <UserMention
+                                key={v4()}
+                                user={user}
+                                full={true}
+                            />
+                        );
                     } else if (urlRegex.test(part)) {
                         if (inviteRegex.test(part)) {
                             const code = part.substring(part.length - 8);
@@ -99,7 +106,13 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
-                        return <UserMention key={v4()} user={user} full={true} />;
+                        return (
+                            <UserMention
+                                key={v4()}
+                                user={user}
+                                full={true}
+                            />
+                        );
                     } else if (urlRegex.test(part)) {
                         return (
                             <Link
@@ -165,6 +178,8 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
     }, [message.waiting]);
 
     useEffect(() => {
+        console.log(edit);
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 if (!edit || edit?.messageId !== message.id) return;
@@ -174,8 +189,8 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit]);
 
     const deleteLocalMessage = async () => {
@@ -366,6 +381,8 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
         if (edit?.messageId !== message.id) return;
         const content = trimMessage(edit?.content || "");
 
+        if (content === message.content) return setEdit(channel.id, null);
+
         if (!content && message.attachments.length === 0) {
             return setLayers({
                 settings: {
@@ -494,12 +511,14 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                         },
                     });
                 }}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
                 style={{
                     backgroundColor: layers.MENU?.content.message?.id === message.id ? "var(--background-hover-4)" : "",
                     marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                {edit?.messageId !== message.id && (
+                {((edit?.messageId !== message.id && hovered) || layers.MENU?.content?.message?.id === message.id) && (
                     <MessageMenu
                         message={message}
                         large={false}
@@ -555,7 +574,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             {message.type === 7 && (
                                 <span>
                                     <UserMention user={message.author} /> pinned{" "}
-                                    <span className={styles.inlineMention} onClick={(e) => {}}>
+                                    <span
+                                        className={styles.inlineMention}
+                                        onClick={(e) => {}}
+                                    >
                                         a message
                                     </span>{" "}
                                     to this channel. See all{" "}
@@ -612,6 +634,8 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                 <></>
             ) : (
                 <li
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
                     className={
                         styles.messageContainer +
                         " " +
@@ -645,7 +669,8 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                 : "",
                     }}
                 >
-                    {edit?.messageId !== message.id && (
+                    {((edit?.messageId !== message.id && hovered) ||
+                        layers.MENU?.content?.message?.id === message.id) && (
                         <MessageMenu
                             message={message}
                             large={large}
@@ -711,7 +736,11 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 ) : (
                                     <div className={styles.noReplyBadge}>
-                                        <svg width="12" height="8" viewBox="0 0 12 8">
+                                        <svg
+                                            width="12"
+                                            height="8"
+                                            viewBox="0 0 12 8"
+                                        >
                                             <path
                                                 d="M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z"
                                                 fill="currentColor"
@@ -794,7 +823,12 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 )}
 
-                                {message.messageReference?.attachments?.length > 0 && <Icon name="image" size={20} />}
+                                {message.messageReference?.attachments?.length > 0 && (
+                                    <Icon
+                                        name="image"
+                                        size={20}
+                                    />
+                                )}
                             </div>
                         )}
 
@@ -848,7 +882,11 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                         });
                                     }}
                                 >
-                                    <Avatar src={message.author.avatar} alt={message.author.username} size={40} />
+                                    <Avatar
+                                        src={message.author.avatar}
+                                        alt={message.author.username}
+                                        size={40}
+                                    />
                                 </div>
                             )}
 
@@ -955,7 +993,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             >
                                 {edit?.messageId === message.id ? (
                                     <>
-                                        <TextArea channel={channel} editing={true} />
+                                        <TextArea
+                                            channel={channel}
+                                            editing={true}
+                                        />
 
                                         <div className={styles.editHint}>
                                             escape to <span onClick={() => setEdit(channel.id, null)}>cancel </span>•
@@ -988,7 +1029,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                                 )}
 
                                 {message.attachments.length > 0 && !(message.error || message.waiting) && (
-                                    <MessageAttachments message={message} functions={functions} />
+                                    <MessageAttachments
+                                        message={message}
+                                        functions={functions}
+                                    />
                                 )}
 
                                 {message.attachments.length > 0 && (message.waiting || message.error) && (
@@ -1074,7 +1118,10 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                             {invites.length > 0 && (
                                 <div className={styles.messageAccessories}>
                                     {invites.map((invite) => (
-                                        <div key={v4()} className={styles.guildInvite}>
+                                        <div
+                                            key={v4()}
+                                            className={styles.guildInvite}
+                                        >
                                             <h3>
                                                 {!("type" in invite)
                                                     ? user.id === invite.inviter.id
@@ -1312,9 +1359,9 @@ export const Message = ({ message, setMessages, large, channel, guild }: Props) 
                     </div>
                 </li>
             ),
-        [message, edit, reply, layers.MENU, fileProgress, invites]
+        [message, edit, reply, layers.MENU, fileProgress, invites, hovered]
     );
-};
+}
 
 const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
     if (!user) return <></>;
@@ -1361,9 +1408,13 @@ const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
     );
 };
 
-const MessageAttachments = ({ message, functions }: { message: TMessage; functions: any }) => {
+function MessageAttachments({ message, functions }: { message: TMessage; functions: any }) {
     const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
-        <Image attachment={attachment} message={message} functions={functions} />
+        <Image
+            attachment={attachment}
+            message={message}
+            functions={functions}
+        />
     );
 
     return (
@@ -1371,14 +1422,20 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
             <div>
                 {message.attachments.length === 1 && (
                     <div className={styles.gridOneBig}>
-                        <ImageComponent key={message.attachments[0].id} attachment={message.attachments[0]} />
+                        <ImageComponent
+                            key={message.attachments[0].id}
+                            attachment={message.attachments[0]}
+                        />
                     </div>
                 )}
 
                 {message.attachments.length == 2 && (
                     <div className={styles.gridTwo}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent key={attachment.id} attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1387,7 +1444,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <div className={styles.gridTwo}>
                         <div className={styles.gridOneSolo}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
@@ -1395,13 +1455,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                             <div>
                                 <div>
                                     {message.attachments.slice(1, 2).map((attachment) => (
-                                        <ImageComponent key={attachment.id} attachment={attachment} />
+                                        <ImageComponent
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                        />
                                     ))}
                                 </div>
 
                                 <div>
                                     {message.attachments.slice(2, 3).map((attachment) => (
-                                        <ImageComponent key={attachment.id} attachment={attachment} />
+                                        <ImageComponent
+                                            key={attachment.id}
+                                            attachment={attachment}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -1412,7 +1478,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 4 && (
                     <div className={styles.gridFour}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent key={attachment.id} attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1421,13 +1490,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(2, 5).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>
@@ -1436,7 +1511,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 6 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent key={attachment.id} attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1445,13 +1523,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 7).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>
@@ -1461,7 +1545,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridTwo}>
                             {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
@@ -1476,7 +1563,10 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                 {message.attachments.length == 9 && (
                     <div className={styles.gridThree}>
                         {message.attachments.map((attachment) => (
-                            <ImageComponent key={attachment.id} attachment={attachment} />
+                            <ImageComponent
+                                key={attachment.id}
+                                attachment={attachment}
+                            />
                         ))}
                     </div>
                 )}
@@ -1485,13 +1575,19 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
                     <>
                         <div className={styles.gridOne}>
                             {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
 
                         <div className={styles.gridThree}>
                             {message.attachments.slice(1, 10).map((attachment) => (
-                                <ImageComponent key={attachment.id} attachment={attachment} />
+                                <ImageComponent
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                />
                             ))}
                         </div>
                     </>
@@ -1499,7 +1595,7 @@ const MessageAttachments = ({ message, functions }: { message: TMessage; functio
             </div>
         </div>
     );
-};
+}
 
 type MenuProps = {
     message: TMessage;
@@ -1510,7 +1606,7 @@ type MenuProps = {
     inline: boolean;
 };
 
-const MessageMenu = ({ message, large, functions, channel, guild, inline }: MenuProps) => {
+function MessageMenu({ message, large, functions, channel, guild, inline }: MenuProps) {
     const [menuSender, setMenuSender] = useState<boolean | null>(null);
     const [shift, setShift] = useState<boolean>(false);
 
@@ -1526,11 +1622,17 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
     }, [message]);
 
     useEffect(() => {
+        if (layers.MENU?.content.message?.id === message?.id) {
+            setShift(false);
+        }
+
         const handleShift = (e: KeyboardEvent) => {
+            if (layers.MENU?.content.message?.id === message?.id) return;
             if (e.key === "Shift") setShift(true);
         };
 
         const handleShiftUp = (e: KeyboardEvent) => {
+            if (layers.MENU?.content.message?.id === message?.id) return;
             if (e.key === "Shift") setShift(false);
         };
 
@@ -1541,7 +1643,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
             document.removeEventListener("keydown", handleShift);
             document.removeEventListener("keyup", handleShiftUp);
         };
-    }, []);
+    }, [layers.MENU]);
 
     if (message.waiting || typeof menuSender !== "boolean") return null;
 
@@ -1556,7 +1658,10 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                 visibility: layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
             }}
         >
-            <div className={styles.buttonWrapper} style={{ top: large ? "-16px" : "-25px" }}>
+            <div
+                className={styles.buttonWrapper}
+                style={{ top: large ? "-16px" : "-25px" }}
+            >
                 <div className={styles.buttons}>
                     {!message.error ? (
                         <>
@@ -1564,13 +1669,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                 <>
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Copy Message ID",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
                                             writeText(message.id);
@@ -1581,13 +1686,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: `${message.pinned ? "Unpin" : "Pin"} Message`,
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
                                             message.pinned
@@ -1617,13 +1722,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                     {message.content && (
                                         <div
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Copy Text",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 writeText(message.content as string);
@@ -1635,28 +1740,31 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Translate",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {}}
                                     >
-                                        <Icon name="translate" viewbox="0 96 960 960" />
+                                        <Icon
+                                            name="translate"
+                                            viewbox="0 96 960 960"
+                                        />
                                     </div>
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Mark Unread",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {}}
                                     >
@@ -1665,13 +1773,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Copy Message Link",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
                                             writeText(`/channels/@me/${message.channelId}/${message.id}`);
@@ -1683,13 +1791,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                     {message.content && (
                                         <div
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Speak Message",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 const msg = new SpeechSynthesisUtterance();
@@ -1707,13 +1815,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                 <>
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Copy Message ID",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
                                             writeText(message.id);
@@ -1743,13 +1851,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Mark Unread",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {}}
                                     >
@@ -1758,13 +1866,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                                     <div
                                         role="button"
-                                        onMouseEnter={(e) =>
+                                        onMouseEnter={(e) => {
                                             setTooltip({
                                                 text: "Copy Message Link",
                                                 element: e.currentTarget,
                                                 gap: 3,
-                                            })
-                                        }
+                                            });
+                                        }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
                                             writeText(`/channels/@me/${message.channelId}/${message.id}`);
@@ -1777,13 +1885,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                             <div
                                 role="button"
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: "Add Reaction",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
                             >
                                 <Icon name="addReaction" />
@@ -1794,13 +1902,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                     {menuSender ? (
                                         <div
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Edit",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 setTooltip(null);
@@ -1812,13 +1920,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                     ) : (
                                         <div
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Reply",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 setTooltip(null);
@@ -1834,13 +1942,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                             {!shift || inline ? (
                                 <div
                                     role="button"
-                                    onMouseEnter={(e) =>
+                                    onMouseEnter={(e) => {
                                         setTooltip({
                                             text: "More",
                                             element: e.currentTarget,
                                             gap: 3,
-                                        })
-                                    }
+                                        });
+                                    }}
                                     onMouseLeave={() => setTooltip(null)}
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -1880,13 +1988,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                         <div
                                             className={styles.red}
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Delete",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 sendRequest({
@@ -1904,13 +2012,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                                         <div
                                             className={styles.red}
                                             role="button"
-                                            onMouseEnter={(e) =>
+                                            onMouseEnter={(e) => {
                                                 setTooltip({
                                                     text: "Report Message",
                                                     element: e.currentTarget,
                                                     gap: 3,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 // functions.reportPopup();
@@ -1928,13 +2036,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
                         <>
                             <div
                                 role="button"
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: "Retry",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
                                     setTooltip(null);
@@ -1946,13 +2054,13 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
 
                             <div
                                 role="button"
-                                onMouseEnter={(e) =>
+                                onMouseEnter={(e) => {
                                     setTooltip({
                                         text: "Delete",
                                         element: e.currentTarget,
                                         gap: 3,
-                                    })
-                                }
+                                    });
+                                }}
                                 onMouseLeave={() => setTooltip(null)}
                                 onClick={() => {
                                     setTooltip(null);
@@ -1967,7 +2075,7 @@ const MessageMenu = ({ message, large, functions, channel, guild, inline }: Menu
             </div>
         </div>
     );
-};
+}
 
 type ImageComponent = {
     attachment: TAttachment;
@@ -1975,7 +2083,7 @@ type ImageComponent = {
     functions: any;
 };
 
-const Image = ({ attachment, message, functions }: ImageComponent) => {
+function Image({ attachment, message, functions }: ImageComponent) {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
@@ -2092,7 +2200,10 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
                             });
                         }}
                     >
-                        <Icon name="delete" size={20} />
+                        <Icon
+                            name="delete"
+                            size={20}
+                        />
                     </div>
                 )}
 
@@ -2117,4 +2228,4 @@ const Image = ({ attachment, message, functions }: ImageComponent) => {
         ),
         [attachment, showDelete, hideSpoiler]
     );
-};
+}

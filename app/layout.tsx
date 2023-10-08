@@ -1,4 +1,3 @@
-import { Analytics } from "@vercel/analytics/react";
 import LayerProvider from "@/context/LayerProvider";
 import { ReactElement } from "react";
 import type { Metadata } from "next";
@@ -17,10 +16,7 @@ export default function RootLayout({ children }: { children: ReactElement }) {
     return (
         <LayerProvider>
             <html lang="en">
-                <body>
-                    {children}
-                    <Analytics />
-                </body>
+                <body>{children}</body>
             </html>
         </LayerProvider>
     );

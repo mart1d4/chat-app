@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, ReactElement, useRef, useEffect } from "react";
 import { useData, useLayers, useTooltip } from "@/lib/store";
 import { translateCap, trimMessage } from "@/lib/strings";
 import { AnimatePresence, motion } from "framer-motion";
 import { getButtonColor } from "@/lib/colors/getColors";
+import { useState, useRef, useEffect } from "react";
 import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useRouter } from "next/navigation";
@@ -27,7 +27,7 @@ const masks = {
     OFFLINE: "status-mask-offline",
 };
 
-export const UserCard = ({ content }: any): ReactElement => {
+export function UserCard({ content }: any) {
     const [note, setNote] = useState<string>("");
     const [originalNote, setOriginalNote] = useState<string>("");
     const [message, setMessage] = useState<string>("");
@@ -45,18 +45,6 @@ export const UserCard = ({ content }: any): ReactElement => {
     const hasRendered = useRef<boolean>(false);
     const animation = content?.animation;
     const router = useRouter();
-
-    // useEffect(() => {
-    //     pusher.bind("user-updated", (data: { user: TCleanUser }) => {
-    //         if (data.user.id === user.id) {
-    //             setUser(data.user);
-    //         }
-    //     });
-
-    //     return () => {
-    //         pusher.unbind("user-updated");
-    //     };
-    // }, []);
 
     useEffect(() => {
         if (!noteRef.current) return;
@@ -114,8 +102,8 @@ export const UserCard = ({ content }: any): ReactElement => {
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [message]);
 
     useEffect(() => {
@@ -132,8 +120,8 @@ export const UserCard = ({ content }: any): ReactElement => {
             }
         };
 
-        window.addEventListener("mousedown", handleClickOutside);
-        return () => window.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [user]);
 
     useEffect(() => {
@@ -423,14 +411,6 @@ export const UserCard = ({ content }: any): ReactElement => {
                                                 },
                                             });
                                         }}
-                                        // onMouseLeave={() => {
-                                        //     setLayers({
-                                        //         settings: {
-                                        //             type: "MENU",
-                                        //             setNull: true,
-                                        //         },
-                                        //     });
-                                        // }}
                                     >
                                         <div className={styles.separator} />
                                         <svg className={styles.settingStatus}>
@@ -517,4 +497,4 @@ export const UserCard = ({ content }: any): ReactElement => {
             )}
         </AnimatePresence>
     );
-};
+}

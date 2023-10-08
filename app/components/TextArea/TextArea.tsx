@@ -45,7 +45,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         if (!mention || editing) return;
         setMessage((message) => `${message}<@${mention}>`);
         setMention(null);
-    }, [mention]);
+    }, [mention, editing]);
 
     const setCursorToEnd = () => {
         const input = textAreaRef.current as HTMLInputElement;
@@ -231,12 +231,11 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     }, [edit, reply]);
 
     useEffect(() => {
-        if (editing) return;
-        setContent(channel.id, message);
-        const input = textAreaRef.current as HTMLInputElement;
+        const input = textAreaRef.current;
         if (input) input.innerText = message;
         setCursorToEnd();
-    }, [message, editing]);
+        setContent(channel.id, message);
+    }, [message]);
 
     useEffect(() => {
         setMessageAttachment(channel.id, attachments);
@@ -246,11 +245,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     useEffect(() => {
         if (!edit || !editing) return;
-        const input = textAreaRef.current as HTMLInputElement;
 
-        if (input?.innerText !== edit.content) {
-            setMessage(edit.content || "");
-        }
+        const input = textAreaRef.current;
+        if (input) input.innerText = edit?.content || "";
+        setCursorToEnd();
     }, [edit, editing]);
 
     const sendMessage = async () => {

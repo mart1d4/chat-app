@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, ReactElement } from "react";
 import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
+import { useState, useMemo, useEffect } from "react";
 import styles from "./AppHeader.module.css";
 import { Icon, Avatar } from "@components";
 
@@ -11,7 +11,7 @@ interface Props {
     requests?: number;
 }
 
-export const AppHeader = ({ channel, friend }: Props): ReactElement => {
+export function AppHeader({ channel, friend }: Props) {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
     const setSettings = useSettings((state) => state.setSettings);
@@ -339,7 +339,7 @@ export const AppHeader = ({ channel, friend }: Props): ReactElement => {
         ),
         [channel, friend, requests, settings, widthLimitPassed]
     );
-};
+}
 
 const ToolbarIcon = ({ item }: any) => {
     const setTooltip = useTooltip((state) => state.setTooltip);

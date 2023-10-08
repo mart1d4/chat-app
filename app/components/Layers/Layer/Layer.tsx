@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, ReactElement } from "react";
 import { Menu, Popup, UserCard, UserProfile } from "@components";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./Layer.module.css";
 import { useLayers } from "@/lib/store";
 
-export const Layers = (): ReactElement => {
+export function Layers() {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
@@ -74,7 +74,7 @@ export const Layers = (): ReactElement => {
             )}
         </div>
     );
-};
+}
 
 type TPositions = {
     top?: number | string;
@@ -119,7 +119,7 @@ type TLayer = {
     content?: TMenu | TPopup | TUserCard | TUserProfile;
 };
 
-const Layer = ({ settings, content }: TLayer) => {
+function Layer({ settings, content }: TLayer) {
     const [transform, setTransform] = useState<string>("");
     const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
 
@@ -242,8 +242,8 @@ const Layer = ({ settings, content }: TLayer) => {
             }
         };
 
-        window.addEventListener("keydown", handleEscKey);
-        return () => window.removeEventListener("keydown", handleEscKey);
+        document.addEventListener("keydown", handleEscKey);
+        return () => document.removeEventListener("keydown", handleEscKey);
     }, [currentNode, settings?.type, layers]);
 
     if (!settings?.type) return null;
@@ -276,4 +276,4 @@ const Layer = ({ settings, content }: TLayer) => {
             {settings.type === "USER_PROFILE" && <UserProfile content={content} />}
         </div>
     );
-};
+}

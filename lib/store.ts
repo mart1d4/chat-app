@@ -626,14 +626,21 @@ export const useMessages = create(
                         return {
                             edits: state.edits.map((e) => {
                                 if (e.channelId === channelId) {
-                                    if (typeof initialContent === "string" && e.initialContent !== initialContent) {
+                                    if (messageId === null) {
+                                        return {
+                                            ...e,
+                                            messageId,
+                                            initialContent: "",
+                                            content: "",
+                                        };
+                                    } else if (typeof initialContent === "string") {
                                         return {
                                             ...e,
                                             messageId,
                                             initialContent,
                                             content: initialContent,
                                         };
-                                    } else if (typeof content === "string" && e.content !== content) {
+                                    } else if (typeof content === "string") {
                                         return {
                                             ...e,
                                             messageId,
@@ -642,10 +649,7 @@ export const useMessages = create(
                                     }
                                 }
 
-                                return {
-                                    ...e,
-                                    messageId: messageId,
-                                };
+                                return e;
                             }),
                         };
                     } else {
