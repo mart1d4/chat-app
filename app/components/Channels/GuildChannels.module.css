@@ -325,6 +325,8 @@
     padding: 0 8px 0 16px;
     height: 24px;
     cursor: pointer;
+    outline-offset: -4px;
+    border-radius: 8px;
 }
 
 .category > div {

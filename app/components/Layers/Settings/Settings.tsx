@@ -1,11 +1,10 @@
 "use client";
 
+import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { Avatar, Icon, LoadingDots, EmojiPicker } from "@components";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { useData, useLayers, useTooltip } from "@/lib/store";
 import { getButtonColor } from "@/lib/colors/getColors";
 import { AnimatePresence, motion } from "framer-motion";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
 import styles from "./Settings.module.css";
@@ -33,7 +32,8 @@ export function Settings() {
     const [minified, setMinified] = useState<boolean>(false);
     const [hideNav, setHideNav] = useState<boolean>(false);
 
-    const { showSettings, setShowSettings }: any = useContextHook({ context: "layer" });
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
+    const showSettings = useShowSettings((state) => state.showSettings);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
@@ -51,8 +51,8 @@ export function Settings() {
     }, []);
 
     useEffect(() => {
-        if (typeof showSettings !== "boolean") {
-            setActiveTab(showSettings.type);
+        if (showSettings !== null && showSettings.length > 0) {
+            setActiveTab(showSettings);
             if (minified) setHideNav(true);
         }
     }, [showSettings]);
@@ -61,12 +61,12 @@ export function Settings() {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 if (layers) return;
-                setShowSettings(false);
+                setShowSettings(null);
             }
         };
 
-        window.addEventListener("keydown", handleEsc);
-        return () => window.removeEventListener("keydown", handleEsc);
+        document.addEventListener("keydown", handleEsc);
+        return () => document.removeEventListener("keydown", handleEsc);
     }, [showSettings, layers]);
 
     const tabs = [
@@ -145,7 +145,7 @@ export function Settings() {
 
     return (
         <AnimatePresence>
-            {showSettings && (
+            {showSettings !== null && (
                 <motion.div
                     className={styles.container}
                     initial={{ opacity: 0, y: 20, scale: 1.2 }}
@@ -162,7 +162,7 @@ export function Settings() {
                                 <nav>
                                     <div className={styles.closeButton}>
                                         <div>
-                                            <div onClick={() => setShowSettings(false)}>
+                                            <div onClick={() => setShowSettings(null)}>
                                                 <Icon
                                                     name="close"
                                                     size={16}
@@ -263,7 +263,7 @@ export function Settings() {
                                             <div
                                                 onClick={() => {
                                                     setTooltip(null);
-                                                    setShowSettings(false);
+                                                    setShowSettings(null);
                                                 }}
                                             >
                                                 <Icon

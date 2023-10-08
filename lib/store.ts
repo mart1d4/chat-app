@@ -759,3 +759,15 @@ export const useUrls = create(
         }
     )
 );
+
+// Settings popup store
+
+interface ShowSettingsState {
+    showSettings: string | null;
+    setShowSettings: (val: string | null) => void;
+}
+
+export const useShowSettings = create<ShowSettingsState>()((set) => ({
+    showSettings: null,
+    setShowSettings: (val) => set(() => ({ showSettings: val })),
+}));

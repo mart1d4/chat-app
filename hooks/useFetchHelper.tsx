@@ -1,6 +1,5 @@
-import useContextHook from "./useContextHook";
-import { useRouter } from "next/navigation";
 import { useData, useLayers } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 type TQuery =
     | "SEND_MESSAGE"
@@ -105,12 +104,12 @@ const methods = {
     ["DELETE_INVITE"]: "DELETE",
 };
 
-const useFetchHelper = () => {
+export default function useFetchHelper() {
     const setLayers = useLayers((state) => state.setLayers);
+    const user = useData((state) => state.user) as TUser;
     const setToken = useData((state) => state.setToken);
     const channels = useData((state) => state.channels);
     const token = useData((state) => state.token);
-    const user = useData((state) => state.user) as TUser;
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
@@ -221,6 +220,4 @@ const useFetchHelper = () => {
     };
 
     return { sendRequest };
-};
-
-export default useFetchHelper;
+}

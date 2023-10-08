@@ -14,18 +14,18 @@ export default function Form() {
     const [error, setError] = useState<string>("");
 
     const usernameInputRef = useRef<HTMLInputElement>(null);
+    const linkRef = useRef<HTMLAnchorElement>(null);
     const router = useRouter();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            e.stopPropagation();
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && document.activeElement !== linkRef.current) {
                 handleSubmit();
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [username, password, isLoading]);
 
     useEffect(() => {
@@ -132,7 +132,12 @@ export default function Form() {
 
             <div className={styles.bottomText}>
                 <span>Need an account?</span>
-                <Link href="/register">Register</Link>
+                <Link
+                    ref={linkRef}
+                    href="/register"
+                >
+                    Register
+                </Link>
             </div>
         </div>
     );

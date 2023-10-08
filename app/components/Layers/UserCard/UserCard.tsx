@@ -1,11 +1,10 @@
 "use client";
 
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { translateCap, trimMessage } from "@/lib/strings";
 import { AnimatePresence, motion } from "framer-motion";
 import { getButtonColor } from "@/lib/colors/getColors";
 import { useState, useRef, useEffect } from "react";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
@@ -33,7 +32,7 @@ export function UserCard({ content }: any) {
     const [message, setMessage] = useState<string>("");
     const [user, setUser] = useState<TCleanUser>(content.user);
 
-    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const currentUser = useData((state) => state.user) as TCleanUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
@@ -198,9 +197,7 @@ export function UserCard({ content }: any) {
                                             setNull: true,
                                         },
                                     });
-                                    setShowSettings({
-                                        type: "Profiles",
-                                    });
+                                    setShowSettings("Profiles");
                                 }}
                             >
                                 <Icon
@@ -396,7 +393,7 @@ export function UserCard({ content }: any) {
                                 <>
                                     <div className={styles.cardDivider + " " + styles.double} />
 
-                                    <div
+                                    <button
                                         className={styles.button}
                                         onMouseEnter={(e) => {
                                             setLayers({
@@ -408,6 +405,27 @@ export function UserCard({ content }: any) {
                                                 },
                                                 content: {
                                                     type: "STATUS",
+                                                },
+                                            });
+                                        }}
+                                        onFocus={(e) => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    element: e.currentTarget,
+                                                    gap: 20,
+                                                    firstSide: "RIGHT",
+                                                },
+                                                content: {
+                                                    type: "STATUS",
+                                                },
+                                            });
+                                        }}
+                                        onBlur={() => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    setNull: true,
                                                 },
                                             });
                                         }}
@@ -425,9 +443,9 @@ export function UserCard({ content }: any) {
                                         </svg>
                                         <div>{translateCap(user.status)}</div>
                                         <Icon name="arrow" />
-                                    </div>
+                                    </button>
 
-                                    <div
+                                    <button
                                         className={styles.button}
                                         onClick={() => {
                                             setLayers({
@@ -445,6 +463,25 @@ export function UserCard({ content }: any) {
                                                     user,
                                                 },
                                             });
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                setLayers({
+                                                    settings: {
+                                                        type: "USER_CARD",
+                                                        setNull: true,
+                                                    },
+                                                });
+                                                setLayers({
+                                                    settings: {
+                                                        type: "POPUP",
+                                                    },
+                                                    content: {
+                                                        type: "USER_STATUS",
+                                                        user,
+                                                    },
+                                                });
+                                            }
                                         }}
                                     >
                                         <Icon name="smiling" />
@@ -469,11 +506,11 @@ export function UserCard({ content }: any) {
                                                 />
                                             </div>
                                         )}
-                                    </div>
+                                    </button>
 
                                     <div className={styles.cardDivider + " " + styles.double} />
 
-                                    <div
+                                    <button
                                         className={styles.button}
                                         style={{ marginBottom: "8px" }}
                                         onClick={() => {
@@ -485,10 +522,21 @@ export function UserCard({ content }: any) {
                                                 },
                                             });
                                         }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                navigator.clipboard.writeText(user.id);
+                                                setLayers({
+                                                    settings: {
+                                                        type: "USER_CARD",
+                                                        setNull: true,
+                                                    },
+                                                });
+                                            }
+                                        }}
                                     >
                                         <Icon name="id" />
                                         <div>Copy User ID</div>
-                                    </div>
+                                    </button>
                                 </>
                             )}
                         </div>

@@ -389,11 +389,14 @@
     justify-content: space-between;
     transition: none;
     position: relative;
+    text-align: left;
 }
 
-.button:hover {
+.button:hover,
+.button:focus-visible {
     background-color: var(--background-hover-dark-1);
     color: var(--foreground-2);
+    outline-offset: 0px;
 }
 
 .button > .separator {

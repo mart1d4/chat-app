@@ -1,11 +1,10 @@
 "use client";
 
+import { useData, useShowSettings } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import useContextHook from "./useContextHook";
-import { useData } from "@/lib/store";
 
 const useLogout = () => {
-    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const removeData = useData((state) => state.removeData);
     const channels = useData((state) => state.channels);
     const router = useRouter();
@@ -27,7 +26,7 @@ const useLogout = () => {
                 });
 
                 removeData();
-                setShowSettings(false);
+                setShowSettings(null);
                 router.refresh();
             });
         } catch (error) {

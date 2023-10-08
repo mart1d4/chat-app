@@ -95,6 +95,7 @@ export function Popup({ content, friends }: any) {
     const uidInputRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
     const guildIconInput = useRef<HTMLInputElement>(null);
+    const cancelRef = useRef<HTMLButtonElement>(null);
 
     if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
         return (
@@ -192,6 +193,8 @@ export function Popup({ content, friends }: any) {
     };
 
     const handlePasswordSubmit = async () => {
+        console.log("handlePasswordSubmit");
+
         setIsLoading(true);
 
         if (!password1) {
@@ -351,6 +354,7 @@ export function Popup({ content, friends }: any) {
             buttonText: "Done",
             function: handleUsernameSubmit,
             centered: true,
+            skipClose: true,
         },
         UPDATE_PASSWORD: {
             title: "Update your password",
@@ -359,6 +363,7 @@ export function Popup({ content, friends }: any) {
             buttonText: "Done",
             function: handlePasswordSubmit,
             centered: true,
+            skipClose: true,
         },
         DELETE_MESSAGE: {
             title: "Delete Message",
@@ -529,7 +534,7 @@ export function Popup({ content, friends }: any) {
             }
 
             if (e.key === "Enter" && !e.shiftKey && prop !== null) {
-                if (isLoading) return;
+                if (isLoading || document.activeElement === cancelRef.current) return;
 
                 prop.function();
                 if (!prop.skipClose) {
@@ -1568,6 +1573,7 @@ export function Popup({ content, friends }: any) {
                         style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}
                     >
                         <button
+                            ref={cancelRef}
                             className="underline"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -1592,7 +1598,7 @@ export function Popup({ content, friends }: any) {
                             className={`${prop.buttonColor} ${prop.buttonDisabled ? "disabled" : ""}`}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (isLoading) return;
+                                if (isLoading || prop.buttonDisabled) return;
 
                                 prop.function();
                                 if (!prop.skipClose) {

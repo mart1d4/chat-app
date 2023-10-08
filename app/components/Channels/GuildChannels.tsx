@@ -4,7 +4,7 @@ import { ReactElement, useState, SetStateAction, Dispatch } from "react";
 import { useData, useLayers, useTooltip } from "@/lib/store";
 import styles from "./GuildChannels.module.css";
 import { Icon, UserSection } from "@components";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -166,6 +166,7 @@ type ChannelItemProps = {
 const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemProps) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+    const pathname = usePathname();
     const params = useParams();
 
     if (channel.type === 4) {
@@ -198,6 +199,31 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                             channel: channel,
                         },
                     });
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        if (!setHidden) return;
+                        if (!hidden) {
+                            setHidden((prev: string[]) => [...prev, channel.id]);
+                        } else {
+                            setHidden((prev: string[]) => prev.filter((id) => id !== channel.id));
+                        }
+                    } else if (e.key === "Enter" && e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setLayers({
+                            settings: {
+                                type: "MENU",
+                                element: e.currentTarget,
+                                firstSide: "RIGHT",
+                            },
+                            content: {
+                                type: "GUILD_CHANNEL",
+                                guild: guild,
+                                channel: channel,
+                            },
+                        });
+                    }
                 }}
             >
                 <div>
@@ -274,7 +300,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                             backgroundColor: params.channelId === channel.id ? "var(--background-hover-2)" : "",
                         }}
                         onClick={(e) => {
-                            if (channel.type === 3) e.preventDefault();
+                            if (channel.type === 3 || pathname.includes(channel.id)) e.preventDefault();
                         }}
                     >
                         <div>

@@ -1,10 +1,9 @@
 "use client";
 
-import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
+import { useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
 import { useEffect, useRef, useState, ReactElement } from "react";
 import { translateCap, trimMessage } from "@/lib/strings";
 import { getButtonColor } from "@/lib/colors/getColors";
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserProfile.module.css";
 import { useRouter } from "next/navigation";
@@ -31,7 +30,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const [originalNote, setOriginalNote] = useState<string>("");
     const [note, setNote] = useState<string>("");
 
-    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const requestsReceived = useData((state) => state.requestsReceived);
     const currentUser = useData((state) => state.user) as TCleanUser;
     const requestsSent = useData((state) => state.requestsSent);
@@ -136,9 +135,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                 },
                             });
                             setTooltip(null);
-                            setShowSettings({
-                                type: "Profiles",
-                            });
+                            setShowSettings("Profiles");
                         }}
                     >
                         <Icon
@@ -150,9 +147,9 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
                 <svg
                     className={styles.cardBanner}
-                    viewBox={`0 0 600 ${user.banner ? "212" : "108"}`}
+                    viewBox={`0 0 600 ${user.banner ? "212" : "106"}`}
                     style={{
-                        minHeight: user.banner ? "212px" : "108px",
+                        minHeight: user.banner ? "212px" : "106px",
                         minWidth: "600px",
                     }}
                 >
@@ -505,7 +502,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
     );
 };
 
-const FriendItem = ({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }): ReactElement => {
+function FriendItem({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }) {
     if (!friend && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
     const urls = useUrls((state) => state.guilds);
@@ -593,4 +590,4 @@ const FriendItem = ({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }):
             </div>
         </button>
     );
-};
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, MouseEvent } from "react";
+import { useRef, useState, useEffect } from "react";
 import { trimMessage } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import { LoadingDots } from "@components";
@@ -21,18 +21,18 @@ export default function Register() {
     const [passwordError, setPasswordError] = useState<string>("");
 
     const uidInputRef = useRef<HTMLInputElement>(null);
+    const linkRef = useRef<HTMLAnchorElement>(null);
     const router = useRouter();
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent): void => {
-            e.stopPropagation();
-            if (e.key === "Enter") {
-                handleSubmit(e as unknown as MouseEvent);
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && document.activeElement !== linkRef.current) {
+                handleSubmit();
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [username, password, passwordMatch, isLoading]);
 
     useEffect(() => {
@@ -47,9 +47,7 @@ export default function Register() {
         setPasswordError("");
     }, [password, passwordMatch]);
 
-    const handleSubmit = async (e: MouseEvent): Promise<void> => {
-        e.preventDefault();
-
+    const handleSubmit = async () => {
         if (isLoading) return;
         setIsLoading(true);
 
@@ -187,13 +185,21 @@ export default function Register() {
             <button
                 type="submit"
                 className={styles.buttonSubmit}
-                onClick={(e) => handleSubmit(e)}
+                onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit();
+                }}
             >
                 {isLoading ? <LoadingDots /> : "Register"}
             </button>
 
             <div className={styles.bottomText}>
-                <Link href="/login">Already have an account?</Link>
+                <Link
+                    ref={linkRef}
+                    href="/login"
+                >
+                    Already have an account?
+                </Link>
             </div>
         </div>
     );

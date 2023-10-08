@@ -1,20 +1,19 @@
 "use client";
 
-import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
-import useContextHook from "@/hooks/useContextHook";
+import { useData, useLayers, useSettings, useTooltip, useShowSettings } from "@/lib/store";
 import styles from "./UserSection.module.css";
 import { useRef, ReactElement } from "react";
 import { translateCap } from "@/lib/strings";
 import { Avatar, Icon } from "@components";
 
 export const UserSection = (): ReactElement => {
-    const { setShowSettings }: any = useContextHook({ context: "layer" });
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const setSettings = useSettings((state) => state.setSettings);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
-    const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user) as TUser;
+    const layers = useLayers((state) => state.layers);
 
     const userSection = useRef<HTMLDivElement>(null);
 
@@ -60,6 +59,7 @@ export const UserSection = (): ReactElement => {
                                 content: {
                                     user: user,
                                     animation: "off",
+                                    settings: true,
                                 },
                             });
                         }
@@ -78,7 +78,11 @@ export const UserSection = (): ReactElement => {
                         <div>{user.displayName}</div>
                         <div className={styles.hoverContent}>
                             <div>{user.username}</div>
-                            <div>{user.customStatus ? user.customStatus : translateCap(user?.status)}</div>
+                            <div>
+                                {user.customStatus
+                                    ? user.customStatus
+                                    : translateCap(user.status === "OFFLINE" ? "INVISIBLE" : user.status)}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -266,10 +270,10 @@ export const UserSection = (): ReactElement => {
                             });
                         }}
                         onBlur={() => setTooltip(null)}
-                        onClick={() => setShowSettings(true)}
+                        onClick={() => setShowSettings("")}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                setShowSettings(true);
+                                setShowSettings("");
                             }
                         }}
                     >

@@ -178,7 +178,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     }, [message.waiting]);
 
     useEffect(() => {
-        console.log(edit);
+        if (!edit || edit?.messageId !== message.id) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {

@@ -1,27 +1,23 @@
-'use client';
+"use client";
 
-import useContextHook from '@/hooks/useContextHook';
+import { useData } from "@/lib/store";
 
 export default function useRefreshToken() {
-    const { setAuth }: any = useContextHook({ context: 'auth' });
+    const setToken = useData((state) => state.setToken);
+    const setUser = useData((state) => state.setUser);
 
     const refresh = async () => {
-        const response = await fetch('/api/auth/refresh', {
-            method: 'GET',
-            credentials: 'include',
+        const response = await fetch("/api/auth/refresh", {
+            method: "GET",
+            credentials: "include",
         }).then((res) => res.json());
 
         if (!response.success) {
             return null;
         }
 
-        setAuth((prev: AuthProviderValue) => {
-            return {
-                ...prev,
-                accessToken: response.accessToken,
-                user: response.user,
-            };
-        });
+        setToken(response.accessToken);
+        setUser(response.user);
 
         return response.accessToken;
     };
