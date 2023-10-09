@@ -1,49 +1,14 @@
-// Enums
+import { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely";
 
-enum EPermissionType {
-    TEST = 1,
+export interface Database {
+    user: PersonTable;
+    guild: PetTable;
+    channel: PetTable;
+    message: PetTable;
+    invite: PetTable;
+    role: PetTable;
+    emote: PetTable;
 }
-
-enum EUserStatus {
-    ONLINE = "ONLINE",
-    IDLE = "IDLE",
-    DO_NOT_DISTURB = "DO_NOT_DISTURB",
-    INVISIBLE = "INVISIBLE",
-    OFFLINE = "OFFLINE",
-}
-
-enum EChannelType {
-    DM = 0,
-    GROUP_DM = 1,
-    GUILD_TEXT = 2,
-    GUILD_VOICE = 3,
-    GUILD_CATEGORY = 4,
-    GUILD_ANNOUNCEMENT = 5,
-    GUILD_THREAD = 6,
-    FORUM = 7,
-}
-
-enum EMessageType {
-    DEFAULT = 0,
-    REPLY = 1,
-    RECIPIENT_ADD = 2,
-    RECIPIENT_REMOVE = 3,
-    CALL = 4,
-    CHANNEL_NAME_CHANGE = 5,
-    CHANNEL_ICON_CHANGE = 6,
-    CHANNEL_PINNED_MESSAGE = 7,
-    USER_JOIN = 8,
-}
-
-enum ENotificationType {
-    REQUEST = "REQUEST",
-    MESSAGE = "MESSAGE",
-    MENTION = "MENTION",
-    CALL = "CALL",
-    OTHER = "OTHER",
-}
-
-// Types
 
 type TUser = readonly {
     id: string;
@@ -101,64 +66,6 @@ type TUser = readonly {
 
     createdAt: DateTime;
     updatedAt: DateTime;
-};
-
-type TCleanUser = readonly {
-    id: string;
-    username: string;
-    displayName: string;
-    email?: string;
-    phone?: string;
-
-    avatar: string;
-    banner?: string;
-    primaryColor: string;
-    accentColor: string;
-
-    description?: string;
-    customStatus?: string;
-
-    status: EUserStatus;
-    system?: boolean;
-    verified?: boolean;
-
-    notifications?: TNotification[];
-
-    guildIds: TGuild.id[];
-    guilds?: TGuild[];
-
-    channelIds: TChannel.id[];
-    channels?: TChannel[];
-
-    friendIds: TUser.id[];
-    friends?: TUser[];
-
-    requestReceivedIds?: TUser.id[];
-    requestsReceived?: TUser[];
-
-    requestSentIds?: TUser.id[];
-    requestsSent?: TUser[];
-
-    blockedUserIds?: TUser.id[];
-    blockedUsers?: TUser[];
-
-    blockedByUserIds?: TUser.id[];
-    blockedByUsers?: TUser[];
-
-    createdAt: DateTime;
-};
-
-type TSensitiveUser = readonly {
-    id: string;
-    username: string;
-    displayName: string;
-
-    avatar: string;
-    banner?: string;
-    primaryColor: string;
-    accentColor: string;
-
-    createdAt: DateTime;
 };
 
 type TGuild = readonly {
@@ -394,13 +301,25 @@ type TEmote = readonly {
     updatedAt: DateTime;
 };
 
-type MessageEditObject = {
-    messageId: TMessage.id;
-    content: string;
-};
+export interface PersonTable {
+    id: Generated<number>;
+    first_name: string;
+    gender: "man" | "woman" | "other";
+    last_name: string | null;
+    created_at: ColumnType<Date, string | undefined, never>;
+}
 
-type MessageReplyObject = {
-    channelId: TChannel.id;
-    messageId: TMessage.id;
-    author: TUser;
-};
+export type Person = Selectable<PersonTable>;
+export type NewPerson = Insertable<PersonTable>;
+export type PersonUpdate = Updateable<PersonTable>;
+
+export interface PetTable {
+    id: Generated<number>;
+    name: string;
+    owner_id: number;
+    species: "dog" | "cat";
+}
+
+export type Pet = Selectable<PetTable>;
+export type NewPet = Insertable<PetTable>;
+export type PetUpdate = Updateable<PetTable>;
