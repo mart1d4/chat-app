@@ -1,11 +1,10 @@
 "use client";
 
-import useContextHook from "@/hooks/useContextHook";
 import { translateCap } from "@/lib/strings";
 import styles from "./Avatar.module.css";
+import { useTooltip } from "@/lib/store";
 import { useEffect } from "react";
 import Image from "next/image";
-import { useTooltip } from "@/lib/store";
 
 type Props = {
     src: string;
@@ -73,166 +72,51 @@ export const Avatar = (props: Props) => {
                 aria-hidden="true"
                 className={styles.svg}
             >
-                <mask
-                    id="status-mask-24"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
+                <mask id="status-mask-24" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 
-                    <circle
-                        fill="black"
-                        cx="0.85"
-                        cy="0.85"
-                        r="0.275"
-                    />
+                    <circle fill="black" cx="0.85" cy="0.85" r="0.275" />
                 </mask>
 
-                <mask
-                    id="status-mask-32"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
+                <mask id="status-mask-32" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 
-                    <circle
-                        fill="black"
-                        cx="0.85"
-                        cy="0.85"
-                        r="0.25"
-                    />
+                    <circle fill="black" cx="0.85" cy="0.85" r="0.25" />
                 </mask>
 
-                <mask
-                    id="status-mask-40"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
+                <mask id="status-mask-40" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 
-                    <circle
-                        fill="black"
-                        cx="0.85"
-                        cy="0.85"
-                        r="0.240"
-                    />
+                    <circle fill="black" cx="0.85" cy="0.85" r="0.240" />
                 </mask>
 
-                <mask
-                    id="status-mask-80"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
+                <mask id="status-mask-80" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 
-                    <circle
-                        fill="black"
-                        cx="0.85"
-                        cy="0.85"
-                        r="0.175"
-                    />
+                    <circle fill="black" cx="0.85" cy="0.85" r="0.175" />
                 </mask>
 
-                <mask
-                    id="status-mask-120"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
+                <mask id="status-mask-120" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 
-                    <circle
-                        fill="black"
-                        cx="0.85"
-                        cy="0.85"
-                        r="0.16"
-                    />
+                    <circle fill="black" cx="0.85" cy="0.85" r="0.16" />
                 </mask>
 
                 {/* Inner Masks */}
 
-                <mask
-                    id="status-mask-offline"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
-                    <circle
-                        fill="black"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.25"
-                    />
+                <mask id="status-mask-offline" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
+                    <circle fill="black" cx="0.5" cy="0.5" r="0.25" />
                 </mask>
 
-                <mask
-                    id="status-mask-dnd"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
-                    <rect
-                        fill="black"
-                        x="0.125"
-                        y="0.375"
-                        width="0.75"
-                        height="0.25"
-                        rx="0.125"
-                        ry="0.125"
-                    />
+                <mask id="status-mask-dnd" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
+                    <rect fill="black" x="0.125" y="0.375" width="0.75" height="0.25" rx="0.125" ry="0.125" />
                 </mask>
 
-                <mask
-                    id="status-mask-idle"
-                    maskContentUnits="objectBoundingBox"
-                    viewBox="0 0 1 1"
-                >
-                    <circle
-                        fill="white"
-                        cx="0.5"
-                        cy="0.5"
-                        r="0.5"
-                    />
-                    <circle
-                        fill="black"
-                        cx="0.25"
-                        cy="0.25"
-                        r="0.375"
-                    />
+                <mask id="status-mask-idle" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                    <circle fill="white" cx="0.5" cy="0.5" r="0.5" />
+                    <circle fill="black" cx="0.25" cy="0.25" r="0.375" />
                 </mask>
 
                 <foreignObject

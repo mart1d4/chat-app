@@ -24,10 +24,6 @@ export const AddFriend = () => {
     };
 
     useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
-
-    useEffect(() => {
         if (error.length > 0) setValid("");
         if (valid.length > 0) setError("");
     }, [error, valid]);
@@ -53,6 +49,7 @@ export const AddFriend = () => {
                     >
                         <div>
                             <input
+                                autoFocus
                                 ref={inputRef}
                                 type="text"
                                 autoComplete="off"

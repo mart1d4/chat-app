@@ -1,13 +1,11 @@
 "use client";
 
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { useLayers, useTooltip } from "@/lib/store";
 import { ReactElement, useRef } from "react";
 import { translateCap } from "@/lib/strings";
-import { useRouter } from "next/navigation";
 import styles from "./UserItem.module.css";
 import { Avatar, Icon } from "@components";
-import { useData, useLayers, useTooltip } from "@/lib/store";
 
 type Props = {
     content: string;
@@ -145,10 +143,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 }}
                                 onBlur={() => setTooltip(null)}
                             >
-                                <Icon
-                                    name="message"
-                                    size={20}
-                                />
+                                <Icon name="message" size={20} />
                             </button>
 
                             <button
@@ -184,10 +179,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 }}
                                 onBlur={() => setTooltip(null)}
                             >
-                                <Icon
-                                    name="more"
-                                    size={20}
-                                />
+                                <Icon name="more" size={20} />
                             </button>
                         </>
                     )}
@@ -223,10 +215,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     }}
                                     onBlur={() => setTooltip(null)}
                                 >
-                                    <Icon
-                                        name="accept"
-                                        size={20}
-                                    />
+                                    <Icon name="accept" size={20} />
                                 </button>
                             )}
 
@@ -258,10 +247,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 }}
                                 onBlur={() => setTooltip(null)}
                             >
-                                <Icon
-                                    name="cancel"
-                                    size={20}
-                                />
+                                <Icon name="cancel" size={20} />
                             </button>
                         </>
                     )}
@@ -294,10 +280,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             }}
                             onBlur={() => setTooltip(null)}
                         >
-                            <Icon
-                                name="userDelete"
-                                size={20}
-                            />
+                            <Icon name="userDelete" size={20} />
                         </button>
                     )}
                 </div>

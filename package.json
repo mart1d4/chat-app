@@ -1,70 +1,73 @@
 {
-    "author": {
-        "name": "Martin Danton",
-        "email": "contact@mart1d4.com",
-        "url": "https://www.mart1d4.com"
-    },
-    "description": "A Chat App to Talk with Friends",
-    "scripts": {
-        "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
-        "postinstall": "prisma generate"
-    },
-    "dependencies": {
-        "@prisma/client": "^5.4.1",
-        "@uploadcare/upload-client": "^6.6.1",
-        "bcryptjs": "^2.4.3",
-        "bufferutil": "^4.0.7",
-        "cryptr": "^6.3.0",
-        "encoding": "^0.1.13",
-        "framer-motion": "^10.16.4",
-        "jose": "^4.15.2",
-        "magic-bytes.js": "^1.5.0",
-        "next": "^13.5.5-canary.4",
-        "pusher": "^5.1.3",
-        "pusher-js": "^8.3.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-router-dom": "^6.16.0",
-        "utf-8-validate": "^6.0.3",
-        "uuid": "^9.0.1",
-        "zustand": "^4.4.3"
-    },
-    "name": "chat-app",
-    "version": "0.4.0",
-    "main": "index.ts",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mart1d4/chat-app.git"
-    },
-    "keywords": [
-        "chat",
-        "app",
-        "next",
-        "react",
-        "tauri",
-        "rust",
-        "socket",
-        "pusher",
-        "websocket",
-        "mongodb",
-        "prisma",
-        "typescript",
-        "uploadcare"
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/mart1d4/chat-app/issues"
-    },
-    "homepage": "https://chat-app.mart1d4.com/",
-    "devDependencies": {
-        "@types/bcryptjs": "^2.4.4",
-        "@types/cookie": "^0.5.2",
-        "@types/node": "20.8.3",
-        "@types/react": "18.2.25",
-        "@types/uuid": "^9.0.5",
-        "prisma": "^5.4.1",
-        "typescript": "5.2.2"
-    }
+  "author": {
+    "name": "Martin Danton",
+    "email": "contact@mart1d4.com",
+    "url": "https://www.mart1d4.com"
+  },
+  "description": "A Chat App to Talk with Friends",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@planetscale/database": "^1.11.0",
+    "@prisma/client": "^5.4.1",
+    "@uploadcare/upload-client": "^6.6.1",
+    "bcryptjs": "^2.4.3",
+    "bufferutil": "^4.0.7",
+    "cryptr": "^6.3.0",
+    "encoding": "^0.1.13",
+    "framer-motion": "^10.16.4",
+    "jose": "^4.15.2",
+    "kysely": "^0.26.3",
+    "kysely-planetscale": "^1.4.0",
+    "magic-bytes.js": "^1.5.0",
+    "next": "^13.5.5-canary.4",
+    "pusher": "^5.1.3",
+    "pusher-js": "^8.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.16.0",
+    "utf-8-validate": "^6.0.3",
+    "uuid": "^9.0.1",
+    "zustand": "^4.4.3"
+  },
+  "name": "chat-app",
+  "version": "0.4.0",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mart1d4/chat-app.git"
+  },
+  "keywords": [
+    "chat",
+    "app",
+    "next",
+    "react",
+    "tauri",
+    "rust",
+    "socket",
+    "pusher",
+    "websocket",
+    "mongodb",
+    "prisma",
+    "typescript",
+    "uploadcare"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mart1d4/chat-app/issues"
+  },
+  "homepage": "https://chat-app.mart1d4.com/",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.4",
+    "@types/cookie": "^0.5.2",
+    "@types/node": "20.8.3",
+    "@types/react": "18.2.25",
+    "@types/uuid": "^9.0.5",
+    "prisma": "^5.4.1",
+    "typescript": "5.2.2"
+  }
 }
