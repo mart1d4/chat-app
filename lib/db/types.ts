@@ -1,325 +1,296 @@
-import { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely";
+import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
-    user: PersonTable;
-    guild: PetTable;
-    channel: PetTable;
-    message: PetTable;
-    invite: PetTable;
-    role: PetTable;
-    emote: PetTable;
+    user: UserTable;
+    guild: GuildTable;
+    channel: ChannelTable;
+    message: MessageTable;
+    invite: InviteTable;
+    role: RoleTable;
+    emote: EmoteTable;
 }
 
-type TUser = readonly {
-    id: string;
+export interface Notification {
+    type: 0 | 1 | 2 | 3 | 4;
+    content: string | null;
+    count: number;
+
+    sender_id: number;
+    channel_id: number | null;
+
+    created_at: Generated<Date>;
+};
+
+export interface UserTable {
+    id: Generated<number>;
     username: string;
-    displayName: string;
-    email?: string;
-    phone?: string;
+    display_name: string;
+    email: string | null;
+    phone: string | null;
 
     avatar: string;
-    banner?: string;
-    primaryColor: string;
-    accentColor: string;
+    banner: string | null;
+    primary_color: string;
+    accent_color: string;
 
-    description?: string;
-    customStatus?: string;
+    description: string | null;
+    custom_status: string | null;
 
     password: string;
-    refreshToken?: string;
+    refresh_tokens: string[];
 
-    status: EUserStatus;
+    status: "online" | "idle" | "dnd" | "offline" | "invisible";
     system: boolean;
     verified: boolean;
 
-    notifications: TNotification[];
+    notifications: Notification[];
 
-    guildIds: TGuild.id[];
-    guilds?: TGuild[];
+    guild_ids: number[];
+    channel_ids: number[];
+    friend_ids: number[];
+    request_ids: number[];
+    blocked_ids: number[];
 
-    channelIds: TChannel.id[];
-    channels?: TChannel[];
+    created_at: Generated<Date>;
+}
 
-    hiddenChannelIds: TChannel.id[];
-    messages: TMessage[];
+export type User = Selectable<UserTable>;
+export type NewUser = Insertable<UserTable>;
+export type UserUpdate = Updateable<UserTable>;
 
-    mentionIds: TMessage.id[];
-    mentions: TMessage[];
+export interface WelcomeScreen {
+    title: string;
+    subtitle: string;
+    content: string[];
 
-    friendIds: TUser.id[];
-    friends?: TUser[];
+    links: string[];
+    buttons: {
+        text: string;
+        color: string;
+        url: string | null;
+    }[];
 
-    friendOfIds: TUser.id[];
-    friendOf?: TUser[];
+    primary_color: string | null;
+    accent_color: string    | null;
 
-    requestReceivedIds: TUser.id[];
-    requestsReceived?: TUser[];
-
-    requestSentIds: TUser.id[];
-    requestsSent?: TUser[];
-
-    blockedUserIds: TUser.id[];
-    blockedUsers?: TUser[];
-
-    blockedByUserIds: TUser.id[];
-    blockedByUsers?: TUser[];
-
-    createdAt: DateTime;
-    updatedAt: DateTime;
+    background_url: string | null;
 };
 
-type TGuild = readonly {
-    id: string;
-    name: string;
-    icon?: string;
-    banner?: string;
-    description?: string;
+export interface GuildMember {
+    user_id: number;
+    nickname: string | null;
+    avatar: string | null;
+    role_ids: number[];
 
-    welcomeScreen?: TWelcomeScreen;
-    vanityUrl?: string;
-    vanityUrlUses?: number;
-    invites?: TInvite[];
-
-    systemChannelId?: TChannel.id;
-    afkChannelId?: TChannel.id;
-    afkTimout?: number;
-
-    ownerId: TUser.id;
-
-    rawMemberIds: TUser.id[];
-    rawMembers: TUser[];
-
-    members: TMember[];
-    channels: TChannel[];
-    roles: TRole[];
-    emotes: TEmote[];
-
-    createdAt: DateTime;
-    updatedAt: DateTime;
-};
-
-type TGuildMember = readonly {
-    userId: TUser.id;
-    nickname?: string;
-    avatar?: string;
-    rolesIds: TRole.id[];
-    joinedAt: DateTime;
     deaf: boolean;
     mute: boolean;
-    timeoutUntil?: DateTime;
-    permissions: number[];
+    timeout_until: Date | null;
+
+    joined_at: Generated<Date>;
 };
 
-type TChannel = readonly {
-    id: string;
-    type: EChannelType;
-    name?: string;
-    topic?: string;
-    icon?: string;
-
-    nsfw?: boolean;
-    position?: number;
-    parentId?: TChannel.id;
-
-    lastMessageId?: TMessage.id;
-    lastPinTimestamp?: DateTime;
-
-    rateLimit?: number;
-    userLimit?: number;
-    bitrate?: number;
-
-    rtcRegion?: string;
-    videoQualityMode?: string;
-
-    ownerId?: TUser.id;
-
-    guildId?: TGuild.id;
-    guild?: TGuild;
-
-    recipientIds: TUser.id[];
-    recipients: TUser[];
-
-    messages: TMessage[];
-
-    permissionOverwrites: TPermissionOverwrite[];
-
-    createdAt: DateTime;
-    updatedAt: DateTime;
-};
-
-type TMessage = readonly {
-    id: string;
-    type: EMessageType;
-    content?: string;
-    embeds: TEmbed[];
-
-    edited: boolean;
-    pinned?: DateTime;
-
-    reactions: TReaction[];
-    mentionEveryone: boolean;
-    mentionChannelIds: TChannel.id[];
-    mentionRoleIds: TRole.id[];
-
-    mentionIds: TUser.id[];
-    mentions: TUser[];
-
-    authorId: TUser.id;
-    author: TUser;
-
-    channelId: TChannel.id;
-    channel: TChannel;
-
-    messageReferenceId?: TMessage.id;
-    messageReference: TMessage;
-
-    referencedBy: TMessage[];
-
-    createdAt: DateTime;
-    updatedAt: DateTime;
-
-    error?: boolean;
-    waiting?: boolean;
-    needsToBeSent?: boolean;
-    attachments: TAttachment[];
-};
-
-type TAttachment = {
-    id: string;
-    url: string;
+export interface GuildTable {
+    id: Generated<number>;
     name: string;
-    dimensions: {
-        width: number;
-        height: number;
-    };
-    size: number;
-    isSpoiler: boolean;
-    isImage: boolean;
-    description?: string;
-};
+    icon: string | null;
+    banner: string | null;
+    description: string | null;
 
-type TEmbed = readonly {
-    author?: {
-        name: string;
-        url?: string;
-        iconUrl?: string;
-    };
-    title?: string;
-    url?: string;
-    thumbnail?: string;
-    description: string;
-    fields?: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[];
-    image?: string;
-    footer?: {
-        text: string;
-        icon?: string;
-    };
-    color?: string;
-    timestamp?: Date;
-};
+    welcome_screen: WelcomeScreen | null;
+    vanity_url: string | null;
+    vanity_url_uses: number;
+    invite_ids: number[];
 
-type TInvite = readonly {
-    id: string;
-    code: string;
-    uses: number;
-    maxUses: number;
-    maxAge: number;
-    temporary: boolean;
+    system_channel_id: number | null;
+    afk_channel_id: number | null;
+    afk_timeout: number;
 
-    inviterId: TUser.id;
-    inviter: TUser;
+    owner_id: number;
+    user_ids: number[];
+    members: GuildMember[];
 
-    guildId?: TGuild.id;
-    guild?: TGuild;
+    channel_ids: number[];
+    role_ids: number[];
+    emote_ids: number[];
 
-    channelId: TChannel.id;
-    channel: TChannel;
+    created_at: Generated<Date>;
+}
 
-    expiresAt: DateTime?;
-    createdAt: DateTime;
-};
+export type Guild = Selectable<GuildTable>;
+export type NewGuild = Insertable<GuildTable>;
+export type GuildUpdate = Updateable<GuildTable>;
 
-type TRole = readonly {
-    id: string;
-    name: string;
-    color: string;
-    permissions: string[];
-    position: number;
-    mentionable: boolean;
-
-    guildId: TGuild.id;
-    guild: TGuild;
-
-    memberIds: TUser.id[];
-    members: TUser[];
-
-    createdAt: DateTime;
-    updatedAt: DateTime;
-};
-
-type TPermissionOverwrite = readonly {
+export interface PermissionOverwrite {
     id: string;
     type: 0 | 1;
     allow: string[];
     deny: string[];
 };
 
-type TNotification = readonly {
-    type: ENotification;
-    senderId: TUser.id;
-    channelId?: TChannel.id;
-    content?: string;
-    count: number;
-    createdAt: Date;
-};
+export interface ChannelTable {
+    id: Generated<number>;
+    type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    name: string | null;
+    topic: string | null;
+    icon: string | null;
 
-type TReaction = readonly {
-    count: number;
+    nsfw: boolean;
+    position: number | null;
+    parent_id: number | null;
 
-    messageId: TMessage.id;
-    emoteId: TEmote.id;
-    userIds: TUser.id[];
+    last_message_id: number | null;
+    last_pin_timestamp: Date | null;
 
-    createdAt: DateTime;
-    updatedAt: DateTime;
-};
+    rate_limit: number | null;
+    user_limit: number | null;
+    bitrate: number | null;
 
-type TEmote = readonly {
+    rtc_region: string | null;
+    video_quality_mode: string | null;
+
+    owner_id: number | null;
+    guild_id: number | null;
+
+    recipient_ids: number[] | null;
+
+    permission_overwrites: PermissionOverwrite[] | null;
+
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+}
+
+export type Channel = Selectable<ChannelTable>;
+export type NewChannel = Insertable<ChannelTable>;
+export type ChannelUpdate = Updateable<ChannelTable>;
+
+export interface Attachment {
     id: string;
+    url: string;
+    name: string;
+
+    dimensions: {
+        width: number;
+        height: number;
+    };
+    size: number;
+
+    isSpoiler: boolean;
+    isImage: boolean;
+
+    description: string | null;
+};
+
+export interface Embed {
+    author: {
+        name: string;
+        url: string | null;
+        iconUrl: string | null;
+    } | null;
+
+    title: string | null;
+    url: string | null;
+    thumbnail: string | null;
+    description: string;
+
+    fields: {
+        name: string;
+        value: string;
+        inline: boolean;
+    }[] | null;
+
+    image: string | null;
+    footer: {
+        text: string;
+        icon: string | null;
+    } | null;
+
+    color: string | null;
+    timestamp: Date | null;
+};
+
+export interface Reaction {
+    count: number;
+    emote_id: number;
+    user_ids: number[];
+};
+
+export interface MessageTable {
+    id: Generated<number>;
+    type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+    content: string | null;
+    attachments: Attachment[];
+    embeds: Embed[];
+
+    edited: Date | null;
+    pinned: Date | null;
+
+    reactions: Reaction[];
+    mention_everyone: boolean;
+    mention_channel_ids: number[];
+    mention_role_ids: number[];
+    mention_ids: number[];
+
+    author_id: number;
+    channel_id: number;
+
+    message_reference_id: number | null;
+
+    created_at: Generated<Date>;
+}
+
+export type Message = Selectable<MessageTable>;
+export type NewMessage = Insertable<MessageTable>;
+export type MessageUpdate = Updateable<MessageTable>;
+
+export interface InviteTable {
+    id: Generated<number>;
+    code: string;
+    uses: number;
+    max_uses: number;
+    max_age: number;
+    temporary: boolean;
+
+    inviter_id: number;
+    channel_id: number;
+    guild_id: number | null;
+
+    expires_at: Generated<Date>;
+    created_at: Generated<Date>;
+}
+
+export type Invite = Selectable<InviteTable>;
+export type NewInvite = Insertable<InviteTable>;
+export type InviteUpdate = Updateable<InviteTable>;
+
+export interface RoleTable {
+    id: Generated<number>;
+    name: string;
+    color: string;
+    permissions: string[];
+    position: number;
+    mentionable: boolean;
+
+    guild_id: number;
+    member_ids: number[];
+
+    created_at: Generated<Date>;
+}
+
+export type Role = Selectable<RoleTable>;
+export type NewRole = Insertable<RoleTable>;
+export type RoleUpdate = Updateable<RoleTable>;
+
+export interface EmoteTable {
+    id: Generated<number>;
     name: string;
     url: string;
     animated: boolean;
 
-    guildId: TGuild.id;
-    guild: TGuild;
+    guild_id: number;
 
-    createdAt: DateTime;
-    updatedAt: DateTime;
-};
-
-export interface PersonTable {
-    id: Generated<number>;
-    first_name: string;
-    gender: "man" | "woman" | "other";
-    last_name: string | null;
-    created_at: ColumnType<Date, string | undefined, never>;
+    created_at: Generated<Date>;
 }
 
-export type Person = Selectable<PersonTable>;
-export type NewPerson = Insertable<PersonTable>;
-export type PersonUpdate = Updateable<PersonTable>;
-
-export interface PetTable {
-    id: Generated<number>;
-    name: string;
-    owner_id: number;
-    species: "dog" | "cat";
-}
-
-export type Pet = Selectable<PetTable>;
-export type NewPet = Insertable<PetTable>;
-export type PetUpdate = Updateable<PetTable>;
+export type Emote = Selectable<EmoteTable>;
+export type NewEmote = Insertable<EmoteTable>;
+export type EmoteUpdate = Updateable<EmoteTable>;
