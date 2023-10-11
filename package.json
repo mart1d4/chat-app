@@ -13,14 +13,14 @@
   },
   "dependencies": {
     "@planetscale/database": "^1.11.0",
-    "@prisma/client": "^5.4.1",
+    "@prisma/client": "^5.4.2",
     "@uploadcare/upload-client": "^6.6.1",
     "bcryptjs": "^2.4.3",
     "bufferutil": "^4.0.7",
     "cryptr": "^6.3.0",
     "encoding": "^0.1.13",
     "framer-motion": "^10.16.4",
-    "jose": "^4.15.2",
+    "jose": "^4.15.3",
     "kysely": "^0.26.3",
     "kysely-planetscale": "^1.4.0",
     "magic-bytes.js": "^1.5.0",
@@ -64,10 +64,10 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.4",
     "@types/cookie": "^0.5.2",
-    "@types/node": "20.8.3",
-    "@types/react": "18.2.25",
+    "@types/node": "20.8.4",
+    "@types/react": "18.2.28",
     "@types/uuid": "^9.0.5",
-    "prisma": "^5.4.1",
+    "prisma": "^5.4.2",
     "typescript": "5.2.2"
   }
 }

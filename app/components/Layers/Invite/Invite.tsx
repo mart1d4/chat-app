@@ -126,12 +126,7 @@ export function Invite({ content }: { content: TContent }) {
                         })
                     }
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        role="image"
-                    >
+                    <svg viewBox="0 0 24 24" width="24" height="24" role="image">
                         <path
                             fill="currentColor"
                             d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -145,10 +140,7 @@ export function Invite({ content }: { content: TContent }) {
                     {filteredList.length > 0 && !error ? (
                         <div className={styles.scroller + " scrollbar"}>
                             {filteredList.map((channel) => (
-                                <div
-                                    key={channel.id}
-                                    className={styles.friend}
-                                >
+                                <div key={channel.id} className={styles.friend}>
                                     <div>
                                         <div className={styles.friendAvatar}>
                                             <Avatar
@@ -162,8 +154,12 @@ export function Invite({ content }: { content: TContent }) {
                                     </div>
 
                                     <button
-                                        className={`button ${styles.inviteButton}`}
+                                        disabled={inviteLink.length === 0}
+                                        className={`button ${styles.inviteButton} ${
+                                            inviteLink.length === 0 ? "disabled" : ""
+                                        }`}
                                         onClick={async () => {
+                                            if (inviteLink.length === 0) return;
                                             try {
                                                 const response = await sendRequest({
                                                     query: "SEND_MESSAGE",

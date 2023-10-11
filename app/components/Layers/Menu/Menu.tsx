@@ -65,6 +65,7 @@ export function Menu({ content }: { content: any }) {
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
     const blockedUsers = useData((state) => state.blocked);
+    const channels = useData((state) => state.channels);
     const friends = useData((state) => state.friends);
     const layers = useLayers((state) => state.layers);
     const guilds = useData((state) => state.guilds);
@@ -307,7 +308,7 @@ export function Menu({ content }: { content: any }) {
                     },
                 },
                 {
-                    name: "Invite People",
+                    name: channels.length > 0 ? "Invite People" : null,
                     func: () => {
                         setLayers({
                             settings: {
@@ -395,10 +396,10 @@ export function Menu({ content }: { content: any }) {
                         func: () => {},
                     },
                     {
-                        name: "Divider",
+                        name: channels.length > 0 ? "Divider" : null,
                     },
                     {
-                        name: "Invite People",
+                        name: channels.length > 0 ? "Invite People" : null,
                         func: () => {
                             setLayers({
                                 settings: {
@@ -508,10 +509,10 @@ export function Menu({ content }: { content: any }) {
                     func: () => {},
                 },
                 {
-                    name: textChan ? "Divider" : null,
+                    name: textChan && channels.length > 0 ? "Divider" : null,
                 },
                 {
-                    name: textChan ? "Invite People" : null,
+                    name: textChan && channels.length > 0 ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -617,7 +618,7 @@ export function Menu({ content }: { content: any }) {
                     name: "Divider",
                 },
                 {
-                    name: textChan ? "Invite People" : null,
+                    name: textChan && channels.length > 0 ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -1605,13 +1606,7 @@ export function Menu({ content }: { content: any }) {
                 <div>
                     {items?.map((item, index) => {
                         if (!item.name) return;
-                        else if (item.name === "Divider")
-                            return (
-                                <div
-                                    key={index}
-                                    className={styles.divider}
-                                />
-                            );
+                        else if (item.name === "Divider") return <div key={index} className={styles.divider} />;
                         else
                             return (
                                 <div
@@ -1646,10 +1641,7 @@ export function Menu({ content }: { content: any }) {
 
                                         {content.type === "STATUS" && (
                                             <div className={styles.statusIcon}>
-                                                <svg
-                                                    width={10}
-                                                    height={10}
-                                                >
+                                                <svg width={10} height={10}>
                                                     <rect
                                                         height="10px"
                                                         width="10px"
@@ -1662,10 +1654,7 @@ export function Menu({ content }: { content: any }) {
                                             </div>
                                         )}
 
-                                        <div
-                                            className={styles.label}
-                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
-                                        >
+                                        <div className={styles.label} style={{ fontSize: item.leftIcon ? "12px" : "" }}>
                                             {item.name}
                                         </div>
 
@@ -1709,12 +1698,7 @@ export function Menu({ content }: { content: any }) {
                                             style={{ marginLeft: content.type === "STATUS" ? "18px" : "" }}
                                         >
                                             {item.tip}
-                                            {item.tipIcon && (
-                                                <Icon
-                                                    name={item.tipIcon}
-                                                    size={16}
-                                                />
-                                            )}
+                                            {item.tipIcon && <Icon name={item.tipIcon} size={16} />}
                                         </div>
                                     )}
                                 </div>

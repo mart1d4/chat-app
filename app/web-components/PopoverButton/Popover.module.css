@@ -15,7 +15,8 @@
     visibility: visible;
 }
 
-.popup > div:hover {
+.popup > div:hover,
+.popup > div:focus-within {
     border-radius: 4px;
     background-color: hsla(217, 8%, 34%, 0.16);
 }

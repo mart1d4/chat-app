@@ -80,6 +80,7 @@ export function Popup({ content, friends }: any) {
     const [guildTemplate, setGuildTemplate] = useState<number>(0);
     const [guildName, setGuildName] = useState(`${user.username}'s server`);
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
+    const [inviteLink, setInviteLink] = useState("");
 
     const [channelName, setChannelName] = useState("");
     const [channelType, setChannelType] = useState(2);
@@ -98,76 +99,30 @@ export function Popup({ content, friends }: any) {
     const cancelRef = useRef<HTMLButtonElement>(null);
 
     if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
-        return (
-            <Popout
-                content={content}
-                friends={friends}
-            />
-        );
+        return <Popout content={content} friends={friends} />;
     }
 
     if (type === "GUILD_INVITE") {
         return <Invite content={content} />;
     }
 
-    useEffect(() => {
-        // Reset all state when popup is closed
-        if (!layers.POPUP) {
-            setIsLoading(false);
-            setUID(user.username);
-            setPassword("");
-            setPassword1("");
-            setNewPassword("");
-            setConfirmPassword("");
-            setPassword1Error("");
-
-            setFilename("");
-            setDescription("");
-            setIsSpoiler(false);
-
-            setJoin(false);
-            setGuildTemplate(0);
-            setGuildName(`${user.username}'s server`);
-            setGuildIcon(null);
-
-            setChannelName("");
-            setChannelType(2);
-            setChannelLocked(false);
-        }
-    }, [layers.POPUP]);
-
-    useEffect(() => {
-        if (!content.file) return;
-
-        setIsImage(content.attachment.isImage);
-        setFilename(content.attachment.name);
-        setDescription(content.attachment.description ?? "");
-        setIsSpoiler(content.attachment.isSpoiler);
-    }, [content.attachment]);
-
     const handleUsernameSubmit = async () => {
-        setIsLoading(true);
-
         const username = trimMessage(uid);
 
         if (!username) {
-            setUsernameError("Username cannot be empty.");
-            return setIsLoading(false);
+            return setUsernameError("Username cannot be empty.");
         }
 
         if (username.length < 2 || username.length > 32) {
-            setUsernameError("Username must be between 2 and 32 characters.");
-            return setIsLoading(false);
+            return setUsernameError("Username must be between 2 and 32 characters.");
         }
 
         if (user.username === username) {
-            setUsernameError("Username cannot be the same as your current username.");
-            return setIsLoading(false);
+            return setUsernameError("Username cannot be the same as your current username.");
         }
 
         if (!password) {
-            setPasswordError("Password cannot be empty.");
-            return setIsLoading(false);
+            return setPasswordError("Password cannot be empty.");
         }
 
         const response = await sendRequest({
@@ -188,33 +143,23 @@ export function Popup({ content, friends }: any) {
                 },
             });
         }
-
-        setIsLoading(false);
     };
 
     const handlePasswordSubmit = async () => {
-        console.log("handlePasswordSubmit");
-
-        setIsLoading(true);
-
         if (!password1) {
-            setPassword1Error("Current password cannot be empty.");
-            return setIsLoading(false);
+            return setPassword1Error("Current password cannot be empty.");
         }
 
         if (!newPassword) {
-            setNewPasswordError("New password cannot be empty.");
-            return setIsLoading(false);
+            return setNewPasswordError("New password cannot be empty.");
         }
 
         if (newPassword.length < 8 || newPassword.length > 256) {
-            setNewPasswordError("Must be between 8 and 256 characters.");
-            return setIsLoading(false);
+            return setNewPasswordError("Must be between 8 and 256 characters.");
         }
 
         if (newPassword !== confirmPassword) {
-            setNewPasswordError("Passwords do not match.");
-            return setIsLoading(false);
+            return setNewPasswordError("Passwords do not match.");
         }
 
         const response = await sendRequest({
@@ -238,13 +183,10 @@ export function Popup({ content, friends }: any) {
                 },
             });
         }
-
-        setIsLoading(false);
     };
 
     const createGuild = async () => {
         if (!guildTemplate || !guildName) return;
-        setIsLoading(true);
         let uploadedIcon = null;
 
         try {
@@ -283,27 +225,31 @@ export function Popup({ content, friends }: any) {
         } catch (err) {
             console.error(err);
         }
-
-        setIsLoading(false);
     };
 
     const props: TProps = {
         CREATE_GUILD: {
-            title: join || guildTemplate ? "Customize your server" : "Create a server",
-            description:
-                join || guildTemplate
-                    ? "Give your new server a personality with a name and an icon. You can always change it later"
-                    : "Your server is where you and your friends hang out. Make yours and start talking.",
+            title: join ? "Join a Server" : guildTemplate ? "Customize your server" : "Create a server",
+            description: join
+                ? "Enter an invite below to join an existing server"
+                : guildTemplate
+                ? "Give your new server a personality with a name and an icon. You can always change it later"
+                : "Your server is where you and your friends hang out. Make yours and start talking.",
             buttonColor: join || guildTemplate ? "blue" : "grey",
             buttonText: join ? "Join server" : guildTemplate ? "Create" : "Join a server",
             buttonDisabled: guildTemplate && !guildName ? true : false,
             function: async () => {
-                if (!guildTemplate && !join) {
-                    setGuildTemplate(1);
+                if (join) {
+                    sendRequest({
+                        query: "ACCEPT_INVITE",
+                        params: {
+                            inviteId: inviteLink,
+                        },
+                    });
                 } else if (guildTemplate) {
                     await createGuild();
-                } else if (join) {
-                    // Join server with invite code
+                } else {
+                    setJoin(true);
                 }
             },
             centered: true,
@@ -512,19 +458,24 @@ export function Popup({ content, friends }: any) {
 
     const prop = props[type as keyof typeof props] ?? null;
 
-    useEffect(() => {
-        if (!content.attachment) return;
-        setIsImage(content.attachment.isImage);
-        setFilename(content.attachment.name);
-        setDescription(content.attachment.description ?? "");
-        setIsSpoiler(content.attachment.isSpoiler);
-    }, [content.attachment]);
+    // useEffect(() => {
+    //     if (!content.attachment) return;
+    //     setIsImage(content.attachment.isImage);
+    //     setFilename(content.attachment.name);
+    //     setDescription(content.attachment.description ?? "");
+    //     setIsSpoiler(content.attachment.isSpoiler);
+    // }, [content.attachment]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (layers.POPUP.length === 0) return;
 
             if (e.key === "Escape" && !layers.MENU) {
+                if (type === "CREATE_GUILD") {
+                    if (guildTemplate !== 0) return setGuildTemplate(0);
+                    else if (join) return setJoin(false);
+                }
+
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -534,7 +485,8 @@ export function Popup({ content, friends }: any) {
             }
 
             if (e.key === "Enter" && !e.shiftKey && prop !== null) {
-                if (isLoading || document.activeElement === cancelRef.current) return;
+                if (isLoading || prop.buttonDisabled || document.activeElement === cancelRef.current) return;
+                setIsLoading(true);
 
                 prop.function();
                 if (!prop.skipClose) {
@@ -545,12 +497,14 @@ export function Popup({ content, friends }: any) {
                         },
                     });
                 }
+
+                setIsLoading(false);
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [layers, isLoading, prop]);
+    }, [layers.POPUP, layers.MENU, type, guildTemplate, join, prop, isLoading]);
 
     return (
         <AnimatePresence>
@@ -611,14 +565,8 @@ export function Popup({ content, friends }: any) {
                                 />
 
                                 {customStatus && (
-                                    <div
-                                        onClick={() => setCustomStatus("")}
-                                        className={styles.clearInput}
-                                    >
-                                        <Icon
-                                            name="closeFilled"
-                                            viewbox="0 0 14 14"
-                                        />
+                                    <div onClick={() => setCustomStatus("")} className={styles.clearInput}>
+                                        <Icon name="closeFilled" viewbox="0 0 14 14" />
                                     </div>
                                 )}
                             </div>
@@ -687,12 +635,7 @@ export function Popup({ content, friends }: any) {
                                                     {s}
                                                 </div>
 
-                                                {status === s && (
-                                                    <Icon
-                                                        name="selected"
-                                                        fill="var(--accent-1)"
-                                                    />
-                                                )}
+                                                {status === s && <Icon name="selected" fill="var(--accent-1)" />}
                                             </li>
                                         ))}
                                     </ul>
@@ -923,12 +866,7 @@ export function Popup({ content, friends }: any) {
                                     });
                                 }}
                             >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    width="24"
-                                    height="24"
-                                    role="image"
-                                >
+                                <svg viewBox="0 0 24 24" width="24" height="24" role="image">
                                     <path
                                         fill="currentColor"
                                         d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
@@ -953,10 +891,7 @@ export function Popup({ content, friends }: any) {
 
                                 {content.message && type !== "DELETE_ATTACHMENT" && (
                                     <div className={styles.messagesContainer}>
-                                        <FixedMessage
-                                            message={content.message}
-                                            pinned={false}
-                                        />
+                                        <FixedMessage message={content.message} pinned={false} />
                                     </div>
                                 )}
                             </>
@@ -1000,17 +935,8 @@ export function Popup({ content, friends }: any) {
 
                         {type === "GROUP_OWNER_CHANGE" && (
                             <div className={styles.ownerChange}>
-                                <svg
-                                    height="16"
-                                    width="80"
-                                    viewBox="0 0 80 16"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <g
-                                        fill="none"
-                                        fillRule="evenodd"
-                                        opacity=".6"
-                                    >
+                                <svg height="16" width="80" viewBox="0 0 80 16" xmlns="http://www.w3.org/2000/svg">
+                                    <g fill="none" fillRule="evenodd" opacity=".6">
                                         <path d="m0 0h80v16h-80z" />
                                         <g
                                             stroke="var(--foreground-3)"
@@ -1019,10 +945,7 @@ export function Popup({ content, friends }: any) {
                                             strokeWidth="2"
                                         >
                                             <path d="m71 1h4v4.16" />
-                                            <path
-                                                d="m2 1h4v4.16"
-                                                transform="matrix(-1 0 0 1 8 0)"
-                                            />
+                                            <path d="m2 1h4v4.16" transform="matrix(-1 0 0 1 8 0)" />
                                             <path d="m51 1h4m6 0h4m-24 0h4m-14 0h4m-14 0h4m-23 11v-2m9-9h4" />
                                             <path d="m72.13 10.474 2.869 3.12 2.631-3.12" />
                                         </g>
@@ -1031,11 +954,7 @@ export function Popup({ content, friends }: any) {
 
                                 <div className={styles.ownerAvatars}>
                                     <div>
-                                        <Avatar
-                                            src={user.avatar}
-                                            alt={user.username}
-                                            size={80}
-                                        />
+                                        <Avatar src={user.avatar} alt={user.username} size={80} />
                                     </div>
 
                                     <div>
@@ -1053,10 +972,7 @@ export function Popup({ content, friends }: any) {
 
                         {type === "CREATE_GUILD" && !guildTemplate && !join && (
                             <>
-                                <button
-                                    className={styles.serverTemplate}
-                                    onClick={() => setGuildTemplate(1)}
-                                >
+                                <button className={styles.serverTemplate} onClick={() => setGuildTemplate(1)}>
                                     <img
                                         src="https://ucarecdn.com/2699b806-e43b-4fea-aa0b-da3bde1972b4/"
                                         alt="Create My Own"
@@ -1080,10 +996,7 @@ export function Popup({ content, friends }: any) {
                                         className={styles.serverTemplate}
                                         onClick={() => setGuildTemplate(index + 2)}
                                     >
-                                        <img
-                                            src={`https://ucarecdn.com/${template[1]}/`}
-                                            alt={template[0]}
-                                        />
+                                        <img src={`https://ucarecdn.com/${template[1]}/`} alt={template[0]} />
                                         <div>{template[0]} </div>
                                         <Icon name="arrow" />
                                     </button>
@@ -1106,11 +1019,7 @@ export function Popup({ content, friends }: any) {
                                                 }}
                                             />
                                         ) : (
-                                            <Icon
-                                                name="fileUpload"
-                                                size={80}
-                                                viewbox="0 0 80 80"
-                                            />
+                                            <Icon name="fileUpload" size={80} viewbox="0 0 80 80" />
                                         )}
 
                                         <div
@@ -1186,6 +1095,32 @@ export function Popup({ content, friends }: any) {
                                             value={guildName}
                                             onChange={(e) => setGuildName(e.target.value)}
                                         />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {type === "CREATE_GUILD" && join && (
+                            <>
+                                <div className={styles.input}>
+                                    <label>Invite Link</label>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            maxLength={37}
+                                            value={inviteLink}
+                                            placeholder="https://chat-app.mart1d4.dev/2xmw7a9n"
+                                            onChange={(e) => setInviteLink(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles.input}>
+                                    <label>Invites should look like</label>
+                                    <div style={{ color: "var(--foreground-1)" }}>
+                                        <p>2xmw7a9n</p>
+                                        <p>https://chat-app.mart1d4.dev/2xmw7a9n</p>
+                                        <p>https://chat-app.mart1d4.dev/super-invite</p>
                                     </div>
                                 </div>
                             </>
@@ -1383,12 +1318,7 @@ export function Popup({ content, friends }: any) {
                                     <input type="checkbox" />
 
                                     <div style={{ borderColor: isSpoiler ? "var(--accent-border)" : "" }}>
-                                        {isSpoiler && (
-                                            <Icon
-                                                name="accept"
-                                                fill="var(--accent-1)"
-                                            />
-                                        )}
+                                        {isSpoiler && <Icon name="accept" fill="var(--accent-1)" />}
                                     </div>
 
                                     <div>
@@ -1496,10 +1426,7 @@ export function Popup({ content, friends }: any) {
                                     </div>
                                 </div>
 
-                                <div
-                                    className={styles.input}
-                                    style={{ marginBottom: "20px" }}
-                                >
+                                <div className={styles.input} style={{ marginBottom: "20px" }}>
                                     <label
                                         htmlFor="newPassword"
                                         style={{
@@ -1568,16 +1495,11 @@ export function Popup({ content, friends }: any) {
                         )}
                     </div>
 
-                    <div
-                        className={styles.footerButtons}
-                        style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}
-                    >
+                    <div className={styles.footerButtons} style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}>
                         <button
                             ref={cancelRef}
                             className="underline"
-                            onClick={(e) => {
-                                e.stopPropagation();
-
+                            onClick={() => {
                                 if (type === "CREATE_GUILD") {
                                     if (guildTemplate !== 0) return setGuildTemplate(0);
                                     else if (join) return setJoin(false);
@@ -1596,9 +1518,9 @@ export function Popup({ content, friends }: any) {
 
                         <button
                             className={`${prop.buttonColor} ${prop.buttonDisabled ? "disabled" : ""}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
+                            onClick={() => {
                                 if (isLoading || prop.buttonDisabled) return;
+                                setIsLoading(true);
 
                                 prop.function();
                                 if (!prop.skipClose) {
@@ -1609,6 +1531,8 @@ export function Popup({ content, friends }: any) {
                                         },
                                     });
                                 }
+
+                                setIsLoading(false);
                             }}
                         >
                             {isLoading ? <LoadingDots /> : prop.buttonText}
