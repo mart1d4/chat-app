@@ -2,11 +2,26 @@
     width: 100%;
     background-color: var(--background-4);
     padding: 10px;
+    overflow-y: scroll;
 }
 
 .container > h1 {
     font-size: 28px;
     font-weight: 700;
     line-height: 100%;
+    color: var(--foreground-1);
+}
+
+.buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+}
+
+.data {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 40px;
     color: var(--foreground-1);
 }

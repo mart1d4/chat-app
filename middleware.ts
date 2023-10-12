@@ -6,8 +6,6 @@ export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
 };
 
-const allowedAPIPaths = ["/api/auth", "/api/invites"];
-
 export async function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
 
@@ -23,14 +21,7 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith("/api")) {
-        // allowedAPIPaths.forEach((path) => {
-        //     if (pathname.startsWith(path)) {
-        //         return NextResponse.next();
-        //     }
-        // });
-
         if (pathname.startsWith("/api/test")) return NextResponse.next();
-
         if (pathname.startsWith("/api/auth")) return NextResponse.next();
 
         if (!token) {
@@ -59,7 +50,7 @@ export async function middleware(req: NextRequest) {
                     },
                 });
             } catch (error) {
-                console.log(error);
+                console.log(`[MIDDLEWARE] Error verifying token: ${error}`);
                 return new NextResponse(null, {
                     status: 401,
                 });
@@ -68,7 +59,7 @@ export async function middleware(req: NextRequest) {
     }
 
     const paths = ["/", "/login", "/register", "/download", "/channels/me", "/channels/discover"];
-    const regex = [/^\/channels\/me\/[0-9a-f]{24}\/?$/, /^\/channels\/[0-9a-f]{24}(\/[0-9a-f]{24})?\/?$/];
+    const regex = [/^\/channels\/me\/[0-9]{18}\/?$/, /^\/channels\/[0-9]{18}(\/[0-9]{18})?\/?$/];
 
     if (!paths.includes(pathname) && !regex.some((r) => pathname.match(r))) {
         if (!refreshToken) {

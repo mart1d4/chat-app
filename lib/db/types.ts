@@ -1,13 +1,13 @@
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
-    user: UserTable;
-    guild: GuildTable;
-    channel: ChannelTable;
-    message: MessageTable;
-    invite: InviteTable;
-    role: RoleTable;
-    emote: EmoteTable;
+    users: UserTable;
+    guilds: GuildTable;
+    channels: ChannelTable;
+    messages: MessageTable;
+    invites: InviteTable;
+    roles: RoleTable;
+    emotes: EmoteTable;
 }
 
 export interface Notification {
@@ -15,29 +15,30 @@ export interface Notification {
     content: string | null;
     count: number;
 
-    sender_id: number;
-    channel_id: number | null;
+    senderId: number;
+    channelId: number | null;
 
-    created_at: Generated<Date>;
-};
+    createdAt: Generated<Date>;
+}
 
 export interface UserTable {
-    id: Generated<number>;
+    id: number;
     username: string;
-    display_name: string;
+    displayName: string;
     email: string | null;
     phone: string | null;
 
     avatar: string;
     banner: string | null;
-    primary_color: string;
-    accent_color: string;
+    primaryColor: string;
+    accentColor: string;
 
     description: string | null;
-    custom_status: string | null;
+    customStatus: string | null;
 
     password: string;
-    refresh_tokens: string[];
+    refreshTokens: string[];
+    hiddenChannelIds: number[] | null;
 
     status: "online" | "idle" | "dnd" | "offline" | "invisible";
     system: boolean;
@@ -45,13 +46,13 @@ export interface UserTable {
 
     notifications: Notification[];
 
-    guild_ids: number[];
-    channel_ids: number[];
-    friend_ids: number[];
-    request_ids: number[];
-    blocked_ids: number[];
+    guildIds: number[];
+    channelIds: number[];
+    friendIds: number[];
+    requestIds: number[];
+    blockedIds: number[];
 
-    created_at: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type User = Selectable<UserTable>;
@@ -70,50 +71,50 @@ export interface WelcomeScreen {
         url: string | null;
     }[];
 
-    primary_color: string | null;
-    accent_color: string    | null;
+    primaryColor: string | null;
+    accentColor: string | null;
 
-    background_url: string | null;
-};
+    backgroundUrl: string | null;
+}
 
 export interface GuildMember {
-    user_id: number;
+    userId: number;
     nickname: string | null;
     avatar: string | null;
-    role_ids: number[];
+    roleIds: number[];
 
     deaf: boolean;
     mute: boolean;
-    timeout_until: Date | null;
+    timeoutUntil: Date | null;
 
-    joined_at: Generated<Date>;
-};
+    joinedAt: Generated<Date>;
+}
 
 export interface GuildTable {
-    id: Generated<number>;
+    id: number;
     name: string;
     icon: string | null;
     banner: string | null;
     description: string | null;
 
     welcome_screen: WelcomeScreen | null;
-    vanity_url: string | null;
-    vanity_url_uses: number;
-    invite_ids: number[];
+    vanityUrl: string | null;
+    vanityUrl_uses: number;
+    inviteIds: number[];
 
-    system_channel_id: number | null;
-    afk_channel_id: number | null;
-    afk_timeout: number;
+    systemChannelId: number | null;
+    afkChannelId: number | null;
+    afkTimeout: number;
 
-    owner_id: number;
-    user_ids: number[];
+    ownerId: number;
+    userIds: number[];
     members: GuildMember[];
 
-    channel_ids: number[];
-    role_ids: number[];
-    emote_ids: number[];
+    channelIds: number[];
+    roleIds: number[];
+    emoteIds: number[];
 
-    created_at: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type Guild = Selectable<GuildTable>;
@@ -125,10 +126,10 @@ export interface PermissionOverwrite {
     type: 0 | 1;
     allow: string[];
     deny: string[];
-};
+}
 
 export interface ChannelTable {
-    id: Generated<number>;
+    id: number;
     type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
     name: string | null;
     topic: string | null;
@@ -136,27 +137,27 @@ export interface ChannelTable {
 
     nsfw: boolean;
     position: number | null;
-    parent_id: number | null;
+    parentId: number | null;
 
-    last_message_id: number | null;
-    last_pin_timestamp: Date | null;
+    lastMessageId: number | null;
+    lastPinTimestamp: Date | null;
 
-    rate_limit: number | null;
-    user_limit: number | null;
+    rateLimit: number | null;
+    userLimit: number | null;
     bitrate: number | null;
 
-    rtc_region: string | null;
-    video_quality_mode: string | null;
+    rtcRegion: string | null;
+    videoQualityMode: string | null;
 
-    owner_id: number | null;
-    guild_id: number | null;
+    ownerId: number | null;
+    guildId: number | null;
 
-    recipient_ids: number[] | null;
+    recipientIds: number[] | null;
 
-    permission_overwrites: PermissionOverwrite[] | null;
+    permissionOverwrites: PermissionOverwrite[] | null;
 
-    created_at: Generated<Date>;
-    updated_at: Generated<Date>;
+    createdAt: Generated<Date>;
+    updatedAt: Generated<Date>;
 }
 
 export type Channel = Selectable<ChannelTable>;
@@ -178,7 +179,7 @@ export interface Attachment {
     isImage: boolean;
 
     description: string | null;
-};
+}
 
 export interface Embed {
     author: {
@@ -192,11 +193,13 @@ export interface Embed {
     thumbnail: string | null;
     description: string;
 
-    fields: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[] | null;
+    fields:
+        | {
+              name: string;
+              value: string;
+              inline: boolean;
+          }[]
+        | null;
 
     image: string | null;
     footer: {
@@ -206,16 +209,16 @@ export interface Embed {
 
     color: string | null;
     timestamp: Date | null;
-};
+}
 
 export interface Reaction {
     count: number;
-    emote_id: number;
-    user_ids: number[];
-};
+    emoteId: number;
+    userIds: number[];
+}
 
 export interface MessageTable {
-    id: Generated<number>;
+    id: number;
     type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
     content: string | null;
     attachments: Attachment[];
@@ -225,17 +228,17 @@ export interface MessageTable {
     pinned: Date | null;
 
     reactions: Reaction[];
-    mention_everyone: boolean;
-    mention_channel_ids: number[];
-    mention_role_ids: number[];
-    mention_ids: number[];
+    mentionEveryone: boolean;
+    mentionChannelIds: number[];
+    mentionRoleIds: number[];
+    mentionIds: number[];
 
-    author_id: number;
-    channel_id: number;
+    authorId: number;
+    channelId: number;
 
-    message_reference_id: number | null;
+    messageReferenceId: number | null;
 
-    created_at: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type Message = Selectable<MessageTable>;
@@ -243,19 +246,19 @@ export type NewMessage = Insertable<MessageTable>;
 export type MessageUpdate = Updateable<MessageTable>;
 
 export interface InviteTable {
-    id: Generated<number>;
+    id: number;
     code: string;
     uses: number;
     max_uses: number;
-    max_age: number;
+    maxAge: number;
     temporary: boolean;
 
-    inviter_id: number;
-    channel_id: number;
-    guild_id: number | null;
+    inviterId: number;
+    channelId: number;
+    guildId: number | null;
 
-    expires_at: Generated<Date>;
-    created_at: Generated<Date>;
+    expiresAt: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type Invite = Selectable<InviteTable>;
@@ -263,17 +266,17 @@ export type NewInvite = Insertable<InviteTable>;
 export type InviteUpdate = Updateable<InviteTable>;
 
 export interface RoleTable {
-    id: Generated<number>;
+    id: number;
     name: string;
     color: string;
     permissions: string[];
     position: number;
     mentionable: boolean;
 
-    guild_id: number;
-    member_ids: number[];
+    guildId: number;
+    memberIds: number[];
 
-    created_at: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type Role = Selectable<RoleTable>;
@@ -281,14 +284,14 @@ export type NewRole = Insertable<RoleTable>;
 export type RoleUpdate = Updateable<RoleTable>;
 
 export interface EmoteTable {
-    id: Generated<number>;
+    id: number;
     name: string;
     url: string;
     animated: boolean;
 
-    guild_id: number;
+    guildId: number;
 
-    created_at: Generated<Date>;
+    createdAt: Generated<Date>;
 }
 
 export type Emote = Selectable<EmoteTable>;

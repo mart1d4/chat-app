@@ -1,25 +1,33 @@
-import { getBlocked, getBlockedBy, getChannels, getFriends, getGuilds, getRequests, useUser } from "@/lib/auth";
 import { AppNav, Settings, Layers, Tooltip, Loading } from "@components";
 import { redirect } from "next/navigation";
 import styles from "./Layout.module.css";
 import { ReactElement } from "react";
 import { Metadata } from "next";
+import { getUser } from "@/lib/db/helpers";
 
 export const metadata: Metadata = {
     title: "Chat App | Friends",
 };
 
-const Layout = async ({ children }: { children: ReactElement }) => {
-    const user = await useUser();
+export default async function Layout({ children }: { children: ReactElement }) {
+    const user = await getUser({
+        toSelect: {
+            id: true,
+            username: true,
+            avatar: true,
+        },
+    });
+    console.log(user);
+
     if (!user) return redirect("/login");
 
-    const friends = await getFriends();
-    const blocked = await getBlocked();
-    const blockedBy = await getBlockedBy();
-    const received = await getRequests(0);
-    const sent = await getRequests(1);
-    const channels = await getChannels();
-    const guilds = await getGuilds();
+    // const friends = await getFriends();
+    // const blocked = await getBlocked();
+    // const blockedBy = await getBlockedBy();
+    // const received = await getRequests(0);
+    // const sent = await getRequests(1);
+    // const channels = await getChannels();
+    // const guilds = await getGuilds();
 
     return (
         <Loading
@@ -49,6 +57,4 @@ const Layout = async ({ children }: { children: ReactElement }) => {
             </div>
         </Loading>
     );
-};
-
-export default Layout;
+}
