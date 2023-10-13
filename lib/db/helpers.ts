@@ -107,7 +107,7 @@ export async function getUser({
 }) {
     if (!id) {
         const refreshToken = cookies().get("token")?.value;
-        if (!refreshToken) throw new Error("No refresh token found");
+        if (!refreshToken) return null;
 
         const user = await db
             .selectFrom("users")
@@ -130,7 +130,7 @@ export async function getUser({
             .$if(!!toSelect?.verified, (q) => q.select("verified"))
             .$if(!!toSelect?.notifications, (q) => q.select("notifications"))
             .$if(!!toSelect?.createdAt, (q) => q.select("createdAt"))
-            .where(sql`json_contains(refresh_tokens, "${refreshToken}")`)
+            .where(sql`json_contains(refresh_tokens, ${refreshToken}, "$.tokens")`)
             .executeTakeFirstOrThrow();
 
         return user;
@@ -164,6 +164,6 @@ export async function getUser({
         return user;
     } catch (error) {
         console.log(error);
-        throw new Error("Error getting user");
+        return null;
     }
 }
