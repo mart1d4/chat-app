@@ -3,7 +3,7 @@ import { UserChannels } from "@components";
 import { redirect } from "next/navigation";
 import Content from "./Content";
 
-const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
+export default async function ChannelPage({ params }: { params: { channelId: string } }) {
     const user = await useUser();
     if (!user) redirect("/login");
 
@@ -15,14 +15,7 @@ const ChannelPage = async ({ params }: { params: { channelId: string } }) => {
     return (
         <>
             <UserChannels />
-
-            <Content
-                channel={channel}
-                user={user}
-                friend={friend}
-            />
+            <Content channel={channel} user={user} friend={friend} />
         </>
     );
-};
-
-export default ChannelPage;
+}

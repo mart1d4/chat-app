@@ -3,7 +3,7 @@ import { GuildChannels } from "@components";
 import { redirect } from "next/navigation";
 import styles from "./page.module.css";
 
-const GuildPage = async ({ params }: { params: { guildId: string } }) => {
+export default async function GuildPage({ params }: { params: { guildId: string } }) {
     const user = await useUser();
     if (!user) redirect("/login");
 
@@ -16,10 +16,7 @@ const GuildPage = async ({ params }: { params: { guildId: string } }) => {
 
     return (
         <>
-            <GuildChannels
-                guild={guild}
-                user={user}
-            />
+            <GuildChannels guild={guild} user={user} />
 
             <div className={styles.container}>
                 <div />
@@ -34,6 +31,4 @@ const GuildPage = async ({ params }: { params: { guildId: string } }) => {
             </div>
         </>
     );
-};
-
-export default GuildPage;
+}

@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
+import { getUser } from "@/lib/db/helpers";
 import styles from "../Auth.module.css";
-import { isLoggedIn } from "@/lib/auth";
 import Link from "next/link";
 import Form from "./Form";
 
 export default async function Register() {
-    const isLogged = await isLoggedIn();
-    if (isLogged) redirect("/channels/me");
+    const user = await getUser({});
+    if (user) redirect("/channels/me");
 
     return (
         <div className={styles.wrapper}>
@@ -15,10 +15,7 @@ export default async function Register() {
                     Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat
                     application which follows Discord's design. All passwords and messages are encrypted. See the source
                     code{" "}
-                    <Link
-                        href="https://github.com/mart1d4/chat-app"
-                        target="_blank"
-                    >
+                    <Link href="https://github.com/mart1d4/chat-app" target="_blank">
                         here
                     </Link>
                     .

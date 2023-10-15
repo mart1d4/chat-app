@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Chat App | Friends",
 };
 
-const FriendsPage = () => {
+export default function FriendsPage() {
     return (
         <>
             <UserChannels />
@@ -23,6 +23,4 @@ const FriendsPage = () => {
             </div>
         </>
     );
-};
-
-export default FriendsPage;
+}

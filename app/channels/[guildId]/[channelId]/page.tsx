@@ -3,7 +3,7 @@ import { GuildChannels } from "@components";
 import { redirect } from "next/navigation";
 import Content from "./Content";
 
-const Page = async ({ params }: { params: { guildId: string; channelId: string } }) => {
+export default async function GuildChannelPage({ params }: { params: { guildId: string; channelId: string } }) {
     const user = await useUser();
     if (!user) redirect("/login");
 
@@ -20,17 +20,8 @@ const Page = async ({ params }: { params: { guildId: string; channelId: string }
 
     return (
         <>
-            <GuildChannels
-                guild={guild}
-                user={user}
-            />
-
-            <Content
-                guild={guild}
-                channel={channel}
-            />
+            <GuildChannels guild={guild} user={user} />
+            <Content guild={guild} channel={channel} />
         </>
     );
-};
-
-export default Page;
+}

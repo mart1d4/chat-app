@@ -13,9 +13,8 @@
     },
     "dependencies": {
         "@planetscale/database": "^1.11.0",
-        "@prisma/client": "^5.4.1",
         "@uploadcare/upload-client": "^6.6.1",
-        "bcryptjs": "^2.4.3",
+        "bcrypt": "^5.1.1",
         "bufferutil": "^4.0.7",
         "cryptr": "^6.3.0",
         "encoding": "^0.1.13",
@@ -63,11 +62,13 @@
     },
     "homepage": "https://chat-app.mart1d4.com/",
     "devDependencies": {
+        "@types/bcrypt": "^5.0.0",
         "@types/bcryptjs": "^2.4.4",
         "@types/cookie": "^0.5.2",
         "@types/node": "20.8.3",
         "@types/react": "18.2.25",
         "@types/uuid": "^9.0.5",
+        "kysely-codegen": "^0.11.0",
         "prisma": "^5.4.2",
         "typescript": "5.2.2"
     }

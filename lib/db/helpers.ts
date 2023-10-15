@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
 import { NewUser, UserTable } from "./types";
-import { db } from "./db";
+import { cookies } from "next/headers";
 import { sql } from "kysely";
+import { db } from "./db";
 
 const avatars = [
     {
@@ -46,7 +46,7 @@ function getRandomId() {
 }
 
 export async function doesUserExist({ id, username, email }: Partial<UserTable>) {
-    if (!id && !username && !email) throw new Error("id, username or email is required");
+    if (!id && !username && !email) return false;
     let query = db.selectFrom("users").select("id");
 
     try {
@@ -61,19 +61,16 @@ export async function doesUserExist({ id, username, email }: Partial<UserTable>)
         const user = await query.executeTakeFirst();
         return !!user;
     } catch (error) {
-        throw new Error("Error checking if user exists");
+        return false;
     }
 }
 
 export async function createUser(user: Partial<UserTable>) {
     if (!user.username || !user.password) {
-        throw new Error("Username and password are required");
+        return null;
     }
 
     try {
-        const exists = await doesUserExist({ username: user.username });
-        if (exists) throw new Error("User already exists");
-
         const profile = getRandomProfile();
 
         const newUser = await db
@@ -86,55 +83,33 @@ export async function createUser(user: Partial<UserTable>) {
                 avatar: profile.avatar,
                 primaryColor: profile.color,
                 accentColor: profile.color,
+                notes: "[]",
+                notifications: "[]",
+                refreshTokens: "[]",
+                hiddenChannelIds: "[]",
             })
-            .executeTakeFirstOrThrow();
+            .executeTakeFirst();
 
-        return newUser.insertId;
+        return newUser;
     } catch (error) {
         console.log(error);
-        throw new Error("Error creating user");
+        return null;
     }
 }
 
 export async function getUser({
     id,
+    username,
     toSelect,
 }: {
     id?: number;
+    username?: string;
     toSelect?: {
         [K in keyof UserTable]?: boolean;
     };
 }) {
-    if (!id) {
-        const refreshToken = cookies().get("token")?.value;
-        if (!refreshToken) return null;
-
-        const user = await db
-            .selectFrom("users")
-            .select("id")
-            .$if(!!toSelect?.username, (q) => q.select("username"))
-            .$if(!!toSelect?.displayName, (q) => q.select("displayName"))
-            .$if(!!toSelect?.email, (q) => q.select("email"))
-            .$if(!!toSelect?.phone, (q) => q.select("phone"))
-            .$if(!!toSelect?.avatar, (q) => q.select("avatar"))
-            .$if(!!toSelect?.banner, (q) => q.select("banner"))
-            .$if(!!toSelect?.primaryColor, (q) => q.select("primaryColor"))
-            .$if(!!toSelect?.accentColor, (q) => q.select("accentColor"))
-            .$if(!!toSelect?.description, (q) => q.select("description"))
-            .$if(!!toSelect?.customStatus, (q) => q.select("customStatus"))
-            .$if(!!toSelect?.password, (q) => q.select("password"))
-            .$if(!!toSelect?.refreshTokens, (q) => q.select("refreshTokens"))
-            .$if(!!toSelect?.hiddenChannelIds, (q) => q.select("hiddenChannelIds"))
-            .$if(!!toSelect?.status, (q) => q.select("status"))
-            .$if(!!toSelect?.system, (q) => q.select("system"))
-            .$if(!!toSelect?.verified, (q) => q.select("verified"))
-            .$if(!!toSelect?.notifications, (q) => q.select("notifications"))
-            .$if(!!toSelect?.createdAt, (q) => q.select("createdAt"))
-            .where(sql`json_contains(refresh_tokens, ${refreshToken}, "$.tokens")`)
-            .executeTakeFirstOrThrow();
-
-        return user;
-    }
+    const refreshToken = cookies().get("token")?.value;
+    if (!id && !username && !refreshToken) return null;
 
     try {
         const user = await db
@@ -158,10 +133,126 @@ export async function getUser({
             .$if(!!toSelect?.verified, (q) => q.select("verified"))
             .$if(!!toSelect?.notifications, (q) => q.select("notifications"))
             .$if(!!toSelect?.createdAt, (q) => q.select("createdAt"))
-            .where("id", "=", id)
-            .execute();
+            .$if(!id && !username, (q) => q.where(sql`json_contains(refresh_tokens, json_quote(${refreshToken}))`))
+            .$if(!!id, (q) => q.where("id", "=", id as number))
+            .$if(!!username, (q) => q.where("username", "=", username as string))
+            .executeTakeFirst();
 
         return user;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+
+export async function getInitialData() {
+    const refreshToken = cookies().get("token")?.value;
+    if (!refreshToken) return null;
+
+    const userFields = [
+        "id",
+        "username",
+        "displayName",
+        "email",
+        "phoneNumber",
+        "avatar",
+        "banner",
+        "primaryColor",
+        "accentColor",
+        "description",
+        "customStatus",
+        "status",
+        "notifications",
+        "createdAt",
+    ];
+
+    try {
+        const user = await db
+            .selectFrom("users")
+            .select(userFields)
+            .where(sql`json_contains(refresh_tokens, json_quote(${refreshToken}))`)
+            .executeTakeFirst();
+
+        const friends = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const blocked = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const blockedBy = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const received = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const sent = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const channels = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        const guilds = await db
+            .selectFrom("friends")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(userFields).as("friends"),
+                (join) => join.onRef("friends.id", "=", "friends.A").onRef("friends.id", "=", "friends.B")
+            )
+            .where("friends.B", "=", user?.id)
+            .where("friends.A", "=", user?.id)
+            .execute();
+
+        return {
+            user,
+            friends,
+            blocked,
+            blockedBy,
+            received,
+            sent,
+            channels,
+            guilds,
+        };
     } catch (error) {
         console.log(error);
         return null;

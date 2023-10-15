@@ -7,7 +7,7 @@ export interface Database {
     messages: MessageTable;
     invites: InviteTable;
     roles: RoleTable;
-    emotes: EmoteTable;
+    emotes: EmojiTable;
 }
 
 export interface Notification {
@@ -23,6 +23,7 @@ export interface Notification {
 
 export interface UserTable {
     id: number;
+
     username: string;
     displayName: string;
     email: string | null;
@@ -35,24 +36,20 @@ export interface UserTable {
 
     description: string | null;
     customStatus: string | null;
+    status: "online" | "idle" | "dnd" | "offline" | "invisible";
 
     password: string;
-    refreshTokens: string[];
-    hiddenChannelIds: number[] | null;
+    refreshTokens: JSON;
 
-    status: "online" | "idle" | "dnd" | "offline" | "invisible";
     system: boolean;
     verified: boolean;
 
-    notifications: Notification[];
-
-    guildIds: number[];
-    channelIds: number[];
-    friendIds: number[];
-    requestIds: number[];
-    blockedIds: number[];
+    notes: JSON;
+    notifications: JSON;
+    hiddenChannelIds: JSON;
 
     createdAt: Generated<Date>;
+    isDeleted: boolean;
 }
 
 export type User = Selectable<UserTable>;
@@ -92,29 +89,25 @@ export interface GuildMember {
 
 export interface GuildTable {
     id: number;
+
     name: string;
     icon: string | null;
     banner: string | null;
     description: string | null;
 
-    welcome_screen: WelcomeScreen | null;
-    vanityUrl: string | null;
-    vanityUrl_uses: number;
-    inviteIds: number[];
-
     systemChannelId: number | null;
     afkChannelId: number | null;
-    afkTimeout: number;
+    afkTimeout: number | null;
+
+    vanityUrl: string | null;
+    vanityUrl_uses: number | null;
+    welcome_screen: JSON | null;
 
     ownerId: number;
-    userIds: number[];
-    members: GuildMember[];
-
-    channelIds: number[];
-    roleIds: number[];
-    emoteIds: number[];
+    members: JSON;
 
     createdAt: Generated<Date>;
+    isDeleted: boolean;
 }
 
 export type Guild = Selectable<GuildTable>;
@@ -131,20 +124,21 @@ export interface PermissionOverwrite {
 export interface ChannelTable {
     id: number;
     type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
     name: string | null;
     topic: string | null;
     icon: string | null;
+    nsfw: boolean | null;
 
-    nsfw: boolean;
     position: number | null;
     parentId: number | null;
 
     lastMessageId: number | null;
     lastPinTimestamp: Date | null;
 
+    bitrate: number | null;
     rateLimit: number | null;
     userLimit: number | null;
-    bitrate: number | null;
 
     rtcRegion: string | null;
     videoQualityMode: string | null;
@@ -152,12 +146,11 @@ export interface ChannelTable {
     ownerId: number | null;
     guildId: number | null;
 
-    recipientIds: number[] | null;
-
-    permissionOverwrites: PermissionOverwrite[] | null;
+    permissionOverwrites: JSON;
 
     createdAt: Generated<Date>;
     updatedAt: Generated<Date>;
+    isDeleted: boolean;
 }
 
 export type Channel = Selectable<ChannelTable>;
@@ -220,23 +213,24 @@ export interface Reaction {
 export interface MessageTable {
     id: number;
     type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
     content: string | null;
-    attachments: Attachment[];
-    embeds: Embed[];
+    attachments: JSON | null;
+    embeds: JSON | null;
 
     edited: Date | null;
     pinned: Date | null;
 
-    reactions: Reaction[];
+    reactions: JSON | null;
+    messageReferenceId: number | null;
+
+    mentionIds: number[] | null;
+    mentionRoleIds: number[] | null;
+    mentionChannelIds: number[] | null;
     mentionEveryone: boolean;
-    mentionChannelIds: number[];
-    mentionRoleIds: number[];
-    mentionIds: number[];
 
     authorId: number;
     channelId: number;
-
-    messageReferenceId: number | null;
 
     createdAt: Generated<Date>;
 }
@@ -247,17 +241,19 @@ export type MessageUpdate = Updateable<MessageTable>;
 
 export interface InviteTable {
     id: number;
+
     code: string;
     uses: number;
-    max_uses: number;
-    maxAge: number;
     temporary: boolean;
+
+    maxAge: number;
+    maxUses: number;
 
     inviterId: number;
     channelId: number;
     guildId: number | null;
 
-    expiresAt: Generated<Date>;
+    expiresAt: Date;
     createdAt: Generated<Date>;
 }
 
@@ -267,14 +263,17 @@ export type InviteUpdate = Updateable<InviteTable>;
 
 export interface RoleTable {
     id: number;
+
     name: string;
     color: string;
-    permissions: string[];
+
+    hoist: boolean;
     position: number;
+
+    permissions: JSON;
     mentionable: boolean;
 
     guildId: number;
-    memberIds: number[];
 
     createdAt: Generated<Date>;
 }
@@ -283,8 +282,9 @@ export type Role = Selectable<RoleTable>;
 export type NewRole = Insertable<RoleTable>;
 export type RoleUpdate = Updateable<RoleTable>;
 
-export interface EmoteTable {
+export interface EmojiTable {
     id: number;
+
     name: string;
     url: string;
     animated: boolean;
@@ -294,6 +294,6 @@ export interface EmoteTable {
     createdAt: Generated<Date>;
 }
 
-export type Emote = Selectable<EmoteTable>;
-export type NewEmote = Insertable<EmoteTable>;
-export type EmoteUpdate = Updateable<EmoteTable>;
+export type Emote = Selectable<EmojiTable>;
+export type NewEmote = Insertable<EmojiTable>;
+export type EmoteUpdate = Updateable<EmojiTable>;
