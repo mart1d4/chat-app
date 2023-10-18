@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { isLoggedIn } from "@/lib/auth";
 
 export async function GET(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
     const username = params.username;
+    const test = isLoggedIn();
+    console.log(test);
 
     try {
         const user = await prisma.user.findUnique({
@@ -31,7 +34,7 @@ export async function GET(req: Request, { params }: { params: { username: string
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -39,7 +42,7 @@ export async function GET(req: Request, { params }: { params: { username: string
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'User found.',
+                    message: "User found.",
                     user: user,
                 },
                 { status: 200 }
@@ -50,7 +53,7 @@ export async function GET(req: Request, { params }: { params: { username: string
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

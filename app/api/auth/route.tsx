@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { isLoggedIn } from "@/lib/auth";
 
 export async function POST(req: Request): Promise<NextResponse> {
     const { requesterId } = await req.json();
+    const blabla = await isLoggedIn();
 
     if (!requesterId) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Invalid requesterId',
+                message: "Invalid requesterId",
             },
             { status: 400 }
         );
@@ -28,7 +30,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -37,7 +39,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: true,
-                message: 'User found.',
+                message: "User found.",
                 userId: user.id,
             },
             { status: 200 }
@@ -47,7 +49,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );

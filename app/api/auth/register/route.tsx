@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 const avatars = [
     {

@@ -3,7 +3,7 @@ import { removeImage } from "@/lib/api/cdn";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 const avatars = [
     "178ba6e1-5551-42f3-b199-ddb9fc0f80de",

@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { SignJWT } from 'jose';
-import bcrypt from 'bcryptjs';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prismadb";
+import { SignJWT } from "jose";
+import bcrypt from "bcrypt";
 
 export async function POST(req: Request): Promise<NextResponse> {
     const { username, password } = await req.json();
@@ -10,7 +10,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Login or password is invalid',
+                message: "Login or password is invalid",
             },
             { status: 400 }
         );
@@ -32,7 +32,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Login or password is invalid',
+                    message: "Login or password is invalid",
                 },
                 { status: 401 }
             );
@@ -45,17 +45,17 @@ export async function POST(req: Request): Promise<NextResponse> {
             const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
 
             const accessToken = await new SignJWT({ id: user.id })
-                .setProtectedHeader({ alg: 'HS256' })
+                .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
-                .setExpirationTime('1h')
+                .setExpirationTime("1h")
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(accessSecret);
 
             const refreshToken = await new SignJWT({ id: user.id })
-                .setProtectedHeader({ alg: 'HS256' })
+                .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
-                .setExpirationTime('30d')
+                .setExpirationTime("30d")
                 .setIssuer(process.env.ISSUER as string)
                 .setAudience(process.env.ISSUER as string)
                 .sign(refreshSecret);
@@ -78,13 +78,13 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Login successful',
+                    message: "Login successful",
                     token: accessToken,
                 },
                 {
                     status: 200,
                     headers: {
-                        'Set-Cookie': `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure`,
+                        "Set-Cookie": `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure`,
                     },
                 }
             );
@@ -92,7 +92,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'Login or password is invalid',
+                    message: "Login or password is invalid",
                 },
                 { status: 401 }
             );
@@ -102,7 +102,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
