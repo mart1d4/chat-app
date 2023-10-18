@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
-import { isLoggedIn } from "@/lib/auth";
 
 export async function GET(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
     const username = params.username;
-    const test = isLoggedIn();
-    console.log(test);
 
     try {
         const user = await prisma.user.findUnique({

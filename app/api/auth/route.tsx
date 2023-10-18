@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
-import { isLoggedIn } from "@/lib/auth";
 
 export async function POST(req: Request): Promise<NextResponse> {
     const { requesterId } = await req.json();
-    const blabla = await isLoggedIn();
 
     if (!requesterId) {
         return NextResponse.json(
