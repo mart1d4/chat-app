@@ -16,7 +16,7 @@ export const Tooltip = (): ReactElement => {
     const position = tooltip?.position || "TOP";
     const gap = tooltip?.gap || 0;
     const big = tooltip?.big || false;
-    const color = tooltip?.color || "var(--background-dark)";
+    const color = tooltip?.color || "var(--background-dark-1)";
     const delay = (tooltip?.delay || 0) / 1000;
     const arrow = tooltip?.arrow || true;
     const wide = tooltip?.wide || false;
@@ -109,11 +109,7 @@ export const Tooltip = (): ReactElement => {
         () => (
             <AnimatePresence>
                 {tooltip && (
-                    <div
-                        ref={tooltipRef}
-                        style={{ ...positions }}
-                        className={styles.container}
-                    >
+                    <div ref={tooltipRef} style={{ ...positions }} className={styles.container}>
                         <motion.div
                             className={big ? styles.tooltip + " " + styles.big : styles.tooltip}
                             initial={{

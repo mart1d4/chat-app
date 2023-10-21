@@ -518,12 +518,12 @@
     font-size: 15px;
     user-select: none;
     color: var(--foreground-2);
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
     z-index: 1;
 }
 
 .image:hover .spoilerButton {
-    background-color: var(--background-dark-1);
+    background-color: var(--background-dark-2);
 }
 
 .imageAlt {

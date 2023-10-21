@@ -293,10 +293,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     const textContainer = useMemo(
         () => (
-            <div
-                className={styles.textContainer}
-                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
-            >
+            <div className={styles.textContainer} style={{ height: textAreaRef.current?.scrollHeight || 44 }}>
                 <div>
                     {(editing ? edit?.content?.length === 0 : message.length === 0) && (
                         <div className={styles.placeholder}>
@@ -361,14 +358,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     if (edit?.messageId && editing) {
         return (
-            <form
-                className={styles.form}
-                style={{ padding: "0 0 0 0", marginTop: "8px" }}
-            >
-                <div
-                    className={styles.textArea}
-                    style={{ marginBottom: "0" }}
-                >
+            <form className={styles.form} style={{ padding: "0 0 0 0", marginTop: "8px" }}>
+                <div className={styles.textArea} style={{ marginBottom: "0" }}>
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div className={styles.input}>
                             {textContainer}
@@ -390,35 +381,21 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                             Replying to <span>{reply?.username || "User"}</span>
                         </div>
 
-                        <div
-                            className={styles.replyClose}
-                            onClick={() => setReply(channel.id, null, "")}
-                        >
+                        <div className={styles.replyClose} onClick={() => setReply(channel.id, null, "")}>
                             <div>
-                                <Icon
-                                    name="closeFilled"
-                                    size={16}
-                                    viewbox={"0 0 14 14"}
-                                />
+                                <Icon name="closeFilled" size={16} viewbox={"0 0 14 14"} />
                             </div>
                         </div>
                     </div>
                 )}
 
-                <div
-                    className={styles.textArea}
-                    style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
-                >
+                <div className={styles.textArea} style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}>
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {attachments.length > 0 && (
                             <>
                                 <ul className={styles.filesList + " scrollbar"}>
                                     {attachments.map((a) => (
-                                        <FilePreview
-                                            key={a.id}
-                                            attachment={a}
-                                            setAttachments={setAttachments}
-                                        />
+                                        <FilePreview key={a.id} attachment={a} setAttachments={setAttachments} />
                                     ))}
                                 </ul>
                                 <div className={styles.formDivider} />
@@ -552,10 +529,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                             <div className={styles.toolsContainer}>
                                 <button onClick={(e) => e.preventDefault()}>
-                                    <Icon
-                                        name="keyboard"
-                                        size={30}
-                                    />
+                                    <Icon name="keyboard" size={30} />
                                 </button>
 
                                 <button onClick={(e) => e.preventDefault()}>
@@ -590,11 +564,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                         }}
                                     >
                                         <div>
-                                            <svg
-                                                width="16"
-                                                height="16"
-                                                viewBox="0 0 16 16"
-                                            >
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
                                                 <path
                                                     d="M8.2738 8.49222L1.99997 9.09877L0.349029 14.3788C0.250591 14.691 0.347154 15.0322 0.595581 15.246C0.843069 15.4597 1.19464 15.5047 1.48903 15.3613L15.2384 8.7032C15.5075 8.57195 15.6781 8.29914 15.6781 8.00007C15.6781 7.70101 15.5074 7.4282 15.2384 7.29694L1.49839 0.634063C1.20401 0.490625 0.852453 0.535625 0.604941 0.749376C0.356493 0.963128 0.259941 1.30344 0.358389 1.61563L2.00932 6.89563L8.27093 7.50312C8.52405 7.52843 8.71718 7.74125 8.71718 7.99531C8.71718 8.24938 8.52406 8.46218 8.27093 8.4875L8.2738 8.49222Z"
                                                     fill="currentColor"
@@ -821,7 +791,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                     <div
                         className={styles.image}
                         style={{
-                            backgroundColor: isSpoiler && !hideSpoiler ? "var(--background-dark-2)" : "",
+                            backgroundColor: isSpoiler && !hideSpoiler ? "var(--background-dark-3)" : "",
                             cursor: isSpoiler && !hideSpoiler ? "pointer" : "default",
                         }}
                         onClick={() => isSpoiler && setHideSpoiler(true)}
@@ -874,10 +844,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                                     );
                                 }}
                             >
-                                <Icon
-                                    name={isSpoiler ? "eyeSlash" : "eye"}
-                                    size={20}
-                                />
+                                <Icon name={isSpoiler ? "eyeSlash" : "eye"} size={20} />
                             </div>
                         </div>
 
@@ -906,10 +873,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                                     });
                                 }}
                             >
-                                <Icon
-                                    name="edit"
-                                    size={20}
-                                />
+                                <Icon name="edit" size={20} />
                             </div>
                         </div>
 
@@ -931,11 +895,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                                     setTooltip(null);
                                 }}
                             >
-                                <Icon
-                                    name="delete"
-                                    size={20}
-                                    fill="var(--error-1)"
-                                />
+                                <Icon name="delete" size={20} fill="var(--error-1)" />
                             </div>
                         </div>
                     </div>

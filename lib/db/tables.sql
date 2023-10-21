@@ -1,6 +1,6 @@
 -- User Table
 
-CREATE TABLE `Users` (
+CREATE TABLE `users` (
 	`id` bigint NOT NULL,
 
 	`username` varchar(32) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE `Users` (
 
 -- Channel Table
 
-CREATE TABLE `Channels` (
+CREATE TABLE `channels` (
 	`id` bigint NOT NULL,
 	`type` int NOT NULL,
 
@@ -83,7 +83,7 @@ CREATE TABLE `Channels` (
 
 -- Guild Table
 
-CREATE TABLE `Guilds` (
+CREATE TABLE `guilds` (
 	`id` bigint NOT NULL,
 
 	`name` varchar(100) NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE `Guilds` (
 
 -- Message Table
 
-CREATE TABLE `Messages` (
+CREATE TABLE `messages` (
 	`id` bigint NOT NULL,
 	`type` int NOT NULL,
 
@@ -151,7 +151,7 @@ CREATE TABLE `Messages` (
 
 -- Emoji Table
 
-CREATE TABLE `Emojis` (
+CREATE TABLE `emojis` (
 	`id` bigint NOT NULL,
 
 	`name` varchar(32) NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE `Emojis` (
 
 -- Role Table
 
-CREATE TABLE `Roles` (
+CREATE TABLE `roles` (
 	`id` bigint NOT NULL,
 
 	`name` varchar(32) NOT NULL,
@@ -196,7 +196,7 @@ CREATE TABLE `Roles` (
 
 -- Invite Table
 
-CREATE TABLE `Invites` (
+CREATE TABLE `invites` (
 	`id` bigint NOT NULL,
 
 	`code` varchar(8) NOT NULL,
@@ -232,7 +232,7 @@ CREATE TABLE `Invites` (
 
 -- Friends
 
-CREATE TABLE `Friends` (
+CREATE TABLE `friends` (
     `A` bigint NOT NULL,
     `B` bigint NOT NULL,
 
@@ -245,7 +245,7 @@ CREATE TABLE `Friends` (
 
 -- Blocked
 
-CREATE TABLE `Blocked` (
+CREATE TABLE `blocked` (
     `blocker_id` bigint NOT NULL,
     `blocked_id` bigint NOT NULL,
 
@@ -258,7 +258,7 @@ CREATE TABLE `Blocked` (
 
 -- Requests
 
-CREATE TABLE `Requests` (
+CREATE TABLE `requests` (
     `requester_id` bigint NOT NULL,
     `requested_id` bigint NOT NULL,
 
@@ -271,7 +271,7 @@ CREATE TABLE `Requests` (
 
 -- ChannelRecipients
 
-CREATE TABLE `ChannelRecipients` (
+CREATE TABLE `channelrecipients` (
     `channel_id` bigint NOT NULL,
     `user_id` bigint NOT NULL,
 
@@ -284,7 +284,7 @@ CREATE TABLE `ChannelRecipients` (
 
 -- GuildMembers
 
-CREATE TABLE `GuildMembers` (
+CREATE TABLE `guildmembers` (
     `guild_id` bigint NOT NULL,
     `user_id` bigint NOT NULL,
 
@@ -297,7 +297,7 @@ CREATE TABLE `GuildMembers` (
 
 -- ChannelMessages
 
-CREATE TABLE `ChannelMessages` (
+CREATE TABLE `channelmessages` (
     `channel_id` bigint NOT NULL,
     `message_id` bigint NOT NULL,
 

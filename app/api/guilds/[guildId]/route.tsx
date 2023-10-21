@@ -2,7 +2,7 @@ import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
-import { removeImage } from "@/lib/api/cdn";
+import { removeImage } from "@/lib/cdn";
 
 export async function DELETE(req: Request, { params }: { params: { guildId: string } }) {
     const senderId = headers().get("X-UserId") || "";

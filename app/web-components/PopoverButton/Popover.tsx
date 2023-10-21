@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./Popover.module.css";
 import Link from "next/link";
 
-type TLinks = string[][];
+type Links = string[][];
 
-export default function PopoverButton({ links }: { links: TLinks }) {
-    const [showPopover, setShowPopover] = useState<boolean>(false);
+export default function PopoverButton({ links }: { links: Links }) {
+    const [showPopover, setShowPopover] = useState(false);
 
     const buttonRef = useRef<HTMLButtonElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -45,17 +45,9 @@ export default function PopoverButton({ links }: { links: TLinks }) {
 
     return (
         <div>
-            <button
-                ref={buttonRef}
-                onClick={() => setShowPopover((prev) => !prev)}
-            >
+            <button ref={buttonRef} onClick={() => setShowPopover((prev) => !prev)}>
                 Download {links.length > 2 && " Public Test Build"}
-                <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 32 32"
-                    fill="none"
-                >
+                <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
                     <path
                         fill="currentColor"
                         fillRule="evenodd"
@@ -78,11 +70,7 @@ export default function PopoverButton({ links }: { links: TLinks }) {
             >
                 {links.map((item, index) => (
                     <div key={item[0]}>
-                        <Link
-                            href={item[1]}
-                            aria-label={item[0]}
-                            autoFocus={index === 0 ? true : undefined}
-                        >
+                        <Link href={item[1]} aria-label={item[0]} autoFocus={index === 0 ? true : undefined}>
                             <div>{item[0]}</div>
                         </Link>
                     </div>

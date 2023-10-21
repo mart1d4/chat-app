@@ -1,27 +1,25 @@
 import Header from "./web-components/Header/Header";
 import Footer from "./web-components/Footer/Footer";
+import { appMetadata } from "@/lib/metadata";
 import styles from "./Home.module.css";
 import type { Metadata } from "next";
 import { Icon } from "@components";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-    title: "Chat App | Your Inviting Place to Connect and Chat.",
-    description:
-        "Chat App makes communication a breeze, offering seamless voice, video, and text interactions. Stay connected, socialize, and nurture bonds with friends and communities effortlessly.",
-    keywords:
-        "chat-app, chat, voice, video, text, gaming, friends, communities, free, open source, open source software, open source project",
+    title: appMetadata.homeTitle,
+    description: appMetadata.description,
+    keywords: appMetadata.keywords.join(", "),
     openGraph: {
-        title: "Chat App | Your Inviting Place to Connect and Chat.",
-        description:
-            "Chat App makes communication a breeze, offering seamless voice, video, and text interactions. Stay connected, socialize, and nurture bonds with friends and communities effortlessly.",
-        url: "https://chat-app.mart1d4.dev",
+        title: appMetadata.homeTitle,
+        description: appMetadata.description,
+        url: appMetadata.url,
         type: "website",
-        siteName: "Chat App",
+        siteName: appMetadata.title,
         locale: "en_US",
         images: [
             {
-                url: "https://chat-app.mart1d4.dev/assets/icon.webp",
+                url: appMetadata.images.home,
                 width: 128,
                 height: 128,
                 alt: "Chat App Logo",
@@ -141,11 +139,7 @@ export default function HomePage() {
                         <h3>Ready to begin on your journey?</h3>
 
                         <Link href="/download">
-                            <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                            >
+                            <svg width="24" height="24" viewBox="0 0 24 24">
                                 <g fill="currentColor">
                                     <path d="M17.707 10.708L16.293 9.29398L13 12.587V2.00098H11V12.587L7.70697 9.29398L6.29297 10.708L12 16.415L17.707 10.708Z" />
                                     <path d="M18 18.001V20.001H6V18.001H4V20.001C4 21.103 4.897 22.001 6 22.001H18C19.104 22.001 20 21.103 20 20.001V18.001H18Z" />

@@ -1,9 +1,15 @@
-import Pusher from 'pusher-js';
+import Pusher from "pusher-js";
 
-const pusherConnection: Pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
+const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+if (!pusherKey || !pusherCluster) {
+    throw new Error("Pusher key or cluster not found.");
+}
+
+const pusherConnection: Pusher = new Pusher(pusherKey, {
+    cluster: pusherCluster,
 });
 
-const pusher = pusherConnection.subscribe('chat-app');
-
+const pusher = pusherConnection.subscribe("chat-app");
 export default pusher;

@@ -16,7 +16,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    max-width: clamp(300px, 90vw, 800px);
+    max-width: clamp(300px, 90vw, 850px);
     width: 100%;
 }
 

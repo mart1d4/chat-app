@@ -1,34 +1,32 @@
-import AuthButton from "../AuthButton/AuthButton";
+import { getUser } from "@/lib/db/helpers";
 import styles from "./Header.module.css";
 import Link from "next/link";
 
-type Link = {
-    name: string;
-    href: string;
-};
-
-const links: Link[] = [
+const links = [
     { name: "Download", href: "/download" },
     { name: "Discover", href: "/" },
     { name: "Support", href: "/" },
     { name: "Blog", href: "/" },
 ];
 
-const Header = () => {
+export default async function Header() {
+    const user = await getUser({});
+
     return (
         <>
             <div className={styles.disclaimer}>
                 Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat application
-                which follows Discord's design. All passwords and messages are encrypted.
+                which follows Discord's design. Passwords are hashed and salted and messages are end-to-end encrypted.
+                See the source code{" "}
+                <Link href="https://github.com/mart1d4/chat-app" target="_blank">
+                    here
+                </Link>
+                .
             </div>
 
             <header className={styles.header}>
                 <nav>
-                    <Link
-                        href="/"
-                        aria-label="Home"
-                        className={styles.brand}
-                    >
+                    <Link href="/" aria-label="Home" className={styles.brand}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="58"
@@ -49,23 +47,17 @@ const Header = () => {
 
                     <div className={styles.navLinks}>
                         {links.map((link) => (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className={styles.navLink}
-                            >
+                            <Link key={link.name} href={link.href} className={styles.navLink}>
                                 {link.name}
                             </Link>
                         ))}
                     </div>
 
                     <div className={styles.appButton}>
-                        <AuthButton link="login" />
+                        <Link href="login">{user ? "Open Chat App" : "Login"}</Link>
                     </div>
                 </nav>
             </header>
         </>
     );
-};
-
-export default Header;
+}

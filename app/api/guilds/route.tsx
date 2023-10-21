@@ -1,6 +1,6 @@
 import { defaultPermissions } from "@/lib/permissions/data";
 import pusher from "@/lib/pusher/server-connection";
-import { removeImage } from "@/lib/api/cdn";
+import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";

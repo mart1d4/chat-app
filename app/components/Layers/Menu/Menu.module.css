@@ -5,7 +5,7 @@
     cursor: default;
     max-height: calc(100vh - 32px);
     border-radius: 4px;
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
     box-shadow: var(--elevation-high);
     position: relative;
 }

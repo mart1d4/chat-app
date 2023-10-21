@@ -14,8 +14,8 @@ export default async function LoginPage() {
             <div className={styles.disclaimer}>
                 <p>
                     Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat
-                    application which follows Discord's design. All passwords and messages are encrypted. See the source
-                    code{" "}
+                    application which follows Discord's design. Passwords are hashed and salted and messages are
+                    end-to-end encrypted. See the source code{" "}
                     <Link href="https://github.com/mart1d4/chat-app" target="_blank">
                         here
                     </Link>

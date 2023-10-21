@@ -12,6 +12,11 @@
     border-radius: 0 0 8px 8px;
 }
 
+.disclaimer a {
+    color: var(--foreground-1);
+    font-weight: 700;
+}
+
 .header {
     width: 100%;
     max-width: 1260px;

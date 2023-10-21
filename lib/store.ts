@@ -1,6 +1,7 @@
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getChannelIcon, getChannelName } from "./strings";
 import { create } from "zustand";
+import { Channel, Guild, Message, User } from "./db/types";
 
 // Tooltip
 
@@ -41,15 +42,15 @@ type TMenu = null | any;
 type TPopup = null | {
     type: EPopupType;
     channelId?: string;
-    message?: TMessage;
+    message?: Message;
 };
 
 type TUserCard = null | {
-    user: TCleanUser;
+    user: Partial<User>;
 };
 
 type TUserProfile = null | {
-    user: TCleanUser;
+    user: Partial<User>;
     focusNote?: boolean;
 };
 
@@ -146,45 +147,45 @@ export const useLayers = create<LayersState>()((set) => ({
 
 interface DataState {
     token: string | null;
-    user: TCleanUser | null;
+    user: Partial<User> | null;
 
-    channels: TChannel[];
-    guilds: TGuild[];
-    friends: TCleanUser[];
-    blocked: TCleanUser[];
-    blockedBy: TCleanUser[];
-    requestsReceived: TCleanUser[];
-    requestsSent: TCleanUser[];
+    channels: Channel[];
+    guilds: Guild[];
+    friends: Partial<User>[];
+    blocked: Partial<User>[];
+    blockedBy: Partial<User>[];
+    requestsReceived: Partial<User>[];
+    requestsSent: Partial<User>[];
 
     setToken: (token: string) => void;
-    setUser: (user: TCleanUser) => void;
+    setUser: (user: Partial<User>) => void;
 
-    setChannels: (channels: TChannel[]) => void;
-    setGuilds: (guilds: TGuild[]) => void;
-    setFriends: (friends: TCleanUser[]) => void;
-    setBlocked: (blocked: TCleanUser[]) => void;
-    setBlockedBy: (blockedBy: TCleanUser[]) => void;
-    setRequestsReceived: (requestsReceived: TCleanUser[]) => void;
-    setRequestsSent: (requestsSent: TCleanUser[]) => void;
-    modifyUser: (user: TCleanUser) => void;
+    setChannels: (channels: Channel[]) => void;
+    setGuilds: (guilds: Guild[]) => void;
+    setFriends: (friends: Partial<User>[]) => void;
+    setBlocked: (blocked: Partial<User>[]) => void;
+    setBlockedBy: (blockedBy: Partial<User>[]) => void;
+    setRequestsReceived: (requestsReceived: Partial<User>[]) => void;
+    setRequestsSent: (requestsSent: Partial<User>[]) => void;
+    modifyUser: (user: Partial<User>) => void;
 
-    addFriend: (friend: TCleanUser) => void;
-    removeFriend: (friend: TCleanUser) => void;
-    addBlocked: (blocked: TCleanUser) => void;
-    addBlockedBy: (blocked: TCleanUser) => void;
-    removeBlocked: (blocked: TCleanUser) => void;
-    removeBlockedBy: (blocked: TCleanUser) => void;
-    addRequestReceived: (request: TCleanUser) => void;
-    addRequestSent: (request: TCleanUser) => void;
-    removeRequests: (request: TCleanUser) => void;
+    addFriend: (friend: Partial<User>) => void;
+    removeFriend: (friend: Partial<User>) => void;
+    addBlocked: (blocked: Partial<User>) => void;
+    addBlockedBy: (blocked: Partial<User>) => void;
+    removeBlocked: (blocked: Partial<User>) => void;
+    removeBlockedBy: (blocked: Partial<User>) => void;
+    addRequestReceived: (request: Partial<User>) => void;
+    addRequestSent: (request: Partial<User>) => void;
+    removeRequests: (request: Partial<User>) => void;
 
-    addChannel: (channel: TChannel) => void;
-    updateChannel: (channel: TChannel) => void;
-    removeChannel: (channel: TChannel) => void;
-    moveChannelUp: (channelId: TChannel["id"]) => void;
-    addGuild: (guild: TGuild) => void;
-    updateGuild: (guild: TGuild) => void;
-    removeGuild: (guild: TGuild) => void;
+    addChannel: (channel: Channel) => void;
+    updateChannel: (channel: Channel) => void;
+    removeChannel: (channel: Channel) => void;
+    moveChannelUp: (channelId: Channel["id"]) => void;
+    addGuild: (guild: Guild) => void;
+    updateGuild: (guild: Guild) => void;
+    removeGuild: (guild: Guild) => void;
 
     removeData: () => void;
 }
@@ -281,8 +282,8 @@ export const useData = create<DataState>()((set) => ({
 
                     return {
                         ...newChannel,
-                        name: getChannelName(newChannel, state.user?.id as string),
-                        icon: getChannelIcon(newChannel, state.user?.id as string),
+                        name: getChannelName(newChannel, state.user?.id?.toString()),
+                        icon: getChannelIcon(newChannel, state.user?.id?.toString()),
                     };
                 }
 
@@ -463,19 +464,19 @@ export const useSettings = create<SettingsState>()((set) => ({
 // Notifications
 
 type TPing = {
-    channelId: TChannel["id"];
+    channelId: Channel["id"];
     amount: number;
 };
 
 interface NotificationsState {
-    messages: TChannel["id"][];
+    messages: Channel["id"][];
     pings: TPing[];
 
-    addMessage: (channelId: TChannel["id"]) => void;
-    removeMessage: (channelId: TChannel["id"]) => void;
+    addMessage: (channelId: Channel["id"]) => void;
+    removeMessage: (channelId: Channel["id"]) => void;
 
-    addPing: (channelId: TChannel["id"]) => void;
-    removePing: (channelId: TChannel["id"]) => void;
+    addPing: (channelId: Channel["id"]) => void;
+    removePing: (channelId: Channel["id"]) => void;
 }
 
 export const useNotifications = create<NotificationsState>()((set) => ({
@@ -533,33 +534,33 @@ export const useNotifications = create<NotificationsState>()((set) => ({
 
 interface MessagesState {
     drafts: {
-        channelId: TChannel["id"];
+        channelId: Channel["id"];
         content: string;
         attachments: TAttachment[];
     }[];
     edits: {
-        channelId: TChannel["id"];
-        messageId: TMessage["id"] | null;
+        channelId: Channel["id"];
+        messageId: Message["id"] | null;
         initialContent?: string;
         content?: string;
     }[];
     replies: {
-        channelId: TChannel["id"];
-        messageId: TMessage["id"] | null;
+        channelId: Channel["id"];
+        messageId: Message["id"] | null;
         username: string;
     }[];
 
-    setContent: (channelId: TChannel["id"], content: string) => void;
-    setAttachments: (channelId: TChannel["id"], attachments: TAttachment[]) => void;
-    removeDraft: (channelId: TChannel["id"]) => void;
+    setContent: (channelId: Channel["id"], content: string) => void;
+    setAttachments: (channelId: Channel["id"], attachments: TAttachment[]) => void;
+    removeDraft: (channelId: Channel["id"]) => void;
 
     setEdit: (
-        channelId: TChannel["id"],
-        messageId: TMessage["id"] | null,
+        channelId: Channel["id"],
+        messageId: Message["id"] | null,
         initialContent?: string,
         content?: string
     ) => void;
-    setReply: (channelId: TChannel["id"], messageId: TMessage["id"] | null, username: string) => void;
+    setReply: (channelId: Channel["id"], messageId: Message["id"] | null, username: string) => void;
 }
 
 export const useMessages = create(
@@ -701,8 +702,8 @@ export const useMessages = create(
 // Text Area Mention
 
 interface MentionState {
-    userId: TCleanUser["id"] | null;
-    setMention: (user: TCleanUser | null) => void;
+    userId: Partial<User>["id"] | null;
+    setMention: (user: Partial<User> | null) => void;
 }
 
 export const useMention = create<MentionState>()((set) => ({

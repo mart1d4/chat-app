@@ -419,7 +419,7 @@
     justify-content: space-between;
     padding: 10px 10px 10px 16px;
     border-radius: 5px;
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
     color: var(--foreground-2);
     box-shadow: var(--elevation-high);
     z-index: 1;
@@ -574,7 +574,7 @@
 }
 
 .inputLarge > div:first-child::-webkit-scrollbar-thumb {
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
     border-width: 4px;
 }
 
@@ -667,7 +667,7 @@
 }
 
 .cardContainer > div::before {
-    content: '';
+    content: "";
     border-radius: 4px;
     height: calc(100% - 8px);
     width: calc(100% - 8px);
@@ -792,7 +792,7 @@
     background-position: 50%;
     box-shadow: 0 2px 4px 0 hsl(0, 0, 0%, 0.2);
     background-color: var(--foreground-1);
-    background-image: url('https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/');
+    background-image: url("https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/");
 }
 
 .cardAvatarStatus {

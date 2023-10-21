@@ -30,7 +30,7 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "app/web-components/Footer/Language.tsx",
+        "app/web-components/Footer/LanguagePicker.tsx",
         "app/register",
         "lib/mongo/models/Channel.ts"
     ],

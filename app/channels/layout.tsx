@@ -10,7 +10,17 @@ export const metadata: Metadata = {
 };
 
 export default async function Layout({ children }: { children: ReactElement }) {
-    const { user, friends, blocked, blockedBy, received, sent, channels, guilds } = await getInitialData();
+    // const { user, friends, blocked, blockedBy, received, sent, channels, guilds } = await getInitialData();
+    const { user, friends, blocked, blockedBy, received, sent, channels, guilds } = {
+        user: {},
+        friends: [],
+        blocked: [],
+        blockedBy: [],
+        received: [],
+        sent: [],
+        channels: [],
+        guilds: [],
+    };
     if (!user) redirect("/login");
 
     return (

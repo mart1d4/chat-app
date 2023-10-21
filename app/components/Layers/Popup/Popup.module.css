@@ -145,9 +145,9 @@
 }
 
 .popupContent::-webkit-scrollbar-thumb {
-    border: 2px var(--background-dark) solid;
+    border: 2px var(--background-dark-1) solid;
     border-color: transparent;
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
 }
 
 .popupContent > div:first-child {

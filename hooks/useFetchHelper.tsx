@@ -184,14 +184,14 @@ export default function useFetchHelper() {
         url = url.replace(":guildId", params?.guildId ?? "");
         url = url.replace(":inviteId", params?.inviteId ?? "");
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
             method: method,
             headers: headers,
             body: method !== "GET" ? body : undefined,
         });
 
         if (response.status === 401) {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
             }).then((res) => res.json());

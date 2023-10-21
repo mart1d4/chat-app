@@ -106,7 +106,7 @@ const Content = ({ channel, user, friend }: Props) => {
         setChannelUrl(channel.id);
 
         const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${channel.id}/messages`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -116,7 +116,7 @@ const Content = ({ channel, user, friend }: Props) => {
 
             console.log("[ChannelContent] ", response);
             if (response.status === 401) {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                     method: "GET",
                     credentials: "include",
                 }).then((res) => res.json());
@@ -202,10 +202,7 @@ const Content = ({ channel, user, friend }: Props) => {
     return useMemo(
         () => (
             <div className={styles.container}>
-                <AppHeader
-                    channel={channel}
-                    friend={friend}
-                />
+                <AppHeader channel={channel} friend={friend} />
 
                 <div className={styles.content}>
                     <main className={styles.main}>
@@ -224,10 +221,7 @@ const Content = ({ channel, user, friend }: Props) => {
                                     }
                                 }}
                             >
-                                <div
-                                    ref={scrollContainerChild}
-                                    className={styles.scrollContent}
-                                >
+                                <div ref={scrollContainerChild} className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
                                         {loading ? (
                                             <MessageSk />
@@ -236,11 +230,7 @@ const Content = ({ channel, user, friend }: Props) => {
                                                 {hasMore ? (
                                                     <MessageSk />
                                                 ) : (
-                                                    <FirstMessage
-                                                        channel={channel}
-                                                        user={user}
-                                                        friend={friend}
-                                                    />
+                                                    <FirstMessage channel={channel} user={user} friend={friend} />
                                                 )}
 
                                                 {messages.map((message, index) => (
@@ -275,18 +265,10 @@ const Content = ({ channel, user, friend }: Props) => {
                             </div>
                         </div>
 
-                        <TextArea
-                            channel={channel}
-                            friend={friend}
-                            setMessages={setMessages}
-                        />
+                        <TextArea channel={channel} friend={friend} setMessages={setMessages} />
                     </main>
 
-                    <MemberList
-                        channel={channel}
-                        user={user}
-                        friend={friend}
-                    />
+                    <MemberList channel={channel} user={user} friend={friend} />
                 </div>
             </div>
         ),
@@ -309,11 +291,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
     return (
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
-                <Avatar
-                    src={channel.icon as string}
-                    alt={channel.name as string}
-                    size={80}
-                />
+                <Avatar src={channel.icon as string} alt={channel.name as string} size={80} />
             </div>
 
             <h3 className={styles.friendUsername}>{channel.name}</h3>

@@ -99,14 +99,14 @@ export const Loading = ({ children, data }: Props): ReactElement => {
         const env = process.env.NODE_ENV;
 
         const setAuthContext = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
-                method: "GET",
-                credentials: "include",
-            }).then((res) => res.json());
+            // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+            //     method: "GET",
+            //     credentials: "include",
+            // }).then((res) => res.json());
 
-            if (response.token) {
+            if (true) {
                 setUser(data.user);
-                setToken(response.token);
+                // setToken(response.token);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
                 setBlockedBy(data.blockedBy);
@@ -260,14 +260,8 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                 children
             ) : (
                 <div className={styles.container}>
-                    <video
-                        autoPlay
-                        loop
-                    >
-                        <source
-                            src="/assets/app/spinner.webm"
-                            type="video/webm"
-                        />
+                    <video autoPlay loop>
+                        <source src="/assets/app/spinner.webm" type="video/webm" />
                     </video>
 
                     <div className={styles.textContent}>

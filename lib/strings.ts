@@ -1,3 +1,5 @@
+import { Channel, User } from "./db/types";
+
 export const translateCap = (str: string) => {
     if (typeof str !== "string") {
         throw new Error(`translateCap expected a string, but got ${typeof str}`);
@@ -44,11 +46,11 @@ export const trimMessage = (message: string) => {
     return message;
 };
 
-export const getChannelName = (channel: TChannel, userId: TUser["id"]): string => {
+export const getChannelName = (channel: Channel, userId: number): string => {
     let name = "";
 
     if (channel.type === 0) {
-        const user = channel.recipients.find((user) => user.id !== userId) as TUser;
+        const user = channel.recipients.find((user) => user.id !== userId) as User;
         name = user.displayName;
     } else if (channel.type === 1 && !channel.name) {
         if (channel.recipients.length > 1) {
@@ -64,11 +66,11 @@ export const getChannelName = (channel: TChannel, userId: TUser["id"]): string =
     return name;
 };
 
-export const getChannelIcon = (channel: TChannel, userId: TUser["id"]): string => {
+export const getChannelIcon = (channel: Channel, userId: number): string => {
     let src = channel.icon || "";
 
     if (channel.type === 0) {
-        const user = channel.recipients.find((user: TCleanUser) => user.id !== userId) as TUser;
+        const user = channel.recipients.find((user: Partial<User>) => user.id !== userId);
         src = user.avatar;
     }
 

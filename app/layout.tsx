@@ -1,11 +1,12 @@
+import { appMetadata } from "@/lib/metadata";
 import { ReactElement } from "react";
 import type { Metadata } from "next";
 import "./global.css";
 
 export const metadata: Metadata = {
-    title: "Chat App",
-    description: "Talk and Chat with your Friends",
-    keywords: "chat, talk, friends, social",
+    title: appMetadata.title,
+    description: appMetadata.shortDescription,
+    keywords: appMetadata.keywords.join(", "),
     icons: {
         icon: "/assets/favicon.svg",
     },

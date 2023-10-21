@@ -130,5 +130,5 @@
 }
 
 .liContainer:hover .actions > button:active {
-    background-color: var(--background-dark);
+    background-color: var(--background-dark-1);
 }

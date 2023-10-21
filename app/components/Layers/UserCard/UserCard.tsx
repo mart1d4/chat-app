@@ -3,7 +3,7 @@
 import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { translateCap, trimMessage } from "@/lib/strings";
 import { AnimatePresence, motion } from "framer-motion";
-import { getButtonColor } from "@/lib/colors/getColors";
+import { getButtonColor } from "@/lib/getColors";
 import { useState, useRef, useEffect } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useRouter } from "next/navigation";
@@ -200,31 +200,14 @@ export function UserCard({ content }: any) {
                                     setShowSettings("Profiles");
                                 }}
                             >
-                                <Icon
-                                    name="edit"
-                                    size={18}
-                                />
+                                <Icon name="edit" size={18} />
                             </div>
                         )}
 
-                        <svg
-                            className={styles.cardBanner}
-                            viewBox={`0 0 340 ${user.banner ? "120" : "90"}`}
-                        >
+                        <svg className={styles.cardBanner} viewBox={`0 0 340 ${user.banner ? "120" : "90"}`}>
                             <mask id="card-banner-mask">
-                                <rect
-                                    fill="white"
-                                    x="0"
-                                    y="0"
-                                    width="100%"
-                                    height="100%"
-                                />
-                                <circle
-                                    fill="black"
-                                    cx="58"
-                                    cy={user.banner ? 112 : 82}
-                                    r="46"
-                                />
+                                <rect fill="white" x="0" y="0" width="100%" height="100%" />
+                                <circle fill="black" cx="58" cy={user.banner ? 112 : 82} r="46" />
                             </mask>
 
                             <foreignObject
@@ -250,10 +233,7 @@ export function UserCard({ content }: any) {
                             </foreignObject>
                         </svg>
 
-                        <div
-                            className={styles.cardAvatar}
-                            style={{ top: user.banner ? "76px" : "46px" }}
-                        >
+                        <div className={styles.cardAvatar} style={{ top: user.banner ? "76px" : "46px" }}>
                             <div
                                 className={styles.avatarImage}
                                 style={{
@@ -500,10 +480,7 @@ export function UserCard({ content }: any) {
                                                     });
                                                 }}
                                             >
-                                                <Icon
-                                                    name="closeFilled"
-                                                    viewbox="0 0 14 14"
-                                                />
+                                                <Icon name="closeFilled" viewbox="0 0 14 14" />
                                             </div>
                                         )}
                                     </button>

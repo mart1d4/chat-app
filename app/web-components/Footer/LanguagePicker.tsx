@@ -4,12 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import styles from "./Footer.module.css";
 import { Icon } from "@components";
 
-type Language = {
-    name: string;
-    flag: string;
-};
-
-const languages: Language[] = [
+const languages = [
     { name: "български", flag: "blg" },
     { name: "Čeština", flag: "cze" },
     { name: "Dansk", flag: "den" },
@@ -41,9 +36,9 @@ const languages: Language[] = [
     { name: "繁體中文", flag: "twn" },
 ];
 
-const Language = () => {
-    const [showPopover, setShowPopover] = useState<boolean>(false);
-    const [lang, setLang] = useState<Language>(languages[5]);
+export default function LanguagePicker() {
+    const [showPopover, setShowPopover] = useState(false);
+    const [lang, setLang] = useState(languages[5]);
 
     const langButton = useRef<HTMLDivElement>(null);
     const langMenu = useRef<HTMLDivElement>(null);
@@ -63,10 +58,7 @@ const Language = () => {
         <div className={styles.language}>
             <div>
                 {showPopover && (
-                    <div
-                        className={styles.langChooser}
-                        ref={langMenu}
-                    >
+                    <div className={styles.langChooser} ref={langMenu}>
                         <div>
                             {languages.map((language) => (
                                 <div
@@ -78,10 +70,7 @@ const Language = () => {
                                     }}
                                 >
                                     <div>
-                                        <img
-                                            src={`/assets/flags/${language.flag}.png`}
-                                            alt={`${language.name} flag`}
-                                        />
+                                        <img src={`/assets/flags/${language.flag}.png`} alt={`${language.name} flag`} />
                                         <div>{language.name}</div>
                                     </div>
                                 </div>
@@ -90,15 +79,9 @@ const Language = () => {
                     </div>
                 )}
 
-                <div
-                    onClick={() => setShowPopover((prev) => !prev)}
-                    ref={langButton}
-                >
+                <div onClick={() => setShowPopover((prev) => !prev)} ref={langButton}>
                     <div>
-                        <img
-                            src={`/assets/flags/${lang?.flag}.png`}
-                            alt={`${lang?.name} flag`}
-                        />
+                        <img src={`/assets/flags/${lang?.flag}.png`} alt={`${lang?.name} flag`} />
                         <div>{lang?.name}</div>
                     </div>
 
@@ -107,6 +90,4 @@ const Language = () => {
             </div>
         </div>
     );
-};
-
-export default Language;
+}

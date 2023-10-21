@@ -1,15 +1,14 @@
 {
     "author": {
         "name": "Martin Danton",
-        "email": "contact@mart1d4.com",
-        "url": "https://www.mart1d4.com"
+        "email": "git@mart1d4.dev",
+        "url": "https://www.mart1d4.dev"
     },
-    "description": "A Chat App to Talk with Friends",
+    "description": "Connect, Chat, and Share Effortlessly with Chat App.",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "start": "next start",
-        "postinstall": "prisma generate"
+        "start": "next start"
     },
     "dependencies": {
         "@planetscale/database": "^1.11.0",
@@ -35,7 +34,7 @@
         "zustand": "^4.4.3"
     },
     "name": "chat-app",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "main": "index.ts",
     "repository": {
         "type": "git",
@@ -44,15 +43,24 @@
     "keywords": [
         "chat",
         "app",
+        "chat-app",
+        "spa",
+        "single-page-app",
+        "fullstack",
+        "full-stack",
         "next",
+        "nextjs",
+        "next.js",
         "react",
-        "tauri",
-        "rust",
+        "reactjs",
         "socket",
-        "pusher",
         "websocket",
-        "mongodb",
-        "prisma",
+        "pusher",
+        "pusher-js",
+        "mysql",
+        "mysql2",
+        "planetscale",
+        "kysely",
         "typescript",
         "uploadcare"
     ],
@@ -60,16 +68,13 @@
     "bugs": {
         "url": "https://github.com/mart1d4/chat-app/issues"
     },
-    "homepage": "https://chat-app.mart1d4.com/",
+    "homepage": "https://chat-app.mart1d4.dev",
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",
-        "@types/bcryptjs": "^2.4.4",
         "@types/cookie": "^0.5.2",
         "@types/node": "20.8.3",
         "@types/react": "18.2.25",
         "@types/uuid": "^9.0.5",
-        "kysely-codegen": "^0.11.0",
-        "prisma": "^5.4.2",
         "typescript": "5.2.2"
     }
 }

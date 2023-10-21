@@ -3,7 +3,7 @@
 import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { Avatar, Icon, LoadingDots, EmojiPicker } from "@components";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { getButtonColor } from "@/lib/colors/getColors";
+import { getButtonColor } from "@/lib/getColors";
 import { AnimatePresence, motion } from "framer-motion";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
@@ -163,10 +163,7 @@ export function Settings() {
                                     <div className={styles.closeButton}>
                                         <div>
                                             <div onClick={() => setShowSettings(null)}>
-                                                <Icon
-                                                    name="close"
-                                                    size={16}
-                                                />
+                                                <Icon name="close" size={16} />
                                             </div>
                                         </div>
                                     </div>
@@ -219,12 +216,7 @@ export function Settings() {
                                         >
                                             {tab.name !== "separator" && tab.name}
 
-                                            {tab?.icon && (
-                                                <Icon
-                                                    name={tab.icon}
-                                                    size={16}
-                                                />
-                                            )}
+                                            {tab?.icon && <Icon name={tab.icon} size={16} />}
                                         </div>
                                     ))}
                                 </nav>
@@ -245,10 +237,7 @@ export function Settings() {
                                                         setHideNav(false);
                                                     }}
                                                 >
-                                                    <Icon
-                                                        name="close"
-                                                        size={16}
-                                                    />
+                                                    <Icon name="close" size={16} />
                                                 </div>
                                             </div>
                                         </div>
@@ -266,10 +255,7 @@ export function Settings() {
                                                     setShowSettings(null);
                                                 }}
                                             >
-                                                <Icon
-                                                    name="close"
-                                                    size={18}
-                                                />
+                                                <Icon name="close" size={18} />
                                             </div>
 
                                             <div>ESC</div>
@@ -369,12 +355,7 @@ function MyAccount({ setActiveTab }: any) {
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
-                            <Avatar
-                                src={user.avatar}
-                                alt={user.username}
-                                size={80}
-                                status={user.status}
-                            />
+                            <Avatar src={user.avatar} alt={user.username} size={80} status={user.status} />
                         </div>
 
                         <div
@@ -396,29 +377,20 @@ function MyAccount({ setActiveTab }: any) {
                             {user.username}
                         </div>
 
-                        <button
-                            className="blue"
-                            onClick={() => setActiveTab("Profiles")}
-                        >
+                        <button className="blue" onClick={() => setActiveTab("Profiles")}>
                             Edit User Profile
                         </button>
                     </div>
 
                     <div>
                         {fields.map((field) => (
-                            <div
-                                className={styles.field}
-                                key={uuidv4()}
-                            >
+                            <div className={styles.field} key={uuidv4()}>
                                 <div>
                                     <h3>{field.title}</h3>
                                     <div>{field.value}</div>
                                 </div>
 
-                                <button
-                                    className="grey"
-                                    onClick={() => field.func && field.func()}
-                                >
+                                <button className="grey" onClick={() => field.func && field.func()}>
                                     {field.edit ? "Edit" : "Add"}
                                 </button>
                             </div>
@@ -588,34 +560,13 @@ function Profiles() {
 
     const CardBanner = useMemo(
         () => (
-            <svg
-                className={styles.cardBanner}
-                viewBox={`0 0 340 ${banner || banner ? "120" : "90"}`}
-            >
+            <svg className={styles.cardBanner} viewBox={`0 0 340 ${banner || banner ? "120" : "90"}`}>
                 <mask id="card-banner-mask">
-                    <rect
-                        fill="white"
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="100%"
-                    />
-                    <circle
-                        fill="black"
-                        cx="58"
-                        cy={banner || banner ? 112 : 82}
-                        r="46"
-                    />
+                    <rect fill="white" x="0" y="0" width="100%" height="100%" />
+                    <circle fill="black" cx="58" cy={banner || banner ? 112 : 82} r="46" />
                 </mask>
 
-                <foreignObject
-                    x="0"
-                    y="0"
-                    width="100%"
-                    height="100%"
-                    overflow="visible"
-                    mask="url(#card-banner-mask)"
-                >
+                <foreignObject x="0" y="0" width="100%" height="100%" overflow="visible" mask="url(#card-banner-mask)">
                     <div>
                         <button
                             className={styles.cardBannerBackground}
@@ -633,10 +584,7 @@ function Profiles() {
                             onClick={() => bannerInputRef.current?.click()}
                         />
 
-                        <div
-                            className={styles.cardBannerButton}
-                            aria-hidden="true"
-                        >
+                        <div className={styles.cardBannerButton} aria-hidden="true">
                             Change Banner
                         </div>
                     </div>
@@ -648,10 +596,7 @@ function Profiles() {
 
     const CardAvatar = useMemo(
         () => (
-            <div
-                className={styles.cardAvatar}
-                style={{ top: banner ? "76px" : "46px" }}
-            >
+            <div className={styles.cardAvatar} style={{ top: banner ? "76px" : "46px" }}>
                 <button
                     className={styles.avatarImage}
                     style={{
@@ -706,10 +651,7 @@ function Profiles() {
                             <p>Careful — you have unsaved changes!</p>
 
                             <div>
-                                <button
-                                    className="button underline"
-                                    onClick={() => resetState()}
-                                >
+                                <button className="button underline" onClick={() => resetState()}>
                                     Reset
                                 </button>
 
@@ -889,18 +831,12 @@ function Profiles() {
                             <h3>Avatar</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button
-                                    onClick={() => avatarInputRef.current?.click()}
-                                    className="blue"
-                                >
+                                <button onClick={() => avatarInputRef.current?.click()} className="blue">
                                     Change Avatar
                                 </button>
 
                                 {!avatars.includes(typeof avatar === "string" ? avatar : "") && (
-                                    <button
-                                        className="underline"
-                                        onClick={() => setAvatar(getRandomAvatar())}
-                                    >
+                                    <button className="underline" onClick={() => setAvatar(getRandomAvatar())}>
                                         Remove Avatar
                                     </button>
                                 )}
@@ -911,18 +847,12 @@ function Profiles() {
                             <h3>Profile Banner</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button
-                                    className="blue"
-                                    onClick={() => bannerInputRef.current?.click()}
-                                >
+                                <button className="blue" onClick={() => bannerInputRef.current?.click()}>
                                     Change Banner
                                 </button>
 
                                 {banner && (
-                                    <button
-                                        className="underline"
-                                        onClick={() => setBanner(undefined)}
-                                    >
+                                    <button className="underline" onClick={() => setBanner(undefined)}>
                                         Remove Banner
                                     </button>
                                 )}
@@ -941,10 +871,7 @@ function Profiles() {
                                         }}
                                         onClick={() => primaryColorInputRef.current?.click()}
                                     >
-                                        <Icon
-                                            name="edit"
-                                            size={14}
-                                        />
+                                        <Icon name="edit" size={14} />
                                     </div>
 
                                     <div>Primary</div>
@@ -958,10 +885,7 @@ function Profiles() {
                                         }}
                                         onClick={() => accentColorInputRef.current?.click()}
                                     >
-                                        <Icon
-                                            name="edit"
-                                            size={14}
-                                        />
+                                        <Icon name="edit" size={14} />
                                     </div>
 
                                     <div>Accent</div>

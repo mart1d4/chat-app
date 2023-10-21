@@ -105,7 +105,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         setGuildUrl(guild.id, channel.id);
 
         const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.id}/messages`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${channel.id}/messages`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -115,7 +115,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
 
             console.log("[ChannelContent] ", response);
             if (response.status === 401) {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                     method: "GET",
                     credentials: "include",
                 }).then((res) => res.json());
@@ -220,10 +220,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                     }
                                 }}
                             >
-                                <div
-                                    ref={scrollContainerChild}
-                                    className={styles.scrollContent}
-                                >
+                                <div ref={scrollContainerChild} className={styles.scrollContent}>
                                     <ol className={styles.scrollContentInner}>
                                         {loading ? (
                                             <MessageSk />
@@ -232,10 +229,7 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                                                 {hasMore ? (
                                                     <MessageSk />
                                                 ) : (
-                                                    <FirstMessage
-                                                        guild={guild}
-                                                        channel={channel}
-                                                    />
+                                                    <FirstMessage guild={guild} channel={channel} />
                                                 )}
 
                                                 {messages?.map((message: TMessage, index: number) => (
@@ -271,16 +265,10 @@ const Content = ({ guild, channel }: Props): ReactElement => {
                             </div>
                         </div>
 
-                        <TextArea
-                            channel={channel}
-                            setMessages={setMessages}
-                        />
+                        <TextArea channel={channel} setMessages={setMessages} />
                     </main>
 
-                    <MemberList
-                        channel={channel}
-                        guild={guild}
-                    />
+                    <MemberList channel={channel} guild={guild} />
                 </div>
             </div>
         ),
