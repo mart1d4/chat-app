@@ -42,6 +42,7 @@ export default function LanguagePicker() {
 
     const langButton = useRef<HTMLDivElement>(null);
     const langMenu = useRef<HTMLDivElement>(null);
+    const firstLang = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
@@ -50,36 +51,79 @@ export default function LanguagePicker() {
             }
         };
 
+        const handleKeydown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setShowPopover(false);
+                langButton.current?.focus();
+            }
+        };
+
         document.addEventListener("click", handleClick);
-        return () => document.removeEventListener("click", handleClick);
+        document.addEventListener("keydown", handleKeydown);
+
+        return () => {
+            document.removeEventListener("click", handleClick);
+            document.removeEventListener("keydown", handleKeydown);
+        };
     }, []);
+
+    useEffect(() => {
+        if (showPopover) firstLang.current?.focus();
+    }, [showPopover]);
 
     return (
         <div className={styles.language}>
             <div>
-                {showPopover && (
-                    <div className={styles.langChooser} ref={langMenu}>
-                        <div>
-                            {languages.map((language) => (
-                                <div
-                                    key={language.flag}
-                                    className={styles.langItem}
-                                    onClick={() => {
+                <div
+                    ref={langMenu}
+                    aria-hidden={!showPopover}
+                    aria-expanded={showPopover}
+                    aria-label="Language chooser"
+                    className={styles.langChooser + " " + (showPopover ? styles.show : "")}
+                >
+                    <div>
+                        {languages.map((language, i) => (
+                            <div
+                                ref={i === 0 ? firstLang : undefined}
+                                tabIndex={0}
+                                key={language.flag}
+                                className={styles.langItem}
+                                aria-label={language.name}
+                                aria-current={language.name === lang?.name}
+                                aria-selected={language.name === lang?.name}
+                                onClick={() => {
+                                    setLang(language);
+                                    setShowPopover(false);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
                                         setLang(language);
                                         setShowPopover(false);
-                                    }}
-                                >
-                                    <div>
-                                        <img src={`/assets/flags/${language.flag}.png`} alt={`${language.name} flag`} />
-                                        <div>{language.name}</div>
-                                    </div>
+                                        langButton.current?.focus();
+                                    }
+                                }}
+                            >
+                                <div>
+                                    <img src={`/assets/flags/${language.flag}.png`} alt={`${language.name} flag`} />
+                                    <div>{language.name}</div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
-                )}
+                </div>
 
-                <div onClick={() => setShowPopover((prev) => !prev)} ref={langButton}>
+                <div
+                    tabIndex={0}
+                    ref={langButton}
+                    aria-label="Language"
+                    aria-haspopup="true"
+                    aria-expanded={showPopover}
+                    className={styles.langButton}
+                    onClick={() => setShowPopover((prev) => !prev)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") setShowPopover((prev) => !prev);
+                    }}
+                >
                     <div>
                         <img src={`/assets/flags/${lang?.flag}.png`} alt={`${lang?.name} flag`} />
                         <div>{lang?.name}</div>

@@ -8,17 +8,37 @@ export interface Database {
     invites: InviteTable;
     roles: RoleTable;
     emotes: EmojiTable;
+    friends: FriendTable;
+    blocked: BlockedTable;
+    requests: RequestTable;
+    channelmessages: ChannelMessageTable;
+    channelrecipients: ChannelRecipientTable;
+    guildmembers: GuildMembersTable;
+}
+
+// Tables
+
+export interface RefreshToken {
+    token: string;
+    expires: Date;
+}
+
+export interface Note {
+    userId: number;
+    content: string;
 }
 
 export interface Notification {
     type: 0 | 1 | 2 | 3 | 4;
+
     content: string | null;
     count: number;
 
-    senderId: number;
+    userId: number | null;
     channelId: number | null;
+    guildId: number | null;
 
-    createdAt: Generated<Date>;
+    createdAt: Date;
 }
 
 export interface UserTable {
@@ -39,14 +59,14 @@ export interface UserTable {
     status: "online" | "idle" | "dnd" | "offline" | "invisible";
 
     password: string;
-    refreshTokens: JSON;
+    refreshTokens: RefreshToken[];
 
     system: boolean;
     verified: boolean;
 
-    notes: JSON;
-    notifications: JSON;
-    hiddenChannelIds: JSON;
+    notes: Note[];
+    notifications: Notification[];
+    hiddenChannelIds: number[];
 
     createdAt: Generated<Date>;
     isDeleted: boolean;
@@ -297,3 +317,59 @@ export interface EmojiTable {
 export type Emote = Selectable<EmojiTable>;
 export type NewEmote = Insertable<EmojiTable>;
 export type EmoteUpdate = Updateable<EmojiTable>;
+
+// Relations
+
+export interface RequestTable {
+    requesterId: number;
+    requestedId: number;
+}
+
+export type Request = Selectable<RequestTable>;
+export type NewRequest = Insertable<RequestTable>;
+export type RequestUpdate = Updateable<RequestTable>;
+
+export interface FriendTable {
+    A: number;
+    B: number;
+}
+
+export type Friend = Selectable<FriendTable>;
+export type NewFriend = Insertable<FriendTable>;
+export type FriendUpdate = Updateable<FriendTable>;
+
+export interface BlockedTable {
+    blockerId: number;
+    blockedId: number;
+}
+
+export type Blocked = Selectable<BlockedTable>;
+export type NewBlocked = Insertable<BlockedTable>;
+export type BlockedUpdate = Updateable<BlockedTable>;
+
+export interface ChannelMessageTable {
+    channelId: number;
+    messageId: number;
+}
+
+export type ChannelMessage = Selectable<ChannelMessageTable>;
+export type NewChannelMessage = Insertable<ChannelMessageTable>;
+export type ChannelMessageUpdate = Updateable<ChannelMessageTable>;
+
+export interface ChannelRecipientTable {
+    channelId: number;
+    userId: number;
+}
+
+export type ChannelRecipient = Selectable<ChannelRecipientTable>;
+export type NewChannelRecipient = Insertable<ChannelRecipientTable>;
+export type ChannelRecipientUpdate = Updateable<ChannelRecipientTable>;
+
+export interface GuildMembersTable {
+    guildId: number;
+    userId: number;
+}
+
+export type GuildMembers = Selectable<GuildMembersTable>;
+export type NewGuildMembers = Insertable<GuildMembersTable>;
+export type GuildMembersUpdate = Updateable<GuildMembersTable>;

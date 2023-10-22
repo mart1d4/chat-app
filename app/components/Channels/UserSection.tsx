@@ -81,7 +81,7 @@ export const UserSection = (): ReactElement => {
                             <div>
                                 {user.customStatus
                                     ? user.customStatus
-                                    : translateCap(user.status === "OFFLINE" ? "INVISIBLE" : user.status)}
+                                    : translateCap(user.status === "offline" ? "invisible" : user.status)}
                             </div>
                         </div>
                     </div>

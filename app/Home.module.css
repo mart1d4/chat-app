@@ -76,7 +76,6 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    transition: background-color 0.2s ease-in-out;
 }
 
 .appButton > a:hover {
@@ -139,7 +138,6 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    transition: background-color 0.2s ease-in-out;
 }
 
 .heroButtons > a:first-child {
@@ -305,7 +303,6 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    transition: background-color 0.2s ease-in-out;
     text-decoration: none;
 }
 

@@ -1,18 +1,14 @@
-import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
+import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
+import { db } from "@/lib/db/db";
 
 export async function DELETE(req: Request): Promise<NextResponse> {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "");
     const { attachments } = await req.json();
 
     try {
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-        });
+        const sender = await db.selectFrom("users").select("id").where("id", "=", senderId).executeTakeFirst();
 
         if (!sender) {
             return NextResponse.json(
@@ -34,7 +30,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             );
         }
 
-        attachments.forEach(async (attachment: TAttachment) => {
+        attachments.forEach(async (attachment: Attachment) => {
             await removeImage(attachment.id);
         });
 

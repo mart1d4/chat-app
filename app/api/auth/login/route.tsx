@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { SignJWT } from "jose";
-import bcrypt from "bcrypt";
 import { getUser } from "@/lib/db/helpers";
 import { db } from "@/lib/db/db";
+import { SignJWT } from "jose";
 import { sql } from "kysely";
+import bcrypt from "bcrypt";
 
 export async function POST(req: Request): Promise<NextResponse> {
     const { username, password } = await req.json();
@@ -21,7 +21,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     try {
         const user = await getUser({
             username,
-            toSelect: {
+            select: {
                 username: true,
                 password: true,
             },
@@ -37,7 +37,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             );
         }
 
-        const match = await bcrypt.compare(password, user.password);
+        const match = await bcrypt.compare(password, user.password as string);
 
         if (match) {
             const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
@@ -60,13 +60,20 @@ export async function POST(req: Request): Promise<NextResponse> {
                 .setExpirationTime("30d")
                 .sign(refreshSecret);
 
+            const tokenObject = {
+                token: refreshToken,
+                expires: Date.now() + 2592000000,
+            };
+
             // Save refresh token to database
             await db
                 .updateTable("users")
                 .set({
-                    refreshTokens: sql`JSON_ARRAY_APPEND(refresh_tokens, "$", ${refreshToken})`,
+                    refreshTokens: sql`JSON_ARRAY_APPEND(refresh_tokens, '$', CAST(${JSON.stringify(
+                        tokenObject
+                    )} AS JSON))`,
                 })
-                .where("id", "=", user.id)
+                .where("id", "=", user.id as number)
                 .executeTakeFirst();
 
             return NextResponse.json(

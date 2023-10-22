@@ -3,26 +3,27 @@
 import { useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
 import { useEffect, useRef, useState, ReactElement } from "react";
 import { translateCap, trimMessage } from "@/lib/strings";
-import { getButtonColor } from "@/lib/getColors";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { getButtonColor } from "@/lib/getColors";
 import styles from "./UserProfile.module.css";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
+import { Guild, User } from "@/lib/db/types";
 
 const colors = {
-    ONLINE: "#22A559",
-    IDLE: "#F0B232",
-    DO_NOT_DISTURB: "#F23F43",
-    INVISIBLE: "#80848E",
-    OFFLINE: "#80848E",
+    online: "#22A559",
+    idle: "#F0B232",
+    dnd: "#F23F43",
+    invisible: "#80848E",
+    offline: "#80848E",
 };
 
 const masks = {
-    ONLINE: "",
-    IDLE: "status-mask-idle",
-    DO_NOT_DISTURB: "status-mask-dnd",
-    INVISIBLE: "status-mask-offline",
-    OFFLINE: "status-mask-offline",
+    online: "",
+    idle: "status-mask-idle",
+    dnd: "status-mask-dnd",
+    invisible: "status-mask-offline",
+    offline: "status-mask-offline",
 };
 
 export const UserProfile = ({ content }: any): ReactElement => {
@@ -32,7 +33,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const requestsReceived = useData((state) => state.requestsReceived);
-    const currentUser = useData((state) => state.user) as TCleanUser;
+    const currentUser = useData((state) => state.user) as User;
     const requestsSent = useData((state) => state.requestsSent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
@@ -43,8 +44,8 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const { sendRequest } = useFetchHelper();
 
     const user = content.user;
-    const mutualFriends = friends.filter((friend: TCleanUser) => user.friendIds.includes(friend.id));
-    const mutualGuilds = guilds.filter((guild: TGuild) => user.guildIds.includes(guild.id));
+    const mutualFriends = friends.filter((friend: User) => user.friendIds.includes(friend.id));
+    const mutualGuilds = guilds.filter((guild: Guild) => user.guildIds.includes(guild.id));
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -475,7 +476,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
     );
 };
 
-function FriendItem({ friend, guild }: { friend?: TCleanUser; guild?: TGuild }) {
+function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
     if (!friend && !guild) return <></>;
     const setLayers = useLayers((state) => state.setLayers);
     const urls = useUrls((state) => state.guilds);

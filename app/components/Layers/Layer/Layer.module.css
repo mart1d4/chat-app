@@ -18,3 +18,11 @@
     will-change: transform;
     transform: translateZ(0);
 }
+
+@media screen and (max-width: 487px) {
+    .layer {
+        width: 100dvw;
+        height: 100dvh;
+        transform: translate(0, 0) !important;
+    }
+}

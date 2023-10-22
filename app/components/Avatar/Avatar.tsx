@@ -1,29 +1,29 @@
 "use client";
 
-import useContextHook from "@/hooks/useContextHook";
 import { translateCap } from "@/lib/strings";
 import styles from "./Avatar.module.css";
+import { useTooltip } from "@/lib/store";
+import { User } from "@/lib/db/types";
 import { useEffect } from "react";
 import Image from "next/image";
-import { useTooltip } from "@/lib/store";
 
 type Props = {
     src: string;
     srcAs?: "png" | "jpeg" | "gif" | "webp";
     alt: string;
     size: 16 | 24 | 32 | 40 | 80 | 120;
-    status?: EUserStatus | undefined;
+    status?: User["status"] | undefined;
     tooltip?: boolean;
     tooltipGap?: number;
     relativeSrc?: boolean;
 };
 
 const colors = {
-    ONLINE: "#22A559",
-    IDLE: "#F0B232",
-    DO_NOT_DISTURB: "#F23F43",
-    INVISIBLE: "#80848E",
-    OFFLINE: "#80848E",
+    online: "#22A559",
+    idle: "#F0B232",
+    dnd: "#F23F43",
+    invisible: "#80848E",
+    offline: "#80848E",
 };
 
 const rectSizes = {
@@ -45,14 +45,14 @@ const rectPlacements = {
 };
 
 const masks = {
-    ONLINE: "",
-    IDLE: "status-mask-idle",
-    DO_NOT_DISTURB: "status-mask-dnd",
-    INVISIBLE: "status-mask-offline",
-    OFFLINE: "status-mask-offline",
+    online: "",
+    idle: "status-mask-idle",
+    dnd: "status-mask-dnd",
+    invisible: "status-mask-offline",
+    offline: "status-mask-offline",
 };
 
-export const Avatar = (props: Props) => {
+export function Avatar(props: Props) {
     const setTooltip = useTooltip((state) => state.setTooltip);
 
     const rectSize = rectSizes[props.size];
@@ -262,8 +262,7 @@ export const Avatar = (props: Props) => {
                     onMouseEnter={(e) => {
                         if (!props.tooltip) return;
                         setTooltip({
-                            text: translateCap(props.status as EUserStatus),
-                            // @ts-ignore
+                            text: translateCap(props.status || "offline"),
                             element: e.currentTarget,
                             gap: props.tooltipGap || 0,
                         });
@@ -297,4 +296,4 @@ export const Avatar = (props: Props) => {
             />
         </div>
     );
-};
+}

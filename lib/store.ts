@@ -5,9 +5,9 @@ import { Channel, Guild, Message, User } from "./db/types";
 
 // Tooltip
 
-type TTooltip = null | {
+type Tooltip = null | {
     text: string;
-    element: HTMLElement;
+    element: Partial<HTMLElement> | null;
     position?: "TOP" | "BOTTOM" | "LEFT" | "RIGHT";
     gap?: number;
     big?: boolean;
@@ -18,8 +18,8 @@ type TTooltip = null | {
 };
 
 interface TooltipState {
-    tooltip: TTooltip;
-    setTooltip: (tooltip: TTooltip) => void;
+    tooltip: Tooltip;
+    setTooltip: (tooltip: Tooltip) => void;
 }
 
 export const useTooltip = create<TooltipState>()((set) => ({

@@ -5,6 +5,7 @@ import { useData, useLayers } from "@/lib/store";
 import { Icon, UserItem } from "@components";
 import styles from "./UserLists.module.css";
 import Image from "next/image";
+import { User } from "@/lib/db/types";
 
 const contentData: contentType = {
     all: {
@@ -62,8 +63,8 @@ type contentType = {
 
 export const UserLists = ({ content }: { content: string }): ReactElement => {
     const [search, setSearch] = useState<string>("");
-    const [list, setList] = useState<TCleanUser[]>([]);
-    const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
+    const [list, setList] = useState<Partial<User>[]>([]);
+    const [filteredList, setFilteredList] = useState<Partial<User>[]>([]);
 
     const requestsReceived = useData((state) => state.requestsReceived);
     const requestsSent = useData((state) => state.requestsSent);
@@ -80,7 +81,7 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
 
     useEffect(() => {
         if (content === "online") {
-            setList(friends.filter((user) => user.status !== "OFFLINE"));
+            setList(friends.filter((user) => user.status !== "offline"));
         } else if (content === "all") {
             setList(friends);
         } else if (content === "pending") {
@@ -93,7 +94,10 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
     }, [content, friends, requestsReceived, requestsSent, blockedUsers]);
 
     useEffect(() => {
-        if (search) setFilteredList(list.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
+        if (search)
+            setFilteredList(
+                list.filter((user) => user.username.toLowerCase().includes(search.toLowerCase()))
+            );
         else setFilteredList(list);
     }, [list, search]);
 

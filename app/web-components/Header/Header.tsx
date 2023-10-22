@@ -15,13 +15,15 @@ export default async function Header() {
     return (
         <>
             <div className={styles.disclaimer}>
-                Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat application
-                which follows Discord's design. Passwords are hashed and salted and messages are end-to-end encrypted.
-                See the source code{" "}
-                <Link href="https://github.com/mart1d4/chat-app" target="_blank">
-                    here
-                </Link>
-                .
+                <div>
+                    Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat
+                    application which follows Discord's design. Passwords are hashed and salted and messages are
+                    end-to-end encrypted. See the source code{" "}
+                    <Link href="https://github.com/mart1d4/chat-app" target="_blank">
+                        here
+                    </Link>
+                    .
+                </div>
             </div>
 
             <header className={styles.header}>

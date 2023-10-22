@@ -71,7 +71,6 @@
     font-weight: 500;
     align-items: center;
     text-decoration: none;
-    transition: background-color 0.2s ease-in-out;
 }
 
 .hero > div:first-child > div:last-child > a:hover {
@@ -179,7 +178,6 @@
     align-items: center;
     text-decoration: none;
     display: inline-flex;
-    transition: background-color 0.2s ease-in-out;
 }
 
 .card:not(:last-child) > div > div > button > svg {
@@ -242,7 +240,6 @@
     font-weight: 500;
     align-items: center;
     display: inline-flex;
-    transition: background-color 0.2s ease-in-out;
 }
 
 .card:last-child > div:last-child > button:hover {

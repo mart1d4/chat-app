@@ -492,10 +492,7 @@
 @media screen and (max-width: 487px) {
     .popup,
     .pinContainer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100dvw;
+        min-width: 100dvw;
         min-height: 100dvh;
         border-radius: 0;
     }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Guild, User, Channel, Message } from "@/lib/db/types";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactElement, useEffect, useRef } from "react";
 import { useData, useNotifications } from "@/lib/store";
@@ -9,51 +10,51 @@ import styles from "./Loading.module.css";
 
 type TRelationData = {
     type: "FRIEND_ADDED" | "FRIEND_REMOVED" | "REQUEST_SENT";
-    sender: TCleanUser;
-    receiver: TCleanUser;
+    sender: Partial<User>;
+    receiver: Partial<User>;
 };
 
 type TChannelData = {
     type: "CHANNEL_ADDED" | "CHANNEL_REMOVED" | "RECIPIENT_ADDED" | "RECIPIENT_REMOVED";
-    channel: TChannel;
-    channelId?: TChannel["id"];
-    recipientId?: TCleanUser["id"];
-    recipientIds?: TCleanUser["id"][];
+    channel: Channel;
+    channelId?: number;
+    recipientId?: number;
+    recipientIds?: number[];
 };
 
 type TGuildData = {
     type: "GUILD_ADDED" | "GUILD_DELETED";
-    guild: TGuild;
-    guildId?: TGuild["id"];
-    channelId?: TChannel["id"];
-    channel?: TChannel;
+    guild: Guild;
+    guildId?: number;
+    channelId?: number;
+    channel?: Channel;
 };
 
 type TMessageData = {
-    channelId: TChannel["id"];
-    message: TMessage;
+    channelId: number;
+    message: Message;
     notSentByAuthor?: boolean;
 };
 
 type TUserUpdateData = {
-    user: TCleanUser;
+    user: Partial<User>;
 };
 
 type Props = {
     children: ReactElement;
     data: {
-        user: TCleanUser;
-        friends: TCleanUser[];
-        blocked: TCleanUser[];
-        blockedBy: TCleanUser[];
-        received: TCleanUser[];
-        sent: TCleanUser[];
-        channels: TChannel[];
-        guilds: TGuild[];
+        user: Partial<User>;
+        friends: Partial<User>[];
+        blocked: Partial<User>[];
+        blockedBy: Partial<User>[];
+        received: Partial<User>[];
+        sent: Partial<User>[];
+        channels: Channel[];
+        guilds: Guild[];
     };
 };
 
-export const Loading = ({ children, data }: Props): ReactElement => {
+export const Loading = ({ children, data }: Props) => {
     const setReceived = useData((state) => state.setRequestsReceived);
     const setBlockedBy = useData((state) => state.setBlockedBy);
     const setSent = useData((state) => state.setRequestsSent);
@@ -99,14 +100,14 @@ export const Loading = ({ children, data }: Props): ReactElement => {
         const env = process.env.NODE_ENV;
 
         const setAuthContext = async () => {
-            // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
-            //     method: "GET",
-            //     credentials: "include",
-            // }).then((res) => res.json());
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+                method: "GET",
+                credentials: "include",
+            }).then((res) => res.json());
 
-            if (true) {
+            if (response.token) {
                 setUser(data.user);
-                // setToken(response.token);
+                setToken(response.token);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
                 setBlockedBy(data.blockedBy);
@@ -260,8 +261,14 @@ export const Loading = ({ children, data }: Props): ReactElement => {
                 children
             ) : (
                 <div className={styles.container}>
-                    <video autoPlay loop>
-                        <source src="/assets/app/spinner.webm" type="video/webm" />
+                    <video
+                        autoPlay
+                        loop
+                    >
+                        <source
+                            src="/assets/app/spinner.webm"
+                            type="video/webm"
+                        />
                     </video>
 
                     <div className={styles.textContent}>

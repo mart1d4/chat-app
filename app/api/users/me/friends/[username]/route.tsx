@@ -1,62 +1,63 @@
+import {
+    areFriends,
+    hasUserBlocked,
+    hasUserReceivedRequest,
+    hasUserSentRequest,
+    isUserBlockedBy,
+} from "@/lib/db/helpers";
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
+import { db } from "@/lib/db/db";
 
-export async function POST(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
-    const senderId = headers().get("X-UserId") || "";
-    const username = params.username;
+type Params = {
+    params: {
+        username: string;
+    };
+};
+
+export async function POST(req: Request, { params }: Params): Promise<NextResponse> {
+    const senderId = parseInt(headers().get("X-UserId") || "");
+    const { username } = params;
 
     try {
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-            select: {
-                id: true,
-                username: true,
-                displayName: true,
-                avatar: true,
-                banner: true,
-                primaryColor: true,
-                accentColor: true,
-                description: true,
-                customStatus: true,
-                status: true,
-                guildIds: true,
-                channelIds: true,
-                friendIds: true,
-                blockedUserIds: true,
-                blockedByUserIds: true,
-                requestSentIds: true,
-                requestReceivedIds: true,
-                createdAt: true,
-            },
-        });
+        const sender = await db
+            .selectFrom("users")
+            .select([
+                "id",
+                "username",
+                "displayName",
+                "avatar",
+                "banner",
+                "status",
+                "customStatus",
+                "primaryColor",
+                "accentColor",
+                "description",
+                "createdAt",
+            ])
+            .where("id", "=", senderId)
+            .executeTakeFirst();
 
-        const user = await prisma.user.findUnique({
-            where: {
-                username: username,
-            },
-            select: {
-                id: true,
-                username: true,
-                displayName: true,
-                avatar: true,
-                banner: true,
-                primaryColor: true,
-                accentColor: true,
-                description: true,
-                customStatus: true,
-                status: true,
-                guildIds: true,
-                channelIds: true,
-                friendIds: true,
-                createdAt: true,
-            },
-        });
+        const receiver = await db
+            .selectFrom("users")
+            .select([
+                "id",
+                "username",
+                "displayName",
+                "avatar",
+                "banner",
+                "status",
+                "customStatus",
+                "primaryColor",
+                "accentColor",
+                "description",
+                "createdAt",
+            ])
+            .where("username", "=", username)
+            .executeTakeFirst();
 
-        if (!sender || !user) {
+        if (!sender || !receiver) {
             return NextResponse.json(
                 {
                     success: false,
@@ -66,7 +67,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        if (sender.id === user.id) {
+        if (sender.id === receiver.id) {
             return NextResponse.json(
                 {
                     success: false,
@@ -76,13 +77,10 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        const isBlocked = sender.blockedUserIds.find((blocked) => blocked === user.id);
-        const isBlockedBy = sender.blockedByUserIds.find((blocked) => blocked === user.id);
-        const isFriend = sender.friendIds.find((friend) => friend === user.id);
-        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
-        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
-
-        if (isBlocked || isBlockedBy) {
+        if (
+            (await hasUserBlocked(senderId, receiver.id)) ||
+            (await isUserBlockedBy(senderId, receiver.id))
+        ) {
             return NextResponse.json(
                 {
                     success: false,
@@ -92,7 +90,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        if (isFriend) {
+        if (await areFriends(senderId, receiver.id)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -102,7 +100,7 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        if (sentRequest) {
+        if (await hasUserSentRequest(senderId, receiver.id)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -112,39 +110,25 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        if (receivedRequest) {
-            await prisma.user.update({
-                where: {
-                    id: sender.id,
-                },
-                data: {
-                    friends: {
-                        connect: { id: user.id },
-                    },
-                    requestsReceived: {
-                        disconnect: { id: user.id },
-                    },
-                },
-            });
+        if (await hasUserReceivedRequest(senderId, receiver.id)) {
+            await db
+                .insertInto("friends")
+                .values({
+                    A: senderId,
+                    B: receiver.id,
+                })
+                .execute();
 
-            await prisma.user.update({
-                where: {
-                    id: user.id,
-                },
-                data: {
-                    friends: {
-                        connect: { id: sender.id },
-                    },
-                    requestsSent: {
-                        disconnect: { id: sender.id },
-                    },
-                },
-            });
+            await db
+                .deleteFrom("requests")
+                .where("requesterId", "=", receiver.id)
+                .where("requestedId", "=", sender.id)
+                .execute();
 
             await pusher.trigger("chat-app", "user-relation", {
                 type: "FRIEND_ADDED",
                 sender: sender,
-                receiver: user,
+                receiver: receiver,
             });
 
             return NextResponse.json(
@@ -156,38 +140,24 @@ export async function POST(req: Request, { params }: { params: { username: strin
             );
         }
 
-        await prisma.user.update({
-            where: {
-                id: senderId,
-            },
-            data: {
-                requestsSent: {
-                    connect: { id: user.id },
-                },
-            },
-        });
-
-        await prisma.user.update({
-            where: {
-                id: user.id,
-            },
-            data: {
-                requestsReceived: {
-                    connect: { id: sender.id },
-                },
-            },
-        });
+        await db
+            .insertInto("requests")
+            .values({
+                requesterId: senderId,
+                requestedId: receiver.id,
+            })
+            .execute();
 
         await pusher.trigger("chat-app", "user-relation", {
             type: "REQUEST_SENT",
             sender: sender,
-            receiver: user,
+            receiver: receiver,
         });
 
         return NextResponse.json(
             {
                 success: true,
-                message: `Success. Friend request sent to ${user.username}.`,
+                message: `Success. Friend request sent to ${receiver.username}.`,
             },
             { status: 200 }
         );
@@ -203,60 +173,48 @@ export async function POST(req: Request, { params }: { params: { username: strin
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { username: string } }): Promise<NextResponse> {
-    const senderId = headers().get("X-UserId") || "";
-    const username = params.username;
+export async function DELETE(req: Request, { params }: Params): Promise<NextResponse> {
+    const senderId = parseInt(headers().get("X-UserId") || "");
+    const { username } = params;
 
     try {
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-            select: {
-                id: true,
-                username: true,
-                displayName: true,
-                avatar: true,
-                banner: true,
-                primaryColor: true,
-                accentColor: true,
-                description: true,
-                customStatus: true,
-                status: true,
-                guildIds: true,
-                channelIds: true,
-                friendIds: true,
-                blockedUserIds: true,
-                blockedByUserIds: true,
-                requestSentIds: true,
-                requestReceivedIds: true,
-                createdAt: true,
-            },
-        });
+        const sender = await db
+            .selectFrom("users")
+            .select([
+                "id",
+                "username",
+                "displayName",
+                "avatar",
+                "banner",
+                "status",
+                "customStatus",
+                "primaryColor",
+                "accentColor",
+                "description",
+                "createdAt",
+            ])
+            .where("id", "=", senderId)
+            .executeTakeFirst();
 
-        const user = await prisma.user.findUnique({
-            where: {
-                username: username,
-            },
-            select: {
-                id: true,
-                username: true,
-                displayName: true,
-                avatar: true,
-                banner: true,
-                primaryColor: true,
-                accentColor: true,
-                description: true,
-                customStatus: true,
-                status: true,
-                guildIds: true,
-                channelIds: true,
-                friendIds: true,
-                createdAt: true,
-            },
-        });
+        const receiver = await db
+            .selectFrom("users")
+            .select([
+                "id",
+                "username",
+                "displayName",
+                "avatar",
+                "banner",
+                "status",
+                "customStatus",
+                "primaryColor",
+                "accentColor",
+                "description",
+                "createdAt",
+            ])
+            .where("username", "=", username)
+            .executeTakeFirst();
 
-        if (!sender || !user) {
+        if (!sender || !receiver) {
             return NextResponse.json(
                 {
                     success: false,
@@ -266,7 +224,7 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             );
         }
 
-        if (sender.id === user.id) {
+        if (sender.id === receiver.id) {
             return NextResponse.json(
                 {
                     success: false,
@@ -276,11 +234,31 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             );
         }
 
-        const isFriend = sender.friendIds.find((friend) => friend === user.id);
-        const sentRequest = sender.requestSentIds.find((request) => request === user.id);
-        const receivedRequest = sender.requestReceivedIds.find((request) => request === user.id);
+        const friend = await areFriends(sender.id, receiver.id);
 
-        if (!isFriend && !sentRequest && !receivedRequest) {
+        if (friend) {
+            await db
+                .deleteFrom("friends")
+                .where(({ eb, or, and }) =>
+                    or([
+                        and([eb("A", "=", sender.id), eb("B", "=", receiver.id)]),
+                        and([eb("A", "=", receiver.id), eb("B", "=", sender.id)]),
+                    ])
+                )
+                .execute();
+        } else if (await hasUserSentRequest(sender.id, receiver.id)) {
+            await db
+                .deleteFrom("requests")
+                .where("requesterId", "=", sender.id)
+                .where("requestedId", "=", receiver.id)
+                .execute();
+        } else if (await hasUserReceivedRequest(sender.id, receiver.id)) {
+            await db
+                .deleteFrom("requests")
+                .where("requesterId", "=", receiver.id)
+                .where("requestedId", "=", sender.id)
+                .execute();
+        } else {
             return NextResponse.json(
                 {
                     success: false,
@@ -290,46 +268,14 @@ export async function DELETE(req: Request, { params }: { params: { username: str
             );
         }
 
-        await prisma.user.update({
-            where: {
-                id: sender.id,
-            },
-            data: {
-                friends: {
-                    disconnect: { id: user.id },
-                },
-                requestsSent: {
-                    disconnect: { id: user.id },
-                },
-                requestsReceived: {
-                    disconnect: { id: user.id },
-                },
-            },
-        });
-
-        await prisma.user.update({
-            where: {
-                id: user.id,
-            },
-            data: {
-                friends: {
-                    disconnect: { id: sender.id },
-                },
-                requestsSent: {
-                    disconnect: { id: sender.id },
-                },
-                requestsReceived: {
-                    disconnect: { id: sender.id },
-                },
-            },
-        });
-
-        const message = isFriend ? "Friend removed" : "Request cancelled";
+        const message = friend
+            ? "Successfully removed friend."
+            : "Successfully cancelled friend request.";
 
         await pusher.trigger("chat-app", "user-relation", {
             type: "FRIEND_REMOVED",
             sender: sender,
-            receiver: user,
+            receiver: receiver,
         });
 
         return NextResponse.json(

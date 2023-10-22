@@ -1,9 +1,10 @@
 import pusher from "@/lib/pusher/server-connection";
-import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
+import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
+import { db } from "@/lib/db/db";
+import { doesUserExist, getUser } from "@/lib/db/helpers";
 
 const avatars = [
     "178ba6e1-5551-42f3-b199-ddb9fc0f80de",
@@ -14,7 +15,8 @@ const avatars = [
 ];
 
 export async function PATCH(req: Request) {
-    const senderId = headers().get("X-UserId") || "";
+    const userId = parseInt(headers().get("X-UserId") || "");
+    let usernameChanged = false;
 
     const {
         password,
@@ -30,16 +32,18 @@ export async function PATCH(req: Request) {
         status,
     } = await req.json();
 
-    let usernameChanged = false;
-
     try {
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
+        const user = await getUser({
+            id: userId,
+            select: {
+                username: true,
+                password: true,
+                avatar: true,
+                banner: true,
             },
         });
 
-        if (!sender) {
+        if (!user) {
             return NextResponse.json(
                 {
                     success: false,
@@ -50,25 +54,6 @@ export async function PATCH(req: Request) {
         }
 
         if (newPassword && password) {
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: senderId,
-                },
-                select: {
-                    password: true,
-                },
-            });
-
-            if (!user) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "User not found",
-                    },
-                    { status: 404 }
-                );
-            }
-
             if (newPassword === password) {
                 return NextResponse.json(
                     {
@@ -92,15 +77,11 @@ export async function PATCH(req: Request) {
             }
 
             const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    password: hashedPassword,
-                },
-            });
+            await db
+                .updateTable("users")
+                .set({ password: hashedPassword })
+                .where("id", "=", userId)
+                .execute();
 
             return NextResponse.json(
                 {
@@ -110,32 +91,17 @@ export async function PATCH(req: Request) {
                 { status: 200 }
             );
         } else if (username && password) {
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: senderId,
-                },
-                select: {
-                    password: true,
-                },
-            });
-
-            if (!user) {
+            if (user.username === username) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "User not found",
+                        message: "New username cannot be the same as the old username",
                     },
-                    { status: 404 }
+                    { status: 400 }
                 );
             }
 
-            const usernameExists = await prisma.user.findUnique({
-                where: {
-                    username,
-                },
-            });
-
-            if (usernameExists) {
+            if (await doesUserExist({ username })) {
                 return NextResponse.json(
                     {
                         success: false,
@@ -157,23 +123,17 @@ export async function PATCH(req: Request) {
                 );
             }
 
-            await prisma.user.update({
-                where: {
-                    id: senderId,
-                },
-                data: {
-                    username,
-                },
-            });
-
+            await db.updateTable("users").set({ username }).where("id", "=", userId).execute();
             usernameChanged = true;
         } else {
-            if (avatar && !avatars.includes(sender.avatar)) {
-                await removeImage(sender.avatar);
+            // User updates avatar but doesn't have a default avatar
+            // Need to remove the old avatar from the CDN
+            if (avatar && !avatars.includes(user.avatar)) {
+                await removeImage(user.avatar);
             }
 
-            if ((banner && sender.banner) || (banner === null && sender.banner)) {
-                await removeImage(sender.banner);
+            if ((banner && user.banner) || (banner === null && user.banner)) {
+                await removeImage(user.banner);
             }
 
             await prisma.user.update({
@@ -181,9 +141,15 @@ export async function PATCH(req: Request) {
                     id: senderId,
                 },
                 data: {
-                    displayName: displayName === "" ? sender.username : displayName ? displayName : sender.displayName,
+                    displayName:
+                        displayName === ""
+                            ? sender.username
+                            : displayName
+                            ? displayName
+                            : sender.displayName,
                     description: typeof description === "string" ? description : sender.description,
-                    customStatus: typeof customStatus === "string" ? customStatus : sender.customStatus,
+                    customStatus:
+                        typeof customStatus === "string" ? customStatus : sender.customStatus,
                     avatar: avatar ? avatar : sender.avatar,
                     banner: banner || banner === null ? banner : sender.banner,
                     primaryColor: primaryColor ? primaryColor : sender.primaryColor,
@@ -191,6 +157,8 @@ export async function PATCH(req: Request) {
                     status: status ? status : sender.status,
                 },
             });
+
+            await db.updateTable("users").set({ status }).where("id", "=", userId).execute();
         }
 
         const updatedUser = await prisma.user.findUnique({

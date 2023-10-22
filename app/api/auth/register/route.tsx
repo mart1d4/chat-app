@@ -37,7 +37,17 @@ export async function POST(req: Request): Promise<NextResponse> {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        createUser({ username, password: hashedPassword });
+        const user = await createUser({ username, password: hashedPassword });
+
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Something went wrong.",
+                },
+                { status: 500 }
+            );
+        }
 
         return NextResponse.json(
             {

@@ -3,27 +3,27 @@
 import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { translateCap, trimMessage } from "@/lib/strings";
 import { AnimatePresence, motion } from "framer-motion";
-import { getButtonColor } from "@/lib/getColors";
 import { useState, useRef, useEffect } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { getButtonColor } from "@/lib/getColors";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
 import { Icon } from "@components";
 
 const colors = {
-    ONLINE: "#22A559",
-    IDLE: "#F0B232",
-    DO_NOT_DISTURB: "#F23F43",
-    INVISIBLE: "#80848E",
-    OFFLINE: "#80848E",
+    online: "#22A559",
+    idle: "#F0B232",
+    dnd: "#F23F43",
+    invisible: "#80848E",
+    offline: "#80848E",
 };
 
 const masks = {
-    ONLINE: "",
-    IDLE: "status-mask-idle",
-    DO_NOT_DISTURB: "status-mask-dnd",
-    INVISIBLE: "status-mask-offline",
-    OFFLINE: "status-mask-offline",
+    online: "",
+    idle: "status-mask-idle",
+    dnd: "status-mask-dnd",
+    invisible: "status-mask-offline",
+    offline: "status-mask-offline",
 };
 
 export function UserCard({ content }: any) {
@@ -278,8 +278,8 @@ export function UserCard({ content }: any) {
                                         width="100%"
                                         rx={8}
                                         ry={8}
-                                        fill={colors[user.status as EUserStatus]}
-                                        mask={`url(#${masks[user.status as EUserStatus]})`}
+                                        fill={colors[user.status as keyof typeof colors]}
+                                        mask={`url(#${masks[user.status as keyof typeof masks]})`}
                                     />
                                 </svg>
                             </div>
@@ -417,8 +417,8 @@ export function UserCard({ content }: any) {
                                                 width="12px"
                                                 rx={8}
                                                 ry={8}
-                                                fill={colors[user.status as EUserStatus]}
-                                                mask={`url(#${masks[user.status as EUserStatus]})`}
+                                                fill={colors[user.status as keyof typeof colors]}
+                                                mask={`url(#${masks[user.status as keyof typeof masks]})`}
                                             />
                                         </svg>
                                         <div>{translateCap(user.status)}</div>
