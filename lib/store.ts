@@ -106,7 +106,10 @@ export const useLayers = create<LayersState>()((set) => ({
                     return {
                         layers: {
                             ...state.layers,
-                            [layer.settings.type]: [...(state.layers[layer.settings.type] as TLayer[]), layer],
+                            [layer.settings.type]: [
+                                ...(state.layers[layer.settings.type] as TLayer[]),
+                                layer,
+                            ],
                             MENU: null,
                         },
                     };
@@ -149,8 +152,8 @@ interface DataState {
     token: string | null;
     user: Partial<User> | null;
 
-    channels: Channel[];
-    guilds: Guild[];
+    channels: Partial<Channel>[];
+    guilds: Partial<Guild>[];
     friends: Partial<User>[];
     blocked: Partial<User>[];
     blockedBy: Partial<User>[];
@@ -160,8 +163,8 @@ interface DataState {
     setToken: (token: string) => void;
     setUser: (user: Partial<User>) => void;
 
-    setChannels: (channels: Channel[]) => void;
-    setGuilds: (guilds: Guild[]) => void;
+    setChannels: (channels: Partial<Channel>[]) => void;
+    setGuilds: (guilds: Partial<Guild>[]) => void;
     setFriends: (friends: Partial<User>[]) => void;
     setBlocked: (blocked: Partial<User>[]) => void;
     setBlockedBy: (blockedBy: Partial<User>[]) => void;
@@ -179,13 +182,13 @@ interface DataState {
     addRequestSent: (request: Partial<User>) => void;
     removeRequests: (request: Partial<User>) => void;
 
-    addChannel: (channel: Channel) => void;
-    updateChannel: (channel: Channel) => void;
-    removeChannel: (channel: Channel) => void;
-    moveChannelUp: (channelId: Channel["id"]) => void;
-    addGuild: (guild: Guild) => void;
-    updateGuild: (guild: Guild) => void;
-    removeGuild: (guild: Guild) => void;
+    addChannel: (channel: Partial<Channel>) => void;
+    updateChannel: (channel: Partial<Channel>) => void;
+    removeChannel: (channel: Partial<Channel>) => void;
+    moveChannelUp: (channelId: number) => void;
+    addGuild: (guild: Partial<Guild>) => void;
+    updateGuild: (guild: Partial<Guild>) => void;
+    removeGuild: (guild: Partial<Guild>) => void;
 
     removeData: () => void;
 }
@@ -321,7 +324,8 @@ export const useData = create<DataState>()((set) => ({
         })),
 
     addFriend: (friend) => set((state) => ({ friends: [...state.friends, friend] })),
-    removeFriend: (friend) => set((state) => ({ friends: state.friends.filter((f) => f.id !== friend.id) })),
+    removeFriend: (friend) =>
+        set((state) => ({ friends: state.friends.filter((f) => f.id !== friend.id) })),
     addBlocked: (blocked) =>
         set((state) => ({
             blocked: [...state.blocked, blocked],
@@ -336,10 +340,14 @@ export const useData = create<DataState>()((set) => ({
             requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
             requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
         })),
-    removeBlocked: (blocked) => set((state) => ({ blocked: state.blocked.filter((b) => b.id !== blocked.id) })),
-    removeBlockedBy: (blocked) => set((state) => ({ blockedBy: state.blockedBy.filter((b) => b.id !== blocked.id) })),
-    addRequestReceived: (request) => set((state) => ({ requestsReceived: [...state.requestsReceived, request] })),
-    addRequestSent: (request) => set((state) => ({ requestsSent: [...state.requestsSent, request] })),
+    removeBlocked: (blocked) =>
+        set((state) => ({ blocked: state.blocked.filter((b) => b.id !== blocked.id) })),
+    removeBlockedBy: (blocked) =>
+        set((state) => ({ blockedBy: state.blockedBy.filter((b) => b.id !== blocked.id) })),
+    addRequestReceived: (request) =>
+        set((state) => ({ requestsReceived: [...state.requestsReceived, request] })),
+    addRequestSent: (request) =>
+        set((state) => ({ requestsSent: [...state.requestsSent, request] })),
     removeRequests: (request) =>
         set((state) => ({
             requestsReceived: state.requestsReceived.filter((r) => r.id !== request.id),
@@ -384,7 +392,8 @@ export const useData = create<DataState>()((set) => ({
             }
         }),
 
-    removeChannel: (channel) => set((state) => ({ channels: state.channels.filter((c) => c.id !== channel.id) })),
+    removeChannel: (channel) =>
+        set((state) => ({ channels: state.channels.filter((c) => c.id !== channel.id) })),
     moveChannelUp: (channelId) => {
         set((state) => {
             const channel = state.channels.find((c) => c.id === channelId);
@@ -398,8 +407,10 @@ export const useData = create<DataState>()((set) => ({
         });
     },
     addGuild: (guild) => set((state) => ({ guilds: [...state.guilds, guild] })),
-    updateGuild: (guild) => set((state) => ({ guilds: state.guilds.map((g) => (g.id === guild.id ? guild : g)) })),
-    removeGuild: (guild) => set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
+    updateGuild: (guild) =>
+        set((state) => ({ guilds: state.guilds.map((g) => (g.id === guild.id ? guild : g)) })),
+    removeGuild: (guild) =>
+        set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
 
     removeData: () =>
         set(() => ({
@@ -492,7 +503,8 @@ export const useNotifications = create<NotificationsState>()((set) => ({
             };
         }),
 
-    removeMessage: (channelId) => set((state) => ({ messages: state.messages.filter((id) => id !== channelId) })),
+    removeMessage: (channelId) =>
+        set((state) => ({ messages: state.messages.filter((id) => id !== channelId) })),
 
     addPing: (channelId) =>
         set((state) => {

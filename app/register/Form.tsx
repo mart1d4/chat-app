@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
-
-const USER_REGEX = /^.{2,32}$/;
-const PWD_REGEX = /^.{8,256}$/;
+import { passwordRegex, usernameRegex } from "@/lib/verifications";
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -51,15 +49,18 @@ export default function Register() {
         if (isLoading) return;
         setIsLoading(true);
 
-        const v1: boolean = USER_REGEX.test(username);
-        const v2: boolean = PWD_REGEX.test(password);
+        if (!usernameRegex.test(username)) {
+            const correctLength = username.length >= 2 && username.length <= 32;
 
-        if (!v1) {
-            setUsernameError("Userame must be between 2 and 32 characters");
+            setUsernameError(
+                correctLength
+                    ? "Username contains restricted characters"
+                    : "Username must be between 2 and 32 characters"
+            );
             return setIsLoading(false);
         }
 
-        if (!v2) {
+        if (!passwordRegex.test(password)) {
             setPasswordError("Password must be between 8 and 256 characters");
             return setIsLoading(false);
         }
@@ -101,10 +102,14 @@ export default function Register() {
             <div>
                 <label
                     htmlFor="username"
-                    style={{ color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)" }}
+                    style={{
+                        color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
+                    }}
                 >
                     Username
-                    {usernameError.length > 0 && <span className={styles.errorLabel}>- {usernameError}</span>}
+                    {usernameError.length > 0 && (
+                        <span className={styles.errorLabel}>- {usernameError}</span>
+                    )}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -131,10 +136,14 @@ export default function Register() {
             <div>
                 <label
                     htmlFor="password"
-                    style={{ color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)" }}
+                    style={{
+                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                    }}
                 >
                     Password
-                    {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
+                    {passwordError.length > 0 && (
+                        <span className={styles.errorLabel}>- {passwordError}</span>
+                    )}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -158,10 +167,14 @@ export default function Register() {
             <div>
                 <label
                     htmlFor="password-match"
-                    style={{ color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)" }}
+                    style={{
+                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                    }}
                 >
                     Confirm Password
-                    {passwordError.length > 0 && <span className={styles.errorLabel}>- {passwordError}</span>}
+                    {passwordError.length > 0 && (
+                        <span className={styles.errorLabel}>- {passwordError}</span>
+                    )}
                 </label>
                 <div className={styles.inputContainer}>
                     <input

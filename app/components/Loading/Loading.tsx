@@ -49,8 +49,8 @@ type Props = {
         blockedBy: Partial<User>[];
         received: Partial<User>[];
         sent: Partial<User>[];
-        channels: Channel[];
-        guilds: Guild[];
+        channels: Partial<Channel>[];
+        guilds: Partial<Guild>[];
     };
 };
 
@@ -135,7 +135,10 @@ export const Loading = ({ children, data }: Props) => {
             if (channels.map((c) => c.id).includes(data.channelId)) {
                 moveChannelUp(data.channelId);
 
-                if (!pathname.includes(data.channelId) && (data.message.authorId !== user.id || data.notSentByAuthor)) {
+                if (
+                    !pathname.includes(data.channelId) &&
+                    (data.message.authorId !== user.id || data.notSentByAuthor)
+                ) {
                     addPing(data.channelId);
 
                     const audio = new Audio("/assets/sounds/ping.mp3");
@@ -208,7 +211,11 @@ export const Loading = ({ children, data }: Props) => {
                         updateGuild(data.guild);
                     }
                 }
-            } else if (data.guildId && data.channelId && guilds.map((g) => g.id).includes(data.guildId)) {
+            } else if (
+                data.guildId &&
+                data.channelId &&
+                guilds.map((g) => g.id).includes(data.guildId)
+            ) {
                 const newGuilds = guilds.map((g) => ({
                     ...g,
                     channels: g.channels
@@ -216,7 +223,11 @@ export const Loading = ({ children, data }: Props) => {
                         .sort((a, b) => (a.position as number) - (b.position as number)),
                 }));
                 setGuilds(newGuilds);
-            } else if (data.guildId && data.channel && guilds.map((g) => g.id).includes(data.guildId)) {
+            } else if (
+                data.guildId &&
+                data.channel &&
+                guilds.map((g) => g.id).includes(data.guildId)
+            ) {
                 const newGuilds = guilds.map((g) => ({
                     ...g,
                     channels: [data.channel as TChannel, ...g.channels].sort(

@@ -79,7 +79,7 @@ export async function doesUserExist({ id, username, email }: Partial<UserTable>)
         if (id) {
             query = query.where("id", "=", id);
         } else if (username) {
-            query = query.where("username", "=", username);
+            query = query.where(sql`username = BINARY ${username}`);
         } else if (email) {
             query = query.where("email", "=", email);
         }
@@ -163,7 +163,7 @@ export async function getUser({
                 q.where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
             )
             .$if(!!id, (q) => q.where("id", "=", id as number))
-            .$if(!!username, (q) => q.where("username", "=", username as string))
+            .$if(!!username, (q) => q.where(sql`username = BINARY ${username as string}`))
             .executeTakeFirst();
 
         return user;
@@ -213,153 +213,177 @@ export async function getInitialData() {
 
 export async function getFriends(userId: number) {
     try {
-        const friends = await db
-            .selectFrom("friends")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
-                (join) =>
-                    // This makes an "AND" instead of an "OR" for some reason
-                    // So no friends are returned
-                    // join.onRef("users.id", "=", "friends.A").onRef("users.id", "=", "friends.B")
-                    // Trying to fix this manually
-                    join.on(
-                        sql`(friends.A = user.id AND friends.B <> user.id) OR (friends.A <> user.id AND friends.B = user.id))`
-                    )
+        const friends = await sql<Partial<User>[]>`
+            SELECT
+                ${sql.ref("id")},
+                ${sql.ref("username")},
+                ${sql.ref("displayName")},
+                ${sql.ref("avatar")},
+                ${sql.ref("banner")},
+                ${sql.ref("primaryColor")},
+                ${sql.ref("accentColor")},
+                ${sql.ref("description")},
+                ${sql.ref("customStatus")},
+                ${sql.ref("status")},
+                ${sql.ref("createdAt")}
+            FROM
+                ${sql.ref("friends")}
+            INNER JOIN (
+                SELECT
+                    ${sql.ref("id")},
+                    ${sql.ref("username")},
+                    ${sql.ref("displayName")},
+                    ${sql.ref("avatar")},
+                    ${sql.ref("banner")},
+                    ${sql.ref("primaryColor")},
+                    ${sql.ref("accentColor")},
+                    ${sql.ref("description")},
+                    ${sql.ref("customStatus")},
+                    ${sql.ref("status")},
+                    ${sql.ref("createdAt")}
+                FROM
+                    ${sql.ref("users")}
+                WHERE
+                    ${sql.ref("id")} != ${userId}
             )
-            .select(defaultSelect)
-            .where(({ eb, or }) => or([eb("friends.B", "=", userId), eb("friends.A", "=", userId)]))
-            .execute();
+            AS ${sql.ref("users")}
+            ON ${sql.ref("users.id")} = ${sql.ref("friends.A")}
+            OR ${sql.ref("users.id")} = ${sql.ref("friends.B")}
+            WHERE (
+                (
+                    ${sql.ref("A")} = ${userId}
+                    AND ${sql.ref("B")} != ${userId}
+                )
+            OR (
+                    ${sql.ref("A")} != ${userId}
+                    AND ${sql.ref("B")} = ${userId}
+                )
+            )`.execute(db);
 
-        console.log("FRIENDS", JSON.stringify(friends, null, 4));
-        return friends;
+        return friends.rows || [];
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getRequestsSent(userId: number) {
     try {
-        const requests = await db
-            .selectFrom("requests")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "requests.requestedId")
-            )
-            .select(defaultSelect)
-            .where("requests.requesterId", "=", userId)
-            .execute();
+        const requests =
+            (await db
+                .selectFrom("requests")
+                .innerJoin(
+                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                    (join) => join.onRef("users.id", "=", "requests.requestedId")
+                )
+                .select(defaultSelect)
+                .where("requests.requesterId", "=", userId)
+                .execute()) || [];
 
         return requests;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getRequestsReceived(userId: number) {
     try {
-        const requests = await db
-            .selectFrom("requests")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "requests.requesterId")
-            )
-            .select(defaultSelect)
-            .where("requests.requestedId", "=", userId)
-            .execute();
+        const requests =
+            (await db
+                .selectFrom("requests")
+                .innerJoin(
+                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                    (join) => join.onRef("users.id", "=", "requests.requesterId")
+                )
+                .select(defaultSelect)
+                .where("requests.requestedId", "=", userId)
+                .execute()) || [];
 
         return requests;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getBlocked(userId: number) {
     try {
-        const blocked = await db
-            .selectFrom("blocked")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(sensitiveSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "blocked.blockedId")
-            )
-            .select(sensitiveSelect)
-            .where("blocked.blockerId", "=", userId)
-            .execute();
+        const blocked =
+            (await db
+                .selectFrom("blocked")
+                .innerJoin(
+                    (eb) => eb.selectFrom("users").select(sensitiveSelect).as("users"),
+                    (join) => join.onRef("users.id", "=", "blocked.blockedId")
+                )
+                .select(sensitiveSelect)
+                .where("blocked.blockerId", "=", userId)
+                .execute()) || [];
 
         return blocked;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getBlockedBy(userId: number) {
     try {
-        const blocked = await db
-            .selectFrom("blocked")
-            .select("blockerId")
-            .innerJoin(
-                (eb) =>
-                    eb
-                        .selectFrom("users")
-                        .select([
-                            "id",
-                            "username",
-                            "displayName",
-                            "avatar",
-                            "primaryColor",
-                            "accentColor",
-                        ])
-                        .as("users"),
-                (join) => join.onRef("users.id", "=", "blocked.blockerId")
-            )
-            .where("blocked.blockedId", "=", userId)
-            .execute();
+        const blocked =
+            (await db
+                .selectFrom("blocked")
+                .innerJoin(
+                    (eb) => eb.selectFrom("users").select(sensitiveSelect).as("users"),
+                    (join) => join.onRef("users.id", "=", "blocked.blockerId")
+                )
+                .select(sensitiveSelect)
+                .where("blocked.blockedId", "=", userId)
+                .execute()) || [];
 
         return blocked;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getChannels(userId: number) {
     try {
-        const channels = await db
-            .selectFrom("channelrecipients")
-            .innerJoin(
-                (eb) => eb.selectFrom("channels").select(["id", "name"]).as("channels"),
-                (join) => join.onRef("channels.id", "=", "channelrecipients.channelId")
-            )
-            .select(["id", "name"])
-            .where("channelrecipients.userId", "=", userId)
-            .execute();
+        const channels =
+            (await db
+                .selectFrom("channelrecipients")
+                .innerJoin(
+                    (eb) => eb.selectFrom("channels").select(["id", "name"]).as("channels"),
+                    (join) => join.onRef("channels.id", "=", "channelrecipients.channelId")
+                )
+                .select(["id", "name"])
+                .where("channelrecipients.userId", "=", userId)
+                .execute()) || [];
 
         return channels;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 
 export async function getGuilds(userId: number) {
     try {
-        const guilds = await db
-            .selectFrom("guildmembers")
-            .innerJoin(
-                (eb) => eb.selectFrom("guilds").select(["id", "name"]).as("guilds"),
-                (join) => join.onRef("guilds.id", "=", "guildmembers.guildId")
-            )
-            .select(["id", "name"])
-            .where("guildmembers.userId", "=", userId)
-            .execute();
+        const guilds =
+            (await db
+                .selectFrom("guildmembers")
+                .innerJoin(
+                    (eb) => eb.selectFrom("guilds").select(["id", "name"]).as("guilds"),
+                    (join) => join.onRef("guilds.id", "=", "guildmembers.guildId")
+                )
+                .select(["id", "name"])
+                .where("guildmembers.userId", "=", userId)
+                .execute()) || [];
 
         return guilds;
     } catch (error) {
         console.log(error);
-        return null;
+        return [];
     }
 }
 

@@ -1,3 +1,4 @@
+import { passwordRegex, usernameRegex } from "@/lib/verifications";
 import { createUser, doesUserExist } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
@@ -5,7 +6,7 @@ import bcrypt from "bcrypt";
 export async function POST(req: Request): Promise<NextResponse> {
     const { username, password } = await req.json();
 
-    if (!/^.{2,32}$/.test(username)) {
+    if (!usernameRegex.test(username)) {
         return NextResponse.json(
             {
                 success: false,
@@ -15,7 +16,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         );
     }
 
-    if (!/^.{8,256}$/.test(password)) {
+    if (!passwordRegex.test(password)) {
         return NextResponse.json(
             {
                 success: false,

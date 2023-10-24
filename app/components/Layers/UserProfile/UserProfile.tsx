@@ -87,7 +87,9 @@ export const UserProfile = ({ content }: any): ReactElement => {
         }
     }, []);
 
-    const sectionNavItems = isSameUser() ? ["User Info"] : ["User Info", "Mutual Servers", "Mutual Friends"];
+    const sectionNavItems = isSameUser()
+        ? ["User Info"]
+        : ["User Info", "Mutual Servers", "Mutual Friends"];
     if (!user || layers.POPUP.length > 0) return <></>;
 
     return (
@@ -103,7 +105,10 @@ export const UserProfile = ({ content }: any): ReactElement => {
                     "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                     "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
                     "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                    "--card-button-color": getButtonColor(user.primaryColor, user.accentColor as string),
+                    "--card-button-color": getButtonColor(
+                        user.primaryColor,
+                        user.accentColor as string
+                    ),
                     "--card-border-color": user.primaryColor,
                 } as React.CSSProperties
             }
@@ -139,7 +144,10 @@ export const UserProfile = ({ content }: any): ReactElement => {
                             setShowSettings("Profiles");
                         }}
                     >
-                        <Icon name="edit" size={24} />
+                        <Icon
+                            name="edit"
+                            size={24}
+                        />
                     </button>
                 )}
 
@@ -152,8 +160,19 @@ export const UserProfile = ({ content }: any): ReactElement => {
                     }}
                 >
                     <mask id="card-banner-mask">
-                        <rect fill="white" x="0" y="0" width="100%" height="100%" />
-                        <circle fill="black" cx="82" cy={user.banner ? 207 : 101} r="68" />
+                        <rect
+                            fill="white"
+                            x="0"
+                            y="0"
+                            width="100%"
+                            height="100%"
+                        />
+                        <circle
+                            fill="black"
+                            cx="82"
+                            cy={user.banner ? 207 : 101}
+                            r="68"
+                        />
                     </mask>
 
                     <foreignObject
@@ -179,7 +198,10 @@ export const UserProfile = ({ content }: any): ReactElement => {
                     </foreignObject>
                 </svg>
 
-                <div className={styles.cardAvatar} style={{ top: user.banner ? "151px" : "46px" }}>
+                <div
+                    className={styles.cardAvatar}
+                    style={{ top: user.banner ? "151px" : "46px" }}
+                >
                     <div
                         className={styles.avatarImage}
                         style={{
@@ -229,9 +251,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "ADD_FRIEND",
-                                                        params: {
-                                                            username: user.username,
-                                                        },
+                                                        data: { username: user.username },
                                                     })
                                                 }
                                             >
@@ -281,18 +301,25 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                                         : "green"
                                                 }
                                                 onClick={() => {
-                                                    if (requestsSent.map((u) => u.id).includes(user.id)) {
+                                                    if (
+                                                        requestsSent
+                                                            .map((u) => u.id)
+                                                            .includes(user.id)
+                                                    ) {
                                                         return;
                                                     }
                                                     sendRequest({
                                                         query: "ADD_FRIEND",
-                                                        params: {
-                                                            username: user.username,
-                                                        },
+                                                        data: { username: user.username },
                                                     });
                                                 }}
                                                 onMouseEnter={(e) => {
-                                                    if (!requestsSent.map((u) => u.id).includes(user.id)) return;
+                                                    if (
+                                                        !requestsSent
+                                                            .map((u) => u.id)
+                                                            .includes(user.id)
+                                                    )
+                                                        return;
                                                     setTooltip({
                                                         text: "You sent a friend request to this user.",
                                                         element: e.currentTarget,
@@ -354,9 +381,13 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         key={index}
                                         style={{
                                             color:
-                                                activeNavItem === index ? "var(--foreground-1)" : "var(--foreground-3)",
+                                                activeNavItem === index
+                                                    ? "var(--foreground-1)"
+                                                    : "var(--foreground-3)",
                                             borderColor:
-                                                activeNavItem === index ? "var(--foreground-1)" : "transparent",
+                                                activeNavItem === index
+                                                    ? "var(--foreground-1)"
+                                                    : "transparent",
                                             cursor: activeNavItem === index ? "default" : "pointer",
                                         }}
                                         onClick={() => setActiveNavItem(index)}
@@ -439,7 +470,12 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         {activeNavItem === 1 && (
                             <>
                                 {mutualGuilds.length > 0 ? (
-                                    mutualGuilds.map((guild) => <FriendItem key={guild.id} guild={guild} />)
+                                    mutualGuilds.map((guild) => (
+                                        <FriendItem
+                                            key={guild.id}
+                                            guild={guild}
+                                        />
+                                    ))
                                 ) : (
                                     <div className={styles.empty}>
                                         <div
@@ -456,7 +492,12 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         {activeNavItem === 2 && (
                             <>
                                 {mutualFriends.length > 0 ? (
-                                    mutualFriends.map((friend) => <FriendItem key={friend.id} friend={friend} />)
+                                    mutualFriends.map((friend) => (
+                                        <FriendItem
+                                            key={friend.id}
+                                            friend={friend}
+                                        />
+                                    ))
                                 ) : (
                                     <div className={styles.empty + " " + styles.noFriends}>
                                         <div
@@ -527,7 +568,12 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
         >
             <div>
                 {friend && (
-                    <Avatar src={friend.avatar} alt={friend.username} size={40} status={friend.status ?? "Offline"} />
+                    <Avatar
+                        src={friend.avatar}
+                        alt={friend.username}
+                        size={40}
+                        status={friend.status ?? "Offline"}
+                    />
                 )}
 
                 {guild && (
@@ -538,7 +584,11 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
                         }}
                     >
                         {guild.icon ? (
-                            <Avatar src={guild.icon} alt={guild.name} size={40} />
+                            <Avatar
+                                src={guild.icon}
+                                alt={guild.name}
+                                size={40}
+                            />
                         ) : (
                             guild.name
                                 .toLowerCase()

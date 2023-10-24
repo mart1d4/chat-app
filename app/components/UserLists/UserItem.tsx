@@ -201,9 +201,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                         e.stopPropagation();
                                         sendRequest({
                                             query: "ADD_FRIEND",
-                                            params: {
-                                                username: user.username,
-                                            },
+                                            data: { username: user.username },
                                         });
                                     }}
                                     onMouseEnter={(e) => {

@@ -49,7 +49,10 @@ const Content = ({ channel, user, friend }: Props) => {
 
         pusher.bind("message-sent", (data: TMessageData) => {
             console.log("[ChannelContent] message-sent", data);
-            if (data.channelId === channel.id && (data.message.author.id !== user.id || data.notSentByAuthor)) {
+            if (
+                data.channelId === channel.id &&
+                (data.message.author.id !== user.id || data.notSentByAuthor)
+            ) {
                 setMessages((prev) => [...prev, data.message]);
             }
         });
@@ -106,13 +109,16 @@ const Content = ({ channel, user, friend }: Props) => {
         setChannelUrl(channel.id);
 
         const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${channel.id}/messages`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }).then((res) => res.json());
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/channels/${channel.id}/messages`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            ).then((res) => res.json());
 
             console.log("[ChannelContent] ", response);
             if (response.status === 401) {
@@ -202,7 +208,10 @@ const Content = ({ channel, user, friend }: Props) => {
     return useMemo(
         () => (
             <div className={styles.container}>
-                <AppHeader channel={channel} friend={friend} />
+                <AppHeader
+                    channel={channel}
+                    friend={friend}
+                />
 
                 <div className={styles.content}>
                     <main className={styles.main}>
@@ -221,7 +230,10 @@ const Content = ({ channel, user, friend }: Props) => {
                                     }
                                 }}
                             >
-                                <div ref={scrollContainerChild} className={styles.scrollContent}>
+                                <div
+                                    ref={scrollContainerChild}
+                                    className={styles.scrollContent}
+                                >
                                     <ol className={styles.scrollContentInner}>
                                         {loading ? (
                                             <MessageSk />
@@ -230,7 +242,11 @@ const Content = ({ channel, user, friend }: Props) => {
                                                 {hasMore ? (
                                                     <MessageSk />
                                                 ) : (
-                                                    <FirstMessage channel={channel} user={user} friend={friend} />
+                                                    <FirstMessage
+                                                        channel={channel}
+                                                        user={user}
+                                                        friend={friend}
+                                                    />
                                                 )}
 
                                                 {messages.map((message, index) => (
@@ -238,12 +254,17 @@ const Content = ({ channel, user, friend }: Props) => {
                                                         {isNewDay(index) && (
                                                             <div className={styles.messageDivider}>
                                                                 <span>
-                                                                    {new Intl.DateTimeFormat("en-US", {
-                                                                        weekday: "long",
-                                                                        year: "numeric",
-                                                                        month: "long",
-                                                                        day: "numeric",
-                                                                    }).format(new Date(message.createdAt))}
+                                                                    {new Intl.DateTimeFormat(
+                                                                        "en-US",
+                                                                        {
+                                                                            weekday: "long",
+                                                                            year: "numeric",
+                                                                            month: "long",
+                                                                            day: "numeric",
+                                                                        }
+                                                                    ).format(
+                                                                        new Date(message.createdAt)
+                                                                    )}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -265,10 +286,18 @@ const Content = ({ channel, user, friend }: Props) => {
                             </div>
                         </div>
 
-                        <TextArea channel={channel} friend={friend} setMessages={setMessages} />
+                        <TextArea
+                            channel={channel}
+                            friend={friend}
+                            setMessages={setMessages}
+                        />
                     </main>
 
-                    <MemberList channel={channel} user={user} friend={friend} />
+                    <MemberList
+                        channel={channel}
+                        user={user}
+                        friend={friend}
+                    />
                 </div>
             </div>
         ),
@@ -291,7 +320,11 @@ const FirstMessage = ({ channel, friend }: Props) => {
     return (
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
-                <Avatar src={channel.icon as string} alt={channel.name as string} size={80} />
+                <Avatar
+                    src={channel.icon as string}
+                    alt={channel.name as string}
+                    size={80}
+                />
             </div>
 
             <h3 className={styles.friendUsername}>{channel.name}</h3>
@@ -368,7 +401,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
                                 onClick={() =>
                                     sendRequest({
                                         query: "ADD_FRIEND",
-                                        params: { username: friend.username },
+                                        data: { username: friend.username },
                                     })
                                 }
                             >
@@ -381,9 +414,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
                                     onClick={() =>
                                         sendRequest({
                                             query: "ADD_FRIEND",
-                                            params: {
-                                                username: friend.username,
-                                            },
+                                            data: { username: friend.username },
                                         })
                                     }
                                 >

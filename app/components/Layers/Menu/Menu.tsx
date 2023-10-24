@@ -96,7 +96,9 @@ export function Menu({ content }: { content: any }) {
     }, []);
 
     useEffect(() => {
-        setFilteredItems(items?.filter((item) => item.name && item.name !== "Divider" && !item.disabled) || []);
+        setFilteredItems(
+            items?.filter((item) => item.name && item.name !== "Divider" && !item.disabled) || []
+        );
     }, [items]);
 
     useEffect(() => {
@@ -455,7 +457,9 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: `Create ${content.channel.type === 2 ? "Text" : "Voice"} Channel`,
                         func: () => {
-                            const guild = guilds.find((guild: TGuild) => guild.id === content.channel.guildId);
+                            const guild = guilds.find(
+                                (guild: TGuild) => guild.id === content.channel.guildId
+                            );
                             const category = guild?.channels.find(
                                 (channel: TChannel) => channel.id === content.channel?.parentId
                             );
@@ -579,7 +583,8 @@ export function Menu({ content }: { content: any }) {
                     name: "Divider",
                 },
                 {
-                    name: content.guild.ownerId === currentUser.id ? "Delete Server" : "Leave Server",
+                    name:
+                        content.guild.ownerId === currentUser.id ? "Delete Server" : "Leave Server",
                     danger: true,
                     func: () => {
                         setLayers({
@@ -758,7 +763,8 @@ export function Menu({ content }: { content: any }) {
                 { name: content.attachment ? "Divider" : null },
                 {
                     name: content.attachment ? "Copy Link" : null,
-                    func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
+                    func: () =>
+                        writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
                 },
                 {
                     name: content.attachment ? "Open Link" : null,
@@ -920,12 +926,17 @@ export function Menu({ content }: { content: any }) {
                     { name: content?.attachment ? "Divider" : null },
                     {
                         name: content?.attachment ? "Copy Link" : null,
-                        func: () => writeText(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`),
+                        func: () =>
+                            writeText(
+                                `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`
+                            ),
                     },
                     {
                         name: content?.attachment ? "Open Link" : null,
                         func: () => {
-                            window.open(`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`);
+                            window.open(
+                                `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`
+                            );
                         },
                     },
                     { name: "Divider" },
@@ -1012,9 +1023,7 @@ export function Menu({ content }: { content: any }) {
                                       })
                                     : sendRequest({
                                           query: "ADD_FRIEND",
-                                          params: {
-                                              username: user.username,
-                                          },
+                                          data: { username: user.username },
                                       }),
                             danger: userProps?.sentRequest || userProps?.isFriend,
                         },
@@ -1207,7 +1216,11 @@ export function Menu({ content }: { content: any }) {
                             },
                         },
                         {
-                            name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
+                            name: !(
+                                userProps?.receivedRequest ||
+                                userProps?.sentRequest ||
+                                !userProps?.isFriend
+                            )
                                 ? "Add Friend Nickname"
                                 : null,
                             func: () => {},
@@ -1242,7 +1255,7 @@ export function Menu({ content }: { content: any }) {
                                       })
                                     : sendRequest({
                                           query: "ADD_FRIEND",
-                                          params: { username: user.username },
+                                          data: { username: user.username },
                                       }),
                         },
                         {
@@ -1420,7 +1433,11 @@ export function Menu({ content }: { content: any }) {
                         },
                     },
                     {
-                        name: !(userProps?.receivedRequest || userProps?.sentRequest || !userProps?.isFriend)
+                        name: !(
+                            userProps?.receivedRequest ||
+                            userProps?.sentRequest ||
+                            !userProps?.isFriend
+                        )
                             ? "Add Friend Nickname"
                             : null,
                         func: () => {},
@@ -1429,7 +1446,8 @@ export function Menu({ content }: { content: any }) {
                         name: content.channel.ownerId === currentUser.id ? "Divider" : null,
                     },
                     {
-                        name: content.channel.ownerId === currentUser.id ? "Remove From Group" : null,
+                        name:
+                            content.channel.ownerId === currentUser.id ? "Remove From Group" : null,
                         func: () => {
                             sendRequest({
                                 query: "CHANNEL_RECIPIENT_REMOVE",
@@ -1442,7 +1460,8 @@ export function Menu({ content }: { content: any }) {
                         danger: true,
                     },
                     {
-                        name: content.channel.ownerId === currentUser.id ? "Make Group Owner" : null,
+                        name:
+                            content.channel.ownerId === currentUser.id ? "Make Group Owner" : null,
                         func: () => {
                             setLayers({
                                 settings: {
@@ -1479,7 +1498,7 @@ export function Menu({ content }: { content: any }) {
                                   })
                                 : sendRequest({
                                       query: "ADD_FRIEND",
-                                      params: { username: user.username },
+                                      data: { username: user.username },
                                   }),
                     },
                     {
@@ -1672,10 +1691,13 @@ export function Menu({ content }: { content: any }) {
                                         {(item.icon || "checked" in item || "items" in item) && (
                                             <div
                                                 className={`${styles.icon} ${
-                                                    "checked" in item && item.checked ? styles.revert : ""
+                                                    "checked" in item && item.checked
+                                                        ? styles.revert
+                                                        : ""
                                                 }`}
                                                 style={{
-                                                    transform: "items" in item ? "rotate(-90deg)" : "",
+                                                    transform:
+                                                        "items" in item ? "rotate(-90deg)" : "",
                                                 }}
                                             >
                                                 <Icon
@@ -1688,7 +1710,9 @@ export function Menu({ content }: { content: any }) {
                                                             ? "arrow"
                                                             : item.icon ?? ""
                                                     }
-                                                    size={item.iconSize ?? type === "GUILD" ? 18 : 16}
+                                                    size={
+                                                        item.iconSize ?? type === "GUILD" ? 18 : 16
+                                                    }
                                                     viewbox={
                                                         item.icon === "boost"
                                                             ? "0 0 8 12"
@@ -1700,13 +1724,17 @@ export function Menu({ content }: { content: any }) {
                                             </div>
                                         )}
 
-                                        {item.textTip && <div className={styles.text}>{item.textTip}</div>}
+                                        {item.textTip && (
+                                            <div className={styles.text}>{item.textTip}</div>
+                                        )}
                                     </div>
 
                                     {item.tip && (
                                         <div
                                             className={styles.tip}
-                                            style={{ marginLeft: content.type === "STATUS" ? "18px" : "" }}
+                                            style={{
+                                                marginLeft: content.type === "STATUS" ? "18px" : "",
+                                            }}
                                         >
                                             {item.tip}
                                             {item.tipIcon && (

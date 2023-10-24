@@ -2,9 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { usernameRegex } from "@/lib/verifications";
 import styles from "./AddFriend.module.css";
 import { useLayers } from "@/lib/store";
 import Image from "next/image";
+
+const defaultMessage = "Hm, didn't work. Double check that the username is correct.";
 
 export const AddFriend = () => {
     const [input, setInput] = useState<string>("");
@@ -38,7 +41,9 @@ export const AddFriend = () => {
                 <h2>Add Friend</h2>
 
                 <form autoComplete="off">
-                    <div className={styles.description}>You can add friends with their Chat App username.</div>
+                    <div className={styles.description}>
+                        You can add friends with their Chat App username.
+                    </div>
 
                     <div
                         className={styles.inputWrapper}
@@ -74,13 +79,19 @@ export const AddFriend = () => {
 
                                         setLoading(true);
 
+                                        if (!usernameRegex.test(input)) {
+                                            setError(defaultMessage);
+                                            return setLoading(false);
+                                        }
+
                                         const res = await sendRequest({
                                             query: "ADD_FRIEND",
-                                            params: { username: input },
+                                            data: { username: input },
                                         });
 
-                                        if (!res.success) setError(res.message);
-                                        else {
+                                        if (!res.success) {
+                                            setError(res.message);
+                                        } else {
                                             setValid(res.message);
                                             setInput("");
                                         }
@@ -115,13 +126,19 @@ export const AddFriend = () => {
 
                                 setLoading(true);
 
+                                if (!usernameRegex.test(input)) {
+                                    setError(defaultMessage);
+                                    return setLoading(false);
+                                }
+
                                 const res = await sendRequest({
                                     query: "ADD_FRIEND",
-                                    params: { username: input },
+                                    data: { username: input },
                                 });
 
-                                if (!res.success) setError(res.message);
-                                else {
+                                if (!res.success) {
+                                    setError(res.message);
+                                } else {
                                     setValid(res.message);
                                     setInput("");
                                 }
