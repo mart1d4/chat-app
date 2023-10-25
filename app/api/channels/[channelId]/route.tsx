@@ -1,91 +1,7 @@
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
-
-export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
-
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
-
-    try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            include: {
-                recipients: {
-                    orderBy: {
-                        username: "asc",
-                    },
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-            },
-        });
-
-        if (!channel) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        if (!channel.recipientIds.includes(senderId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not in this channel",
-                },
-                { status: 401 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: true,
-                message: "Successfully retrieved channel",
-                channel: channel,
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
-    }
-}
+import { getUser } from "@/lib/db/helpers";
 
 export async function PUT(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
@@ -198,27 +114,15 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
 }
 
 export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
-    const userId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
-
-    if (userId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
+    const userId = parseInt(headers().get("X-UserId") || "");
+    const { channelId } = params;
 
     try {
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId,
-            },
+        const user = await getUser({
             select: {
                 id: true,
             },
+            throwOnNotFound: true,
         });
 
         if (!user) {

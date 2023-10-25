@@ -2,6 +2,7 @@ import { User, UserTable } from "./types";
 import { cookies } from "next/headers";
 import { sql } from "kysely";
 import { db } from "./db";
+import { NextResponse } from "next/server";
 
 // Fields selections
 
@@ -52,12 +53,12 @@ const avatars = [
     },
 ];
 
-function getRandomProfile() {
+export function getRandomProfile() {
     const index = Math.floor(Math.random() * avatars.length);
     return { avatar: avatars[index].avatar, color: avatars[index].color };
 }
 
-function getRandomId() {
+export function getRandomId() {
     const timestamp = Date.now().toString();
     const first9Digits = timestamp.slice(0, 9);
 
@@ -127,15 +128,29 @@ export async function getUser({
     id,
     username,
     select,
+    throwOnNotFound,
 }: {
     id?: number;
     username?: string;
     select?: {
         [K in keyof UserTable]?: boolean;
     };
-}): Promise<Partial<User> | null> {
+    throwOnNotFound?: boolean;
+}): Promise<Partial<User> | NextResponse | null> {
     const refreshToken = cookies().get("token")?.value;
-    if (!id && !username && !refreshToken) return null;
+    if (!id && !username && !refreshToken) {
+        if (throwOnNotFound) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "User not found",
+                },
+                { status: 404 }
+            );
+        }
+
+        return null;
+    }
 
     try {
         const user = await db
@@ -166,9 +181,34 @@ export async function getUser({
             .$if(!!username, (q) => q.where(sql`username = BINARY ${username as string}`))
             .executeTakeFirst();
 
+        if (!user) {
+            if (throwOnNotFound) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "User not found",
+                    },
+                    { status: 404 }
+                );
+            }
+
+            return null;
+        }
+
         return user;
     } catch (error) {
         console.log(error);
+
+        if (throwOnNotFound) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "User not found",
+                },
+                { status: 404 }
+            );
+        }
+
         return null;
     }
 }

@@ -111,9 +111,9 @@
 
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter",
-            "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New",
-            Courier, monospace;
+        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console",
+            "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
+            "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
     }
 }
 
@@ -182,9 +182,9 @@
 
         --border-light: hsla(217, 8%, 34%, 0.5);
 
-        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter",
-            "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New",
-            Courier, monospace;
+        --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console",
+            "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
+            "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
     }
 }
 
@@ -409,10 +409,10 @@ button.disabled {
     height: 21px;
 }
 
-button,
+/* button,
 a {
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
+} */
 
 a {
     border-radius: 3px;

@@ -1,7 +1,8 @@
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
+import { getRandomId, getUser } from "@/lib/db/helpers";
+import { db } from "@/lib/db/db";
 
 const channelIcons = [
     "3d035ad7-d7e0-4d8d-8efd-3ac56c9bdc88",
@@ -17,104 +18,9 @@ const getRandomIcon = () => {
     return channelIcons[Math.floor(Math.random() * channelIcons.length)];
 };
 
-export async function GET(req: Request): Promise<NextResponse> {
-    const senderId = headers().get("X-UserId") || "";
-
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 400 }
-        );
-    }
-
-    try {
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-            select: {
-                hiddenChannelIds: true,
-                channels: {
-                    orderBy: {
-                        updatedAt: "desc",
-                    },
-                    select: {
-                        id: true,
-                        type: true,
-                        icon: true,
-                        ownerId: true,
-                        recipientIds: true,
-                        recipients: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        createdAt: true,
-                        updatedAt: true,
-                    },
-                },
-            },
-        });
-
-        if (!sender) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: true,
-                message: "Channels fetched successfully",
-                channels: sender.channels.filter((channel) => !sender.hiddenChannelIds.includes(channel.id)),
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
-    }
-}
-
 export async function POST(req: Request) {
-    const userId = headers().get("X-UserId") || "";
+    const userId = parseInt(headers().get("X-UserId") || "");
     const { recipients } = await req.json();
-
-    if (userId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
 
     if (!recipients || recipients.length < 0 || recipients.length > 9) {
         return NextResponse.json(
@@ -127,65 +33,43 @@ export async function POST(req: Request) {
     }
 
     try {
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId,
-            },
+        const user = await getUser({
             select: {
+                id: true,
                 hiddenChannelIds: true,
             },
+            throwOnNotFound: true,
         });
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found",
-                },
-                { status: 404 }
-            );
-        }
 
         if (recipients.length === 0) {
             // Create a group channel with just the user
-            const channel = await prisma.channel.create({
-                data: {
+            const id = getRandomId();
+
+            const channelCreated = await db
+                .insertInto("channels")
+                .values({
+                    id: id,
                     type: 1,
                     icon: getRandomIcon(),
-                    ownerId: userId,
-                    recipients: {
-                        connect: {
-                            id: userId,
-                        },
-                    },
-                },
-                select: {
-                    id: true,
-                    type: true,
-                    icon: true,
-                    ownerId: true,
-                    recipientIds: true,
-                    recipients: {
-                        select: {
-                            id: true,
-                            username: true,
-                            displayName: true,
-                            avatar: true,
-                            banner: true,
-                            primaryColor: true,
-                            accentColor: true,
-                            description: true,
-                            customStatus: true,
-                            status: true,
-                            guildIds: true,
-                            channelIds: true,
-                            friendIds: true,
-                            createdAt: true,
-                        },
-                    },
-                    createdAt: true,
-                },
-            });
+                    ownerId: user.id,
+                    permissionOverwrites: "[]",
+                    isDeleted: false,
+                })
+                .executeTakeFirst();
+
+            await db
+                .insertInto("channelrecipients")
+                .values({
+                    channelId: id,
+                    userId: user.id,
+                })
+                .execute();
+
+            const channel = await db
+                .selectFrom("channels")
+                .selectAll()
+                .where("id", "=", id)
+                .executeTakeFirst();
 
             await pusher.trigger("chat-app", "channel-update", {
                 type: "CHANNEL_ADDED",
@@ -196,31 +80,18 @@ export async function POST(req: Request) {
                 {
                     success: true,
                     message: "Channel created successfully",
-                    channelId: channel.id,
                 },
                 { status: 201 }
             );
         }
 
         if (recipients.length === 1) {
-            const recipient = await prisma.user.findUnique({
-                where: {
-                    id: recipients[0],
-                },
+            const recipient = await getUser({
                 select: {
-                    friendIds: true,
+                    id: true,
                 },
+                throwOnNotFound: true,
             });
-
-            if (!recipient) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "Recipient not found",
-                    },
-                    { status: 404 }
-                );
-            }
 
             // Create a DM channel with the user and the recipient
             const channelExists = await prisma.channel.findFirst({
@@ -401,7 +272,10 @@ export async function POST(req: Request) {
                     icon: getRandomIcon(),
                     ownerId: userId,
                     recipients: {
-                        connect: [...recipients.map((recipient: string) => ({ id: recipient })), { id: userId }],
+                        connect: [
+                            ...recipients.map((recipient: string) => ({ id: recipient })),
+                            { id: userId },
+                        ],
                     },
                 },
                 select: {
