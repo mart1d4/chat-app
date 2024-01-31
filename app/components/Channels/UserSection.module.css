@@ -29,7 +29,7 @@
 
 .avatarWrapper:hover,
 .avatarWrapper.active {
-    background-color: var(--background-hover-1);
+    background-color: var(--background-5);
 }
 
 .avatarWrapper > div:first-child {
@@ -88,7 +88,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 13px;
+    line-height: 16px;
     font-size: 12px;
     font-weight: 400;
     color: var(--foreground-3);
@@ -159,7 +159,7 @@
 
 .toolbar > button:hover {
     color: var(--foreground-2);
-    background-color: var(--background-hover-1);
+    background-color: var(--background-5);
 }
 
 .toolbar > button:active {

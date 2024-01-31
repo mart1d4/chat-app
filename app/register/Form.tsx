@@ -1,12 +1,12 @@
 "use client";
 
+import { passwordRegex, usernameRegex } from "@/lib/verifications";
 import { useRef, useState, useEffect } from "react";
-import { trimMessage } from "@/lib/strings";
+import { sanitizeString } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
-import { passwordRegex, usernameRegex } from "@/lib/verifications";
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -75,7 +75,7 @@ export default function Register() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ username: trimMessage(username), password }),
+            body: JSON.stringify({ username: sanitizeString(username), password }),
         }).then((res) => res.json());
 
         if (!response.success) {

@@ -263,7 +263,7 @@ h6 {
     user-select: none;
 }
 
-button {
+.button {
     color: var(--foreground-1);
     position: relative;
     display: flex;
@@ -283,7 +283,8 @@ button {
     line-height: 16px;
     padding: 2px 16px;
     user-select: none;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 input:-webkit-autofill,
@@ -299,63 +300,63 @@ input::placeholder {
     user-select: none;
 }
 
-button:focus-visible {
+.button:focus-visible {
     outline-offset: 2px;
 }
 
-button.blue {
+.button.blue {
     background-color: var(--accent-1);
 }
 
-button.blue:not(.disabled):hover {
+.button.blue:not(.disabled):hover {
     background-color: var(--accent-2);
 }
 
-button.blue:not(.disabled):active {
+.button.blue:not(.disabled):active {
     background-color: var(--accent-3);
 }
 
-button.green {
+.button.green {
     background-color: var(--success-1);
 }
 
-button.green:not(.disabled):hover {
+.button.green:not(.disabled):hover {
     background-color: var(--success-2);
 }
 
-button.green:not(.disabled):active {
+.button.green:not(.disabled):active {
     background-color: var(--success-3);
 }
 
-button.red {
+.button.red {
     background-color: var(--error-1);
 }
 
-button.red:not(.disabled):hover {
+.button.red:not(.disabled):hover {
     background-color: var(--error-2);
 }
 
-button.red:not(.disabled):active {
+.button.red:not(.disabled):active {
     background-color: var(--error-3);
 }
 
-button.grey {
+.button.grey {
     background-color: var(--default-1);
 }
 
-button.grey:not(.disabled):hover {
+.button.grey:not(.disabled):hover {
     background-color: var(--default-2);
 }
 
-button.grey:not(.disabled):active {
+.button.grey:not(.disabled):active {
     background-color: var(--default-3);
 }
 
-button.underline:hover {
+.button.underline:hover {
     text-decoration: underline;
 }
 
-button.disabled {
+.button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -407,15 +408,6 @@ button.disabled {
     transform: translateY(2px);
     padding-bottom: 2px;
     height: 21px;
-}
-
-/* button,
-a {
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-} */
-
-a {
-    border-radius: 3px;
 }
 
 input:focus-visible {

@@ -54,7 +54,9 @@ type Props = {
     };
 };
 
-export const Loading = ({ children, data }: Props) => {
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+export function Loading({ children, data }: Props) {
     const setReceived = useData((state) => state.setRequestsReceived);
     const setBlockedBy = useData((state) => state.setBlockedBy);
     const setSent = useData((state) => state.setRequestsSent);
@@ -100,14 +102,13 @@ export const Loading = ({ children, data }: Props) => {
         const env = process.env.NODE_ENV;
 
         const setAuthContext = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+            const response = await fetch(`${apiUrl}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
             }).then((res) => res.json());
 
             if (response.token) {
                 setUser(data.user);
-                setToken(response.token);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
                 setBlockedBy(data.blockedBy);
@@ -115,11 +116,15 @@ export const Loading = ({ children, data }: Props) => {
                 setSent(data.sent);
                 setChannels(data.channels);
                 setGuilds(data.guilds);
+                setToken(response.token);
             }
         };
 
         if (env == "development") {
-            if (hasRendered.current) setAuthContext();
+            if (hasRendered.current) {
+                setAuthContext();
+            }
+
             return () => {
                 hasRendered.current = true;
             };
@@ -296,4 +301,4 @@ export const Loading = ({ children, data }: Props) => {
             )}
         </div>
     );
-};
+}

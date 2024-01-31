@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, ReactElement, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
 import { useRouter, usePathname } from "next/navigation";
 import styles from "./AppNav.module.css";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 
 type Props = {
@@ -19,7 +19,7 @@ type Props = {
     user?: TUser;
 };
 
-const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: Props): ReactElement => {
+function NavIcon({ green, special, guild, name, link, src, svg, count, user }: Props) {
     const [active, setActive] = useState<boolean>(false);
     const [markHeight, setMarkHeight] = useState<number>(0);
 
@@ -43,7 +43,13 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: P
     const router = useRouter();
 
     useEffect(() => {
-        if (special ? pathname.startsWith("/channels/me") : guild ? pathname.startsWith(link) : pathname === link) {
+        if (
+            special
+                ? pathname.startsWith("/channels/me")
+                : guild
+                ? pathname.startsWith(link)
+                : pathname === link
+        ) {
             setActive(true);
             setMarkHeight(40);
         } else {
@@ -61,23 +67,31 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: P
     return (
         <div className={green ? styles.navIcon + " " + styles.green : styles.navIcon}>
             <div className={styles.marker}>
-                {markHeight > 0 && (
-                    <motion.span
-                        initial={{
-                            opacity: 0,
-                            scale: 0,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            scale: 1,
-                            height: markHeight,
-                        }}
-                        transition={{
-                            duration: 0.15,
-                            ease: "easeInOut",
-                        }}
-                    />
-                )}
+                <AnimatePresence>
+                    {markHeight > 0 && (
+                        <motion.span
+                            initial={{
+                                opacity: 0,
+                                scale: 0,
+                                height: 0,
+                            }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                height: markHeight,
+                            }}
+                            exit={{
+                                opacity: 0,
+                                scale: 0,
+                                height: 0,
+                            }}
+                            transition={{
+                                duration: 0.15,
+                                ease: "easeInOut",
+                            }}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
 
             {name !== "Add a Server" ? (
@@ -217,6 +231,6 @@ const NavIcon = ({ green, special, guild, name, link, src, svg, count, user }: P
             )}
         </div>
     );
-};
+}
 
 export default NavIcon;

@@ -1,7 +1,7 @@
+import { getRandomId, getUser } from "@/lib/db/helpers";
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { getRandomId, getUser } from "@/lib/db/helpers";
 import { db } from "@/lib/db/db";
 
 const channelIcons = [
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Invalid recipients length",
+                message: "Invalid recipients",
             },
             { status: 400 }
         );
@@ -42,10 +42,11 @@ export async function POST(req: Request) {
         });
 
         if (recipients.length === 0) {
-            // Create a group channel with just the user
+            // Create a DM with just the user
+
             const id = getRandomId();
 
-            const channelCreated = await db
+            await db
                 .insertInto("channels")
                 .values({
                     id: id,
@@ -53,9 +54,8 @@ export async function POST(req: Request) {
                     icon: getRandomIcon(),
                     ownerId: user.id,
                     permissionOverwrites: "[]",
-                    isDeleted: false,
                 })
-                .executeTakeFirst();
+                .execute();
 
             await db
                 .insertInto("channelrecipients")
@@ -73,7 +73,10 @@ export async function POST(req: Request) {
 
             await pusher.trigger("chat-app", "channel-update", {
                 type: "CHANNEL_ADDED",
-                channel: channel,
+                channel: {
+                    ...channel,
+                    recipients: [],
+                },
             });
 
             return NextResponse.json(
@@ -87,105 +90,63 @@ export async function POST(req: Request) {
 
         if (recipients.length === 1) {
             const recipient = await getUser({
+                id: recipients[0],
                 select: {
                     id: true,
+                    username: true,
                 },
                 throwOnNotFound: true,
             });
 
-            // Create a DM channel with the user and the recipient
-            const channelExists = await prisma.channel.findFirst({
-                where: {
-                    type: 0,
-                    OR: [
-                        {
-                            recipientIds: {
-                                equals: [userId, recipients[0]],
-                            },
-                        },
-                        {
-                            recipientIds: {
-                                equals: [recipients[0], userId],
-                            },
-                        },
-                    ],
-                },
-                select: {
-                    id: true,
-                    type: true,
-                    icon: true,
-                    ownerId: true,
-                    recipientIds: true,
-                    recipients: {
-                        select: {
-                            id: true,
-                            username: true,
-                            displayName: true,
-                            avatar: true,
-                            banner: true,
-                            primaryColor: true,
-                            accentColor: true,
-                            description: true,
-                            customStatus: true,
-                            status: true,
-                            guildIds: true,
-                            channelIds: true,
-                            friendIds: true,
-                            createdAt: true,
-                        },
-                    },
-                    createdAt: true,
-                },
-            });
+            const channelExists = await db
+                .selectFrom("channels")
+                .innerJoin(
+                    (eb) =>
+                        eb
+                            .selectFrom("channelrecipients")
+                            .select(["channelId", "userId"])
+                            .where("userId", "in", [userId, recipient.id])
+                            .as("cr"),
+                    (join) => join.onRef("channels.id", "=", "cr.channelId")
+                )
+                .select(["channels.id", "channels.icon", "channels.type"])
+                .groupBy("channels.id")
+                .having((eb) =>
+                    eb.and([
+                        eb(eb.fn.count("cr.userId").distinct(), "=", 2),
+                        eb(eb.fn.count("channels.id").distinct(), "=", 1),
+                        eb("channels.type", "=", 0),
+                    ])
+                )
+                .executeTakeFirst();
 
             if (!channelExists) {
                 // Create a DM channel
-                const channel = await prisma.channel.create({
-                    data: {
-                        type: 0,
-                        icon: getRandomIcon(),
-                        recipients: {
-                            connect: [{ id: userId }, { id: recipients[0] }],
-                        },
-                    },
-                    select: {
-                        id: true,
-                        type: true,
-                        icon: true,
-                        ownerId: true,
-                        recipientIds: true,
-                        recipients: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        createdAt: true,
-                    },
-                });
 
-                await prisma.user.update({
-                    where: {
-                        id: recipients[0],
-                    },
-                    data: {
-                        hiddenChannelIds: {
-                            push: channel.id,
+                const id = getRandomId();
+
+                const channel = await db
+                    .insertInto("channels")
+                    .values({
+                        id: id,
+                        type: 0,
+                        permissionOverwrites: "[]",
+                    })
+                    .execute();
+
+                await db
+                    .insertInto("channelrecipients")
+                    .values([
+                        {
+                            channelId: id,
+                            userId: userId,
                         },
-                    },
-                });
+                        {
+                            channelId: id,
+                            userId: recipient.id,
+                        },
+                    ])
+                    .execute();
 
                 await pusher.trigger("chat-app", "channel-update", {
                     type: "CHANNEL_ADDED",
@@ -196,26 +157,30 @@ export async function POST(req: Request) {
                     {
                         success: true,
                         message: "Channel created successfully",
-                        channelId: channel.id,
+                        channelId: id,
                     },
                     { status: 201 }
                 );
             } else {
-                // If channel exists, check if user has the channel in his hidden channels
-                // If he does, remove it from the hidden channels, otherwise do nothing
-                const isHidden = user.hiddenChannelIds.includes(channelExists.id);
+                // If channel exists, check if the user has it hidden
+                // If so, unhide it, otherwise, do nothing
+
+                const channelLink = await db
+                    .selectFrom("channelrecipients")
+                    .select("isHidden")
+                    .where("channelId", "=", channelExists.id)
+                    .where("userId", "=", userId)
+                    .executeTakeFirst();
+
+                const isHidden = channelLink?.isHidden;
 
                 if (isHidden) {
-                    await prisma.user.update({
-                        where: {
-                            id: userId,
-                        },
-                        data: {
-                            hiddenChannelIds: {
-                                set: user.hiddenChannelIds.filter((id) => id !== channelExists.id),
-                            },
-                        },
-                    });
+                    await db
+                        .updateTable("channelrecipients")
+                        .set("isHidden", false)
+                        .where("channelId", "=", channelExists.id)
+                        .where("userId", "=", userId)
+                        .execute();
 
                     await pusher.trigger("chat-app", "channel-update", {
                         type: "CHANNEL_ADDED",
@@ -242,19 +207,14 @@ export async function POST(req: Request) {
             }
         }
 
-        if (recipients.length > 1 && recipients.length < 10) {
+        if (recipients.length > 1) {
             // Create a group channel
 
-            const recipientsUser = await prisma.user.findMany({
-                where: {
-                    id: {
-                        in: recipients,
-                    },
-                },
-                select: {
-                    id: true,
-                },
-            });
+            const recipientsUser = await db
+                .selectFrom("users")
+                .selectAll()
+                .where("id", "in", recipients)
+                .execute();
 
             if (recipientsUser.length !== recipients.length) {
                 return NextResponse.json(
@@ -266,45 +226,32 @@ export async function POST(req: Request) {
                 );
             }
 
-            const channel = await prisma.channel.create({
-                data: {
+            const id = getRandomId();
+
+            const channel = await db
+                .insertInto("channels")
+                .values({
+                    id: id,
                     type: 1,
                     icon: getRandomIcon(),
-                    ownerId: userId,
-                    recipients: {
-                        connect: [
-                            ...recipients.map((recipient: string) => ({ id: recipient })),
-                            { id: userId },
-                        ],
+                    ownerId: user.id,
+                    permissionOverwrites: "[]",
+                })
+                .execute();
+
+            await db
+                .insertInto("channelrecipients")
+                .values([
+                    ...recipients.map((r) => ({
+                        channelId: id,
+                        userId: r,
+                    })),
+                    {
+                        channelId: id,
+                        userId: user.id,
                     },
-                },
-                select: {
-                    id: true,
-                    type: true,
-                    icon: true,
-                    ownerId: true,
-                    recipientIds: true,
-                    recipients: {
-                        select: {
-                            id: true,
-                            username: true,
-                            displayName: true,
-                            avatar: true,
-                            banner: true,
-                            primaryColor: true,
-                            accentColor: true,
-                            description: true,
-                            customStatus: true,
-                            status: true,
-                            guildIds: true,
-                            channelIds: true,
-                            friendIds: true,
-                            createdAt: true,
-                        },
-                    },
-                    createdAt: true,
-                },
-            });
+                ])
+                .execute();
 
             await pusher.trigger("chat-app", "channel-update", {
                 type: "CHANNEL_ADDED",
@@ -315,19 +262,11 @@ export async function POST(req: Request) {
                 {
                     success: true,
                     message: "Channel created successfully",
-                    channelId: channel.id,
+                    channelId: id,
                 },
                 { status: 201 }
             );
         }
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Invalid recipients length",
-            },
-            { status: 400 }
-        );
     } catch (error) {
         console.error(`[ERROR] /api/users/me/channels - ${error}`);
         return NextResponse.json(

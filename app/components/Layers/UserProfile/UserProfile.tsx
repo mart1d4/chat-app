@@ -2,13 +2,13 @@
 
 import { useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
 import { useEffect, useRef, useState, ReactElement } from "react";
-import { translateCap, trimMessage } from "@/lib/strings";
+import { sanitizeString, translateCap } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
 import styles from "./UserProfile.module.css";
+import { Guild, User } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
-import { Guild, User } from "@/lib/db/types";
 
 const colors = {
     online: "#22A559",
@@ -44,8 +44,11 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const { sendRequest } = useFetchHelper();
 
     const user = content.user;
-    const mutualFriends = friends.filter((friend: User) => user.friendIds.includes(friend.id));
-    const mutualGuilds = guilds.filter((guild: Guild) => user.guildIds.includes(guild.id));
+    // const mutualFriends = friends.filter((friend: User) => user.friendIds.includes(friend.id));
+    // const mutualGuilds = guilds.filter((guild: Guild) => user.guildIds.includes(guild.id));
+
+    const mutualFriends: Partial<User>[] = [];
+    const mutualGuilds: Partial<Guild>[] = [];
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -247,7 +250,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                     {requestsReceived.map((u) => u.id).includes(user.id) ? (
                                         <>
                                             <button
-                                                className="green"
+                                                className="button green"
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "ADD_FRIEND",
@@ -259,7 +262,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             </button>
 
                                             <button
-                                                className="grey"
+                                                className="button grey"
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "REMOVE_FRIEND",
@@ -274,7 +277,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                         </>
                                     ) : friends.map((u) => u.id).includes(user.id) ? (
                                         <button
-                                            className="green"
+                                            className="button green"
                                             onClick={() => {
                                                 sendRequest({
                                                     query: "CHANNEL_CREATE",
@@ -297,8 +300,8 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             <button
                                                 className={
                                                     requestsSent.map((u) => u.id).includes(user.id)
-                                                        ? "green disabled"
-                                                        : "green"
+                                                        ? "button green disabled"
+                                                        : "button green"
                                                 }
                                                 onClick={() => {
                                                     if (
@@ -451,7 +454,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             onInput={(e) => setNote(e.currentTarget.value)}
                                             onBlur={async () => {
                                                 if (note !== originalNote) {
-                                                    const trimmed = trimMessage(note);
+                                                    const trimmed = sanitizeString(note);
                                                     const response = await sendRequest({
                                                         query: "SET_NOTE",
                                                         params: { userId: user.id },

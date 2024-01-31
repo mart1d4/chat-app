@@ -2,7 +2,11 @@
     padding: 4px;
     width: 608px;
     position: relative;
-    background: linear-gradient(var(--card-primary-color), var(--card-primary-color) 90px, var(--card-accent-color));
+    background: linear-gradient(
+        var(--card-primary-color),
+        var(--card-primary-color) 90px,
+        var(--card-accent-color)
+    );
     border-radius: 8px;
 }
 
@@ -112,9 +116,11 @@
     display: flex;
     align-items: center;
     color: var(--foreground-3);
+    background-color: transparent;
     cursor: pointer;
     height: 30px;
     padding: 0;
+    border-radius: 4px;
 }
 
 .moreButton:hover {
@@ -411,6 +417,7 @@
     user-select: none;
     padding: 0;
     border-radius: 0;
+    background-color: transparent;
 }
 
 .contentNavItem:hover {

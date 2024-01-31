@@ -377,6 +377,7 @@
 
 .friendCheck svg {
     margin: 0;
+    color: var(--accent-1);
 }
 
 .separator {

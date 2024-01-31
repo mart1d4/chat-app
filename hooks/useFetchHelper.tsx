@@ -116,7 +116,9 @@ export default function useFetchHelper() {
         return channels.find((channel: TChannel) => {
             return (
                 channel.recipients.length === recipients.length &&
-                channel.recipientIds.every((recipient: string) => recipients.includes(recipient)) &&
+                channel.recipients
+                    .map((r) => r.id)
+                    .every((recipient: string) => recipients.includes(recipient)) &&
                 (searchDM ? channel.type === 0 : true)
             );
         });
@@ -128,6 +130,7 @@ export default function useFetchHelper() {
                 data?.recipients.length === 1
                     ? channelExists([...data?.recipients, user.id], true)
                     : channelExists([...data?.recipients, user.id], false);
+
             if (channel) {
                 if (channel.type === 0) {
                     return router.push(`/channels/me/${channel.id}`);

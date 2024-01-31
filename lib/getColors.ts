@@ -1,4 +1,9 @@
 export const getButtonColor = (hex1: string, hex2: string) => {
+    if (!hex1 || !hex2) {
+        console.error("Invalid input colors");
+        return null;
+    }
+
     const parseHex = (hex: string) => {
         const match = hex.match(/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/);
 
@@ -66,7 +71,7 @@ export const getButtonColor = (hex1: string, hex2: string) => {
     const rgb2 = parseHex(hex2);
 
     if (!rgb1 || !rgb2) {
-        console.error('Invalid input colors');
+        console.error("Invalid input colors");
         return null;
     }
 

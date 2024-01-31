@@ -1,6 +1,6 @@
-import { Channel, User } from "./db/types";
+import { User } from "./db/types";
 
-export const translateCap = (str: string) => {
+export function translateCap(str: string) {
     if (typeof str !== "string") {
         throw new Error(`translateCap expected a string, but got ${typeof str}`);
     }
@@ -8,104 +8,76 @@ export const translateCap = (str: string) => {
     return str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => {
         return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
     });
-};
+}
 
-export const trimMessage = (message: string) => {
-    if (typeof message !== "string") {
-        throw new Error(`trimMessage expected a string, but got ${typeof message}`);
+export function sanitizeString(content: string) {
+    if (typeof content !== "string") {
+        throw new Error(`sanitizeString expected a string, but got ${typeof content}`);
     }
 
+    const trimmedChars = ["\n", "\r", "\t", "\b", " "];
     const notAllowedUnicode: string[] = [];
 
-    while (
-        message.startsWith("\n") ||
-        message.startsWith("\r") ||
-        message.startsWith("\t") ||
-        message.startsWith("\b") ||
-        message.startsWith(" ")
-    ) {
-        message = message.substring(1);
-    }
+    for (const char of trimmedChars) {
+        while (content.startsWith(char)) {
+            content = content.substring(1);
+        }
 
-    while (
-        message.endsWith("\n") ||
-        message.endsWith("\r") ||
-        message.endsWith("\t") ||
-        message.endsWith("\b") ||
-        message.endsWith(" ")
-    ) {
-        message = message.substring(0, message.length - 1);
+        while (content.endsWith(char)) {
+            content = content.substring(0, content.length - 1);
+        }
     }
 
     for (const char of notAllowedUnicode) {
-        while (message.includes(char)) {
-            message = message.replace(char, "");
+        while (content.includes(char)) {
+            content = content.replace(char, "");
         }
     }
 
-    return message;
-};
+    return content;
+}
 
-export const getChannelName = (channel: Channel, userId: number): string => {
-    let name = "";
-
-    if (channel.type === 0) {
-        const user = channel.recipients.find((user) => user.id !== userId) as User;
-        name = user.displayName;
-    } else if (channel.type === 1 && !channel.name) {
-        if (channel.recipients.length > 1) {
-            const filtered = channel.recipients?.filter((user) => user.id !== userId);
-            name = filtered.map((user) => user.displayName).join(", ");
-        } else {
-            name = `${channel.recipients[0].displayName}'s Group`;
-        }
+export function getChannelName(recipients: Partial<User>[], user?: Partial<User>) {
+    if (recipients.length === 0) {
+        return "Error fetching recipients";
+    } else if (recipients.length === 1 && user) {
+        return `${user.displayName}'s Group`;
     } else {
-        name = channel.name as string;
+        let name = "";
+        for (const recipient of recipients) {
+            if (recipient.displayName !== user?.displayName) {
+                name += recipient.displayName + ", ";
+            }
+        }
+
+        return name.substring(0, name.length - 2);
     }
+}
 
-    return name;
-};
-
-export const getChannelIcon = (channel: Channel, userId: number): string => {
-    let src = channel.icon || "";
-
-    if (channel.type === 0) {
-        const user = channel.recipients.find((user: Partial<User>) => user.id !== userId);
-        src = user.avatar;
-    }
-
-    return src;
-};
-
-export const getRelativeDate = (timestamp: Date, hours?: boolean) => {
-    // If date is earlier than 2 days, return a relative date like 'Yesterday at 10:00 AM'
-    // Otherwise, return a date like '10/15/2020 10:00 AM'
-    // If hours is true, the relative date should display like '10 hours ago'
-
-    const date = new Date(timestamp);
-
+export function getRelativeDate(date: Date) {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    const diffInDays = diff / (1000 * 3600 * 24);
-    const diffInHours = diff / (1000 * 3600);
 
-    if (diffInDays < 2) {
-        if (hours) {
-            return `${Math.round(diffInHours)} hours ago`;
-        }
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-        const options = { hour: "numeric", minute: "numeric", hour12: true };
-        return `Yesterday at ${date.toLocaleString("en-US", options as Intl.DateTimeFormatOptions)}`;
+    if (seconds < 60) {
+        return "Just now";
+    } else if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    } else if (hours < 24) {
+        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    } else {
+        return `${days} day${days === 1 ? "" : "s"} ago`;
     }
+}
 
-    const options = {
-        month: "numeric",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-    };
+export function getChannelIcon(channel, user) {
+    if (channel.icon) return channel.icon;
 
-    return date.toLocaleString("en-US", options as Intl.DateTimeFormatOptions);
-};
+    const recipients = channel.recipients?.filter((recipient) => recipient.id !== user.id);
+    if (recipients.length > 0) return recipients[0].avatar;
+    else return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
+}

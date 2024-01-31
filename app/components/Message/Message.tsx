@@ -1,8 +1,12 @@
 "use client";
 
-import { ComputableProgressInfo, UnknownProgressInfo, uploadFileGroup } from "@uploadcare/upload-client";
+import {
+    ComputableProgressInfo,
+    UnknownProgressInfo,
+    uploadFileGroup,
+} from "@uploadcare/upload-client";
 import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
-import { getChannelIcon, getChannelName, trimMessage } from "@/lib/strings";
+import { getChannelIcon, getChannelName, sanitizeString } from "@/lib/strings";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
@@ -63,7 +67,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                 {message.content.split(/(\s+)/).map((part, index) => {
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
+                        const user = message.mentions?.find(
+                            (user) => user.id === userId
+                        ) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
@@ -105,7 +111,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                 {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
+                        const user = message.mentions?.find(
+                            (user) => user.id === userId
+                        ) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
@@ -198,7 +206,11 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     };
 
     const retrySendMessage = async (prevMessage: TMessage) => {
-        if (!prevMessage || (!prevMessage.waiting && !prevMessage.error && !prevMessage.needsToBeSent)) return;
+        if (
+            !prevMessage ||
+            (!prevMessage.waiting && !prevMessage.error && !prevMessage.needsToBeSent)
+        )
+            return;
 
         const tempMessage = {
             id: prevMessage.id,
@@ -270,7 +282,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
             if (!response.success) {
                 setMessages((prev: TMessage[]) => {
                     return prev.map((message) =>
-                        message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message
+                        message.id === prevMessage.id
+                            ? { ...message, error: true, waiting: false }
+                            : message
                     );
                 });
 
@@ -291,14 +305,18 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
 
             const message = response.data.message;
 
-            setMessages((messages: TMessage[]) => messages.filter((message) => message.id !== prevMessage.id));
+            setMessages((messages: TMessage[]) =>
+                messages.filter((message) => message.id !== prevMessage.id)
+            );
             setMessages((messages: TMessage[]) => [...messages, message]);
             moveChannelUp(message.channelId);
         } catch (error) {
             console.error(error);
             setMessages((messages) => {
                 return messages.map((message) => {
-                    return message.id === prevMessage.id ? { ...message, error: true, waiting: false } : message;
+                    return message.id === prevMessage.id
+                        ? { ...message, error: true, waiting: false }
+                        : message;
                 });
             });
 
@@ -373,13 +391,13 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         });
     };
 
-    const editMessageState = async () => {
+    const editMessageState = () => {
         setEdit(channel.id, message.id, message.content || "");
     };
 
     const sendEditedMessage = async () => {
         if (edit?.messageId !== message.id) return;
-        const content = trimMessage(edit?.content || "");
+        const content = sanitizeString(edit?.content || "");
 
         if (content === message.content) return setEdit(channel.id, null);
 
@@ -514,11 +532,15 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
                 style={{
-                    backgroundColor: layers.MENU?.content.message?.id === message.id ? "var(--background-hover-4)" : "",
+                    backgroundColor:
+                        layers.MENU?.content.message?.id === message.id
+                            ? "var(--background-hover-4)"
+                            : "",
                     marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                {((edit?.messageId !== message.id && hovered) || layers.MENU?.content?.message?.id === message.id) && (
+                {((edit?.messageId !== message.id && hovered) ||
+                    layers.MENU?.content?.message?.id === message.id) && (
                     <MessageMenu
                         message={message}
                         large={false}
@@ -533,7 +555,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     <div className={styles.specialIcon}>
                         <div
                             style={{
-                                backgroundImage: `url(https://ucarecdn.com/${messageIcons[message.type]}/)`,
+                                backgroundImage: `url(https://ucarecdn.com/${
+                                    messageIcons[message.type]
+                                }/)`,
                                 width: "1rem",
                                 height: "1rem",
                                 backgroundSize: "1rem 1rem",
@@ -619,7 +643,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                 }
                                 onMouseLeave={() => setTooltip(null)}
                             >
-                                <span style={{ userSelect: "text" }}>{getMidDate(message.createdAt)}</span>
+                                <span style={{ userSelect: "text" }}>
+                                    {getMidDate(message.createdAt)}
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -646,7 +672,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (edit?.messageId === message.id || message.waiting || message.error) return;
+                        if (edit?.messageId === message.id || message.waiting || message.error)
+                            return;
                         setLayers({
                             settings: {
                                 type: "MENU",
@@ -664,7 +691,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     }}
                     style={{
                         backgroundColor:
-                            layers.MENU?.content?.message?.id === message.id || edit?.messageId === message.id
+                            layers.MENU?.content?.message?.id === message.id ||
+                            edit?.messageId === message.id
                                 ? "var(--background-hover-4)"
                                 : "",
                     }}
@@ -691,7 +719,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (!message.messageReference) return;
-                                            if (layers.MENU?.settings.event?.currentTarget === e.currentTarget) {
+                                            if (
+                                                layers.MENU?.settings.event?.currentTarget ===
+                                                e.currentTarget
+                                            ) {
                                                 setLayers({
                                                     settings: {
                                                         type: "USER_CARD",
@@ -754,7 +785,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (layers.USER_CARD?.settings.element === e.currentTarget) {
+                                            if (
+                                                layers.USER_CARD?.settings.element ===
+                                                e.currentTarget
+                                            ) {
                                                 setLayers({
                                                     settings: {
                                                         type: "USER_CARD",
@@ -897,7 +931,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (layers.USER_CARD?.settings.element === e.currentTarget) {
+                                            if (
+                                                layers.USER_CARD?.settings.element ===
+                                                e.currentTarget
+                                            ) {
                                                 setLayers({
                                                     settings: {
                                                         type: "USER_CARD",
@@ -936,8 +973,12 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         {message.author?.displayName}
                                     </span>
 
-                                    {message.waiting && <span className={styles.titleTimestamp}>Sending...</span>}
-                                    {message.error && <span className={styles.titleTimestamp}>Error Sending</span>}
+                                    {message.waiting && (
+                                        <span className={styles.titleTimestamp}>Sending...</span>
+                                    )}
+                                    {message.error && (
+                                        <span className={styles.titleTimestamp}>Error Sending</span>
+                                    )}
 
                                     {!message.waiting && !message.error && (
                                         <span
@@ -963,7 +1004,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                     className={styles.messageTimestamp}
                                     style={{
                                         visibility:
-                                            layers.MENU?.content.message?.id === message.id ? "visible" : undefined,
+                                            layers.MENU?.content.message?.id === message.id
+                                                ? "visible"
+                                                : undefined,
                                     }}
                                 >
                                     <span
@@ -987,7 +1030,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                 className={styles.mainContent}
                                 style={{
                                     whiteSpace: "pre-line",
-                                    opacity: message.waiting && message?.attachments?.length === 0 ? 0.5 : 1,
+                                    opacity:
+                                        message.waiting && message?.attachments?.length === 0
+                                            ? 0.5
+                                            : 1,
                                     color: message.error ? "var(--error-1)" : "",
                                 }}
                             >
@@ -999,8 +1045,12 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         />
 
                                         <div className={styles.editHint}>
-                                            escape to <span onClick={() => setEdit(channel.id, null)}>cancel </span>•
-                                            enter to <span onClick={() => sendEditedMessage()}>save </span>
+                                            escape to{" "}
+                                            <span onClick={() => setEdit(channel.id, null)}>
+                                                cancel{" "}
+                                            </span>
+                                            • enter to{" "}
+                                            <span onClick={() => sendEditedMessage()}>save </span>
                                         </div>
                                     </>
                                 ) : (
@@ -1012,7 +1062,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                     <span
                                                         onMouseEnter={(e) =>
                                                             setTooltip({
-                                                                text: getLongDate(message.updatedAt),
+                                                                text: getLongDate(
+                                                                    message.updatedAt
+                                                                ),
                                                                 element: e.currentTarget,
                                                                 delay: 1000,
                                                                 wide: true,
@@ -1028,73 +1080,79 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                     )
                                 )}
 
-                                {message.attachments.length > 0 && !(message.error || message.waiting) && (
-                                    <MessageAttachments
-                                        message={message}
-                                        functions={functions}
-                                    />
-                                )}
-
-                                {message.attachments.length > 0 && (message.waiting || message.error) && (
-                                    <div className={styles.imagesUpload}>
-                                        <img
-                                            src="https://ucarecdn.com/81976ed2-ac05-457f-b52d-930c474dcb1d/"
-                                            alt="File Upload"
+                                {message.attachments?.length > 0 &&
+                                    !(message.error || message.waiting) && (
+                                        <MessageAttachments
+                                            message={message}
+                                            functions={functions}
                                         />
+                                    )}
 
-                                        <div>
-                                            <div>
-                                                {message.error ? (
-                                                    <div>Failed uploading files</div>
-                                                ) : (
-                                                    <>
-                                                        <div>
-                                                            {message.attachments.length === 1
-                                                                ? message.attachments[0].name
-                                                                : `${message.attachments.length} files`}
-                                                        </div>
-
-                                                        <div>
-                                                            —{" "}
-                                                            {(
-                                                                message.attachments.reduce(
-                                                                    (acc: number, attachment: any) =>
-                                                                        acc + attachment.size,
-                                                                    0
-                                                                ) / 1000000
-                                                            ).toFixed(2)}{" "}
-                                                            MB
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
+                                {message.attachments?.length > 0 &&
+                                    (message.waiting || message.error) && (
+                                        <div className={styles.imagesUpload}>
+                                            <img
+                                                src="https://ucarecdn.com/81976ed2-ac05-457f-b52d-930c474dcb1d/"
+                                                alt="File Upload"
+                                            />
 
                                             <div>
                                                 <div>
-                                                    <div
-                                                        style={{
-                                                            transform: `translate3d(
+                                                    {message.error ? (
+                                                        <div>Failed uploading files</div>
+                                                    ) : (
+                                                        <>
+                                                            <div>
+                                                                {message.attachments.length === 1
+                                                                    ? message.attachments[0].name
+                                                                    : `${message.attachments.length} files`}
+                                                            </div>
+
+                                                            <div>
+                                                                —{" "}
+                                                                {(
+                                                                    message.attachments.reduce(
+                                                                        (
+                                                                            acc: number,
+                                                                            attachment: any
+                                                                        ) => acc + attachment.size,
+                                                                        0
+                                                                    ) / 1000000
+                                                                ).toFixed(2)}{" "}
+                                                                MB
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <div>
+                                                        <div
+                                                            style={{
+                                                                transform: `translate3d(
                                                             ${fileProgress * 100 - 100}%,
                                                             0,
                                                             0
                                                         )`,
-                                                            backgroundColor: message.error ? "var(--error-1)" : "",
-                                                        }}
-                                                    />
+                                                                backgroundColor: message.error
+                                                                    ? "var(--error-1)"
+                                                                    : "",
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div
-                                            onClick={() => {
-                                                if (message.error) deleteLocalMessage();
-                                                else controller.abort();
-                                            }}
-                                        >
-                                            <Icon name="close" />
+                                            <div
+                                                onClick={() => {
+                                                    if (message.error) deleteLocalMessage();
+                                                    else controller.abort();
+                                                }}
+                                            >
+                                                <Icon name="close" />
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
                                 {message.edited && message.attachments.length > 0 && (
                                     <div className={styles.contentTimestamp}>
@@ -1154,8 +1212,12 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     ? invite.guild.icon &&
                                                                       `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
                                                                     : `url(${
-                                                                          process.env.NEXT_PUBLIC_CDN_URL
-                                                                      }/${getChannelIcon(invite.channel, user.id)}/)`,
+                                                                          process.env
+                                                                              .NEXT_PUBLIC_CDN_URL
+                                                                      }/${getChannelIcon(
+                                                                          invite.channel,
+                                                                          user.id
+                                                                      )}/)`,
                                                         }}
                                                     >
                                                         {!("type" in invite) &&
@@ -1172,17 +1234,22 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                         <h3
                                                             style={{
                                                                 color:
-                                                                    "type" in invite && invite.type === "notfound"
+                                                                    "type" in invite &&
+                                                                    invite.type === "notfound"
                                                                         ? "var(--error-1)"
                                                                         : "",
                                                             }}
                                                             className={
                                                                 !("type" in invite) &&
                                                                 (guilds.find(
-                                                                    (guild) => guild.id === invite.guild?.id
+                                                                    (guild) =>
+                                                                        guild.id ===
+                                                                        invite.guild?.id
                                                                 ) ||
                                                                     channels.find(
-                                                                        (channel) => channel.id === invite.channel.id
+                                                                        (channel) =>
+                                                                            channel.id ===
+                                                                            invite.channel.id
                                                                     ))
                                                                     ? styles.link
                                                                     : ""
@@ -1192,7 +1259,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     if (invite.guild) {
                                                                         if (
                                                                             guilds.find(
-                                                                                (guild) => guild.id === invite.guild?.id
+                                                                                (guild) =>
+                                                                                    guild.id ===
+                                                                                    invite.guild?.id
                                                                             )
                                                                         ) {
                                                                             if (
@@ -1207,7 +1276,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                             sendRequest({
                                                                                 query: "ACCEPT_INVITE",
                                                                                 params: {
-                                                                                    inviteId: invite.code,
+                                                                                    inviteId:
+                                                                                        invite.code,
                                                                                 },
                                                                             });
                                                                         }
@@ -1215,7 +1285,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                         if (
                                                                             channels.find(
                                                                                 (channel) =>
-                                                                                    channel.id === invite.channelId
+                                                                                    channel.id ===
+                                                                                    invite.channelId
                                                                             )
                                                                         ) {
                                                                             if (
@@ -1230,7 +1301,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                             sendRequest({
                                                                                 query: "ACCEPT_INVITE",
                                                                                 params: {
-                                                                                    inviteId: invite.code,
+                                                                                    inviteId:
+                                                                                        invite.code,
                                                                                 },
                                                                             });
                                                                         }
@@ -1243,12 +1315,16 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     ? "Invalid Invite"
                                                                     : "Something Went Wrong"
                                                                 : invite.guild?.name ??
-                                                                  getChannelName(invite.channel, user.id)}
+                                                                  getChannelName(
+                                                                      invite.channel,
+                                                                      user.id
+                                                                  )}
                                                         </h3>
                                                         <strong>
                                                             {"type" in invite ? (
                                                                 invite.type === "notfound" ? (
-                                                                    user.id === message.author.id ? (
+                                                                    user.id ===
+                                                                    message.author.id ? (
                                                                         "Try sending a new invite!"
                                                                     ) : (
                                                                         `Ask ${message.author.username} for a new invite!`
@@ -1259,22 +1335,42 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                             ) : (
                                                                 <>
                                                                     <span>
-                                                                        <span className={styles.onlineDot} />
+                                                                        <span
+                                                                            className={
+                                                                                styles.onlineDot
+                                                                            }
+                                                                        />
                                                                         {invite.guild
-                                                                            ? invite.guild?.rawMemberIds.length
-                                                                            : invite.channel.recipientIds.length}{" "}
+                                                                            ? invite.guild
+                                                                                  ?.rawMemberIds
+                                                                                  .length
+                                                                            : invite.channel
+                                                                                  .recipientIds
+                                                                                  .length}{" "}
                                                                         Online
                                                                     </span>
 
                                                                     <span>
-                                                                        <span className={styles.offlineDot} />
+                                                                        <span
+                                                                            className={
+                                                                                styles.offlineDot
+                                                                            }
+                                                                        />
                                                                         {invite.guild
-                                                                            ? invite.guild?.rawMemberIds.length
-                                                                            : invite.channel.recipientIds.length}{" "}
+                                                                            ? invite.guild
+                                                                                  ?.rawMemberIds
+                                                                                  .length
+                                                                            : invite.channel
+                                                                                  .recipientIds
+                                                                                  .length}{" "}
                                                                         Member
                                                                         {(invite.guild
-                                                                            ? invite.guild?.rawMemberIds.length
-                                                                            : invite.channel.recipientIds.length) > 1 &&
+                                                                            ? invite.guild
+                                                                                  ?.rawMemberIds
+                                                                                  .length
+                                                                            : invite.channel
+                                                                                  .recipientIds
+                                                                                  .length) > 1 &&
                                                                             "s"}
                                                                     </span>
                                                                 </>
@@ -1289,7 +1385,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                             if (invite.guild) {
                                                                 if (
                                                                     guilds.find(
-                                                                        (guild) => guild.id === invite.guild?.id
+                                                                        (guild) =>
+                                                                            guild.id ===
+                                                                            invite.guild?.id
                                                                     )
                                                                 ) {
                                                                     if (
@@ -1311,11 +1409,14 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                             } else {
                                                                 if (
                                                                     channels.find(
-                                                                        (channel) => channel.id === invite.channelId
+                                                                        (channel) =>
+                                                                            channel.id ===
+                                                                            invite.channelId
                                                                     )
                                                                 ) {
                                                                     if (
-                                                                        pathname !== `/channels/me/${invite.channel.id}`
+                                                                        pathname !==
+                                                                        `/channels/me/${invite.channel.id}`
                                                                     ) {
                                                                         router.push(
                                                                             `/channels/me/${invite.channel.id}`
@@ -1333,8 +1434,13 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                         }}
                                                         className="button green"
                                                     >
-                                                        {guilds.find((guild) => guild.id === invite.guildId) ||
-                                                        channels.find((channel) => channel.id === invite.channelId)
+                                                        {guilds.find(
+                                                            (guild) => guild.id === invite.guildId
+                                                        ) ||
+                                                        channels.find(
+                                                            (channel) =>
+                                                                channel.id === invite.channelId
+                                                        )
                                                             ? "Joined"
                                                             : "Join"}
                                                     </button>
@@ -1345,7 +1451,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                     user.id !== message.author.id && (
                                                         <button
                                                             className="button blue"
-                                                            onClick={() => setMention(message.author)}
+                                                            onClick={() =>
+                                                                setMention(message.author)
+                                                            }
                                                         >
                                                             Mention
                                                         </button>
@@ -1655,7 +1763,8 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
         <div
             className={styles.buttonContainer}
             style={{
-                visibility: layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
+                visibility:
+                    layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
             }}
         >
             <div
@@ -1782,7 +1891,9 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
                                         }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
-                                            writeText(`/channels/@me/${message.channelId}/${message.id}`);
+                                            writeText(
+                                                `/channels/@me/${message.channelId}/${message.id}`
+                                            );
                                         }}
                                     >
                                         <Icon name="link" />
@@ -1875,7 +1986,9 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
                                         }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
-                                            writeText(`/channels/@me/${message.channelId}/${message.id}`);
+                                            writeText(
+                                                `/channels/@me/${message.channelId}/${message.id}`
+                                            );
                                         }}
                                     >
                                         <Icon name="link" />
@@ -1912,7 +2025,7 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
                                             onMouseLeave={() => setTooltip(null)}
                                             onClick={() => {
                                                 setTooltip(null);
-                                                setEdit(message.channelId, message.id, message.content || "");
+                                                functions.editMessageState();
                                             }}
                                         >
                                             <Icon name="edit" />
@@ -2143,12 +2256,19 @@ function Image({ attachment, message, functions }: ImageComponent) {
                         <div>
                             <div>
                                 <img
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${attachment.id}/-/resize/x${
-                                        attachment.dimensions.height >= 350 ? 350 : attachment.dimensions.height
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${
+                                        attachment.id
+                                    }/-/resize/x${
+                                        attachment.dimensions.height >= 350
+                                            ? 350
+                                            : attachment.dimensions.height
                                     }/-/format/webp/`}
                                     alt={attachment?.name}
                                     style={{
-                                        filter: attachment.isSpoiler && !hideSpoiler ? "blur(44px)" : "none",
+                                        filter:
+                                            attachment.isSpoiler && !hideSpoiler
+                                                ? "blur(44px)"
+                                                : "none",
                                     }}
                                 />
                             </div>
@@ -2207,7 +2327,9 @@ function Image({ attachment, message, functions }: ImageComponent) {
                     </div>
                 )}
 
-                {attachment.isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+                {attachment.isSpoiler && !hideSpoiler && (
+                    <div className={styles.spoilerButton}>Spoiler</div>
+                )}
                 {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
                     <button
                         className={styles.imageAlt}

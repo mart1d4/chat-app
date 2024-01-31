@@ -26,7 +26,8 @@ export const UserSection = (): ReactElement => {
                     className={
                         styles.avatarWrapper +
                         " " +
-                        (layers.USER_CARD?.settings.element === userSection.current && styles.active)
+                        (layers.USER_CARD?.settings.element === userSection.current &&
+                            styles.active)
                     }
                     onClick={(e) => {
                         if (layers.USER_CARD?.settings.element === e.currentTarget) return;
@@ -81,7 +82,9 @@ export const UserSection = (): ReactElement => {
                             <div>
                                 {user.customStatus
                                     ? user.customStatus
-                                    : translateCap(user.status === "offline" ? "invisible" : user.status)}
+                                    : translateCap(
+                                          user.status === "offline" ? "invisible" : user.status
+                                      )}
                             </div>
                         </div>
                     </div>
@@ -163,7 +166,9 @@ export const UserSection = (): ReactElement => {
                                 } else {
                                     setSettings("microphone", !settings.microphone);
                                     const audio = new Audio(`
-                                        /assets/sounds/${settings.microphone ? "mute" : "unmute"}.mp3
+                                        /assets/sounds/${
+                                            settings.microphone ? "mute" : "unmute"
+                                        }.mp3
                                     `);
                                     audio.volume = 0.5;
                                     audio.play();
@@ -174,7 +179,7 @@ export const UserSection = (): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={settings.microphone ? "mic" : "micSlash"}
+                                name={settings.microphone ? "mic" : "micDisabled"}
                                 size={20}
                             />
                         </div>
@@ -245,7 +250,7 @@ export const UserSection = (): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name={settings.sound ? "headset" : "headsetSlash"}
+                                name={settings.sound ? "headset" : "headsetDisabled"}
                                 size={20}
                             />
                         </div>
@@ -279,7 +284,7 @@ export const UserSection = (): ReactElement => {
                     >
                         <div className={styles.toolbar}>
                             <Icon
-                                name="settings"
+                                name="cog"
                                 size={20}
                             />
                         </div>

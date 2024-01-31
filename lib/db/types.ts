@@ -66,7 +66,6 @@ export interface UserTable {
 
     notes: Note[];
     notifications: Notification[];
-    hiddenChannelIds: number[];
 
     createdAt: Generated<Date>;
     isDeleted: boolean;
@@ -244,7 +243,7 @@ export interface MessageTable {
     reactions: JSON | null;
     messageReferenceId: number | null;
 
-    mentionIds: number[] | null;
+    mentions: number[] | null;
     mentionRoleIds: number[] | null;
     mentionChannelIds: number[] | null;
     mentionEveryone: boolean;
@@ -359,6 +358,7 @@ export type ChannelMessageUpdate = Updateable<ChannelMessageTable>;
 export interface ChannelRecipientTable {
     channelId: number;
     userId: number;
+    isHidden: boolean;
 }
 
 export type ChannelRecipient = Selectable<ChannelRecipientTable>;

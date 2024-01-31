@@ -196,7 +196,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                         <>
                             {user.req === "Received" && (
                                 <button
-                                    className={styles.buttonAccept}
+                                    className={styles.green}
                                     onClick={async (e) => {
                                         e.stopPropagation();
                                         sendRequest({
@@ -222,14 +222,14 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     onBlur={() => setTooltip(null)}
                                 >
                                     <Icon
-                                        name="accept"
+                                        name="checkmark"
                                         size={20}
                                     />
                                 </button>
                             )}
 
                             <button
-                                className={styles.buttonCancel}
+                                className={styles.red}
                                 onClick={async (e) => {
                                     e.stopPropagation();
                                     sendRequest({
@@ -266,6 +266,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
                     {content === "blocked" && (
                         <button
+                            className={styles.red}
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 sendRequest({
@@ -293,7 +294,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             onBlur={() => setTooltip(null)}
                         >
                             <Icon
-                                name="userDelete"
+                                name="unblock"
                                 size={20}
                             />
                         </button>

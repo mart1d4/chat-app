@@ -41,7 +41,8 @@
     border-radius: 50%;
     cursor: pointer;
     background-color: var(--background-4);
-    transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out, color 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out,
+        color 0.15s ease-in-out;
     text-decoration: none;
     padding: 0;
     outline-offset: 2px;
@@ -103,7 +104,7 @@
     display: block;
     width: 8px;
     border-radius: 0 4px 4px 0;
-    margin-left: -5px;
+    margin-left: -4px;
     background-color: var(--foreground-1);
 }
 

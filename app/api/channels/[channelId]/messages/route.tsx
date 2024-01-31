@@ -2,161 +2,172 @@ import { decryptMessage, encryptMessage } from "@/lib/encryption";
 import pusher from "@/lib/pusher/server-connection";
 import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
+import {
+    areUsersBlocked,
+    getChannel,
+    getRandomId,
+    getUser,
+    isUserInChannel,
+    isUserInGuild,
+} from "@/lib/db/helpers";
+import { db } from "@/lib/db/db";
 
-export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
-    const { skip, limit } = { skip: 0, limit: 500 };
+// export async function GET(req: Request, { params }: { params: { channelId: string } }) {
+//     const senderId = headers().get("X-UserId") || "";
+//     const channelId = params.channelId;
+//     const { skip, limit } = { skip: 0, limit: 500 };
 
-    try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            include: {
-                messages: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                    skip: skip,
-                    take: limit,
-                    include: {
-                        author: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        messageReference: {
-                            include: {
-                                author: {
-                                    select: {
-                                        id: true,
-                                        username: true,
-                                        displayName: true,
-                                        avatar: true,
-                                        banner: true,
-                                        primaryColor: true,
-                                        accentColor: true,
-                                        description: true,
-                                        customStatus: true,
-                                        status: true,
-                                        guildIds: true,
-                                        friendIds: true,
-                                        createdAt: true,
-                                    },
-                                },
-                                mentions: {
-                                    select: {
-                                        id: true,
-                                        username: true,
-                                        displayName: true,
-                                        avatar: true,
-                                        banner: true,
-                                        primaryColor: true,
-                                        accentColor: true,
-                                        description: true,
-                                        customStatus: true,
-                                        status: true,
-                                        guildIds: true,
-                                        friendIds: true,
-                                        createdAt: true,
-                                    },
-                                },
-                            },
-                        },
-                        mentions: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
+//     try {
+//         const channel = await prisma.channel.findUnique({
+//             where: {
+//                 id: channelId,
+//             },
+//             include: {
+//                 messages: {
+//                     orderBy: {
+//                         createdAt: "asc",
+//                     },
+//                     skip: skip,
+//                     take: limit,
+//                     include: {
+//                         author: {
+//                             select: {
+//                                 id: true,
+//                                 username: true,
+//                                 displayName: true,
+//                                 avatar: true,
+//                                 banner: true,
+//                                 primaryColor: true,
+//                                 accentColor: true,
+//                                 description: true,
+//                                 customStatus: true,
+//                                 status: true,
+//                                 guildIds: true,
+//                                 friendIds: true,
+//                                 createdAt: true,
+//                             },
+//                         },
+//                         messageReference: {
+//                             include: {
+//                                 author: {
+//                                     select: {
+//                                         id: true,
+//                                         username: true,
+//                                         displayName: true,
+//                                         avatar: true,
+//                                         banner: true,
+//                                         primaryColor: true,
+//                                         accentColor: true,
+//                                         description: true,
+//                                         customStatus: true,
+//                                         status: true,
+//                                         guildIds: true,
+//                                         friendIds: true,
+//                                         createdAt: true,
+//                                     },
+//                                 },
+//                                 mentions: {
+//                                     select: {
+//                                         id: true,
+//                                         username: true,
+//                                         displayName: true,
+//                                         avatar: true,
+//                                         banner: true,
+//                                         primaryColor: true,
+//                                         accentColor: true,
+//                                         description: true,
+//                                         customStatus: true,
+//                                         status: true,
+//                                         guildIds: true,
+//                                         friendIds: true,
+//                                         createdAt: true,
+//                                     },
+//                                 },
+//                             },
+//                         },
+//                         mentions: {
+//                             select: {
+//                                 id: true,
+//                                 username: true,
+//                                 displayName: true,
+//                                 avatar: true,
+//                                 banner: true,
+//                                 primaryColor: true,
+//                                 accentColor: true,
+//                                 description: true,
+//                                 customStatus: true,
+//                                 status: true,
+//                                 guildIds: true,
+//                                 friendIds: true,
+//                                 createdAt: true,
+//                             },
+//                         },
+//                     },
+//                 },
+//             },
+//         });
 
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-        });
+//         const sender = await prisma.user.findUnique({
+//             where: {
+//                 id: senderId,
+//             },
+//         });
 
-        if (!channel || !sender) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel not found",
-                },
-                { status: 404 }
-            );
-        }
+//         if (!channel || !sender) {
+//             return NextResponse.json(
+//                 {
+//                     success: false,
+//                     message: "Channel not found",
+//                 },
+//                 { status: 404 }
+//             );
+//         }
 
-        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? "")) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not in this channel",
-                },
-                { status: 401 }
-            );
-        }
+//         if (
+//             !channel.recipientIds.includes(senderId) &&
+//             !sender.guildIds.includes(channel?.guildId ?? "")
+//         ) {
+//             return NextResponse.json(
+//                 {
+//                     success: false,
+//                     message: "You are not in this channel",
+//                 },
+//                 { status: 401 }
+//             );
+//         }
 
-        const messages = channel.messages.map((message) => {
-            return {
-                ...message,
-                content: decryptMessage(message.content),
-                messageReference: {
-                    ...message.messageReference,
-                    content: decryptMessage(message.messageReference?.content ?? ""),
-                },
-            };
-        });
+//         const messages = channel.messages.map((message) => {
+//             return {
+//                 ...message,
+//                 content: decryptMessage(message.content),
+//                 messageReference: {
+//                     ...message.messageReference,
+//                     content: decryptMessage(message.messageReference?.content ?? ""),
+//                 },
+//             };
+//         });
 
-        return NextResponse.json(
-            {
-                success: true,
-                message: "Successfully retrieved messages",
-                messages: messages,
-                hasMore: channel.messages.length - skip > limit,
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
-    }
-}
+//         return NextResponse.json(
+//             {
+//                 success: true,
+//                 message: "Successfully retrieved messages",
+//                 messages: messages,
+//                 hasMore: channel.messages.length - skip > limit,
+//             },
+//             { status: 200 }
+//         );
+//     } catch (error) {
+//         console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
+//         return NextResponse.json(
+//             {
+//                 success: false,
+//                 message: "Something went wrong.",
+//             },
+//             { status: 500 }
+//         );
+//     }
+// }
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
@@ -175,45 +186,8 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
     }
 
     try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            select: {
-                id: true,
-                type: true,
-                icon: true,
-                ownerId: true,
-                recipientIds: true,
-                recipients: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-                guildId: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
-
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-        });
+        const channel = await getChannel(parseInt(channelId));
+        const sender = await getUser({ id: parseInt(senderId) });
 
         if (!channel || !sender) {
             return NextResponse.json(
@@ -225,7 +199,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             );
         }
 
-        if (!channel.recipientIds.includes(senderId) && !sender.guildIds.includes(channel?.guildId ?? "")) {
+        if (
+            !isUserInChannel(sender.id, channel.id) &&
+            channel.guildId &&
+            !isUserInGuild(sender.id, channel.guildId)
+        ) {
             return NextResponse.json(
                 {
                     success: false,
@@ -235,13 +213,16 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             );
         }
 
-        // if dm and user is blocked
+        // If DM and user is blocked
         if (channel.type === 0) {
-            const userId = channel.recipientIds.find((id) => id !== senderId) ?? "";
-            const isBlocked = sender.blockedUserIds.includes(userId);
-            const isBlockedBy = sender.blockedByUserIds.includes(userId);
+            const otherUser = await db
+                .selectFrom("channelrecipients")
+                .select("userId")
+                .where("channelId", "=", channel.id)
+                .where("userId", "!=", sender.id)
+                .executeTakeFirst();
 
-            if (isBlocked || isBlockedBy) {
+            if (await areUsersBlocked([senderId, otherUser.userId])) {
                 return NextResponse.json(
                     {
                         success: false,
@@ -272,14 +253,12 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             );
         }
 
-        const prevContent = message.content;
-
-        if (message.messageReference !== null) {
-            const messageRef = await prisma.message.findUnique({
-                where: {
-                    id: message.messageReference,
-                },
-            });
+        if (message.messageReference) {
+            const messageRef = await db
+                .selectFrom("messages")
+                .select("id")
+                .where("id", "=", message.messageReference)
+                .executeTakeFirst();
 
             if (!messageRef) {
                 return NextResponse.json(
@@ -293,230 +272,96 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         }
 
         const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
-        const mentions: string[] = (message.content?.match(regex) || []).map((match: string) => match.slice(2, -1));
+        const mentions: string[] = (message.content?.match(regex) || []).map((match: string) =>
+            match.slice(2, -1)
+        );
 
         // Check if mentions are valid
-        const validMentions = await prisma.user.findMany({
-            where: {
-                id: {
-                    in: mentions,
-                },
-            },
-            select: { id: true },
-        });
+        if (mentions.length > 0) {
+            const validMentions = await db
+                .selectFrom("users")
+                .select("id")
+                .where("id", "in", mentions)
+                .execute();
 
-        mentions.forEach((mention) => {
-            if (!validMentions.find((user) => user.id === mention)) {
-                // Remove invalid mentions from array
-                mentions.splice(mentions.indexOf(mention), 1);
-            }
-        });
-
-        let newMessage;
-        if (message.messageReference !== null) {
-            if (mentions.length > 0) {
-                newMessage = await prisma.message.create({
-                    data: {
-                        type: message.messageReference ? 1 : 0,
-                        content: encryptMessage(message.content),
-                        attachments: message.attachments,
-                        embeds: message.embeds,
-                        mentionEveryone: message.mentionEveryone,
-                        mentionChannelIds: message.mentionChannelIds,
-                        mentionRoleIds: message.mentionRoleIds,
-                        mentions: {
-                            connect: mentions.map((id) => ({ id })),
-                        },
-                        author: {
-                            connect: { id: senderId },
-                        },
-                        channel: {
-                            connect: { id: channelId },
-                        },
-                        messageReference: {
-                            connect: { id: message.messageReference },
-                        },
-                    },
-                });
-            } else {
-                newMessage = await prisma.message.create({
-                    data: {
-                        type: message.messageReference ? 1 : 0,
-                        content: encryptMessage(message.content),
-                        attachments: message.attachments,
-                        embeds: message.embeds,
-                        mentionEveryone: message.mentionEveryone,
-                        mentionChannelIds: message.mentionChannelIds,
-                        mentionRoleIds: message.mentionRoleIds,
-                        author: {
-                            connect: { id: senderId },
-                        },
-                        channel: {
-                            connect: { id: channelId },
-                        },
-                        messageReference: {
-                            connect: { id: message.messageReference },
-                        },
-                    },
-                });
-            }
-        } else {
-            if (mentions.length > 0) {
-                newMessage = await prisma.message.create({
-                    data: {
-                        type: message.messageReference ? 1 : 0,
-                        content: encryptMessage(message.content),
-                        attachments: message.attachments,
-                        embeds: message.embeds,
-                        mentionEveryone: message.mentionEveryone,
-                        mentionChannelIds: message.mentionChannelIds,
-                        mentionRoleIds: message.mentionRoleIds,
-                        mentions: {
-                            connect: mentions.map((id) => ({ id })),
-                        },
-                        author: {
-                            connect: { id: senderId },
-                        },
-                        channel: {
-                            connect: { id: channelId },
-                        },
-                    },
-                });
-            } else {
-                newMessage = await prisma.message.create({
-                    data: {
-                        type: message.messageReference ? 1 : 0,
-                        content: encryptMessage(message.content),
-                        attachments: message.attachments,
-                        embeds: message.embeds,
-                        mentionEveryone: message.mentionEveryone,
-                        mentionChannelIds: message.mentionChannelIds,
-                        mentionRoleIds: message.mentionRoleIds,
-                        author: {
-                            connect: { id: senderId },
-                        },
-                        channel: {
-                            connect: { id: channelId },
-                        },
-                    },
-                });
-            }
-        }
-
-        await prisma.channel.update({
-            where: {
-                id: channelId,
-            },
-            data: {
-                updatedAt: new Date(),
-            },
-        });
-
-        if (channel.type === 0) {
-            // If the recipient has hidden the channel, unhide it
-            const recipientId = channel.recipientIds.find((id) => id !== senderId);
-            const recipient = await prisma.user.findUnique({
-                where: {
-                    id: recipientId,
-                },
-                select: {
-                    hiddenChannelIds: true,
-                },
+            mentions.forEach((mention) => {
+                if (!validMentions.find((user) => user.id === parseInt(mention))) {
+                    mentions.splice(mentions.indexOf(mention), 1);
+                }
             });
-
-            if (recipient?.hiddenChannelIds.includes(channelId)) {
-                await prisma.user.update({
-                    where: {
-                        id: recipientId,
-                    },
-                    data: {
-                        hiddenChannelIds: {
-                            set: recipient.hiddenChannelIds.filter((id) => id !== channelId),
-                        },
-                    },
-                });
-
-                await pusher.trigger("chat-app", "channel-created", {
-                    recipients: [recipientId],
-                    channel: channel,
-                });
-            }
         }
 
-        const messageToSend = await prisma.message.findUnique({
-            where: {
-                id: newMessage.id,
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-                messageReference: {
-                    include: {
-                        author: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                },
-                mentions: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-            },
-        });
+        const id = getRandomId();
+
+        const newMessage = await db
+            .insertInto("messages")
+            .values({
+                id: id,
+                type: message.messageReference ? 1 : 0,
+                content: message.content,
+                attachments: message.attachments ? JSON.stringify(message.attachments) : "[]",
+                embeds: message.embeds ? JSON.stringify(message.embeds) : "[]",
+                mentionEveryone: message.mentionEveryone ?? false,
+                mentionChannelIds: message.mentionChannelIds
+                    ? JSON.stringify(message.mentionChannelIds)
+                    : "[]",
+                mentionRoleIds: message.mentionRoleIds
+                    ? JSON.stringify(message.mentionRoleIds)
+                    : "[]",
+                mentions: mentions ? JSON.stringify(message.mentions) : "[]",
+                authorId: senderId,
+                channelId: channelId,
+                messageReferenceId: message.messageReference ?? null,
+            })
+            .executeTakeFirst();
+
+        await db
+            .updateTable("channels")
+            .set("lastMessageId", id)
+            .where("id", "=", channelId)
+            .execute();
+
+        // if (channel.type === 0) {
+        //     // If the recipient has hidden the channel, unhide it
+        //     const recipientId = channel.recipientIds.find((id) => id !== senderId);
+        //     const recipient = await prisma.user.findUnique({
+        //         where: {
+        //             id: recipientId,
+        //         },
+        //         select: {
+        //             hiddenChannelIds: true,
+        //         },
+        //     });
+
+        //     if (recipient?.hiddenChannelIds.includes(channelId)) {
+        //         await prisma.user.update({
+        //             where: {
+        //                 id: recipientId,
+        //             },
+        //             data: {
+        //                 hiddenChannelIds: {
+        //                     set: recipient.hiddenChannelIds.filter((id) => id !== channelId),
+        //                 },
+        //             },
+        //         });
+
+        //         await pusher.trigger("chat-app", "channel-created", {
+        //             recipients: [recipientId],
+        //             channel: channel,
+        //         });
+        //     }
+        // }
 
         await pusher.trigger("chat-app", "message-sent", {
             channelId: channelId,
             message: {
-                ...messageToSend,
-                content: prevContent,
-                messageReference: {
-                    ...messageToSend?.messageReference,
-                    content: decryptMessage(messageToSend?.messageReference?.content ?? ""),
+                id: id,
+                authorId: sender.id,
+                channelId: channelId,
+                content: message.content,
+                createdAt: new Date(),
+                author: {
+                    ...sender,
                 },
             },
         });
@@ -527,11 +372,13 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 message: "Successfully sent message",
                 data: {
                     message: {
-                        ...messageToSend,
-                        content: prevContent,
-                        messageReference: {
-                            ...messageToSend?.messageReference,
-                            content: decryptMessage(messageToSend?.messageReference?.content ?? ""),
+                        id: id,
+                        authorId: sender.id,
+                        channelId: channelId,
+                        content: message.content,
+                        createdAt: new Date(),
+                        author: {
+                            ...sender,
                         },
                     },
                 },
@@ -541,11 +388,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
     } catch (error) {
         console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
 
-        if (message.attachments) {
-            message.attachments.forEach(async (attachment: TAttachment) => {
-                await removeImage(attachment.id);
-            });
-        }
+        // if (message.attachments) {
+        //     message.attachments.forEach(async (attachment: TAttachment) => {
+        //         await removeImage(attachment.id);
+        //     });
+        // }
 
         return NextResponse.json(
             {

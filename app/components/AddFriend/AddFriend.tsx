@@ -117,7 +117,7 @@ export const AddFriend = () => {
                         </div>
 
                         <button
-                            className={input.length > 0 ? "blue" : "blue disabled"}
+                            className={input.length > 0 ? "button blue" : "button blue disabled"}
                             onClick={async (e) => {
                                 e.preventDefault();
                                 if (!input.length || loading) {

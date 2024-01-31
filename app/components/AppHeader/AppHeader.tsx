@@ -4,14 +4,15 @@ import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
 import { useState, useMemo, useEffect } from "react";
 import styles from "./AppHeader.module.css";
 import { Icon, Avatar } from "@components";
+import { Channel, User } from "@/lib/db/types";
 
 interface Props {
-    channel?: TChannel;
-    friend?: TCleanUser | null;
+    channelId?: Channel["id"];
+    friend?: Partial<User>;
     requests?: number;
 }
 
-export function AppHeader({ channel, friend }: Props) {
+export function AppHeader({ channelId, friend }: Props) {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
     const setSettings = useSettings((state) => state.setSettings);
@@ -19,6 +20,12 @@ export function AppHeader({ channel, friend }: Props) {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
+    const channels = useData((state) => state.channels);
+
+    let channel;
+    if (channelId) {
+        channel = channels.find((c) => c.id === channelId);
+    }
 
     useEffect(() => {
         const width: number = window.innerWidth;

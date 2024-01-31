@@ -395,6 +395,7 @@
     transition: none;
     position: relative;
     text-align: left;
+    background-color: transparent;
 }
 
 .button:hover,

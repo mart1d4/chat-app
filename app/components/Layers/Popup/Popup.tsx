@@ -1,7 +1,16 @@
 "use client";
 
-import { FixedMessage, LoadingDots, Icon, Popout, Checkbox, Avatar, Invite, EmojiPicker } from "@components";
-import { getChannelName, getRelativeDate, translateCap, trimMessage } from "@/lib/strings";
+import {
+    FixedMessage,
+    LoadingDots,
+    Icon,
+    Popout,
+    Checkbox,
+    Avatar,
+    Invite,
+    EmojiPicker,
+} from "@components";
+import { getChannelName, getRelativeDate, translateCap, sanitizeString } from "@/lib/strings";
 import { useRef, useEffect, useState } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
@@ -148,7 +157,7 @@ export function Popup({ content, friends }: any) {
     const handleUsernameSubmit = async () => {
         setIsLoading(true);
 
-        const username = trimMessage(uid);
+        const username = sanitizeString(uid);
 
         if (!username) {
             setUsernameError("Username cannot be empty.");
@@ -311,9 +320,15 @@ export function Popup({ content, friends }: any) {
         },
         GUILD_CHANNEL_CREATE: {
             title: `Create ${content.isCategory ? "Category" : "Channel"}`,
-            description: content.category ? `in ${content.category.name}` : content.isCategory ? undefined : " ",
+            description: content.category
+                ? `in ${content.category.name}`
+                : content.isCategory
+                ? undefined
+                : " ",
             buttonColor: "blue",
-            buttonText: channelLocked ? "Next" : `Create ${content.isCategory ? "Category" : "Channel"}`,
+            buttonText: channelLocked
+                ? "Next"
+                : `Create ${content.isCategory ? "Category" : "Channel"}`,
             buttonDisabled: !channelName || channelLocked,
             function: () => {
                 if (!channelName || channelLocked) return;
@@ -333,9 +348,9 @@ export function Popup({ content, friends }: any) {
         },
         GUILD_CHANNEL_DELETE: {
             title: `Delete ${content.channel?.type === 4 ? "Category" : "Channel"}`,
-            description: `Are you sure you want to delete ${content.channel?.type === 2 ? "#" : ""}${
-                content.channel?.name
-            }? This cannot be undone.`,
+            description: `Are you sure you want to delete ${
+                content.channel?.type === 2 ? "#" : ""
+            }${content.channel?.name}? This cannot be undone.`,
             buttonColor: "red",
             buttonText: `Delete ${content.channel?.type === 4 ? "Category" : "Channel"}`,
             function: () => {
@@ -412,7 +427,9 @@ export function Popup({ content, friends }: any) {
             },
         },
         FILE_EDIT: {
-            title: content?.attachment?.isSpoiler ? content?.attachment?.name.slice(8) : content?.attachment?.name,
+            title: content?.attachment?.isSpoiler
+                ? content?.attachment?.name.slice(8)
+                : content?.attachment?.name,
             description: "",
             buttonColor: "blue",
             buttonText: "Save",
@@ -451,7 +468,8 @@ export function Popup({ content, friends }: any) {
         },
         CHANNEL_EXISTS: {
             title: "Confirm New Group",
-            description: "You already have a group with these people! Are you sure you want to create a new one?",
+            description:
+                "You already have a group with these people! Are you sure you want to create a new one?",
             buttonColor: "blue",
             buttonText: "Create Group",
             function: () => {
@@ -483,10 +501,14 @@ export function Popup({ content, friends }: any) {
             },
         },
         LEAVE_CONFIRM: {
-            title: `Leave '${content.channel ? getChannelName(content.channel, user.id) : content.guild?.name}'`,
+            title: `Leave '${
+                content.channel ? getChannelName(content.channel, user.id) : content.guild?.name
+            }'`,
             description: `Are you sure you want to leave ${
                 content.channel ? getChannelName(content.channel, user.id) : content.guild?.name
-            }? You won't be able to rejoin this ${content.guild ? "server" : "group"} unless your are re-invited.`,
+            }? You won't be able to rejoin this ${
+                content.guild ? "server" : "group"
+            } unless your are re-invited.`,
             buttonColor: "red",
             buttonText: `Leave ${content.channel ? "Group" : "Server"}`,
             function: () => {
@@ -661,40 +683,50 @@ export function Popup({ content, friends }: any) {
                                             width: showOptions.getBoundingClientRect().width,
                                         }}
                                     >
-                                        {["Online", "Idle", "Do Not Disturb", "Offline"].map((s) => (
-                                            <li
-                                                className={status === s ? styles.selected : ""}
-                                                key={s}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setStatus(s);
-                                                    setShowOptions(null);
-                                                }}
-                                            >
-                                                <div>
-                                                    <svg className={styles.settingStatus}>
-                                                        <rect
-                                                            height="10px"
-                                                            width="10px"
-                                                            rx={8}
-                                                            ry={8}
-                                                            // @ts-ignore
-                                                            fill={colors[statuses[s] as EUserStatus]}
-                                                            // @ts-ignore
-                                                            mask={`url(#${masks[statuses[s] as EUserStatus]})`}
-                                                        />
-                                                    </svg>
-                                                    {s}
-                                                </div>
+                                        {["Online", "Idle", "Do Not Disturb", "Offline"].map(
+                                            (s) => (
+                                                <li
+                                                    className={status === s ? styles.selected : ""}
+                                                    key={s}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setStatus(s);
+                                                        setShowOptions(null);
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <svg className={styles.settingStatus}>
+                                                            <rect
+                                                                height="10px"
+                                                                width="10px"
+                                                                rx={8}
+                                                                ry={8}
+                                                                // @ts-ignore
+                                                                fill={
+                                                                    colors[
+                                                                        statuses[s] as EUserStatus
+                                                                    ]
+                                                                }
+                                                                // @ts-ignore
+                                                                mask={`url(#${
+                                                                    masks[
+                                                                        statuses[s] as EUserStatus
+                                                                    ]
+                                                                })`}
+                                                            />
+                                                        </svg>
+                                                        {s}
+                                                    </div>
 
-                                                {status === s && (
-                                                    <Icon
-                                                        name="selected"
-                                                        fill="var(--accent-1)"
-                                                    />
-                                                )}
-                                            </li>
-                                        ))}
+                                                    {status === s && (
+                                                        <Icon
+                                                            name="selected"
+                                                            fill="var(--accent-1)"
+                                                        />
+                                                    )}
+                                                </li>
+                                            )
+                                        )}
                                     </ul>
                                 )}
                             </div>
@@ -703,7 +735,7 @@ export function Popup({ content, friends }: any) {
 
                     <div>
                         <button
-                            className="underline"
+                            className="button underline"
                             onClick={() => {
                                 setLayers({
                                     settings: {
@@ -717,7 +749,7 @@ export function Popup({ content, friends }: any) {
                         </button>
 
                         <button
-                            className="blue"
+                            className="button blue"
                             onClick={async () => {
                                 setLayers({
                                     settings: {
@@ -727,13 +759,21 @@ export function Popup({ content, friends }: any) {
                                 });
 
                                 const correctStatus = statuses[status as keyof typeof statuses];
-                                if (correctStatus !== user.status || customStatus !== user.customStatus) {
+                                if (
+                                    correctStatus !== user.status ||
+                                    customStatus !== user.customStatus
+                                ) {
                                     const response = await sendRequest({
                                         query: "UPDATE_USER",
                                         data: {
-                                            status: correctStatus === user.status ? null : correctStatus,
+                                            status:
+                                                correctStatus === user.status
+                                                    ? null
+                                                    : correctStatus,
                                             customStatus:
-                                                customStatus === user.customStatus ? null : trimMessage(customStatus),
+                                                customStatus === user.customStatus
+                                                    ? null
+                                                    : sanitizeString(customStatus),
                                         },
                                     });
                                 }
@@ -789,7 +829,8 @@ export function Popup({ content, friends }: any) {
                                     src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
                                         content.attachments[imgIndex].id
                                     }/-/resize/${
-                                        content.attachments[imgIndex].dimensions.width >= window.innerWidth
+                                        content.attachments[imgIndex].dimensions.width >=
+                                        window.innerWidth
                                             ? Math.ceil(window.innerWidth * 0.9)
                                             : content.attachments[imgIndex].dimensions.width
                                     }x/`}
@@ -832,7 +873,8 @@ export function Popup({ content, friends }: any) {
                     <div
                         className={styles.warning}
                         style={{
-                            backgroundColor: content.warning === "DRAG_FILE" ? "var(--accent-1)" : "",
+                            backgroundColor:
+                                content.warning === "DRAG_FILE" ? "var(--accent-1)" : "",
                         }}
                     >
                         <div>
@@ -855,15 +897,23 @@ export function Popup({ content, friends }: any) {
                                 {content.warning === "UPLOAD_FAILED" && "Upload Failed"}
                                 {content.warning === "DRAG_FILE" &&
                                     `Upload to ${
-                                        content.channel?.type === 0 ? "@" : content.channel?.type === 2 ? "#" : ""
+                                        content.channel?.type === 0
+                                            ? "@"
+                                            : content.channel?.type === 2
+                                            ? "#"
+                                            : ""
                                     }${getChannelName(content.channel, user.id)}`}
                             </div>
 
                             <div className={styles.description}>
-                                {content.warning === "FILE_SIZE" && "Max file size is 10.00 MB please."}
-                                {content.warning === "FILE_TYPE" && "Hm.. I don't think we support that type of file"}
-                                {content.warning === "FILE_NUMBER" && "You can only upload 10 files at a time!"}
-                                {content.warning === "UPLOAD_FAILED" && "Something went wrong. try again later"}
+                                {content.warning === "FILE_SIZE" &&
+                                    "Max file size is 10.00 MB please."}
+                                {content.warning === "FILE_TYPE" &&
+                                    "Hm.. I don't think we support that type of file"}
+                                {content.warning === "FILE_NUMBER" &&
+                                    "You can only upload 10 files at a time!"}
+                                {content.warning === "UPLOAD_FAILED" &&
+                                    "Something went wrong. try again later"}
                                 {content.warning === "DRAG_FILE" && (
                                     <>
                                         You can add comments before uploading.
@@ -881,7 +931,12 @@ export function Popup({ content, friends }: any) {
                     ref={popupRef}
                     className={styles.cardContainer}
                     style={{
-                        width: type === "FILE_EDIT" ? "530px" : type === "GUILD_CHANNEL_CREATE" ? "460px" : "",
+                        width:
+                            type === "FILE_EDIT"
+                                ? "530px"
+                                : type === "GUILD_CHANNEL_CREATE"
+                                ? "460px"
+                                : "",
                         padding: type === "FILE_EDIT" ? "84px 4px 0 4px" : "",
                     }}
                     onContextMenu={(e) => e.preventDefault()}
@@ -902,7 +957,10 @@ export function Popup({ content, friends }: any) {
                         <div
                             className={styles.titleBlock}
                             style={{
-                                paddingBottom: type === "GUILD_CHANNEL_CREATE" && prop.description !== " " ? "0" : "",
+                                paddingBottom:
+                                    type === "GUILD_CHANNEL_CREATE" && prop.description !== " "
+                                        ? "0"
+                                        : "",
                             }}
                         >
                             <h1>{prop.title}</h1>
@@ -913,6 +971,7 @@ export function Popup({ content, friends }: any) {
                             <div>{prop.description}</div>
 
                             <button
+                                className="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setLayers({
@@ -968,7 +1027,12 @@ export function Popup({ content, friends }: any) {
 
                                 <div>
                                     You can hold down shift when clicking
-                                    <strong> {type === "DELETE_MESSAGE" ? "delete message" : "unpin message"} </strong>
+                                    <strong>
+                                        {" "}
+                                        {type === "DELETE_MESSAGE"
+                                            ? "delete message"
+                                            : "unpin message"}{" "}
+                                    </strong>
                                     to bypass this confirmation entirely.
                                 </div>
                             </div>
@@ -1012,12 +1076,7 @@ export function Popup({ content, friends }: any) {
                                         opacity=".6"
                                     >
                                         <path d="m0 0h80v16h-80z" />
-                                        <g
-                                            stroke="var(--foreground-3)"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                        >
+                                        <g stroke="var(--foreground-3)">
                                             <path d="m71 1h4v4.16" />
                                             <path
                                                 d="m2 1h4v4.16"
@@ -1047,7 +1106,10 @@ export function Popup({ content, friends }: any) {
                                     </div>
                                 </div>
 
-                                <div>Transfer ownership of this group to {content.recipient.username}?</div>
+                                <div>
+                                    Transfer ownership of this group to {content.recipient.username}
+                                    ?
+                                </div>
                             </div>
                         )}
 
@@ -1062,10 +1124,12 @@ export function Popup({ content, friends }: any) {
                                         alt="Create My Own"
                                     />
                                     <div>Create My Own</div>
-                                    <Icon name="arrow" />
+                                    <Icon name="caret" />
                                 </button>
 
-                                <div className={styles.serverTemplateTitle}>Start from a template</div>
+                                <div className={styles.serverTemplateTitle}>
+                                    Start from a template
+                                </div>
 
                                 {[
                                     ["Gaming", "34bdb748-aea8-4542-b534-610ac9ad347f"],
@@ -1085,7 +1149,7 @@ export function Popup({ content, friends }: any) {
                                             alt={template[0]}
                                         />
                                         <div>{template[0]} </div>
-                                        <Icon name="arrow" />
+                                        <Icon name="caret" />
                                     </button>
                                 ))}
                             </>
@@ -1151,8 +1215,11 @@ export function Popup({ content, friends }: any) {
                                                 return (e.target.value = "");
                                             }
 
-                                            const fileBytes = new Uint8Array(await file.arrayBuffer());
-                                            const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
+                                            const fileBytes = new Uint8Array(
+                                                await file.arrayBuffer()
+                                            );
+                                            const fileType =
+                                                filetypeinfo(fileBytes)?.[0].mime?.toString();
 
                                             if (!fileType || !allowedFileTypes.includes(fileType)) {
                                                 setLayers({
@@ -1201,27 +1268,46 @@ export function Popup({ content, friends }: any) {
                                             className={styles.typePick}
                                             onClick={() => setChannelType(2)}
                                             style={{
-                                                backgroundColor: channelType === 2 ? "var(--background-hover-2)" : "",
+                                                backgroundColor:
+                                                    channelType === 2
+                                                        ? "var(--background-hover-2)"
+                                                        : "",
                                             }}
                                         >
                                             <div>
                                                 <div
                                                     style={{
-                                                        color: channelType === 2 ? "var(--foreground-1)" : "",
+                                                        color:
+                                                            channelType === 2
+                                                                ? "var(--foreground-1)"
+                                                                : "",
                                                     }}
                                                 >
-                                                    <Icon name={channelType === 2 ? "circleChecked" : "circle"} />
+                                                    <Icon
+                                                        name={
+                                                            channelType === 2
+                                                                ? "circleChecked"
+                                                                : "circle"
+                                                        }
+                                                    />
                                                 </div>
 
                                                 <div>
                                                     <div>
-                                                        <Icon name={channelLocked ? "hashtagLock" : "hashtag"} />
+                                                        <Icon
+                                                            name={
+                                                                channelLocked
+                                                                    ? "hashtagLock"
+                                                                    : "hashtag"
+                                                            }
+                                                        />
                                                     </div>
 
                                                     <div className={styles.content}>
                                                         <div>Text</div>
                                                         <div>
-                                                            Send messages, images, GIFs, emoji, opinions, and puns
+                                                            Send messages, images, GIFs, emoji,
+                                                            opinions, and puns
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1232,26 +1318,47 @@ export function Popup({ content, friends }: any) {
                                             className={styles.typePick}
                                             onClick={() => setChannelType(3)}
                                             style={{
-                                                backgroundColor: channelType === 3 ? "var(--background-hover-2)" : "",
+                                                backgroundColor:
+                                                    channelType === 3
+                                                        ? "var(--background-hover-2)"
+                                                        : "",
                                             }}
                                         >
                                             <div>
                                                 <div
                                                     style={{
-                                                        color: channelType === 3 ? "var(--foreground-1)" : "",
+                                                        color:
+                                                            channelType === 3
+                                                                ? "var(--foreground-1)"
+                                                                : "",
                                                     }}
                                                 >
-                                                    <Icon name={channelType === 3 ? "circleChecked" : "circle"} />
+                                                    <Icon
+                                                        name={
+                                                            channelType === 3
+                                                                ? "circleChecked"
+                                                                : "circle"
+                                                        }
+                                                    />
                                                 </div>
 
                                                 <div>
                                                     <div>
-                                                        <Icon name={channelLocked ? "voiceLock" : "voice"} />
+                                                        <Icon
+                                                            name={
+                                                                channelLocked
+                                                                    ? "voiceLock"
+                                                                    : "voice"
+                                                            }
+                                                        />
                                                     </div>
 
                                                     <div className={styles.content}>
                                                         <div>Voice</div>
-                                                        <div>Hang out together with voice, video, and screen share</div>
+                                                        <div>
+                                                            Hang out together with voice, video, and
+                                                            screen share
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1259,7 +1366,11 @@ export function Popup({ content, friends }: any) {
                                     </div>
                                 )}
 
-                                <div className={`${styles.input} ${!content.isCategory && styles.channel}`}>
+                                <div
+                                    className={`${styles.input} ${
+                                        !content.isCategory && styles.channel
+                                    }`}
+                                >
                                     <label>Channel name</label>
                                     <div>
                                         {!content.isCategory && (
@@ -1280,7 +1391,9 @@ export function Popup({ content, friends }: any) {
                                             type="text"
                                             maxLength={100}
                                             value={channelName}
-                                            placeholder={content.isCategory ? "New Category" : "new-channel"}
+                                            placeholder={
+                                                content.isCategory ? "New Category" : "new-channel"
+                                            }
                                             onChange={(e) => setChannelName(e.target.value)}
                                         />
                                     </div>
@@ -1290,7 +1403,9 @@ export function Popup({ content, friends }: any) {
                                     <div onClick={() => setChannelLocked((prev) => !prev)}>
                                         <label>
                                             <Icon name="lock" />
-                                            {content.isCategory ? "Private Category" : "Private Channel"}
+                                            {content.isCategory
+                                                ? "Private Category"
+                                                : "Private Channel"}
                                         </label>
 
                                         <div>
@@ -1313,12 +1428,16 @@ export function Popup({ content, friends }: any) {
                                     <label
                                         htmlFor="uid"
                                         style={{
-                                            color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
+                                            color: usernameError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
                                         }}
                                     >
                                         Filename
                                         {usernameError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {usernameError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {usernameError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1344,12 +1463,16 @@ export function Popup({ content, friends }: any) {
                                     <label
                                         htmlFor="password"
                                         style={{
-                                            color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                                            color: passwordError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
                                         }}
                                     >
                                         Description (alt text)
                                         {passwordError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {passwordError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {passwordError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1382,13 +1505,13 @@ export function Popup({ content, friends }: any) {
                                 >
                                     <input type="checkbox" />
 
-                                    <div style={{ borderColor: isSpoiler ? "var(--accent-border)" : "" }}>
-                                        {isSpoiler && (
-                                            <Icon
-                                                name="accept"
-                                                fill="var(--accent-1)"
-                                            />
-                                        )}
+                                    <div
+                                        style={{
+                                            borderColor: isSpoiler ? "var(--accent-border)" : "",
+                                            color: "var(--accent-1)",
+                                        }}
+                                    >
+                                        {isSpoiler && <Icon name="checkmark" />}
                                     </div>
 
                                     <div>
@@ -1404,12 +1527,16 @@ export function Popup({ content, friends }: any) {
                                     <label
                                         htmlFor="uid"
                                         style={{
-                                            color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
+                                            color: usernameError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
                                         }}
                                     >
                                         Username
                                         {usernameError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {usernameError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {usernameError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1435,12 +1562,16 @@ export function Popup({ content, friends }: any) {
                                     <label
                                         htmlFor="password"
                                         style={{
-                                            color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                                            color: passwordError.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
                                         }}
                                     >
                                         Current Password
                                         {passwordError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {passwordError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {passwordError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1469,12 +1600,16 @@ export function Popup({ content, friends }: any) {
                                     <label
                                         htmlFor="password1"
                                         style={{
-                                            color: password1Error.length ? "var(--error-light)" : "var(--foreground-3)",
+                                            color: password1Error.length
+                                                ? "var(--error-light)"
+                                                : "var(--foreground-3)",
                                         }}
                                     >
                                         Current Password
                                         {password1Error.length > 0 && (
-                                            <span className={styles.errorLabel}>- {password1Error}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {password1Error}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1510,7 +1645,9 @@ export function Popup({ content, friends }: any) {
                                     >
                                         New Password
                                         {newPasswordError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {newPasswordError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {newPasswordError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1543,7 +1680,9 @@ export function Popup({ content, friends }: any) {
                                     >
                                         Confirm New Password
                                         {newPasswordError.length > 0 && (
-                                            <span className={styles.errorLabel}>- {newPasswordError}</span>
+                                            <span className={styles.errorLabel}>
+                                                - {newPasswordError}
+                                            </span>
                                         )}
                                     </label>
                                     <div className={styles.inputContainer}>
@@ -1574,7 +1713,7 @@ export function Popup({ content, friends }: any) {
                     >
                         <button
                             ref={cancelRef}
-                            className="underline"
+                            className="button underline"
                             onClick={(e) => {
                                 e.stopPropagation();
 
@@ -1595,7 +1734,9 @@ export function Popup({ content, friends }: any) {
                         </button>
 
                         <button
-                            className={`${prop.buttonColor} ${prop.buttonDisabled ? "disabled" : ""}`}
+                            className={`${prop.buttonColor} ${
+                                prop.buttonDisabled ? "button disabled" : "button"
+                            }`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (isLoading || prop.buttonDisabled) return;

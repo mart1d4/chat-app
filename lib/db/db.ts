@@ -10,5 +10,5 @@ export const db = new Kysely<Database>({
         useSharedConnection: true,
     }),
     plugins: [new CamelCasePlugin()],
-    log: ["query"],
+    // log: ["query"],
 });

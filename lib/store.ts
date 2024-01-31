@@ -208,7 +208,15 @@ export const useData = create<DataState>()((set) => ({
     setToken: (token) => set(() => ({ token })),
     setUser: (user) => set(() => ({ user })),
 
-    setChannels: (channels) => set(() => ({ channels })),
+    setChannels: (channels) =>
+        set(() => ({
+            channels: channels.map((c) => ({
+                ...c,
+                name: getChannelName(c.recipients, useData.getState().user),
+                icon: getChannelIcon(c, useData.getState().user),
+            })),
+        })),
+
     setGuilds: (guilds) => set(() => ({ guilds })),
     setFriends: (friends) => set(() => ({ friends })),
     setBlocked: (blocked) => set(() => ({ blocked })),

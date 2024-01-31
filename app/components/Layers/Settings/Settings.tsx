@@ -163,14 +163,21 @@ export function Settings() {
                                     <div className={styles.closeButton}>
                                         <div>
                                             <div onClick={() => setShowSettings(null)}>
-                                                <Icon name="close" size={16} />
+                                                <Icon
+                                                    name="close"
+                                                    size={16}
+                                                />
                                             </div>
                                         </div>
                                     </div>
 
                                     {tabs.map((tab) => (
                                         <div
-                                            tabIndex={tab.name === "separator" || tab.type === "title" ? -1 : 0}
+                                            tabIndex={
+                                                tab.name === "separator" || tab.type === "title"
+                                                    ? -1
+                                                    : 0
+                                            }
                                             key={uuidv4()}
                                             className={
                                                 tab.type === "title"
@@ -183,7 +190,11 @@ export function Settings() {
                                             }
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                if (tab.name === "separator" || tab.type === "title") return;
+                                                if (
+                                                    tab.name === "separator" ||
+                                                    tab.type === "title"
+                                                )
+                                                    return;
                                                 if (tab.name === "Log Out")
                                                     return setLayers({
                                                         settings: {
@@ -199,7 +210,11 @@ export function Settings() {
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
                                                     e.preventDefault();
-                                                    if (tab.name === "separator" || tab.type === "title") return;
+                                                    if (
+                                                        tab.name === "separator" ||
+                                                        tab.type === "title"
+                                                    )
+                                                        return;
                                                     if (tab.name === "Log Out")
                                                         return setLayers({
                                                             settings: {
@@ -216,7 +231,12 @@ export function Settings() {
                                         >
                                             {tab.name !== "separator" && tab.name}
 
-                                            {tab?.icon && <Icon name={tab.icon} size={16} />}
+                                            {tab?.icon && (
+                                                <Icon
+                                                    name={tab.icon}
+                                                    size={16}
+                                                />
+                                            )}
                                         </div>
                                     ))}
                                 </nav>
@@ -237,7 +257,10 @@ export function Settings() {
                                                         setHideNav(false);
                                                     }}
                                                 >
-                                                    <Icon name="close" size={16} />
+                                                    <Icon
+                                                        name="close"
+                                                        size={16}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -255,7 +278,10 @@ export function Settings() {
                                                     setShowSettings(null);
                                                 }}
                                             >
-                                                <Icon name="close" size={18} />
+                                                <Icon
+                                                    name="close"
+                                                    size={18}
+                                                />
                                             </div>
 
                                             <div>ESC</div>
@@ -355,7 +381,12 @@ function MyAccount({ setActiveTab }: any) {
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
-                            <Avatar src={user.avatar} alt={user.username} size={80} status={user.status} />
+                            <Avatar
+                                src={user.avatar}
+                                alt={user.username}
+                                size={80}
+                                status={user.status}
+                            />
                         </div>
 
                         <div
@@ -377,20 +408,29 @@ function MyAccount({ setActiveTab }: any) {
                             {user.username}
                         </div>
 
-                        <button className="blue" onClick={() => setActiveTab("Profiles")}>
+                        <button
+                            className="button blue"
+                            onClick={() => setActiveTab("Profiles")}
+                        >
                             Edit User Profile
                         </button>
                     </div>
 
                     <div>
                         {fields.map((field) => (
-                            <div className={styles.field} key={uuidv4()}>
+                            <div
+                                className={styles.field}
+                                key={uuidv4()}
+                            >
                                 <div>
                                     <h3>{field.title}</h3>
                                     <div>{field.value}</div>
                                 </div>
 
-                                <button className="grey" onClick={() => field.func && field.func()}>
+                                <button
+                                    className="button grey"
+                                    onClick={() => field.func && field.func()}
+                                >
                                     {field.edit ? "Edit" : "Add"}
                                 </button>
                             </div>
@@ -407,7 +447,7 @@ function MyAccount({ setActiveTab }: any) {
                 </div>
 
                 <button
-                    className="blue"
+                    className="button blue"
                     style={{ marginBottom: "28px" }}
                     onClick={() => {
                         setLayers({
@@ -426,14 +466,14 @@ function MyAccount({ setActiveTab }: any) {
                 <h3>SMS Backup Authentication</h3>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose your authentication app or backup codes.
-                        Your current phone number is 0001.
+                        Add your phone as a backup 2FA method in case you lose your authentication
+                        app or backup codes. Your current phone number is 0001.
                     </div>
 
                     <div className={styles.buttonsContainer}>
-                        <button className="blue">Enable SMS Authentication</button>
+                        <button className=" button blue">Enable SMS Authentication</button>
 
-                        <button className="underline">Change phone number</button>
+                        <button className="button underline">Change phone number</button>
                     </div>
                 </div>
             </div>
@@ -447,11 +487,11 @@ function MyAccount({ setActiveTab }: any) {
 
                 <div className={styles.accountRemoval}>
                     <div>
-                        Deleting your account will remove all of your data from our servers. This action is
-                        irreversible.
+                        Deleting your account will remove all of your data from our servers. This
+                        action is irreversible.
                     </div>
 
-                    <button className="red">Delete Account</button>
+                    <button className="button red">Delete Account</button>
                 </div>
             </div>
         </>
@@ -560,13 +600,34 @@ function Profiles() {
 
     const CardBanner = useMemo(
         () => (
-            <svg className={styles.cardBanner} viewBox={`0 0 340 ${banner || banner ? "120" : "90"}`}>
+            <svg
+                className={styles.cardBanner}
+                viewBox={`0 0 340 ${banner || banner ? "120" : "90"}`}
+            >
                 <mask id="card-banner-mask">
-                    <rect fill="white" x="0" y="0" width="100%" height="100%" />
-                    <circle fill="black" cx="58" cy={banner || banner ? 112 : 82} r="46" />
+                    <rect
+                        fill="white"
+                        x="0"
+                        y="0"
+                        width="100%"
+                        height="100%"
+                    />
+                    <circle
+                        fill="black"
+                        cx="58"
+                        cy={banner || banner ? 112 : 82}
+                        r="46"
+                    />
                 </mask>
 
-                <foreignObject x="0" y="0" width="100%" height="100%" overflow="visible" mask="url(#card-banner-mask)">
+                <foreignObject
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    overflow="visible"
+                    mask="url(#card-banner-mask)"
+                >
                     <div>
                         <button
                             className={styles.cardBannerBackground}
@@ -584,7 +645,10 @@ function Profiles() {
                             onClick={() => bannerInputRef.current?.click()}
                         />
 
-                        <div className={styles.cardBannerButton} aria-hidden="true">
+                        <div
+                            className={styles.cardBannerButton}
+                            aria-hidden="true"
+                        >
                             Change Banner
                         </div>
                     </div>
@@ -596,7 +660,10 @@ function Profiles() {
 
     const CardAvatar = useMemo(
         () => (
-            <div className={styles.cardAvatar} style={{ top: banner ? "76px" : "46px" }}>
+            <div
+                className={styles.cardAvatar}
+                style={{ top: banner ? "76px" : "46px" }}
+            >
                 <button
                     className={styles.avatarImage}
                     style={{
@@ -651,12 +718,19 @@ function Profiles() {
                             <p>Careful — you have unsaved changes!</p>
 
                             <div>
-                                <button className="button underline" onClick={() => resetState()}>
+                                <button
+                                    className="button underline"
+                                    onClick={() => resetState()}
+                                >
                                     Reset
                                 </button>
 
                                 <button
-                                    className={description.length > 190 ? "button green disabled" : "button green"}
+                                    className={
+                                        description.length > 190
+                                            ? "button green disabled"
+                                            : "button green"
+                                    }
                                     onMouseEnter={(e) => {
                                         if (description.length > 190) {
                                             setTooltip({
@@ -666,7 +740,9 @@ function Profiles() {
                                             });
                                         }
                                     }}
-                                    onMouseLeave={() => description.length > 190 && setTooltip(null)}
+                                    onMouseLeave={() =>
+                                        description.length > 190 && setTooltip(null)
+                                    }
                                     onClick={() => description.length <= 190 && saveUser()}
                                 >
                                     {isLoading ? <LoadingDots /> : "Save Changes"}
@@ -802,7 +878,8 @@ function Profiles() {
                             style={{
                                 color: activeTab === index ? "var(--foreground-1)" : "",
                                 cursor: activeTab === index ? "default" : "",
-                                borderBottom: activeTab === index ? "2px solid var(--accent-2)" : "",
+                                borderBottom:
+                                    activeTab === index ? "2px solid var(--accent-2)" : "",
                             }}
                         >
                             {tab}
@@ -831,12 +908,18 @@ function Profiles() {
                             <h3>Avatar</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button onClick={() => avatarInputRef.current?.click()} className="blue">
+                                <button
+                                    onClick={() => avatarInputRef.current?.click()}
+                                    className="button blue"
+                                >
                                     Change Avatar
                                 </button>
 
                                 {!avatars.includes(typeof avatar === "string" ? avatar : "") && (
-                                    <button className="underline" onClick={() => setAvatar(getRandomAvatar())}>
+                                    <button
+                                        className="button underline"
+                                        onClick={() => setAvatar(getRandomAvatar())}
+                                    >
                                         Remove Avatar
                                     </button>
                                 )}
@@ -847,12 +930,18 @@ function Profiles() {
                             <h3>Profile Banner</h3>
 
                             <div className={styles.buttonContainer}>
-                                <button className="blue" onClick={() => bannerInputRef.current?.click()}>
+                                <button
+                                    className="button blue"
+                                    onClick={() => bannerInputRef.current?.click()}
+                                >
                                     Change Banner
                                 </button>
 
                                 {banner && (
-                                    <button className="underline" onClick={() => setBanner(undefined)}>
+                                    <button
+                                        className="underline"
+                                        onClick={() => setBanner(undefined)}
+                                    >
                                         Remove Banner
                                     </button>
                                 )}
@@ -871,7 +960,10 @@ function Profiles() {
                                         }}
                                         onClick={() => primaryColorInputRef.current?.click()}
                                     >
-                                        <Icon name="edit" size={14} />
+                                        <Icon
+                                            name="edit"
+                                            size={14}
+                                        />
                                     </div>
 
                                     <div>Primary</div>
@@ -885,7 +977,10 @@ function Profiles() {
                                         }}
                                         onClick={() => accentColorInputRef.current?.click()}
                                     >
-                                        <Icon name="edit" size={14} />
+                                        <Icon
+                                            name="edit"
+                                            size={14}
+                                        />
                                     </div>
 
                                     <div>Accent</div>
@@ -896,7 +991,9 @@ function Profiles() {
                         <div className={styles.customSection}>
                             <h3>About me</h3>
 
-                            <div className={styles.description}>You can use markdown and links if you'd like</div>
+                            <div className={styles.description}>
+                                You can use markdown and links if you'd like
+                            </div>
 
                             <div className={styles.inputLarge}>
                                 <div className="scrollbar">
@@ -936,7 +1033,9 @@ function Profiles() {
                                             text:
                                                 description.length > 190
                                                     ? "Message is too long"
-                                                    : `${190 - description.length} characters remaining`,
+                                                    : `${
+                                                          190 - description.length
+                                                      } characters remaining`,
                                             element: e.currentTarget,
                                         });
                                     }}
@@ -964,7 +1063,10 @@ function Profiles() {
                                     "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
                                     "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                                     "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                                    "--card-button-color": getButtonColor(primaryColor, accentColor),
+                                    "--card-button-color": getButtonColor(
+                                        primaryColor,
+                                        accentColor
+                                    ),
                                     "--card-border-color": primaryColor,
                                 } as React.CSSProperties
                             }
@@ -1016,7 +1118,12 @@ function Profiles() {
                                             </div>
                                         </div>
 
-                                        <button tabIndex={-1}>Example Button</button>
+                                        <button
+                                            className="button"
+                                            tabIndex={-1}
+                                        >
+                                            Example Button
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1071,7 +1178,11 @@ function StopWatch() {
         <div>
             <span>
                 {`${time.hours > 0 ? time.hours + ":" : ""}${
-                    time.minutes ? (time.minutes < 10 ? "0" + time.minutes + ":" : time.minutes + ":") : "00:"
+                    time.minutes
+                        ? time.minutes < 10
+                            ? "0" + time.minutes + ":"
+                            : time.minutes + ":"
+                        : "00:"
                 }${time.seconds ? (time.seconds < 10 ? "0" + time.seconds : time.seconds) : "00"}`}
             </span>
             {" elapsed"}

@@ -196,7 +196,7 @@
 }
 
 .toolsContainer {
-    margin-right: -6px;
+    margin-right: 4px;
     display: flex;
     height: 44px;
     position: sticky;
@@ -205,14 +205,14 @@
 
 .toolsContainer > button:not(.sendButton) {
     padding: 4px;
-    margin: 0 4px;
     height: 44px;
-    width: 38px;
+    width: 40px;
     color: var(--foreground-3);
-}
-
-.toolsContainer > button:first-child:not(.sendButton) {
-    width: 38px;
+    background-color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toolsContainer > button:not(:last-child):hover {
@@ -386,13 +386,30 @@
     color: var(--foreground-3);
 }
 
+.fileMenuButton:nth-child(3) {
+    color: var(--error-1);
+}
+
+.fileMenuButton svg {
+    transition: transform 0.05s ease-in-out;
+}
+
 .fileMenuButton:hover {
     background-color: var(--background-4);
     color: var(--foreground-2);
 }
 
+.fileMenuButton:nth-child(3):hover {
+    color: var(--error-1);
+}
+
 .fileMenuButton:active {
     background-color: var(--background-5);
+    color: var(--foreground-1);
+}
+
+.fileMenuButton:nth-child(3):active {
+    color: var(--error-1);
 }
 
 .fileMenuButton:active svg {
@@ -499,6 +516,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 3px;
+    background-color: transparent;
 }
 
 .sendButton::before {

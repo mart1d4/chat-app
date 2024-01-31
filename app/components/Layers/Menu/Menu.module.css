@@ -10,7 +10,8 @@
     position: relative;
 }
 
-.container > div {
+.container > ul {
+    list-style: none;
     max-width: 320px;
     padding: 6px 8px;
     position: relative;
@@ -18,9 +19,8 @@
     flex: 1 1 auto;
 }
 
-.item,
-.itemDanger {
-    color: var(--foreground-4);
+.item {
+    color: var(--foreground-3);
     min-height: 32px;
     padding: 6px 8px;
     margin: 2px 0;
@@ -32,41 +32,41 @@
     user-select: none;
 }
 
-.itemDanger {
+.item.danger {
     color: var(--error-1);
 }
 
-.item > div,
-.itemDanger > div {
+.item > div {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.item.disabled,
-.itemDanger.disabled {
+.item.disabled {
     opacity: 0.5;
     cursor: default;
-    color: var(--foreground-3) !important;
-    background-color: transparent !important;
+    color: var(--foreground-3);
+    background-color: transparent;
 }
 
-.item.hover {
+.item:hover,
+.item:focus-visible {
     background-color: var(--accent-1);
-    color: var(--foreground-2);
+    color: var(--foreground-1);
 }
 
-.item.hover:active {
+.item:active {
     background-color: var(--accent-2);
     color: var(--foreground-1);
 }
 
-.itemDanger.hover {
+.item.danger:hover,
+.item.danger:focus-visible {
     background-color: var(--error-1);
-    color: var(--foreground-2);
+    color: var(--foreground-1);
 }
 
-.itemDanger.hover:active {
+.item.danger:active {
     background-color: var(--error-2);
     color: var(--foreground-1);
 }
@@ -122,18 +122,9 @@
     line-height: 16px;
     margin-top: 2px;
     white-space: normal;
-    color: var(--foreground-4);
     display: flex;
     align-items: center;
     justify-content: flex-start;
-}
-
-.item.hover .tip {
-    color: var(--foreground-2);
-}
-
-.iter.hover:active .tip {
-    color: var(--foreground-1);
 }
 
 .tip > svg {

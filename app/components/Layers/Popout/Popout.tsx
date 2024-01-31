@@ -119,7 +119,9 @@ export function Popout({ content }: any) {
             fetchPinned();
         } else {
             if (content.channel) {
-                const filtered = friends.filter((friend) => !content.channel.recipientIds.includes(friend.id));
+                const filtered = friends.filter(
+                    (friend) => !content.channel.recipientIds.includes(friend.id)
+                );
                 setFilteredList(filtered);
                 setPlacesLeft(10 - content.channel.recipientIds.length);
             } else {
@@ -145,14 +147,24 @@ export function Popout({ content }: any) {
         if (content.pinned) return;
 
         if (content.channel) {
-            const filtered = friends.filter((friend: any) => !content.channel.recipientIds?.includes(friend.id));
+            const filtered = friends.filter(
+                (friend: any) => !content.channel.recipientIds?.includes(friend.id)
+            );
 
             if (search)
-                setFilteredList(filtered.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
+                setFilteredList(
+                    filtered.filter((user) =>
+                        user.username.toLowerCase().includes(search.toLowerCase())
+                    )
+                );
             else setFilteredList(filtered);
         } else {
             if (search)
-                setFilteredList(friends.filter((user) => user.username.toLowerCase().includes(search.toLowerCase())));
+                setFilteredList(
+                    friends.filter((user) =>
+                        user.username.toLowerCase().includes(search.toLowerCase())
+                    )
+                );
             else setFilteredList(friends);
         }
     }, [search, friends]);
@@ -177,7 +189,9 @@ export function Popout({ content }: any) {
                     const channel = channels.find((channel) => {
                         return (
                             channel.recipients.length === recipients.length &&
-                            channel.recipientIds.every((recipient: string) => recipients.includes(recipient))
+                            channel.recipientIds.every((recipient: string) =>
+                                recipients.includes(recipient)
+                            )
                         );
                     });
 
@@ -299,7 +313,8 @@ export function Popout({ content }: any) {
                                             (recipient: TCleanUser) => recipient.id !== user.id
                                         ).username
                                     } can pin a message from its cog menu.`}
-                                {content.channel.type === 1 && "Any group member can pin a message from its cog menu."}
+                                {content.channel.type === 1 &&
+                                    "Any group member can pin a message from its cog menu."}
                                 {content.channel.type === 2 &&
                                     "Users with 'Manage Messages' can pin from the cog menu."}
                             </div>
@@ -321,7 +336,9 @@ export function Popout({ content }: any) {
                         <>
                             <div>
                                 {placesLeft > 0
-                                    ? `You can add ${placesLeft} more friend${placesLeft > 1 ? "s" : ""}.`
+                                    ? `You can add ${placesLeft} more friend${
+                                          placesLeft > 1 ? "s" : ""
+                                      }.`
                                     : "This group has a 10 member limit."}
                             </div>
 
@@ -334,11 +351,19 @@ export function Popout({ content }: any) {
                                                 key={friend.username}
                                                 className={styles.friendChip}
                                                 onClick={() => {
-                                                    setChosen(chosen?.filter((user) => user.id !== friend.id));
+                                                    setChosen(
+                                                        chosen?.filter(
+                                                            (user) => user.id !== friend.id
+                                                        )
+                                                    );
                                                 }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter") {
-                                                        setChosen(chosen?.filter((user) => user.id !== friend.id));
+                                                        setChosen(
+                                                            chosen?.filter(
+                                                                (user) => user.id !== friend.id
+                                                            )
+                                                        );
                                                         inputRef.current?.focus();
                                                     }
                                                 }}
@@ -380,7 +405,11 @@ export function Popout({ content }: any) {
                                 {content.channel?.type === 1 && (
                                     <div className={styles.addButton}>
                                         <button
-                                            className={chosen?.length ? "blue" : "blue disabled"}
+                                            className={
+                                                chosen?.length
+                                                    ? "button blue"
+                                                    : "button blue disabled"
+                                            }
                                             onClick={() => {
                                                 if (chosen?.length) {
                                                     createChan();
@@ -436,7 +465,9 @@ export function Popout({ content }: any) {
                                     className={styles.friend}
                                     onClick={() => {
                                         if (chosen.includes(friend)) {
-                                            setChosen(chosen?.filter((user) => user.id !== friend.id));
+                                            setChosen(
+                                                chosen?.filter((user) => user.id !== friend.id)
+                                            );
                                         } else {
                                             if (placesLeft > 0) {
                                                 setChosen([...chosen, friend]);
@@ -447,7 +478,9 @@ export function Popout({ content }: any) {
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             if (chosen.includes(friend)) {
-                                                setChosen(chosen?.filter((user) => user.id !== friend.id));
+                                                setChosen(
+                                                    chosen?.filter((user) => user.id !== friend.id)
+                                                );
                                             } else {
                                                 if (placesLeft > 0) {
                                                     setChosen([...chosen, friend]);
@@ -474,11 +507,10 @@ export function Popout({ content }: any) {
 
                                         <div className={styles.friendCheck}>
                                             <div>
-                                                {chosen?.includes(friend) && (
+                                                {chosen.includes(friend) && (
                                                     <Icon
-                                                        name="accept"
+                                                        name="checkmark"
                                                         size={16}
-                                                        fill="var(--accent-1)"
                                                     />
                                                 )}
                                             </div>
@@ -501,7 +533,10 @@ export function Popout({ content }: any) {
                                             type="text"
                                             readOnly
                                             placeholder="https://chat-app.mart1d4.dev/example"
-                                            value={inviteLink && `https://chat-app.mart1d4.dev/${inviteLink}`}
+                                            value={
+                                                inviteLink &&
+                                                `https://chat-app.mart1d4.dev/${inviteLink}`
+                                            }
                                             onClick={async () => {
                                                 const getLink = async () => {
                                                     const response = await sendRequest({
@@ -531,7 +566,7 @@ export function Popout({ content }: any) {
                                     </div>
 
                                     <button
-                                        className={copied ? "green" : "blue"}
+                                        className={copied ? "button green" : "button blue"}
                                         onClick={async () => {
                                             const getLink = async () => {
                                                 const response = await sendRequest({
@@ -571,7 +606,10 @@ export function Popout({ content }: any) {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className={"blue " + (content.channel && !chosen.length ? "disabled" : "")}
+                                    className={
+                                        "button blue " +
+                                        (content.channel && !chosen.length ? "disabled" : "")
+                                    }
                                     onClick={() => {
                                         if (content?.channel && !chosen.length) return;
                                         setLayers({
@@ -627,7 +665,10 @@ export function Popout({ content }: any) {
                                             type="text"
                                             readOnly
                                             placeholder="https://chat-app.mart1d4.dev/example"
-                                            value={inviteLink && `https://chat-app.mart1d4.dev/${inviteLink}`}
+                                            value={
+                                                inviteLink &&
+                                                `https://chat-app.mart1d4.dev/${inviteLink}`
+                                            }
                                             onClick={async () => {
                                                 const getLink = async () => {
                                                     const response = await sendRequest({
@@ -657,7 +698,7 @@ export function Popout({ content }: any) {
                                     </div>
 
                                     <button
-                                        className={copied ? "green" : "blue"}
+                                        className={copied ? "button green" : "button blue"}
                                         onClick={async () => {
                                             const getLink = async () => {
                                                 const response = await fetch(
@@ -702,7 +743,7 @@ export function Popout({ content }: any) {
                         ) : (
                             <div className={styles.footer}>
                                 <button
-                                    className="blue"
+                                    className="button blue"
                                     onClick={() => {
                                         if (chosen.length) {
                                             setLayers({
@@ -733,7 +774,7 @@ export function Popout({ content }: any) {
                         <div>You don't have any friends to add!</div>
 
                         <button
-                            className="green"
+                            className="button green"
                             onClick={() => {
                                 setLayers({
                                     settings: {

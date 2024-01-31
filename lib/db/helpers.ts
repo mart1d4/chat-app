@@ -1,8 +1,8 @@
+import { NextResponse } from "next/server";
 import { User, UserTable } from "./types";
 import { cookies } from "next/headers";
 import { sql } from "kysely";
 import { db } from "./db";
-import { NextResponse } from "next/server";
 
 // Fields selections
 
@@ -119,7 +119,7 @@ export async function createUser(user: Partial<UserTable>) {
 
         return newUser;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return null;
     }
 }
@@ -138,6 +138,7 @@ export async function getUser({
     throwOnNotFound?: boolean;
 }): Promise<Partial<User> | NextResponse | null> {
     const refreshToken = cookies().get("token")?.value;
+
     if (!id && !username && !refreshToken) {
         if (throwOnNotFound) {
             return NextResponse.json(
@@ -174,10 +175,11 @@ export async function getUser({
             .$if(!!select?.verified, (q) => q.select("verified"))
             .$if(!!select?.notifications, (q) => q.select("notifications"))
             .$if(!!select?.createdAt, (q) => q.select("createdAt"))
+            .$if(!select || Object.keys(select).length === 0, (q) => q.select(defaultSelect))
             .$if(!id && !username, (q) =>
                 q.where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
             )
-            .$if(!!id, (q) => q.where("id", "=", id as number))
+            .$if(!!id, (q) => q.where("id", "=", id))
             .$if(!!username, (q) => q.where(sql`username = BINARY ${username as string}`))
             .executeTakeFirst();
 
@@ -197,7 +199,7 @@ export async function getUser({
 
         return user;
     } catch (error) {
-        console.log(error);
+        console.error(error);
 
         if (throwOnNotFound) {
             return NextResponse.json(
@@ -210,6 +212,22 @@ export async function getUser({
         }
 
         return null;
+    }
+}
+
+export async function canUserAccessChannel(userId: number, channelId: number) {
+    try {
+        const channel = await db
+            .selectFrom("channelrecipients")
+            .select("channelId")
+            .where("userId", "=", userId)
+            .where("channelId", "=", channelId)
+            .executeTakeFirst();
+
+        return !!channel;
+    } catch (error) {
+        console.error(error);
+        return false;
     }
 }
 
@@ -246,7 +264,7 @@ export async function getInitialData() {
             guilds,
         };
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return null;
     }
 }
@@ -259,11 +277,6 @@ export async function getFriends(userId: number) {
                 ${sql.ref("username")},
                 ${sql.ref("displayName")},
                 ${sql.ref("avatar")},
-                ${sql.ref("banner")},
-                ${sql.ref("primaryColor")},
-                ${sql.ref("accentColor")},
-                ${sql.ref("description")},
-                ${sql.ref("customStatus")},
                 ${sql.ref("status")},
                 ${sql.ref("createdAt")}
             FROM
@@ -274,11 +287,6 @@ export async function getFriends(userId: number) {
                     ${sql.ref("username")},
                     ${sql.ref("displayName")},
                     ${sql.ref("avatar")},
-                    ${sql.ref("banner")},
-                    ${sql.ref("primaryColor")},
-                    ${sql.ref("accentColor")},
-                    ${sql.ref("description")},
-                    ${sql.ref("customStatus")},
                     ${sql.ref("status")},
                     ${sql.ref("createdAt")}
                 FROM
@@ -300,9 +308,26 @@ export async function getFriends(userId: number) {
                 )
             )`.execute(db);
 
+        // const rows = await kysely
+        //     .selectFrom("user as u1")
+        //     .innerJoin("user as u2", (jb) =>
+        //         jb.on(({ eb, ref }) =>
+        //             eb("u1.id", "=", ref("u2.id")).or("u1.first_name", "=", ref("u2.first_name"))
+        //         )
+        //     )
+        //     .innerJoin("user as u3", (jb) =>
+        //         jb.on(({ eb, or, ref }) =>
+        //             or([
+        //                 eb("u2.id", "=", ref("u3.id")),
+        //                 eb("u2.first_name", "=", ref("u2.first_name")),
+        //             ])
+        //         )
+        //     )
+        //     .execute();
+
         return friends.rows || [];
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -322,7 +347,7 @@ export async function getRequestsSent(userId: number) {
 
         return requests;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -342,7 +367,7 @@ export async function getRequestsReceived(userId: number) {
 
         return requests;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -362,7 +387,7 @@ export async function getBlocked(userId: number) {
 
         return blocked;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -382,7 +407,7 @@ export async function getBlockedBy(userId: number) {
 
         return blocked;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -393,17 +418,69 @@ export async function getChannels(userId: number) {
             (await db
                 .selectFrom("channelrecipients")
                 .innerJoin(
-                    (eb) => eb.selectFrom("channels").select(["id", "name"]).as("channels"),
+                    (eb) =>
+                        eb
+                            .selectFrom("channels")
+                            .select(["id", "type", "name", "icon", "updatedAt"])
+                            .as("channels"),
                     (join) => join.onRef("channels.id", "=", "channelrecipients.channelId")
                 )
-                .select(["id", "name"])
+                .select(["id", "type", "name", "icon"])
+                .orderBy("channels.updatedAt", "desc")
                 .where("channelrecipients.userId", "=", userId)
                 .execute()) || [];
 
-        return channels;
+        // MAYBE REALLY TRY TO GET THE RECIPIENTS IN ONE QUERY
+
+        const newChannels = await Promise.all(
+            channels.map(async (channel) => {
+                const recipients =
+                    (await db
+                        .selectFrom("channelrecipients")
+                        .innerJoin(
+                            (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                            (join) => join.onRef("users.id", "=", "channelrecipients.userId")
+                        )
+                        .select(defaultSelect)
+                        .where("channelId", "=", channel.id)
+                        .execute()) || [];
+
+                return { ...channel, recipients };
+            })
+        );
+
+        return newChannels;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
+    }
+}
+
+export async function getChannel(channelId: number) {
+    try {
+        const channel = await db
+            .selectFrom("channels")
+            .select(["id", "type", "name", "icon", "guildId", "updatedAt"])
+            .where("id", "=", channelId)
+            .executeTakeFirst();
+
+        if (!channel) return null;
+
+        const recipients =
+            (await db
+                .selectFrom("channelrecipients")
+                .innerJoin(
+                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                    (join) => join.onRef("users.id", "=", "channelrecipients.userId")
+                )
+                .select(defaultSelect)
+                .where("channelId", "=", channel.id)
+                .execute()) || [];
+
+        return { ...channel, recipients };
+    } catch (error) {
+        console.error(error);
+        return null;
     }
 }
 
@@ -422,7 +499,7 @@ export async function getGuilds(userId: number) {
 
         return guilds;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
@@ -438,7 +515,7 @@ export async function hasUserBlocked(userId: number, blockedId: number) {
 
         return !!blocked;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 }
@@ -454,7 +531,7 @@ export async function isUserBlockedBy(userId: number, blockerId: number) {
 
         return !!blocked;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 }
@@ -474,7 +551,7 @@ export async function areFriends(userId: number, friendId: number) {
 
         return !!friends;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 }
@@ -490,7 +567,7 @@ export async function hasUserSentRequest(userId: number, requestedId: number) {
 
         return !!request;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 }
@@ -506,7 +583,59 @@ export async function hasUserReceivedRequest(userId: number, requesterId: number
 
         return !!request;
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        return false;
+    }
+}
+
+export async function isUserInChannel(userId: number, channelId: number) {
+    try {
+        const channel = await db
+            .selectFrom("channelrecipients")
+            .select("userId")
+            .where("userId", "=", userId)
+            .where("channelId", "=", channelId)
+            .executeTakeFirst();
+
+        return !!channel;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function isUserInGuild(userId: number, guildId: number) {
+    try {
+        const guild = await db
+            .selectFrom("guildmembers")
+            .select("userId")
+            .where("userId", "=", userId)
+            .where("guildId", "=", guildId)
+            .executeTakeFirst();
+
+        return !!guild;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function areUsersBlocked([firstUserId, secondUserId]: [number, number]) {
+    try {
+        const blocked = await db
+            .selectFrom("blocked")
+            .select("blockedId")
+            .where(({ eb, or, and }) =>
+                or([
+                    and([eb("blockerId", "=", firstUserId), eb("blockedId", "=", secondUserId)]),
+                    and([eb("blockerId", "=", secondUserId), eb("blockedId", "=", firstUserId)]),
+                ])
+            )
+            .executeTakeFirst();
+
+        return !!blocked;
+    } catch (error) {
+        console.error(error);
         return false;
     }
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { sanitizeString } from "@/lib/strings";
 import { useRouter } from "next/navigation";
-import { trimMessage } from "@/lib/strings";
 import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
@@ -39,7 +39,7 @@ export default function Form() {
         const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: trimMessage(username), password }),
+            body: JSON.stringify({ username: sanitizeString(username), password }),
         }).then((res) => res.json());
 
         if (!response.success) {
@@ -61,7 +61,11 @@ export default function Form() {
                     style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
                     Email or Username
-                    {error.length ? <span className={styles.errorLabel}> - {error}</span> : <span> *</span>}
+                    {error.length ? (
+                        <span className={styles.errorLabel}> - {error}</span>
+                    ) : (
+                        <span> *</span>
+                    )}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -89,7 +93,11 @@ export default function Form() {
                     style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
                 >
                     Password
-                    {error.length ? <span className={styles.errorLabel}>- {error}</span> : <span>*</span>}
+                    {error.length ? (
+                        <span className={styles.errorLabel}>- {error}</span>
+                    ) : (
+                        <span>*</span>
+                    )}
                 </label>
                 <div className={styles.inputContainer}>
                     <input
@@ -121,7 +129,7 @@ export default function Form() {
 
             <button
                 type="submit"
-                className={styles.buttonSubmit}
+                className={"button " + styles.buttonSubmit}
                 onClick={(e) => {
                     e.preventDefault();
                     handleSubmit();

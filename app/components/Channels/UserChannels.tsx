@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Icon, Avatar, UserSection } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserChannels.module.css";
+import { Channel, User } from "@/lib/db/types";
 import { ReactElement } from "react";
 import Link from "next/link";
 
@@ -26,7 +27,7 @@ export const UserChannels = (): ReactElement => {
                         <Title />
 
                         {channels.length > 0 ? (
-                            channels.map((channel: TChannel) => (
+                            channels.map((channel) => (
                                 <ChannelItem
                                     key={channel.id}
                                     channel={channel}
@@ -111,17 +112,22 @@ const Title = () => {
     );
 };
 
-interface ChannelItemProps {
-    special?: boolean;
-    channel?: TChannel;
-}
+type ChannelItemProps =
+    | {
+          special: boolean;
+          channel?: never;
+      }
+    | {
+          special?: never;
+          channel: Channel;
+      };
 
-const ChannelItem = ({ special, channel }: ChannelItemProps) => {
+function ChannelItem({ special, channel }: ChannelItemProps) {
     const requests = useData((state) => state.requestsReceived).length;
-    const currentUser = useData((state) => state.user) as TUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const pings = useNotifications((state) => state.pings);
+    const currentUser = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const isPinged = (pings.find((ping) => ping.channelId === channel?.id)?.amount || 0) > 0;
@@ -145,7 +151,11 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                             <div className={styles.layoutAvatar}>
                                 <Icon
                                     name="friends"
-                                    fill={pathname === "/channels/@me" ? "var(--foreground-1)" : "var(--foreground-3)"}
+                                    fill={
+                                        pathname === "/channels/@me"
+                                            ? "var(--foreground-1)"
+                                            : "var(--foreground-3)"
+                                    }
                                 />
                             </div>
 
@@ -161,10 +171,11 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                 </div>
             </Link>
         );
-    }
-
-    if (channel) {
-        const user = channel.type === 0 ? channel.recipients.find((user) => user.id !== currentUser.id) : null;
+    } else {
+        let user: User | null = null;
+        if (channel.type === 0) {
+            user = channel.recipients.find((user) => user.id !== currentUser.id);
+        }
 
         return (
             <Link
@@ -195,8 +206,8 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
                             <div className={styles.layoutAvatar}>
                                 <div>
                                     <Avatar
-                                        src={channel.icon || ""}
-                                        alt={channel.name || ""}
+                                        src={channel.icon}
+                                        alt={channel.name}
                                         size={32}
                                         status={user?.status}
                                         tooltip={user ? true : false}
@@ -308,4 +319,4 @@ const ChannelItem = ({ special, channel }: ChannelItemProps) => {
             </Link>
         );
     }
-};
+}

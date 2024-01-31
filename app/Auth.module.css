@@ -144,6 +144,8 @@
     height: auto;
     padding: 2px 0;
     color: var(--accent-light);
+    background-color: transparent;
+    font-size: 14px;
 }
 
 .passwordForgot:hover {

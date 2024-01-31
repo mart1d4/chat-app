@@ -25,7 +25,6 @@ CREATE TABLE `users` (
 
 	`notes` json NOT NULL,
 	`notifications` json NOT NULL,
-	`hidden_channel_ids` json NOT NULL,
 
 	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
 	`is_deleted` tinyint(1) NOT NULL DEFAULT '0',
@@ -274,6 +273,7 @@ CREATE TABLE `requests` (
 CREATE TABLE `channelrecipients` (
     `channel_id` bigint NOT NULL,
     `user_id` bigint NOT NULL,
+	`is_hidden` tinyint(1) NOT NULL DEFAULT '0',
 
     UNIQUE KEY `recipients_channel_id_idx` (`channel_id`, `user_id`),
     KEY `recipients_user_id_idx` (`user_id`)

@@ -1,7 +1,9 @@
+// @ts-nocheck
+
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useData, useLayers, useMention, useSettings } from "@/lib/store";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Menu.module.css";
@@ -52,7 +54,6 @@ enum EMenuType {
 }
 
 export function Menu({ content }: { content: any }) {
-    const [hover, setHover] = useState<string>("");
     const [items, setItems] = useState<ItemType[]>([]);
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
@@ -93,6 +94,17 @@ export function Menu({ content }: { content: any }) {
 
         document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Tab") {
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     useEffect(() => {
@@ -148,9 +160,9 @@ export function Menu({ content }: { content: any }) {
             }
         };
 
-        document.addEventListener("keydown", handlekeyDown);
-        return () => document.removeEventListener("keydown", handlekeyDown);
-    }, [filteredItems, hover]);
+        // document.addEventListener("keydown", handlekeyDown);
+        // return () => document.removeEventListener("keydown", handlekeyDown);
+    }, [filteredItems]);
 
     useEffect(() => {
         if (content?.user) {
@@ -263,7 +275,7 @@ export function Menu({ content }: { content: any }) {
                 },
                 {
                     name: "Send Voice Message",
-                    leftIcon: "mic",
+                    leftIcon: "voiceMessage",
                     func: () => {},
                 },
             ]);
@@ -386,6 +398,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Channel ID",
                         icon: "id",
+                        iconSize: 18,
                         func: () => writeText(content.channel.id),
                     },
                 ]);
@@ -497,6 +510,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Channel ID",
                         icon: "id",
+                        iconSize: 18,
                         func: () => writeText(content.channel.id),
                     },
                 ]);
@@ -605,6 +619,7 @@ export function Menu({ content }: { content: any }) {
                 {
                     name: "Copy Server ID",
                     icon: "id",
+                    iconSize: 18,
                     func: () => writeText(content.guild.id),
                 },
             ]);
@@ -799,6 +814,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Message ID",
                         icon: "id",
+                        iconSize: 18,
                         func: () => writeText(message.id),
                     },
                 ]);
@@ -943,6 +959,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Message ID",
                         icon: "id",
+                        iconSize: 18,
                         func: () => writeText(message.id),
                     },
                 ]);
@@ -999,6 +1016,7 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                     ]);
                 } else if (content?.userprofile) {
@@ -1067,6 +1085,7 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                     ]);
                 } else if (userProps?.isBlocked) {
@@ -1159,11 +1178,13 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                         {
                             name: content?.channel && "Copy Channel ID",
                             func: () => writeText(content.channel.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                     ]);
                 } else {
@@ -1283,11 +1304,13 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                         {
                             name: content?.channel && "Copy Channel ID",
                             func: () => writeText(content.channel.id),
                             icon: "id",
+                            iconSize: 18,
                         },
                     ]);
                 }
@@ -1343,6 +1366,7 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy Channel ID",
                         func: () => writeText(content.channel.id),
                         icon: "id",
+                        iconSize: 18,
                     },
                 ]);
             }
@@ -1382,6 +1406,7 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy User ID",
                         func: () => writeText(user.id),
                         icon: "id",
+                        iconSize: 18,
                     },
                 ]);
             } else {
@@ -1519,6 +1544,7 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy User ID",
                         func: () => writeText(user.id),
                         icon: "id",
+                        iconSize: 18,
                     },
                 ]);
             }
@@ -1609,148 +1635,139 @@ export function Menu({ content }: { content: any }) {
         }
     }, [userProps, settings.sendButton, settings.spellcheck, layers]);
 
-    return useMemo(
-        () => (
-            <div
-                ref={menuRef}
-                className={`${styles.container} ${type === "GUILD" ? "big" : ""}`}
-                onMouseLeave={() => setHover("")}
-                style={{
-                    width: type === "GUILD" ? 220 : "",
-                    transform: type === "GUILD" ? "translateX(+10px)" : "",
-                    visibility: items?.length ? "visible" : "hidden",
-                }}
-            >
-                <div>
-                    {items?.map((item, index) => {
-                        if (!item.name) return;
-                        else if (item.name === "Divider")
-                            return (
+    return (
+        <div
+            ref={menuRef}
+            className={`${styles.container} ${type === "GUILD" ? "big" : ""}`}
+            // onMouseLeave={() => setHover("")}
+            style={{
+                width: type === "GUILD" ? 220 : "",
+                transform: type === "GUILD" ? "translateX(+10px)" : "",
+                visibility: items?.length ? "visible" : "hidden",
+            }}
+        >
+            <ul>
+                {items?.map((item, index) => {
+                    if (!item.name) return;
+                    else if (item.name === "Divider")
+                        return (
+                            <div
+                                key={index}
+                                className={styles.divider}
+                            />
+                        );
+                    else
+                        return (
+                            <li
+                                key={index}
+                                tabIndex={0}
+                                className={`${styles.item} ${item.danger ? styles.danger : ""} ${
+                                    item.disabled ? styles.disabled : ""
+                                }`}
+                                onClick={(e) => {
+                                    if (item.disabled) return;
+                                    if (e.shiftKey && item.funcShift) item.funcShift();
+                                    else if (item.func) item.func();
+                                    if ("checked" in item) return;
+                                    setLayers({
+                                        settings: {
+                                            type: "MENU",
+                                            setNull: true,
+                                        },
+                                    });
+                                }}
+                            >
                                 <div
-                                    key={index}
-                                    className={styles.divider}
-                                />
-                            );
-                        else
-                            return (
-                                <div
-                                    key={index}
-                                    className={`${item.danger ? styles.itemDanger : styles.item} ${
-                                        item.disabled ? styles.disabled : ""
-                                    } ${hover === item.name ? styles.hover : ""}`}
-                                    onClick={(e) => {
-                                        if (item.disabled) return;
-                                        if (e.shiftKey && item.funcShift) item.funcShift();
-                                        else if (item.func) item.func();
-                                        if ("checked" in item) return;
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                setNull: true,
-                                            },
-                                        });
+                                    style={{
+                                        justifyContent: item.leftIcon ? "flex-start" : "",
                                     }}
-                                    onMouseEnter={() => setHover(item.name as string)}
                                 >
-                                    <div
-                                        style={{
-                                            justifyContent: item.leftIcon ? "flex-start" : "",
-                                        }}
-                                    >
-                                        {item.leftIcon && (
-                                            <div style={{ marginRight: "8px" }}>
-                                                <Icon name={item.leftIcon} />
-                                            </div>
-                                        )}
-
-                                        {content.type === "STATUS" && (
-                                            <div className={styles.statusIcon}>
-                                                <svg
-                                                    width={10}
-                                                    height={10}
-                                                >
-                                                    <rect
-                                                        height="10px"
-                                                        width="10px"
-                                                        rx={8}
-                                                        ry={8}
-                                                        fill={colors[index]}
-                                                        mask={`url(#${masks[index]})`}
-                                                    />
-                                                </svg>
-                                            </div>
-                                        )}
-
-                                        <div
-                                            className={styles.label}
-                                            style={{ fontSize: item.leftIcon ? "12px" : "" }}
-                                        >
-                                            {item.name}
-                                        </div>
-
-                                        {(item.icon || "checked" in item || "items" in item) && (
-                                            <div
-                                                className={`${styles.icon} ${
-                                                    "checked" in item && item.checked
-                                                        ? styles.revert
-                                                        : ""
-                                                }`}
-                                                style={{
-                                                    transform:
-                                                        "items" in item ? "rotate(-90deg)" : "",
-                                                }}
-                                            >
-                                                <Icon
-                                                    name={
-                                                        "checked" in item
-                                                            ? item.checked
-                                                                ? "checkboxFilled"
-                                                                : "checkbox"
-                                                            : "items" in item
-                                                            ? "arrow"
-                                                            : item.icon ?? ""
-                                                    }
-                                                    size={
-                                                        item.iconSize ?? type === "GUILD" ? 18 : 16
-                                                    }
-                                                    viewbox={
-                                                        item.icon === "boost"
-                                                            ? "0 0 8 12"
-                                                            : item.icon === "translate"
-                                                            ? "0 96 960 960"
-                                                            : ""
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-
-                                        {item.textTip && (
-                                            <div className={styles.text}>{item.textTip}</div>
-                                        )}
-                                    </div>
-
-                                    {item.tip && (
-                                        <div
-                                            className={styles.tip}
-                                            style={{
-                                                marginLeft: content.type === "STATUS" ? "18px" : "",
-                                            }}
-                                        >
-                                            {item.tip}
-                                            {item.tipIcon && (
-                                                <Icon
-                                                    name={item.tipIcon}
-                                                    size={16}
-                                                />
-                                            )}
+                                    {item.leftIcon && (
+                                        <div style={{ marginRight: "8px" }}>
+                                            <Icon name={item.leftIcon} />
                                         </div>
                                     )}
+
+                                    {content.type === "STATUS" && (
+                                        <div className={styles.statusIcon}>
+                                            <svg
+                                                width={10}
+                                                height={10}
+                                            >
+                                                <rect
+                                                    height="10px"
+                                                    width="10px"
+                                                    rx={8}
+                                                    ry={8}
+                                                    fill={colors[index]}
+                                                    mask={`url(#${masks[index]})`}
+                                                />
+                                            </svg>
+                                        </div>
+                                    )}
+
+                                    <div
+                                        className={styles.label}
+                                        style={{ fontSize: item.leftIcon ? "12px" : "" }}
+                                    >
+                                        {item.name}
+                                    </div>
+
+                                    {(item.icon || "checked" in item || "items" in item) && (
+                                        <div
+                                            className={`${styles.icon} ${
+                                                "checked" in item && item.checked
+                                                    ? styles.revert
+                                                    : ""
+                                            }`}
+                                        >
+                                            <Icon
+                                                name={
+                                                    "checked" in item
+                                                        ? item.checked
+                                                            ? "checkboxFilled"
+                                                            : "checkbox"
+                                                        : "items" in item
+                                                        ? "caret"
+                                                        : item.icon ?? ""
+                                                }
+                                                size={18}
+                                                viewbox={
+                                                    item.icon === "boost"
+                                                        ? "0 0 8 12"
+                                                        : item.icon === "translate"
+                                                        ? "0 96 960 960"
+                                                        : ""
+                                                }
+                                            />
+                                        </div>
+                                    )}
+
+                                    {item.textTip && (
+                                        <div className={styles.text}>{item.textTip}</div>
+                                    )}
                                 </div>
-                            );
-                    })}
-                </div>
-            </div>
-        ),
-        [items, hover]
+
+                                {item.tip && (
+                                    <div
+                                        className={styles.tip}
+                                        style={{
+                                            marginLeft: content.type === "STATUS" ? "18px" : "",
+                                        }}
+                                    >
+                                        {item.tip}
+                                        {item.tipIcon && (
+                                            <Icon
+                                                name={item.tipIcon}
+                                                size={16}
+                                            />
+                                        )}
+                                    </div>
+                                )}
+                            </li>
+                        );
+                })}
+            </ul>
+        </div>
     );
 }

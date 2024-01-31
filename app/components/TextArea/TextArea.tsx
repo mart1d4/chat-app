@@ -4,7 +4,7 @@ import { useData, useLayers, useMention, useMessages, useSettings, useTooltip } 
 import { useState, useRef, useMemo, useEffect } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { Icon, LoadingDots } from "@components";
-import { trimMessage } from "@/lib/strings";
+import { sanitizeString } from "@/lib/strings";
 import styles from "./TextArea.module.css";
 import filetypeinfo from "magic-bytes.js";
 import { v4 as uuidv4 } from "uuid";
@@ -252,7 +252,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     }, [edit, editing]);
 
     const sendMessage = async () => {
-        let messageContent = trimMessage(message);
+        let messageContent = sanitizeString(message);
 
         if (!messageContent && attachments.length === 0) return;
         if (messageContent && messageContent.length > 4000) {
@@ -293,13 +293,18 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     const textContainer = useMemo(
         () => (
-            <div className={styles.textContainer} style={{ height: textAreaRef.current?.scrollHeight || 44 }}>
+            <div
+                className={styles.textContainer}
+                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
+            >
                 <div>
                     {(editing ? edit?.content?.length === 0 : message.length === 0) && (
                         <div className={styles.placeholder}>
                             {edit?.messageId && editing
                                 ? "Edit Message"
-                                : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`}
+                                : `Message ${
+                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
+                                  }${channel.name}`}
                         </div>
                     )}
 
@@ -313,7 +318,9 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                         aria-label={
                             edit?.messageId
                                 ? "Edit Message"
-                                : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${channel.name}`
+                                : `Message ${
+                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
+                                  }${channel.name}`
                         }
                         aria-multiline="true"
                         aria-required="true"
@@ -326,7 +333,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                             const input = e.target as HTMLDivElement;
                             const text = input.innerText.toString();
 
-                            if (edit?.messageId && editing) setEdit(channel.id, edit.messageId, undefined, text);
+                            if (edit?.messageId && editing)
+                                setEdit(channel.id, edit.messageId, undefined, text);
                             else setMessage(text);
                         }}
                         onKeyDown={(e) => {
@@ -358,8 +366,14 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     if (edit?.messageId && editing) {
         return (
-            <form className={styles.form} style={{ padding: "0 0 0 0", marginTop: "8px" }}>
-                <div className={styles.textArea} style={{ marginBottom: "0" }}>
+            <form
+                className={styles.form}
+                style={{ padding: "0 0 0 0", marginTop: "8px" }}
+            >
+                <div
+                    className={styles.textArea}
+                    style={{ marginBottom: "0" }}
+                >
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div className={styles.input}>
                             {textContainer}
@@ -381,21 +395,35 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                             Replying to <span>{reply?.username || "User"}</span>
                         </div>
 
-                        <div className={styles.replyClose} onClick={() => setReply(channel.id, null, "")}>
+                        <div
+                            className={styles.replyClose}
+                            onClick={() => setReply(channel.id, null, "")}
+                        >
                             <div>
-                                <Icon name="closeFilled" size={16} viewbox={"0 0 14 14"} />
+                                <Icon
+                                    name="closeFilled"
+                                    size={16}
+                                    viewbox={"0 0 14 14"}
+                                />
                             </div>
                         </div>
                     </div>
                 )}
 
-                <div className={styles.textArea} style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}>
+                <div
+                    className={styles.textArea}
+                    style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
+                >
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {attachments.length > 0 && (
                             <>
                                 <ul className={styles.filesList + " scrollbar"}>
                                     {attachments.map((a) => (
-                                        <FilePreview key={a.id} attachment={a} setAttachments={setAttachments} />
+                                        <FilePreview
+                                            key={a.id}
+                                            attachment={a}
+                                            setAttachments={setAttachments}
+                                        />
                                     ))}
                                 </ul>
                                 <div className={styles.formDivider} />
@@ -445,10 +473,15 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 return (e.target.value = "");
                                             }
 
-                                            const fileBytes = new Uint8Array(await file.arrayBuffer());
+                                            const fileBytes = new Uint8Array(
+                                                await file.arrayBuffer()
+                                            );
                                             const fileType = filetypeinfo(fileBytes);
 
-                                            if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
+                                            if (
+                                                !fileType ||
+                                                !allowedFileTypes.includes(fileType[0]?.mime ?? "")
+                                            ) {
                                                 setLayers({
                                                     settings: {
                                                         type: "POPUP",
@@ -462,11 +495,13 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 return (e.target.value = "");
                                             }
 
-                                            const image = await new Promise<HTMLImageElement>((resolve) => {
-                                                const img = new Image();
-                                                img.onload = () => resolve(img);
-                                                img.src = URL.createObjectURL(file);
-                                            });
+                                            const image = await new Promise<HTMLImageElement>(
+                                                (resolve) => {
+                                                    const img = new Image();
+                                                    img.onload = () => resolve(img);
+                                                    img.src = URL.createObjectURL(file);
+                                                }
+                                            );
 
                                             const dimensions = {
                                                 height: image.height,
@@ -479,8 +514,12 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 name: file.name ?? "file",
                                                 dimensions,
                                                 size: file.size,
-                                                isSpoiler: file.name ? file.name.startsWith("SPOILER_") : false,
-                                                isImage: allowedFileTypes.includes(fileType[0]?.mime ?? ""),
+                                                isSpoiler: file.name
+                                                    ? file.name.startsWith("SPOILER_")
+                                                    : false,
+                                                isImage: allowedFileTypes.includes(
+                                                    fileType[0]?.mime ?? ""
+                                                ),
                                                 description: "",
                                             });
                                         }
@@ -529,7 +568,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                             <div className={styles.toolsContainer}>
                                 <button onClick={(e) => e.preventDefault()}>
-                                    <Icon name="keyboard" size={30} />
+                                    <Icon
+                                        name="keyboard"
+                                        size={30}
+                                    />
                                 </button>
 
                                 <button onClick={(e) => e.preventDefault()}>
@@ -556,7 +598,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 message.length === 0 && attachments.length === 0
                                                     ? "not-allowed"
                                                     : "pointer",
-                                            opacity: message.length === 0 && attachments.length === 0 ? 0.3 : 1,
+                                            opacity:
+                                                message.length === 0 && attachments.length === 0
+                                                    ? 0.3
+                                                    : 1,
                                             color:
                                                 message.length === 0 && attachments.length === 0
                                                     ? "var(--foreground-5)"
@@ -564,7 +609,11 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                         }}
                                     >
                                         <div>
-                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                            <svg
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 16 16"
+                                            >
                                                 <path
                                                     d="M8.2738 8.49222L1.99997 9.09877L0.349029 14.3788C0.250591 14.691 0.347154 15.0322 0.595581 15.246C0.843069 15.4597 1.19464 15.5047 1.48903 15.3613L15.2384 8.7032C15.5075 8.57195 15.6781 8.29914 15.6781 8.00007C15.6781 7.70101 15.5074 7.4282 15.2384 7.29694L1.49839 0.634063C1.20401 0.490625 0.852453 0.535625 0.604941 0.749376C0.356493 0.963128 0.259941 1.30344 0.358389 1.61563L2.00932 6.89563L8.27093 7.50312C8.52405 7.52843 8.71718 7.74125 8.71718 7.99531C8.71718 8.24938 8.52406 8.46218 8.27093 8.4875L8.2738 8.49222Z"
                                                     fill="currentColor"
@@ -607,7 +656,14 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                         }
                         onMouseLeave={() => setTooltip(null)}
                     >
-                        <span style={{ color: message.length > 4000 ? "var(--error-1)" : "var(--foreground-3)" }}>
+                        <span
+                            style={{
+                                color:
+                                    message.length > 4000
+                                        ? "var(--error-1)"
+                                        : "var(--foreground-3)",
+                            }}
+                        >
                             {message.length}
                         </span>
                         /4000
@@ -737,7 +793,9 @@ const emojisPos = [
 ];
 
 export const EmojiPicker = () => {
-    const [emojisPosIndex, setEmojisPosIndex] = useState(Math.floor(Math.random() * emojisPos.length));
+    const [emojisPosIndex, setEmojisPosIndex] = useState(
+        Math.floor(Math.random() * emojisPos.length)
+    );
 
     return (
         <button
@@ -748,7 +806,8 @@ export const EmojiPicker = () => {
             <div
                 className={styles.emoji}
                 style={{
-                    backgroundImage: "url('https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/')",
+                    backgroundImage:
+                        "url('https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/')",
                     backgroundPosition: `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`,
                 }}
             />
@@ -791,16 +850,21 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                     <div
                         className={styles.image}
                         style={{
-                            backgroundColor: isSpoiler && !hideSpoiler ? "var(--background-dark-3)" : "",
+                            backgroundColor:
+                                isSpoiler && !hideSpoiler ? "var(--background-dark-3)" : "",
                             cursor: isSpoiler && !hideSpoiler ? "pointer" : "default",
                         }}
                         onClick={() => isSpoiler && setHideSpoiler(true)}
                     >
-                        {isSpoiler && !hideSpoiler && <div className={styles.spoilerButton}>Spoiler</div>}
+                        {isSpoiler && !hideSpoiler && (
+                            <div className={styles.spoilerButton}>Spoiler</div>
+                        )}
 
                         <img
                             src={
-                                isImage ? attachment.url : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
+                                isImage
+                                    ? attachment.url
+                                    : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
                             }
                             alt="File Preview"
                             style={{ filter: isSpoiler && !hideSpoiler ? "blur(44px)" : "none" }}
@@ -819,84 +883,90 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
 
                 <div className={styles.fileMenu}>
                     <div>
-                        <div>
-                            <div
-                                className={styles.fileMenuButton}
-                                onMouseEnter={(e) =>
-                                    setTooltip({
-                                        text: "Spoiler Attachment",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    })
-                                }
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setAttachments((attachments: TAttachment[]) =>
-                                        attachments.map((a) =>
-                                            a.id === attachment.id
-                                                ? {
-                                                      ...a,
-                                                      name: isSpoiler ? a.name.slice(8) : `SPOILER_${a.name}`,
-                                                      isSpoiler: !isSpoiler,
-                                                  }
-                                                : a
-                                        )
-                                    );
-                                }}
-                            >
-                                <Icon name={isSpoiler ? "eyeSlash" : "eye"} size={20} />
-                            </div>
+                        <div
+                            className={styles.fileMenuButton}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: "Spoiler Attachment",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
+                            onClick={() => {
+                                setAttachments((attachments: TAttachment[]) =>
+                                    attachments.map((a) =>
+                                        a.id === attachment.id
+                                            ? {
+                                                  ...a,
+                                                  name: isSpoiler
+                                                      ? a.name.slice(8)
+                                                      : `SPOILER_${a.name}`,
+                                                  isSpoiler: !isSpoiler,
+                                              }
+                                            : a
+                                    )
+                                );
+                            }}
+                        >
+                            <Icon
+                                name={isSpoiler ? "eyeSlash" : "eye"}
+                                size={20}
+                            />
                         </div>
 
-                        <div>
-                            <div
-                                className={styles.fileMenuButton}
-                                onMouseEnter={(e) =>
-                                    setTooltip({
-                                        text: "Modify Attachment",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    })
-                                }
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setTooltip(null);
-                                    setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                        },
-                                        content: {
-                                            type: "FILE_EDIT",
-                                            attachment,
-                                            handleFileChange,
-                                        },
-                                    });
-                                }}
-                            >
-                                <Icon name="edit" size={20} />
-                            </div>
+                        <div
+                            className={styles.fileMenuButton}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: "Modify Attachment",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
+                            onClick={() => {
+                                setTooltip(null);
+                                setLayers({
+                                    settings: {
+                                        type: "POPUP",
+                                    },
+                                    content: {
+                                        type: "FILE_EDIT",
+                                        attachment,
+                                        handleFileChange,
+                                    },
+                                });
+                            }}
+                        >
+                            <Icon
+                                name="edit"
+                                size={20}
+                            />
                         </div>
 
-                        <div>
-                            <div
-                                className={styles.fileMenuButton + " " + styles.danger}
-                                onMouseEnter={(e) =>
-                                    setTooltip({
-                                        text: "Remove Attachment",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    })
-                                }
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setAttachments((attachments: TAttachment[]) =>
-                                        attachments.filter((a) => a.id !== attachment.id)
-                                    );
-                                    setTooltip(null);
-                                }}
-                            >
-                                <Icon name="delete" size={20} fill="var(--error-1)" />
-                            </div>
+                        <div
+                            className={styles.fileMenuButton + " " + styles.danger}
+                            onMouseEnter={(e) =>
+                                setTooltip({
+                                    text: "Remove Attachment",
+                                    element: e.currentTarget,
+                                    gap: 3,
+                                })
+                            }
+                            onMouseLeave={() => setTooltip(null)}
+                            onClick={() => {
+                                setAttachments((attachments: TAttachment[]) =>
+                                    attachments.filter((a) => a.id !== attachment.id)
+                                );
+                                setTooltip(null);
+                            }}
+                        >
+                            <Icon
+                                name="delete"
+                                size={20}
+                                fill="var(--error-1)"
+                            />
                         </div>
                     </div>
                 </div>

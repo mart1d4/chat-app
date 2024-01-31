@@ -1,7 +1,7 @@
 "use client";
 
 import { useData, useLayers, useSettings, useTooltip, useUrls } from "@/lib/store";
-import { translateCap, trimMessage } from "@/lib/strings";
+import { translateCap, sanitizeString } from "@/lib/strings";
 import { getButtonColor } from "@/lib/getColors";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useState, useEffect, useRef } from "react";
@@ -27,13 +27,13 @@ const masks = {
 };
 
 interface Props {
-    channel: TChannel;
+    channelId: TChannel;
     guild?: TGuild;
     user?: TCleanUser;
     friend?: TCleanUser | null;
 }
 
-export function MemberList({ channel, guild, user, friend }: Props) {
+export function MemberList({ channelId, guild, user, friend }: Props) {
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
     const [originalNote, setOriginalNote] = useState<string>("");
@@ -52,9 +52,14 @@ export function MemberList({ channel, guild, user, friend }: Props) {
     const hasRendered = useRef<boolean>(false);
     const { sendRequest } = useFetchHelper();
 
+    let channel;
+    if (channelId) channel = channels.find((c) => c.id === channelId);
+
     const recipients = guild
         ? guilds.find((g) => g.id === guild.id)?.rawMembers ?? []
-        : channels.find((c) => c.id === channel.id)?.recipients ?? [];
+        : channel
+        ? channel.recipients ?? []
+        : [];
 
     useEffect(() => {
         const width: number = window.innerWidth;
@@ -102,11 +107,14 @@ export function MemberList({ channel, guild, user, friend }: Props) {
         }
     }, []);
 
-    if (!settings.showUsers || !widthLimitPassed) return <></>;
+    if (!settings.showUsers || !widthLimitPassed) return null;
 
     if (friend) {
-        const mutualFriends = friends.filter((f: TCleanUser) => friend.friendIds.includes(f.id));
-        const mutualGuilds = guilds.filter((g: TGuild) => friend.guildIds.includes(g.id));
+        // const mutualFriends = friends.filter((f: TCleanUser) => friend.friendIds.includes(f.id));
+        // const mutualGuilds = guilds.filter((g: TGuild) => friend.guildIds.includes(g.id));
+
+        const mutualFriends = [];
+        const mutualGuilds = [];
 
         return (
             <aside
@@ -120,16 +128,33 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                         "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                         "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
                         "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                        "--card-button-color": getButtonColor(friend.primaryColor, friend.accentColor),
+                        "--card-button-color": getButtonColor(
+                            friend.primaryColor,
+                            friend.accentColor
+                        ),
                         "--card-border-color": friend.primaryColor,
                     } as React.CSSProperties
                 }
             >
                 <div>
-                    <svg className={styles.cardBanner} viewBox="0 0 340 120">
+                    <svg
+                        className={styles.cardBanner}
+                        viewBox="0 0 340 120"
+                    >
                         <mask id="card-banner-mask-1">
-                            <rect fill="white" x="0" y="0" width="100%" height="100%" />
-                            <circle fill="black" cx="58" cy="112" r="46" />
+                            <rect
+                                fill="white"
+                                x="0"
+                                y="0"
+                                width="100%"
+                                height="100%"
+                            />
+                            <circle
+                                fill="black"
+                                cx="58"
+                                cy="112"
+                                r="46"
+                            />
                         </mask>
 
                         <foreignObject
@@ -249,12 +274,12 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                                     userId: friend.id,
                                                 },
                                                 data: {
-                                                    newNote: trimMessage(note),
+                                                    newNote: sanitizeString(note),
                                                 },
                                             });
 
                                             if (response.success) {
-                                                setOriginalNote(trimMessage(note));
+                                                setOriginalNote(sanitizeString(note));
                                             }
                                         }
                                     }}
@@ -266,7 +291,10 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                     <div className={styles.cardMutuals}>
                         {mutualGuilds.length > 0 && (
                             <>
-                                <button className={"button"} onClick={() => setShowGuilds((prev) => !prev)}>
+                                <button
+                                    className={"button"}
+                                    onClick={() => setShowGuilds((prev) => !prev)}
+                                >
                                     <div>
                                         {mutualGuilds?.length} Mutual Server
                                         {mutualGuilds?.length > 1 && "s"}
@@ -277,7 +305,9 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                             name="chevron"
                                             size={24}
                                             style={{
-                                                transform: `rotate(${!showGuilds ? "-90deg" : "0deg"})`,
+                                                transform: `rotate(${
+                                                    !showGuilds ? "-90deg" : "0deg"
+                                                })`,
                                             }}
                                         />
                                     </div>
@@ -286,7 +316,10 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                 {showGuilds && (
                                     <ul className={styles.mutualItems}>
                                         {mutualGuilds.map((guild: TGuild) => (
-                                            <MutualItem key={guild.id} guild={guild} />
+                                            <MutualItem
+                                                key={guild.id}
+                                                guild={guild}
+                                            />
                                         ))}
                                     </ul>
                                 )}
@@ -295,7 +328,10 @@ export function MemberList({ channel, guild, user, friend }: Props) {
 
                         {mutualFriends.length > 0 && (
                             <>
-                                <button className={"button"} onClick={() => setShowFriends((prev) => !prev)}>
+                                <button
+                                    className={"button"}
+                                    onClick={() => setShowFriends((prev) => !prev)}
+                                >
                                     <div>
                                         {mutualFriends.length} Mutual Friend
                                         {mutualFriends.length > 1 && "s"}
@@ -305,7 +341,11 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                         <Icon
                                             name="chevron"
                                             size={24}
-                                            style={{ transform: `rotate(${!showFriends ? "-90deg" : "0deg"})` }}
+                                            style={{
+                                                transform: `rotate(${
+                                                    !showFriends ? "-90deg" : "0deg"
+                                                })`,
+                                            }}
                                         />
                                     </div>
                                 </button>
@@ -313,7 +353,10 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                 {showFriends && (
                                     <ul className={styles.mutualItems}>
                                         {mutualFriends.map((friend: TCleanUser) => (
-                                            <MutualItem key={friend.id} user={friend} />
+                                            <MutualItem
+                                                key={friend.id}
+                                                user={friend}
+                                            />
                                         ))}
                                     </ul>
                                 )}
@@ -327,11 +370,13 @@ export function MemberList({ channel, guild, user, friend }: Props) {
         let online, offline: TCleanUser[];
 
         if (guild) {
-            online = recipients.filter((r) => ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(r.status));
-            offline = recipients.filter((r) => r.status === "OFFLINE");
+            online = recipients.filter((r) =>
+                ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(r.status)
+            );
+            offline = recipients.filter((r) => r.status === "offline");
         } else {
-            online = recipients.filter((r) => ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(r.status));
-            offline = recipients.filter((r) => r.status === "OFFLINE");
+            online = recipients.filter((r) => ["online", "idle", "dnd"].includes(r.status));
+            offline = recipients.filter((r) => r.status === "offline");
         }
 
         return (
@@ -346,11 +391,15 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                 key={user.id}
                                 user={user}
                                 channel={channel}
-                                isOwner={guild ? guild.ownerId === user.id : channel.ownerId === user.id}
+                                isOwner={
+                                    guild ? guild.ownerId === user.id : channel.ownerId === user.id
+                                }
                             />
                         ))}
 
-                    {channel?.guildId && offline?.length > 0 && <h2>Offline — {offline?.length}</h2>}
+                    {channel?.guildId && offline?.length > 0 && (
+                        <h2>Offline — {offline?.length}</h2>
+                    )}
 
                     {offline?.length > 0 &&
                         offline.map((user: TCleanUser) => (
@@ -359,7 +408,9 @@ export function MemberList({ channel, guild, user, friend }: Props) {
                                 user={user}
                                 channel={channel}
                                 offline
-                                isOwner={guild ? guild.ownerId === user.id : channel.ownerId === user.id}
+                                isOwner={
+                                    guild ? guild.ownerId === user.id : channel.ownerId === user.id
+                                }
                             />
                         ))}
                 </div>
@@ -467,12 +518,26 @@ function MutualItem({ user, guild }: { user?: TCleanUser; guild?: TGuild }) {
             }}
         >
             <div>
-                {user && <Avatar src={user.avatar} alt={user.username} size={40} status={user.status} />}
+                {user && (
+                    <Avatar
+                        src={user.avatar}
+                        alt={user.username}
+                        size={40}
+                        status={user.status}
+                    />
+                )}
 
                 {guild && (
-                    <div className={styles.guildIcon} style={{ backgroundColor: guild.icon ? "transparent" : "" }}>
+                    <div
+                        className={styles.guildIcon}
+                        style={{ backgroundColor: guild.icon ? "transparent" : "" }}
+                    >
                         {guild.icon ? (
-                            <Avatar src={guild.icon} alt={guild.name} size={40} />
+                            <Avatar
+                                src={guild.icon}
+                                alt={guild.name}
+                                size={40}
+                            />
                         ) : (
                             guild.name
                                 .toLowerCase()
