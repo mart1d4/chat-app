@@ -76,6 +76,12 @@
     overflow-x: auto;
 }
 
+@-moz-document url-prefix() {
+    .list {
+        scrollbar-width: none;
+    }
+}
+
 .list::-webkit-scrollbar {
     display: none;
     width: 0;

@@ -16,7 +16,8 @@ export function Layers() {
         }
     });
 
-    const darkBackground = (layers.POPUP.length > 0 && popupHasBackground) || layers.USER_PROFILE !== null;
+    const darkBackground =
+        (layers.POPUP.length > 0 && popupHasBackground) || layers.USER_PROFILE !== null;
 
     return (
         <div
@@ -255,7 +256,9 @@ function Layer({ settings, content }: TLayer) {
         USER_PROFILE: 1003,
     };
 
-    const index = ["PINNED_MESSAGES", "CREATE_DM"].includes(content.type) ? 1001 : indexes[settings.type];
+    const index = ["PINNED_MESSAGES", "CREATE_DM"].includes(content.type)
+        ? 1001
+        : indexes[settings.type];
 
     return (
         <div
@@ -271,7 +274,12 @@ function Layer({ settings, content }: TLayer) {
             onMouseDown={(e) => e.stopPropagation()}
         >
             {settings.type === "MENU" && <Menu content={content} />}
-            {settings.type === "POPUP" && <Popup content={content} />}
+            {settings.type === "POPUP" && (
+                <Popup
+                    content={content}
+                    element={settings.element}
+                />
+            )}
             {settings.type === "USER_CARD" && <UserCard content={content} />}
             {settings.type === "USER_PROFILE" && <UserProfile content={content} />}
         </div>

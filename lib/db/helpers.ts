@@ -425,7 +425,7 @@ export async function getChannels(userId: number) {
                             .as("channels"),
                     (join) => join.onRef("channels.id", "=", "channelrecipients.channelId")
                 )
-                .select(["id", "type", "name", "icon"])
+                .select(["id", "type", "name", "icon", "updatedAt"])
                 .orderBy("channels.updatedAt", "desc")
                 .where("channelrecipients.userId", "=", userId)
                 .execute()) || [];

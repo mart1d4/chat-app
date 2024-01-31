@@ -160,7 +160,10 @@
     width: 24px;
     height: 24px;
     color: var(--foreground-3);
+    background-color: transparent;
     visibility: hidden;
+    cursor: pointer;
+    border-radius: 4px;
 }
 
 .closeButton:hover {

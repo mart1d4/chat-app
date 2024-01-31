@@ -13,7 +13,7 @@ type TMessageData = {
     message: TMessage;
 };
 
-export function Popout({ content }: any) {
+export function Popout({ content, element }: any) {
     const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
     const [search, setSearch] = useState<string>("");
     const [chosen, setChosen] = useState<TCleanUser[]>([]);
@@ -41,7 +41,10 @@ export function Popout({ content }: any) {
         if (layers.POPUP.length !== 1) return;
 
         const handleClickOutside = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+            if (
+                !containerRef.current?.contains(e.target as Node) &&
+                !element.contains(e.target as Node)
+            ) {
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -51,9 +54,9 @@ export function Popout({ content }: any) {
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [layers]);
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, [layers, containerRef]);
 
     useEffect(() => {
         if (!user || content.type !== "PINNED_MESSAGES") return;
@@ -328,7 +331,6 @@ export function Popout({ content }: any) {
             <div
                 ref={containerRef}
                 className={styles.popup}
-                onContextMenu={(e) => e.preventDefault()}
             >
                 <div className={styles.header}>
                     <h1>Select Friends</h1>
@@ -345,27 +347,20 @@ export function Popout({ content }: any) {
                             <div className={styles.input}>
                                 <div>
                                     <div>
-                                        {chosen?.map((friend) => (
-                                            <div
-                                                tabIndex={0}
+                                        {chosen.map((friend) => (
+                                            <button
                                                 key={friend.username}
                                                 className={styles.friendChip}
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    console.log("wikshnawuiodgbwuao");
+
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     setChosen(
                                                         chosen?.filter(
                                                             (user) => user.id !== friend.id
                                                         )
                                                     );
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        setChosen(
-                                                            chosen?.filter(
-                                                                (user) => user.id !== friend.id
-                                                            )
-                                                        );
-                                                        inputRef.current?.focus();
-                                                    }
                                                 }}
                                             >
                                                 {friend.username}
@@ -373,7 +368,7 @@ export function Popout({ content }: any) {
                                                     name="close"
                                                     size={12}
                                                 />
-                                            </div>
+                                            </button>
                                         ))}
 
                                         <input

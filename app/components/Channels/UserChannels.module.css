@@ -24,7 +24,8 @@
     align-items: center;
     position: relative;
     display: flex;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05), 0 2px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
+        0 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .searchContainer > button {
@@ -41,16 +42,23 @@
     padding: 1px 6px;
     color: var(--foreground-4);
     background-color: var(--background-1);
+    font-size: 14px;
 }
 
 .scroller {
     overflow: hidden scroll;
-    padding-right: 0px;
+    padding-right: 0;
     position: relative;
     min-height: 0;
     flex: 1 1 auto;
     padding-bottom: 8px;
-    scrollbar-width: thin;
+}
+
+@-moz-document url-prefix() {
+    .scroller {
+        scrollbar-width: thin;
+        padding-right: 8px;
+    }
 }
 
 .scroller::-webkit-scrollbar {
@@ -294,13 +302,13 @@
     background-color: var(--error-1);
     width: 16px;
     height: 16px;
-    padding-right: 1px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
     min-height: 16px;
     min-width: 16px;
+    margin-right: 2px;
     color: var(--foreground-1);
     text-align: center;
     flex: 0 0 auto;

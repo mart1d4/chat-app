@@ -11,19 +11,19 @@ import { Avatar, Icon } from "@components";
 import { UserItem } from "./UserItem";
 
 const colors = {
-    ONLINE: "#22A559",
-    IDLE: "#F0B232",
-    DO_NOT_DISTURB: "#F23F43",
-    INVISIBLE: "#80848E",
-    OFFLINE: "#80848E",
+    online: "#22A559",
+    idle: "#F0B232",
+    dnd: "#F23F43",
+    invisible: "#80848E",
+    offline: "#80848E",
 };
 
 const masks = {
-    ONLINE: "",
-    IDLE: "status-mask-idle",
-    DO_NOT_DISTURB: "status-mask-dnd",
-    INVISIBLE: "status-mask-offline",
-    OFFLINE: "status-mask-offline",
+    online: "",
+    idle: "status-mask-idle",
+    dnd: "status-mask-dnd",
+    invisible: "status-mask-offline",
+    offline: "status-mask-offline",
 };
 
 interface Props {
@@ -208,9 +208,9 @@ export function MemberList({ channelId, guild, user, friend }: Props) {
                                     rx={8}
                                     ry={8}
                                     // @ts-ignore
-                                    fill={colors[friend.status ?? "OFFLINE"]}
+                                    fill={colors[friend.status ?? "offline"]}
                                     // @ts-ignore
-                                    mask={`url(#${masks[friend.status ?? "OFFLINE"]})`}
+                                    mask={`url(#${masks[friend.status ?? "offline"]})`}
                                 />
                             </svg>
                         </div>

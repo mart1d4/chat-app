@@ -190,8 +190,10 @@
 
 /* Change scrollbar */
 
-.scrollbar {
-    scrollbar-color: var(--background-dark-1) var(--background-3);
+@-moz-document url-prefix() {
+    .scrollbar {
+        scrollbar-color: var(--background-dark-1) var(--background-3);
+    }
 }
 
 .scrollbar::-webkit-scrollbar {

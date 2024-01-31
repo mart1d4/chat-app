@@ -58,7 +58,7 @@ const statuses = {
     Offline: "OFFLINE",
 };
 
-export function Popup({ content, friends }: any) {
+export function Popup({ content, friends, element }: any) {
     const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
@@ -105,19 +105,6 @@ export function Popup({ content, friends }: any) {
     const passwordRef = useRef<HTMLInputElement>(null);
     const guildIconInput = useRef<HTMLInputElement>(null);
     const cancelRef = useRef<HTMLButtonElement>(null);
-
-    if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
-        return (
-            <Popout
-                content={content}
-                friends={friends}
-            />
-        );
-    }
-
-    if (type === "GUILD_INVITE") {
-        return <Invite content={content} />;
-    }
 
     useEffect(() => {
         // Reset all state when popup is closed
@@ -502,10 +489,10 @@ export function Popup({ content, friends }: any) {
         },
         LEAVE_CONFIRM: {
             title: `Leave '${
-                content.channel ? getChannelName(content.channel, user.id) : content.guild?.name
+                content.channel ? getChannelName(content.recipients, user.id) : content.guild?.name
             }'`,
             description: `Are you sure you want to leave ${
-                content.channel ? getChannelName(content.channel, user.id) : content.guild?.name
+                content.channel ? getChannelName(content.recipients, user.id) : content.guild?.name
             }? You won't be able to rejoin this ${
                 content.guild ? "server" : "group"
             } unless your are re-invited.`,
@@ -573,6 +560,20 @@ export function Popup({ content, friends }: any) {
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [layers, isLoading, prop]);
+
+    if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
+        return (
+            <Popout
+                content={content}
+                friends={friends}
+                element={element}
+            />
+        );
+    }
+
+    if (type === "GUILD_INVITE") {
+        return <Invite content={content} />;
+    }
 
     return (
         <AnimatePresence>
@@ -1053,12 +1054,12 @@ export function Popup({ content, friends }: any) {
                             >
                                 <Avatar
                                     src={content.channel.icon}
-                                    alt={getChannelName(content.channel, user.id)}
+                                    alt={getChannelName(content.channel.recipients, user.id)}
                                     size={24}
                                 />
 
-                                <span>{getChannelName(content.channel, user.id)}</span>
-                                <span>{getRelativeDate(content.channel.updatedAt, true)}</span>
+                                <span>{getChannelName(content.channel.recipients, user.id)}</span>
+                                <span>{getRelativeDate(content.channel.updatedAt)}</span>
                             </div>
                         )}
 

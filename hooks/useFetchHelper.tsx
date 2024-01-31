@@ -1,3 +1,4 @@
+import { Channel } from "@/lib/db/types";
 import { useData, useLayers } from "@/lib/store";
 import { useRouter } from "next/navigation";
 
@@ -113,7 +114,7 @@ export default function useFetchHelper() {
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
-        return channels.find((channel: TChannel) => {
+        return channels.find((channel: Channel) => {
             return (
                 channel.recipients.length === recipients.length &&
                 channel.recipients
@@ -125,11 +126,11 @@ export default function useFetchHelper() {
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
-        if (query === "CHANNEL_CREATE" && !skipCheck) {
+        if (query === "CHANNEL_CREATE" && data && !skipCheck) {
             const channel =
-                data?.recipients.length === 1
-                    ? channelExists([...data?.recipients, user.id], true)
-                    : channelExists([...data?.recipients, user.id], false);
+                data.recipients.length === 1
+                    ? channelExists([...data.recipients, user.id], true)
+                    : channelExists([...data.recipients, user.id], false);
 
             if (channel) {
                 if (channel.type === 0) {
@@ -142,7 +143,7 @@ export default function useFetchHelper() {
                         content: {
                             type: "CHANNEL_EXISTS",
                             channel: channel,
-                            recipients: data?.recipients,
+                            recipients: channel.recipients,
                         },
                     });
                 }
