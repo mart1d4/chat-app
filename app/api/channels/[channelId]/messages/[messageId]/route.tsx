@@ -1,15 +1,16 @@
 import pusher from "@/lib/pusher/server-connection";
-import { decryptMessage, encryptMessage } from "@/lib/encryption";
-import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
+import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
+import { db } from "@/lib/db/db";
 
-export async function PUT(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
+export async function PUT(
+    req: Request,
+    { params }: { params: { channelId: string; messageId: string } }
+) {
     const senderId = headers().get("X-UserId") || "";
 
-    const channelId = params.channelId;
-    const messageId = params.messageId;
+    const { channelId, messageId } = params;
     const { content, attachments } = await req.json();
 
     if (content !== undefined && typeof content !== "string" && content !== null) {
@@ -33,33 +34,11 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
     }
 
     try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-        });
-
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-        });
-
-        if (!channel || !sender) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel or sender not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        const message = await prisma.message.findUnique({
-            where: {
-                id: messageId,
-            },
-        });
+        const message = await db
+            .selectFrom("messages")
+            .where("id", "=", messageId)
+            .selectAll()
+            .executeTakeFirst();
 
         if (!message) {
             return NextResponse.json(
@@ -71,117 +50,44 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             );
         }
 
-        const newMessage = await prisma.message.update({
-            where: {
-                id: messageId,
-            },
-            data: {
-                content: encryptMessage(content),
-                attachments: attachments
-                    ? message.attachments.filter((file) => attachments.includes(file.id))
-                    : message.attachments,
-                edited: true,
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
+        if (message.authorId != parseInt(senderId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "You are not the author of this message",
                 },
-                mentions: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-                messageReference: {
-                    include: {
-                        author: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        mentions: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
+                { status: 403 }
+            );
+            2;
+        }
+
+        const newMessage = await db
+            .updateTable("messages")
+            .set({ content: content })
+            .set({ edited: new Date() })
+            .$if(attachments !== undefined, (q) =>
+                q.set({
+                    attachments: message.attachments.length
+                        ? message.attachments.filter((file) => attachments.includes(file.id))
+                        : attachments,
+                })
+            )``
+            .where("id", "=", messageId)
+            .executeTakeFirst();
 
         if (attachments && message.attachments.length !== attachments.length) {
             const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
 
             if (toDelete.length > 0) {
                 toDelete.forEach(async (file) => {
-                    await removeImage(file.id);
+                    removeImage(file.id);
                 });
             }
         }
 
-        await pusher.trigger("chat-app", "message-edited", {
+        pusher.trigger("chat-app", "message-edited", {
             channelId: channelId,
-            message: {
-                ...newMessage,
-                content: decryptMessage(newMessage.content),
-                messageReference: {
-                    ...newMessage.messageReference,
-                    content: decryptMessage(newMessage.messageReference?.content || ""),
-                },
-            },
+            message: newMessage,
         });
 
         return NextResponse.json(
@@ -203,7 +109,10 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { channelId: string; messageId: string } }) {
+export async function DELETE(
+    req: Request,
+    { params }: { params: { channelId: string; messageId: string } }
+) {
     const senderId = headers().get("X-UserId") || "";
 
     const channelId = params.channelId;

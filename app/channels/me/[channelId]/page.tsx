@@ -150,6 +150,7 @@ async function FetchMessage({
             "attachments",
             "createdAt",
             "authorId",
+            "channelId",
             "userId",
             "username",
             "displayName",
@@ -171,8 +172,6 @@ async function FetchMessage({
         .orderBy("messages.createdAt", "desc")
         .limit(50)
         .execute();
-
-    console.log(messages);
 
     const hasMore = await db
         .selectFrom("messages")
