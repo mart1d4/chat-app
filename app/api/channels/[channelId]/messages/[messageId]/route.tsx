@@ -114,62 +114,16 @@ export async function DELETE(
     { params }: { params: { channelId: string; messageId: string } }
 ) {
     const senderId = headers().get("X-UserId") || "";
-
-    const channelId = params.channelId;
-    const messageId = params.messageId;
+    const { channelId, messageId } = params;
 
     try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-        });
+        const deletedMessage = await db
+            .deleteFrom("messages")
+            .where("id", "=", messageId)
+            .where("authorId", "=", senderId)
+            .executeTakeFirst();
 
-        const sender = await prisma.user.findUnique({
-            where: {
-                id: senderId,
-            },
-        });
-
-        if (!channel || !sender) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel or sender not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        if (!channel.guildId) {
-            if (!sender.channelIds.includes(channelId)) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "You are not in this channel",
-                    },
-                    { status: 403 }
-                );
-            }
-        } else {
-            if (!sender.guildIds.includes(channel.guildId)) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "You are not in this channel",
-                    },
-                    { status: 403 }
-                );
-            }
-        }
-
-        const message = await prisma.message.findUnique({
-            where: {
-                id: messageId,
-            },
-        });
-
-        if (!message) {
+        if (!deletedMessage) {
             return NextResponse.json(
                 {
                     success: false,
@@ -179,39 +133,11 @@ export async function DELETE(
             );
         }
 
-        if (!channel.guildId) {
-            // If channel is DM or Group DM, user must be the author
-            if (message.authorId !== senderId) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "You are not the author of this message",
-                    },
-                    { status: 403 }
-                );
-            }
-        }
-
-        await prisma.message.updateMany({
-            where: {
-                messageReferenceId: messageId,
-            },
-            data: {
-                messageReferenceId: null,
-            },
-        });
-
-        if (message.attachments.length > 0) {
-            message.attachments.forEach(async (attachment: any) => {
-                await removeImage(attachment.id);
-            });
-        }
-
-        await prisma.message.delete({
-            where: {
-                id: messageId,
-            },
-        });
+        // if (message.attachments.length > 0) {
+        //     message.attachments.forEach(async (attachment: any) => {
+        //         removeImage(attachment.id);
+        //     });
+        // }
 
         await pusher.trigger("chat-app", "message-deleted", {
             channelId: channelId,

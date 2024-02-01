@@ -1,52 +1,69 @@
 import { defaultPermissions } from "@/lib/permissions/data";
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
+import { db } from "@/lib/db/db";
 
 export async function GET(req: Request, { params }: { params: { code: string } }) {
-    const code = params.code;
+    const { code } = params;
 
     try {
-        const invite = await prisma.invite.findFirst({
-            where: {
-                code: code,
-            },
-            include: {
-                guild: {
-                    select: {
-                        id: true,
-                        name: true,
-                        icon: true,
-                        ownerId: true,
-                        rawMemberIds: true,
-                    },
-                },
-                channel: {
-                    select: {
-                        id: true,
-                        type: true,
-                        name: true,
-                        icon: true,
-                        recipientIds: true,
-                        recipients: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                            },
-                        },
-                    },
-                },
-                inviter: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                    },
-                },
-            },
-        });
+        const invite = await db
+            .selectFrom("invites")
+            .innerJoin(
+                (eb) =>
+                    eb
+                        .selectFrom("users")
+                        .select([
+                            "id as inviterId",
+                            "username as inviterUsername",
+                            "displayName as inviterDisplayName",
+                        ])
+                        .as("users"),
+                (join) => join.onRef("users.inviterId", "=", "invites.inviterId")
+            )
+            .innerJoin(
+                (eb) =>
+                    eb
+                        .selectFrom("channels")
+                        .select([
+                            "id as channelId",
+                            "type as channelType",
+                            "name as channelName",
+                            "icon as channelIcon",
+                        ])
+                        .as("channels"),
+                (join) => join.onRef("channels.channelId", "=", "invites.channelId")
+            )
+            .innerJoin(
+                (eb) =>
+                    eb
+                        .selectFrom("guilds")
+                        .select([
+                            "id as guildId",
+                            "name as guildName",
+                            "icon as guildIcon",
+                            "ownerId as guildOwnerId",
+                        ])
+                        .as("guilds"),
+                (join) => join.onRef("guilds.guildId", "=", "invites.guildId")
+            )
+            .select([
+                "code",
+                "inviterId",
+                "inviterUsername",
+                "inviterDisplayName",
+                "channelId",
+                "channelType",
+                "channelName",
+                "channelIcon",
+                "guildId",
+                "guildName",
+                "guildIcon",
+                "guildOwnerId",
+            ])
+            .where("code", "=", code)
+            .executeTakeFirst();
 
         return NextResponse.json(
             {
@@ -150,7 +167,10 @@ export async function POST(req: Request, { params }: { params: { code: string } 
         }
 
         if (invite.channel.type === 1) {
-            if (invite.channel.recipientIds.includes(user.id) || invite.channel.recipientIds.length >= 10) {
+            if (
+                invite.channel.recipientIds.includes(user.id) ||
+                invite.channel.recipientIds.length >= 10
+            ) {
                 return NextResponse.json(
                     {
                         success: false,

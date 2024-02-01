@@ -271,7 +271,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             }
         }
 
-        const regex: RegExp = /<@([a-zA-Z0-9]{24})>/g;
+        const regex: RegExp = /<@([0-9]{18})>/g;
         const mentions: string[] = (message.content?.match(regex) || []).map((match: string) =>
             match.slice(2, -1)
         );
@@ -317,7 +317,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         await db
             .updateTable("channels")
-            .set("lastMessageId", id)
+            .set({ lastMessageId: id })
             .where("id", "=", channelId)
             .execute();
 

@@ -24,9 +24,75 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
 
         const messages = await db
             .selectFrom("messages")
+            .innerJoin(
+                (eb) =>
+                    eb
+                        .selectFrom("users")
+                        .select(["id as userId", "username", "displayName", "avatar", "status"])
+                        .as("users"),
+                (join) => join.onRef("users.userId", "=", "messages.authorId")
+            )
+            .leftJoin(
+                (eb) =>
+                    eb
+                        .selectFrom("messages")
+                        .innerJoin(
+                            (eb) =>
+                                eb
+                                    .selectFrom("users")
+                                    .select([
+                                        "id as refUserId",
+                                        "username as refUsername",
+                                        "displayName as refDisplayName",
+                                        "avatar as refAvatar",
+                                        "status as refStatus",
+                                    ])
+                                    .as("users"),
+                            (join) => join.onRef("users.refUserId", "=", "messages.authorId")
+                        )
+                        .select([
+                            "id as refId",
+                            "type as refType",
+                            "content as refContent",
+                            "attachments as refAttachments",
+                            "createdAt as refCreatedAt",
+                            "authorId as refAuthorId",
+                            "refUserId",
+                            "refUsername",
+                            "refDisplayName",
+                            "refAvatar",
+                            "refStatus",
+                        ])
+                        .as("ref"),
+                (join) => join.onRef("ref.refId", "=", "messages.messageReferenceId")
+            )
+            .select([
+                "id",
+                "type",
+                "content",
+                "attachments",
+                "createdAt",
+                "authorId",
+                "channelId",
+                "userId",
+                "username",
+                "displayName",
+                "avatar",
+                "status",
+                "refId",
+                "refType",
+                "refContent",
+                "refAttachments",
+                "refCreatedAt",
+                "refAuthorId",
+                "refUserId",
+                "refUsername",
+                "refDisplayName",
+                "refAvatar",
+                "refStatus",
+            ])
             .where("channelId", "=", channelId)
             .where("pinned", "is not", null)
-            .select(["id", "content", "authorId", "createdAt", "pinned"])
             .orderBy("createdAt", "desc")
             .execute();
 
@@ -34,7 +100,32 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             {
                 success: true,
                 message: "Successfully retrieved pinned messages",
-                pinned: messages,
+                pinned: messages.map((message) => ({
+                    ...message,
+                    author: {
+                        id: message.userId,
+                        username: message.username,
+                        displayName: message.displayName,
+                        avatar: message.avatar,
+                        status: message.status,
+                    },
+                    messageReference: message.refId
+                        ? {
+                              id: message.refId,
+                              type: message.refType,
+                              content: message.refContent,
+                              attachments: message.refAttachments,
+                              createdAt: message.refCreatedAt,
+                              author: {
+                                  id: message.refUserId,
+                                  username: message.refUsername,
+                                  displayName: message.refDisplayName,
+                                  avatar: message.refAvatar,
+                                  status: message.refStatus,
+                              },
+                          }
+                        : undefined,
+                })),
             },
             { status: 200 }
         );

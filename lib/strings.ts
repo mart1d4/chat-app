@@ -37,7 +37,7 @@ export function sanitizeString(content: string) {
     return content;
 }
 
-export function getChannelName(recipients: Partial<User>[], user?: Partial<User>) {
+export function getChannelName(recipients: Partial<User>[] = [], user?: Partial<User>) {
     if (recipients.length === 0) {
         return "Error fetching recipients";
     } else if (recipients.length === 1 && user) {

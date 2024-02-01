@@ -579,8 +579,9 @@
     display: flex;
     align-items: center;
     border-radius: 8px;
-    color: var(--foreground-1);
-    background-color: var(--background-3);
+    color: var(--foreground-5);
+    background-color: transparent;
+    border: 1px solid var(--background-6);
     margin-bottom: 8px;
     cursor: pointer;
     width: 100%;
@@ -608,6 +609,8 @@
 }
 
 .serverTemplate > svg {
+    width: 20px;
+    height: 20px;
     margin-left: auto;
     margin-right: 16px;
 }

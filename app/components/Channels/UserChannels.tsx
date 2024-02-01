@@ -55,7 +55,7 @@ const Title = () => {
     return (
         <h2 className={styles.title}>
             <span>Direct Messages</span>
-            <div
+            <button
                 tabIndex={0}
                 onMouseEnter={(e) => {
                     setTooltip({
@@ -72,6 +72,7 @@ const Title = () => {
                 }}
                 onBlur={() => setTooltip(null)}
                 onClick={(e) => {
+                    setTooltip(null);
                     setLayers({
                         settings: {
                             type: "POPUP",
@@ -85,29 +86,13 @@ const Title = () => {
                         },
                     });
                 }}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                                element: e.currentTarget,
-                                firstSide: "BOTTOM",
-                                secondSide: "RIGHT",
-                                gap: 5,
-                            },
-                            content: {
-                                type: "CREATE_DM",
-                            },
-                        });
-                    }
-                }}
             >
                 <Icon
                     name="add"
                     size={16}
                     viewbox="0 0 18 18"
                 />
-            </div>
+            </button>
         </h2>
     );
 };
