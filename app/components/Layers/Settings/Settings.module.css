@@ -40,7 +40,7 @@
 
 .sidebarWrapper {
     overflow: hidden scroll;
-    padding-right: 0px;
+    padding-right: 0;
     flex: 1 0 auto;
     align-items: flex-start;
     display: flex;
@@ -48,6 +48,12 @@
     position: relative;
     min-height: 0;
     background-color: var(--background-3);
+}
+
+@-moz-document url-prefix() {
+    .sidebarWrapper {
+        padding-right: 8px;
+    }
 }
 
 .sidebarWrapper nav {
@@ -569,6 +575,12 @@
     max-height: 50vh;
 }
 
+@-moz-document url-prefix() {
+    .inputLarge > div:first-child {
+        padding-right: 12px;
+    }
+}
+
 .inputLarge > div:first-child::-webkit-scrollbar {
     width: 12px;
 }
@@ -654,7 +666,11 @@
     width: 348px;
     position: relative;
     min-height: 280px;
-    background: linear-gradient(var(--card-primary-color), var(--card-primary-color) 90px, var(--card-accent-color));
+    background: linear-gradient(
+        var(--card-primary-color),
+        var(--card-primary-color) 90px,
+        var(--card-accent-color)
+    );
     border-radius: 8px;
 }
 

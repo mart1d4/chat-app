@@ -678,13 +678,13 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     <div>You cannot send messages to a user you have blocked.</div>
 
                     <button
-                        className="grey"
+                        className="button grey"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             sendRequest({
                                 query: "UNBLOCK_USER",
-                                params: { username: friend.username },
+                                params: { userId: friend.id },
                             });
                         }}
                     >

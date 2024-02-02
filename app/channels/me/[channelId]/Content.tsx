@@ -276,7 +276,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
                                 onClick={() =>
                                     sendRequest({
                                         query: "REMOVE_FRIEND",
-                                        params: { username: friend.username },
+                                        data: { username: friend.username },
                                     })
                                 }
                             >
@@ -318,7 +318,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
                                 onClick={() =>
                                     sendRequest({
                                         query: "BLOCK_USER",
-                                        params: { username: friend.username },
+                                        params: { userId: friend.id },
                                     })
                                 }
                             >
@@ -330,7 +330,7 @@ const FirstMessage = ({ channel, friend }: Props) => {
                                 onClick={() =>
                                     sendRequest({
                                         query: "UNBLOCK_USER",
-                                        params: { username: friend.username },
+                                        params: { userId: friend.id },
                                     })
                                 }
                             >

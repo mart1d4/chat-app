@@ -31,6 +31,12 @@
     padding: 8px 0 0 8px;
 }
 
+@-moz-document url-prefix() {
+    .pinContainer > div:nth-child(2) {
+        padding-right: 8px;
+    }
+}
+
 .pinContainer > div:nth-child(2)::-webkit-scrollbar {
     width: 8px;
 }
@@ -275,10 +281,16 @@
 
 .scroller {
     overflow: hidden scroll;
-    padding-right: 0px;
+    padding-right: 0;
     padding-bottom: 14px;
     max-height: 190px;
     flex: 1 1 auto;
+}
+
+@-moz-document url-prefix() {
+    .scroller {
+        padding-right: 8px;
+    }
 }
 
 .scroller::-webkit-scrollbar {

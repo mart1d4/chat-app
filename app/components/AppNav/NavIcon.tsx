@@ -27,6 +27,7 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const guildUrls = useUrls((state) => state.guilds);
+    const layers = useLayers((state) => state.layers);
     const meUrl = useUrls((state) => state.me);
 
     let url;
@@ -97,7 +98,7 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
             {name !== "Add a Server" ? (
                 <Link
                     href={url}
-                    className={active ? styles.wrapperActive : styles.wrapper}
+                    className={`${styles.wrapper} ${active ? styles.active : ""}`}
                     onMouseEnter={(e) => {
                         setTooltip({
                             text: name,
@@ -200,7 +201,11 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
                 </Link>
             ) : (
                 <button
-                    className={active ? styles.wrapperActive : styles.wrapper}
+                    className={`${styles.wrapper} ${styles.add} ${
+                        active || layers?.POPUP?.find((obj) => obj.content.type === "CREATE_GUILD")
+                            ? styles.active
+                            : ""
+                    }`}
                     onMouseEnter={(e) => {
                         setTooltip({
                             text: name,
@@ -209,12 +214,8 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
                             gap: 15,
                             big: true,
                         });
-                        if (!active) setMarkHeight(20);
                     }}
-                    onMouseLeave={() => {
-                        setTooltip(null);
-                        if (!active) setMarkHeight(count ? 7 : 0);
-                    }}
+                    onMouseLeave={() => setTooltip(null)}
                     onClick={() => {
                         setLayers({
                             settings: {
@@ -225,6 +226,16 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
                             },
                         });
                     }}
+                    onFocus={(e) => {
+                        setTooltip({
+                            text: name,
+                            element: e.currentTarget,
+                            position: "RIGHT",
+                            gap: 15,
+                            big: true,
+                        });
+                    }}
+                    onBlur={() => setTooltip(null)}
                 >
                     {svg && svg}
                 </button>

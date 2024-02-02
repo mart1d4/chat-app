@@ -56,19 +56,19 @@ export interface UserTable {
 
     description: string | null;
     customStatus: string | null;
-    status: "online" | "idle" | "dnd" | "offline" | "invisible";
+    status: "online" | "idle" | "dnd" | "offline" | "invisible" | null;
 
     password: string;
-    refreshTokens: RefreshToken[];
+    refreshTokens: RefreshToken[] | string;
 
-    system: boolean;
-    verified: boolean;
+    system: boolean | null;
+    verified: boolean | null;
 
-    notes: Note[];
-    notifications: Notification[];
+    notes: Note[] | string;
+    notifications: Notification[] | string;
 
     createdAt: Generated<Date>;
-    isDeleted: boolean;
+    isDeleted: boolean | null;
 }
 
 export type User = Selectable<UserTable>;

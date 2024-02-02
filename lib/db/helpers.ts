@@ -6,6 +6,8 @@ import { db } from "./db";
 
 // Fields selections
 
+type id = string | number;
+
 export const defaultSelect = [
     "id",
     "username",
@@ -80,6 +82,7 @@ export async function doesUserExist({ id, username, email }: Partial<UserTable>)
         if (id) {
             query = query.where("id", "=", id);
         } else if (username) {
+            // @ts-expect-error
             query = query.where(sql`username = BINARY ${username}`);
         } else if (email) {
             query = query.where("email", "=", email);
@@ -113,7 +116,6 @@ export async function createUser(user: Partial<UserTable>) {
                 notes: "[]",
                 notifications: "[]",
                 refreshTokens: "[]",
-                hiddenChannelIds: "[]",
             })
             .executeTakeFirst();
 
@@ -130,13 +132,13 @@ export async function getUser({
     select,
     throwOnNotFound,
 }: {
-    id?: number;
+    id?: id;
     username?: string;
     select?: {
         [K in keyof UserTable]?: boolean;
     };
     throwOnNotFound?: boolean;
-}): Promise<Partial<User> | NextResponse | null> {
+}): Promise<Partial<UserTable> | NextResponse | null> {
     const refreshToken = cookies().get("token")?.value;
 
     if (!id && !username && !refreshToken) {
@@ -169,18 +171,18 @@ export async function getUser({
             .$if(!!select?.customStatus, (q) => q.select("customStatus"))
             .$if(!!select?.password, (q) => q.select("password"))
             .$if(!!select?.refreshTokens, (q) => q.select("refreshTokens"))
-            .$if(!!select?.hiddenChannelIds, (q) => q.select("hiddenChannelIds"))
             .$if(!!select?.status, (q) => q.select("status"))
             .$if(!!select?.system, (q) => q.select("system"))
             .$if(!!select?.verified, (q) => q.select("verified"))
             .$if(!!select?.notifications, (q) => q.select("notifications"))
             .$if(!!select?.createdAt, (q) => q.select("createdAt"))
-            .$if(!select || Object.keys(select).length === 0, (q) => q.select(defaultSelect))
             .$if(!id && !username, (q) =>
+                // @ts-expect-error
                 q.where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
             )
-            .$if(!!id, (q) => q.where("id", "=", id))
-            .$if(!!username, (q) => q.where(sql`username = BINARY ${username as string}`))
+            .$if(!!id, (q) => q.where("id", "=", id as number))
+            // @ts-expect-error
+            .$if(!!username, (q) => q.where(sql`username = BINARY ${username}`))
             .executeTakeFirst();
 
         if (!user) {
@@ -197,6 +199,7 @@ export async function getUser({
             return null;
         }
 
+        // @ts-expect-error
         return user;
     } catch (error) {
         console.error(error);
@@ -264,12 +267,12 @@ export async function getInitialData() {
             guilds,
         };
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return null;
     }
 }
 
-export async function getFriends(userId: number) {
+export async function getFriends(userId: id) {
     try {
         const friends = await sql<Partial<User>[]>`
             SELECT
@@ -332,7 +335,7 @@ export async function getFriends(userId: number) {
     }
 }
 
-export async function getRequestsSent(userId: number) {
+export async function getRequestsSent(userId: id) {
     try {
         const requests =
             (await db
@@ -352,7 +355,7 @@ export async function getRequestsSent(userId: number) {
     }
 }
 
-export async function getRequestsReceived(userId: number) {
+export async function getRequestsReceived(userId: id) {
     try {
         const requests =
             (await db
@@ -372,7 +375,7 @@ export async function getRequestsReceived(userId: number) {
     }
 }
 
-export async function getBlocked(userId: number) {
+export async function getBlocked(userId: id) {
     try {
         const blocked =
             (await db
@@ -392,7 +395,7 @@ export async function getBlocked(userId: number) {
     }
 }
 
-export async function getBlockedBy(userId: number) {
+export async function getBlockedBy(userId: id) {
     try {
         const blocked =
             (await db
@@ -412,7 +415,7 @@ export async function getBlockedBy(userId: number) {
     }
 }
 
-export async function getChannels(userId: number) {
+export async function getChannels(userId: id) {
     try {
         const channels =
             (await db
@@ -456,7 +459,7 @@ export async function getChannels(userId: number) {
     }
 }
 
-export async function getChannel(channelId: number) {
+export async function getChannel(channelId: id) {
     try {
         const channel = await db
             .selectFrom("channels")
@@ -465,6 +468,8 @@ export async function getChannel(channelId: number) {
             .executeTakeFirst();
 
         if (!channel) return null;
+
+        // MAYBE REALLY TRY TO GET THE RECIPIENTS IN ONE QUERY
 
         const recipients =
             (await db
@@ -479,12 +484,11 @@ export async function getChannel(channelId: number) {
 
         return { ...channel, recipients };
     } catch (error) {
-        console.error(error);
-        return null;
+        return error;
     }
 }
 
-export async function getGuilds(userId: number) {
+export async function getGuilds(userId: id) {
     try {
         const guilds =
             (await db
@@ -504,7 +508,7 @@ export async function getGuilds(userId: number) {
     }
 }
 
-export async function hasUserBlocked(userId: number, blockedId: number) {
+export async function hasUserBlocked(userId: id, blockedId: id) {
     try {
         const blocked = await db
             .selectFrom("blocked")
@@ -520,7 +524,7 @@ export async function hasUserBlocked(userId: number, blockedId: number) {
     }
 }
 
-export async function isUserBlockedBy(userId: number, blockerId: number) {
+export async function isUserBlockedBy(userId: id, blockerId: id) {
     try {
         const blocked = await db
             .selectFrom("blocked")
@@ -536,7 +540,7 @@ export async function isUserBlockedBy(userId: number, blockerId: number) {
     }
 }
 
-export async function areFriends(userId: number, friendId: number) {
+export async function areFriends(userId: id, friendId: id) {
     try {
         const friends = await db
             .selectFrom("friends")
@@ -556,7 +560,26 @@ export async function areFriends(userId: number, friendId: number) {
     }
 }
 
-export async function hasUserSentRequest(userId: number, requestedId: number) {
+export async function removeFriends(user1: id, user2: id) {
+    try {
+        const result = await db
+            .deleteFrom("friends")
+            .where(({ eb, or, and }) =>
+                or([
+                    and([eb("A", "=", user1), eb("B", "=", user2)]),
+                    and([eb("A", "=", user2), eb("B", "=", user1)]),
+                ])
+            )
+            .execute();
+
+        return !!result;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function hasUserSentRequest(userId: id, requestedId: id) {
     try {
         const request = await db
             .selectFrom("requests")
@@ -572,7 +595,7 @@ export async function hasUserSentRequest(userId: number, requestedId: number) {
     }
 }
 
-export async function hasUserReceivedRequest(userId: number, requesterId: number) {
+export async function hasUserReceivedRequest(userId: id, requesterId: id) {
     try {
         const request = await db
             .selectFrom("requests")
@@ -588,7 +611,7 @@ export async function hasUserReceivedRequest(userId: number, requesterId: number
     }
 }
 
-export async function isUserInChannel(userId: number, channelId: number) {
+export async function isUserInChannel(userId: id, channelId: id) {
     try {
         const channel = await db
             .selectFrom("channelrecipients")
@@ -604,7 +627,7 @@ export async function isUserInChannel(userId: number, channelId: number) {
     }
 }
 
-export async function isUserInGuild(userId: number, guildId: number) {
+export async function isUserInGuild(userId: id, guildId: id) {
     try {
         const guild = await db
             .selectFrom("guildmembers")
@@ -620,7 +643,7 @@ export async function isUserInGuild(userId: number, guildId: number) {
     }
 }
 
-export async function areUsersBlocked([firstUserId, secondUserId]: [number, number]) {
+export async function areUsersBlocked([firstUserId, secondUserId]: [id, id]) {
     try {
         const blocked = await db
             .selectFrom("blocked")

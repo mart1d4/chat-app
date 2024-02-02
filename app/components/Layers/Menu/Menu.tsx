@@ -1051,15 +1051,11 @@ export function Menu({ content }: { content: any }) {
                                 userProps?.isBlocked
                                     ? sendRequest({
                                           query: "UNBLOCK_USER",
-                                          params: {
-                                              username: user.username,
-                                          },
+                                          params: { userId: user.id },
                                       })
                                     : sendRequest({
                                           query: "BLOCK_USER",
-                                          params: {
-                                              username: user.username,
-                                          },
+                                          params: { userId: user.id },
                                       }),
                             danger: !userProps?.isBlocked,
                         },
@@ -1162,9 +1158,7 @@ export function Menu({ content }: { content: any }) {
                             func: () =>
                                 sendRequest({
                                     query: "UNBLOCK_USER",
-                                    params: {
-                                        username: user.username,
-                                    },
+                                    params: { userId: user.id },
                                 }),
                         },
                         { name: "Divider" },
@@ -1285,11 +1279,11 @@ export function Menu({ content }: { content: any }) {
                                 userProps?.isBlocked
                                     ? sendRequest({
                                           query: "UNBLOCK_USER",
-                                          params: { username: user.username },
+                                          params: { userId: user.id },
                                       })
                                     : sendRequest({
                                           query: "BLOCK_USER",
-                                          params: { username: user.username },
+                                          params: { userId: user.id },
                                       }),
                             danger: !userProps?.isBlocked,
                         },
@@ -1532,11 +1526,11 @@ export function Menu({ content }: { content: any }) {
                             userProps?.isBlocked
                                 ? sendRequest({
                                       query: "UNBLOCK_USER",
-                                      params: { username: user.username },
+                                      params: { userId: user.id },
                                   })
                                 : sendRequest({
                                       query: "BLOCK_USER",
-                                      params: { username: user.username },
+                                      params: { userId: user.id },
                                   }),
                     },
                     { name: content?.channel && "Divider" },

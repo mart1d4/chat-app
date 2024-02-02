@@ -170,6 +170,12 @@
     margin: 0 -12px 0 -4px;
 }
 
+@-moz-document url-prefix() {
+    .cardBody > .scrollContainer {
+        padding-right: 12px;
+    }
+}
+
 .cardBody > .scrollContainer::-webkit-scrollbar {
     width: 8px;
 }

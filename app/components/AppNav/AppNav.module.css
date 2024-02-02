@@ -31,7 +31,7 @@
 }
 
 .wrapper,
-.wrapperActive {
+.active {
     position: relative;
     display: flex;
     align-items: center;
@@ -40,6 +40,7 @@
     height: 48px;
     border-radius: 50%;
     cursor: pointer;
+    color: var(--foreground-1);
     background-color: var(--background-4);
     transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out,
         color 0.15s ease-in-out;
@@ -48,33 +49,26 @@
     outline-offset: 2px;
 }
 
-.wrapperActive,
-.wrapper:hover {
+.wrapper:hover,
+.active {
     border-radius: 33%;
     background-color: var(--accent-1);
 }
 
-.green > .wrapperActive,
+.green > .active,
 .green > .wrapper:hover {
     background-color: var(--success-light);
 }
 
-.wrapper img,
-.wrapperActive img {
+.wrapper img {
     width: 48px;
     height: 48px;
     border-radius: 50%;
     transition: all 0.2s ease-in-out;
 }
 
-.wrapper:hover img,
-.wrapperActive:hover img {
+.wrapper:hover {
     border-radius: 33% !important;
-}
-
-.wrapper,
-.wrapperActive {
-    color: var(--foreground-1);
 }
 
 .green > .wrapper {
@@ -82,8 +76,7 @@
 }
 
 .green > .wrapper:hover,
-.green > .wrapperActive,
-.green > .wrapperActive:hover {
+.green > .active {
     color: var(--foreground-1);
 }
 

@@ -23,7 +23,7 @@ CREATE TABLE `users` (
 	`system` tinyint(1) NOT NULL DEFAULT '0',
 	`verified` tinyint(1) NOT NULL DEFAULT '0',
 
-	`notes` json NOT NULL,
+	`notes` json NOT NULL DEFAULT,
 	`notifications` json NOT NULL,
 
 	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),

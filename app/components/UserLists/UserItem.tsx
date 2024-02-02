@@ -271,9 +271,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                 e.stopPropagation();
                                 sendRequest({
                                     query: "UNBLOCK_USER",
-                                    params: {
-                                        username: user.username,
-                                    },
+                                    params: { userId: user.id },
                                 });
                             }}
                             onMouseEnter={(e) => {

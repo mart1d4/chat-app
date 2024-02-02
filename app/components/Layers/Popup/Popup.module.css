@@ -135,6 +135,12 @@
     flex: 1 1 auto;
 }
 
+@-moz-document url-prefix() {
+    .popupContent {
+        padding-right: 16px;
+    }
+}
+
 .popupContent::-webkit-scrollbar {
     width: 8px;
 }
@@ -606,11 +612,12 @@
     font-weight: 700;
     font-size: 16px;
     line-height: 20px;
+    color: var(--foreground-2);
 }
 
 .serverTemplate > svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     margin-left: auto;
     margin-right: 16px;
 }
@@ -881,8 +888,9 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    columns: var(--foreground-3);
-    opacity: 0.6;
+    color: var(--foreground-3);
+    background-color: transparent;
+    cursor: pointer;
     z-index: 1;
 }
 
@@ -898,7 +906,7 @@
 
 .imageNav:hover,
 .imageNav:focus-visible {
-    opacity: 1;
+    color: var(--foreground-1);
 }
 
 .imageNav:active {
