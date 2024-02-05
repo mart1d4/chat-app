@@ -792,3 +792,13 @@ export const useShowSettings = create<ShowSettingsState>()((set) => ({
     showSettings: null,
     setShowSettings: (val) => set(() => ({ showSettings: val })),
 }));
+
+interface ShowChannelsState {
+    showChannels: boolean;
+    setShowChannels: (val: boolean) => void;
+}
+
+export const useShowChannels = create<ShowChannelsState>()((set) => ({
+    showChannels: true,
+    setShowChannels: (val) => set(() => ({ showChannels: val })),
+}));

@@ -508,8 +508,14 @@
 @media screen and (max-width: 487px) {
     .popup,
     .pinContainer {
-        min-width: 100dvw;
-        min-height: 100dvh;
+        min-width: 100svw;
+        min-height: 100svh;
+        max-width: 100svw;
+        max-height: 100svh;
+        min-width: 100vw;
+        min-height: 100vh;
+        max-width: 100vw;
+        max-height: 100vh;
         border-radius: 0;
     }
 

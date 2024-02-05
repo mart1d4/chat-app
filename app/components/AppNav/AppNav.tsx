@@ -1,7 +1,7 @@
 "use client";
 
 import { getChannelIcon, getChannelName } from "@/lib/strings";
-import { useData, useNotifications } from "@/lib/store";
+import { useData, useNotifications, useShowChannels } from "@/lib/store";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
 
@@ -10,6 +10,9 @@ export const AppNav = () => {
     const pings = useNotifications((state) => state.pings);
     const channels = useData((state) => state.channels);
     const guilds = useData((state) => state.guilds);
+    const showChannels = useShowChannels((state) => state.showChannels);
+
+    if (!showChannels) return null;
 
     const filteredChannels = channels.filter((channel) =>
         pings.map((ping) => ping.channelId).includes(channel.id)

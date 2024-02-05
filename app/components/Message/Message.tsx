@@ -62,15 +62,22 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${"fr"}&dt=t&dj=1&source=input&q=`;
 
     async function translateMessage() {
-        const response = await fetch(translateUrl + message.content);
-        const data = await response.json();
+        const contents = [];
 
-        const origineLang = data.src;
-        const translatedText = data.sentences[0].trans;
-
-        if (translatedText) {
-            setTranslation(translatedText);
+        // Split the message into chunks of 2000 characters
+        for (let i = 0; i < message.content.length; i += 2000) {
+            contents.push(message.content.substring(i, i + 2000));
         }
+
+        const translations = await Promise.all(
+            contents.map(async (content) => {
+                const response = await fetch(translateUrl + content);
+                const data = await response.json();
+                return data.sentences.map((sentence: any) => sentence.trans);
+            })
+        );
+
+        setTranslation(translations.join(""));
     }
 
     let guildInvites: string[] = [];
