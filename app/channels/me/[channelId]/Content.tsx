@@ -2,7 +2,14 @@
 
 "use client";
 
-import { Channel, Message as TMessage, User } from "@/lib/db/types";
+import {
+    Channel,
+    ChannelTable,
+    MessageTable,
+    Message as TMessage,
+    User,
+    UserTable,
+} from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
 import { useData, useLayers, useUrls } from "@/lib/store";
 import { useState, useEffect, useCallback } from "react";
@@ -11,50 +18,28 @@ import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Channels.module.css";
 import Image from "next/image";
 
-type TMessageData = {
-    channelId: Channel["id"];
-    message: TMessage;
-    notSentByAuthor?: boolean;
-};
-
-type TMessageIdData = {
-    channelId: Channel["id"];
-    messageId: TMessage["id"];
-};
-
-type TUserUpdateData = {
-    user: Partial<User>;
-};
-
-type Props = {
-    channel: Channel;
-    user: Partial<User>;
-    friend?: Partial<User>;
-    initMessages: TMessage[];
-    messagesLoading: boolean;
-};
-
 const Content = ({
-    channelId,
+    channel,
     user,
     friend,
     messagesLoading,
     initMessages,
     initHasMore,
-}: Props) => {
-    const [scrollerNode, setScrollerNode] = useState<HTMLDivElement | null>(null);
-    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
-    const [messages, setMessages] = useState<TMessage[]>(initMessages);
-    const [hasMore, setHasMore] = useState<boolean>(initHasMore);
-    const [loading, setLoading] = useState<boolean>(false);
+}: {
+    channel: Partial<ChannelTable>;
+    user: Partial<UserTable>;
+    friend: Partial<UserTable>;
+    messagesLoading: boolean;
+    initMessages: Partial<MessageTable>[];
+    initHasMore: boolean;
+}) => {
+    const [scrollerNode, setScrollerNode] = useState(null);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [messages, setMessages] = useState(initMessages);
+    const [hasMore, setHasMore] = useState(initHasMore);
+    const [loading, setLoading] = useState(false);
 
     const setChannelUrl = useUrls((state) => state.setMe);
-    const channels = useData((state) => state.channels);
-
-    let channel;
-    if (channelId) {
-        channel = channels.find((c) => c.id === channelId);
-    }
 
     useEffect(() => {
         document.title = `Chat App | @${channel.name}`;
@@ -66,7 +51,7 @@ const Content = ({
             if (node === null) return;
             setScrollerNode(node);
             const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) node.scrollTop = node.scrollHeight;
+                // if (isAtBottom) node.scrollTop = node.scrollHeight;
             });
             resizeObserver.observe(node);
         },
@@ -77,7 +62,7 @@ const Content = ({
         (node: HTMLDivElement) => {
             if (node === null || !scrollerNode) return;
             const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
+                // if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
             });
             resizeObserver.observe(node);
         },
@@ -194,7 +179,13 @@ const Content = ({
     );
 };
 
-const FirstMessage = ({ channel, friend }: Props) => {
+const FirstMessage = ({
+    channel,
+    friend,
+}: {
+    channel: Partial<ChannelTable>;
+    friend: Partial<UserTable>;
+}) => {
     const requestsR = useData((state) => state.requestsReceived).map((u) => u.id);
     const requestsS = useData((state) => state.requestsSent).map((u) => u.id);
     const friends = useData((state) => state.friends).map((u) => u.id);
@@ -203,15 +194,17 @@ const FirstMessage = ({ channel, friend }: Props) => {
     const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
-    const mutualGuilds = guilds.filter((guild) => guild.rawMemberIds.includes(friend?.id));
+    const mutualGuilds = guilds.filter((guild) =>
+        guild.members.map((m) => m.id).includes(friend?.id)
+    );
     const guildIcons = guilds.filter((guild) => !!guild.icon);
 
     return (
         <div className={styles.firstTimeMessageContainer}>
             <div className={styles.imageWrapper}>
                 <Avatar
-                    src={channel.icon as string}
-                    alt={channel.name as string}
+                    src={channel.icon}
+                    alt={channel.name}
                     size={80}
                 />
             </div>

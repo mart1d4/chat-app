@@ -181,7 +181,7 @@ export function Menu({ content }: { content: any }) {
     }, [content, friends, blockedUsers, requestsSent, requestsReceived]);
 
     const canDeleteMessage = useCallback(() => {
-        if (message.authorId === currentUser.id) return true;
+        if (message.author.id === currentUser.id) return true;
         if (content.guildOwnerId) return content.guildOwnerId === currentUser.id;
         return false;
     }, [content, userProps]);
@@ -398,7 +398,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Channel ID",
                         icon: "id",
-                        iconSize: 18,
+
                         func: () => writeText(content.channel.id),
                     },
                 ]);
@@ -510,7 +510,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Channel ID",
                         icon: "id",
-                        iconSize: 18,
+
                         func: () => writeText(content.channel.id),
                     },
                 ]);
@@ -518,7 +518,8 @@ export function Menu({ content }: { content: any }) {
         }
 
         if (type === "GUILD_ICON") {
-            const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+            // const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+            const textChan = null;
             setItems([
                 {
                     name: "Mark As Read",
@@ -619,14 +620,15 @@ export function Menu({ content }: { content: any }) {
                 {
                     name: "Copy Server ID",
                     icon: "id",
-                    iconSize: 18,
+
                     func: () => writeText(content.guild.id),
                 },
             ]);
         }
 
         if (type === "GUILD") {
-            const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+            // const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+            const textChan = null;
             setItems([
                 {
                     name: "Server Boost",
@@ -653,23 +655,23 @@ export function Menu({ content }: { content: any }) {
                     },
                 },
                 {
-                    name: "Invite a Guest",
-                    icon: "addUser",
+                    name: "Server Settings",
+                    icon: "cog",
                     func: () => {},
                 },
                 {
-                    name: "Server Settings",
-                    icon: "settings",
+                    name: "Server Insights",
+                    icon: "chart",
                     func: () => {},
                 },
                 {
                     name: "Create Channel",
-                    icon: "addCircle",
+                    icon: "attach",
                     func: () => {},
                 },
                 {
                     name: "Create Category",
-                    icon: "addFolder",
+                    icon: "folder",
                     func: () => {},
                 },
                 {
@@ -678,12 +680,22 @@ export function Menu({ content }: { content: any }) {
                     func: () => {},
                 },
                 {
+                    name: "Active Threads",
+                    icon: "message",
+                    func: () => {},
+                },
+                {
                     name: "App Directory",
-                    icon: "bot",
+                    icon: "app",
                     func: () => {},
                 },
                 {
                     name: "Divider",
+                },
+                {
+                    name: "Show All Channels",
+                    checked: true,
+                    func: () => {},
                 },
                 {
                     name: "Notification Settings",
@@ -692,7 +704,7 @@ export function Menu({ content }: { content: any }) {
                 },
                 {
                     name: "Privacy Settings",
-                    icon: "policeBadge",
+                    icon: "shield",
                     func: () => {},
                 },
                 {
@@ -712,8 +724,20 @@ export function Menu({ content }: { content: any }) {
                     name: "Divider",
                 },
                 {
+                    name: "Security Actions",
+                    icon: "lock",
+                    func: () => {},
+                    danger: true,
+                },
+                {
                     name: "Report Raid",
                     icon: "shield",
+                    func: () => {},
+                    danger: true,
+                },
+                {
+                    name: "Leave Server",
+                    icon: "logout",
                     func: () => {},
                     danger: true,
                 },
@@ -814,7 +838,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Message ID",
                         icon: "id",
-                        iconSize: 18,
+
                         func: () => writeText(message.id),
                     },
                 ]);
@@ -868,9 +892,9 @@ export function Menu({ content }: { content: any }) {
                         func: () => writeText(message.content as string),
                     },
                     {
-                        name: message.content !== null ? "Translate" : null,
+                        name: message.content ? "Translate" : null,
                         icon: "translate",
-                        func: () => {},
+                        func: () => content?.functions?.translateMessage(),
                     },
                     { name: "Mark Unread", icon: "mark", func: () => {} },
                     {
@@ -879,7 +903,7 @@ export function Menu({ content }: { content: any }) {
                         func: () => writeText(`/channels/@me/${message.channelId}/${message.id}`),
                     },
                     {
-                        name: message.content !== null ? "Speak Message" : null,
+                        name: message.content ? "Speak Message" : null,
                         icon: "speak",
                         func: () => {
                             const msg = new SpeechSynthesisUtterance();
@@ -959,7 +983,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Copy Message ID",
                         icon: "id",
-                        iconSize: 18,
+
                         func: () => writeText(message.id),
                     },
                 ]);
@@ -1016,7 +1040,6 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                     ]);
                 } else if (content?.userprofile) {
@@ -1081,7 +1104,6 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                     ]);
                 } else if (userProps?.isBlocked) {
@@ -1172,13 +1194,11 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                         {
                             name: content?.channel && "Copy Channel ID",
                             func: () => writeText(content.channel.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                     ]);
                 } else {
@@ -1298,13 +1318,11 @@ export function Menu({ content }: { content: any }) {
                             name: "Copy User ID",
                             func: () => writeText(user.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                         {
                             name: content?.channel && "Copy Channel ID",
                             func: () => writeText(content.channel.id),
                             icon: "id",
-                            iconSize: 18,
                         },
                     ]);
                 }
@@ -1360,7 +1378,6 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy Channel ID",
                         func: () => writeText(content.channel.id),
                         icon: "id",
-                        iconSize: 18,
                     },
                 ]);
             }
@@ -1400,7 +1417,6 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy User ID",
                         func: () => writeText(user.id),
                         icon: "id",
-                        iconSize: 18,
                     },
                 ]);
             } else {
@@ -1538,7 +1554,6 @@ export function Menu({ content }: { content: any }) {
                         name: "Copy User ID",
                         func: () => writeText(user.id),
                         icon: "id",
-                        iconSize: 18,
                     },
                 ]);
             }
@@ -1677,7 +1692,7 @@ export function Menu({ content }: { content: any }) {
                                     }}
                                 >
                                     {item.leftIcon && (
-                                        <div style={{ marginRight: "8px" }}>
+                                        <div className={styles.leftIcon}>
                                             <Icon name={item.leftIcon} />
                                         </div>
                                     )}
@@ -1702,7 +1717,7 @@ export function Menu({ content }: { content: any }) {
 
                                     <div
                                         className={styles.label}
-                                        style={{ fontSize: item.leftIcon ? "12px" : "" }}
+                                        style={{ fontSize: item.leftIcon ? "14px" : "" }}
                                     >
                                         {item.name}
                                     </div>
@@ -1725,7 +1740,7 @@ export function Menu({ content }: { content: any }) {
                                                         ? "caret"
                                                         : item.icon ?? ""
                                                 }
-                                                size={18}
+                                                size={item.items ? 16 : 18}
                                                 viewbox={
                                                     item.icon === "boost"
                                                         ? "0 0 8 12"

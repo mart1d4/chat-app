@@ -28,13 +28,13 @@ type TInvites = TInvite[] | { code: string; type: string }[];
 
 export function Message({ message, setMessages, large, channel, guild }: Props) {
     const [fileProgress, setFileProgress] = useState<number>(0);
-    const [hovered, setHovered] = useState<boolean>(false);
+    const [translation, setTranslation] = useState<string>("");
     const [invites, setInvites] = useState<TInvites>([]);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setMention = useMention((state) => state.setMention);
-    const user = useData((state) => state.user) as TCleanUser;
+    const user = useData((state) => state.user);
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
@@ -56,7 +56,22 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
 
     const userRegex = /<([@][a-zA-Z0-9]{24})>/g;
     const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
-    const inviteRegex = /https?:\/\/chat-app.mart1d4.dev\/([a-zA-Z0-9]{8})/g;
+    const inviteRegex =
+        /^(https?:\/\/)?(localhost:3000|chat-app\.mart1d4\.com)\/[a-zA-Z0-9]{6}\/?$/g;
+
+    const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${"fr"}&dt=t&dj=1&source=input&q=`;
+
+    async function translateMessage() {
+        const response = await fetch(translateUrl + message.content);
+        const data = await response.json();
+
+        const origineLang = data.src;
+        const translatedText = data.sentences[0].trans;
+
+        if (translatedText) {
+            setTranslation(translatedText);
+        }
+    }
 
     let guildInvites: string[] = [];
 
@@ -79,6 +94,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                         );
                     } else if (urlRegex.test(part)) {
                         if (inviteRegex.test(part)) {
+                            console.log("IsInvite: Part is", part);
+
                             const code = part.substring(part.length - 8);
                             if (!guildInvites.includes(code)) {
                                 guildInvites.push(code);
@@ -105,10 +122,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     }
 
     let referencedContent: JSX.Element | null = null;
-    if (message.messageReference?.content && !inline) {
+    if (message.reference?.content && !inline) {
         referencedContent = (
             <span>
-                {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
+                {message.reference?.content.split(/(\s+)/).map((part, index) => {
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.mentions?.find(
@@ -154,7 +171,6 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
             });
 
             if (!response.invite && response.invite !== null) {
-                // @ts-expect-error
                 return setInvites((invites) => [...invites, { code: code, type: "error" }]);
             }
 
@@ -168,8 +184,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
             if (hasRendered.current) {
                 if (guildInvites.length === 0 || message.waiting) return;
 
-                guildInvites.forEach(async (code) => {
-                    await getInvite(code);
+                guildInvites.forEach((code) => {
+                    getInvite(code);
                 });
             }
 
@@ -179,8 +195,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         } else if (env == "production") {
             if (guildInvites.length === 0 || message.waiting) return;
 
-            guildInvites.forEach(async (code) => {
-                await getInvite(code);
+            guildInvites.forEach((code) => {
+                getInvite(code);
             });
         }
     }, [message.waiting]);
@@ -414,7 +430,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
             });
         }
 
-        if (content && content.length > 4000) {
+        if (content && content.length > 16000) {
             return setLayers({
                 settings: {
                     type: "POPUP",
@@ -484,6 +500,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         replyToMessageState,
         deleteLocalMessage,
         retrySendMessage,
+        translateMessage,
     };
 
     const messageIcons = [
@@ -526,11 +543,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                             guildOwnerId: guild?.ownerId,
                             deletePopup,
                             replyToMessageState,
+                            translateMessage,
                         },
                     });
                 }}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
                 style={{
                     backgroundColor:
                         layers.MENU?.content.message?.id === message.id
@@ -539,17 +555,16 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     marginTop: large ? "1.0625rem" : "",
                 }}
             >
-                {((edit?.messageId !== message.id && hovered) ||
-                    layers.MENU?.content?.message?.id === message.id) && (
-                    <MessageMenu
-                        message={message}
-                        large={false}
-                        functions={functions}
-                        channel={channel}
-                        guild={guild}
-                        inline={inline}
-                    />
-                )}
+                <MessageMenu
+                    message={message}
+                    large={false}
+                    functions={functions}
+                    channel={channel}
+                    guild={guild}
+                    inline={inline}
+                    show={layers.MENU?.content?.message?.id === message.id}
+                    hide={edit?.messageId === message.id}
+                />
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
@@ -660,8 +675,6 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                 <></>
             ) : (
                 <li
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
                     className={
                         styles.messageContainer +
                         " " +
@@ -697,28 +710,26 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                 : "",
                     }}
                 >
-                    {((edit?.messageId !== message.id && hovered) ||
-                        layers.MENU?.content?.message?.id === message.id) && (
-                        <MessageMenu
-                            message={message}
-                            large={large}
-                            functions={functions}
-                            channel={channel}
-                            guild={guild}
-                            inline={inline}
-                        />
-                    )}
+                    <MessageMenu
+                        message={message}
+                        large={large}
+                        functions={functions}
+                        channel={channel}
+                        guild={guild}
+                        inline={inline}
+                        show={layers.MENU?.content?.message?.id === message.id}
+                        hide={edit?.messageId === message.id}
+                    />
 
                     <div className={styles.message}>
                         {message.type === 1 && (
                             <div className={styles.messageReply}>
-                                {message.messageReference ? (
+                                {message.reference ? (
                                     <div
                                         className={styles.userAvatarReply}
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (!message.messageReference) return;
                                             if (
                                                 layers.MENU?.settings.event?.currentTarget ===
                                                 e.currentTarget
@@ -738,7 +749,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                         gap: 10,
                                                     },
                                                     content: {
-                                                        user: message.messageReference?.author,
+                                                        user: message.reference.author,
                                                     },
                                                 });
                                             }
@@ -746,7 +757,6 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         onContextMenu={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            if (!message.messageReference) return;
                                             setLayers({
                                                 settings: {
                                                     type: "MENU",
@@ -754,14 +764,14 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                 },
                                                 content: {
                                                     type: "USER",
-                                                    user: message.messageReference?.author,
+                                                    user: message.reference.author,
                                                 },
                                             });
                                         }}
                                     >
                                         <Avatar
-                                            src={message.messageReference?.author.avatar}
-                                            alt={message.messageReference?.author.username}
+                                            src={message.reference.author.avatar}
+                                            alt={message.reference.author.username}
                                             size={16}
                                         />
                                     </div>
@@ -780,7 +790,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 )}
 
-                                {message.messageReference && (
+                                {message.reference && (
                                     <span
                                         onDoubleClick={(e) => e.stopPropagation()}
                                         onClick={(e) => {
@@ -804,7 +814,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                         gap: 10,
                                                     },
                                                     content: {
-                                                        user: message.messageReference.author,
+                                                        user: message.reference.author,
                                                     },
                                                 });
                                             }
@@ -819,24 +829,24 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                 },
                                                 content: {
                                                     type: "USER",
-                                                    user: message.messageReference.author,
+                                                    user: message.reference.author,
                                                 },
                                             });
                                         }}
                                     >
-                                        {message.messageReference.author.displayName}
+                                        {message.reference.author.displayName}
                                     </span>
                                 )}
 
                                 {referencedContent ? (
                                     <div className={styles.referenceContent}>
                                         {referencedContent}{" "}
-                                        {message.messageReference.edited && (
+                                        {message.reference.edited && (
                                             <div className={styles.contentTimestamp}>
                                                 <span
                                                     onMouseEnter={(e) =>
                                                         setTooltip({
-                                                            text: getLongDate(message.updatedAt),
+                                                            text: getLongDate(message.edited),
                                                             element: e.currentTarget,
                                                             delay: 1000,
                                                             wide: true,
@@ -851,13 +861,13 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                     </div>
                                 ) : (
                                     <div className={styles.italic}>
-                                        {message.messageReference?.attachments.length > 0
+                                        {message.reference.attachments.length > 0
                                             ? "Click to see attachment"
                                             : "Original message was deleted"}
                                     </div>
                                 )}
 
-                                {message.messageReference?.attachments?.length > 0 && (
+                                {message.reference.attachments.length > 0 && (
                                     <Icon
                                         name="image"
                                         size={20}
@@ -1062,9 +1072,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                     <span
                                                         onMouseEnter={(e) =>
                                                             setTooltip({
-                                                                text: getLongDate(
-                                                                    message.updatedAt
-                                                                ),
+                                                                text: getLongDate(message.edited),
                                                                 element: e.currentTarget,
                                                                 delay: 1000,
                                                                 wide: true,
@@ -1073,6 +1081,14 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                         onMouseLeave={() => setTooltip(null)}
                                                     >
                                                         (edited)
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {translation && (
+                                                <div className={styles.translation}>
+                                                    {translation}
+                                                    <span onClick={() => setTranslation("")}>
+                                                        Dismiss
                                                     </span>
                                                 </div>
                                             )}
@@ -1467,7 +1483,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     </div>
                 </li>
             ),
-        [message, edit, reply, layers.MENU, fileProgress, invites, hovered]
+        [message, edit, reply, layers.MENU, fileProgress, invites, translation]
     );
 }
 
@@ -1712,9 +1728,11 @@ type MenuProps = {
     channel: TChannel;
     guild?: TGuild | null;
     inline: boolean;
+    show: boolean;
+    hide: boolean;
 };
 
-function MessageMenu({ message, large, functions, channel, guild, inline }: MenuProps) {
+function MessageMenu({ message, large, functions, channel, guild, inline, show, hide }: MenuProps) {
     const [menuSender, setMenuSender] = useState<boolean | null>(null);
     const [shift, setShift] = useState<boolean>(false);
 
@@ -1762,10 +1780,7 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
     return (
         <div
             className={styles.buttonContainer}
-            style={{
-                visibility:
-                    layers.MENU?.content.message?.id === message?.id ? "visible" : undefined,
-            }}
+            style={{ visibility: show ? "visible" : hide ? "hidden" : undefined }}
         >
             <div
                 className={styles.buttonWrapper}
@@ -1804,25 +1819,15 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
                                         }}
                                         onMouseLeave={() => setTooltip(null)}
                                         onClick={() => {
-                                            message.pinned
-                                                ? () => {
-                                                      sendRequest({
-                                                          query: "UNPIN_MESSAGE",
-                                                          params: {
-                                                              channelId: message.channelId,
-                                                              messageId: message.id,
-                                                          },
-                                                      });
-                                                  }
-                                                : () => {
-                                                      sendRequest({
-                                                          query: "PIN_MESSAGE",
-                                                          params: {
-                                                              channelId: message.channelId,
-                                                              messageId: message.id,
-                                                          },
-                                                      });
-                                                  };
+                                            sendRequest({
+                                                query: message.pinned
+                                                    ? "UNPIN_MESSAGE"
+                                                    : "PIN_MESSAGE",
+                                                params: {
+                                                    channelId: message.channelId,
+                                                    messageId: message.id,
+                                                },
+                                            });
                                         }}
                                     >
                                         <Icon name="pin" />
@@ -1847,23 +1852,27 @@ function MessageMenu({ message, large, functions, channel, guild, inline }: Menu
                                         </div>
                                     )}
 
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Translate",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {}}
-                                    >
-                                        <Icon
-                                            name="translate"
-                                            viewbox="0 96 960 960"
-                                        />
-                                    </div>
+                                    {message.content && (
+                                        <div
+                                            role="button"
+                                            onMouseEnter={(e) => {
+                                                setTooltip({
+                                                    text: "Translate",
+                                                    element: e.currentTarget,
+                                                    gap: 3,
+                                                });
+                                            }}
+                                            onMouseLeave={() => setTooltip(null)}
+                                            onClick={() => {
+                                                functions.translateMessage();
+                                            }}
+                                        >
+                                            <Icon
+                                                name="translate"
+                                                viewbox="0 96 960 960"
+                                            />
+                                        </div>
+                                    )}
 
                                     <div
                                         role="button"

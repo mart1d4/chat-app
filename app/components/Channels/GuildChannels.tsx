@@ -1,27 +1,29 @@
 "use client";
 
-import { ReactElement, useState, SetStateAction, Dispatch } from "react";
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { ChannelTable, GuildTable, UserTable } from "@/lib/db/types";
+import { useState, SetStateAction, Dispatch } from "react";
+import { useParams, usePathname } from "next/navigation";
+import { useLayers, useTooltip } from "@/lib/store";
 import styles from "./GuildChannels.module.css";
 import { Icon, UserSection } from "@components";
-import { useParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 interface Props {
-    user: TCleanUser;
-    guild: TGuild;
+    user: Partial<UserTable>;
+    guild: Partial<GuildTable>;
+    initChannels: Partial<ChannelTable>[];
 }
 
-export const GuildChannels = ({ user, guild }: Props): ReactElement => {
-    const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
+export const GuildChannels = ({ user, guild, initChannels }: Props) => {
+    const [hiddenCategories, setHiddenCategories] = useState([]);
+    const [channels, setChannels] = useState(initChannels.sort((a, b) => a.position - b.position));
 
-    const channels = useData((state) => state.guilds).find((g) => g.id === guild.id)?.channels || [];
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const params = useParams();
 
-    const member = guild.members.find((member: TGuildMember) => member.userId === user.id);
+    const member = guild.members?.find((member) => member.userId === user.id);
 
     return (
         <div className={styles.nav}>
@@ -62,19 +64,24 @@ export const GuildChannels = ({ user, guild }: Props): ReactElement => {
                         }
                     }}
                     style={{
-                        backgroundColor: layers.MENU?.content.type === "GUILD" ? "var(--background-hover-1)" : "",
+                        backgroundColor:
+                            layers.MENU?.content.type === "GUILD"
+                                ? "var(--background-hover-1)"
+                                : "",
                     }}
                 >
                     <div>
                         <div>{guild.name}</div>
-                        <div style={{ transform: layers.MENU?.content.type !== "GUILD" ? "rotate(-90deg)" : "" }}>
+                        <div
+                            style={{
+                                transform:
+                                    layers.MENU?.content.type !== "GUILD" ? "rotate(-90deg)" : "",
+                            }}
+                        >
                             {layers.MENU?.content.type === "GUILD" ? (
-                                <Icon
-                                    name="close"
-                                    size={16}
-                                />
+                                <Icon name="close" />
                             ) : (
-                                <Icon name="arrow" />
+                                <Icon name="caret" />
                             )}
                         </div>
                     </div>
@@ -113,7 +120,10 @@ export const GuildChannels = ({ user, guild }: Props): ReactElement => {
                                     );
                                 }
 
-                                if (hiddenCategories.includes(channel?.parentId) && params?.channelId !== channel.id)
+                                if (
+                                    hiddenCategories.includes(channel?.parentId) &&
+                                    params?.channelId !== channel.id
+                                )
                                     return;
 
                                 if (channel.parentId) {
@@ -227,7 +237,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                 }}
             >
                 <div>
-                    <Icon name="arrow" />
+                    <Icon name="caret" />
                     <h3>{channel.name}</h3>
                 </div>
 
@@ -260,11 +270,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                     }}
                     onBlur={() => setTooltip(null)}
                 >
-                    <Icon
-                        name="add"
-                        size={18}
-                        viewbox="0 0 18 18"
-                    />
+                    <Icon name="add" />
                 </button>
             </motion.li>
         );
@@ -297,10 +303,12 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                     <Link
                         href={`/channels/${channel.guildId}/${channel.id}`}
                         style={{
-                            backgroundColor: params.channelId === channel.id ? "var(--background-hover-2)" : "",
+                            backgroundColor:
+                                params.channelId === channel.id ? "var(--background-hover-2)" : "",
                         }}
                         onClick={(e) => {
-                            if (channel.type === 3 || pathname.includes(channel.id)) e.preventDefault();
+                            if (channel.type === 3 || pathname.includes(channel.id))
+                                e.preventDefault();
                         }}
                     >
                         <div>
@@ -321,7 +329,10 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                             <div
                                 className={styles.name}
                                 style={{
-                                    color: params.channelId === channel.id ? "var(--foreground-1)" : "",
+                                    color:
+                                        params.channelId === channel.id
+                                            ? "var(--foreground-1)"
+                                            : "",
                                 }}
                             >
                                 {channel.name}
@@ -377,11 +388,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                                         flex: params.channelId === channel.id ? "0 0 auto" : "",
                                     }}
                                 >
-                                    <Icon
-                                        name="addUserSmall"
-                                        size={16}
-                                        viewbox="0 0 16 16"
-                                    />
+                                    <Icon name="addUser" />
                                 </button>
 
                                 <button
@@ -404,11 +411,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                                         flex: params.channelId === channel.id ? "0 0 auto" : "",
                                     }}
                                 >
-                                    <Icon
-                                        name="corkSmall"
-                                        size={16}
-                                        viewbox="0 0 16 16"
-                                    />
+                                    <Icon name="cog" />
                                 </button>
                             </div>
                         </div>

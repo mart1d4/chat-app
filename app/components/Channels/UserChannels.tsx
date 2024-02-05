@@ -56,7 +56,6 @@ const Title = () => {
         <h2 className={styles.title}>
             <span>Direct Messages</span>
             <button
-                tabIndex={0}
                 onMouseEnter={(e) => {
                     setTooltip({
                         text: "Create DM",
@@ -87,11 +86,7 @@ const Title = () => {
                     });
                 }}
             >
-                <Icon
-                    name="add"
-                    size={16}
-                    viewbox="0 0 18 18"
-                />
+                <Icon name="add" />
             </button>
         </h2>
     );

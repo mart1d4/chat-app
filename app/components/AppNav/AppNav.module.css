@@ -43,7 +43,7 @@
     color: var(--foreground-1);
     background-color: var(--background-4);
     transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out,
-        color 0.15s ease-in-out;
+        color 0.15s ease-in-out, transform 0.05s ease-in-out;
     text-decoration: none;
     padding: 0;
     outline-offset: 2px;
@@ -67,7 +67,11 @@
     transition: all 0.2s ease-in-out;
 }
 
-.wrapper:hover {
+.wrapper:active {
+    transform: translateY(1px);
+}
+
+.wrapper:hover img {
     border-radius: 33% !important;
 }
 

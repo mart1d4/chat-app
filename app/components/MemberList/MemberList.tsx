@@ -28,12 +28,13 @@ const masks = {
 
 interface Props {
     channelId: TChannel;
+    channel: TChannel;
     guild?: TGuild;
     user?: TCleanUser;
     friend?: TCleanUser | null;
 }
 
-export function MemberList({ channelId, guild, user, friend }: Props) {
+export function MemberList({ channelId, channel, guild, user, friend }: Props) {
     const [showFriends, setShowFriends] = useState<boolean>(false);
     const [showGuilds, setShowGuilds] = useState<boolean>(false);
     const [originalNote, setOriginalNote] = useState<string>("");
@@ -52,8 +53,8 @@ export function MemberList({ channelId, guild, user, friend }: Props) {
     const hasRendered = useRef<boolean>(false);
     const { sendRequest } = useFetchHelper();
 
-    let channel;
-    if (channelId) channel = channels.find((c) => c.id === channelId);
+    // let channel;
+    // if (channelId) channel = channels.find((c) => c.id === channelId);
 
     const recipients = guild
         ? guilds.find((g) => g.id === guild.id)?.rawMembers ?? []

@@ -233,7 +233,7 @@
     align-items: center;
     align-self: stretch;
     cursor: pointer;
-    transition: background-color 0.075s ease-in-out;
+    transition: background-color 0.05s ease-in-out;
     user-select: none;
 }
 
@@ -261,6 +261,5 @@
 .welcomeCard > svg {
     justify-self: flex-end;
     min-width: 24px;
-    transform: rotate(-90deg);
     color: var(--foreground-3);
 }

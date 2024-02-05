@@ -12,7 +12,7 @@ interface Props {
     requests?: number;
 }
 
-export function AppHeader({ channelId, friend }: Props) {
+export function AppHeader({ channel, friend }: Props) {
     const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
 
     const setSettings = useSettings((state) => state.setSettings);
@@ -21,11 +21,6 @@ export function AppHeader({ channelId, friend }: Props) {
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
     const channels = useData((state) => state.channels);
-
-    let channel;
-    if (channelId) {
-        channel = channels.find((c) => c.id === channelId);
-    }
 
     useEffect(() => {
         const width: number = window.innerWidth;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Guild, User, Channel, Message } from "@/lib/db/types";
+import { Guild, User, Channel, Message, UserTable, ChannelTable, GuildTable } from "@/lib/db/types";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactElement, useEffect, useRef } from "react";
 import { useData, useNotifications } from "@/lib/store";
@@ -43,14 +43,14 @@ type TUserUpdateData = {
 type Props = {
     children: ReactElement;
     data: {
-        user: Partial<User>;
-        friends: Partial<User>[];
-        blocked: Partial<User>[];
-        blockedBy: Partial<User>[];
-        received: Partial<User>[];
-        sent: Partial<User>[];
-        channels: Partial<Channel>[];
-        guilds: Partial<Guild>[];
+        user: Partial<UserTable>;
+        friends: Partial<UserTable>[];
+        blocked: Partial<UserTable>[];
+        blockedBy: Partial<UserTable>[];
+        received: Partial<UserTable>[];
+        sent: Partial<UserTable>[];
+        channels: Partial<ChannelTable>[];
+        guilds: Partial<GuildTable>[];
     };
 };
 
@@ -108,7 +108,10 @@ export function Loading({ children, data }: Props) {
             }).then((res) => res.json());
 
             if (response.token) {
-                setUser(data.user);
+                setUser({
+                    ...data.user,
+                    id: parseInt(data.user.id),
+                });
                 setFriends(data.friends);
                 setBlocked(data.blocked);
                 setBlockedBy(data.blockedBy);

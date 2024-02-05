@@ -1,4 +1,4 @@
-import { canUserAccessChannel, getUser, getChannel } from "@/lib/db/helpers";
+import { canUserAccessChannel, getUser, getChannel, getMessages } from "@/lib/db/helpers";
 import { AppHeader, MemberList } from "@components";
 import styles from "../FriendsPage.module.css";
 import { Channel, User } from "@/lib/db/types";
@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import Content from "./Content";
 import { db } from "@/lib/db/db";
+import { getChannelIcon, getChannelName } from "@/lib/strings";
 
 async function getFriend(userId: string, channelId: string) {
     const friend = await db
@@ -54,8 +55,17 @@ export default async function ChannelPage({ params }: { params: { channelId: str
         redirect("/channels/me");
     }
 
-    const channel = await getChannel(channelId);
-    if (!channel) redirect("/channels/me");
+    const channelFetch = await getChannel(channelId);
+    if (!channelFetch) redirect("/channels/me");
+
+    const channel = {
+        ...channelFetch,
+        // name: getChannelName(channelFetch, user.id),
+        name: "olala",
+        icon: getChannelIcon(channelFetch, user),
+    };
+
+    console.log(channel);
 
     const friend = channel.type === 0 ? await getFriend(user.id, channel.id) : undefined;
 
@@ -69,7 +79,7 @@ export default async function ChannelPage({ params }: { params: { channelId: str
                         <Content
                             user={user}
                             friend={friend}
-                            channelId={channel.id}
+                            channel={channel}
                             messagesLoading={true}
                         />
                     }
@@ -82,7 +92,7 @@ export default async function ChannelPage({ params }: { params: { channelId: str
                 </Suspense>
 
                 <MemberList
-                    channelId={channel.id}
+                    channel={channel}
                     friend={friend}
                 />
             </div>
@@ -99,79 +109,7 @@ async function FetchMessage({
     friend: User;
     channel: Channel;
 }) {
-    const messages = await db
-        .selectFrom("messages")
-        .innerJoin(
-            (eb) =>
-                eb
-                    .selectFrom("users")
-                    .select(["id as userId", "username", "displayName", "avatar", "status"])
-                    .as("users"),
-            (join) => join.onRef("users.userId", "=", "messages.authorId")
-        )
-        .leftJoin(
-            (eb) =>
-                eb
-                    .selectFrom("messages")
-                    .innerJoin(
-                        (eb) =>
-                            eb
-                                .selectFrom("users")
-                                .select([
-                                    "id as refUserId",
-                                    "username as refUsername",
-                                    "displayName as refDisplayName",
-                                    "avatar as refAvatar",
-                                    "status as refStatus",
-                                ])
-                                .as("users"),
-                        (join) => join.onRef("users.refUserId", "=", "messages.authorId")
-                    )
-                    .select([
-                        "id as refId",
-                        "type as refType",
-                        "content as refContent",
-                        "attachments as refAttachments",
-                        "createdAt as refCreatedAt",
-                        "authorId as refAuthorId",
-                        "refUserId",
-                        "refUsername",
-                        "refDisplayName",
-                        "refAvatar",
-                        "refStatus",
-                    ])
-                    .as("ref"),
-            (join) => join.onRef("ref.refId", "=", "messages.messageReferenceId")
-        )
-        .select([
-            "id",
-            "type",
-            "content",
-            "attachments",
-            "createdAt",
-            "authorId",
-            "channelId",
-            "userId",
-            "username",
-            "displayName",
-            "avatar",
-            "status",
-            "refId",
-            "refType",
-            "refContent",
-            "refAttachments",
-            "refCreatedAt",
-            "refAuthorId",
-            "refUserId",
-            "refUsername",
-            "refDisplayName",
-            "refAvatar",
-            "refStatus",
-        ])
-        .where("channelId", "=", channel.id)
-        .orderBy("messages.createdAt", "desc")
-        .limit(50)
-        .execute();
+    const messages = await getMessages(channel.id, 50);
 
     const hasMore = await db
         .selectFrom("messages")
@@ -179,41 +117,12 @@ async function FetchMessage({
         .where("channelId", "=", channel.id)
         .execute();
 
-    const messages2 = messages
-        .map((message) => ({
-            ...message,
-            author: {
-                id: message.userId,
-                username: message.username,
-                displayName: message.displayName,
-                avatar: message.avatar,
-                status: message.status,
-            },
-            messageReference: message.refId
-                ? {
-                      id: message.refId,
-                      type: message.refType,
-                      content: message.refContent,
-                      attachments: message.refAttachments,
-                      createdAt: message.refCreatedAt,
-                      author: {
-                          id: message.refUserId,
-                          username: message.refUsername,
-                          displayName: message.refDisplayName,
-                          avatar: message.refAvatar,
-                          status: message.refStatus,
-                      },
-                  }
-                : undefined,
-        }))
-        .reverse();
-
     return (
         <Content
             user={user}
             friend={friend}
-            channelId={channel.id}
-            initMessages={messages2}
+            channel={channel}
+            initMessages={messages.reverse()}
             initHasMore={hasMore[0].count > 50}
         />
     );

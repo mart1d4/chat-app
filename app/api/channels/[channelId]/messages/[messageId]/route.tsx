@@ -1,16 +1,13 @@
-import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
 import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function PUT(
-    req: Request,
-    { params }: { params: { channelId: string; messageId: string } }
-) {
+export async function PUT(req: Request, { params }: { params: { messageId: string } }) {
     const senderId = headers().get("X-UserId") || "";
+    const { messageId } = params;
 
-    const { channelId, messageId } = params;
     const { content, attachments } = await req.json();
 
     if (content !== undefined && typeof content !== "string" && content !== null) {
@@ -36,8 +33,9 @@ export async function PUT(
     try {
         const message = await db
             .selectFrom("messages")
+            .select("attachments")
             .where("id", "=", messageId)
-            .selectAll()
+            .where("authorId", "=", senderId)
             .executeTakeFirst();
 
         if (!message) {
@@ -50,45 +48,30 @@ export async function PUT(
             );
         }
 
-        if (message.authorId != parseInt(senderId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not the author of this message",
-                },
-                { status: 403 }
-            );
-            2;
-        }
-
-        const newMessage = await db
+        const updatedMessage = await db
             .updateTable("messages")
             .set({ content: content })
             .set({ edited: new Date() })
-            .$if(attachments !== undefined, (q) =>
+            .$if(attachments, (q) =>
                 q.set({
-                    attachments: message.attachments.length
+                    attachments: message.attachments?.length
                         ? message.attachments.filter((file) => attachments.includes(file.id))
                         : attachments,
                 })
-            )``
+            )
             .where("id", "=", messageId)
+            .where("authorId", "=", senderId)
             .executeTakeFirst();
 
         if (attachments && message.attachments.length !== attachments.length) {
             const toDelete = message.attachments.filter((file) => !attachments.includes(file.id));
 
             if (toDelete.length > 0) {
-                toDelete.forEach(async (file) => {
+                toDelete.forEach((file) => {
                     removeImage(file.id);
                 });
             }
         }
-
-        pusher.trigger("chat-app", "message-edited", {
-            channelId: channelId,
-            message: newMessage,
-        });
 
         return NextResponse.json(
             {
@@ -98,32 +81,23 @@ export async function PUT(
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { channelId: string; messageId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { messageId: string } }) {
     const senderId = headers().get("X-UserId") || "";
-    const { channelId, messageId } = params;
+    const { messageId } = params;
 
     try {
-        const deletedMessage = await db
-            .deleteFrom("messages")
+        const message = await db
+            .selectFrom("messages")
+            .select("attachments")
             .where("id", "=", messageId)
             .where("authorId", "=", senderId)
             .executeTakeFirst();
 
-        if (!deletedMessage) {
+        if (!message) {
             return NextResponse.json(
                 {
                     success: false,
@@ -133,16 +107,17 @@ export async function DELETE(
             );
         }
 
-        // if (message.attachments.length > 0) {
-        //     message.attachments.forEach(async (attachment: any) => {
-        //         removeImage(attachment.id);
-        //     });
-        // }
+        const deletedMessage = await db
+            .deleteFrom("messages")
+            .where("id", "=", messageId)
+            .where("authorId", "=", senderId)
+            .executeTakeFirst();
 
-        await pusher.trigger("chat-app", "message-deleted", {
-            channelId: channelId,
-            messageId: messageId,
-        });
+        if (message.attachments?.length > 0) {
+            message.attachments.forEach((file: any) => {
+                removeImage(file.id);
+            });
+        }
 
         return NextResponse.json(
             {
@@ -152,13 +127,6 @@ export async function DELETE(
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

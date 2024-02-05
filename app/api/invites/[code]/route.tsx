@@ -15,38 +15,38 @@ export async function GET(req: Request, { params }: { params: { code: string } }
                     eb
                         .selectFrom("users")
                         .select([
-                            "id as inviterId",
+                            "id as userId",
                             "username as inviterUsername",
                             "displayName as inviterDisplayName",
                         ])
                         .as("users"),
-                (join) => join.onRef("users.inviterId", "=", "invites.inviterId")
+                (join) => join.onRef("users.userId", "=", "invites.inviterId")
             )
             .innerJoin(
                 (eb) =>
                     eb
                         .selectFrom("channels")
                         .select([
-                            "id as channelId",
+                            "id as channelId2",
                             "type as channelType",
                             "name as channelName",
                             "icon as channelIcon",
                         ])
                         .as("channels"),
-                (join) => join.onRef("channels.channelId", "=", "invites.channelId")
+                (join) => join.onRef("channels.channelId2", "=", "invites.channelId")
             )
             .innerJoin(
                 (eb) =>
                     eb
                         .selectFrom("guilds")
                         .select([
-                            "id as guildId",
+                            "id as guildId2",
                             "name as guildName",
                             "icon as guildIcon",
                             "ownerId as guildOwnerId",
                         ])
                         .as("guilds"),
-                (join) => join.onRef("guilds.guildId", "=", "invites.guildId")
+                (join) => join.onRef("guilds.guildId2", "=", "invites.guildId")
             )
             .select([
                 "code",

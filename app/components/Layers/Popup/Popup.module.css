@@ -522,6 +522,11 @@
     overflow: hidden;
 }
 
+.imagePreview > div > div {
+    max-width: 80dvw;
+    max-height: 80dvh;
+}
+
 .imagePreview > div > img {
     max-width: 80dvw;
     max-height: 80dvh;

@@ -255,7 +255,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         let messageContent = sanitizeString(message);
 
         if (!messageContent && attachments.length === 0) return;
-        if (messageContent && messageContent.length > 4000) {
+        if (messageContent && messageContent.length > 16000) {
             return setLayers({
                 settings: {
                     type: "POPUP",
@@ -568,14 +568,11 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                             <div className={styles.toolsContainer}>
                                 <button onClick={(e) => e.preventDefault()}>
-                                    <Icon
-                                        name="keyboard"
-                                        size={30}
-                                    />
+                                    <Icon name="gif" />
                                 </button>
 
                                 <button onClick={(e) => e.preventDefault()}>
-                                    <Icon name="gif" />
+                                    <Icon name="sticker" />
                                 </button>
 
                                 <EmojiPicker />
@@ -648,9 +645,9 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                         onMouseEnter={(e) =>
                             setTooltip({
                                 text:
-                                    message.length > 4000
+                                    message.length > 16000
                                         ? "Message is too long"
-                                        : `${4000 - message.length} characters remaining`,
+                                        : `${16000 - message.length} characters remaining`,
                                 element: e.currentTarget,
                             })
                         }
@@ -659,14 +656,14 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                         <span
                             style={{
                                 color:
-                                    message.length > 4000
+                                    message.length > 16000
                                         ? "var(--error-1)"
                                         : "var(--foreground-3)",
                             }}
                         >
                             {message.length}
                         </span>
-                        /4000
+                        /16000
                     </div>
                 </div>
             </form>

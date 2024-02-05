@@ -5,13 +5,16 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import {
     areUsersBlocked,
+    didUserHideChannel,
     getChannel,
+    getMessage,
     getRandomId,
     getUser,
     isUserInChannel,
     isUserInGuild,
 } from "@/lib/db/helpers";
 import { db } from "@/lib/db/db";
+import { catchError } from "@/lib/api";
 
 // export async function GET(req: Request, { params }: { params: { channelId: string } }) {
 //     const senderId = headers().get("X-UserId") || "";
@@ -171,39 +174,33 @@ import { db } from "@/lib/db/db";
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
-
     const channelId = params.channelId;
-    const { message } = await req.json();
 
-    if (!message || (!message.content && !message.attachments && !message.embeds)) {
+    const { message } = await req.json();
+    let recipient;
+
+    if (!message.content && !message.attachments.length && !message.embeds.length) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Message is required",
+                message: "Message can't be blank",
+            },
+            { status: 400 }
+        );
+    }
+
+    if (message.content && message.content.length > 16000) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: "Message must be less than 16000 characters",
             },
             { status: 400 }
         );
     }
 
     try {
-        const channel = await getChannel(parseInt(channelId));
-        const sender = await getUser({ id: parseInt(senderId) });
-
-        if (!channel || !sender) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel or sender not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        if (
-            !isUserInChannel(sender.id, channel.id) &&
-            channel.guildId &&
-            !isUserInGuild(sender.id, channel.guildId)
-        ) {
+        if (!isUserInChannel(senderId, channelId)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -213,16 +210,42 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             );
         }
 
+        const channel = await db
+            .selectFrom("channels")
+            .select(["guildId", "type"])
+            .where("id", "=", channelId)
+            .executeTakeFirst();
+
+        if (!channel) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Channel not found",
+                },
+                { status: 404 }
+            );
+        }
+
         // If DM and user is blocked
         if (channel.type === 0) {
-            const otherUser = await db
+            recipient = await db
                 .selectFrom("channelrecipients")
-                .select("userId")
-                .where("channelId", "=", channel.id)
-                .where("userId", "!=", sender.id)
+                .select("userId as id")
+                .where("channelId", "=", channelId)
+                .where("userId", "!=", senderId)
                 .executeTakeFirst();
 
-            if (await areUsersBlocked([senderId, otherUser.userId])) {
+            if (!recipient) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "User not found",
+                    },
+                    { status: 404 }
+                );
+            }
+
+            if (await areUsersBlocked([senderId, recipient.id])) {
                 return NextResponse.json(
                     {
                         success: false,
@@ -231,26 +254,6 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     { status: 401 }
                 );
             }
-        }
-
-        if (!message.content && message.attachments.length === 0) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Message can't be blank",
-                },
-                { status: 400 }
-            );
-        }
-
-        if (message.content && message.content.length > 4000) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Message must be less than 4000 characters",
-                },
-                { status: 400 }
-            );
         }
 
         if (message.messageReference) {
@@ -293,7 +296,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         const id = getRandomId();
 
-        const newMessage = await db
+        await db
             .insertInto("messages")
             .values({
                 id: id,
@@ -315,91 +318,38 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             })
             .executeTakeFirst();
 
-        await db
-            .updateTable("channels")
-            .set({ lastMessageId: id })
-            .where("id", "=", channelId)
-            .execute();
+        db.updateTable("channels").set({ lastMessageId: id }).where("id", "=", channelId).execute();
 
-        // if (channel.type === 0) {
-        //     // If the recipient has hidden the channel, unhide it
-        //     const recipientId = channel.recipientIds.find((id) => id !== senderId);
-        //     const recipient = await prisma.user.findUnique({
-        //         where: {
-        //             id: recipientId,
-        //         },
-        //         select: {
-        //             hiddenChannelIds: true,
-        //         },
-        //     });
+        if (channel.type === 0 && recipient) {
+            // If the recipient has hidden the channel, unhide it
+            if (await didUserHideChannel(recipient.id, channelId)) {
+                db.updateTable("channelrecipients")
+                    .set({ isHidden: false })
+                    .where("channelId", "=", channelId)
+                    .where("userId", "=", recipient.id)
+                    .execute();
+            }
+        }
 
-        //     if (recipient?.hiddenChannelIds.includes(channelId)) {
-        //         await prisma.user.update({
-        //             where: {
-        //                 id: recipientId,
-        //             },
-        //             data: {
-        //                 hiddenChannelIds: {
-        //                     set: recipient.hiddenChannelIds.filter((id) => id !== channelId),
-        //                 },
-        //             },
-        //         });
-
-        //         await pusher.trigger("chat-app", "channel-created", {
-        //             recipients: [recipientId],
-        //             channel: channel,
-        //         });
-        //     }
-        // }
-
-        await pusher.trigger("chat-app", "message-sent", {
-            channelId: channelId,
-            message: {
-                id: id,
-                authorId: sender.id,
-                channelId: channelId,
-                content: message.content,
-                createdAt: new Date(),
-                author: {
-                    ...sender,
-                },
-            },
-        });
+        const newMessage = await getMessage(id);
 
         return NextResponse.json(
             {
                 success: true,
                 message: "Successfully sent message",
                 data: {
-                    message: {
-                        id: id,
-                        authorId: sender.id,
-                        channelId: channelId,
-                        content: message.content,
-                        createdAt: new Date(),
-                        author: {
-                            ...sender,
-                        },
-                    },
+                    message: newMessage,
                 },
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
+        if (message.attachments.length) {
+            message.attachments.forEach((file) => {
+                removeImage(file.id);
+            });
+        }
 
-        // if (message.attachments) {
-        //     message.attachments.forEach(async (attachment: TAttachment) => {
-        //         await removeImage(attachment.id);
-        //     });
-        // }
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

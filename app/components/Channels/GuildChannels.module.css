@@ -93,7 +93,7 @@
 }
 
 .guildSettings > div > div:last-child > svg {
-    transform: rotate(90deg);
+    transform: rotate(180deg);
 }
 
 .scroller {
@@ -348,11 +348,11 @@
     top: 6px;
     width: 12px;
     height: 12px;
-    transition: transform 0.2s ease-out;
+    transition: none;
 }
 
-.category.hide > div > svg {
-    transform: rotate(-90deg);
+.category:not(.hide) > div > svg {
+    transform: rotate(90deg);
 }
 
 .category > div > h3 {
@@ -380,7 +380,9 @@
     width: 18px;
     height: 18px;
     color: var(--foreground-4);
+    background-color: transparent;
     padding: 0;
+    cursor: pointer;
 }
 
 .category > button:hover {
@@ -476,6 +478,7 @@
     line-height: 0;
     align-items: center;
     justify-content: center;
+    background-color: transparent;
     padding: 0;
     height: auto;
 }

@@ -1,144 +1,37 @@
 "use client";
 
-import { AppHeader, Message, TextArea, MemberList, MessageSk, Icon } from "@components";
-import { useState, useEffect, useCallback, ReactElement, useMemo, useRef } from "react";
+import { ChannelTable, GuildTable, MessageTable } from "@/lib/db/types";
+import { Message, TextArea, MessageSk, Icon } from "@components";
+import { useState, useEffect, useCallback } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
-import pusher from "@/lib/pusher/client-connection";
-import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
+import { useUrls } from "@/lib/store";
 import Link from "next/link";
 
-type TMessageData = {
-    channelId: TChannel["id"];
-    message: TMessage;
-    notSentByAuthor?: boolean;
-};
+export default function Content({
+    channel,
+    guild,
+    messagesLoading,
+    initMessages,
+    initHasMore,
+}: {
+    channel: Partial<ChannelTable>;
+    guild: Partial<GuildTable>;
+    messagesLoading: boolean;
+    initMessages: Partial<MessageTable>[];
+    initHasMore: boolean;
+}) {
+    const [scrollerNode, setScrollerNode] = useState(null);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [messages, setMessages] = useState(initMessages);
+    const [hasMore, setHasMore] = useState(initHasMore);
+    const [loading, setLoading] = useState(false);
 
-type TMessageIdData = {
-    channelId: TChannel["id"];
-    messageId: TMessage["id"];
-};
-
-type TUserUpdateData = {
-    user: TCleanUser;
-};
-
-interface Props {
-    guild: TGuild;
-    channel: TChannel;
-}
-
-const Content = ({ guild, channel }: Props): ReactElement => {
-    const [scrollerNode, setScrollerNode] = useState<HTMLDivElement | null>(null);
-    const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
-    const [messages, setMessages] = useState<TMessage[]>([]);
-    const [hasMore, setHasMore] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
-
-    const modifyUser = useData((state) => state.modifyUser);
-    const setGuildUrl = useUrls((state) => state.setGuild);
-    const setToken = useData((state) => state.setToken);
-    const setUser = useData((state) => state.setUser);
-    const token = useData((state) => state.token);
-    const user = useData((state) => state.user);
-    const hasRendered = useRef<boolean>(false);
-
-    useEffect(() => {
-        if (!user) return;
-
-        pusher.bind("message-sent", (data: TMessageData) => {
-            console.log("[ChannelContent] message-sent", data);
-            if (data.channelId === channel.id && (data.message.author.id !== user.id || data.notSentByAuthor)) {
-                setMessages((prev) => [...prev, data.message]);
-            }
-        });
-
-        pusher.bind("message-edited", (data: TMessageData) => {
-            if (data.channelId === channel.id) {
-                setMessages((prev) =>
-                    prev.map((message) => {
-                        if (message.id === data.message.id) return data.message;
-                        return message;
-                    })
-                );
-            }
-        });
-
-        pusher.bind("message-deleted", (data: TMessageIdData) => {
-            if (data.channelId === channel.id) {
-                setMessages((prev) => prev.filter((message) => message.id !== data.messageId));
-            }
-        });
-
-        pusher.bind("user-updated", (data: TUserUpdateData) => {
-            if (data.user.id === user.id) {
-                setUser(data.user);
-            } else {
-                modifyUser(data.user);
-            }
-
-            if (guild.rawMemberIds.includes(data.user.id)) {
-                setMessages((prev) =>
-                    prev.map((message) => {
-                        if (message.author.id === data.user.id) {
-                            return {
-                                ...message,
-                                author: data.user as TUser,
-                            };
-                        }
-                        return message;
-                    })
-                );
-            }
-        });
-
-        return () => {
-            pusher.unbind("message-sent");
-            pusher.unbind("message-edited");
-            pusher.unbind("message-deleted");
-            pusher.unbind("user-updated");
-        };
-    }, [user, messages, guild]);
+    const setGuildUrl = useUrls((s) => s.setGuild);
 
     useEffect(() => {
         document.title = `Chat App | #${channel.name} | ${guild.name}`;
         setGuildUrl(guild.id, channel.id);
-
-        const getMessages = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${channel.id}/messages`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }).then((res) => res.json());
-
-            console.log("[ChannelContent] ", response);
-            if (response.status === 401) {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
-                    method: "GET",
-                    credentials: "include",
-                }).then((res) => res.json());
-
-                if (!response.token) throw new Error("[ChannelContent] No token found");
-                setToken(response.token);
-            } else if (!response.error) {
-                setMessages(response.messages);
-                setHasMore(response.hasMore);
-            }
-
-            setLoading(false);
-        };
-
-        const env = process.env.NODE_ENV;
-        if (env == "development") {
-            if (hasRendered.current) getMessages();
-            return () => {
-                hasRendered.current = true;
-            };
-        } else if (env == "production") {
-            getMessages();
-        }
     }, []);
 
     const scrollContainer = useCallback(
@@ -198,85 +91,101 @@ const Content = ({ guild, channel }: Props): ReactElement => {
         );
     };
 
-    return useMemo(
-        () => (
-            <div className={styles.container}>
-                <AppHeader channel={channel} />
+    return (
+        <main className={styles.main}>
+            <div className={styles.messagesWrapper}>
+                <div
+                    ref={scrollContainer}
+                    className={styles.messagesScrollableContainer + " scrollbar"}
+                    onScroll={(e) => {
+                        if (
+                            e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
+                            e.currentTarget.scrollHeight
+                        ) {
+                            if (!isAtBottom) setIsAtBottom(true);
+                        } else if (isAtBottom) {
+                            setIsAtBottom(false);
+                        }
+                    }}
+                >
+                    <div
+                        ref={scrollContainerChild}
+                        className={styles.scrollContent}
+                    >
+                        <ol className={styles.scrollContentInner}>
+                            {loading || messagesLoading ? (
+                                <MessageSk />
+                            ) : (
+                                <>
+                                    {hasMore ? (
+                                        <MessageSk />
+                                    ) : (
+                                        <FirstMessage
+                                            guild={guild}
+                                            channel={channel}
+                                        />
+                                    )}
 
-                <div className={styles.content}>
-                    <main className={styles.main}>
-                        <div className={styles.messagesWrapper}>
-                            <div
-                                ref={scrollContainer}
-                                className={styles.messagesScrollableContainer + " scrollbar"}
-                                onScroll={(e) => {
-                                    if (
-                                        e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
-                                        e.currentTarget.scrollHeight
-                                    ) {
-                                        if (!isAtBottom) setIsAtBottom(true);
-                                    } else if (isAtBottom) {
-                                        setIsAtBottom(false);
-                                    }
-                                }}
-                            >
-                                <div ref={scrollContainerChild} className={styles.scrollContent}>
-                                    <ol className={styles.scrollContentInner}>
-                                        {loading ? (
-                                            <MessageSk />
-                                        ) : (
-                                            <>
-                                                {hasMore ? (
-                                                    <MessageSk />
-                                                ) : (
-                                                    <FirstMessage guild={guild} channel={channel} />
-                                                )}
+                                    {messages.map((message, index) => (
+                                        <div key={message.id}>
+                                            {isNewDay(index) && (
+                                                <div className={styles.messageDivider}>
+                                                    <span>
+                                                        {new Intl.DateTimeFormat("en-US", {
+                                                            weekday: "long",
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                        }).format(new Date(message.createdAt))}
+                                                    </span>
+                                                </div>
+                                            )}
 
-                                                {messages?.map((message: TMessage, index: number) => (
-                                                    <div key={message.id}>
-                                                        {isNewDay(index) && (
-                                                            <div className={styles.messageDivider}>
-                                                                <span>
-                                                                    {new Intl.DateTimeFormat("en-US", {
-                                                                        weekday: "long",
-                                                                        year: "numeric",
-                                                                        month: "long",
-                                                                        day: "numeric",
-                                                                    }).format(new Date(message.createdAt))}
-                                                                </span>
-                                                            </div>
-                                                        )}
+                                            <Message
+                                                message={message}
+                                                setMessages={setMessages}
+                                                large={shouldBeLarge(index)}
+                                                channel={channel}
+                                            />
+                                        </div>
+                                    ))}
+                                </>
+                            )}
 
-                                                        <Message
-                                                            message={message}
-                                                            setMessages={setMessages}
-                                                            large={shouldBeLarge(index)}
-                                                            channel={channel}
-                                                            guild={guild}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
-
-                                        <div className={styles.scrollerSpacer} />
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-
-                        <TextArea channel={channel} setMessages={setMessages} />
-                    </main>
-
-                    <MemberList channel={channel} guild={guild} />
+                            <div className={styles.scrollerSpacer} />
+                        </ol>
+                    </div>
                 </div>
             </div>
-        ),
-        [channel, loading, messages, hasMore]
+
+            <TextArea
+                channel={channel}
+                setMessages={setMessages}
+            />
+        </main>
     );
-};
+}
 
 const FirstMessage = ({ guild, channel }: Props) => {
+    const content = [
+        {
+            text: "Invite your friends",
+            icon: "e6a37780-7436-41eb-b818-fdb19e16bb0d",
+        },
+        {
+            text: "Personalize your server with an icon",
+            icon: "07a4b38b-38ae-4000-b7ad-68571a2806c6",
+        },
+        {
+            text: "Send your first message",
+            icon: "c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1",
+        },
+        {
+            text: "Add your first app",
+            icon: "d5bce184-683e-4746-ae9c-68904a4a876e",
+        },
+    ];
+
     if (guild.systemChannelId === channel.id) {
         return (
             <div className={styles.systemChannel}>
@@ -289,50 +198,23 @@ const FirstMessage = ({ guild, channel }: Props) => {
                             </h3>
 
                             <div>
-                                This is your brand new, shiny server. Here are some steps to help you get started. For
-                                more, check out our <Link href="/forum/getting-started">Getting Started guide</Link>.
+                                This is your brand new, shiny server. Here are some steps to help
+                                you get started. For more, check out our{" "}
+                                <Link href="/forum/getting-started">Getting Started guide</Link>.
                             </div>
                         </div>
 
-                        <div className={styles.welcomeCard}>
-                            <div
-                                style={{
-                                    backgroundImage: `url("https://ucarecdn.com/e6a37780-7436-41eb-b818-fdb19e16bb0d/")`,
-                                }}
-                            />
-                            <div>Invite your friends</div>
-                            <Icon name="arrow" />
-                        </div>
-
-                        <div className={styles.welcomeCard}>
-                            <div
-                                style={{
-                                    backgroundImage: `url("https://ucarecdn.com/07a4b38b-38ae-4000-b7ad-68571a2806c6/")`,
-                                }}
-                            />
-                            <div>Personalize your server with an icon</div>
-                            <Icon name="arrow" />
-                        </div>
-
-                        <div className={styles.welcomeCard}>
-                            <div
-                                style={{
-                                    backgroundImage: `url("https://ucarecdn.com/c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1/")`,
-                                }}
-                            />
-                            <div>Send your first message</div>
-                            <Icon name="arrow" />
-                        </div>
-
-                        <div className={styles.welcomeCard}>
-                            <div
-                                style={{
-                                    backgroundImage: `url("https://ucarecdn.com/d5bce184-683e-4746-ae9c-68904a4a876e/")`,
-                                }}
-                            />
-                            <div>Add your first app</div>
-                            <Icon name="arrow" />
-                        </div>
+                        {content.map((c) => (
+                            <div className={styles.welcomeCard}>
+                                <div
+                                    style={{
+                                        backgroundImage: `url("https://ucarecdn.com/${c.icon}/")`,
+                                    }}
+                                />
+                                <div>{c.text}</div>
+                                <Icon name="caret" />
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -343,12 +225,14 @@ const FirstMessage = ({ guild, channel }: Props) => {
         <div className={styles.firstTimeMessageContainer}>
             <div
                 className={styles.channelIcon}
-                style={{ backgroundImage: `url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/")` }}
+                style={{
+                    backgroundImage: `url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/")`,
+                }}
             />
             <h3 className={styles.friendUsername}>Welcome to #{channel.name}!</h3>
-            <div className={styles.descriptionContainer}>This is the start of the #{channel.name} channel.</div>
+            <div className={styles.descriptionContainer}>
+                This is the start of the #{channel.name} channel.
+            </div>
         </div>
     );
 };
-
-export default Content;

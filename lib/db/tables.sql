@@ -174,7 +174,7 @@ CREATE TABLE `roles` (
 	`id` bigint NOT NULL,
 
 	`name` varchar(32) NOT NULL,
-	`color` varchar(7) NOT NULL,
+	`color` varchar(7) NOT NULL DEFAULT '#99AAB5',
 
 	`hoist` tinyint(1) NOT NULL DEFAULT '0',
 	`position` int NOT NULL,

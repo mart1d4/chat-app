@@ -45,8 +45,8 @@
 .item.disabled {
     opacity: 0.5;
     cursor: default;
-    color: var(--foreground-3);
-    background-color: transparent;
+    color: var(--foreground-3) !important;
+    background-color: transparent !important;
 }
 
 .item:hover,
@@ -69,6 +69,13 @@
 .item.danger:active {
     background-color: var(--error-2);
     color: var(--foreground-1);
+}
+
+.leftIcon {
+    margin: 2px 8px 2px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .label {
@@ -98,11 +105,11 @@
     color: var(--foreground-1);
 }
 
-.item.hover .icon.revert {
+.item:hover .icon.revert {
     color: var(--foreground-1);
 }
 
-.item.hover .icon.revert path:last-child {
+.item:hover .icon.revert path:last-child {
     color: var(--accent-1);
 }
 

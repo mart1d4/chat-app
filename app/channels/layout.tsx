@@ -13,6 +13,8 @@ export default async function Layout({ children }: { children: ReactElement }) {
     const data = await getInitialData();
     if (!data) redirect("/login");
 
+    console.log(data.user);
+
     return (
         <Loading
             data={{

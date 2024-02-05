@@ -36,19 +36,19 @@ type TProps = {
 };
 
 const colors = {
-    ONLINE: "#22A559",
-    IDLE: "#F0B232",
-    DO_NOT_DISTURB: "#F23F43",
-    INVISIBLE: "#80848E",
-    OFFLINE: "#80848E",
+    online: "#22A559",
+    idle: "#F0B232",
+    dnd: "#F23F43",
+    invisible: "#80848E",
+    offline: "#80848E",
 };
 
 const masks = {
-    ONLINE: "",
-    IDLE: "status-mask-idle",
-    DO_NOT_DISTURB: "status-mask-dnd",
-    INVISIBLE: "status-mask-offline",
-    OFFLINE: "status-mask-offline",
+    online: "",
+    idle: "status-mask-idle",
+    dnd: "status-mask-dnd",
+    invisible: "status-mask-offline",
+    offline: "status-mask-offline",
 };
 
 const statuses = {
@@ -95,6 +95,7 @@ export function Popup({ content, friends, element }: any) {
     const [channelLocked, setChannelLocked] = useState(false);
 
     const [imgIndex, setImgIndex] = useState<number>(content.current ?? 0);
+    const [imageLoading, setImageLoading] = useState(true);
 
     const [status, setStatus] = useState<string>(translateCap(user.status));
     const [customStatus, setCustomStatus] = useState<string>(user.customStatus ?? "");
@@ -105,6 +106,10 @@ export function Popup({ content, friends, element }: any) {
     const passwordRef = useRef<HTMLInputElement>(null);
     const guildIconInput = useRef<HTMLInputElement>(null);
     const cancelRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        setImageLoading(true);
+    }, [imgIndex]);
 
     useEffect(() => {
         // Reset all state when popup is closed
@@ -575,6 +580,8 @@ export function Popup({ content, friends, element }: any) {
         return <Invite content={content} />;
     }
 
+    const currentImage = content.attachments?.length ? content.attachments[imgIndex] : null;
+
     return (
         <AnimatePresence>
             {type === "USER_STATUS" ? (
@@ -817,32 +824,52 @@ export function Popup({ content, friends, element }: any) {
                                         },
                                         content: {
                                             type: "IMAGE",
-                                            attachment: content.attachments[imgIndex],
+                                            attachment: currentImage,
                                         },
                                     });
                                 }}
                             >
-                                <img
+                                {imageLoading && (
+                                    <div
+                                        style={{
+                                            maxWidth: `minmax(${currentImage.dimensions.width}px, 80dvw)`,
+                                            maxHeight: `minmax(${currentImage.dimensions.height}px, 80dvh)`,
+                                            width: currentImage.dimensions.width,
+                                            height: currentImage.dimensions.height,
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            backgroundColor: "hsla(0, 0%, 0%, 0.3)",
+                                        }}
+                                    >
+                                        <LoadingDots />
+                                    </div>
+                                )}
+
+                                <Image
                                     style={{
-                                        maxWidth: `minmax(${content.attachments[imgIndex].dimensions.width}px, 80dvw)`,
-                                        maxHeight: `minmax(${content.attachments[imgIndex].dimensions.height}px, 80dvh)`,
+                                        maxWidth: `minmax(${currentImage.dimensions.width}px, 80dvw)`,
+                                        maxHeight: `minmax(${currentImage.dimensions.height}px, 80dvh)`,
+                                        position: imageLoading ? "absolute" : "relative",
                                     }}
                                     src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
-                                        content.attachments[imgIndex].id
+                                        currentImage.id
                                     }/-/resize/${
-                                        content.attachments[imgIndex].dimensions.width >=
-                                        window.innerWidth
+                                        currentImage.dimensions.width >= window.innerWidth
                                             ? Math.ceil(window.innerWidth * 0.9)
-                                            : content.attachments[imgIndex].dimensions.width
+                                            : currentImage.dimensions.width
                                     }x/`}
-                                    alt={content.attachments[imgIndex]?.description ?? "Image"}
+                                    alt={currentImage.description || "Image"}
+                                    width={currentImage.dimensions.width}
+                                    height={currentImage.dimensions.height}
+                                    onLoad={() => setImageLoading(false)}
                                 />
                             </div>
 
                             <a
                                 target="_blank"
                                 className={styles.imageLink}
-                                href={`${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachments[imgIndex].id}/`}
+                                href={`${process.env.NEXT_PUBLIC_CDN_URL}/${currentImage.id}/`}
                             >
                                 Open in new tab
                             </a>

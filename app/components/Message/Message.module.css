@@ -107,7 +107,7 @@
     display: inline-block;
     cursor: default;
     font-weight: 500;
-    height: 1.375rem;
+    height: 1.25rem;
     user-select: text;
 }
 
@@ -368,8 +368,12 @@
     color: var(--error-1) !important;
 }
 
+.buttons > div > svg {
+    transition: transform 0s ease-out;
+}
+
 .buttons > div:active > svg {
-    transform: translateY(0.5px);
+    transform: translateY(1px);
 }
 
 .buttons > div:first-child {
@@ -885,4 +889,24 @@
 
 .guildInvite > .content > .headline > div:last-child > strong .offlineDot {
     background-color: var(--background-5);
+}
+
+.translation {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--foreground-3);
+}
+
+.translation > span {
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--accent-light);
+    margin-left: 8px;
+    line-height: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.translation > span:hover {
+    text-decoration: underline;
 }

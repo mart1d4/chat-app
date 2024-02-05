@@ -1,14 +1,13 @@
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
+import { ChannelTable, GuildTable, MessageTable, UserTable } from "./types";
 import { NextResponse } from "next/server";
-import { User, UserTable } from "./types";
 import { cookies } from "next/headers";
-import { sql } from "kysely";
+import { ExpressionBuilder, sql } from "kysely";
 import { db } from "./db";
-
-// Fields selections
 
 type id = string | number;
 
-export const defaultSelect = [
+export const selfUserSelect: (keyof UserTable)[] = [
     "id",
     "username",
     "displayName",
@@ -22,7 +21,7 @@ export const defaultSelect = [
     "createdAt",
 ];
 
-export const sensitiveSelect = [
+export const userSelect: (keyof UserTable)[] = [
     "id",
     "username",
     "displayName",
@@ -30,6 +29,41 @@ export const sensitiveSelect = [
     "banner",
     "primaryColor",
     "accentColor",
+];
+
+const messageSelect: (keyof MessageTable)[] = [
+    "id",
+    "type",
+    "content",
+    "attachments",
+    "embeds",
+    "edited",
+    "pinned",
+    "mentionEveryone",
+    "mentions",
+    "mentionRoleIds",
+    "createdAt",
+    "channelId",
+];
+
+const channelSelect: (keyof ChannelTable)[] = [
+    "id",
+    "type",
+    "name",
+    "topic",
+    "icon",
+    "ownerId",
+    "updatedAt",
+];
+
+const guildSelect: (keyof GuildTable)[] = [
+    "id",
+    "name",
+    "icon",
+    "banner",
+    "description",
+    "members",
+    "systemChannelId",
 ];
 
 const avatars = [
@@ -177,11 +211,9 @@ export async function getUser({
             .$if(!!select?.notifications, (q) => q.select("notifications"))
             .$if(!!select?.createdAt, (q) => q.select("createdAt"))
             .$if(!id && !username, (q) =>
-                // @ts-expect-error
                 q.where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
             )
-            .$if(!!id, (q) => q.where("id", "=", id as number))
-            // @ts-expect-error
+            .$if(!!id, (q) => q.where("id", "=", id))
             .$if(!!username, (q) => q.where(sql`username = BINARY ${username}`))
             .executeTakeFirst();
 
@@ -199,7 +231,6 @@ export async function getUser({
             return null;
         }
 
-        // @ts-expect-error
         return user;
     } catch (error) {
         console.error(error);
@@ -241,7 +272,7 @@ export async function getInitialData() {
     try {
         const user = await db
             .selectFrom("users")
-            .select(defaultSelect)
+            .select(selfUserSelect)
             .where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
             .executeTakeFirst();
 
@@ -274,7 +305,7 @@ export async function getInitialData() {
 
 export async function getFriends(userId: id) {
     try {
-        const friends = await sql<Partial<User>[]>`
+        const friends = await sql<Partial<UserTable>[]>`
             SELECT
                 ${sql.ref("id")},
                 ${sql.ref("username")},
@@ -341,10 +372,10 @@ export async function getRequestsSent(userId: id) {
             (await db
                 .selectFrom("requests")
                 .innerJoin(
-                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                    (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
                     (join) => join.onRef("users.id", "=", "requests.requestedId")
                 )
-                .select(defaultSelect)
+                .select(selfUserSelect)
                 .where("requests.requesterId", "=", userId)
                 .execute()) || [];
 
@@ -361,10 +392,10 @@ export async function getRequestsReceived(userId: id) {
             (await db
                 .selectFrom("requests")
                 .innerJoin(
-                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
+                    (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
                     (join) => join.onRef("users.id", "=", "requests.requesterId")
                 )
-                .select(defaultSelect)
+                .select(selfUserSelect)
                 .where("requests.requestedId", "=", userId)
                 .execute()) || [];
 
@@ -381,10 +412,10 @@ export async function getBlocked(userId: id) {
             (await db
                 .selectFrom("blocked")
                 .innerJoin(
-                    (eb) => eb.selectFrom("users").select(sensitiveSelect).as("users"),
+                    (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
                     (join) => join.onRef("users.id", "=", "blocked.blockedId")
                 )
-                .select(sensitiveSelect)
+                .select(selfUserSelect)
                 .where("blocked.blockerId", "=", userId)
                 .execute()) || [];
 
@@ -401,10 +432,10 @@ export async function getBlockedBy(userId: id) {
             (await db
                 .selectFrom("blocked")
                 .innerJoin(
-                    (eb) => eb.selectFrom("users").select(sensitiveSelect).as("users"),
+                    (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
                     (join) => join.onRef("users.id", "=", "blocked.blockerId")
                 )
-                .select(sensitiveSelect)
+                .select(selfUserSelect)
                 .where("blocked.blockedId", "=", userId)
                 .execute()) || [];
 
@@ -417,42 +448,37 @@ export async function getBlockedBy(userId: id) {
 
 export async function getChannels(userId: id) {
     try {
-        const channels =
-            (await db
-                .selectFrom("channelrecipients")
-                .innerJoin(
-                    (eb) =>
-                        eb
-                            .selectFrom("channels")
-                            .select(["id", "type", "name", "icon", "updatedAt"])
-                            .as("channels"),
-                    (join) => join.onRef("channels.id", "=", "channelrecipients.channelId")
-                )
-                .select(["id", "type", "name", "icon", "updatedAt"])
-                .orderBy("channels.updatedAt", "desc")
-                .where("channelrecipients.userId", "=", userId)
-                .execute()) || [];
-
-        // MAYBE REALLY TRY TO GET THE RECIPIENTS IN ONE QUERY
-
-        const newChannels = await Promise.all(
-            channels.map(async (channel) => {
-                const recipients =
-                    (await db
+        const channels = await db
+            .selectFrom("channels")
+            .select(channelSelect)
+            .select((eb) =>
+                jsonArrayFrom(
+                    eb
                         .selectFrom("channelrecipients")
                         .innerJoin(
-                            (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
-                            (join) => join.onRef("users.id", "=", "channelrecipients.userId")
+                            (eb) =>
+                                eb
+                                    .selectFrom("users as recipient")
+                                    .select(selfUserSelect)
+                                    .as("recipient"),
+                            (join) => join.onRef("recipient.id", "=", "channelrecipients.userId")
                         )
-                        .select(defaultSelect)
-                        .where("channelId", "=", channel.id)
-                        .execute()) || [];
+                        .select(selfUserSelect)
+                        .whereRef("channelrecipients.channelId", "=", "channels.id")
+                ).as("recipients")
+            )
+            .where(({ exists, selectFrom }) =>
+                exists(
+                    selectFrom("channelrecipients")
+                        .select("id")
+                        .where("channelrecipients.userId", "=", userId)
+                        .whereRef("channelrecipients.channelId", "=", "channels.id")
+                )
+            )
+            .orderBy("updatedAt", "desc")
+            .execute();
 
-                return { ...channel, recipients };
-            })
-        );
-
-        return newChannels;
+        return channels || [];
     } catch (error) {
         console.error(error);
         return [];
@@ -463,26 +489,27 @@ export async function getChannel(channelId: id) {
     try {
         const channel = await db
             .selectFrom("channels")
-            .select(["id", "type", "name", "icon", "guildId", "updatedAt"])
+            .select(channelSelect)
+            .select((eb) =>
+                jsonArrayFrom(
+                    eb
+                        .selectFrom("channelrecipients")
+                        .innerJoin(
+                            (eb) =>
+                                eb
+                                    .selectFrom("users as recipient")
+                                    .select(selfUserSelect)
+                                    .as("recipient"),
+                            (join) => join.onRef("recipient.id", "=", "channelrecipients.userId")
+                        )
+                        .select(selfUserSelect)
+                        .whereRef("channelrecipients.channelId", "=", "channels.id")
+                ).as("recipients")
+            )
             .where("id", "=", channelId)
             .executeTakeFirst();
 
-        if (!channel) return null;
-
-        // MAYBE REALLY TRY TO GET THE RECIPIENTS IN ONE QUERY
-
-        const recipients =
-            (await db
-                .selectFrom("channelrecipients")
-                .innerJoin(
-                    (eb) => eb.selectFrom("users").select(defaultSelect).as("users"),
-                    (join) => join.onRef("users.id", "=", "channelrecipients.userId")
-                )
-                .select(defaultSelect)
-                .where("channelId", "=", channel.id)
-                .execute()) || [];
-
-        return { ...channel, recipients };
+        return channel;
     } catch (error) {
         return error;
     }
@@ -490,18 +517,74 @@ export async function getChannel(channelId: id) {
 
 export async function getGuilds(userId: id) {
     try {
-        const guilds =
-            (await db
-                .selectFrom("guildmembers")
-                .innerJoin(
-                    (eb) => eb.selectFrom("guilds").select(["id", "name"]).as("guilds"),
-                    (join) => join.onRef("guilds.id", "=", "guildmembers.guildId")
-                )
-                .select(["id", "name"])
-                .where("guildmembers.userId", "=", userId)
-                .execute()) || [];
+        const guilds = await db
+            .selectFrom("guildmembers")
+            .innerJoin(
+                (eb) => eb.selectFrom("guilds").select(guildSelect).as("guilds"),
+                (join) => join.onRef("guilds.id", "=", "guildmembers.guildId")
+            )
+            .select(guildSelect)
+            .where("guildmembers.userId", "=", userId)
+            .execute();
 
-        return guilds;
+        return guilds || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getGuild(guildId: id) {
+    try {
+        const guild = await db
+            .selectFrom("guilds")
+            .select(guildSelect)
+            .where("id", "=", guildId)
+            .executeTakeFirst();
+
+        return guild;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+export async function getGuildChannels(guildId: id) {
+    try {
+        const channels = await db
+            .selectFrom("channels")
+            .select([
+                "id",
+                "type",
+                "name",
+                "position",
+                "parentId",
+                "guildId",
+                "permissionOverwrites",
+            ])
+            .where("guildId", "=", guildId)
+            .execute();
+
+        return channels || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getGuildMembers(guildId: id) {
+    try {
+        const members = await db
+            .selectFrom("guildmembers")
+            .innerJoin(
+                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
+                (join) => join.onRef("users.id", "=", "guildmembers.userId")
+            )
+            .select(selfUserSelect)
+            .where("guildId", "=", guildId)
+            .execute();
+
+        return members || [];
     } catch (error) {
         console.error(error);
         return [];
@@ -660,5 +743,74 @@ export async function areUsersBlocked([firstUserId, secondUserId]: [id, id]) {
     } catch (error) {
         console.error(error);
         return false;
+    }
+}
+
+export async function didUserHideChannel(userId: id, channelId: id) {
+    try {
+        const hidden = await db
+            .selectFrom("channelrecipients")
+            .select("isHidden")
+            .where("userId", "=", userId)
+            .where("channelId", "=", channelId)
+            .executeTakeFirst();
+
+        return hidden ? hidden.isHidden : false;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export function withAuthor(eb: ExpressionBuilder<DB, "users">) {
+    return jsonObjectFrom(
+        eb
+            .selectFrom("users as author")
+            .select(userSelect)
+            .whereRef("author.id", "=", "messages.authorId")
+    ).as("author");
+}
+
+export function withReference(eb: ExpressionBuilder<DB, "messages">) {
+    return jsonObjectFrom(
+        eb
+            .selectFrom("messages as reference")
+            .select((eb) => [...messageSelect, withAuthor(eb)])
+            .whereRef("reference.id", "=", "messages.messageReferenceId")
+    ).as("reference");
+}
+
+export async function getMessages(channelId: id, limit: number, pinned: boolean = false) {
+    try {
+        const messages = await db
+            .selectFrom("messages")
+            .select(messageSelect)
+            .select((eb) => [withAuthor(eb), withReference(eb)])
+            .where("channelId", "=", channelId)
+            .$if(pinned, (q) => q.where("pinned", "is not", null))
+            .orderBy("createdAt", "desc")
+            .limit(limit)
+            .execute();
+
+        return messages || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getMessage(messageId: id) {
+    try {
+        const message = await db
+            .selectFrom("messages")
+            .select(messageSelect)
+            .select((eb) => [withAuthor(eb), withReference(eb)])
+            .where("id", "=", messageId)
+            .executeTakeFirst();
+
+        return message;
+    } catch (error) {
+        console.error(error);
+        return null;
     }
 }
