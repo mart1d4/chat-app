@@ -60,18 +60,15 @@ export default async function ChannelPage({ params }: { params: { channelId: str
 
     const channel = {
         ...channelFetch,
-        // name: getChannelName(channelFetch, user.id),
-        name: "olala",
+        name: getChannelName(channelFetch.recipients, user.id),
         icon: getChannelIcon(channelFetch, user),
     };
-
-    console.log(channel);
 
     const friend = channel.type === 0 ? await getFriend(user.id, channel.id) : undefined;
 
     return (
         <div className={styles.main}>
-            <AppHeader channelId={channel.id} />
+            <AppHeader channel={channel} />
 
             <div className={styles.content}>
                 <Suspense

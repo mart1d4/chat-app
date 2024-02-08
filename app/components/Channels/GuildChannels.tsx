@@ -3,7 +3,7 @@
 import { ChannelTable, GuildTable, UserTable } from "@/lib/db/types";
 import { useState, SetStateAction, Dispatch } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { useLayers, useTooltip } from "@/lib/store";
+import { useLayers, useShowChannels, useTooltip, useWidthThresholds } from "@/lib/store";
 import styles from "./GuildChannels.module.css";
 import { Icon, UserSection } from "@components";
 import { motion } from "framer-motion";
@@ -23,7 +23,12 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
     const layers = useLayers((state) => state.layers);
     const params = useParams();
 
+    const widthLimitPassed = useWidthThresholds((state) => state.widthThresholds)[562];
+    const showChannels = useShowChannels((state) => state.showChannels);
+
     const member = guild.members?.find((member) => member.userId === user.id);
+
+    if (!showChannels && !widthLimitPassed) return null;
 
     return (
         <div className={styles.nav}>

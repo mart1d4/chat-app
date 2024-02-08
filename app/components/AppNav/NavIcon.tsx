@@ -1,27 +1,35 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
 import { useData, useLayers, useTooltip, useUrls } from "@/lib/store";
 import { useRouter, usePathname } from "next/navigation";
-import styles from "./AppNav.module.css";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import styles from "./AppNav.module.css";
 import Link from "next/link";
 
-type Props = {
+export default function NavIcon({
+    green,
+    special,
+    guild,
+    name,
+    link,
+    src,
+    svg,
+    count,
+    user,
+}: {
     green?: boolean;
     special?: boolean;
-    guild?: TGuild;
+    guild?: any;
     name: string;
     link: string;
     src?: string;
-    svg?: ReactNode;
+    svg?: JSX.Element;
     count?: number;
-    user?: TUser;
-};
-
-function NavIcon({ green, special, guild, name, link, src, svg, count, user }: Props) {
-    const [active, setActive] = useState<boolean>(false);
-    const [markHeight, setMarkHeight] = useState<number>(0);
+    user?: any;
+}) {
+    const [markHeight, setMarkHeight] = useState(0);
+    const [active, setActive] = useState(false);
 
     const requests = useData((state) => state.requestsReceived);
     const setTooltip = useTooltip((state) => state.setTooltip);
@@ -44,20 +52,14 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
     const router = useRouter();
 
     useEffect(() => {
-        if (
-            special
-                ? pathname.startsWith("/channels/me")
-                : guild
-                ? pathname.startsWith(link)
-                : pathname === link
-        ) {
+        if (pathname.startsWith(special ? "/channels/me" : link)) {
             setActive(true);
             setMarkHeight(40);
         } else {
             setActive(false);
             setMarkHeight(count ? 7 : 0);
         }
-    }, [pathname, link, count]);
+    }, [pathname, special, guild, link, count]);
 
     let firstLetters =
         name
@@ -66,7 +68,7 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
             ?.join("") ?? "";
 
     return (
-        <div className={green ? styles.navIcon + " " + styles.green : styles.navIcon}>
+        <div className={`${styles.navIcon} ${green ? styles.green : ""}`}>
             <div className={styles.marker}>
                 <AnimatePresence>
                     {markHeight > 0 && (
@@ -172,9 +174,7 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
                     {((requests.length > 0 && special) || (count !== undefined && count > 0)) && (
                         <div
                             className={styles.badgeContainer}
-                            style={{
-                                width: requests.length > 99 ? "30px" : "",
-                            }}
+                            style={{ width: requests.length > 99 ? "30px" : "" }}
                         >
                             <div
                                 style={{
@@ -189,7 +189,6 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
 
                     {src ? (
                         <img
-                            style={{ borderRadius: active ? "33%" : "50%" }}
                             src={src}
                             alt={name}
                         />
@@ -243,5 +242,3 @@ function NavIcon({ green, special, guild, name, link, src, svg, count, user }: P
         </div>
     );
 }
-
-export default NavIcon;

@@ -1,44 +1,29 @@
 "use client";
 
-import { useData, useLayers, useNotifications, useShowChannels, useTooltip } from "@/lib/store";
+import {
+    useData,
+    useLayers,
+    useNotifications,
+    useShowChannels,
+    useTooltip,
+    useWidthThresholds,
+} from "@/lib/store";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon, Avatar, UserSection } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserChannels.module.css";
 import { Channel, User } from "@/lib/db/types";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export function UserChannels() {
-    const [widthLimitPassed, setWidthLimitPassed] = useState(false);
-
+    const widthLimitPassed = useWidthThresholds((state) => state.widthThresholds)[562];
     const showChannels = useShowChannels((state) => state.showChannels);
     const channels = useData((state) => state.channels);
 
-    useEffect(() => {
-        const width = window.innerWidth;
-
-        if (width <= 562) setWidthLimitPassed(true);
-        else setWidthLimitPassed(false);
-
-        const handleResize = () => {
-            const width = window.innerWidth;
-
-            if (width <= 562) setWidthLimitPassed(true);
-            else setWidthLimitPassed(false);
-        };
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    if (!showChannels) return null;
+    if (!showChannels && !widthLimitPassed) return null;
 
     return (
-        <div
-            className={styles.nav}
-            style={{ width: widthLimitPassed ? "calc(100vw - 72px - 50px)" : "" }}
-        >
+        <div className={styles.nav}>
             <div className={styles.privateChannels}>
                 <div className={styles.searchContainer}>
                     <button>Find or start a conversation</button>

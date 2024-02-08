@@ -40,8 +40,8 @@ export function sanitizeString(content: string) {
 export function getChannelName(recipients: Partial<User>[] = [], user?: Partial<User>) {
     if (recipients.length === 0) {
         return "Error fetching recipients";
-    } else if (recipients.length === 1 && user) {
-        return `${user.displayName}'s Group`;
+    } else if (recipients.length === 1) {
+        return `${recipients[0].displayName}'s Group`;
     } else {
         let name = "";
         for (const recipient of recipients) {

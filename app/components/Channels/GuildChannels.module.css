@@ -103,6 +103,7 @@
     min-height: 0;
     flex: 1 1 auto;
     padding-bottom: 8px;
+    margin-top: 2px;
 }
 
 @-moz-document url-prefix() {
@@ -492,4 +493,11 @@
     color: var(--foreground-4);
     width: 16px;
     height: 16px;
+}
+
+@media screen and (max-width: 562px) {
+    .nav {
+        width: calc(100vw - 72px - 40px);
+        max-width: 350px;
+    }
 }

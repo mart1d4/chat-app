@@ -1,4 +1,5 @@
 .aside {
+    display: block;
     position: relative;
     flex: 0 1 30%;
     min-width: 360px;
@@ -47,4 +48,10 @@
     line-height: 18px;
     font-weight: 400;
     user-select: none;
+}
+
+@media screen and (max-width: 1200px) {
+    .aside {
+        display: none;
+    }
 }

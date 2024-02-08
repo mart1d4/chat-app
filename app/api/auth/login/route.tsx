@@ -85,7 +85,8 @@ export async function POST(req: Request): Promise<NextResponse> {
                 {
                     status: 200,
                     headers: {
-                        "Set-Cookie": `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=2592000; Secure`,
+                        // "Set-Cookie": `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=2592000; Secure`,
+                        "Set-Cookie": `token=${refreshToken}; path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
                     },
                 }
             );

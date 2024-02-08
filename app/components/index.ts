@@ -39,3 +39,5 @@ export { Message } from "./Message/Message";
 export { FixedMessage } from "./Message/FixedMessage";
 
 export { TextArea, EmojiPicker } from "./TextArea/TextArea";
+
+export { ClickLayer } from "./ClickLayer/ClickLayer";

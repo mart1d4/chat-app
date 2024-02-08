@@ -194,8 +194,6 @@ export function Popup({ content, friends, element }: any) {
     };
 
     const handlePasswordSubmit = async () => {
-        console.log("handlePasswordSubmit");
-
         setIsLoading(true);
 
         if (!password1) {
@@ -850,7 +848,9 @@ export function Popup({ content, friends, element }: any) {
                                     style={{
                                         maxWidth: `minmax(${currentImage.dimensions.width}px, 80dvw)`,
                                         maxHeight: `minmax(${currentImage.dimensions.height}px, 80dvh)`,
+                                        aspectRatio: `${currentImage.dimensions.width}/${currentImage.dimensions.height}`,
                                         position: imageLoading ? "absolute" : "relative",
+                                        objectFit: "contain",
                                     }}
                                     src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
                                         currentImage.id

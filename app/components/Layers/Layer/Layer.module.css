@@ -1,26 +1,35 @@
 .container {
-    position: fixed;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
     width: 100dvw;
     height: 100dvh;
     z-index: 1000;
 }
 
 .filter {
-    position: fixed;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
     width: 100dvw;
     height: 100dvh;
     z-index: 1002;
 }
 
 .layer {
-    position: fixed;
+    position: absolute;
     pointer-events: all;
     will-change: transform;
     transform: translateZ(0);
 }
 
 @media screen and (max-width: 487px) {
-    .layer {
+    .layer.popup {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
         width: 100dvw;
         height: 100dvh;
         transform: translate(0, 0) !important;

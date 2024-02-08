@@ -123,10 +123,10 @@ export function Popout({ content, element }: any) {
         } else {
             if (content.channel) {
                 const filtered = friends.filter(
-                    (friend) => !content.channel.recipientIds.includes(friend.id)
+                    (friend) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
                 );
                 setFilteredList(filtered);
-                setPlacesLeft(10 - content.channel.recipientIds.length);
+                setPlacesLeft(10 - content.channel.recipients.length);
             } else {
                 setFilteredList(friends);
                 setPlacesLeft(9);
@@ -138,8 +138,8 @@ export function Popout({ content, element }: any) {
         if (content.type === "PINNED_MESSAGES") return;
 
         if (content.channel) {
-            if (chosen?.length === 0) setPlacesLeft(10 - content.channel.recipientIds.length);
-            else setPlacesLeft(10 - content.channel.recipientIds.length - chosen.length);
+            if (chosen?.length === 0) setPlacesLeft(10 - content.channel.recipients.length);
+            else setPlacesLeft(10 - content.channel.recipients.length - chosen.length);
         } else {
             if (chosen.length === 0) setPlacesLeft(9);
             else setPlacesLeft(9 - chosen.length);
@@ -151,7 +151,7 @@ export function Popout({ content, element }: any) {
 
         if (content.channel) {
             const filtered = friends.filter(
-                (friend: any) => !content.channel.recipientIds?.includes(friend.id)
+                (friend: any) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
             );
 
             if (search)

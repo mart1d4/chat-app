@@ -263,7 +263,9 @@ function Layer({ settings, content }: TLayer) {
     return (
         <div
             ref={layerRef}
-            className={styles.layer}
+            className={`${styles.layer} ${
+                settings.type === "POPUP" || settings.type === "POPUP" ? styles.popup : ""
+            }`}
             style={{
                 zIndex: index,
                 opacity: transform !== "" ? 1 : 0,

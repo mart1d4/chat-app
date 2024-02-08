@@ -579,11 +579,11 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                                 {settings.sendButton && (
                                     <button
-                                        className={
-                                            message.length === 0 && attachments.length === 0
-                                                ? styles.sendButton + " " + styles.empty
-                                                : styles.sendButton
-                                        }
+                                        className={`${styles.sendButton} ${
+                                            !message.length && !attachments.length
+                                                ? styles.empty
+                                                : ""
+                                        }`}
                                         onClick={(e) => {
                                             e.preventDefault();
                                             if (edit?.messageId) return;

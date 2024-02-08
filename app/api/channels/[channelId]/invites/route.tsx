@@ -1,91 +1,49 @@
+import {
+    getInvite,
+    getInvites,
+    getRandomId,
+    withChannel,
+    withGuild,
+    withInviter,
+} from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
+import { catchError } from "@/lib/api";
 import { headers } from "next/headers";
+import { db } from "@/lib/db/db";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
-
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
+    const { channelId } = params;
 
     try {
-        const user = await prisma.user.findFirst({
-            where: {
-                id: senderId,
-            },
-        });
+        const channel = await db
+            .selectFrom("channels")
+            .select("id")
+            .where(({ eb, and, exists, selectFrom }) =>
+                and([
+                    eb("id", "=", channelId),
+                    eb("guildId", "is not", null),
+                    exists(
+                        selectFrom("guildmembers")
+                            .select("userId")
+                            .whereRef("userId", "=", senderId)
+                            .whereRef("guildId", "=", "channels.guildId")
+                    ),
+                ])
+            )
+            .executeTakeFirst();
 
-        if (!user) {
+        if (!channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found",
+                    message: "Channel not found or you are not in this channel",
                 },
                 { status: 404 }
             );
         }
 
-        const channel = await prisma.channel.findFirst({
-            where: {
-                id: channelId,
-            },
-        });
-
-        if (!channel || !channel.guildId) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel not found",
-                },
-                { status: 404 }
-            );
-        } else if (!user.guildIds.includes(channel.guildId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not in this guild",
-                },
-                { status: 401 }
-            );
-        }
-
-        const invites = await prisma.invite.findMany({
-            where: {
-                channelId: channelId,
-            },
-            include: {
-                guild: {
-                    select: {
-                        id: true,
-                        name: true,
-                        icon: true,
-                        ownerId: true,
-                    },
-                },
-                channel: {
-                    select: {
-                        id: true,
-                        type: true,
-                        name: true,
-                        recipientIds: true,
-                    },
-                },
-                inviter: {
-                    select: {
-                        id: true,
-                        username: true,
-                    },
-                },
-            },
-        });
+        const invites = await getInvites(channelId);
 
         return NextResponse.json(
             {
@@ -95,167 +53,108 @@ export async function GET(req: Request, { params }: { params: { channelId: strin
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/channels/${channelId}/invites`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
+    const { channelId } = params;
+
     const { maxUses, maxAge, temporary } = await req.json();
 
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
-
     try {
-        const user = await prisma.user.findFirst({
-            where: {
-                id: senderId,
-            },
-        });
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        const channel = await prisma.channel.findFirst({
-            where: {
-                id: channelId,
-            },
-            select: {
-                id: true,
-                guildId: true,
-            },
-        });
+        const channel = await db
+            .selectFrom("channels")
+            .select("id")
+            // .where(({ eb, and, exists, selectFrom }) =>
+            //     and([
+            //         eb("id", "=", channelId),
+            //         eb("guildId", "is not", null),
+            //         exists(
+            //             selectFrom("guildmembers")
+            //                 .select("userId")
+            //                 .where("userId", "=", senderId)
+            //                 .whereRef("guildId", "=", "channels.guildId")
+            //         ),
+            //     ])
+            // )
+            .where("id", "=", channelId)
+            .executeTakeFirst();
 
         if (!channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Guild not found",
+                    message: "Channel not found or you are not in this channel",
                 },
                 { status: 404 }
-            );
-        } else if (!user.channelIds.includes(channel.id) && !user.guildIds.includes(channel.guildId || "")) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "You are not in this channel",
-                },
-                { status: 401 }
             );
         }
 
         // Search for same invite, otherwise create one
-        const invite = await prisma.invite.findFirst({
-            where: {
-                channelId: channelId,
-                maxUses: maxUses,
-                maxAge: maxAge,
-                temporary: temporary,
-                inviterId: senderId,
-            },
-            include: {
-                guild: {
-                    select: {
-                        id: true,
-                        name: true,
-                        icon: true,
-                        ownerId: true,
-                    },
-                },
-                channel: {
-                    select: {
-                        id: true,
-                        type: true,
-                        name: true,
-                        recipientIds: true,
-                    },
-                },
-                inviter: {
-                    select: {
-                        id: true,
-                        username: true,
-                    },
-                },
-            },
-        });
+        const invite = await db
+            .selectFrom("invites")
+            .select((eb) => [
+                "id",
+                "code",
+                "maxUses",
+                "maxAge",
+                "temporary",
+                withInviter(eb),
+                withChannel(eb),
+                withGuild(eb),
+            ])
+            .where(({ eb, and }) =>
+                and([
+                    eb("channelId", "=", channelId),
+                    eb("maxUses", "=", maxUses),
+                    eb("maxAge", "=", maxAge),
+                    eb("temporary", "=", temporary),
+                    eb("inviterId", "=", senderId),
+                ])
+            )
+            .executeTakeFirst();
 
         if (invite) {
             return NextResponse.json(
                 {
                     success: true,
+                    message: "Successfully found invite with same settings",
                     invite: invite,
                 },
                 { status: 200 }
             );
         } else {
-            const newInvite = await prisma.invite.create({
-                data: {
+            const code = Math.random().toString(36).substring(2, 10);
+
+            await db
+                .insertInto("invites")
+                .values({
+                    id: getRandomId(),
                     channelId: channelId,
                     guildId: channel.guildId,
                     maxUses: maxUses,
                     maxAge: maxAge,
+                    expiresAt: maxAge ? new Date(Date.now() + maxAge) : null,
                     temporary: temporary,
                     inviterId: senderId,
-                    code: Math.random().toString(36).substring(2, 10),
-                },
-                include: {
-                    guild: {
-                        select: {
-                            id: true,
-                            name: true,
-                            icon: true,
-                            ownerId: true,
-                        },
-                    },
-                    channel: {
-                        select: {
-                            id: true,
-                            type: true,
-                            name: true,
-                            recipientIds: true,
-                        },
-                    },
-                },
-            });
+                    code: code,
+                })
+                .execute();
+
+            const newInvite = await getInvite(code);
 
             return NextResponse.json(
                 {
                     success: true,
+                    message: "Successfully created invite",
                     invite: newInvite,
                 },
                 { status: 200 }
             );
         }
     } catch (error) {
-        console.error(`[ERROR] /api/channels/${channelId}/invites`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

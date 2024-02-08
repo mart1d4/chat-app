@@ -2,14 +2,7 @@
 
 "use client";
 
-import {
-    Channel,
-    ChannelTable,
-    MessageTable,
-    Message as TMessage,
-    User,
-    UserTable,
-} from "@/lib/db/types";
+import { ChannelTable, MessageTable, UserTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
 import { useData, useLayers, useUrls } from "@/lib/store";
 import { useState, useEffect, useCallback } from "react";

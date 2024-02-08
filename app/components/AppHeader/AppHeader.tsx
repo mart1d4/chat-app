@@ -1,10 +1,17 @@
 "use client";
 
-import { useData, useLayers, useSettings, useTooltip } from "@/lib/store";
-import { useState, useMemo, useEffect } from "react";
+import {
+    useData,
+    useLayers,
+    useSettings,
+    useShowChannels,
+    useTooltip,
+    useWidthThresholds,
+} from "@/lib/store";
+import { Channel, User } from "@/lib/db/types";
 import styles from "./AppHeader.module.css";
 import { Icon, Avatar } from "@components";
-import { Channel, User } from "@/lib/db/types";
+import { useMemo } from "react";
 
 interface Props {
     channelId?: Channel["id"];
@@ -13,31 +20,16 @@ interface Props {
 }
 
 export function AppHeader({ channel, friend }: Props) {
-    const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(false);
+    const width1200 = useWidthThresholds((state) => state.widthThresholds)[1200];
+    const width562 = useWidthThresholds((state) => state.widthThresholds)[562];
+
+    const setShowChannels = useShowChannels((state) => state.setShowChannels);
 
     const setSettings = useSettings((state) => state.setSettings);
     const requests = useData((state) => state.requestsReceived);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
-    const channels = useData((state) => state.channels);
-
-    useEffect(() => {
-        const width: number = window.innerWidth;
-
-        if (width >= 1200) setWidthLimitPassed(true);
-        else setWidthLimitPassed(false);
-
-        const handleResize = () => {
-            const width: number = window.innerWidth;
-
-            if (width >= 1200) setWidthLimitPassed(true);
-            else setWidthLimitPassed(false);
-        };
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
 
     const tabs = [
         { name: "Online", func: "online" },
@@ -80,13 +72,12 @@ export function AppHeader({ channel, friend }: Props) {
                       },
                   },
                   {
-                      name:
-                          settings.showUsers && widthLimitPassed
-                              ? "Hide User Profile"
-                              : `Show ${channel.type === 0 ? " User Profile" : "Member List"}`,
+                      name: settings.showUsers
+                          ? `Hide ${!channel.type ? " User Profile" : "Member List"}`
+                          : `Show ${!channel.type ? " User Profile" : "Member List"}`,
                       icon: channel.type === 0 ? "userProfile" : "memberList",
                       active: settings.showUsers,
-                      disabled: widthLimitPassed === false,
+                      disabled: !width1200,
                       func: () => setSettings("showUsers", !settings.showUsers),
                   },
               ]
@@ -132,13 +123,12 @@ export function AppHeader({ channel, friend }: Props) {
                       },
                   },
                   {
-                      name:
-                          settings.showUsers && widthLimitPassed
-                              ? "Hide User Profile"
-                              : `Show ${channel.type === 0 ? " User Profile" : "Member List"}`,
+                      name: settings.showUsers
+                          ? `Hide ${!channel.type ? " User Profile" : "Member List"}`
+                          : `Show ${!channel.type ? " User Profile" : "Member List"}`,
                       icon: channel.type === 0 ? "userProfile" : "memberList",
                       active: settings.showUsers,
-                      disabled: widthLimitPassed === false,
+                      disabled: !width1200,
                       func: () => setSettings("showUsers", !settings.showUsers),
                   },
               ]
@@ -168,6 +158,13 @@ export function AppHeader({ channel, friend }: Props) {
         () => (
             <div className={styles.header}>
                 <div className={styles.nav}>
+                    <button
+                        className={styles.backButton}
+                        onClick={() => setShowChannels(true)}
+                    >
+                        <Icon name="back" />
+                    </button>
+
                     {!channel ? (
                         <>
                             <div className={styles.icon}>
@@ -264,7 +261,7 @@ export function AppHeader({ channel, friend }: Props) {
                         />
                     ))}
 
-                    {!channel ? (
+                    {!channel || !width562 ? (
                         <div className={styles.divider} />
                     ) : (
                         <div className={styles.search}>
@@ -287,51 +284,50 @@ export function AppHeader({ channel, friend }: Props) {
                         </div>
                     )}
 
-                    <div
-                        tabIndex={0}
+                    <button
                         className={styles.toolbarIcon}
-                        onMouseEnter={(e) =>
+                        onMouseEnter={(e) => {
                             setTooltip({
                                 text: "Inbox",
                                 element: e.currentTarget,
                                 position: "BOTTOM",
                                 gap: 5,
-                            })
-                        }
+                            });
+                        }}
                         onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) =>
+                        onFocus={(e) => {
                             setTooltip({
                                 text: "Inbox",
                                 element: e.currentTarget,
                                 position: "BOTTOM",
                                 gap: 5,
-                            })
-                        }
+                            });
+                        }}
                         onBlur={() => setTooltip(null)}
                     >
                         <Icon name="inbox" />
-                    </div>
+                    </button>
 
                     <a
                         href="/en-US/support"
                         className={styles.toolbarIcon}
-                        onMouseEnter={(e) =>
+                        onMouseEnter={(e) => {
                             setTooltip({
                                 text: "Help",
                                 element: e.currentTarget,
                                 position: "BOTTOM",
                                 gap: 5,
-                            })
-                        }
+                            });
+                        }}
                         onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) =>
+                        onFocus={(e) => {
                             setTooltip({
                                 text: "Help",
                                 element: e.currentTarget,
                                 position: "BOTTOM",
                                 gap: 5,
-                            })
-                        }
+                            });
+                        }}
                         onBlur={() => setTooltip(null)}
                     >
                         <Icon name="help" />
@@ -339,7 +335,7 @@ export function AppHeader({ channel, friend }: Props) {
                 </div>
             </div>
         ),
-        [channel, friend, requests, settings, widthLimitPassed]
+        [channel, friend, requests, settings, width1200, width562]
     );
 }
 
@@ -347,43 +343,35 @@ const ToolbarIcon = ({ item }: any) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
 
     return (
-        <div
-            tabIndex={0}
-            className={`${styles.toolbarIcon} ${item.disabled && styles.disabled}`}
+        <button
+            className={`${styles.toolbarIcon} ${item.disabled ? styles.disabled : ""} ${
+                !!item.active ? styles.hideOnMobile : ""
+            }`}
+            onClick={(e) => {
+                if (item.disabled) return;
+                item.func(e);
+            }}
             onMouseEnter={(e) => {
                 setTooltip({
-                    text: item.disabled ? item.name + " (Unavailable)" : item.name,
+                    text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
                     element: e.currentTarget,
                     position: "BOTTOM",
                     gap: 5,
                 });
             }}
             onMouseLeave={() => setTooltip(null)}
-            onClick={(e) => {
-                if (item.disabled) return;
-                item.func(e);
-            }}
             onFocus={(e) => {
                 setTooltip({
-                    text: item.disabled ? item.name + " (Unavailable)" : item.name,
+                    text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
                     element: e.currentTarget,
                     position: "BOTTOM",
                     gap: 5,
                 });
             }}
             onBlur={() => setTooltip(null)}
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    if (item.disabled) return;
-                    item.func(e);
-                    e.currentTarget.focus();
-                }
-            }}
+            style={{ color: item.active && !item.disabled ? "var(--foreground-2)" : "" }}
         >
-            <Icon
-                name={item.icon}
-                fill={item.active && !item.disabled && "var(--foreground-2)"}
-            />
-        </div>
+            <Icon name={item.icon} />
+        </button>
     );
 };

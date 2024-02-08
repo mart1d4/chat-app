@@ -3,6 +3,7 @@
     min-width: 340px;
     width: 340px;
     height: 100%;
+    display: block;
     background: linear-gradient(var(--card-primary-color), var(--card-accent-color));
 }
 
@@ -421,4 +422,14 @@
     letter-spacing: 0.02rem;
     color: var(--foreground-4);
     font-weight: 600;
+}
+
+@media screen and (max-width: 1200px) {
+    .aside {
+        display: none;
+    }
+
+    .memberList {
+        display: none;
+    }
 }

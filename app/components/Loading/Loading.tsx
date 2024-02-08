@@ -3,7 +3,7 @@
 import { Guild, User, Channel, Message, UserTable, ChannelTable, GuildTable } from "@/lib/db/types";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactElement, useEffect, useRef } from "react";
-import { useData, useNotifications } from "@/lib/store";
+import { useData, useNotifications, useWidthThresholds } from "@/lib/store";
 import pusher from "@/lib/pusher/client-connection";
 import { getChannelName } from "@/lib/strings";
 import styles from "./Loading.module.css";
@@ -86,6 +86,9 @@ export function Loading({ children, data }: Props) {
     const addChannel = useData((state) => state.addChannel);
     const addGuild = useData((state) => state.addGuild);
 
+    const setWidthThreshold = useWidthThresholds((state) => state.setWidthThreshold);
+    const widthThresholds = useWidthThresholds((state) => state.widthThresholds);
+
     const addPing = useNotifications((state) => state.addPing);
 
     const channels = useData((state) => state.channels);
@@ -98,6 +101,31 @@ export function Loading({ children, data }: Props) {
     const pathname = usePathname();
     const router = useRouter();
 
+    function updateWidths(width: number) {
+        for (const [k, value] of Object.entries(widthThresholds)) {
+            const key = parseInt(k);
+
+            if (width >= key) {
+                if (!value) setWidthThreshold(key, true);
+            } else {
+                if (value) setWidthThreshold(key, false);
+            }
+        }
+    }
+
+    useEffect(() => {
+        const width = window.innerWidth;
+        updateWidths(width);
+
+        function handleResize() {
+            const width = window.innerWidth;
+            updateWidths(width);
+        }
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [widthThresholds]);
+
     useEffect(() => {
         const env = process.env.NODE_ENV;
 
@@ -105,7 +133,11 @@ export function Loading({ children, data }: Props) {
             const response = await fetch(`${apiUrl}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
-            }).then((res) => res.json());
+            })
+                .then((res) => res.json())
+                .catch(() => {
+                    console.log("Error fetching /auth/refresh");
+                });
 
             if (response.token) {
                 setUser({

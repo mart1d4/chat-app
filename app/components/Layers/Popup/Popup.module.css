@@ -10,6 +10,20 @@
     box-shadow: var(--elevation-high), var(--elevation-low);
 }
 
+@media screen and (max-width: 487px) {
+    .cardContainer {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        width: 100dvw;
+        max-width: 100dvw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+}
+
 .titleBlock {
     flex: 0 0 auto;
     border-radius: 4px 4px 0 0;
@@ -306,20 +320,6 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
-    }
-}
-
-@media screen and (max-width: 487px) {
-    .cardContainer {
-        min-width: 100svw;
-        min-height: 100svh;
-        max-width: 100svw;
-        max-height: 100svh;
-        min-width: 100vw;
-        min-height: 100vh;
-        max-width: 100vw;
-        max-height: 100vh;
-        border-radius: 0;
     }
 }
 

@@ -18,7 +18,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: "http://localhost:3000",
+                        value: "http://192.168.1.27:3000",
                     },
                     {
                         key: "Access-Control-Allow-Methods",

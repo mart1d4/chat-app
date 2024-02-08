@@ -1,5 +1,5 @@
 import { getGuild, getGuildChannels, getUser, isUserInGuild, getMessages } from "@/lib/db/helpers";
-import { GuildChannels, AppHeader, MemberList } from "@components";
+import { GuildChannels, AppHeader, MemberList, ClickLayer } from "@components";
 import styles from "../../me/FriendsPage.module.css";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -37,28 +37,30 @@ export default async function GuildChannelPage({
                 initChannels={channels}
             />
 
-            <div className={styles.main}>
-                <AppHeader channel={channel} />
+            <ClickLayer>
+                <div className={styles.main}>
+                    <AppHeader channel={channel} />
 
-                <div className={styles.content}>
-                    <Suspense
-                        fallback={
-                            <Content
+                    <div className={styles.content}>
+                        <Suspense
+                            fallback={
+                                <Content
+                                    guild={guild}
+                                    channel={channel}
+                                    messagesLoading={true}
+                                />
+                            }
+                        >
+                            <FetchMessage
                                 guild={guild}
                                 channel={channel}
-                                messagesLoading={true}
                             />
-                        }
-                    >
-                        <FetchMessage
-                            guild={guild}
-                            channel={channel}
-                        />
-                    </Suspense>
+                        </Suspense>
 
-                    <MemberList channel={channel} />
+                        <MemberList channel={channel} />
+                    </div>
                 </div>
-            </div>
+            </ClickLayer>
         </>
     );
 }

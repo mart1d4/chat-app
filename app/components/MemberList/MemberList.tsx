@@ -40,10 +40,6 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
     const [originalNote, setOriginalNote] = useState<string>("");
     const [note, setNote] = useState<string>("");
 
-    const [widthLimitPassed, setWidthLimitPassed] = useState<boolean>(
-        typeof window !== "undefined" ? window.innerWidth >= 1200 : false
-    );
-
     const setTooltip = useTooltip((state) => state.setTooltip);
     const settings = useSettings((state) => state.settings);
     const channels = useData((state) => state.channels);
@@ -53,31 +49,11 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
     const hasRendered = useRef<boolean>(false);
     const { sendRequest } = useFetchHelper();
 
-    // let channel;
-    // if (channelId) channel = channels.find((c) => c.id === channelId);
-
     const recipients = guild
         ? guilds.find((g) => g.id === guild.id)?.rawMembers ?? []
         : channel
         ? channel.recipients ?? []
         : [];
-
-    useEffect(() => {
-        const width: number = window.innerWidth;
-
-        if (width >= 1200) setWidthLimitPassed(true);
-        else setWidthLimitPassed(false);
-
-        const handleResize = () => {
-            const width: number = window.innerWidth;
-
-            if (width >= 1200) setWidthLimitPassed(true);
-            else setWidthLimitPassed(false);
-        };
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
 
     useEffect(() => {
         if (!friend) return;
@@ -108,7 +84,7 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
         }
     }, []);
 
-    if (!settings.showUsers || !widthLimitPassed) return null;
+    if (!settings.showUsers) return null;
 
     if (friend) {
         // const mutualFriends = friends.filter((f: TCleanUser) => friend.friendIds.includes(f.id));

@@ -5,6 +5,7 @@
     min-height: 0;
     flex: 0 0 auto;
     background-color: var(--background-3);
+    overflow: hidden;
 }
 
 .privateChannels {
@@ -323,4 +324,10 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02rem;
+}
+
+@media screen and (max-width: 562px) {
+    .nav {
+        width: calc(100vw - 72px - 40px);
+    }
 }

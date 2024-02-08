@@ -16,25 +16,14 @@ import styles from "./Message.module.css";
 import Link from "next/link";
 import { v4 } from "uuid";
 
-type Props = {
-    message: TMessage;
-    setMessages: React.Dispatch<React.SetStateAction<TMessage[]>>;
-    large: boolean;
-    channel: TChannel;
-    guild?: TGuild;
-};
-
-type TInvites = TInvite[] | { code: string; type: string }[];
-
 export function Message({ message, setMessages, large, channel, guild }: Props) {
-    const [fileProgress, setFileProgress] = useState<number>(0);
-    const [translation, setTranslation] = useState<string>("");
-    const [invites, setInvites] = useState<TInvites>([]);
+    const [fileProgress, setFileProgress] = useState(0);
+    const [translation, setTranslation] = useState("");
+    const [invites, setInvites] = useState([]);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setMention = useMention((state) => state.setMention);
-    const user = useData((state) => state.user);
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
@@ -43,6 +32,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     const layers = useLayers((state) => state.layers);
     const edits = useMessages((state) => state.edits);
     const guilds = useData((state) => state.guilds);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const reply = replies.find((r) => r.messageId === message.id);
@@ -54,10 +44,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     const pathname = usePathname();
     const router = useRouter();
 
-    const userRegex = /<([@][a-zA-Z0-9]{24})>/g;
+    const userRegex = /<([@][0-9]{18})>/g;
     const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
     const inviteRegex =
-        /^(https?:\/\/)?(localhost:3000|chat-app\.mart1d4\.com)\/[a-zA-Z0-9]{6}\/?$/g;
+        /^(https?:\/\/)?(localhost:3000|chat-app\.mart1d4\.dev)\/[a-zA-Z0-9]{8}\/?$/g;
 
     const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${"fr"}&dt=t&dj=1&source=input&q=`;
 
@@ -80,29 +70,28 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         setTranslation(translations.join(""));
     }
 
-    let guildInvites: string[] = [];
+    const guildInvites: string[] = [];
 
     let messageContent: JSX.Element | null = null;
     if (message.content && !inline) {
         messageContent = (
             <span>
-                {message.content.split(/(\s+)/).map((part, index) => {
-                    if (userRegex.test(part)) {
+                {message.content.split(/(\s+)/).map((part: string, i: number) => {
+                    if (userRegex.test(part) && message.mentions.length) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find(
-                            (user) => user.id === userId
-                        ) as TCleanUser;
+                        const user = message.mentions.find((u) => u.id === parseInt(userId));
+
+                        if (!user) return part;
+
                         return (
                             <UserMention
-                                key={v4()}
+                                key={`${message.id}-${user.id}-${i}`}
                                 user={user}
                                 full={true}
                             />
                         );
                     } else if (urlRegex.test(part)) {
                         if (inviteRegex.test(part)) {
-                            console.log("IsInvite: Part is", part);
-
                             const code = part.substring(part.length - 8);
                             if (!guildInvites.includes(code)) {
                                 guildInvites.push(code);
@@ -112,8 +101,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                         return (
                             <Link
                                 href={part}
-                                key={v4()}
-                                target="_blank"
+                                key={`${message.id}-link-${i}`}
+                                target={part.includes("chat-app.mart1d4.dev") ? "_self" : "_blank"}
                                 rel="noopener noreferrer"
                                 className={styles.messageLink}
                             >
@@ -132,30 +121,30 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     if (message.reference?.content && !inline) {
         referencedContent = (
             <span>
-                {message.reference?.content.split(/(\s+)/).map((part, index) => {
-                    if (userRegex.test(part)) {
+                {message.reference.content.split(/(\s+)/).map((part: string, i: number) => {
+                    if (userRegex.test(part) && message.reference.mentions.length) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find(
-                            (user) => user.id === userId
-                        ) as TCleanUser;
+                        const user = message.reference.mentions.find(
+                            (u) => u.id === parseInt(userId)
+                        );
+
+                        if (!user) return part;
+
                         return (
                             <UserMention
-                                key={v4()}
+                                key={`${message.id}-${user.id}-${i}`}
                                 user={user}
                                 full={true}
                             />
                         );
                     } else if (urlRegex.test(part)) {
                         return (
-                            <Link
-                                href={part}
-                                key={v4()}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <span
+                                key={`${message.id}-link-${i}`}
                                 className={styles.messageLink}
                             >
                                 {part}
-                            </Link>
+                            </span>
                         );
                     } else {
                         return part;
@@ -209,11 +198,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     }, [message.waiting]);
 
     useEffect(() => {
-        if (!edit || edit?.messageId !== message.id) return;
+        if (!edit || edit.messageId !== message.id) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
-                if (!edit || edit?.messageId !== message.id) return;
                 e.preventDefault();
                 e.stopPropagation();
                 sendEditedMessage();
@@ -232,8 +220,9 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         if (
             !prevMessage ||
             (!prevMessage.waiting && !prevMessage.error && !prevMessage.needsToBeSent)
-        )
+        ) {
             return;
+        }
 
         const tempMessage = {
             id: prevMessage.id,
@@ -466,7 +455,6 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     };
 
     const replyToMessageState = () => {
-        console.log(message.author.username);
         setReply(channel.id, message.id, message.author.username);
     };
 
@@ -1339,7 +1327,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     : "Something Went Wrong"
                                                                 : invite.guild?.name ??
                                                                   getChannelName(
-                                                                      invite.channel,
+                                                                      invite.channel.recipients,
                                                                       user.id
                                                                   )}
                                                         </h3>
@@ -1368,7 +1356,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                                   ?.rawMemberIds
                                                                                   .length
                                                                             : invite.channel
-                                                                                  .recipientIds
+                                                                                  .recipients
                                                                                   .length}{" "}
                                                                         Online
                                                                     </span>
@@ -1384,7 +1372,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                                   ?.rawMemberIds
                                                                                   .length
                                                                             : invite.channel
-                                                                                  .recipientIds
+                                                                                  .recipients
                                                                                   .length}{" "}
                                                                         Member
                                                                         {(invite.guild
@@ -1392,7 +1380,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                                   ?.rawMemberIds
                                                                                   .length
                                                                             : invite.channel
-                                                                                  .recipientIds
+                                                                                  .recipients
                                                                                   .length) > 1 &&
                                                                             "s"}
                                                                     </span>

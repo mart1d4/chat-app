@@ -1,86 +1,28 @@
 import { defaultPermissions } from "@/lib/permissions/data";
 import pusher from "@/lib/pusher/server-connection";
+import { getInvite } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db/db";
+import { catchError } from "@/lib/api";
 
 export async function GET(req: Request, { params }: { params: { code: string } }) {
     const { code } = params;
 
     try {
-        const invite = await db
-            .selectFrom("invites")
-            .innerJoin(
-                (eb) =>
-                    eb
-                        .selectFrom("users")
-                        .select([
-                            "id as userId",
-                            "username as inviterUsername",
-                            "displayName as inviterDisplayName",
-                        ])
-                        .as("users"),
-                (join) => join.onRef("users.userId", "=", "invites.inviterId")
-            )
-            .innerJoin(
-                (eb) =>
-                    eb
-                        .selectFrom("channels")
-                        .select([
-                            "id as channelId2",
-                            "type as channelType",
-                            "name as channelName",
-                            "icon as channelIcon",
-                        ])
-                        .as("channels"),
-                (join) => join.onRef("channels.channelId2", "=", "invites.channelId")
-            )
-            .innerJoin(
-                (eb) =>
-                    eb
-                        .selectFrom("guilds")
-                        .select([
-                            "id as guildId2",
-                            "name as guildName",
-                            "icon as guildIcon",
-                            "ownerId as guildOwnerId",
-                        ])
-                        .as("guilds"),
-                (join) => join.onRef("guilds.guildId2", "=", "invites.guildId")
-            )
-            .select([
-                "code",
-                "inviterId",
-                "inviterUsername",
-                "inviterDisplayName",
-                "channelId",
-                "channelType",
-                "channelName",
-                "channelIcon",
-                "guildId",
-                "guildName",
-                "guildIcon",
-                "guildOwnerId",
-            ])
-            .where("code", "=", code)
-            .executeTakeFirst();
+        const invite = await getInvite(code);
+
+        console.log(JSON.stringify(invite, null, 4));
 
         return NextResponse.json(
             {
                 success: true,
+                message: invite ? "Successfuly found invite" : "No invite found with that code",
                 invite: invite || null,
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/invites/${code}`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
@@ -449,13 +391,6 @@ export async function POST(req: Request, { params }: { params: { code: string } 
             }
         }
     } catch (error) {
-        console.error(`[ERROR] /api/invites/${code}`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

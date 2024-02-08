@@ -833,6 +833,13 @@ export const Icon = ({ name, fill, fill2, size, viewbox, style }: Props): ReactE
                 clipRule="evenodd"
             />
         ),
+        back: (
+            <polygon
+                fill="currentColor"
+                fillRule="nonzero"
+                points="13 20 11 20 11 8 5.5 13.5 4.08 12.08 12 4.16 19.92 12.08 18.5 13.5 13 8"
+            />
+        ),
     };
 
     return (

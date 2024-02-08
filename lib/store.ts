@@ -802,3 +802,25 @@ export const useShowChannels = create<ShowChannelsState>()((set) => ({
     showChannels: true,
     setShowChannels: (val) => set(() => ({ showChannels: val })),
 }));
+
+interface WidthThresholdsState {
+    widthThresholds: {
+        [key: number]: boolean;
+    };
+    setWidthThreshold: (key: number, val: boolean) => void;
+}
+
+export const useWidthThresholds = create<WidthThresholdsState>()((set) => ({
+    widthThresholds: {
+        1200: false,
+        767: false,
+        562: false,
+    },
+    setWidthThreshold: (key, val) =>
+        set(() => ({
+            widthThresholds: {
+                ...useWidthThresholds.getState().widthThresholds,
+                [key]: val,
+            },
+        })),
+}));

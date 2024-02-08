@@ -19,7 +19,7 @@
     display: flex;
     align-items: center;
     margin-left: -2px;
-    min-width: 122px;
+    width: 122px;
     padding-left: 2px;
     margin-right: 8px;
     cursor: pointer;
