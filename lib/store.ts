@@ -1,7 +1,11 @@
+import { ChannelTable, GuildTable, UserTable } from "./db/types";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { getChannelIcon, getChannelName } from "./strings";
+import { getFullChannel } from "./strings";
 import { create } from "zustand";
-import { Channel, Guild, Message, User } from "./db/types";
+
+type User = Partial<UserTable> & Pick<UserTable, "id" | "username" | "displayName">;
+type Channel = Channel & Pick<ChannelTable, "id" | "type" | "name">;
+type Guild = Guild & Pick<GuildTable, "id" | "name">;
 
 // Tooltip
 
@@ -150,47 +154,41 @@ export const useLayers = create<LayersState>()((set) => ({
 
 interface DataState {
     token: string | null;
-    user: Partial<User> | null;
+    user: User | null;
 
-    channels: Partial<Channel>[];
-    guilds: Partial<Guild>[];
-    friends: Partial<User>[];
-    blocked: Partial<User>[];
-    blockedBy: Partial<User>[];
-    requestsReceived: Partial<User>[];
-    requestsSent: Partial<User>[];
+    channels: Channel[];
+    guilds: Guild[];
+    friends: User[];
+    blocked: User[];
+    received: User[];
+    sent: User[];
 
     setToken: (token: string) => void;
-    setUser: (user: Partial<User>) => void;
+    setUser: (user: User) => void;
 
-    setChannels: (channels: Partial<Channel>[]) => void;
-    setGuilds: (guilds: Partial<Guild>[]) => void;
-    setFriends: (friends: Partial<User>[]) => void;
-    setBlocked: (blocked: Partial<User>[]) => void;
-    setBlockedBy: (blockedBy: Partial<User>[]) => void;
-    setRequestsReceived: (requestsReceived: Partial<User>[]) => void;
-    setRequestsSent: (requestsSent: Partial<User>[]) => void;
-    modifyUser: (user: Partial<User>) => void;
+    setChannels: (channels: Channel[]) => void;
+    setGuilds: (guilds: Guild[]) => void;
+    setFriends: (friends: User[]) => void;
+    setBlocked: (blocked: User[]) => void;
+    setReceived: (received: User[]) => void;
+    setSent: (sent: User[]) => void;
 
-    addFriend: (friend: Partial<User>) => void;
-    removeFriend: (friend: Partial<User>) => void;
-    addBlocked: (blocked: Partial<User>) => void;
-    addBlockedBy: (blocked: Partial<User>) => void;
-    removeBlocked: (blocked: Partial<User>) => void;
-    removeBlockedBy: (blocked: Partial<User>) => void;
-    addRequestReceived: (request: Partial<User>) => void;
-    addRequestSent: (request: Partial<User>) => void;
-    removeRequests: (request: Partial<User>) => void;
+    modifyUser: (user: User) => void;
+
+    addUser: (user: User, type: string) => void;
+    removeUser: (id: number, type: string) => void;
 
     addChannel: (channel: Partial<Channel>) => void;
     updateChannel: (channel: Partial<Channel>) => void;
-    removeChannel: (channel: Partial<Channel>) => void;
+    removeChannel: (channelId: number) => void;
     moveChannelUp: (channelId: number) => void;
+
     addGuild: (guild: Partial<Guild>) => void;
     updateGuild: (guild: Partial<Guild>) => void;
-    removeGuild: (guild: Partial<Guild>) => void;
+    removeGuild: (guildId: number) => void;
+    moveGuildUp: (guildId: number) => void;
 
-    removeData: () => void;
+    reset: () => void;
 }
 
 export const useData = create<DataState>()((set) => ({
@@ -201,28 +199,21 @@ export const useData = create<DataState>()((set) => ({
     guilds: [],
     friends: [],
     blocked: [],
-    blockedBy: [],
-    requestsReceived: [],
-    requestsSent: [],
+    received: [],
+    sent: [],
 
     setToken: (token) => set(() => ({ token })),
     setUser: (user) => set(() => ({ user })),
 
-    setChannels: (channels) =>
-        set(() => ({
-            channels: channels.map((c) => ({
-                ...c,
-                name: getChannelName(c.recipients, useData.getState().user),
-                icon: getChannelIcon(c, useData.getState().user),
-            })),
-        })),
-
+    setChannels: (channels) => {
+        set((state) => ({ channels: channels.map((c) => getFullChannel(c, state.user)) }));
+    },
     setGuilds: (guilds) => set(() => ({ guilds })),
     setFriends: (friends) => set(() => ({ friends })),
     setBlocked: (blocked) => set(() => ({ blocked })),
-    setBlockedBy: (blockedBy) => set(() => ({ blockedBy })),
-    setRequestsReceived: (requestsReceived) => set(() => ({ requestsReceived })),
-    setRequestsSent: (requestsSent) => set(() => ({ requestsSent })),
+    setReceived: (received) => set(() => ({ received })),
+    setSent: (sent) => set(() => ({ sent })),
+
     modifyUser: (user) =>
         set((state) => ({
             friends: state.friends.map((f) => {
@@ -245,17 +236,7 @@ export const useData = create<DataState>()((set) => ({
 
                 return b;
             }),
-            blockedBy: state.blockedBy.map((b) => {
-                if (b.id === user.id) {
-                    return {
-                        ...b,
-                        ...user,
-                    };
-                }
-
-                return b;
-            }),
-            requestsReceived: state.requestsReceived.map((r) => {
+            received: state.received.map((r) => {
                 if (r.id === user.id) {
                     return {
                         ...r,
@@ -265,7 +246,7 @@ export const useData = create<DataState>()((set) => ({
 
                 return r;
             }),
-            requestsSent: state.requestsSent.map((r) => {
+            sent: state.sent.map((r) => {
                 if (r.id === user.id) {
                     return {
                         ...r,
@@ -291,11 +272,7 @@ export const useData = create<DataState>()((set) => ({
                         }),
                     };
 
-                    return {
-                        ...newChannel,
-                        name: getChannelName(newChannel, state.user?.id?.toString()),
-                        icon: getChannelIcon(newChannel, state.user?.id?.toString()),
-                    };
+                    return getFullChannel(newChannel, state.user);
                 }
 
                 return c;
@@ -331,77 +308,82 @@ export const useData = create<DataState>()((set) => ({
             }),
         })),
 
-    addFriend: (friend) => set((state) => ({ friends: [...state.friends, friend] })),
-    removeFriend: (friend) =>
-        set((state) => ({ friends: state.friends.filter((f) => f.id !== friend.id) })),
-    addBlocked: (blocked) =>
-        set((state) => ({
-            blocked: [...state.blocked, blocked],
-            friends: state.friends.filter((f) => f.id !== blocked.id),
-            requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
-            requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
-        })),
-    addBlockedBy: (blocked) =>
-        set((state) => ({
-            blockedBy: [...state.blockedBy, blocked],
-            friends: state.friends.filter((f) => f.id !== blocked.id),
-            requestsReceived: state.requestsReceived.filter((r) => r.id !== blocked.id),
-            requestsSent: state.requestsSent.filter((r) => r.id !== blocked.id),
-        })),
-    removeBlocked: (blocked) =>
-        set((state) => ({ blocked: state.blocked.filter((b) => b.id !== blocked.id) })),
-    removeBlockedBy: (blocked) =>
-        set((state) => ({ blockedBy: state.blockedBy.filter((b) => b.id !== blocked.id) })),
-    addRequestReceived: (request) =>
-        set((state) => ({ requestsReceived: [...state.requestsReceived, request] })),
-    addRequestSent: (request) =>
-        set((state) => ({ requestsSent: [...state.requestsSent, request] })),
-    removeRequests: (request) =>
-        set((state) => ({
-            requestsReceived: state.requestsReceived.filter((r) => r.id !== request.id),
-            requestsSent: state.requestsSent.filter((r) => r.id !== request.id),
-        })),
-
-    addChannel: (channel) =>
-        set((state) => {
-            if (!state.user) return state;
-            else {
+    addUser: (user, type) => {
+        return set((state) => {
+            if (type === "friends") {
                 return {
-                    channels: [
-                        {
-                            ...channel,
-                            name: getChannelName(channel, state?.user.id),
-                            icon: getChannelIcon(channel, state?.user.id),
-                        },
-                        ...state.channels,
-                    ],
+                    friends: [user, ...state.friends],
+                    received: state.received.filter((r) => r.id !== user.id),
+                    sent: state.sent.filter((r) => r.id !== user.id),
                 };
-            }
-        }),
-    updateChannel: (channel) =>
-        set((state) => {
-            if (state.channels.find((c) => c.id === channel.id)) {
+            } else if (type === "blocked") {
                 return {
-                    channels: state.channels.map((c) => {
-                        if (c.id === channel.id) {
-                            return {
-                                ...c,
-                                ...channel,
-                            };
-                        }
-
-                        return c;
-                    }),
+                    blocked: [user, ...state.blocked],
+                    friends: state.friends.filter((f) => f.id !== user.id),
+                    received: state.received.filter((r) => r.id !== user.id),
+                    sent: state.sent.filter((r) => r.id !== user.id),
+                };
+            } else if (type === "received") {
+                return {
+                    received: [user, ...state.received],
+                };
+            } else if (type === "sent") {
+                return {
+                    sent: [user, ...state.sent],
                 };
             } else {
-                return {
-                    channels: [channel, ...state.channels],
-                };
+                return state;
             }
-        }),
+        });
+    },
 
-    removeChannel: (channel) =>
-        set((state) => ({ channels: state.channels.filter((c) => c.id !== channel.id) })),
+    removeUser: (id, type) => {
+        return set((state) => {
+            if (type === "friends") {
+                return {
+                    friends: state.friends.filter((f) => f.id !== id),
+                };
+            } else if (type === "blocked") {
+                return {
+                    blocked: state.blocked.filter((b) => b.id !== id),
+                };
+            } else if (type === "received") {
+                return {
+                    received: state.received.filter((r) => r.id !== id),
+                };
+            } else if (type === "sent") {
+                return {
+                    sent: state.sent.filter((r) => r.id !== id),
+                };
+            } else {
+                return state;
+            }
+        });
+    },
+
+    addChannel: (channel) => {
+        return set((state) => ({
+            channels: [getFullChannel(channel, state.user), ...state.channels],
+        }));
+    },
+    updateChannel: (channel) => {
+        return set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id === channel.id) {
+                    return {
+                        ...c,
+                        ...channel,
+                    };
+                }
+
+                return c;
+            }),
+        }));
+    },
+
+    removeChannel: (channelId) => {
+        set((state) => ({ channels: state.channels.filter((c) => c.id !== channelId) }));
+    },
     moveChannelUp: (channelId) => {
         set((state) => {
             const channel = state.channels.find((c) => c.id === channelId);
@@ -414,23 +396,50 @@ export const useData = create<DataState>()((set) => ({
             return state;
         });
     },
-    addGuild: (guild) => set((state) => ({ guilds: [...state.guilds, guild] })),
-    updateGuild: (guild) =>
-        set((state) => ({ guilds: state.guilds.map((g) => (g.id === guild.id ? guild : g)) })),
-    removeGuild: (guild) =>
-        set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guild.id) })),
 
-    removeData: () =>
-        set(() => ({
+    addGuild: (guild) => set((state) => ({ guilds: [guild, ...state.guilds] })),
+    updateGuild: (guild) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id === guild.id) {
+                    return {
+                        ...g,
+                        ...guild,
+                    };
+                }
+
+                return g;
+            }),
+        }));
+    },
+    removeGuild: (guildId) => {
+        set((state) => ({ guilds: state.guilds.filter((g) => g.id !== guildId) }));
+    },
+    moveGuildUp: (guildId) => {
+        set((state) => {
+            const guild = state.guilds.find((g) => g.id === guildId);
+
+            if (guild) {
+                const newGuilds = [guild, ...state.guilds.filter((g) => g.id !== guildId)];
+                return { guilds: newGuilds };
+            }
+
+            return state;
+        });
+    },
+
+    reset: () => {
+        set({
             token: null,
             user: null,
             channels: [],
             guilds: [],
             friends: [],
             blocked: [],
-            requestsReceived: [],
-            requestsSent: [],
-        })),
+            received: [],
+            sent: [],
+        });
+    },
 }));
 
 // Settings
@@ -454,31 +463,39 @@ interface SettingsState {
     setSettings: (key: keyof TSettings, val: any) => void;
 }
 
-export const useSettings = create<SettingsState>()((set) => ({
-    settings: {
-        language: "en",
-        microphone: false,
-        sound: true,
-        camera: true,
-        appearance: "system",
-        font: "default",
-        theme: "default",
-        friendTab: "online",
-        sendButton: true,
-        spellcheck: true,
-        showUsers: true,
-    },
+export const useSettings = create(
+    persist<SettingsState>(
+        (set) => ({
+            settings: {
+                language: "en",
+                microphone: false,
+                sound: true,
+                camera: true,
+                appearance: "system",
+                font: "default",
+                theme: "default",
+                friendTab: "online",
+                sendButton: true,
+                spellcheck: true,
+                showUsers: true,
+            },
 
-    setSettings: (key, val) =>
-        set((state) => {
-            return {
-                settings: {
-                    ...state.settings,
-                    [key]: val,
-                },
-            };
+            setSettings: (key, val) =>
+                set((state) => {
+                    return {
+                        settings: {
+                            ...state.settings,
+                            [key]: val,
+                        },
+                    };
+                }),
         }),
-}));
+        {
+            name: "settings",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
 
 // Notifications
 
@@ -798,10 +815,18 @@ interface ShowChannelsState {
     setShowChannels: (val: boolean) => void;
 }
 
-export const useShowChannels = create<ShowChannelsState>()((set) => ({
-    showChannels: true,
-    setShowChannels: (val) => set(() => ({ showChannels: val })),
-}));
+export const useShowChannels = create(
+    persist<ShowChannelsState>(
+        (set) => ({
+            showChannels: true,
+            setShowChannels: (val) => set(() => ({ showChannels: val })),
+        }),
+        {
+            name: "showChannels",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
 
 interface WidthThresholdsState {
     widthThresholds: {
@@ -817,9 +842,9 @@ export const useWidthThresholds = create<WidthThresholdsState>()((set) => ({
         562: false,
     },
     setWidthThreshold: (key, val) =>
-        set(() => ({
+        set((state) => ({
             widthThresholds: {
-                ...useWidthThresholds.getState().widthThresholds,
+                ...state.widthThresholds,
                 [key]: val,
             },
         })),

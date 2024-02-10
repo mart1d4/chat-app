@@ -34,7 +34,9 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
 
     const UserMention = ({ user, full }: { user: TCleanUser; full: boolean }) => {
         if (!user) return null;
-        return <span className={full ? styles.mention : styles.inlineMention}>@{user.username}</span>;
+        return (
+            <span className={full ? styles.mention : styles.inlineMention}>@{user.username}</span>
+        );
     };
 
     const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
@@ -47,7 +49,9 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                 {message.content.split(/(\s+)/).map((part, index) => {
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
+                        const user = message.mentions?.find(
+                            (user) => user.id === userId
+                        ) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
@@ -79,7 +83,9 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                 {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
                     if (userRegex.test(part)) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find((user) => user.id === userId) as TCleanUser;
+                        const user = message.mentions?.find(
+                            (user) => user.id === userId
+                        ) as TCleanUser;
                         return (
                             <UserMention
                                 key={v4()}
@@ -101,6 +107,26 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                     }
                 })}
             </span>
+        );
+    }
+
+    function edited(time) {
+        return (
+            <div className={styles.contentTimestamp}>
+                <span
+                    onMouseEnter={(e) => {
+                        setTooltip({
+                            text: getLongDate(time),
+                            element: e.currentTarget,
+                            delay: 1000,
+                            wide: true,
+                        });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                >
+                    (edited)
+                </span>
+            </div>
         );
     }
 
@@ -165,28 +191,15 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                             </div>
                         )}
 
-                        {message.messageReference && <span>{message.messageReference.author.displayName}</span>}
+                        {message.messageReference && (
+                            <span>{message.messageReference.author.displayName}</span>
+                        )}
 
                         {referencedContent ? (
                             <div className={styles.referenceContent}>
                                 {referencedContent}{" "}
-                                {message.messageReference.edited && (
-                                    <div className={styles.contentTimestamp}>
-                                        <span
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: getLongDate(message.updatedAt),
-                                                    element: e.currentTarget,
-                                                    delay: 1000,
-                                                    wide: true,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                        >
-                                            (edited)
-                                        </span>
-                                    </div>
-                                )}
+                                {message.messageReference.edited &&
+                                    edited(message.messageReference.edited)}
                             </div>
                         ) : (
                             <div className={styles.italic}>
@@ -242,45 +255,14 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                         {messageContent && (
                             <>
                                 {messageContent}{" "}
-                                {message.edited && message.attachments.length === 0 && (
-                                    <div className={styles.contentTimestamp}>
-                                        <span
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: getLongDate(message.updatedAt),
-                                                    element: e.currentTarget,
-                                                    delay: 1000,
-                                                    wide: true,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                        >
-                                            (edited)
-                                        </span>
-                                    </div>
-                                )}
+                                {message.edited &&
+                                    message.attachments.length === 0 &&
+                                    edited(message.edited)}
                             </>
                         )}
 
                         {message.attachments.length > 0 && <MessageAttachments message={message} />}
-
-                        {message.edited && message.attachments.length > 0 && (
-                            <div className={styles.contentTimestamp}>
-                                <span
-                                    onMouseEnter={(e) =>
-                                        setTooltip({
-                                            text: getLongDate(message.updatedAt),
-                                            element: e.currentTarget,
-                                            delay: 1000,
-                                            wide: true,
-                                        })
-                                    }
-                                    onMouseLeave={() => setTooltip(null)}
-                                >
-                                    (edited)
-                                </span>
-                            </div>
-                        )}
+                        {message.edited && message.attachments.length > 0 && edited(message.edited)}
                     </div>
                 </div>
             </div>
@@ -458,8 +440,12 @@ const Image = ({ attachment }: ImageComponent) => {
                         <div style={{ cursor: isHidden ? "pointer" : "default" }}>
                             <div>
                                 <img
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${attachment.id}/-/resize/x${
-                                        attachment.dimensions.height >= 350 ? 350 : attachment.dimensions.height
+                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${
+                                        attachment.id
+                                    }/-/resize/x${
+                                        attachment.dimensions.height >= 350
+                                            ? 350
+                                            : attachment.dimensions.height
                                     }/-/format/webp/`}
                                     alt={attachment?.name}
                                     style={{ filter: isHidden ? "blur(44px)" : "none" }}

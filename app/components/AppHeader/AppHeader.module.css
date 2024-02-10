@@ -17,6 +17,11 @@
     overflow-x: auto;
 }
 
+.header::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
 .nav {
     position: relative;
     flex: 1 1 auto;
@@ -87,10 +92,7 @@
     width: 0;
 }
 
-.item,
-.itemActive,
-.itemAdd,
-.itemAddActive {
+.item {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -107,24 +109,27 @@
     flex-shrink: 0;
 }
 
-.itemAdd {
+.item.add {
     color: var(--foreground-1);
     background-color: var(--success-1);
 }
 
-.itemAddActive {
+.item.add.active {
     color: var(--success-light);
-    cursor: default;
+    background-color: transparent;
 }
 
-.itemActive {
+.item.add:not(.active):hover {
+    background-color: var(--success-2);
+}
+
+.item.active {
     background-color: var(--background-hover-3);
     color: var(--foreground-1);
     cursor: default;
 }
 
-.item:hover,
-.itemActive:hover {
+.item:hover {
     background-color: var(--background-hover-1);
     color: var(--foreground-2);
 }
@@ -238,6 +243,7 @@
     border-radius: 4px;
     color: var(--foreground-3);
     transform: rotate(-90deg);
+    cursor: pointer;
 }
 
 .backButton:hover {

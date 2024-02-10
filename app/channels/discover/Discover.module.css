@@ -2,7 +2,8 @@
     width: 100%;
     background-color: var(--background-4);
     padding: 10px;
-    overflow-y: scroll;
+    padding-bottom: 120px;
+    overflow-y: auto;
 }
 
 .container > h1 {

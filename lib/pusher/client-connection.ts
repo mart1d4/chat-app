@@ -11,5 +11,5 @@ const pusherConnection: Pusher = new Pusher(pusherKey, {
     cluster: pusherCluster,
 });
 
-const pusher = pusherConnection.subscribe("chat-app");
+const pusher = pusherConnection.subscribe("app");
 export default pusher;

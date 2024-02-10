@@ -185,6 +185,18 @@
     margin-right: 5px;
 }
 
+@media screen and (max-width: 562px) {
+    .liContainer {
+        max-width: 100%;
+        border-radius: 10px;
+        border: 1px solid transparent;
+    }
+
+    .liContainer:hover {
+        border: 1px solid var(--background-1);
+    }
+}
+
 .liWrapper {
     display: flex;
     align-items: center;

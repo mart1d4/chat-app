@@ -8,14 +8,13 @@ import {
     useTooltip,
     useWidthThresholds,
 } from "@/lib/store";
-import { Channel, User } from "@/lib/db/types";
+import { ChannelTable, UserTable } from "@/lib/db/types";
 import styles from "./AppHeader.module.css";
 import { Icon, Avatar } from "@components";
-import { useMemo } from "react";
 
 interface Props {
-    channelId?: Channel["id"];
-    friend?: Partial<User>;
+    channel?: Partial<ChannelTable>;
+    friend?: Partial<UserTable>;
     requests?: number;
 }
 
@@ -26,7 +25,7 @@ export function AppHeader({ channel, friend }: Props) {
     const setShowChannels = useShowChannels((state) => state.setShowChannels);
 
     const setSettings = useSettings((state) => state.setSettings);
-    const requests = useData((state) => state.requestsReceived);
+    const requests = useData((state) => state.received);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
@@ -55,7 +54,7 @@ export function AppHeader({ channel, friend }: Props) {
                   {
                       name: "Pinned Messages",
                       icon: "pin",
-                      func: (e: any) => {
+                      func: (e: MouseEvent | KeyboardEvent) => {
                           setLayers({
                               settings: {
                                   type: "POPUP",
@@ -67,6 +66,7 @@ export function AppHeader({ channel, friend }: Props) {
                               content: {
                                   type: "PINNED_MESSAGES",
                                   channel: channel,
+                                  pinned: true,
                               },
                           });
                       },
@@ -87,7 +87,7 @@ export function AppHeader({ channel, friend }: Props) {
                   {
                       name: "Pinned Messages",
                       icon: "pin",
-                      func: (e: any) => {
+                      func: (e: MouseEvent | KeyboardEvent) => {
                           setLayers({
                               settings: {
                                   type: "POPUP",
@@ -99,6 +99,7 @@ export function AppHeader({ channel, friend }: Props) {
                               content: {
                                   type: "PINNED_MESSAGES",
                                   channel: channel,
+                                  pinned: true,
                               },
                           });
                       },
@@ -154,193 +155,165 @@ export function AppHeader({ channel, friend }: Props) {
               },
           ];
 
-    return useMemo(
-        () => (
-            <div className={styles.header}>
-                <div className={styles.nav}>
-                    <button
-                        className={styles.backButton}
-                        onClick={() => setShowChannels(true)}
-                    >
-                        <Icon name="back" />
-                    </button>
+    const func = (e: any, text: string) => {
+        setTooltip({
+            text: text,
+            element: e.currentTarget,
+            position: "BOTTOM",
+            gap: 5,
+        });
+    };
 
-                    {!channel ? (
-                        <>
-                            <div className={styles.icon}>
-                                <Icon
-                                    name="friends"
-                                    fill="var(--foreground-5)"
-                                />
-                            </div>
-                            <h1 className={styles.title}>Friends</h1>
-                            <div className={styles.divider}></div>
-                            <ul className={styles.list}>
-                                {tabs.map((tab, index) => (
-                                    <li
-                                        key={index}
-                                        tabIndex={0}
-                                        onClick={() => setSettings("friendTab", tab.func)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                setSettings("friendTab", tab.func);
-                                            }
-                                        }}
-                                        className={
-                                            tab.name === "Add Friend"
-                                                ? settings.friendTab === tab.func
-                                                    ? styles.itemAddActive
-                                                    : styles.itemAdd
-                                                : settings.friendTab === tab.func
-                                                ? styles.itemActive
-                                                : styles.item
-                                        }
-                                    >
-                                        {tab.name}
-                                        {tab.name === "Pending" && requests.length > 0 && (
-                                            <div className={styles.badge}>{requests.length}</div>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    ) : (
-                        <>
-                            <div className={styles.icon}>
-                                {channel.guildId ? (
-                                    <Icon name="hashtag" />
-                                ) : (
-                                    <Avatar
-                                        src={channel.icon || ""}
-                                        relativeSrc={!channel}
-                                        alt={channel.name || ""}
-                                        size={24}
-                                        status={friend ? friend.status : undefined}
-                                    />
-                                )}
-                            </div>
+    return (
+        <div className={styles.header}>
+            <div className={styles.nav}>
+                <button
+                    className={styles.backButton}
+                    onClick={() => setShowChannels(true)}
+                >
+                    <Icon name="back" />
+                </button>
 
-                            <h1
-                                className={styles.titleFriend}
-                                onMouseEnter={(e) => {
-                                    if (channel.guildId) return;
-                                    setTooltip({
-                                        text: channel.name || "",
-                                        element: e.currentTarget,
-                                        position: "BOTTOM",
-                                        gap: 5,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    if (channel.type !== 0) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_PROFILE",
-                                        },
-                                        content: {
-                                            user: friend,
-                                        },
-                                    });
-                                }}
-                                style={{
-                                    cursor: channel.guildId ? "default" : "",
-                                }}
-                            >
-                                {channel.name || ""}
-                            </h1>
-                        </>
-                    )}
-                </div>
-
-                <div className={styles.toolbar}>
-                    {toolbarItems.map((item) => (
-                        <ToolbarIcon
-                            key={item.name}
-                            item={item}
-                        />
-                    ))}
-
-                    {!channel || !width562 ? (
-                        <div className={styles.divider} />
-                    ) : (
-                        <div className={styles.search}>
-                            <div
-                                role="combobox"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                aria-label="Search"
-                                autoCorrect="off"
-                            >
-                                Search
-                            </div>
-
-                            <div>
-                                <Icon
-                                    name="search"
-                                    size={16}
-                                />
-                            </div>
+                {!channel ? (
+                    <>
+                        <div className={styles.icon}>
+                            <Icon
+                                name="friends"
+                                fill="var(--foreground-5)"
+                            />
                         </div>
-                    )}
 
-                    <button
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) => {
-                            setTooltip({
-                                text: "Inbox",
-                                element: e.currentTarget,
-                                position: "BOTTOM",
-                                gap: 5,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) => {
-                            setTooltip({
-                                text: "Inbox",
-                                element: e.currentTarget,
-                                position: "BOTTOM",
-                                gap: 5,
-                            });
-                        }}
-                        onBlur={() => setTooltip(null)}
-                    >
-                        <Icon name="inbox" />
-                    </button>
+                        <h1 className={styles.title}>Friends</h1>
+                        <div className={styles.divider}></div>
 
-                    <a
-                        href="/en-US/support"
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) => {
-                            setTooltip({
-                                text: "Help",
-                                element: e.currentTarget,
-                                position: "BOTTOM",
-                                gap: 5,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) => {
-                            setTooltip({
-                                text: "Help",
-                                element: e.currentTarget,
-                                position: "BOTTOM",
-                                gap: 5,
-                            });
-                        }}
-                        onBlur={() => setTooltip(null)}
-                    >
-                        <Icon name="help" />
-                    </a>
-                </div>
+                        <ul className={styles.list}>
+                            {tabs.map((tab) => (
+                                <li
+                                    tabIndex={0}
+                                    key={tab.name}
+                                    onClick={() => setSettings("friendTab", tab.func)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            setSettings("friendTab", tab.func);
+                                        }
+                                    }}
+                                    className={`${styles.item} ${
+                                        settings.friendTab === tab.func ? styles.active : ""
+                                    } ${tab.name === "Add Friend" ? styles.add : ""}`}
+                                >
+                                    {tab.name}
+
+                                    {tab.name === "Pending" && requests.length > 0 && (
+                                        <div className={styles.badge}>{requests.length}</div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </>
+                ) : (
+                    <>
+                        <div className={styles.icon}>
+                            {channel.guildId ? (
+                                <Icon name="hashtag" />
+                            ) : (
+                                <Avatar
+                                    size={24}
+                                    src={channel.icon}
+                                    alt={channel.name}
+                                    status={friend ? friend.status : undefined}
+                                />
+                            )}
+                        </div>
+
+                        <h1
+                            className={styles.titleFriend}
+                            onMouseEnter={(e) => {
+                                if (channel.guildId) return;
+                                func(e, channel.name);
+                            }}
+                            onMouseLeave={() => setTooltip(null)}
+                            onClick={() => {
+                                if (channel.type !== 0) return;
+                                setLayers({
+                                    settings: {
+                                        type: "USER_PROFILE",
+                                    },
+                                    content: {
+                                        user: friend,
+                                    },
+                                });
+                            }}
+                            style={{ cursor: channel.guildId ? "default" : "" }}
+                        >
+                            {channel.name}
+                        </h1>
+                    </>
+                )}
             </div>
-        ),
-        [channel, friend, requests, settings, width1200, width562]
+
+            <div className={styles.toolbar}>
+                {toolbarItems.map((item) => (
+                    <ToolbarIcon
+                        item={item}
+                        key={item.name}
+                    />
+                ))}
+
+                {!channel || !width562 ? (
+                    <div className={styles.divider} />
+                ) : (
+                    <div className={styles.search}>
+                        <div
+                            role="combobox"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            aria-label="Search"
+                            autoCorrect="off"
+                        >
+                            Search
+                        </div>
+
+                        <div>
+                            <Icon name="search" />
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    className={styles.toolbarIcon}
+                    onMouseEnter={(e) => func(e, "Inbox")}
+                    onMouseLeave={() => setTooltip(null)}
+                    onFocus={(e) => func(e, "Inbox")}
+                    onBlur={() => setTooltip(null)}
+                >
+                    <Icon name="inbox" />
+                </button>
+
+                <a
+                    href="/en-US/support"
+                    className={styles.toolbarIcon}
+                    onMouseEnter={(e) => func(e, "Help")}
+                    onMouseLeave={() => setTooltip(null)}
+                    onFocus={(e) => func(e, "Help")}
+                    onBlur={() => setTooltip(null)}
+                >
+                    <Icon name="help" />
+                </a>
+            </div>
+        </div>
     );
 }
 
 const ToolbarIcon = ({ item }: any) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
+    const func = (e: any) => {
+        setTooltip({
+            text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
+            element: e.currentTarget,
+            position: "BOTTOM",
+            gap: 5,
+        });
+    };
 
     return (
         <button
@@ -351,23 +324,9 @@ const ToolbarIcon = ({ item }: any) => {
                 if (item.disabled) return;
                 item.func(e);
             }}
-            onMouseEnter={(e) => {
-                setTooltip({
-                    text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
-                    element: e.currentTarget,
-                    position: "BOTTOM",
-                    gap: 5,
-                });
-            }}
+            onMouseEnter={(e) => func(e)}
             onMouseLeave={() => setTooltip(null)}
-            onFocus={(e) => {
-                setTooltip({
-                    text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
-                    element: e.currentTarget,
-                    position: "BOTTOM",
-                    gap: 5,
-                });
-            }}
+            onFocus={(e) => func(e)}
             onBlur={() => setTooltip(null)}
             style={{ color: item.active && !item.disabled ? "var(--foreground-2)" : "" }}
         >

@@ -280,7 +280,6 @@ export async function getInitialData() {
 
         const friends = await getFriends(user.id);
         const blocked = await getBlocked(user.id);
-        const blockedBy = await getBlockedBy(user.id);
         const received = await getRequestsReceived(user.id);
         const sent = await getRequestsSent(user.id);
 
@@ -291,7 +290,6 @@ export async function getInitialData() {
             user,
             friends,
             blocked,
-            blockedBy,
             received,
             sent,
             channels,
@@ -721,10 +719,7 @@ export function withAuthor(eb: ExpressionBuilder<DB, "users">) {
 
 export function withMentions(eb: ExpressionBuilder<DB, "users">) {
     return jsonArrayFrom(
-        eb
-            .selectFrom("users as mention")
-            .select(userSelect)
-            .whereRef("mention.id", "=", "messages.authorId")
+        eb.selectFrom("users as mention").select(userSelect).where("mention.id", "in", [0])
     ).as("mentions");
 }
 
@@ -772,11 +767,11 @@ export async function getMessage(messageId: id) {
     }
 }
 
-export function withInviter(eb: ExpressionBuilder<DB, "users">) {
+export function withInviter(eb: ExpressionBuilder<DB, "users">, select = selfUserSelect) {
     return jsonObjectFrom(
         eb
             .selectFrom("users as inviter")
-            .select(selfUserSelect)
+            .select(select)
             .whereRef("inviter.id", "=", "invites.inviterId")
     ).as("inviter");
 }
@@ -787,11 +782,11 @@ export function withGuild(eb: ExpressionBuilder<DB, "guilds">) {
     ).as("guild");
 }
 
-export function withChannel(eb: ExpressionBuilder<DB, "channels">) {
+export function withChannel(eb: ExpressionBuilder<DB, "channels">, select = channelSelect) {
     return jsonObjectFrom(
         eb
             .selectFrom("channels")
-            .select((eb) => [...channelSelect, withRecipients(eb, ["username", "displayName"])])
+            .select((eb) => [...select, withRecipients(eb, ["id", "displayName"])])
             .whereRef("channels.id", "=", "invites.channelId")
     ).as("channel");
 }
@@ -831,9 +826,9 @@ export async function getInvite(code: string) {
                 "maxUses",
                 "maxAge",
                 "temporary",
-                withInviter(eb),
+                "inviterId",
                 withGuild(eb),
-                withChannel(eb),
+                withChannel(eb, ["id", "name", "icon"]),
             ])
             .where("code", "=", code)
             .executeTakeFirstOrThrow();

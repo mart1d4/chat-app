@@ -72,6 +72,8 @@
         --background-mention: hsla(235, 85.6%, 64.7%, 0.3);
         --background-message-highlight: hsl(235, 86.1%, 77.5%, 0.08);
         --background-message-highlight-hover: hsl(235, 85.6%, 64.7%, 0.1);
+        --background-message-mentioned: hsla(40, 86.4%, 56.9%, 0.1);
+        --background-message-mentioned-hover: hsl(40, 86%, 57%);
 
         --foreground-1: hsl(210, 9%, 95%, 1);
         --foreground-2: hsl(210, 9%, 87%, 1);

@@ -3,6 +3,7 @@ import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
+import pusher from "@/lib/pusher/server-connection";
 
 export async function PUT(req: Request, { params }: { params: { messageId: string } }) {
     const senderId = headers().get("X-UserId") || "";
@@ -85,9 +86,12 @@ export async function PUT(req: Request, { params }: { params: { messageId: strin
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { messageId: string } }) {
+export async function DELETE(
+    req: Request,
+    { params }: { params: { channelId: string; messageId: string } }
+) {
     const senderId = headers().get("X-UserId") || "";
-    const { messageId } = params;
+    const { channelId, messageId } = params;
 
     try {
         const message = await db
@@ -116,6 +120,13 @@ export async function DELETE(req: Request, { params }: { params: { messageId: st
         if (message.attachments?.length > 0) {
             message.attachments.forEach((file: any) => {
                 removeImage(file.id);
+            });
+        }
+
+        if (deletedMessage) {
+            pusher.trigger("app", "message-deleted", {
+                channelId: channelId,
+                messageId,
             });
         }
 

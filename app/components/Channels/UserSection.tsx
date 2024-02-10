@@ -275,7 +275,10 @@ export const UserSection = (): ReactElement => {
                             });
                         }}
                         onBlur={() => setTooltip(null)}
-                        onClick={() => setShowSettings("")}
+                        onClick={() => {
+                            setShowSettings("");
+                            setTooltip(null);
+                        }}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 setShowSettings("");

@@ -1,25 +1,63 @@
 "use client";
 
+import { useEffect, useState, useMemo, useRef, SetStateAction, Dispatch } from "react";
+import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
+import { usePathname, useRouter } from "next/navigation";
+import { TextArea, Icon, Avatar } from "@components";
+import { shouldDisplayInlined } from "@/lib/message";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { getFullChannel, sanitizeString } from "@/lib/strings";
+import styles from "./Message.module.css";
+import Link from "next/link";
+import { v4 } from "uuid";
 import {
     ComputableProgressInfo,
     UnknownProgressInfo,
     uploadFileGroup,
 } from "@uploadcare/upload-client";
-import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
-import { getChannelIcon, getChannelName, sanitizeString } from "@/lib/strings";
-import { useEffect, useState, useMemo, useRef } from "react";
-import { TextArea, Icon, Avatar } from "@components";
-import { shouldDisplayInlined } from "@/lib/message";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { usePathname, useRouter } from "next/navigation";
-import styles from "./Message.module.css";
-import Link from "next/link";
-import { v4 } from "uuid";
+import {
+    MessageTable,
+    ChannelTable,
+    GuildTable,
+    UserTable,
+    InviteTable,
+    Attachment,
+} from "@/lib/db/types";
 
-export function Message({ message, setMessages, large, channel, guild }: Props) {
+type Message = Partial<MessageTable> & {
+    reference: Message | null;
+    attachments: Attachment[];
+    mentions: UserTable[];
+    author: UserTable;
+    waiting?: boolean;
+    error?: boolean;
+    needsToBeSent?: boolean;
+} & Pick<MessageTable, "id" | "type" | "createdAt" | "edited" | "attachments" | "channelId">;
+
+type Invite = (
+    | Partial<InviteTable>
+    | {
+          code: string;
+          type: "error" | "notfound";
+      }
+)[];
+
+export function Message({
+    message,
+    setMessages,
+    large,
+    channel,
+    guild,
+}: {
+    message: Message;
+    setMessages: Dispatch<SetStateAction<Message[]>>;
+    large: boolean;
+    channel: Partial<ChannelTable>;
+    guild: Partial<GuildTable>;
+}) {
     const [fileProgress, setFileProgress] = useState(0);
     const [translation, setTranslation] = useState("");
-    const [invites, setInvites] = useState([]);
+    const [invites, setInvites] = useState<Invite>([]);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
@@ -38,6 +76,8 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     const reply = replies.find((r) => r.messageId === message.id);
     const edit = edits.find((e) => e.messageId === message.id);
 
+    const isMentioned = message.mentions?.some((m) => m.id === user.id);
+
     const controller = useMemo(() => new AbortController(), []);
     const inline = shouldDisplayInlined(message.type);
     const hasRendered = useRef(false);
@@ -52,6 +92,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${"fr"}&dt=t&dj=1&source=input&q=`;
 
     async function translateMessage() {
+        if (!message.content) return;
         const contents = [];
 
         // Split the message into chunks of 2000 characters
@@ -77,9 +118,11 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         messageContent = (
             <span>
                 {message.content.split(/(\s+)/).map((part: string, i: number) => {
-                    if (userRegex.test(part) && message.mentions.length) {
+                    if (userRegex.test(part) && message.mentions?.length) {
                         const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions.find((u) => u.id === parseInt(userId));
+                        const user = message.mentions.find(
+                            (u: UserTable) => u.id === parseInt(userId)
+                        );
 
                         if (!user) return part;
 
@@ -122,10 +165,10 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         referencedContent = (
             <span>
                 {message.reference.content.split(/(\s+)/).map((part: string, i: number) => {
-                    if (userRegex.test(part) && message.reference.mentions.length) {
+                    if (userRegex.test(part) && message.reference?.mentions?.length) {
                         const userId = part.substring(2).slice(0, -1);
                         const user = message.reference.mentions.find(
-                            (u) => u.id === parseInt(userId)
+                            (u: UserTable) => u.id === parseInt(userId)
                         );
 
                         if (!user) return part;
@@ -161,9 +204,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         const getInvite = async (code: string) => {
             const response = await sendRequest({
                 query: "GET_INVITE",
-                params: {
-                    inviteId: code,
-                },
+                params: { inviteId: code },
             });
 
             if (!response.invite && response.invite !== null) {
@@ -172,30 +213,28 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
 
             setInvites((invites) => [
                 ...invites,
-                response.invite === null ? { code: code, type: "notfound" } : response.invite,
+                response.invite === null
+                    ? { code: code, type: "notfound" }
+                    : {
+                          ...response.invite,
+                          channel: getFullChannel(
+                              response.invite.channel,
+                              response.invite.channelId
+                          ),
+                      },
             ]);
         };
 
-        if (env == "development") {
-            if (hasRendered.current) {
-                if (guildInvites.length === 0 || message.waiting) return;
-
-                guildInvites.forEach((code) => {
-                    getInvite(code);
-                });
-            }
-
+        if (env === "development" && !hasRendered.current) {
             return () => {
                 hasRendered.current = true;
             };
-        } else if (env == "production") {
-            if (guildInvites.length === 0 || message.waiting) return;
-
-            guildInvites.forEach((code) => {
-                getInvite(code);
-            });
         }
-    }, [message.waiting]);
+
+        guildInvites.forEach((code) => {
+            getInvite(code);
+        });
+    }, [message.waiting, message.needsToBeSent, message.error]);
 
     useEffect(() => {
         if (!edit || edit.messageId !== message.id) return;
@@ -216,7 +255,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
     };
 
-    const retrySendMessage = async (prevMessage: TMessage) => {
+    const retrySendMessage = async (prevMessage: Message) => {
         if (
             !prevMessage ||
             (!prevMessage.waiting && !prevMessage.error && !prevMessage.needsToBeSent)
@@ -230,27 +269,26 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
             attachments: prevMessage.attachments,
             author: prevMessage.author,
             channelId: prevMessage.channelId,
-            messageReference: prevMessage.messageReference,
+            reference: prevMessage.reference,
             createdAt: new Date(),
             error: false,
             waiting: true,
             needsToBeSent: false,
-        } as TMessage;
+        };
 
         deleteLocalMessage();
-        setMessages((messages: TMessage[]) => [...messages, tempMessage]);
+        setMessages((messages) => [...messages, tempMessage]);
 
-        let uploadedFiles: any = [];
+        let uploadedFiles: Attachment[] = [];
 
         try {
-            if (prevMessage.attachments.length > 0) {
+            if (prevMessage.attachments?.length > 0) {
                 const onProgress = (props: ComputableProgressInfo | UnknownProgressInfo) => {
                     if ("value" in props) setFileProgress(props.value);
                 };
 
                 const filesToAdd = await Promise.all(
                     prevMessage.attachments.map(async (a) => {
-                        // a.url is a blob, so we need to convert it to a file
                         const response = await fetch(a.url);
                         const blob = await response.blob();
                         const file = new File([blob], a.name, { type: blob.type });
@@ -265,15 +303,12 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     signal: controller.signal,
                 }).then((result) => {
                     uploadedFiles = result.files.map((file, index) => {
+                        const attachment = prevMessage.attachments[index];
+
                         return {
+                            ...attachment,
                             id: file.uuid,
                             url: `https://ucarecdn.com/${file.uuid}/`,
-                            name: prevMessage.attachments[index].name,
-                            dimensions: prevMessage.attachments[index].dimensions,
-                            size: prevMessage.attachments[index].size,
-                            isSpoiler: prevMessage.attachments[index].isSpoiler,
-                            isImage: prevMessage.attachments[index].isImage,
-                            description: prevMessage.attachments[index].description,
                         };
                     });
                 });
@@ -286,19 +321,17 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                     message: {
                         content: prevMessage.content,
                         attachments: uploadedFiles,
-                        messageReference: prevMessage.messageReference,
+                        reference: prevMessage.reference,
                     },
                 },
             });
 
             if (!response.success) {
-                setMessages((prev: TMessage[]) => {
-                    return prev.map((message) =>
-                        message.id === prevMessage.id
-                            ? { ...message, error: true, waiting: false }
-                            : message
-                    );
-                });
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === prevMessage.id ? { ...m, error: true, waiting: false } : m
+                    )
+                );
 
                 if (prevMessage.attachments.length > 0) {
                     setLayers({
@@ -317,22 +350,19 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
 
             const message = response.data.message;
 
-            setMessages((messages: TMessage[]) =>
-                messages.filter((message) => message.id !== prevMessage.id)
-            );
-            setMessages((messages: TMessage[]) => [...messages, message]);
+            setMessages((prev) => prev.map((m) => (m.id === prevMessage.id ? message : m)));
             moveChannelUp(message.channelId);
         } catch (error) {
             console.error(error);
-            setMessages((messages) => {
-                return messages.map((message) => {
-                    return message.id === prevMessage.id
-                        ? { ...message, error: true, waiting: false }
-                        : message;
+
+            setMessages((prev) => {
+                return prev.map((m) => {
+                    return m.id === prevMessage.id ? { ...m, error: true, waiting: false } : m;
                 });
             });
 
             if (prevMessage.attachments.length > 0) {
+                controller.abort();
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -347,21 +377,13 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
     };
 
     useEffect(() => {
-        const env = process.env.NODE_ENV;
-
-        if (env == "development") {
-            if (message?.needsToBeSent && hasRendered.current) {
-                retrySendMessage(message);
-            }
-
+        if (process.env.NODE_ENV === "development" && !hasRendered.current) {
             return () => {
                 hasRendered.current = true;
             };
-        } else if (env == "production") {
-            if (message?.needsToBeSent) {
-                retrySendMessage(message);
-            }
         }
+
+        if (message.needsToBeSent) retrySendMessage(message);
     }, []);
 
     const deletePopup = () => {
@@ -670,13 +692,12 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                 <></>
             ) : (
                 <li
-                    className={
-                        styles.messageContainer +
-                        " " +
-                        (large ? styles.large : "") +
-                        " " +
-                        (reply?.messageId === message.id ? styles.reply : "")
-                    }
+                    className={`
+                        ${styles.messageContainer}
+                        ${large ? styles.large : ""}
+                        ${reply?.messageId === message.id ? styles.reply : ""}
+                        ${isMentioned ? styles.mentioned : ""}
+                    `}
                     onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1193,7 +1214,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                         >
                                             <h3>
                                                 {!("type" in invite)
-                                                    ? user.id === invite.inviter.id
+                                                    ? user.id === invite.inviterId
                                                         ? `You sent an invite to join a ${
                                                               invite.guild ? "server" : "group dm"
                                                           }`
@@ -1222,13 +1243,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     : invite.guild
                                                                     ? invite.guild.icon &&
                                                                       `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
-                                                                    : `url(${
-                                                                          process.env
-                                                                              .NEXT_PUBLIC_CDN_URL
-                                                                      }/${getChannelIcon(
-                                                                          invite.channel,
-                                                                          user.id
-                                                                      )}/)`,
+                                                                    : `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.channel.icon}/)`,
                                                         }}
                                                     >
                                                         {!("type" in invite) &&
@@ -1326,10 +1341,7 @@ export function Message({ message, setMessages, large, channel, guild }: Props) 
                                                                     ? "Invalid Invite"
                                                                     : "Something Went Wrong"
                                                                 : invite.guild?.name ??
-                                                                  getChannelName(
-                                                                      invite.channel.recipients,
-                                                                      user.id
-                                                                  )}
+                                                                  invite.channel.name}
                                                         </h3>
                                                         <strong>
                                                             {"type" in invite ? (

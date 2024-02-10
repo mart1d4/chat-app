@@ -10,7 +10,7 @@ import {
     Invite,
     EmojiPicker,
 } from "@components";
-import { getChannelName, getRelativeDate, translateCap, sanitizeString } from "@/lib/strings";
+import { translateCap, sanitizeString } from "@/lib/strings";
 import { useRef, useEffect, useState } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
@@ -21,6 +21,7 @@ import useLogout from "@/hooks/useLogout";
 import filetypeinfo from "magic-bytes.js";
 import styles from "./Popup.module.css";
 import Image from "next/image";
+import { getRelativeDate } from "@/lib/time";
 
 type TProps = {
     [key: string]: {
@@ -491,11 +492,9 @@ export function Popup({ content, friends, element }: any) {
             },
         },
         LEAVE_CONFIRM: {
-            title: `Leave '${
-                content.channel ? getChannelName(content.recipients, user.id) : content.guild?.name
-            }'`,
+            title: `Leave '${content.channel ? content.channel.name : content.guild?.name}'`,
             description: `Are you sure you want to leave ${
-                content.channel ? getChannelName(content.recipients, user.id) : content.guild?.name
+                content.channel ? content.channel.name : content.guild?.name
             }? You won't be able to rejoin this ${
                 content.guild ? "server" : "group"
             } unless your are re-invited.`,
@@ -930,7 +929,7 @@ export function Popup({ content, friends, element }: any) {
                                             : content.channel?.type === 2
                                             ? "#"
                                             : ""
-                                    }${getChannelName(content.channel, user.id)}`}
+                                    }${content.channel.name}`}
                             </div>
 
                             <div className={styles.description}>
@@ -957,16 +956,13 @@ export function Popup({ content, friends, element }: any) {
                 <div
                     autoFocus
                     ref={popupRef}
-                    className={styles.cardContainer}
-                    style={{
-                        width:
-                            type === "FILE_EDIT"
-                                ? "530px"
-                                : type === "GUILD_CHANNEL_CREATE"
-                                ? "460px"
-                                : "",
-                        padding: type === "FILE_EDIT" ? "84px 4px 0 4px" : "",
-                    }}
+                    className={`${styles.cardContainer} ${
+                        type === "FILE_EDIT"
+                            ? styles.fileEdit
+                            : type === "GUILD_CHANNEL_CREATE"
+                            ? styles.guildChannelCreate
+                            : ""
+                    }`}
                     onContextMenu={(e) => e.preventDefault()}
                 >
                     {type === "FILE_EDIT" && (
@@ -1081,11 +1077,11 @@ export function Popup({ content, friends, element }: any) {
                             >
                                 <Avatar
                                     src={content.channel.icon}
-                                    alt={getChannelName(content.channel.recipients, user.id)}
+                                    alt={content.channel.name}
                                     size={24}
                                 />
 
-                                <span>{getChannelName(content.channel.recipients, user.id)}</span>
+                                <span>{content.channel.name}</span>
                                 <span>{getRelativeDate(content.channel.updatedAt)}</span>
                             </div>
                         )}

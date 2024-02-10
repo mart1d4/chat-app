@@ -20,7 +20,8 @@
     margin-bottom: 0.125rem;
 }
 
-.messageContainer.reply::before {
+.messageContainer.reply::before,
+.messageContainer.mentioned::before {
     content: "";
     position: absolute;
     left: 0;
@@ -39,6 +40,14 @@
     position: relative;
     word-wrap: break-word;
     user-select: text;
+}
+
+.messageContainer.mentioned {
+    background-color: var(--background-message-mentioned);
+}
+
+.messageContainer.mentioned::before {
+    background-color: var(--background-message-mentioned-hover);
 }
 
 .message {
@@ -822,10 +831,10 @@
 .guildInvite > .content > .headline > .inviteIcon {
     background-size: 100% 100%;
     background-repeat: no-repeat;
-    border-radius: 15px;
+    border-radius: 999px;
     background-position: 50%;
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
     flex: 0 0 auto;
     background-clip: padding-box;
 }

@@ -10,7 +10,6 @@ export async function GET(req: Request, { params }: { params: { code: string } }
 
     try {
         const invite = await getInvite(code);
-
         console.log(JSON.stringify(invite, null, 4));
 
         return NextResponse.json(

@@ -1,8 +1,9 @@
-import { User } from "./db/types";
+import { ChannelTable, UserTable } from "./db/types";
 
 export function translateCap(str: string) {
     if (typeof str !== "string") {
-        throw new Error(`translateCap expected a string, but got ${typeof str}`);
+        console.error(`translateCap expected a string, but got ${typeof str}`);
+        return "";
     }
 
     return str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => {
@@ -12,7 +13,8 @@ export function translateCap(str: string) {
 
 export function sanitizeString(content: string) {
     if (typeof content !== "string") {
-        throw new Error(`sanitizeString expected a string, but got ${typeof content}`);
+        console.error(`sanitizeString expected a string, but got ${typeof content}`);
+        return "";
     }
 
     const trimmedChars = ["\n", "\r", "\t", "\b", " "];
@@ -37,15 +39,30 @@ export function sanitizeString(content: string) {
     return content;
 }
 
-export function getChannelName(recipients: Partial<User>[] = [], user?: Partial<User>) {
-    if (recipients.length === 0) {
-        return "Error fetching recipients";
-    } else if (recipients.length === 1) {
-        return `${recipients[0].displayName}'s Group`;
+export function getChannelName(
+    channel: ChannelTable & {
+        recipients: UserTable[];
+    },
+    user: UserTable
+) {
+    if (!channel) return "";
+    if (channel.name) return channel.name;
+
+    if (!channel.recipients) {
+        console.error("Channel has no recipients");
+        return "";
+    }
+
+    if (channel.recipients.length === 0) {
+        console.error("Channel has no recipients");
+        return "";
+    } else if (channel.recipients.length === 1) {
+        return `${channel.recipients[0].displayName}'s Group`;
     } else {
         let name = "";
-        for (const recipient of recipients) {
-            if (recipient.displayName !== user?.displayName) {
+
+        for (const recipient of channel.recipients) {
+            if (recipient.displayName !== user.displayName) {
                 name += recipient.displayName + ", ";
             }
         }
@@ -54,30 +71,30 @@ export function getChannelName(recipients: Partial<User>[] = [], user?: Partial<
     }
 }
 
-export function getRelativeDate(date: Date) {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+export function getChannelIcon(
+    channel: ChannelTable & {
+        recipients: UserTable[];
+    },
+    user: UserTable
+) {
+    if (!channel) return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
+    if (channel.icon) return channel.icon;
+    if (!channel.recipients) return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
 
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (seconds < 60) {
-        return "Just now";
-    } else if (minutes < 60) {
-        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-    } else if (hours < 24) {
-        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-    } else {
-        return `${days} day${days === 1 ? "" : "s"} ago`;
-    }
+    const recipients = channel.recipients?.filter((r) => r.id !== user.id);
+    if (recipients.length === 1) return recipients[0].avatar;
+    else return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
 }
 
-export function getChannelIcon(channel, user) {
-    if (channel.icon) return channel.icon;
-
-    const recipients = channel.recipients?.filter((recipient) => recipient.id !== user.id);
-    if (recipients.length > 0) return recipients[0].avatar;
-    else return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
+export function getFullChannel(
+    channel: ChannelTable & {
+        recipients: UserTable[];
+    },
+    user: UserTable
+) {
+    return {
+        ...channel,
+        name: getChannelName(channel, user),
+        icon: getChannelIcon(channel, user),
+    };
 }

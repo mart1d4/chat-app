@@ -1,6 +1,7 @@
 "use client";
 
 import { useData, useLayers, useMention, useMessages, useSettings, useTooltip } from "@/lib/store";
+import { Editor, EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
 import { useState, useRef, useMemo, useEffect } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { Icon, LoadingDots } from "@components";
@@ -8,6 +9,7 @@ import { sanitizeString } from "@/lib/strings";
 import styles from "./TextArea.module.css";
 import filetypeinfo from "magic-bytes.js";
 import { v4 as uuidv4 } from "uuid";
+import "draft-js/dist/Draft.css";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng"];
 
@@ -16,7 +18,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const setContent = useMessages((state) => state.setContent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setMention = useMention((state) => state.setMention);
-    const user = useData((state) => state.user) as TCleanUser;
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
@@ -25,15 +26,21 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const mention = useMention((state) => state.userId);
     const drafts = useMessages((state) => state.drafts);
     const edits = useMessages((state) => state.edits);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const reply = replies.find((r) => r.channelId === channel.id);
     const draft = drafts.find((d) => d.channelId === channel.id);
     const edit = edits.find((e) => e.channelId === channel.id);
 
-    const [attachments, setAttachments] = useState<TAttachment[]>(draft?.attachments || []);
-    const [usersTyping, setUsersTyping] = useState<string[]>([]);
-    const [message, setMessage] = useState<string>(draft?.content || "");
+    const [attachments, setAttachments] = useState(draft?.attachments || []);
+    const [usersTyping, setUsersTyping] = useState([]);
+    const [editorState, setEditorState] = useState(() => {
+        return draft?.content
+            ? EditorState.createWithContent(draft.content)
+            : EditorState.createEmpty();
+    });
+    const [message, setMessage] = useState("");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
@@ -42,141 +49,45 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const friend = channel.recipients?.find((r: any) => r.id !== user.id);
 
     useEffect(() => {
+        setMessage(editorState.getCurrentContent().getPlainText());
+    }, [editorState]);
+
+    useEffect(() => {
         if (!mention || editing) return;
-        setMessage((message) => `${message}<@${mention}>`);
+
+        // Get whether some text has been selected
+        // If so, replace instead of inserting
+
+        const hasSelection = !editorState.getSelection().isCollapsed();
+
+        if (hasSelection) {
+            const newEditor = Modifier.replaceText(
+                editorState.getCurrentContent(),
+                editorState.getSelection(),
+                `<@${mention}>`
+            );
+
+            setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
+            EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
+        } else {
+            const newEditor = Modifier.insertText(
+                editorState.getCurrentContent(),
+                editorState.getSelection(),
+                `<@${mention}>`
+            );
+
+            setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
+            EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
+        }
         setMention(null);
     }, [mention, editing]);
 
-    const setCursorToEnd = () => {
-        const input = textAreaRef.current as HTMLInputElement;
-        if (!input) return;
-
-        input.focus();
-
-        // Set cursor to end of text
-        const range = document.createRange();
-        const sel = window.getSelection();
-
-        // Select the last text node
-        const textNodes = input.childNodes;
-        const lastTextNode = textNodes[textNodes.length - 1];
-        if (!lastTextNode) return;
-
-        range.setStart(lastTextNode, lastTextNode.textContent!.length);
-        range.collapse(true);
-        sel?.removeAllRanges();
-        sel?.addRange(range);
-    };
-
-    // useEffect(() => {
-    //     const handlePaste = async (e: ClipboardEvent) => {
-    //         if (layers) return;
-    //         e.preventDefault();
-
-    //         const clipboardData = e.clipboardData;
-    //         const items = clipboardData?.items;
-
-    //         if (!items) return;
-
-    //         for (const item of items) {
-    //             if (item.type.includes("image")) {
-    //                 const file = item.getAsFile();
-    //                 if (file) {
-    //                     if (attachments.length >= 10) {
-    //                         return setLayers({
-    //                             settings: {
-    //                                 type: "POPUP",
-    //                             },
-    //                             content: {
-    //                                 type: "WARNING",
-    //                                 warning: "FILE_LIMIT",
-    //                             },
-    //                         });
-    //                     }
-
-    //                     const maxFileSize = 1024 * 1024 * 10; // 10MB
-
-    //                     if (file.size > maxFileSize) {
-    //                         return setLayers({
-    //                             settings: {
-    //                                 type: "POPUP",
-    //                             },
-    //                             content: {
-    //                                 type: "WARNING",
-    //                                 warning: "FILE_SIZE",
-    //                             },
-    //                         });
-    //                     }
-
-    //                     const fileBytes = new Uint8Array(await file.arrayBuffer());
-    //                     const fileType = filetypeinfo(fileBytes);
-
-    //                     if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
-    //                         return setLayers({
-    //                             settings: {
-    //                                 type: "POPUP",
-    //                             },
-    //                             content: {
-    //                                 type: "WARNING",
-    //                                 warning: "FILE_TYPE",
-    //                             },
-    //                         });
-    //                     }
-
-    //                     // Check image dimensions
-    //                     const image = await new Promise<HTMLImageElement>((resolve) => {
-    //                         const img = new Image();
-    //                         img.onload = () => resolve(img);
-    //                         img.src = URL.createObjectURL(file);
-    //                     });
-
-    //                     const dimensions = {
-    //                         height: image.height,
-    //                         width: image.width,
-    //                     };
-
-    //                     setAttachments((attachments) => [...attachments, { id: uuidv4(), file, dimensions }]);
-    //                 }
-    //             } else if (item.type === "text/plain") {
-    //                 const text = clipboardData?.getData("text/plain") || "";
-    //                 if (text) {
-    //                     const input = textAreaRef.current as HTMLInputElement;
-
-    //                     const selection = window.getSelection();
-    //                     const range = selection?.getRangeAt(0);
-    //                     if (!range) return;
-
-    //                     const start = range.startOffset;
-    //                     const end = range.endOffset;
-
-    //                     const textBefore = input.innerText.slice(0, start);
-    //                     const textAfter = input.innerText.slice(end);
-
-    //                     input.innerText = textBefore + text + textAfter;
-
-    //                     // Set cursor to the end of the pasted text, and don't forget there can be line breaks thus multiple text nodes
-    //                     const textNodes = input.childNodes;
-    //                     const lastTextNode = textNodes[textNodes.length - 1];
-    //                     if (!lastTextNode) return;
-
-    //                     const range2 = document.createRange();
-    //                     const sel = window.getSelection();
-    //                     range2.setStart(lastTextNode, lastTextNode.textContent!.length);
-    //                     range2.collapse(true);
-    //                     sel?.removeAllRanges();
-    //                     sel?.addRange(range2);
-
-    //                     setMessage(input.innerText);
-    //                 }
-    //             }
-    //         }
-    //     };
-
-    //     window.addEventListener("paste", handlePaste);
-    //     return () => window.removeEventListener("paste", handlePaste);
-    // }, [layers, attachments]);
-
     useEffect(() => {
+        if (edit || reply) {
+            const input = textAreaRef.current;
+            if (input) input.focus();
+        }
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setEdit(channel.id, null);
@@ -184,63 +95,19 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             }
         };
 
-        const handleDragEnter = (e: DragEvent) => {
-            e.preventDefault();
-            console.log("enter");
-            // setLayers({
-            //     settings: {
-            //         type: "POPUP",
-            //     },
-            //     content: {
-            //         type: "WARNING",
-            //         warning: "DRAG_FILE",
-            //         channel: channel,
-            //     },
-            // });
-        };
-
-        const handleDragLeave = (e: DragEvent) => {
-            // setLayers({
-            //     settings: {
-            //         type: "POPUP",
-            //         setNull: true,
-            //     },
-            // });
-            e.preventDefault();
-            console.log("leave");
-        };
-
-        const handleDrop = (e: DragEvent) => {
-            e.preventDefault();
-            console.log("drop");
-        };
-
         document.addEventListener("keydown", handleKeyDown);
-        document.addEventListener("dragenter", handleDragEnter);
-        document.addEventListener("dragleave", handleDragLeave);
-        document.addEventListener("drop", handleDrop);
-        document.addEventListener("dragover", (e) => e.preventDefault());
 
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
-            document.removeEventListener("dragenter", handleDragEnter);
-            document.removeEventListener("dragleave", handleDragLeave);
-            document.removeEventListener("drop", handleDrop);
-            document.removeEventListener("dragover", (e) => e.preventDefault());
         };
     }, [edit, reply]);
 
     useEffect(() => {
-        const input = textAreaRef.current;
-        if (input) input.innerText = message;
-        setCursorToEnd();
         setContent(channel.id, message);
     }, [message]);
 
     useEffect(() => {
         setMessageAttachment(channel.id, attachments);
-        const input = textAreaRef.current as HTMLInputElement;
-        if (input !== document.activeElement) setCursorToEnd();
     }, [attachments]);
 
     useEffect(() => {
@@ -248,7 +115,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
         const input = textAreaRef.current;
         if (input) input.innerText = edit?.content || "";
-        setCursorToEnd();
     }, [edit, editing]);
 
     const sendMessage = async () => {
@@ -273,95 +139,68 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             attachments: attachments,
             author: user,
             channelId: [channel.id],
-            messageReference: reply?.messageId ?? null,
+            reference: reply?.messageId ?? null,
             createdAt: new Date(),
             needsToBeSent: true,
         };
 
-        setMessage("");
+        // Reset the editor state
+        const newState = EditorState.push(
+            editorState,
+            ContentState.createFromText(""),
+            "remove-range"
+        );
+
+        setEditorState(newState);
+
         setAttachments([]);
-        setMessages((messages: TMessage[]) => [...messages, tempMessage]);
+        setMessages((messages) => [...messages, tempMessage]);
 
         if (reply?.messageId) setReply(channel.id, null, "");
     };
 
-    const pasteText = () => {
-        navigator.clipboard.readText().then((content) => {
-            setMessage((message) => `${message}${content}`);
-        });
-    };
+    function myKeyBindingFn(e: SyntheticKeyboardEvent): string | null {
+        if (e.key === "Enter" && !e.shiftKey) {
+            return "message-send";
+        }
+        return getDefaultKeyBinding(e);
+    }
 
-    const textContainer = useMemo(
-        () => (
+    function handleKeyCommand(command: string): DraftHandleValue {
+        if (command === "message-send") {
+            return sendMessage();
+        }
+        return "not-handled";
+    }
+
+    const textContainer = (
+        <div
+            className={styles.textContainer}
+            style={{ height: textAreaRef.current?.scrollHeight || 44 }}
+        >
             <div
-                className={styles.textContainer}
-                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
+                ref={textAreaRef}
+                className={styles.textbox}
             >
-                <div>
-                    {(editing ? edit?.content?.length === 0 : message.length === 0) && (
-                        <div className={styles.placeholder}>
-                            {edit?.messageId && editing
-                                ? "Edit Message"
-                                : `Message ${
-                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
-                                  }${channel.name}`}
-                        </div>
-                    )}
-
-                    <div
-                        ref={textAreaRef}
-                        className={styles.textbox}
-                        role="textbox"
-                        spellCheck="true"
-                        aria-haspopup="listbox"
-                        aria-invalid="false"
-                        aria-label={
-                            edit?.messageId
+                <Editor
+                    editorState={editorState}
+                    onChange={setEditorState}
+                    placeholder={
+                        (editing ? edit?.content?.length === 0 : message.length === 0)
+                            ? edit?.messageId && editing
                                 ? "Edit Message"
                                 : `Message ${
                                       channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
                                   }${channel.name}`
-                        }
-                        aria-multiline="true"
-                        aria-required="true"
-                        aria-autocomplete="list"
-                        autoCorrect="off"
-                        contentEditable="true"
-                        onDragStart={() => false}
-                        onDrop={() => false}
-                        onInput={(e) => {
-                            const input = e.target as HTMLDivElement;
-                            const text = input.innerText.toString();
-
-                            if (edit?.messageId && editing)
-                                setEdit(channel.id, edit.messageId, undefined, text);
-                            else setMessage(text);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                if (!editing) sendMessage();
-                            }
-                        }}
-                        onContextMenu={(e) => {
-                            setLayers({
-                                settings: {
-                                    type: "MENU",
-                                    event: e,
-                                },
-                                content: {
-                                    type: "INPUT",
-                                    input: true,
-                                    sendButton: true,
-                                    pasteText,
-                                },
-                            });
-                        }}
-                    />
-                </div>
+                            : ""
+                    }
+                    spellCheck={true}
+                    stripPastedStyles={true}
+                    handleKeyCommand={handleKeyCommand}
+                    keyBindingFn={myKeyBindingFn}
+                />
             </div>
-        ),
-        [channel, friend, edit, reply, editing, attachments, message]
+        </div>
     );
 
     if (edit?.messageId && editing) {

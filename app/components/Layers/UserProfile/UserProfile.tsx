@@ -32,9 +32,9 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const [note, setNote] = useState<string>("");
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const requestsReceived = useData((state) => state.requestsReceived);
+    const requestsReceived = useData((state) => state.received);
     const currentUser = useData((state) => state.user) as User;
-    const requestsSent = useData((state) => state.requestsSent);
+    const requestsSent = useData((state) => state.sent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const friends = useData((state) => state.friends);

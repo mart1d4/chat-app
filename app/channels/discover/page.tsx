@@ -39,7 +39,7 @@ export default function DiscoverPage() {
     };
 
     return (
-        <div className={styles.container}>
+        <div className={`${styles.container} scrollbar`}>
             <h1>Discover</h1>
 
             <button

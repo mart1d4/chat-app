@@ -4,8 +4,9 @@ import { ChannelTable, GuildTable, MessageTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Icon } from "@components";
 import { useState, useEffect, useCallback } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
+import pusher from "@/lib/pusher/client-connection";
+import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
-import { useUrls } from "@/lib/store";
 import Link from "next/link";
 
 export default function Content({
@@ -28,10 +29,30 @@ export default function Content({
     const [loading, setLoading] = useState(false);
 
     const setGuildUrl = useUrls((s) => s.setGuild);
+    const user = useData((s) => s.user);
 
     useEffect(() => {
         document.title = `Chat App | #${channel.name} | ${guild.name}`;
         setGuildUrl(guild.id, channel.id);
+    }, []);
+
+    useEffect(() => {
+        pusher.bind("message", (data) => {
+            if (data.channelId == channel.id && data.message.author.id != user.id) {
+                setMessages((prev) => [...prev, data.message]);
+            }
+        });
+
+        pusher.bind("message-deleted", (data) => {
+            if (data.channelId == channel.id) {
+                setMessages((prev) => prev.filter((m) => m.id != data.messageId));
+            }
+        });
+
+        return () => {
+            pusher.unbind("message");
+            pusher.unbind("message-delete");
+        };
     }, []);
 
     const scrollContainer = useCallback(
@@ -205,7 +226,10 @@ const FirstMessage = ({ guild, channel }: Props) => {
                         </div>
 
                         {content.map((c) => (
-                            <div className={styles.welcomeCard}>
+                            <div
+                                key={c.text}
+                                className={styles.welcomeCard}
+                            >
                                 <div
                                     style={{
                                         backgroundImage: `url("https://ucarecdn.com/${c.icon}/")`,

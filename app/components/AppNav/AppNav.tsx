@@ -1,7 +1,6 @@
 "use client";
 
 import { useData, useNotifications, useShowChannels, useWidthThresholds } from "@/lib/store";
-import { getChannelIcon, getChannelName } from "@/lib/strings";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
 
@@ -78,14 +77,11 @@ export const AppNav = () => {
                 {filteredChannels.map((channel) => (
                     <NavIcon
                         key={channel.id}
-                        name={getChannelName(channel, user.id)}
+                        name={channel.name}
                         link={`/channels/me/${channel.id}`}
-                        src={`${process.env.NEXT_PUBLIC_CDN_URL}/${getChannelIcon(
-                            channel,
-                            user.id
-                        )}/`}
-                        count={pings.find((ping) => ping.channelId === channel.id)?.amount}
-                        user={channel.recipients.find((recipient) => recipient.id !== user.id)}
+                        src={`${process.env.NEXT_PUBLIC_CDN_URL}/${channel.icon}/`}
+                        count={pings.find((p) => p.channelId === channel.id)?.amount}
+                        user={channel.recipients.find((r) => r.id !== user.id)}
                     />
                 ))}
 

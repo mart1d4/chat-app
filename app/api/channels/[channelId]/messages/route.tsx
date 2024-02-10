@@ -1,176 +1,16 @@
-import { decryptMessage, encryptMessage } from "@/lib/encryption";
-import pusher from "@/lib/pusher/server-connection";
-import { removeImage } from "@/lib/cdn";
 import { NextResponse } from "next/server";
+import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
+import { db } from "@/lib/db/db";
 import {
     areUsersBlocked,
     didUserHideChannel,
-    getChannel,
     getMessage,
     getRandomId,
-    getUser,
     isUserInChannel,
-    isUserInGuild,
 } from "@/lib/db/helpers";
-import { db } from "@/lib/db/db";
-import { catchError } from "@/lib/api";
-
-// export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-//     const senderId = headers().get("X-UserId") || "";
-//     const channelId = params.channelId;
-//     const { skip, limit } = { skip: 0, limit: 500 };
-
-//     try {
-//         const channel = await prisma.channel.findUnique({
-//             where: {
-//                 id: channelId,
-//             },
-//             include: {
-//                 messages: {
-//                     orderBy: {
-//                         createdAt: "asc",
-//                     },
-//                     skip: skip,
-//                     take: limit,
-//                     include: {
-//                         author: {
-//                             select: {
-//                                 id: true,
-//                                 username: true,
-//                                 displayName: true,
-//                                 avatar: true,
-//                                 banner: true,
-//                                 primaryColor: true,
-//                                 accentColor: true,
-//                                 description: true,
-//                                 customStatus: true,
-//                                 status: true,
-//                                 guildIds: true,
-//                                 friendIds: true,
-//                                 createdAt: true,
-//                             },
-//                         },
-//                         messageReference: {
-//                             include: {
-//                                 author: {
-//                                     select: {
-//                                         id: true,
-//                                         username: true,
-//                                         displayName: true,
-//                                         avatar: true,
-//                                         banner: true,
-//                                         primaryColor: true,
-//                                         accentColor: true,
-//                                         description: true,
-//                                         customStatus: true,
-//                                         status: true,
-//                                         guildIds: true,
-//                                         friendIds: true,
-//                                         createdAt: true,
-//                                     },
-//                                 },
-//                                 mentions: {
-//                                     select: {
-//                                         id: true,
-//                                         username: true,
-//                                         displayName: true,
-//                                         avatar: true,
-//                                         banner: true,
-//                                         primaryColor: true,
-//                                         accentColor: true,
-//                                         description: true,
-//                                         customStatus: true,
-//                                         status: true,
-//                                         guildIds: true,
-//                                         friendIds: true,
-//                                         createdAt: true,
-//                                     },
-//                                 },
-//                             },
-//                         },
-//                         mentions: {
-//                             select: {
-//                                 id: true,
-//                                 username: true,
-//                                 displayName: true,
-//                                 avatar: true,
-//                                 banner: true,
-//                                 primaryColor: true,
-//                                 accentColor: true,
-//                                 description: true,
-//                                 customStatus: true,
-//                                 status: true,
-//                                 guildIds: true,
-//                                 friendIds: true,
-//                                 createdAt: true,
-//                             },
-//                         },
-//                     },
-//                 },
-//             },
-//         });
-
-//         const sender = await prisma.user.findUnique({
-//             where: {
-//                 id: senderId,
-//             },
-//         });
-
-//         if (!channel || !sender) {
-//             return NextResponse.json(
-//                 {
-//                     success: false,
-//                     message: "Channel not found",
-//                 },
-//                 { status: 404 }
-//             );
-//         }
-
-//         if (
-//             !channel.recipientIds.includes(senderId) &&
-//             !sender.guildIds.includes(channel?.guildId ?? "")
-//         ) {
-//             return NextResponse.json(
-//                 {
-//                     success: false,
-//                     message: "You are not in this channel",
-//                 },
-//                 { status: 401 }
-//             );
-//         }
-
-//         const messages = channel.messages.map((message) => {
-//             return {
-//                 ...message,
-//                 content: decryptMessage(message.content),
-//                 messageReference: {
-//                     ...message.messageReference,
-//                     content: decryptMessage(message.messageReference?.content ?? ""),
-//                 },
-//             };
-//         });
-
-//         return NextResponse.json(
-//             {
-//                 success: true,
-//                 message: "Successfully retrieved messages",
-//                 messages: messages,
-//                 hasMore: channel.messages.length - skip > limit,
-//             },
-//             { status: 200 }
-//         );
-//     } catch (error) {
-//         console.error(`[ERROR] /api/channels/[channelId]/messages/route.tsx: ${error}`);
-//         return NextResponse.json(
-//             {
-//                 success: false,
-//                 message: "Something went wrong.",
-//             },
-//             { status: 500 }
-//         );
-//     }
-// }
+import pusher from "@/lib/pusher/server-connection";
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = headers().get("X-UserId") || "";
@@ -256,11 +96,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             }
         }
 
-        if (message.messageReference) {
+        if (message.reference) {
             const messageRef = await db
                 .selectFrom("messages")
                 .select("id")
-                .where("id", "=", message.messageReference)
+                .where("id", "=", message.reference)
                 .executeTakeFirst();
 
             if (!messageRef) {
@@ -300,7 +140,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             .insertInto("messages")
             .values({
                 id: id,
-                type: message.messageReference ? 1 : 0,
+                type: message.reference ? 1 : 0,
                 content: message.content,
                 attachments: message.attachments ? JSON.stringify(message.attachments) : "[]",
                 embeds: message.embeds ? JSON.stringify(message.embeds) : "[]",
@@ -314,7 +154,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 mentions: mentions ? JSON.stringify(message.mentions) : "[]",
                 authorId: senderId,
                 channelId: channelId,
-                messageReferenceId: message.messageReference ?? null,
+                messageReferenceId: message.reference ?? null,
             })
             .executeTakeFirst();
 
@@ -332,6 +172,11 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
         }
 
         const newMessage = await getMessage(id);
+
+        pusher.trigger(`app`, "message", {
+            message: newMessage,
+            channelId: channelId,
+        });
 
         return NextResponse.json(
             {

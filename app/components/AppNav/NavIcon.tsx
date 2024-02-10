@@ -31,7 +31,7 @@ export default function NavIcon({
     const [markHeight, setMarkHeight] = useState(0);
     const [active, setActive] = useState(false);
 
-    const requests = useData((state) => state.requestsReceived);
+    const requests = useData((state) => state.received);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const guildUrls = useUrls((state) => state.guilds);

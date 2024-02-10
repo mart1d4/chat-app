@@ -4,9 +4,10 @@
 
 import { ChannelTable, MessageTable, UserTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
-import { useData, useLayers, useUrls } from "@/lib/store";
+import { useData, useLayers, useNotifications, useUrls } from "@/lib/store";
 import { useState, useEffect, useCallback } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
+import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Channels.module.css";
 import Image from "next/image";
@@ -32,11 +33,36 @@ const Content = ({
     const [hasMore, setHasMore] = useState(initHasMore);
     const [loading, setLoading] = useState(false);
 
+    const removePing = useNotifications((state) => state.removePing);
+    const pings = useNotifications((state) => state.pings);
     const setChannelUrl = useUrls((state) => state.setMe);
 
     useEffect(() => {
         document.title = `Chat App | @${channel.name}`;
         setChannelUrl(channel.id);
+
+        if (pings.find((ping) => ping.channelId === channel.id && ping.amount > 0)) {
+            removePing(channel.id);
+        }
+    }, []);
+
+    useEffect(() => {
+        pusher.bind("message", (data) => {
+            if (data.channelId == channel.id && data.message.author.id != user.id) {
+                setMessages((prev) => [...prev, data.message]);
+            }
+        });
+
+        pusher.bind("message-deleted", (data) => {
+            if (data.channelId == channel.id) {
+                setMessages((prev) => prev.filter((m) => m.id != data.messageId));
+            }
+        });
+
+        return () => {
+            pusher.unbind("message");
+            pusher.unbind("message-delete");
+        };
     }, []);
 
     const scrollContainer = useCallback(
@@ -44,7 +70,7 @@ const Content = ({
             if (node === null) return;
             setScrollerNode(node);
             const resizeObserver = new ResizeObserver(() => {
-                // if (isAtBottom) node.scrollTop = node.scrollHeight;
+                if (isAtBottom) node.scrollTop = node.scrollHeight;
             });
             resizeObserver.observe(node);
         },
@@ -55,7 +81,7 @@ const Content = ({
         (node: HTMLDivElement) => {
             if (node === null || !scrollerNode) return;
             const resizeObserver = new ResizeObserver(() => {
-                // if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
+                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
             });
             resizeObserver.observe(node);
         },
@@ -179,8 +205,8 @@ const FirstMessage = ({
     channel: Partial<ChannelTable>;
     friend: Partial<UserTable>;
 }) => {
-    const requestsR = useData((state) => state.requestsReceived).map((u) => u.id);
-    const requestsS = useData((state) => state.requestsSent).map((u) => u.id);
+    const requestsR = useData((state) => state.received).map((u) => u.id);
+    const requestsS = useData((state) => state.sent).map((u) => u.id);
     const friends = useData((state) => state.friends).map((u) => u.id);
     const blocked = useData((state) => state.blocked).map((u) => u.id);
     const setLayers = useLayers((state) => state.setLayers);

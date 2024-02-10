@@ -113,7 +113,7 @@ type ChannelItemProps =
       };
 
 function ChannelItem({ special, channel }: ChannelItemProps) {
-    const requests = useData((state) => state.requestsReceived).length;
+    const requests = useData((state) => state.received).length;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const pings = useNotifications((state) => state.pings);
@@ -133,6 +133,7 @@ function ChannelItem({ special, channel }: ChannelItemProps) {
                 style={{
                     backgroundColor: pathname === "/channels/me" ? "var(--background-5)" : "",
                     color: pathname === "/channels/me" ? "var(--foreground-1)" : "",
+                    borderColor: pathname === "/channels/me" ? "var(--background-1)" : "",
                 }}
             >
                 <div className={styles.liWrapper}>
@@ -188,6 +189,7 @@ function ChannelItem({ special, channel }: ChannelItemProps) {
                 style={{
                     backgroundColor: pathname.includes(channel.id) ? "var(--background-5)" : "",
                     color: pathname.includes(channel.id) || isPinged ? "var(--foreground-1)" : "",
+                    borderColor: pathname.includes(channel.id) ? "var(--background-1)" : "",
                 }}
             >
                 <div className={styles.liWrapper}>

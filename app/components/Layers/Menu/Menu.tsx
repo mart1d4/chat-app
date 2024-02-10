@@ -58,10 +58,10 @@ export function Menu({ content }: { content: any }) {
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
-    const requestsReceived = useData((state) => state.requestsReceived);
+    const requestsReceived = useData((state) => state.received);
     const currentUser = useData((state) => state.user) as TCleanUser;
     const setSettings = useSettings((state) => state.setSettings);
-    const requestsSent = useData((state) => state.requestsSent);
+    const requestsSent = useData((state) => state.sent);
     const setMention = useMention((state) => state.setMention);
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);

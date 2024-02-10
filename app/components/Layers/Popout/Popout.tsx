@@ -151,7 +151,7 @@ export function Popout({ content, element }: any) {
 
         if (content.channel) {
             const filtered = friends.filter(
-                (friend: any) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
+                (friend) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
             );
 
             if (search)

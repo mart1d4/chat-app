@@ -2,11 +2,11 @@ import { canUserAccessChannel, getUser, getChannel, getMessages } from "@/lib/db
 import { AppHeader, MemberList } from "@components";
 import styles from "../FriendsPage.module.css";
 import { Channel, User } from "@/lib/db/types";
+import { getFullChannel } from "@/lib/strings";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import Content from "./Content";
 import { db } from "@/lib/db/db";
-import { getChannelIcon, getChannelName } from "@/lib/strings";
+import Content from "./Content";
 
 async function getFriend(userId: string, channelId: string) {
     const friend = await db
@@ -58,11 +58,7 @@ export default async function ChannelPage({ params }: { params: { channelId: str
     const channelFetch = await getChannel(channelId);
     if (!channelFetch) redirect("/channels/me");
 
-    const channel = {
-        ...channelFetch,
-        name: getChannelName(channelFetch.recipients, user.id),
-        icon: getChannelIcon(channelFetch, user),
-    };
+    const channel = getFullChannel(channelFetch, user);
 
     const friend = channel.type === 0 ? await getFriend(user.id, channel.id) : undefined;
 

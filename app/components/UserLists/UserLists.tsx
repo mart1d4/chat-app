@@ -66,8 +66,8 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
     const [list, setList] = useState<Partial<User>[]>([]);
     const [filteredList, setFilteredList] = useState<Partial<User>[]>([]);
 
-    const requestsReceived = useData((state) => state.requestsReceived);
-    const requestsSent = useData((state) => state.requestsSent);
+    const requestsReceived = useData((state) => state.received);
+    const requestsSent = useData((state) => state.sent);
     const setLayers = useLayers((state) => state.setLayers);
     const blockedUsers = useData((state) => state.blocked);
     const friends = useData((state) => state.friends);
