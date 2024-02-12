@@ -1,6 +1,5 @@
 import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
 
 export async function POST(req: Request, { params }: { params: { guildId: string } }) {
@@ -64,7 +63,9 @@ export async function POST(req: Request, { params }: { params: { guildId: string
             );
         }
 
-        const category = categoryId ? await prisma.channel.findUnique({ where: { id: categoryId } }) : null;
+        const category = categoryId
+            ? await prisma.channel.findUnique({ where: { id: categoryId } })
+            : null;
 
         let channel;
 
@@ -182,7 +183,8 @@ export async function POST(req: Request, { params }: { params: { guildId: string
                 },
             });
 
-            const position = type === 4 ? guild.channels.length : type === 2 ? textChannelCount : channelCount;
+            const position =
+                type === 4 ? guild.channels.length : type === 2 ? textChannelCount : channelCount;
 
             channel = await prisma.channel.create({
                 data: {

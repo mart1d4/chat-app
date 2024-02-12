@@ -1,7 +1,6 @@
 import pusher from "@/lib/pusher/server-connection";
 import { encryptMessage } from "@/lib/encryption";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismadb";
 import { headers } from "next/headers";
 
 type Params = {
