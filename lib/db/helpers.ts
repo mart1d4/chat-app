@@ -723,7 +723,7 @@ export function withMentions(eb: ExpressionBuilder<DB, "users">) {
             .selectFrom("users as mention")
             .select(userSelect)
             // Where mention id is in the mentions arraym which is a JSON array
-            .whereRef("mention.id", "in", "messages.mentions")
+            .where("mention.id", "=", "messages.authorId")
     ).as("mentions");
 }
 
