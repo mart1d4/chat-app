@@ -1,15 +1,14 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
 export async function GET(req: Request): Promise<NextResponse> {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
-    if (typeof senderId !== 'string' || senderId.length !== 24) {
+    if (typeof senderId !== "string" || senderId.length !== 24) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Invalid user ID.',
+                message: "Invalid user ID.",
             },
             {
                 status: 400,
@@ -42,7 +41,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 {
                     status: 404,
@@ -52,7 +51,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Successfully retrieved requests.',
+                    message: "Successfully retrieved requests.",
                     requests: sender.requestsSent,
                 },
                 {
@@ -65,7 +64,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             {
                 status: 500,

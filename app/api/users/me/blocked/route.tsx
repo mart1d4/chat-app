@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prismadb';
-import { headers } from 'next/headers';
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
 export async function GET(req: Request): Promise<NextResponse> {
-    const senderId = headers().get('X-UserId') || '';
+    const senderId = headers().get("X-UserId") || "";
 
     try {
         const sender = await prisma.user.findUnique({
@@ -30,7 +29,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: false,
-                    message: 'User not found.',
+                    message: "User not found.",
                 },
                 { status: 404 }
             );
@@ -38,7 +37,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'Successfully retrieved blocked users.',
+                    message: "Successfully retrieved blocked users.",
                     blockedUsers: sender.blockedUsers,
                 },
                 { status: 200 }
@@ -49,7 +48,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Something went wrong.',
+                message: "Something went wrong.",
             },
             { status: 500 }
         );
