@@ -59,35 +59,6 @@ export function Popout({ content, element }: any) {
     }, [layers, containerRef]);
 
     useEffect(() => {
-        if (!user || content.type !== "PINNED_MESSAGES") return;
-
-        pusher.bind("message-edited", (data: TMessageData) => {
-            if (data.channelId === content.channel.id) {
-                if (pinned.map((m) => m.id).includes(data.message.id)) {
-                    if (!data.message.pinned) {
-                        setPinned(pinned.filter((m) => m.id !== data.message.id));
-                    } else {
-                        setPinned(
-                            pinned.map((m) => {
-                                if (m.id === data.message.id) return data.message;
-                                else return m;
-                            })
-                        );
-                    }
-                } else {
-                    if (data.message.pinned) {
-                        setPinned([...pinned, data.message]);
-                    }
-                }
-            }
-        });
-
-        return () => {
-            pusher.unbind("message-edited");
-        };
-    }, [user, pinned]);
-
-    useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 if (layers.POPUP.length > 2 || layers.MENU) {

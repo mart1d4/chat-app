@@ -2,10 +2,10 @@
 
 "use client";
 
+import { useData, useLayers, useNotifications, useUrls } from "@/lib/store";
 import { ChannelTable, MessageTable, UserTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
-import { useData, useLayers, useNotifications, useUrls } from "@/lib/store";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -122,79 +122,82 @@ const Content = ({
         );
     };
 
-    return (
-        <main className={styles.main}>
-            <div className={styles.messagesWrapper}>
-                <div
-                    ref={scrollContainer}
-                    className={styles.messagesScrollableContainer + " scrollbar"}
-                    onScroll={(e) => {
-                        if (
-                            e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
-                            e.currentTarget.scrollHeight
-                        ) {
-                            if (!isAtBottom) setIsAtBottom(true);
-                        } else if (isAtBottom) {
-                            setIsAtBottom(false);
-                        }
-                    }}
-                >
+    return useMemo(
+        () => (
+            <main className={styles.main}>
+                <div className={styles.messagesWrapper}>
                     <div
-                        ref={scrollContainerChild}
-                        className={styles.scrollContent}
+                        ref={scrollContainer}
+                        className={styles.messagesScrollableContainer + " scrollbar"}
+                        onScroll={(e) => {
+                            if (
+                                e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
+                                e.currentTarget.scrollHeight
+                            ) {
+                                if (!isAtBottom) setIsAtBottom(true);
+                            } else if (isAtBottom) {
+                                setIsAtBottom(false);
+                            }
+                        }}
                     >
-                        <ol className={styles.scrollContentInner}>
-                            {loading || messagesLoading ? (
-                                <MessageSk />
-                            ) : (
-                                <>
-                                    {hasMore ? (
-                                        <MessageSk />
-                                    ) : (
-                                        <FirstMessage
-                                            user={user}
-                                            friend={friend}
-                                            channel={channel}
-                                        />
-                                    )}
-
-                                    {messages.map((message, index) => (
-                                        <div key={message.id}>
-                                            {isNewDay(index) && (
-                                                <div className={styles.messageDivider}>
-                                                    <span>
-                                                        {new Intl.DateTimeFormat("en-US", {
-                                                            weekday: "long",
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                        }).format(new Date(message.createdAt))}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <Message
-                                                message={message}
-                                                setMessages={setMessages}
-                                                large={shouldBeLarge(index)}
+                        <div
+                            ref={scrollContainerChild}
+                            className={styles.scrollContent}
+                        >
+                            <ol className={styles.scrollContentInner}>
+                                {loading || messagesLoading ? (
+                                    <MessageSk />
+                                ) : (
+                                    <>
+                                        {hasMore ? (
+                                            <MessageSk />
+                                        ) : (
+                                            <FirstMessage
+                                                user={user}
+                                                friend={friend}
                                                 channel={channel}
                                             />
-                                        </div>
-                                    ))}
-                                </>
-                            )}
+                                        )}
 
-                            <div className={styles.scrollerSpacer} />
-                        </ol>
+                                        {messages.map((message, index) => (
+                                            <div key={message.id}>
+                                                {isNewDay(index) && (
+                                                    <div className={styles.messageDivider}>
+                                                        <span>
+                                                            {new Intl.DateTimeFormat("en-US", {
+                                                                weekday: "long",
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            }).format(new Date(message.createdAt))}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <Message
+                                                    message={message}
+                                                    setMessages={setMessages}
+                                                    large={shouldBeLarge(index)}
+                                                    channel={channel}
+                                                />
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+
+                                <div className={styles.scrollerSpacer} />
+                            </ol>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <TextArea
-                channel={channel}
-                setMessages={setMessages}
-            />
-        </main>
+                <TextArea
+                    channel={channel}
+                    setMessages={setMessages}
+                />
+            </main>
+        ),
+        [loading, messagesLoading, hasMore, messages]
     );
 };
 

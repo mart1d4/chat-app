@@ -90,7 +90,6 @@ export function Loading({ children, data }: Props) {
 
     const hasRendered = useRef(false);
     const pathname = usePathname();
-    const router = useRouter();
 
     function updateWidths(width: number) {
         for (const [k, value] of Object.entries(widthThresholds)) {
@@ -145,21 +144,21 @@ export function Loading({ children, data }: Props) {
             }
         };
 
-        if (env == "development") {
-            if (hasRendered.current) {
-                setAuthContext();
-            }
-
+        if (env === "development" && !hasRendered.current) {
             return () => {
                 hasRendered.current = true;
             };
-        } else if (env == "production") {
-            setAuthContext();
         }
+
+        setAuthContext();
     }, []);
 
     useEffect(() => {
+        console.log("Pathname changed", pathname);
+
         pusher.bind("message", (data) => {
+            console.log("Received message");
+
             if (channels.find((channel) => channel.id == data.channelId)) {
                 if (!pathname.includes(data.channelId)) {
                     // Play sound

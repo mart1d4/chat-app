@@ -136,8 +136,6 @@
 }
 
 .title svg {
-    margin-left: 0;
-    margin-right: 2px;
     display: block;
     color: var(--foreground-3);
     cursor: pointer;

@@ -666,9 +666,11 @@
 }
 
 .mention {
+    display: inline-block;
     border-radius: 3px;
     padding: 0 2px;
     cursor: pointer;
+    font-size: 16px;
     font-weight: 500;
     color: var(--foreground-2);
     background-color: var(--background-mention);

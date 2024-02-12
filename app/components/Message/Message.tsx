@@ -1494,9 +1494,7 @@ export function Message({
     );
 }
 
-const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
-    if (!user) return <></>;
-
+export function UserMention({ user, full }) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
@@ -1534,13 +1532,13 @@ const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
             }}
         >
             {full && "@"}
-            {user.username}
+            {user.username || "Unknown User"}
         </span>
     );
-};
+}
 
 function MessageAttachments({ message, functions }: { message: TMessage; functions: any }) {
-    const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
+    const ImageComponent = ({ attachment }) => (
         <Image
             attachment={attachment}
             message={message}
@@ -1740,43 +1738,15 @@ type MenuProps = {
 };
 
 function MessageMenu({ message, large, functions, channel, guild, inline, show, hide }: MenuProps) {
-    const [menuSender, setMenuSender] = useState<boolean | null>(null);
-    const [shift, setShift] = useState<boolean>(false);
+    const [shift, setShift] = useState(false);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
-    const setEdit = useMessages((state) => state.setEdit);
     const layers = useLayers((state) => state.layers);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
-    useEffect(() => {
-        setMenuSender(message.author.id === user.id);
-    }, [message]);
-
-    useEffect(() => {
-        if (layers.MENU?.content.message?.id === message?.id) {
-            setShift(false);
-        }
-
-        const handleShift = (e: KeyboardEvent) => {
-            if (layers.MENU?.content.message?.id === message?.id) return;
-            if (e.key === "Shift") setShift(true);
-        };
-
-        const handleShiftUp = (e: KeyboardEvent) => {
-            if (layers.MENU?.content.message?.id === message?.id) return;
-            if (e.key === "Shift") setShift(false);
-        };
-
-        document.addEventListener("keydown", handleShift);
-        document.addEventListener("keyup", handleShiftUp);
-
-        return () => {
-            document.removeEventListener("keydown", handleShift);
-            document.removeEventListener("keyup", handleShiftUp);
-        };
-    }, [layers.MENU]);
+    const menuSender = message.author.id === user.id;
 
     if (message.waiting || typeof menuSender !== "boolean") return null;
 
@@ -2217,8 +2187,8 @@ function Image({ attachment, message, functions }: ImageComponent) {
     const [showDelete, setShowDelete] = useState<boolean>(false);
 
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
+    const user = useData((state) => state.user);
 
     return useMemo(
         () => (
@@ -2275,11 +2245,11 @@ function Image({ attachment, message, functions }: ImageComponent) {
                                     src={`${process.env.NEXT_PUBLIC_CDN_URL}${
                                         attachment.id
                                     }/-/resize/x${
-                                        attachment.dimensions.height >= 350
+                                        attachment.dimensions?.height >= 350
                                             ? 350
-                                            : attachment.dimensions.height
+                                            : attachment.dimensions?.height
                                     }/-/format/webp/`}
-                                    alt={attachment?.name}
+                                    alt={attachment.name}
                                     style={{
                                         filter:
                                             attachment.isSpoiler && !hideSpoiler

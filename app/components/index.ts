@@ -41,3 +41,4 @@ export { FixedMessage } from "./Message/FixedMessage";
 export { TextArea, EmojiPicker } from "./TextArea/TextArea";
 
 export { ClickLayer } from "./ClickLayer/ClickLayer";
+export { UserMention } from "./Message/Message";

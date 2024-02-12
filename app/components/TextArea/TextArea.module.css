@@ -563,3 +563,94 @@
         display: none;
     }
 }
+
+/* MENTIONS */
+
+.mentionPopover {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 8px);
+    border-radius: 5px;
+    overflow: hidden auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    z-index: 3;
+    box-shadow: 0 0 0 1px hsl(0, 0%, 0.8%, 0.15), var(--elevation-high);
+    background-color: var(--background-3);
+    max-height: 490px;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.mentionPopover::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mentionPopover > :first-child {
+    border-radius: 3px;
+    padding: 8px;
+}
+
+.mentionPopover > :first-child > h3 {
+    font-size: 12px;
+    line-height: 1.333;
+    font-weight: 600;
+    color: var(--foreground-3);
+    padding: 4px 0;
+    text-transform: uppercase;
+}
+
+.mentionContainer {
+    padding: 0 8px;
+    font-size: 14px;
+    line-height: 16px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.mentionContainer > div:hover {
+    background-color: var(--background-4);
+}
+
+.mentionContainer > div {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    min-height: 16px;
+    color: var(--foreground-3);
+}
+
+.mentionContainer .avatar {
+    flex: 0 0 auto;
+    margin-right: 8px;
+}
+
+.mentionContainer .displayName {
+    flex: 0 2 auto;
+    overflow: hidden;
+    min-width: 10ch;
+    color: var(--foreground-1);
+    font-size: 16px;
+    line-height: 1.25;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.mentionContainer .username {
+    color: var(--foreground-3);
+    font-size: 12px;
+    line-height: 1.333;
+    font-weight: 400;
+    flex: 1 1 auto;
+    margin-left: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+}

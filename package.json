@@ -11,6 +11,10 @@
         "start": "next start"
     },
     "dependencies": {
+        "@draft-js-plugins/editor": "^4.1.4",
+        "@draft-js-plugins/inline-toolbar": "^4.2.1",
+        "@draft-js-plugins/linkify": "^4.2.2",
+        "@draft-js-plugins/mention": "^5.2.2",
         "@planetscale/database": "^1.14.0",
         "@uploadcare/upload-client": "^6.12.1",
         "bcrypt": "^5.1.1",

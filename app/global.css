@@ -418,3 +418,10 @@ input::placeholder {
 input:focus-visible {
     outline: 4px solid var(--accent-light);
 }
+
+/* Draftjs */
+
+.public-DraftEditorPlaceholder-inner {
+    color: var(--foreground-5);
+    user-select: none;
+}

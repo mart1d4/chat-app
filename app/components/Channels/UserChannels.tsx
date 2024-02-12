@@ -58,7 +58,7 @@ export function UserChannels() {
     );
 }
 
-const Title = () => {
+function Title() {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
 
@@ -81,7 +81,6 @@ const Title = () => {
                 }}
                 onBlur={() => setTooltip(null)}
                 onClick={(e) => {
-                    setTooltip(null);
                     setLayers({
                         settings: {
                             type: "POPUP",
@@ -100,7 +99,7 @@ const Title = () => {
             </button>
         </h2>
     );
-};
+}
 
 type ChannelItemProps =
     | {

@@ -12,8 +12,8 @@ export const UserSection = (): ReactElement => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
-    const user = useData((state) => state.user) as TUser;
     const layers = useLayers((state) => state.layers);
+    const user = useData((state) => state.user);
 
     const userSection = useRef<HTMLDivElement>(null);
 
@@ -123,23 +123,6 @@ export const UserSection = (): ReactElement => {
                                 const audio = new Audio("/assets/sounds/undeafen.mp3");
                                 audio.volume = 0.5;
                                 audio.play();
-
-                                // Speech
-                                // const SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-                                // const recognition = new SpeechRecognition();
-
-                                // recognition.continous = true;
-                                // recognition.interimResults = true;
-                                // recognition.lang = "en-US";
-                                // recognition.start();
-
-                                // recognition.onresult = function () {
-                                //     console.log("Speech result");
-                                // };
-
-                                // recognition.onspeechend = function () {
-                                //     console.log("Speech ended");
-                                // };
                             } else {
                                 setSettings("microphone", !settings.microphone);
                                 const audio = new Audio(`

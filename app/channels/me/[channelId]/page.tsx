@@ -102,7 +102,8 @@ async function FetchMessage({
     friend: User;
     channel: Channel;
 }) {
-    const messages = await getMessages(channel.id, 50);
+    const limit = 500;
+    const messages = await getMessages(channel.id, limit);
 
     const hasMore = await db
         .selectFrom("messages")
@@ -116,7 +117,7 @@ async function FetchMessage({
             friend={friend}
             channel={channel}
             initMessages={messages.reverse()}
-            initHasMore={hasMore[0].count > 50}
+            initHasMore={hasMore[0].count > limit}
         />
     );
 }

@@ -719,7 +719,11 @@ export function withAuthor(eb: ExpressionBuilder<DB, "users">) {
 
 export function withMentions(eb: ExpressionBuilder<DB, "users">) {
     return jsonArrayFrom(
-        eb.selectFrom("users as mention").select(userSelect).where("mention.id", "in", [0])
+        eb
+            .selectFrom("users as mention")
+            .select(userSelect)
+            // Where mention id is in the mentions arraym which is a JSON array
+            .whereRef("mention.id", "in", "messages.mentions")
     ).as("mentions");
 }
 
@@ -743,6 +747,8 @@ export async function getMessages(channelId: id, limit: number = 50, pinned: boo
             .orderBy("createdAt", "desc")
             .limit(limit)
             .execute();
+
+        console.log(messages);
 
         return messages || [];
     } catch (error) {

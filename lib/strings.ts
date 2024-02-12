@@ -62,7 +62,7 @@ export function getChannelName(
         let name = "";
 
         for (const recipient of channel.recipients) {
-            if (recipient.displayName !== user.displayName) {
+            if (recipient.id != user.id) {
                 name += recipient.displayName + ", ";
             }
         }
@@ -81,7 +81,7 @@ export function getChannelIcon(
     if (channel.icon) return channel.icon;
     if (!channel.recipients) return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
 
-    const recipients = channel.recipients?.filter((r) => r.id !== user.id);
+    const recipients = channel.recipients.filter((r) => r.id != user.id);
     if (recipients.length === 1) return recipients[0].avatar;
     else return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
 }

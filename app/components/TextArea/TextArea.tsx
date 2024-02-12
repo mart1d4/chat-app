@@ -1,17 +1,47 @@
 "use client";
 
+// @refresh reset
+
 import { useData, useLayers, useMention, useMessages, useSettings, useTooltip } from "@/lib/store";
-import { Editor, EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
-import { useState, useRef, useMemo, useEffect } from "react";
+import createMentionPlugin, { defaultSuggestionsFilter } from "@draft-js-plugins/mention";
+import { EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import createInlineToolbarPlugin from "@draft-js-plugins/inline-toolbar";
+import { Avatar, Icon, LoadingDots, UserMention } from "@components";
+import createLinkifyPlugin from "@draft-js-plugins/linkify";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { Icon, LoadingDots } from "@components";
 import { sanitizeString } from "@/lib/strings";
+import Editor from "@draft-js-plugins/editor";
 import styles from "./TextArea.module.css";
 import filetypeinfo from "magic-bytes.js";
 import { v4 as uuidv4 } from "uuid";
 import "draft-js/dist/Draft.css";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng"];
+
+function Entry(props) {
+    const { mention, theme, searchValue, isFocused, ...parentProps } = props;
+
+    return (
+        <div {...parentProps}>
+            <div className={styles.mentionContainer}>
+                <div>
+                    <div className={styles.avatar}>
+                        <Avatar
+                            size={24}
+                            src={mention.avatar}
+                            alt={mention.username}
+                            // status={mention.status}
+                        />
+                    </div>
+
+                    <div className={styles.displayName}>{mention.displayName}</div>
+                    <div className={styles.username}>{mention.username}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export const TextArea = ({ channel, setMessages, editing }: any) => {
     const setMessageAttachment = useMessages((state) => state.setAttachments);
@@ -42,6 +72,70 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     });
     const [message, setMessage] = useState("");
 
+    const editorRef = useRef(null);
+
+    const [suggestions, setSuggestions] = useState(
+        channel.recipients.map((r) => ({
+            name: `<@${r.id}>`,
+            ...r,
+        }))
+    );
+    const [open, setOpen] = useState(false);
+
+    const { MentionSuggestions, InlineToolbar, plugins } = useMemo(() => {
+        const mentionPlugin = createMentionPlugin({
+            entityMutability: "IMMUTABLE",
+            mentionTrigger: "@",
+            supportWhitespace: false,
+            mentionComponent: (mention) => {
+                return (
+                    <>
+                        <UserMention
+                            user={mention.mention}
+                            full
+                        />
+                        <span style={{ display: "none" }}>{mention.children}</span>
+                    </>
+                );
+            },
+        });
+
+        const linkifyPlugin = createLinkifyPlugin({
+            component: (props) => {
+                return (
+                    <span
+                        {...props}
+                        style={{ color: "var(--accent-light)" }}
+                    />
+                );
+            },
+        });
+
+        const inlineToolbarPlugin = createInlineToolbarPlugin();
+
+        return {
+            MentionSuggestions: mentionPlugin.MentionSuggestions,
+            InlineToolbar: inlineToolbarPlugin.InlineToolbar,
+            plugins: [mentionPlugin, linkifyPlugin, inlineToolbarPlugin],
+        };
+    }, []);
+
+    const onOpenChange = useCallback((open: boolean) => {
+        setOpen(open);
+    }, []);
+
+    const onSearchChange = useCallback(({ value }: { value: string }) => {
+        setSuggestions(
+            defaultSuggestionsFilter(
+                value,
+                channel.recipients.map((r) => ({
+                    name: `<@${r.id}>`,
+                    ...r,
+                }))
+            )
+        );
+    }, []);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +144,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     useEffect(() => {
         setMessage(editorState.getCurrentContent().getPlainText());
-    }, [editorState]);
+        console.log(editorState.getCurrentContent().getPlainText());
+    }, [editorState.getCurrentContent().getPlainText()]);
 
     useEffect(() => {
         if (!mention || editing) return;
@@ -110,12 +205,12 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         setMessageAttachment(channel.id, attachments);
     }, [attachments]);
 
-    useEffect(() => {
-        if (!edit || !editing) return;
+    // useEffect(() => {
+    //     if (!edit || !editing) return;
 
-        const input = textAreaRef.current;
-        if (input) input.innerText = edit?.content || "";
-    }, [edit, editing]);
+    //     const input = textAreaRef.current;
+    //     if (input) input.innerText = edit?.content || "";
+    // }, [edit, editing]);
 
     const sendMessage = async () => {
         let messageContent = sanitizeString(message);
@@ -182,22 +277,25 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                 ref={textAreaRef}
                 className={styles.textbox}
             >
+                {/* <InlineToolbar /> */}
+
                 <Editor
+                    editorKey="editor"
                     editorState={editorState}
                     onChange={setEditorState}
                     placeholder={
-                        (editing ? edit?.content?.length === 0 : message.length === 0)
-                            ? edit?.messageId && editing
-                                ? "Edit Message"
-                                : `Message ${
-                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
-                                  }${channel.name}`
-                            : ""
+                        edit?.messageId && editing
+                            ? "Edit Message"
+                            : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${
+                                  channel.name
+                              }`
                     }
                     spellCheck={true}
                     stripPastedStyles={true}
                     handleKeyCommand={handleKeyCommand}
                     keyBindingFn={myKeyBindingFn}
+                    plugins={plugins}
+                    ref={editorRef}
                 />
             </div>
         </div>
@@ -213,6 +311,26 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     className={styles.textArea}
                     style={{ marginBottom: "0" }}
                 >
+                    <MentionSuggestions
+                        open={open}
+                        onOpenChange={onOpenChange}
+                        suggestions={suggestions}
+                        onSearchChange={onSearchChange}
+                        onAddMention={() => {
+                            // get the mention object selected
+                        }}
+                        entryComponent={Entry}
+                        popoverContainer={({ children }) => (
+                            <div className={`${styles.mentionPopover} scrollbar`}>
+                                <div>
+                                    <h3>Members</h3>
+                                </div>
+
+                                {children}
+                            </div>
+                        )}
+                    />
+
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div className={styles.input}>
                             {textContainer}
@@ -253,6 +371,26 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     className={styles.textArea}
                     style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
+                    <MentionSuggestions
+                        open={open}
+                        onOpenChange={onOpenChange}
+                        suggestions={suggestions}
+                        onSearchChange={onSearchChange}
+                        onAddMention={() => {
+                            // get the mention object selected
+                        }}
+                        entryComponent={Entry}
+                        popoverContainer={({ children }) => (
+                            <div className={`${styles.mentionPopover} scrollbar`}>
+                                <div>
+                                    <h3>Members</h3>
+                                </div>
+
+                                {children}
+                            </div>
+                        )}
+                    />
+
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {attachments.length > 0 && (
                             <>
@@ -530,49 +668,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             </form>
         );
     }
-};
-
-const UserMention = ({ user, full }: { user: TCleanUser; full?: boolean }) => {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
-
-    return (
-        <span
-            className={full ? styles.mention : styles.inlineMention}
-            onClick={(e) => {
-                if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                setLayers({
-                    settings: {
-                        type: "USER_CARD",
-                        element: e.currentTarget,
-                        firstSide: "RIGHT",
-                        gap: 10,
-                    },
-                    content: {
-                        user: user,
-                    },
-                });
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (layers.MENU?.settings.element === e.currentTarget) return;
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: "USER",
-                        user: user,
-                    },
-                });
-            }}
-        >
-            {full && "@"}
-            {user.username}
-        </span>
-    );
 };
 
 const emojisPos = [
