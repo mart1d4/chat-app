@@ -68,4 +68,14 @@ export async function GET(req: Request): Promise<NextResponse> {
     //         }
     //     );
     // }
+
+    return NextResponse.json(
+        {
+            success: false,
+            message: "Something went wrong.",
+        },
+        {
+            status: 500,
+        }
+    );
 }

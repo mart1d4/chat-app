@@ -51,4 +51,14 @@ export async function GET(req: Request): Promise<NextResponse> {
     //         { status: 500 }
     //     );
     // }
+
+    return NextResponse.json(
+        {
+            success: false,
+            message: "Something went wrong.",
+        },
+        {
+            status: 500,
+        }
+    );
 }
