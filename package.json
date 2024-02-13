@@ -81,6 +81,7 @@
         "@types/node": "20.11.9",
         "@types/react": "18.2.48",
         "@types/uuid": "^9.0.8",
+        "kysely-codegen": "^0.11.0",
         "typescript": "5.3.3"
     }
 }

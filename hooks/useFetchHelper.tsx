@@ -118,8 +118,8 @@ export default function useFetchHelper() {
             return (
                 channel.recipients.length === recipients.length &&
                 channel.recipients
-                    .map((r) => r.id)
-                    .every((recipient: string) => recipients.includes(recipient)) &&
+                    .map((r) => r.id.toString())
+                    .every((id) => recipients.includes(id)) &&
                 (searchDM ? channel.type === 0 : true)
             );
         });
@@ -129,8 +129,8 @@ export default function useFetchHelper() {
         if (query === "CHANNEL_CREATE" && data && !skipCheck) {
             const channel =
                 data.recipients.length === 1
-                    ? channelExists([...data.recipients, user.id], true)
-                    : channelExists([...data.recipients, user.id], false);
+                    ? channelExists([...data.recipients, user.id.toString()], true)
+                    : channelExists([...data.recipients, user.id.toString()], false);
 
             if (channel) {
                 if (channel.type === 0) {
@@ -195,30 +195,31 @@ export default function useFetchHelper() {
         });
 
         if (response.status === 401) {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+            const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
             }).then((res) => res.json());
 
-            if (!response.token) throw new Error("[useFetchHelper] No token found");
-            setToken(response.token);
+            if (!tokenRes.token) {
+                throw new Error("[useFetchHelper] No token found");
+            } else {
+                setToken(tokenRes.token);
 
-            const { sendRequest: resend } = useFetchHelper();
-            const res: any = await resend({ query, params, data, skipCheck });
-            return res;
+                const newResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
+                    method: method,
+                    headers: headers,
+                    body: method !== "GET" ? body : undefined,
+                });
+
+                if (newResponse.status === 401) {
+                    throw new Error("[useFetchHelper] Unauthorized");
+                } else {
+                    const res = await newResponse.json();
+                    return res;
+                }
+            }
         } else {
             const res = await response.json();
-
-            if ((query === "CHANNEL_CREATE" || query === "ACCEPT_INVITE") && res.channelId) {
-                router.push(`/channels/me/${res.channelId}`);
-            } else if (query === "GUILD_CREATE" && res.channelId && res.guildId) {
-                router.push(`/channels/${res.guildId}/${res.channelId}`);
-            } else if (query === "GUILD_CHANNEL_CREATE" && res.channelId && res.guildId) {
-                router.push(`/channels/${res.guildId}/${res.channelId}`);
-            } else if (query === "CHANNEL_RECIPIENT_REMOVE" && res.channelId) {
-                router.refresh();
-            }
-
             return res;
         }
     };

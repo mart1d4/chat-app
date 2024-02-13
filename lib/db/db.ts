@@ -1,8 +1,8 @@
 import { PlanetScaleDialect } from "kysely-planetscale";
 import { Kysely, CamelCasePlugin } from "kysely";
-import { Database } from "./types";
+import { DB } from "db";
 
-export const db = new Kysely<Database>({
+export const db = new Kysely<DB>({
     dialect: new PlanetScaleDialect({
         host: process.env.PLANETSCALE_HOST,
         username: process.env.PLANETSCALE_USERNAME,

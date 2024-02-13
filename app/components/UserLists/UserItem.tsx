@@ -1,17 +1,16 @@
 "use client";
 
-import useContextHook from "@/hooks/useContextHook";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { useLayers, useTooltip } from "@/lib/store";
 import { ReactElement, useRef } from "react";
 import { translateCap } from "@/lib/strings";
-import { useRouter } from "next/navigation";
 import styles from "./UserItem.module.css";
 import { Avatar, Icon } from "@components";
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { UserTable } from "@/lib/db/types";
 
 type Props = {
     content: string;
-    user: any;
+    user: Partial<UserTable>;
 };
 
 export const UserItem = ({ content, user }: Props): ReactElement => {
@@ -23,8 +22,8 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
     return (
         <li
-            tabIndex={0}
             ref={liRef}
+            tabIndex={0}
             className={
                 layers.MENU?.content.refElement === liRef.current
                     ? styles.liContainer + " " + styles.active
@@ -95,6 +94,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                             status={content !== "pending" && content !== "blocked" && user.status}
                         />
                     </div>
+
                     <div className={styles.text}>
                         <div className={styles.usernames}>
                             <p>{user.displayName}</p>

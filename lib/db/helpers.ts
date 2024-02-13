@@ -1,5 +1,5 @@
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
-import { ChannelTable, GuildTable, MessageTable, UserTable } from "./types";
+import { Channels, Guilds, Messages, Users } from "./types";
 import { ExpressionBuilder, sql } from "kysely";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -7,7 +7,7 @@ import { db } from "./db";
 
 type id = string | number;
 
-export const selfUserSelect: (keyof UserTable)[] = [
+export const selfUserSelect: (keyof Users)[] = [
     "id",
     "username",
     "displayName",
@@ -21,7 +21,7 @@ export const selfUserSelect: (keyof UserTable)[] = [
     "createdAt",
 ];
 
-export const userSelect: (keyof UserTable)[] = [
+export const userSelect: (keyof Users)[] = [
     "id",
     "username",
     "displayName",
@@ -31,7 +31,7 @@ export const userSelect: (keyof UserTable)[] = [
     "accentColor",
 ];
 
-const messageSelect: (keyof MessageTable)[] = [
+const messageSelect: (keyof Messages)[] = [
     "id",
     "type",
     "content",
@@ -46,7 +46,7 @@ const messageSelect: (keyof MessageTable)[] = [
     "channelId",
 ];
 
-const channelSelect: (keyof ChannelTable)[] = [
+const channelSelect: (keyof Channels)[] = [
     "id",
     "type",
     "name",
@@ -56,7 +56,7 @@ const channelSelect: (keyof ChannelTable)[] = [
     "updatedAt",
 ];
 
-const guildSelect: (keyof GuildTable)[] = [
+const guildSelect: (keyof Guilds)[] = [
     "id",
     "name",
     "icon",
@@ -108,7 +108,7 @@ export function getRandomId() {
     return parseInt(result, 10);
 }
 
-export async function doesUserExist({ id, username, email }: Partial<UserTable>) {
+export async function doesUserExist({ id, username, email }: Partial<Users>) {
     if (!id && !username && !email) return false;
     let query = db.selectFrom("users").select("id");
 
@@ -129,7 +129,7 @@ export async function doesUserExist({ id, username, email }: Partial<UserTable>)
     }
 }
 
-export async function createUser(user: Partial<UserTable>) {
+export async function createUser(user: Partial<Users>) {
     if (!user.username || !user.password) {
         return null;
     }
@@ -169,10 +169,10 @@ export async function getUser({
     id?: id;
     username?: string;
     select?: {
-        [K in keyof UserTable]?: boolean;
+        [K in keyof Users]?: boolean;
     };
     throwOnNotFound?: boolean;
-}): Promise<Partial<UserTable> | NextResponse | null> {
+}): Promise<Partial<Users> | NextResponse | null> {
     const refreshToken = cookies().get("token")?.value;
 
     if (!id && !username && !refreshToken) {
