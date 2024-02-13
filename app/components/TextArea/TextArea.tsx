@@ -58,6 +58,34 @@ function Entry(props) {
     );
 }
 
+const mentionPlugin = createMentionPlugin({
+    entityMutability: "IMMUTABLE",
+    mentionTrigger: "@",
+    supportWhitespace: false,
+    mentionComponent: (mention) => (
+        <UserMention
+            user={mention.mention}
+            full
+            editor
+        />
+    ),
+});
+
+const linkifyPlugin = createLinkifyPlugin({
+    component: (props) => (
+        <span
+            {...props}
+            style={{ color: "var(--accent-light)" }}
+        />
+    ),
+});
+
+const inlineToolbarPlugin = createInlineToolbarPlugin();
+
+const plugins = [mentionPlugin, linkifyPlugin, inlineToolbarPlugin];
+const InlineToolbar = inlineToolbarPlugin.InlineToolbar;
+const MentionSuggestions = mentionPlugin.MentionSuggestions;
+
 export const TextArea = ({ channel, setMessages, editing }: any) => {
     const setMessageAttachment = useMessages((state) => state.setAttachments);
     const setContent = useMessages((state) => state.setContent);
@@ -103,38 +131,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         }))
     );
     const [open, setOpen] = useState(false);
-
-    const { MentionSuggestions, InlineToolbar, plugins } = useMemo(() => {
-        const mentionPlugin = createMentionPlugin({
-            entityMutability: "IMMUTABLE",
-            mentionTrigger: "@",
-            supportWhitespace: false,
-            mentionComponent: (mention) => (
-                <UserMention
-                    user={mention.mention}
-                    full
-                    editor
-                />
-            ),
-        });
-
-        const linkifyPlugin = createLinkifyPlugin({
-            component: (props) => (
-                <span
-                    {...props}
-                    style={{ color: "var(--accent-light)" }}
-                />
-            ),
-        });
-
-        const inlineToolbarPlugin = createInlineToolbarPlugin();
-
-        return {
-            MentionSuggestions: mentionPlugin.MentionSuggestions,
-            InlineToolbar: inlineToolbarPlugin.InlineToolbar,
-            plugins: [mentionPlugin, linkifyPlugin, inlineToolbarPlugin],
-        };
-    }, []);
 
     const onOpenChange = useCallback((open: boolean) => {
         setOpen(open);
@@ -317,7 +313,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     });
                 }}
             >
-                {/* <InlineToolbar /> */}
+                <InlineToolbar />
 
                 <Editor
                     editorKey="editor"
