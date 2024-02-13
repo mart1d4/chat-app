@@ -748,8 +748,6 @@ export async function getMessages(channelId: id, limit: number = 50, pinned: boo
             .limit(limit)
             .execute();
 
-        console.log(messages);
-
         return messages || [];
     } catch (error) {
         console.error(error);

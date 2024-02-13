@@ -118,16 +118,6 @@ export default function Content({
                 <div
                     ref={scrollContainer}
                     className={styles.messagesScrollableContainer + " scrollbar"}
-                    onScroll={(e) => {
-                        if (
-                            e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
-                            e.currentTarget.scrollHeight
-                        ) {
-                            if (!isAtBottom) setIsAtBottom(true);
-                        } else if (isAtBottom) {
-                            setIsAtBottom(false);
-                        }
-                    }}
                 >
                     <div
                         ref={scrollContainerChild}

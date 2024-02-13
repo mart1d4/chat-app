@@ -1,10 +1,18 @@
-import { getGuild, getGuildChannels, getUser, isUserInGuild, getMessages } from "@/lib/db/helpers";
+import {
+    getGuild,
+    getGuildChannels,
+    getUser,
+    isUserInGuild,
+    getMessages,
+    getGuildMembers,
+} from "@/lib/db/helpers";
 import { GuildChannels, AppHeader, MemberList, ClickLayer } from "@components";
 import styles from "../../me/FriendsPage.module.css";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { db } from "@/lib/db/db";
 import Content from "./Content";
+import { getFullChannel } from "@/lib/strings";
 
 export default async function GuildChannelPage({
     params,
@@ -29,6 +37,8 @@ export default async function GuildChannelPage({
         redirect(`/channels/${guildId}`);
     }
 
+    const members = await getGuildMembers(guildId);
+
     return (
         <>
             <GuildChannels
@@ -46,18 +56,29 @@ export default async function GuildChannelPage({
                             fallback={
                                 <Content
                                     guild={guild}
-                                    channel={channel}
+                                    channel={{
+                                        ...channel,
+                                        recipients: members,
+                                    }}
                                     messagesLoading={true}
                                 />
                             }
                         >
                             <FetchMessage
                                 guild={guild}
-                                channel={channel}
+                                channel={{
+                                    ...channel,
+                                    recipients: members,
+                                }}
                             />
                         </Suspense>
 
-                        <MemberList channel={channel} />
+                        <MemberList
+                            channel={{
+                                ...channel,
+                                recipients: members,
+                            }}
+                        />
                     </div>
                 </div>
             </ClickLayer>

@@ -677,7 +677,11 @@
     transition: all 0.05s ease-out;
 }
 
-.mention:hover {
+.mention.editor {
+    cursor: default;
+}
+
+.mention:hover:not(.editor) {
     text-decoration: underline;
     color: var(--foreground-1);
     background-color: var(--accent-1);

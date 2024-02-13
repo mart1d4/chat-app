@@ -2,9 +2,24 @@
 
 // @refresh reset
 
-import { useData, useLayers, useMention, useMessages, useSettings, useTooltip } from "@/lib/store";
-import createMentionPlugin, { defaultSuggestionsFilter } from "@draft-js-plugins/mention";
-import { EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
+import {
+    useData,
+    useLayers,
+    useMention,
+    useMessages,
+    useSettings,
+    useTooltip,
+    useWidthThresholds,
+} from "@/lib/store";
+import createMentionPlugin from "@draft-js-plugins/mention";
+import {
+    EditorState,
+    Modifier,
+    ContentState,
+    getDefaultKeyBinding,
+    convertToRaw,
+    convertFromRaw,
+} from "draft-js";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import createInlineToolbarPlugin from "@draft-js-plugins/inline-toolbar";
 import { Avatar, Icon, LoadingDots, UserMention } from "@components";
@@ -59,6 +74,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
+    const width562 = useWidthThresholds((state) => state.widthThresholds)[562];
+
     const reply = replies.find((r) => r.channelId === channel.id);
     const draft = drafts.find((d) => d.channelId === channel.id);
     const edit = edits.find((e) => e.channelId === channel.id);
@@ -66,9 +83,14 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const [attachments, setAttachments] = useState(draft?.attachments || []);
     const [usersTyping, setUsersTyping] = useState([]);
     const [editorState, setEditorState] = useState(() => {
-        return draft?.content
-            ? EditorState.createWithContent(draft.content)
-            : EditorState.createEmpty();
+        return EditorState.createEmpty();
+        if (editing && edit?.content) {
+            return EditorState.createWithContent(convertFromRaw(JSON.parse(edit?.content)));
+        } else if (draft?.content && draft.content.length > 0) {
+            return EditorState.createWithContent(convertFromRaw(JSON.parse(draft.content)));
+        } else {
+            return EditorState.createEmpty();
+        }
     });
     const [message, setMessage] = useState("");
 
@@ -87,28 +109,22 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             entityMutability: "IMMUTABLE",
             mentionTrigger: "@",
             supportWhitespace: false,
-            mentionComponent: (mention) => {
-                return (
-                    <>
-                        <UserMention
-                            user={mention.mention}
-                            full
-                        />
-                        <span style={{ display: "none" }}>{mention.children}</span>
-                    </>
-                );
-            },
+            mentionComponent: (mention) => (
+                <UserMention
+                    user={mention.mention}
+                    full
+                    editor
+                />
+            ),
         });
 
         const linkifyPlugin = createLinkifyPlugin({
-            component: (props) => {
-                return (
-                    <span
-                        {...props}
-                        style={{ color: "var(--accent-light)" }}
-                    />
-                );
-            },
+            component: (props) => (
+                <span
+                    {...props}
+                    style={{ color: "var(--accent-light)" }}
+                />
+            ),
         });
 
         const inlineToolbarPlugin = createInlineToolbarPlugin();
@@ -126,13 +142,12 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     const onSearchChange = useCallback(({ value }: { value: string }) => {
         setSuggestions(
-            defaultSuggestionsFilter(
-                value,
-                channel.recipients.map((r) => ({
+            channel.recipients
+                .map((r) => ({
                     name: `<@${r.id}>`,
                     ...r,
                 }))
-            )
+                .filter((s) => s.username.toLowerCase().includes(value.toLowerCase()))
         );
     }, []);
 
@@ -144,8 +159,20 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
     useEffect(() => {
         setMessage(editorState.getCurrentContent().getPlainText());
-        console.log(editorState.getCurrentContent().getPlainText());
     }, [editorState.getCurrentContent().getPlainText()]);
+
+    // useEffect(() => {
+    //     if (editing) {
+    //         setEdit(
+    //             channel.id,
+    //             edit?.messageId,
+    //             null,
+    //             JSON.stringify(convertToRaw(editorState.getCurrentContent()))
+    //         );
+    //     } else {
+    //         setContent(channel.id, JSON.stringify(convertToRaw(editorState.getCurrentContent())));
+    //     }
+    // }, [editorState]);
 
     useEffect(() => {
         if (!mention || editing) return;
@@ -175,18 +202,17 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
         }
         setMention(null);
-    }, [mention, editing]);
+    }, [mention]);
 
     useEffect(() => {
         if (edit || reply) {
-            const input = textAreaRef.current;
-            if (input) input.focus();
+            editorRef.current.focus();
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setEdit(channel.id, null);
-                setReply(channel.id, null, "");
+                setReply(channel.id, null, null);
             }
         };
 
@@ -198,19 +224,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     }, [edit, reply]);
 
     useEffect(() => {
-        setContent(channel.id, message);
-    }, [message]);
-
-    useEffect(() => {
         setMessageAttachment(channel.id, attachments);
     }, [attachments]);
-
-    // useEffect(() => {
-    //     if (!edit || !editing) return;
-
-    //     const input = textAreaRef.current;
-    //     if (input) input.innerText = edit?.content || "";
-    // }, [edit, editing]);
 
     const sendMessage = async () => {
         let messageContent = sanitizeString(message);
@@ -255,7 +270,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     };
 
     function myKeyBindingFn(e: SyntheticKeyboardEvent): string | null {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && width562) {
             return "message-send";
         }
         return getDefaultKeyBinding(e);
@@ -268,6 +283,17 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         return "not-handled";
     }
 
+    function pasteText(text: string) {
+        const newEditor = Modifier.insertText(
+            editorState.getCurrentContent(),
+            editorState.getSelection(),
+            text
+        );
+
+        setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
+        EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
+    }
+
     const textContainer = (
         <div
             className={styles.textContainer}
@@ -276,6 +302,20 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             <div
                 ref={textAreaRef}
                 className={styles.textbox}
+                onContextMenu={(e) => {
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            event: e,
+                        },
+                        content: {
+                            type: "INPUT",
+                            input: true,
+                            sendButton: true,
+                            pasteText,
+                        },
+                    });
+                }}
             >
                 {/* <InlineToolbar /> */}
 
@@ -284,7 +324,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     editorState={editorState}
                     onChange={setEditorState}
                     placeholder={
-                        edit?.messageId && editing
+                        editing
                             ? "Edit Message"
                             : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${
                                   channel.name
@@ -554,7 +594,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                                 <EmojiPicker />
 
-                                {settings.sendButton && (
+                                {(settings.sendButton || !width562) && (
                                     <button
                                         className={`${styles.sendButton} ${
                                             !message.length && !attachments.length
@@ -591,7 +631,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 <path
                                                     d="M8.2738 8.49222L1.99997 9.09877L0.349029 14.3788C0.250591 14.691 0.347154 15.0322 0.595581 15.246C0.843069 15.4597 1.19464 15.5047 1.48903 15.3613L15.2384 8.7032C15.5075 8.57195 15.6781 8.29914 15.6781 8.00007C15.6781 7.70101 15.5074 7.4282 15.2384 7.29694L1.49839 0.634063C1.20401 0.490625 0.852453 0.535625 0.604941 0.749376C0.356493 0.963128 0.259941 1.30344 0.358389 1.61563L2.00932 6.89563L8.27093 7.50312C8.52405 7.52843 8.71718 7.74125 8.71718 7.99531C8.71718 8.24938 8.52406 8.46218 8.27093 8.4875L8.2738 8.49222Z"
                                                     fill="currentColor"
-                                                ></path>
+                                                />
                                             </svg>
                                         </div>
                                     </button>

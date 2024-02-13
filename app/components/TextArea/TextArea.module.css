@@ -559,8 +559,9 @@
 }
 
 @media screen and (max-width: 562px) {
-    .sendButton {
-        display: none;
+    .toolsContainer > :nth-child(1),
+    .toolsContainer > :nth-child(2) {
+        display: none !important;
     }
 }
 
