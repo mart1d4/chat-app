@@ -849,3 +849,13 @@ export const useWidthThresholds = create<WidthThresholdsState>()((set) => ({
             },
         })),
 }));
+
+interface PusherState {
+    pusher: any;
+    setPusher: (pusher: any) => void;
+}
+
+export const usePusher = create<PusherState>((set) => ({
+    pusher: null,
+    setPusher: (pusher) => set(() => ({ pusher })),
+}));

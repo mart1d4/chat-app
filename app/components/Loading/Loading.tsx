@@ -1,57 +1,10 @@
 "use client";
 
-import { Guild, User, Channel, Message, UserTable, ChannelTable, GuildTable } from "@/lib/db/types";
-import { usePathname, useRouter } from "next/navigation";
-import { ReactElement, useEffect, useRef } from "react";
-import { useData, useNotifications, useWidthThresholds } from "@/lib/store";
-import pusher from "@/lib/pusher/client-connection";
+import { useData, useNotifications, usePusher, useWidthThresholds } from "@/lib/store";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import styles from "./Loading.module.css";
-
-type TRelationData = {
-    type: "FRIEND_ADDED" | "FRIEND_REMOVED" | "REQUEST_SENT";
-    sender: Partial<User>;
-    receiver: Partial<User>;
-};
-
-type TChannelData = {
-    type: "CHANNEL_ADDED" | "CHANNEL_REMOVED" | "RECIPIENT_ADDED" | "RECIPIENT_REMOVED";
-    channel: Channel;
-    channelId?: number;
-    recipientId?: number;
-    recipientIds?: number[];
-};
-
-type TGuildData = {
-    type: "GUILD_ADDED" | "GUILD_DELETED";
-    guild: Guild;
-    guildId?: number;
-    channelId?: number;
-    channel?: Channel;
-};
-
-type TMessageData = {
-    channelId: number;
-    message: Message;
-    notSentByAuthor?: boolean;
-};
-
-type TUserUpdateData = {
-    user: Partial<User>;
-};
-
-type Props = {
-    children: ReactElement;
-    data: {
-        user: Partial<UserTable>;
-        friends: Partial<UserTable>[];
-        blocked: Partial<UserTable>[];
-        blockedBy: Partial<UserTable>[];
-        received: Partial<UserTable>[];
-        sent: Partial<UserTable>[];
-        channels: Partial<ChannelTable>[];
-        guilds: Partial<GuildTable>[];
-    };
-};
+import Pusher from "pusher-js";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -79,6 +32,9 @@ export function Loading({ children, data }: Props) {
 
     const setWidthThreshold = useWidthThresholds((state) => state.setWidthThreshold);
     const widthThresholds = useWidthThresholds((state) => state.widthThresholds);
+
+    const setPusher = usePusher((state) => state.setPusher);
+    const pusher = usePusher((state) => state.pusher);
 
     const addPing = useNotifications((state) => state.addPing);
 
@@ -154,30 +110,82 @@ export function Loading({ children, data }: Props) {
     }, []);
 
     useEffect(() => {
-        console.log("Pathname changed", pathname);
+        if (!token) return;
 
-        pusher.bind("message", (data) => {
-            console.log("Received message");
+        const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+        const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
 
-            if (channels.find((channel) => channel.id == data.channelId)) {
-                if (!pathname.includes(data.channelId)) {
-                    // Play sound
-                    const audio = new Audio("/assets/sounds/ping.mp3");
-                    audio.volume = 0.5;
-                    audio.play();
-                    addPing(data.channelId);
-                }
+        if (!pusherKey || !pusherCluster) {
+            throw new Error("Pusher key or cluster not found.");
+        }
 
-                if (channels[0].id != data.channelId) {
-                    moveChannelUp(data.channelId);
-                }
-            }
+        const pusher: Pusher = new Pusher(pusherKey, {
+            cluster: pusherCluster,
+            userAuthentication: {
+                endpoint: `/auth/pusher`,
+                transport: "ajax",
+                params: {},
+                headers: {},
+            },
+        });
+
+        pusher.bind("pusher:signin_success", (data) => {
+            console.log("Subscription succeeded", data);
+        });
+
+        pusher.bind("pusher:error", (data) => {
+            console.log("Subscription error", data);
+        });
+
+        pusher.signin();
+        setPusher(pusher);
+
+        return () => {
+            pusher.disconnect();
+        };
+    }, [token]);
+
+    useEffect(() => {
+        if (!pusher) return;
+
+        const channel = pusher.subscribe("private-user-" + user.id);
+
+        console.log("Fucking shit subscribed");
+
+        channel.bind("message", (data) => {
+            console.log("Received message", data);
         });
 
         return () => {
-            pusher.unbind("message");
+            pusher.unsubscribe("private-user-" + user.id);
         };
-    }, [channels, pathname]);
+    }, [pusher]);
+
+    // useEffect(() => {
+    //     console.log("Pathname changed", pathname);
+
+    //     pusher.bind("message", (data) => {
+    //         console.log("Received message");
+
+    //         if (channels.find((channel) => channel.id == data.channelId)) {
+    //             if (!pathname.includes(data.channelId)) {
+    //                 // Play sound
+    //                 const audio = new Audio("/assets/sounds/ping.mp3");
+    //                 audio.volume = 0.5;
+    //                 audio.play();
+    //                 addPing(data.channelId);
+    //             }
+
+    //             if (channels[0].id != data.channelId) {
+    //                 moveChannelUp(data.channelId);
+    //             }
+    //         }
+    //     });
+
+    //     return () => {
+    //         pusher.unbind("message");
+    //     };
+    // }, [channels, pathname]);
 
     return (
         <div

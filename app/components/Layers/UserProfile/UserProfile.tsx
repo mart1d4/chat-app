@@ -266,7 +266,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "REMOVE_FRIEND",
-                                                        params: {
+                                                        data: {
                                                             username: user.username,
                                                         },
                                                     })

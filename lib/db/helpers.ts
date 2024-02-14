@@ -481,6 +481,8 @@ export async function getGuilds(userId: id) {
 }
 
 export async function getGuild(guildId: id) {
+    if (!guildId) return null;
+
     try {
         const guild = await db
             .selectFrom("guilds")
@@ -496,6 +498,8 @@ export async function getGuild(guildId: id) {
 }
 
 export async function getGuildChannels(guildId: id) {
+    if (!guildId) return [];
+
     try {
         const channels = await db
             .selectFrom("channels")
@@ -657,6 +661,8 @@ export async function isUserInChannel(userId: id, channelId: id) {
 }
 
 export async function isUserInGuild(userId: id, guildId: id) {
+    if (!userId || !guildId) return false;
+
     try {
         const guild = await db
             .selectFrom("guildmembers")

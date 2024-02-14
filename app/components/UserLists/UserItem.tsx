@@ -234,7 +234,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                                     e.stopPropagation();
                                     sendRequest({
                                         query: "REMOVE_FRIEND",
-                                        params: {
+                                        data: {
                                             username: user.username,
                                         },
                                     });

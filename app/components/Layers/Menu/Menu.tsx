@@ -1005,7 +1005,7 @@ export function Menu({ content }: { content: any }) {
                     func: () =>
                         sendRequest({
                             query: "REMOVE_FRIEND",
-                            params: {
+                            data: {
                                 username: user.username,
                             },
                         }),
@@ -1058,7 +1058,7 @@ export function Menu({ content }: { content: any }) {
                                 userProps?.sentRequest || userProps?.isFriend
                                     ? sendRequest({
                                           query: "REMOVE_FRIEND",
-                                          params: {
+                                          data: {
                                               username: user.username,
                                           },
                                       })
@@ -1286,7 +1286,7 @@ export function Menu({ content }: { content: any }) {
                                 userProps?.sentRequest || userProps?.isFriend
                                     ? sendRequest({
                                           query: "REMOVE_FRIEND",
-                                          params: { username: user.username },
+                                          data: { username: user.username },
                                       })
                                     : sendRequest({
                                           query: "ADD_FRIEND",
@@ -1529,7 +1529,7 @@ export function Menu({ content }: { content: any }) {
                             userProps?.sentRequest || userProps?.isFriend
                                 ? sendRequest({
                                       query: "REMOVE_FRIEND",
-                                      params: { username: user.username },
+                                      data: { username: user.username },
                                   })
                                 : sendRequest({
                                       query: "ADD_FRIEND",
