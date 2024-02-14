@@ -107,10 +107,11 @@ const methods = {
 
 export default function useFetchHelper() {
     const setLayers = useLayers((state) => state.setLayers);
-    const user = useData((state) => state.user) as TUser;
     const setToken = useData((state) => state.setToken);
     const channels = useData((state) => state.channels);
     const token = useData((state) => state.token);
+    const user = useData((state) => state.user);
+
     const router = useRouter();
 
     const channelExists = (recipients: string[], searchDM: boolean) => {
@@ -126,6 +127,8 @@ export default function useFetchHelper() {
     };
 
     const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
+        // If user wants to create a channel that already exists,
+        // prevent it if it's a DM, or ask confirmation if it's a group DM
         if (query === "CHANNEL_CREATE" && data && !skipCheck) {
             const channel =
                 data.recipients.length === 1

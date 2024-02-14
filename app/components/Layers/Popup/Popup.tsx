@@ -64,6 +64,7 @@ export function Popup({ content, friends, element }: any) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
+    const addGuild = useData((state) => state.addGuild);
     const { sendRequest } = useFetchHelper();
     const { logout } = useLogout();
     const router = useRouter();
@@ -272,14 +273,19 @@ export function Popup({ content, friends, element }: any) {
 
             if (!response.success) {
                 return alert(response.message ?? "Something went wrong. Try again later.");
-            }
+            } else {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
 
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
+                if (response.guild) {
+                    addGuild(response.guild);
+                    router.push(`/channels/${response.guild.id}`);
+                }
+            }
         } catch (err) {
             console.error(err);
         }

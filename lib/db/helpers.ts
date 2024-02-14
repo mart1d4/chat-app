@@ -64,6 +64,7 @@ const guildSelect: (keyof Guilds)[] = [
     "description",
     "members",
     "systemChannelId",
+    "createdAt",
 ];
 
 const avatars = [
@@ -471,6 +472,7 @@ export async function getGuilds(userId: id) {
             )
             .select(guildSelect)
             .where("guildmembers.userId", "=", userId)
+            .orderBy("createdAt", "desc")
             .execute();
 
         return guilds || [];

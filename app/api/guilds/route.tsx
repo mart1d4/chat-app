@@ -1,5 +1,5 @@
 import { defaultPermissions } from "@/lib/permissions/data";
-import { getRandomId } from "@/lib/db/helpers";
+import { getGuild, getRandomId } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
-        const guild = await db
+        await db
             .insertInto("guilds")
             .values({
                 id: guildId,
@@ -107,12 +107,13 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
+        const guild = await getGuild(guildId);
+
         return NextResponse.json(
             {
                 success: true,
                 message: "Guild created.",
-                guildId: guildId,
-                channelId: textChannelId,
+                guild: guild,
             },
             { status: 200 }
         );

@@ -3,11 +3,9 @@
 "use client";
 
 import { useData, useLayers, useNotifications, useUrls } from "@/lib/store";
-import { ChannelTable, MessageTable, UserTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
-import pusher from "@/lib/pusher/client-connection";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Channels.module.css";
 import Image from "next/image";
@@ -46,24 +44,24 @@ const Content = ({
         }
     }, []);
 
-    useEffect(() => {
-        pusher.bind("message", (data) => {
-            if (data.channelId == channel.id && data.message.author.id != user.id) {
-                setMessages((prev) => [...prev, data.message]);
-            }
-        });
+    // useEffect(() => {
+    //     pusher.bind("message", (data) => {
+    //         if (data.channelId == channel.id && data.message.author.id != user.id) {
+    //             setMessages((prev) => [...prev, data.message]);
+    //         }
+    //     });
 
-        pusher.bind("message-deleted", (data) => {
-            if (data.channelId == channel.id) {
-                setMessages((prev) => prev.filter((m) => m.id != data.messageId));
-            }
-        });
+    //     pusher.bind("message-deleted", (data) => {
+    //         if (data.channelId == channel.id) {
+    //             setMessages((prev) => prev.filter((m) => m.id != data.messageId));
+    //         }
+    //     });
 
-        return () => {
-            pusher.unbind("message");
-            pusher.unbind("message-delete");
-        };
-    }, []);
+    //     return () => {
+    //         pusher.unbind("message");
+    //         pusher.unbind("message-delete");
+    //     };
+    // }, []);
 
     const scrollContainer = useCallback(
         (node: HTMLDivElement) => {

@@ -122,7 +122,7 @@ export function Loading({ children, data }: Props) {
         const pusher: Pusher = new Pusher(pusherKey, {
             cluster: pusherCluster,
             userAuthentication: {
-                endpoint: `/auth/pusher`,
+                endpoint: `${apiUrl}/auth/pusher`,
                 transport: "ajax",
                 params: {},
                 headers: {},

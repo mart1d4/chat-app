@@ -1,9 +1,12 @@
 import pusher from "@/lib/pusher/server-connection";
 import { getUser } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
+import { catchError } from "@/lib/api";
 
 export async function POST(req: Request) {
-    const { socketId, channel } = await req.json();
+    const data = await req.json();
+
+    console.log(data);
 
     try {
         const user = await getUser({});
@@ -18,15 +21,17 @@ export async function POST(req: Request) {
             );
         }
 
-        const response = pusher.authorizeChannel(socketId, channel, user);
+        const userObj = {
+            user_id: user.id,
+            user_info: {
+                name: user.username,
+            },
+        };
 
-        return NextResponse.json({
-            success: true,
-            message: "User authorized",
-            ...response,
-            channel_data: JSON.stringify(user),
-        });
-    } catch (e) {
-        return new Response("Unauthorized", { status: 401 });
+        const response = pusher.authorizeChannel(socketId, channel, userObj);
+
+        return NextResponse.json(response, { status: 200 });
+    } catch (error) {
+        return catchError(req, error);
     }
 }

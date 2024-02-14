@@ -1,10 +1,8 @@
 "use client";
 
-import { ChannelTable, GuildTable, MessageTable } from "@/lib/db/types";
 import { Message, TextArea, MessageSk, Icon } from "@components";
 import { useState, useEffect, useCallback } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
-import pusher from "@/lib/pusher/client-connection";
 import { useData, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 import Link from "next/link";
@@ -36,24 +34,24 @@ export default function Content({
         setGuildUrl(guild.id, channel.id);
     }, []);
 
-    useEffect(() => {
-        pusher.bind("message", (data) => {
-            if (data.channelId == channel.id && data.message.author.id != user.id) {
-                setMessages((prev) => [...prev, data.message]);
-            }
-        });
+    // useEffect(() => {
+    //     pusher.bind("message", (data) => {
+    //         if (data.channelId == channel.id && data.message.author.id != user.id) {
+    //             setMessages((prev) => [...prev, data.message]);
+    //         }
+    //     });
 
-        pusher.bind("message-deleted", (data) => {
-            if (data.channelId == channel.id) {
-                setMessages((prev) => prev.filter((m) => m.id != data.messageId));
-            }
-        });
+    //     pusher.bind("message-deleted", (data) => {
+    //         if (data.channelId == channel.id) {
+    //             setMessages((prev) => prev.filter((m) => m.id != data.messageId));
+    //         }
+    //     });
 
-        return () => {
-            pusher.unbind("message");
-            pusher.unbind("message-delete");
-        };
-    }, []);
+    //     return () => {
+    //         pusher.unbind("message");
+    //         pusher.unbind("message-delete");
+    //     };
+    // }, []);
 
     const scrollContainer = useCallback(
         (node: HTMLDivElement) => {
