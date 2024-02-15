@@ -1,4 +1,4 @@
-import { createUser } from "@/lib/db/helpers";
+import { createUser, getUser } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 
@@ -28,6 +28,18 @@ export async function GET(req: Request): Promise<NextResponse> {
 
 export async function POST(req: Request): Promise<NextResponse> {
     try {
+        const user = await getUser({ select: { id: true, system: true } });
+
+        if (!user.system) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Permission denied.",
+                },
+                { status: 404 }
+            );
+        }
+
         await createUser({
             username: Math.random().toString(36).substring(7),
             password: "test",

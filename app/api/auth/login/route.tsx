@@ -24,6 +24,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             select: {
                 username: true,
                 password: true,
+                refreshTokens: true,
             },
         });
 
@@ -62,19 +63,37 @@ export async function POST(req: Request): Promise<NextResponse> {
 
             const tokenObject = {
                 token: refreshToken,
+                // In 30 days
                 expires: Date.now() + 2592000000,
             };
 
-            // Save refresh token to database
+            console.log("user.refreshTokens", user.refreshTokens);
+
+            const newTokens = [
+                ...user.refreshTokens.filter(
+                    (token: { expires: number }) => token.expires > Date.now()
+                ),
+                tokenObject,
+            ];
+
             await db
                 .updateTable("users")
                 .set({
-                    refreshTokens: sql`JSON_ARRAY_APPEND(refresh_tokens, '$', CAST(${JSON.stringify(
-                        tokenObject
-                    )} AS JSON))`,
+                    refreshTokens: sql`CAST(${JSON.stringify(newTokens)} AS JSON)`,
                 })
-                .where("id", "=", user.id as number)
+                .where("id", "=", user.id)
                 .executeTakeFirst();
+
+            // Save refresh token to database
+            // await db
+            //     .updateTable("users")
+            //     .set({
+            //         refreshTokens: sql`JSON_ARRAY_APPEND(refresh_tokens, '$', CAST(${JSON.stringify(
+            //             tokenObject
+            //         )} AS JSON))`,
+            //     })
+            //     .where("id", "=", user.id as number)
+            //     .executeTakeFirst();
 
             return NextResponse.json(
                 {
