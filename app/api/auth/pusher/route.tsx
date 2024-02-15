@@ -3,10 +3,9 @@ import { getUser } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import { catchError } from "@/lib/api";
 
-export async function POST(req: Request) {
-    const data = await req.json();
-
-    console.log(data);
+export async function POST(req: Request): Promise<NextResponse> {
+    // Triggering error
+    console.log(await req.json());
 
     try {
         const user = await getUser({});

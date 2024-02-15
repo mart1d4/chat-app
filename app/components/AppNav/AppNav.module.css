@@ -67,6 +67,11 @@
     transition: all 0.2s ease-in-out;
 }
 
+.wrapper:hover img,
+.active img {
+    border-radius: 33%;
+}
+
 .wrapper:active {
     transform: translateY(1px);
 }
