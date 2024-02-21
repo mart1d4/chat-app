@@ -1,5 +1,6 @@
 import { createUser, getUser } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
 export async function GET(req: Request): Promise<NextResponse> {
@@ -15,14 +16,7 @@ export async function GET(req: Request): Promise<NextResponse> {
             { status: 201 }
         );
     } catch (error) {
-        console.error(`[TEST] ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
@@ -36,7 +30,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     success: false,
                     message: "Permission denied.",
                 },
-                { status: 404 }
+                { status: 401 }
             );
         }
 

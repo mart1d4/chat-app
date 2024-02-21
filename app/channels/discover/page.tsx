@@ -4,9 +4,9 @@ import styles from "./Discover.module.css";
 import { useState } from "react";
 
 export default function DiscoverPage() {
-    const [state, setState] = useState(null);
+    const [state, setState] = useState({});
     const [users, setUsers] = useState([]);
-    const [time, setTime] = useState(null);
+    const [time, setTime] = useState(0);
 
     const postData = async () => {
         const res = await fetch("/api/test", {
@@ -17,7 +17,7 @@ export default function DiscoverPage() {
         });
 
         const json = await res.json();
-        setState(json);
+        setState(json || {});
     };
 
     const fetchData = async () => {
@@ -35,7 +35,7 @@ export default function DiscoverPage() {
         setTime(Math.round(end - start));
 
         const json = await res.json();
-        setUsers(json.users);
+        setUsers(json.users || []);
     };
 
     return (
@@ -89,7 +89,7 @@ export default function DiscoverPage() {
                 <button
                     className="button red"
                     onClick={() => {
-                        setState(null);
+                        setState({});
                         setUsers([]);
                     }}
                 >
@@ -101,7 +101,7 @@ export default function DiscoverPage() {
                 {time && <div>Time taken: {time}ms</div>}
 
                 <div>
-                    {Object.keys(state || {}).map((key) => (
+                    {Object.keys(state).map((key) => (
                         <div key={key}>
                             {key}: {state[key]}
                         </div>

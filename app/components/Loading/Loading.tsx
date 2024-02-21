@@ -145,8 +145,12 @@ export function Loading({ children, data }: Props) {
         };
     }, [token]);
 
+    const expires = 1709040449540;
+    const date = new Date(expires);
+    console.log("Date", date);
+
     useEffect(() => {
-        if (!pusher) return;
+        if (!pusher || !user) return;
 
         const channel = pusher.subscribe("private-user-" + user.id);
 
@@ -159,7 +163,7 @@ export function Loading({ children, data }: Props) {
         return () => {
             pusher.unsubscribe("private-user-" + user.id);
         };
-    }, [pusher]);
+    }, [pusher, user]);
 
     // useEffect(() => {
     //     console.log("Pathname changed", pathname);

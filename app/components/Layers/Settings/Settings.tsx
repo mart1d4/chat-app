@@ -22,11 +22,6 @@ const avatars = [
     "51073721-c1b9-4d47-a2f3-34f0fbb1c0a8",
 ];
 
-const getRandomAvatar = (): string => {
-    const index = Math.floor(Math.random() * avatars.length);
-    return avatars[index];
-};
-
 export function Settings() {
     const [activeTab, setActiveTab] = useState<string>("My Account");
     const [minified, setMinified] = useState<boolean>(false);
@@ -594,7 +589,7 @@ function Profiles() {
             displayName !== user.displayName ||
             primaryColor !== user.primaryColor ||
             accentColor !== user.accentColor ||
-            description !== (user.description || "")
+            description !== user.description
         );
     };
 
@@ -918,7 +913,7 @@ function Profiles() {
                                 {!avatars.includes(typeof avatar === "string" ? avatar : "") && (
                                     <button
                                         className="button underline"
-                                        onClick={() => setAvatar(getRandomAvatar())}
+                                        onClick={() => setAvatar(null)}
                                     >
                                         Remove Avatar
                                     </button>
@@ -939,8 +934,8 @@ function Profiles() {
 
                                 {banner && (
                                     <button
-                                        className="underline"
-                                        onClick={() => setBanner(undefined)}
+                                        className="button underline"
+                                        onClick={() => setBanner(null)}
                                     >
                                         Remove Banner
                                     </button>

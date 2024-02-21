@@ -3,22 +3,14 @@ import { getUser } from "@/lib/db/helpers";
 import { NextResponse } from "next/server";
 import { catchError } from "@/lib/api";
 
-export async function POST(req: Request): Promise<NextResponse> {
-    // Triggering error
+export async function POST(req: Request) {
+    // req.json() triggering error
     console.log(await req.json());
 
-    try {
-        const user = await getUser({});
+    const { socketId, channel } = await req.json();
 
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found",
-                },
-                { status: 403 }
-            );
-        }
+    try {
+        const user = await getUser({ throwOnNotFound: true });
 
         const userObj = {
             user_id: user.id,

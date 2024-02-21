@@ -1,22 +1,23 @@
 import {
     areFriends,
+    getUser,
     hasUserBlocked,
     hasUserReceivedRequest,
     hasUserSentRequest,
     isUserBlockedBy,
 } from "@/lib/db/helpers";
-import pusher from "@/lib/pusher/server-connection";
-import { usernameRegex } from "@/lib/verifications";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { regexes } from "@/lib/verifications";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 import { sql } from "kysely";
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest) {
     const senderId = parseInt(headers().get("X-UserId") || "");
     const { username } = await req.json();
 
-    if (!usernameRegex.test(username)) {
+    if (!regexes.username.test(username)) {
         return NextResponse.json(
             {
                 success: false,
@@ -27,23 +28,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const sender = await db
-            .selectFrom("users")
-            .select([
-                "id",
-                "username",
-                "displayName",
-                "avatar",
-                "banner",
-                "status",
-                "customStatus",
-                "primaryColor",
-                "accentColor",
-                "description",
-                "createdAt",
-            ])
-            .where("id", "=", senderId)
-            .executeTakeFirst();
+        const sender = await getUser({ throwOnNotFound: true, id: senderId });
 
         const receiver = await db
             .selectFrom("users")
@@ -63,7 +48,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             .where(sql`username = BINARY ${username}`)
             .executeTakeFirst();
 
-        if (!sender || !receiver) {
+        if (!receiver) {
             return NextResponse.json(
                 {
                     success: false,
@@ -131,12 +116,6 @@ export async function POST(req: Request): Promise<NextResponse> {
                 .where("requestedId", "=", sender.id)
                 .execute();
 
-            await pusher.trigger("chat-app", "user-relation", {
-                type: "FRIEND_ADDED",
-                sender: sender,
-                receiver: receiver,
-            });
-
             return NextResponse.json(
                 {
                     success: true,
@@ -154,12 +133,6 @@ export async function POST(req: Request): Promise<NextResponse> {
             })
             .execute();
 
-        await pusher.trigger("chat-app", "user-relation", {
-            type: "REQUEST_SENT",
-            sender: sender,
-            receiver: receiver,
-        });
-
         return NextResponse.json(
             {
                 success: true,
@@ -168,22 +141,15 @@ export async function POST(req: Request): Promise<NextResponse> {
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/users/me/friends/[username]`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
-export async function DELETE(req: Request): Promise<NextResponse> {
+export async function DELETE(req: NextRequest) {
     const senderId = parseInt(headers().get("X-UserId") || "");
     const { username } = await req.json();
 
-    if (!usernameRegex.test(username)) {
+    if (!regexes.username.test(username)) {
         return NextResponse.json(
             {
                 success: false,
@@ -194,23 +160,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
     }
 
     try {
-        const sender = await db
-            .selectFrom("users")
-            .select([
-                "id",
-                "username",
-                "displayName",
-                "avatar",
-                "banner",
-                "status",
-                "customStatus",
-                "primaryColor",
-                "accentColor",
-                "description",
-                "createdAt",
-            ])
-            .where("id", "=", senderId)
-            .executeTakeFirst();
+        const sender = await getUser({ throwOnNotFound: true, id: senderId });
 
         const receiver = await db
             .selectFrom("users")
@@ -230,7 +180,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             .where(sql`username = BINARY ${username}`)
             .executeTakeFirst();
 
-        if (!sender || !receiver) {
+        if (!receiver) {
             return NextResponse.json(
                 {
                     success: false,
@@ -288,12 +238,6 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             ? "Successfully removed friend."
             : "Successfully cancelled friend request.";
 
-        await pusher.trigger("chat-app", "user-relation", {
-            type: "FRIEND_REMOVED",
-            sender: sender,
-            receiver: receiver,
-        });
-
         return NextResponse.json(
             {
                 success: true,
@@ -302,13 +246,6 @@ export async function DELETE(req: Request): Promise<NextResponse> {
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/users/me/friends/[username]`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

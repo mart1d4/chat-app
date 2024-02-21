@@ -197,7 +197,9 @@ export default function useFetchHelper() {
             body: method !== "GET" ? body : undefined,
         });
 
-        if (response.status === 401) {
+        const res = await response.json();
+
+        if (response.status === 401 && res.message === "Unauthorized") {
             const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
@@ -210,7 +212,10 @@ export default function useFetchHelper() {
 
                 const newResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
                     method: method,
-                    headers: headers,
+                    headers: {
+                        ...headers,
+                        Authorization: `Bearer ${tokenRes.token}`,
+                    },
                     body: method !== "GET" ? body : undefined,
                 });
 
@@ -221,8 +226,16 @@ export default function useFetchHelper() {
                     return res;
                 }
             }
+        } else if (response.status === 429) {
+            setLayers({
+                settings: {
+                    type: "POPUP",
+                },
+                content: {
+                    type: "RATE_LIMIT",
+                },
+            });
         } else {
-            const res = await response.json();
             return res;
         }
     };

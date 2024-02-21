@@ -240,9 +240,9 @@ export async function getUser({
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found",
+                    message: "Unauthorized",
                 },
-                { status: 404 }
+                { status: 401 }
             );
         }
 

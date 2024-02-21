@@ -1029,3 +1029,7 @@
         border-radius: 0;
     }
 }
+
+.big {
+    flex: 1 1 auto;
+}

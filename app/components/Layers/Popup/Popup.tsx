@@ -525,6 +525,15 @@ export function Popup({ content, friends, element }: any) {
                 }
             },
         },
+        RATE_LIMIT: {
+            title: "WOAH THERE. WAY TOO SPICY",
+            centered: true,
+            description: "You're sending messages to quickly",
+            buttonColor: "blue",
+            buttonText: "Enter the chill zone",
+            onlyButton: true,
+            function: () => {},
+        },
     };
 
     const prop = props[type as keyof typeof props] ?? null;
@@ -1741,32 +1750,34 @@ export function Popup({ content, friends, element }: any) {
                         className={styles.footerButtons}
                         style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}
                     >
-                        <button
-                            ref={cancelRef}
-                            className="button underline"
-                            onClick={(e) => {
-                                e.stopPropagation();
+                        {!prop.onlyButton && (
+                            <button
+                                ref={cancelRef}
+                                className="button underline"
+                                onClick={(e) => {
+                                    e.stopPropagation();
 
-                                if (type === "CREATE_GUILD") {
-                                    if (guildTemplate !== 0) return setGuildTemplate(0);
-                                    else if (join) return setJoin(false);
-                                }
+                                    if (type === "CREATE_GUILD") {
+                                        if (guildTemplate !== 0) return setGuildTemplate(0);
+                                        else if (join) return setJoin(false);
+                                    }
 
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                        setNull: true,
-                                    },
-                                });
-                            }}
-                        >
-                            {guildTemplate || join ? "Back" : "Cancel"}
-                        </button>
+                                    setLayers({
+                                        settings: {
+                                            type: "POPUP",
+                                            setNull: true,
+                                        },
+                                    });
+                                }}
+                            >
+                                {guildTemplate || join ? "Back" : "Cancel"}
+                            </button>
+                        )}
 
                         <button
                             className={`${prop.buttonColor} ${
                                 prop.buttonDisabled ? "button disabled" : "button"
-                            }`}
+                            } ${prop.onlyButton ? styles.big : ""}`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (isLoading || prop.buttonDisabled) return;

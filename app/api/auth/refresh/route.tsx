@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/db/helpers";
+import { catchError } from "@/lib/api";
 import { SignJWT } from "jose";
 
-export async function GET(req: Request): Promise<NextResponse> {
+export async function GET(req: Request) {
     try {
         const user = await getUser({
             select: {
                 id: true,
                 refreshTokens: true,
             },
+            throwOnNotFound: true,
         });
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Forbidden",
-                },
-                { status: 401 }
-            );
-        }
 
         const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
         const url = process.env.BASE_URL as string;
@@ -41,13 +33,6 @@ export async function GET(req: Request): Promise<NextResponse> {
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[REFRESH] ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

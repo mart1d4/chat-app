@@ -1,12 +1,13 @@
-import { passwordRegex, usernameRegex } from "@/lib/verifications";
 import { createUser, doesUserExist } from "@/lib/db/helpers";
+import { regexes } from "@/lib/verifications";
 import { NextResponse } from "next/server";
+import { catchError } from "@/lib/api";
 import bcrypt from "bcrypt";
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: Request) {
     const { username, password } = await req.json();
 
-    if (!usernameRegex.test(username)) {
+    if (!regexes.username.test(username)) {
         return NextResponse.json(
             {
                 success: false,
@@ -16,7 +17,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         );
     }
 
-    if (!passwordRegex.test(password)) {
+    if (!regexes.password.test(password)) {
         return NextResponse.json(
             {
                 success: false,
@@ -58,13 +59,6 @@ export async function POST(req: Request): Promise<NextResponse> {
             { status: 201 }
         );
     } catch (error) {
-        console.error(`[REGISTER] ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

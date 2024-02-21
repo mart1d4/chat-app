@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/db/helpers";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 import { SignJWT } from "jose";
 import { sql } from "kysely";
 import bcrypt from "bcrypt";
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest) {
     const { username, password } = await req.json();
 
     if (!username || !password) {
@@ -38,7 +39,7 @@ export async function POST(req: Request): Promise<NextResponse> {
             );
         }
 
-        const match = await bcrypt.compare(password, user.password as string);
+        const match = await bcrypt.compare(password, user.password);
 
         if (match) {
             const accessSecret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
@@ -63,11 +64,9 @@ export async function POST(req: Request): Promise<NextResponse> {
 
             const tokenObject = {
                 token: refreshToken,
-                // In 30 days
                 expires: Date.now() + 2592000000,
+                ip: req.ip || "",
             };
-
-            console.log("user.refreshTokens", user.refreshTokens);
 
             const newTokens = [
                 ...user.refreshTokens.filter(
@@ -79,21 +78,10 @@ export async function POST(req: Request): Promise<NextResponse> {
             await db
                 .updateTable("users")
                 .set({
-                    refreshTokens: sql`CAST(${JSON.stringify(newTokens)} AS JSON)`,
+                    refreshTokens: JSON.stringify(newTokens),
                 })
                 .where("id", "=", user.id)
                 .executeTakeFirst();
-
-            // Save refresh token to database
-            // await db
-            //     .updateTable("users")
-            //     .set({
-            //         refreshTokens: sql`JSON_ARRAY_APPEND(refresh_tokens, '$', CAST(${JSON.stringify(
-            //             tokenObject
-            //         )} AS JSON))`,
-            //     })
-            //     .where("id", "=", user.id as number)
-            //     .executeTakeFirst();
 
             return NextResponse.json(
                 {
@@ -119,13 +107,6 @@ export async function POST(req: Request): Promise<NextResponse> {
             );
         }
     } catch (error) {
-        console.error(`[LOGIN] ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

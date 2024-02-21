@@ -1,6 +1,14 @@
 import type { NextRequest } from "next/server";
+import { Ratelimit } from "@upstash/ratelimit";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { kv } from "@vercel/kv";
+
+const ratelimit = new Ratelimit({
+    redis: kv,
+    // 5 requests from the same IP in 10 seconds
+    limiter: Ratelimit.slidingWindow(5, "10 s"),
+});
 
 export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
@@ -8,6 +16,8 @@ export const config = {
 
 export async function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
+    const ip = req.ip ?? "127.0.0.1";
+    console.log(ip);
 
     const token = req.headers.get("Authorization")?.split(" ")[1];
     const refreshToken = req.cookies.get("token")?.value;
@@ -21,6 +31,18 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith("/api")) {
+        const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Rate limit exceeded",
+                },
+                { status: 429 }
+            );
+        }
+
         if (pathname.startsWith("/api/test")) return NextResponse.next();
         if (pathname.startsWith("/api/auth")) return NextResponse.next();
 

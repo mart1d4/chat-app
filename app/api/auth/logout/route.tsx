@@ -1,9 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/db/helpers";
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db/db";
+import { sql } from "kysely";
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest) {
     try {
         const user = await getUser({
             select: {
@@ -16,8 +17,9 @@ export async function POST(req: Request): Promise<NextResponse> {
             const tokens = user.refreshTokens;
             const token = cookies().get("token")?.value || "";
 
-            // Remove current session token as well as expired tokens
-            const newTokens = tokens?.filter((obj) => obj.token !== token && obj.expires > new Date());
+            const newTokens = tokens?.filter((obj: { token: string; expires: number }) => {
+                return obj.token !== token && obj.expires > Date.now();
+            });
 
             if (tokens?.length !== newTokens?.length) {
                 await db
@@ -25,7 +27,7 @@ export async function POST(req: Request): Promise<NextResponse> {
                     .set({
                         refreshTokens: JSON.stringify(newTokens),
                     })
-                    .where("id", "=", user.id as number)
+                    .where("id", "=", user.id)
                     .executeTakeFirst();
             }
         }

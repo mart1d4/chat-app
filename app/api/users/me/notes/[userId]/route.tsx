@@ -1,48 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getUser } from "@/lib/db/helpers";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function GET(req: Request, { params }: { params: { userId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { userId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "");
     const userId = parseInt(params.userId);
 
     try {
-        const user = await db
-            .selectFrom("users")
-            .select(["id", "notes"])
-            .where("id", "=", senderId)
-            .executeTakeFirst();
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found.",
-                },
-                { status: 404 }
-            );
-        }
+        const user = await getUser({
+            id: senderId,
+            select: { notes: true },
+            throwOnNotFound: true,
+        });
 
         return NextResponse.json(
             {
                 success: true,
-                note: user.notes.find((note) => note.userId === userId)?.content,
+                message: "Successfully retrieved note.",
+                note: user.notes.find((note) => note.userId === userId)?.content || "",
             },
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/users/me/notes/${userId}`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
-export async function PUT(req: Request, { params }: { params: { userId: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { userId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "");
     const userId = parseInt(params.userId);
     const { newNote } = await req.json();
@@ -58,21 +44,11 @@ export async function PUT(req: Request, { params }: { params: { userId: string }
     }
 
     try {
-        const user = await db
-            .selectFrom("users")
-            .select(["id", "notes"])
-            .where("id", "=", senderId)
-            .executeTakeFirst();
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found.",
-                },
-                { status: 404 }
-            );
-        }
+        const user = await getUser({
+            id: senderId,
+            select: { notes: true },
+            throwOnNotFound: true,
+        });
 
         const alreadyExists = user.notes.find((note) => note.userId === userId);
         let newNotes;
@@ -105,13 +81,6 @@ export async function PUT(req: Request, { params }: { params: { userId: string }
             { status: 200 }
         );
     } catch (error) {
-        console.error(`[ERROR] /api/users/me/notes/${userId}`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
