@@ -3,7 +3,6 @@ import { getUser } from "@/lib/db/helpers";
 import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 import { SignJWT } from "jose";
-import { sql } from "kysely";
 import bcrypt from "bcrypt";
 
 export async function POST(req: NextRequest) {
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Login or password is invalid",
+                message: "You must provide a username and password.",
             },
             { status: 400 }
         );
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Username or password is invalid",
+                    message: "Username or password is invalid.",
                 },
                 { status: 401 }
             );
@@ -86,7 +85,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 {
                     success: true,
-                    message: "Login successful",
+                    message: "Successfully logged in.",
                     token: accessToken,
                 },
                 {
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Login or password is invalid",
+                    message: "Username or password is invalid.",
                 },
                 { status: 401 }
             );

@@ -14,14 +14,14 @@ import { db } from "@/lib/db/db";
 import { sql } from "kysely";
 
 export async function POST(req: NextRequest) {
-    const senderId = parseInt(headers().get("X-UserId") || "");
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { username } = await req.json();
 
     if (!regexes.username.test(username)) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Invalid Username",
+                message: "The username you provided is invalid.",
             },
             { status: 400 }
         );
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
                 "description",
                 "createdAt",
             ])
+            // @ts-ignore
             .where(sql`username = BINARY ${username}`)
             .executeTakeFirst();
 
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    const senderId = parseInt(headers().get("X-UserId") || "");
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { username } = await req.json();
 
     if (!regexes.username.test(username)) {
@@ -177,6 +178,7 @@ export async function DELETE(req: NextRequest) {
                 "description",
                 "createdAt",
             ])
+            // @ts-ignore
             .where(sql`username = BINARY ${username}`)
             .executeTakeFirst();
 
@@ -184,7 +186,7 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found.",
+                    message: "No user found with that username.",
                 },
                 { status: 404 }
             );

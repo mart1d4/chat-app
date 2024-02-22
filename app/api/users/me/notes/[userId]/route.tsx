@@ -5,7 +5,7 @@ import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
 export async function GET(req: NextRequest, { params }: { params: { userId: string } }) {
-    const senderId = parseInt(headers().get("X-UserId") || "");
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const userId = parseInt(params.userId);
 
     try {
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: { userId: stri
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { userId: string } }) {
-    const senderId = parseInt(headers().get("X-UserId") || "");
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const userId = parseInt(params.userId);
     const { newNote } = await req.json();
 
@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { userId: stri
         return NextResponse.json(
             {
                 success: false,
-                message: "Invalid note.",
+                message: "The note you provided is invalid.",
             },
             { status: 400 }
         );

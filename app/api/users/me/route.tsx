@@ -8,7 +8,7 @@ import { db } from "@/lib/db/db";
 import bcrypt from "bcrypt";
 
 export async function PATCH(req: Request) {
-    const userId = parseInt(headers().get("X-UserId") || "");
+    const userId = parseInt(headers().get("X-UserId") || "0");
 
     const {
         username,
@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "You must provide your current password to change it",
+                        message: "You must provide your current password to change it.",
                     },
                     { status: 400 }
                 );
@@ -51,7 +51,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "New password cannot be the same as the old password",
+                        message: "New password cannot be the same as the old password.",
                     },
                     { status: 400 }
                 );
@@ -61,7 +61,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Invalid Password",
+                        message: "The new password you provided is invalid.",
                     },
                     { status: 400 }
                 );
@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Incorrect password",
+                        message: "The password you provided is incorrect.",
                     },
                     { status: 401 }
                 );
@@ -98,7 +98,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Invalid Username",
+                        message: "The username you provided is invalid.",
                     },
                     { status: 400 }
                 );
@@ -108,7 +108,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "New username cannot be the same as the old username",
+                        message: "New username cannot be the same as the old username.",
                     },
                     { status: 400 }
                 );
@@ -118,7 +118,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Username already exists",
+                        message: "Username is already taken.",
                     },
                     { status: 409 }
                 );
@@ -128,7 +128,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Password is required to change username",
+                        message: "Password is required to change username.",
                     },
                     { status: 400 }
                 );
@@ -140,7 +140,7 @@ export async function PATCH(req: Request) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Incorrect password",
+                        message: "The password you provided is incorrect.",
                     },
                     { status: 401 }
                 );
@@ -155,7 +155,7 @@ export async function PATCH(req: Request) {
                         return NextResponse.json(
                             {
                                 success: false,
-                                message: `Invalid ${varName}`,
+                                message: `The ${varName} you provided is invalid.`,
                             },
                             { status: 400 }
                         );

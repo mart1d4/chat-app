@@ -1,17 +1,17 @@
+import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUser } from "@/lib/db/helpers";
-import { NextResponse } from "next/server";
 import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function GET(req: Request): Promise<NextResponse> {
+export async function GET(req: NextRequest) {
     try {
         const users = await db.selectFrom("users").selectAll().execute();
 
         return NextResponse.json(
             {
                 success: true,
-                message: "Test successful.",
-                users,
+                message: "Successfully fetched users.",
+                users: users,
             },
             { status: 201 }
         );
@@ -20,7 +20,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     }
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest) {
     try {
         const user = await getUser({ select: { id: true, system: true } });
 
@@ -42,18 +42,11 @@ export async function POST(req: Request): Promise<NextResponse> {
         return NextResponse.json(
             {
                 success: true,
-                message: "Test successful.",
+                message: "Successfully created user.",
             },
             { status: 201 }
         );
     } catch (error) {
-        console.error(`[TEST] ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

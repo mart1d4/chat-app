@@ -1,16 +1,16 @@
 import { getUser, hasUserBlocked, removeFriends } from "@/lib/db/helpers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-    const senderId = headers().get("X-UserId") || "";
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { id } = params;
 
     try {
         const user = await getUser({
             id: id,
-            select: { id: true },
             throwOnNotFound: true,
         });
 
@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             return NextResponse.json(
                 {
                     success: true,
-                    message: "Successfuly blocked this user",
+                    message: "Successfuly blocked this user.",
                 },
                 { status: 200 }
             );
@@ -41,25 +41,23 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             );
         }
     } catch (error) {
-        console.error(`[ERROR:${req.method}] ${req.url}: ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Internal server error.",
-            },
-            { status: 500 }
-        );
+        await db
+            .deleteFrom("blocked")
+            .where("blockerId", "=", senderId)
+            .where("blockedId", "=", id)
+            .execute();
+
+        return catchError(req, error);
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-    const senderId = headers().get("X-userId") || "";
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { id } = params;
 
     try {
         const user = await getUser({
             id: id,
-            select: { id: true },
             throwOnNotFound: true,
         });
 
@@ -89,13 +87,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             );
         }
     } catch (error) {
-        console.error(`[ERROR:${req.method}] ${req.url}: ${error}`);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

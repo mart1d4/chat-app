@@ -1,28 +1,18 @@
-import pusher from "@/lib/pusher/server-connection";
-import { NextResponse } from "next/server";
+import { canUserManageChannel, getUser } from "@/lib/db/helpers";
+import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { getUser } from "@/lib/db/helpers";
+import { catchError } from "@/lib/api";
 
-export async function PUT(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
+export async function PUT(req: NextRequest, { params }: { params: { channelId: string } }) {
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { name, icon } = await req.json();
-
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
+    const { channelId } = params;
 
     if (!name && !icon) {
         return NextResponse.json(
             {
                 success: false,
-                message: "No changes were made",
+                message: "A name or icon is required.",
             },
             { status: 400 }
         );
@@ -102,19 +92,12 @@ export async function PUT(req: Request, { params }: { params: { channelId: strin
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong.",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { channelId: string } }) {
-    const userId = parseInt(headers().get("X-UserId") || "");
+export async function DELETE(req: NextRequest, { params }: { params: { channelId: string } }) {
+    const userId = parseInt(headers().get("X-UserId") || "0");
     const { channelId } = params;
 
     try {
@@ -125,47 +108,13 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             throwOnNotFound: true,
         });
 
-        if (!user) {
+        if (!(await canUserManageChannel(user.id, channelId))) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found",
+                    message: "You cannot delete this channel",
                 },
-                { status: 404 }
-            );
-        }
-
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            select: {
-                id: true,
-                type: true,
-                position: true,
-                parentId: true,
-                recipientIds: true,
-                guildId: true,
-            },
-        });
-
-        const guild = await prisma.guild.findUnique({
-            where: {
-                id: channel?.guildId as string,
-            },
-            select: {
-                ownerId: true,
-                rawMemberIds: true,
-            },
-        });
-
-        if (!channel || !channel.guildId || !guild?.rawMemberIds.includes(userId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel not found",
-                },
-                { status: 404 }
+                { status: 401 }
             );
         }
 
@@ -319,13 +268,6 @@ export async function DELETE(req: Request, { params }: { params: { channelId: st
             { status: 200 }
         );
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong",
-            },
-            { status: 500 }
-        );
+        return catchError(req, error);
     }
 }

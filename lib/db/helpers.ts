@@ -135,13 +135,15 @@ export async function createUser(user: Partial<Users>) {
         return null;
     }
 
+    const id = getRandomId();
+
     try {
         const profile = getRandomProfile();
 
         const newUser = await db
             .insertInto("users")
             .values({
-                id: getRandomId(),
+                id: id,
                 username: user.username,
                 displayName: user.username,
                 password: user.password,
@@ -157,7 +159,8 @@ export async function createUser(user: Partial<Users>) {
         return newUser;
     } catch (error) {
         console.error(error);
-        return null;
+        await db.deleteFrom("users").where("id", "=", id).execute();
+        throw new Error("Failed to create user");
     }
 }
 
@@ -447,18 +450,34 @@ export async function getChannels(userId: id) {
     }
 }
 
-export async function getChannel(channelId: id) {
+export async function getChannel(channelId: id, select?: (keyof Channels)[]) {
     try {
         const channel = await db
             .selectFrom("channels")
-            .select(channelSelect)
-            .select((eb) => withRecipients(eb))
+            .$if(!!select, (q) => q.select(select))
+            .$if(!select, (q) => q.select(channelSelect))
+            .$if(!select, (q) => q.select((eb) => withRecipients(eb)))
             .where("id", "=", channelId)
             .executeTakeFirst();
 
         return channel;
     } catch (error) {
         return error;
+    }
+}
+
+export async function getChannelRecipientCount(channelId: id) {
+    try {
+        const result = await db
+            .selectFrom("channelrecipients")
+            .select((eb) => eb.fn.countAll<number>().as("count"))
+            .where("channelId", "=", channelId)
+            .executeTakeFirst();
+
+        return result?.count || 0;
+    } catch (error) {
+        console.error(error);
+        return 0;
     }
 }
 
@@ -849,5 +868,54 @@ export async function getInvite(code: string) {
     } catch (error) {
         console.error(error);
         return null;
+    }
+}
+
+export async function isUserGuildOwner(userId: id, guildId: id) {
+    try {
+        const guild = await db
+            .selectFrom("guilds")
+            .select("ownerId")
+            .where("id", "=", guildId)
+            .executeTakeFirst();
+
+        return guild?.ownerId === userId;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function isUserChannelOwner(userId: id, channelId: id) {
+    try {
+        const channel = await db
+            .selectFrom("channels")
+            .select("ownerId")
+            .where("id", "=", channelId)
+            .executeTakeFirst();
+
+        return channel?.ownerId === userId;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function canUserManageChannel(userId: id, guildId: id) {
+    // In the future, in addition to checking if the user is the guild owner,
+    // check if user has the "MANAGE_CHANNELS" permission (4)
+    // through the user's roles in the guild
+
+    try {
+        const guild = await db
+            .selectFrom("guilds")
+            .select("ownerId")
+            .where("id", "=", guildId)
+            .executeTakeFirst();
+
+        return guild?.ownerId == userId;
+    } catch (error) {
+        console.error(error);
+        return false;
     }
 }

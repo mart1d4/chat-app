@@ -13,7 +13,7 @@ import {
 import pusher from "@/lib/pusher/server-connection";
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const channelId = params.channelId;
 
     const { message } = await req.json();

@@ -6,7 +6,7 @@ import { db } from "@/lib/db/db";
 import pusher from "@/lib/pusher/server-connection";
 
 export async function PUT(req: Request, { params }: { params: { messageId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { messageId } = params;
 
     const { content, attachments } = await req.json();
@@ -90,7 +90,7 @@ export async function DELETE(
     req: Request,
     { params }: { params: { channelId: string; messageId: string } }
 ) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { channelId, messageId } = params;
 
     try {

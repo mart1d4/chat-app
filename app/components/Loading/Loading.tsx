@@ -145,10 +145,6 @@ export function Loading({ children, data }: Props) {
         };
     }, [token]);
 
-    const expires = 1709040449540;
-    const date = new Date(expires);
-    console.log("Date", date);
-
     useEffect(() => {
         if (!pusher || !user) return;
 

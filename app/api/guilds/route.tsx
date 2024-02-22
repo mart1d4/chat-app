@@ -1,13 +1,13 @@
 import { defaultPermissions } from "@/lib/permissions/data";
 import { getGuild, getRandomId } from "@/lib/db/helpers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function POST(req: Request) {
-    const senderId = headers().get("X-UserId") || "";
+export async function POST(req: NextRequest) {
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { name, icon } = await req.json();
 
     const guildId = getRandomId();
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
             joinedAt: new Date(),
         };
 
-        const role = await db
+        await db
             .insertInto("roles")
             .values({
                 id: roleId,
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
-        const textCategory = await db
+        await db
             .insertInto("channels")
             .values({
                 id: textCategoryId,
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
-        const voiceCategory = await db
+        await db
             .insertInto("channels")
             .values({
                 id: voiceCategoryId,
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
-        const textChannel = await db
+        await db
             .insertInto("channels")
             .values({
                 id: textChannelId,
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             })
             .executeTakeFirstOrThrow();
 
-        const voiceChannel = await db
+        await db
             .insertInto("channels")
             .values({
                 id: voiceChannelId,
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                message: "Guild created.",
+                message: "Successfully created guild.",
                 guild: guild,
             },
             { status: 200 }

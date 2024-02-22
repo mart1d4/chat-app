@@ -8,7 +8,7 @@ export async function POST(
     req: Request,
     { params }: { params: { channelId: string; messageId: string } }
 ) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { channelId, messageId } = params;
 
     try {
@@ -55,7 +55,7 @@ export async function POST(
 }
 
 export async function DELETE(req: Request, { params }: { params: { messageId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { messageId } = params;
 
     try {

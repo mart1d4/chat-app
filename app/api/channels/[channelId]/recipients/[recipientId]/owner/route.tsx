@@ -11,7 +11,7 @@ type Params = {
 };
 
 export async function PUT(req: Request, { params }: Params) {
-    const userId = headers().get("X-UserId") || "";
+    const userId = parseInt(headers().get("X-UserId") || "0");
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 

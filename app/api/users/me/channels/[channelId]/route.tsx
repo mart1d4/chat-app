@@ -1,147 +1,112 @@
-import pusher from "@/lib/pusher/server-connection";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { catchError } from "@/lib/api";
+import { db } from "@/lib/db/db";
+import {
+    getUser,
+    getChannel,
+    getRandomId,
+    isUserInChannel,
+    getChannelRecipientCount,
+} from "@/lib/db/helpers";
 
-type Params = {
-    params: {
-        channelId: string;
-    };
-};
+export async function DELETE(req: NextRequest, { params }: { params: { channelId: string } }) {
+    const userId = parseInt(headers().get("X-UserId") || "0");
+    const { searchParams } = new URL(req.url);
+    const { channelId } = params;
 
-export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get("X-UserId") || "";
-    const channelId = params.channelId;
-
-    if (userId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 401 }
-        );
-    }
+    const messageId = getRandomId();
 
     try {
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId,
-            },
-            select: {
-                id: true,
-            },
-        });
+        await getUser({ throwOnNotFound: true });
 
-        if (!user) {
+        if (!(await isUserInChannel(userId, channelId))) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            include: {
-                recipients: {
-                    orderBy: {
-                        username: "asc",
-                    },
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatar: true,
-                        banner: true,
-                        primaryColor: true,
-                        accentColor: true,
-                        description: true,
-                        customStatus: true,
-                        status: true,
-                        guildIds: true,
-                        channelIds: true,
-                        friendIds: true,
-                        createdAt: true,
-                    },
-                },
-            },
-        });
-
-        if (!channel) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Channel not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        if (!channel.recipientIds.includes(userId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Unauthorized",
+                    message: "You are not in this channel.",
                 },
                 { status: 401 }
             );
         }
 
-        if (channel.type === 0) {
-            // Add channel to hidden channels
-            await prisma.user.update({
-                where: {
-                    id: userId,
-                },
-                data: {
-                    hiddenChannelIds: {
-                        push: channelId,
-                    },
-                },
-            });
+        const channel = await getChannel(channelId);
 
-            await pusher.trigger("chat-app", "channel-update", {
-                type: "CHANNEL_REMOVED",
-                channel: channel,
-            });
+        if (!channel) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "No channel found with the provided ID.",
+                },
+                { status: 404 }
+            );
+        }
+
+        if (channel.type === 0) {
+            await db
+                .updateTable("channelrecipients")
+                .set({ isHidden: true })
+                .where("userId", "=", userId)
+                .where("channelId", "=", channelId)
+                .execute();
 
             return NextResponse.json(
                 {
                     success: true,
-                    message: "Channel deleted",
+                    message: "Successfully hidden channel.",
                     channelId: channelId,
                 },
                 { status: 200 }
             );
         } else if (channel.type === 1) {
-            if (channel.recipientIds.length > 1) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "Cannot delete group DM",
-                    },
-                    { status: 400 }
-                );
-            } else {
-                await prisma.channel.delete({
-                    where: {
-                        id: channelId,
-                    },
-                });
+            const recipientCount = await getChannelRecipientCount(channelId);
 
-                await pusher.trigger("chat-app", "channel-update", {
-                    type: "CHANNEL_REMOVED",
-                    channel: channel,
-                });
+            if (recipientCount === 1) {
+                await db
+                    .updateTable("channels")
+                    .set({ isDeleted: true })
+                    .where("id", "=", channelId)
+                    .execute();
+
+                await db
+                    .deleteFrom("channelrecipients")
+                    .where("channelId", "=", channelId)
+                    .execute();
 
                 return NextResponse.json(
                     {
                         success: true,
-                        message: "Channel deleted",
+                        message: "Successfully deleted channel.",
+                        channelId: channelId,
+                    },
+                    { status: 200 }
+                );
+            } else {
+                const hideLeft = searchParams.get("hideLeft") === "true";
+
+                await db
+                    .deleteFrom("channelrecipients")
+                    .where("userId", "=", userId)
+                    .where("channelId", "=", channelId)
+                    .execute();
+
+                if (!hideLeft) {
+                    await db
+                        .insertInto("messages")
+                        .values({
+                            id: id,
+                            type: 3,
+                            authorId: userId,
+                            channelId: channelId,
+                            mentions: JSON.stringify([userId]),
+                        })
+                        .execute();
+                }
+
+                return NextResponse.json(
+                    {
+                        success: true,
+                        message: "Successfully left channel.",
                         channelId: channelId,
                     },
                     { status: 200 }
@@ -151,19 +116,13 @@ export async function DELETE(req: Request, { params }: Params) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Wrong channel type",
+                    message: "The channel type is invalid.",
                 },
                 { status: 404 }
             );
         }
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong",
-            },
-            { status: 500 }
-        );
+        await db.deleteFrom("messages").where("id", "=", messageId).execute();
+        return catchError(req, error);
     }
 }

@@ -5,7 +5,7 @@ import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
 export async function GET(req: Request, { params }: { params: { channelId: string } }) {
-    const senderId = headers().get("X-UserId") || "";
+    const senderId = parseInt(headers().get("X-UserId") || "0");
     const { channelId } = params;
 
     try {

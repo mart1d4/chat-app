@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Invalid Username",
+                message: "The username you provided is invalid.",
             },
             { status: 400 }
         );
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Invalid Password",
+                message: "The password you provided is invalid.",
             },
             { status: 400 }
         );
@@ -32,29 +32,19 @@ export async function POST(req: Request) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User already exists",
+                    message: "A user with that username already exists.",
                 },
                 { status: 400 }
             );
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await createUser({ username, password: hashedPassword });
-
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Something went wrong.",
-                },
-                { status: 500 }
-            );
-        }
+        await createUser({ username, password: hashedPassword });
 
         return NextResponse.json(
             {
                 success: true,
-                message: "User registered successfully",
+                message: "Successfully created user.",
             },
             { status: 201 }
         );

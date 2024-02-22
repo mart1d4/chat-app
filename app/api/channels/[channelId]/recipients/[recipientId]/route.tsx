@@ -10,7 +10,7 @@ type Params = {
 };
 
 export async function PUT(req: Request, { params }: Params) {
-    const userId = headers().get("X-UserId") || "";
+    const userId = parseInt(headers().get("X-UserId") || "0");
     const recipientId = params.recipientId;
     const channelId = params.channelId;
 
@@ -283,7 +283,7 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-    const userId = headers().get("X-UserId") || "";
+    const userId = parseInt(headers().get("X-UserId") || "0");
     const { withoutMessage } = await req.json();
 
     const recipientId = params.recipientId;

@@ -28,3 +28,5 @@ export const regexes = {
     accentColor: accentColorRegex,
     status: statusRegex,
 };
+
+export const validInviteChannelTypes = [1, 2, 3];

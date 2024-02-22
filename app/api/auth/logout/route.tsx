@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/db/helpers";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db/db";
-import { sql } from "kysely";
 
 export async function POST(req: NextRequest) {
     try {
@@ -35,7 +34,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
             {
                 success: true,
-                message: "Logged out",
+                message: "Successfully logged out.",
             },
             {
                 status: 200,

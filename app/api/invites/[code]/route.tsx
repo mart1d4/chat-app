@@ -1,21 +1,30 @@
+import { validInviteChannelTypes } from "@/lib/verifications";
 import { defaultPermissions } from "@/lib/permissions/data";
-import pusher from "@/lib/pusher/server-connection";
-import { getInvite } from "@/lib/db/helpers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
+import { db } from "@/lib/db/db";
+import {
+    getChannelRecipientCount,
+    getGuild,
+    getInvite,
+    getUser,
+    isUserInChannel,
+    isUserInGuild,
+} from "@/lib/db/helpers";
 
-export async function GET(req: Request, { params }: { params: { code: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { code: string } }) {
     const { code } = params;
 
     try {
         const invite = await getInvite(code);
-        console.log(JSON.stringify(invite, null, 4));
 
         return NextResponse.json(
             {
                 success: true,
-                message: invite ? "Successfuly found invite" : "No invite found with that code",
+                message: invite
+                    ? "Successfuly fetched invite."
+                    : "No invite was found with that code.",
                 invite: invite || null,
             },
             { status: 200 }
@@ -25,254 +34,74 @@ export async function GET(req: Request, { params }: { params: { code: string } }
     }
 }
 
-export async function POST(req: Request, { params }: { params: { code: string } }) {
-    const senderId = headers().get("X-UserId") || "";
-    const code = params.code;
-
-    if (senderId === "") {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Unauthorized",
-            },
-            { status: 400 }
-        );
-    }
+export async function POST(req: NextRequest, { params }: { params: { code: string } }) {
+    const senderId = parseInt(headers().get("X-UserId") || "0");
+    const { code } = params;
 
     try {
-        const user = await prisma.user.findFirst({
-            where: {
-                id: senderId,
-            },
-        });
+        const user = await getUser({ id: senderId, throwOnNotFound: true });
+        const invite = await getInvite(code);
 
-        if (!user) {
+        if (!invite || !invite.channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Unauthorized",
-                },
-                { status: 401 }
-            );
-        }
-
-        const invite = await prisma.invite.findFirst({
-            where: {
-                code: code,
-            },
-            include: {
-                guild: {
-                    select: {
-                        id: true,
-                        name: true,
-                        icon: true,
-                        ownerId: true,
-                        rawMemberIds: true,
-                    },
-                },
-                channel: {
-                    select: {
-                        id: true,
-                        type: true,
-                        name: true,
-                        recipientIds: true,
-                    },
-                },
-                inviter: {
-                    select: {
-                        id: true,
-                        username: true,
-                    },
-                },
-            },
-        });
-
-        if (!invite) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Invalid invite",
+                    message: "No invite was found with that code.",
                 },
                 { status: 400 }
             );
         }
 
-        if (![1, 2].includes(invite.channel.type)) {
+        if (invite.uses >= invite.maxUses || Date.now() > invite.expiresAt.getTime()) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Invalid invite",
+                    message: "Invite has expired.",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (!validInviteChannelTypes.includes(invite.channel.type)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Invalid invite channel type.",
                 },
                 { status: 400 }
             );
         }
 
         if (invite.channel.type === 1) {
-            if (
-                invite.channel.recipientIds.includes(user.id) ||
-                invite.channel.recipientIds.length >= 10
-            ) {
+            const recipientCount = await getChannelRecipientCount(invite.channel.id);
+
+            if ((await isUserInChannel(user.id, invite.channel.id)) || recipientCount >= 10) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Invalid invite",
+                        message: "Channel is full or you are already in it.",
                     },
                     { status: 400 }
                 );
             } else {
-                // Create message
-                const message = await prisma.message.create({
-                    data: {
-                        type: 2,
-                        author: {
-                            connect: {
-                                id: invite.inviter.id,
-                            },
-                        },
-                        channel: {
-                            connect: {
-                                id: invite.channel.id,
-                            },
-                        },
-                        mentions: {
-                            connect: {
-                                id: user.id,
-                            },
-                        },
-                    },
-                    include: {
-                        author: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        messageReference: {
-                            include: {
-                                author: {
-                                    select: {
-                                        id: true,
-                                        username: true,
-                                        displayName: true,
-                                        avatar: true,
-                                        banner: true,
-                                        primaryColor: true,
-                                        accentColor: true,
-                                        description: true,
-                                        customStatus: true,
-                                        status: true,
-                                        guildIds: true,
-                                        channelIds: true,
-                                        friendIds: true,
-                                        createdAt: true,
-                                    },
-                                },
-                                mentions: {
-                                    select: {
-                                        id: true,
-                                        username: true,
-                                        displayName: true,
-                                        avatar: true,
-                                        banner: true,
-                                        primaryColor: true,
-                                        accentColor: true,
-                                        description: true,
-                                        customStatus: true,
-                                        status: true,
-                                        guildIds: true,
-                                        channelIds: true,
-                                        friendIds: true,
-                                        createdAt: true,
-                                    },
-                                },
-                            },
-                        },
-                        mentions: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                });
+                await db
+                    .insertInto("channelrecipients")
+                    .values({
+                        channelId: invite.channel.id,
+                        userId: user.id,
+                    })
+                    .execute();
 
-                const newChannel = await prisma.channel.update({
-                    where: {
-                        id: invite.channel.id,
-                    },
-                    data: {
-                        recipients: {
-                            connect: {
-                                id: user.id,
-                            },
-                        },
-                        updatedAt: new Date(),
-                    },
-                    include: {
-                        recipients: {
-                            orderBy: {
-                                username: "asc",
-                            },
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                });
-
-                await pusher.trigger("chat-app", "message-sent", {
-                    channelId: invite.channel.id,
-                    message: message,
-                    notSentByAuthor: true,
-                });
-
-                await pusher.trigger("chat-app", "channel-update", {
-                    type: "RECIPIENT_ADDED",
-                    channel: newChannel,
-                });
+                await db
+                    .updateTable("invites")
+                    .set({ uses: invite.uses + 1 })
+                    .where("code", "=", code)
+                    .execute();
 
                 return NextResponse.json(
                     {
                         success: true,
-                        message: "Invite accepted",
-                        channelId: invite.channel.id,
+                        message: "Successfully joined channel.",
                     },
                     { status: 200 }
                 );
@@ -282,59 +111,26 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Guild ID missing.",
+                        message: "Invalid invite guild id.",
                     },
                     { status: 400 }
                 );
-            } else if (user.guildIds.includes(invite.guildId)) {
+            } else if (await isUserInGuild(user.id, invite.guildId)) {
                 return NextResponse.json(
                     {
                         success: false,
-                        message: "Already in guild.",
+                        message: "You are already in this guild.",
                     },
                     { status: 400 }
                 );
             } else {
-                const guild = await prisma.guild.findFirst({
-                    where: {
-                        id: invite.guildId,
-                    },
-                    include: {
-                        rawMembers: {
-                            select: {
-                                id: true,
-                                username: true,
-                                displayName: true,
-                                avatar: true,
-                                banner: true,
-                                primaryColor: true,
-                                accentColor: true,
-                                description: true,
-                                customStatus: true,
-                                status: true,
-                                guildIds: true,
-                                channelIds: true,
-                                friendIds: true,
-                                createdAt: true,
-                            },
-                        },
-                        channels: {
-                            select: {
-                                id: true,
-                                type: true,
-                                name: true,
-                                parentId: true,
-                                position: true,
-                            },
-                        },
-                    },
-                });
+                const guild = await getGuild(invite.guildId);
 
                 if (!guild) {
                     return NextResponse.json(
                         {
                             success: false,
-                            message: "Guild not found.",
+                            message: "Invalid invite guild id.",
                         },
                         { status: 400 }
                     );
@@ -346,46 +142,36 @@ export async function POST(req: Request, { params }: { params: { code: string } 
                     joinedAt: new Date(),
                 };
 
-                await prisma.guild.update({
-                    where: {
-                        id: guild.id,
-                    },
-                    data: {
-                        members: {
-                            push: memberObject,
-                        },
-                    },
-                });
+                const newMembers = [...guild.members, memberObject];
 
-                await prisma.user.update({
-                    where: {
-                        id: user.id,
-                    },
-                    data: {
-                        guilds: {
-                            connect: {
-                                id: guild.id,
-                            },
-                        },
-                    },
-                });
+                await db
+                    .updateTable("guilds")
+                    .set({
+                        members: JSON.stringify(newMembers),
+                    })
+                    .where("id", "=", guild.id)
+                    .execute();
 
-                await pusher.trigger("chat-app", "guild-update", {
-                    type: "GUILD_ADDED",
-                    guild: {
-                        ...guild,
-                        rawMembers: [...guild.rawMembers, user],
-                        rawMemberIds: [...guild.rawMemberIds, user.id],
-                        members: [...guild.members, memberObject],
-                    },
-                });
+                await db
+                    .insertInto("guildmembers")
+                    .values({
+                        userId: user.id,
+                        guildId: guild.id,
+                    })
+                    .execute();
+
+                await db
+                    .updateTable("invites")
+                    .set({ uses: invite.uses + 1 })
+                    .where("code", "=", code)
+                    .execute();
 
                 return NextResponse.json(
                     {
-                        success: false,
-                        message: "Not currently available",
+                        success: true,
+                        message: "Successfully joined guild.",
                     },
-                    { status: 400 }
+                    { status: 200 }
                 );
             }
         }

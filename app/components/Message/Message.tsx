@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useMemo, useRef, SetStateAction, Dispatch } from "react";
 import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
+import { getFullChannel, sanitizeString } from "@/lib/strings";
 import { usePathname, useRouter } from "next/navigation";
 import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { getFullChannel, sanitizeString } from "@/lib/strings";
 import styles from "./Message.module.css";
 import Link from "next/link";
 import { v4 } from "uuid";
@@ -15,14 +15,6 @@ import {
     UnknownProgressInfo,
     uploadFileGroup,
 } from "@uploadcare/upload-client";
-import {
-    MessageTable,
-    ChannelTable,
-    GuildTable,
-    UserTable,
-    InviteTable,
-    Attachment,
-} from "@/lib/db/types";
 
 type Message = Partial<MessageTable> & {
     reference: Message | null;
@@ -41,6 +33,12 @@ type Invite = (
           type: "error" | "notfound";
       }
 )[];
+
+const messageIcons = {
+    2: "add-user",
+    3: "remove-user",
+    7: "pin",
+};
 
 export function Message({
     message,
@@ -520,18 +518,6 @@ export function Message({
         translateMessage,
     };
 
-    const messageIcons = [
-        "",
-        "",
-        "834fd250-08b6-4009-be66-284b1e593abd",
-        "a03e8741-1662-46ba-9870-839c54a5d7f0",
-        "Call",
-        "979c692b-3889-48b5-81e3-a2fe80f42bad",
-        "979c692b-3889-48b5-81e3-a2fe80f42bad",
-        "938d46b0-fd11-411e-a891-42571825cd11",
-        "834fd250-08b6-4009-be66-284b1e593abd",
-    ];
-
     if (inline) {
         return (
             <li
@@ -585,17 +571,9 @@ export function Message({
 
                 <div className={styles.message}>
                     <div className={styles.specialIcon}>
-                        <div
-                            style={{
-                                backgroundImage: `url(https://ucarecdn.com/${
-                                    messageIcons[message.type]
-                                }/)`,
-                                width: "1rem",
-                                height: "1rem",
-                                backgroundSize: "1rem 1rem",
-                                backgroundRepeat: "no-repeat",
-                            }}
-                        />
+                        <div>
+                            <Icon name={messageIcons[message.type]} />
+                        </div>
                     </div>
 
                     <div className={styles.messageContent}>
@@ -622,9 +600,7 @@ export function Message({
                             )}
 
                             {message.type === 4 && <span></span>}
-
                             {message.type === 5 && <span></span>}
-
                             {message.type === 6 && <span></span>}
 
                             {message.type === 7 && (
