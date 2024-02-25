@@ -232,6 +232,11 @@
     justify-content: center;
 }
 
+.search > div:last-child > svg {
+    width: 16px;
+    height: 16px;
+}
+
 .backButton {
     background-color: transparent;
     width: 44px;

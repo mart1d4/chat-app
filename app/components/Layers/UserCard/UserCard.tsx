@@ -380,7 +380,7 @@ export function UserCard({ content }: any) {
                                 </div>
                             </div>
 
-                            {currentUser.id !== user.id && (
+                            {currentUser.id != user.id && (
                                 <div className={styles.cardSection}>
                                     <input
                                         className={styles.cardMessage}

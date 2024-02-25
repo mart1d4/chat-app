@@ -5,6 +5,7 @@
 **.DS_Store
 **.vercel
 **.git
+**.lockb
 .vercel
 .env.local
 .env

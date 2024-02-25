@@ -11,6 +11,7 @@ import {
     isUserInChannel,
 } from "@/lib/db/helpers";
 import pusher from "@/lib/pusher/server-connection";
+import probe from "probe-image-size";
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "0");
@@ -134,6 +135,57 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             });
         }
 
+        // embeds are either images or links
+        const embeds = await Promise.all(
+            (message.content.match(/https?:\/\/[^\s]+/g) || [])
+                .map(async (url) => {
+                    try {
+                        const isImage = /\.(jpe?g|png|gif|bmp)$/i.test(url);
+
+                        const res = await fetch(url);
+                        const contentType = res.headers.get("content-type");
+
+                        if (isImage || contentType?.startsWith("image")) {
+                            const result = await probe(url);
+                            console.log(result);
+
+                            return {
+                                type: "image",
+                                url: url,
+                                dimensions: {
+                                    width: result.width,
+                                    height: result.height,
+                                },
+                                mime: result.mime,
+                            };
+                        }
+
+                        const metadata = await fetch(
+                            `https://api.microlink.io/?url=${encodeURIComponent(url)}`
+                        ).then((res) => res.json());
+
+                        if (metadata.status === "success") {
+                            return {
+                                type: "link",
+                                url: url,
+                                title: metadata.data.title,
+                                description: metadata.data.description,
+                                image: metadata.data.image,
+                            };
+                        }
+
+                        return null;
+                    } catch (error) {
+                        console.log(error);
+                        return null;
+                    }
+                })
+                .filter((r) => r !== null)
+        );
+
+        // Remove duplicate urls
+        const uniqueEmbeds = embeds.filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i);
+
         const id = getRandomId();
 
         await db
@@ -143,7 +195,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                 type: message.reference ? 1 : 0,
                 content: message.content,
                 attachments: message.attachments ? JSON.stringify(message.attachments) : "[]",
-                embeds: message.embeds ? JSON.stringify(message.embeds) : "[]",
+                embeds: uniqueEmbeds.length ? JSON.stringify(uniqueEmbeds) : "[]",
                 mentionEveryone: message.mentionEveryone ?? false,
                 mentionChannelIds: message.mentionChannelIds
                     ? JSON.stringify(message.mentionChannelIds)

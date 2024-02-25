@@ -212,6 +212,7 @@ export async function getUser({
             .$if(!!select?.status, (q) => q.select("status"))
             .$if(!!select?.system, (q) => q.select("system"))
             .$if(!!select?.verified, (q) => q.select("verified"))
+            .$if(!!select?.notes, (q) => q.select("notes"))
             .$if(!!select?.notifications, (q) => q.select("notifications"))
             .$if(!!select?.createdAt, (q) => q.select("createdAt"))
             .$if(!id && !username, (q) =>
@@ -739,7 +740,7 @@ export function withAuthor(eb: ExpressionBuilder<DB, "users">) {
     return jsonObjectFrom(
         eb
             .selectFrom("users as author")
-            .select(userSelect)
+            .select([...userSelect, "createdAt", "status"])
             .whereRef("author.id", "=", "messages.authorId")
     ).as("author");
 }
@@ -854,15 +855,17 @@ export async function getInvite(code: string) {
             .select((eb) => [
                 "id",
                 "code",
+                "uses",
                 "maxUses",
                 "maxAge",
                 "temporary",
                 "inviterId",
+                "expiresAt",
                 withGuild(eb),
-                withChannel(eb, ["id", "name", "icon"]),
+                withChannel(eb, ["id", "type", "name", "icon"]),
             ])
             .where("code", "=", code)
-            .executeTakeFirstOrThrow();
+            .executeTakeFirst();
 
         return invite;
     } catch (error) {

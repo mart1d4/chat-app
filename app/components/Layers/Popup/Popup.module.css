@@ -7,7 +7,10 @@
     background-color: var(--background-4);
     border-radius: 4px;
     position: relative;
+    backface-visibility: hidden;
+    transform: translateZ(0);
     box-shadow: var(--elevation-high), var(--elevation-low);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cardContainer.fileEdit {
@@ -246,12 +249,11 @@
 }
 
 .imagePopup {
-    position: absolute;
-    left: 20px;
-    top: -20px;
-    background-repeat: no-repeat;
-    background-position: 50%;
+    width: 104px;
     height: 104px;
+    margin: -33px 16px 0 0;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .spoilerCheckbox {
@@ -509,27 +511,8 @@
 /* ATTACHMENT PREVIEW */
 
 .imagePreview {
-    width: fit-content;
-    margin: 0 auto;
-}
-
-.imagePreview > div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
     user-select: text;
-    overflow: hidden;
-}
-
-.imagePreview > div > div {
-    max-width: 80dvw;
-    max-height: 80dvh;
-}
-
-.imagePreview > div > img {
-    max-width: 80dvw;
-    max-height: 80dvh;
 }
 
 .imageLink {
@@ -599,6 +582,7 @@
     height: auto;
     padding: 0;
     transition: background-color 0s;
+    user-select: none;
 }
 
 .serverTemplate:hover {
@@ -669,7 +653,7 @@
     cursor: pointer;
 }
 
-.input {
+.input:not(:first-child) {
     margin-top: 24px;
 }
 
@@ -1032,4 +1016,26 @@
 
 .big {
     flex: 1 1 auto;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.35);
+        opacity: 0;
+    }
 }

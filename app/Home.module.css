@@ -138,6 +138,8 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 .heroButtons > a:first-child {
@@ -304,11 +306,13 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 .contentGrid:nth-child(5) > div > a:hover {
-    background-color: hsl(235, 86.1%, 71.8%);
-    box-shadow: 0 8px 15px hsla(0, 0%, 0%, 0.2);
+    background-color: hsl(227, 58%, 65%);
+    box-shadow: 0 8px 5px rgba(0, 0, 0, 0.2);
 }
 
 .contentGrid:nth-child(5) > div > a > svg {
@@ -326,7 +330,7 @@
 .contentGrid > div > div > div {
     margin-top: 24px;
     font-size: clamp(16px, 2vw, 20px);
-    line-height: 1.625;
+    line-height: 28px;
 }
 
 @media screen and (min-width: 768px) {
@@ -402,6 +406,7 @@
 
     .contentGrid > div > div > h2 {
         font-size: 48px;
+        line-height: 48px;
     }
 
     .contentGrid:nth-child(2) > div > div {

@@ -49,6 +49,11 @@
     border-radius: 4px;
 }
 
+.langButton > svg {
+    transform: rotate(90deg);
+    padding-bottom: 8px;
+}
+
 .langChooser {
     position: absolute;
     z-index: 10;
@@ -126,10 +131,6 @@
     color: hsl(0, 0%, 100%);
     font-size: 14px;
     line-height: 18px;
-}
-
-.language > div > div > svg {
-    padding-left: 8px;
 }
 
 .socials {
@@ -218,6 +219,8 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 .bottomFooterContent > a:last-child:hover {

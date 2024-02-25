@@ -44,17 +44,20 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const { sendRequest } = useFetchHelper();
 
     const user = content.user;
+
     // const mutualFriends = friends.filter((friend: User) => user.friendIds.includes(friend.id));
     // const mutualGuilds = guilds.filter((guild: Guild) => user.guildIds.includes(guild.id));
 
     const mutualFriends: Partial<User>[] = [];
-    const mutualGuilds: Partial<Guild>[] = [];
+    const mutualGuilds: Partial<Guild>[] = guilds.filter((g) =>
+        g.members.map((m) => m.userId).includes(user.id)
+    );
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const hasRendered = useRef<boolean>(false);
 
-    const isSameUser = () => user?.id === currentUser.id;
+    const isSameUser = () => user.id == currentUser.id;
 
     useEffect(() => {
         if (content.focusNote) noteRef.current?.focus();
@@ -375,6 +378,8 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         </div>
                     )}
 
+                    {isSameUser() && <div className={styles.divider} />}
+
                     {!isSameUser() && (
                         <div className={styles.contentNav}>
                             <div>
@@ -528,7 +533,7 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
 
     let url: string | null = null;
     if (guild) {
-        const guildUrl = urls.find((u) => u.guildId === guild.id);
+        const guildUrl = urls.find((u) => u.guildId == guild.id);
         if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
     }
 

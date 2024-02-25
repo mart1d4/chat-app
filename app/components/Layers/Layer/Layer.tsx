@@ -5,36 +5,25 @@ import { useEffect, useState, useCallback } from "react";
 import styles from "./Layer.module.css";
 import { useLayers } from "@/lib/store";
 
+const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
+
 export function Layers() {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
-    let popupHasBackground = false;
-    layers.POPUP.forEach((obj, index: number) => {
-        if (!["PINNED_MESSAGES", "CREATE_DM"].includes(layers.POPUP[index].content.type)) {
-            popupHasBackground = true;
-        }
-    });
-
-    const darkBackground =
-        (layers.POPUP.length > 0 && popupHasBackground) || layers.USER_PROFILE !== null;
+    const showFilter =
+        layers.POPUP.find((obj) => !popoutTypes.includes(obj.content.type)) ||
+        layers.USER_PROFILE !== null;
 
     return (
-        <div
-            className={styles.container}
-            style={{ pointerEvents: darkBackground ? "all" : "none" }}
-        >
+        <div className={`${styles.container} ${showFilter ? styles.showFilter : ""}`}>
             <div
                 className={styles.filter}
-                style={{
-                    pointerEvents: darkBackground ? "all" : "none",
-                    backgroundColor: darkBackground ? "rgba(0, 0, 0, 0.80)" : "",
-                }}
-                onMouseDown={() => {
-                    if (layers.USER_PROFILE || layers.POPUP.length > 0) {
+                onClick={() => {
+                    if (layers.USER_PROFILE || layers.POPUP.length) {
                         setLayers({
                             settings: {
-                                type: layers.POPUP.length > 0 ? "POPUP" : "USER_PROFILE",
+                                type: layers.POPUP.length ? "POPUP" : "USER_PROFILE",
                                 setNull: true,
                             },
                         });
@@ -42,16 +31,13 @@ export function Layers() {
                 }}
             />
 
-            {layers.POPUP.length > 0 &&
-                layers.POPUP.map((obj, index: number) => {
-                    return (
-                        <Layer
-                            key={index}
-                            settings={layers.POPUP[index].settings}
-                            content={layers.POPUP[index].content}
-                        />
-                    );
-                })}
+            {layers.POPUP.map((_, index: number) => (
+                <Layer
+                    key={index}
+                    settings={layers.POPUP[index].settings}
+                    content={layers.POPUP[index].content}
+                />
+            ))}
 
             {layers.MENU && (
                 <Layer
@@ -77,50 +63,21 @@ export function Layers() {
     );
 }
 
-type TPositions = {
-    top?: number | string;
-    left?: number | string;
-    right?: number | string;
-    bottom?: number | string;
-    transform?: string;
-};
-
-type TDimensions = null | {
-    width: number;
-    height: number;
-};
-
-type TMenu = null | any;
-
-type TPopup = null | {
-    type: string;
-    channelId?: string;
-    message?: TMessage;
-};
-
-type TUserCard = null | {
-    user: TCleanUser;
-};
-
-type TUserProfile = null | {
-    user: TCleanUser;
-    focusNote?: boolean;
-};
-
-type TLayer = {
+function Layer({
+    settings,
+    content,
+}: {
     settings: {
-        type: "MENU" | "POPUP" | "USER_CARD" | "USER_PROFILE";
-        setNull?: boolean;
-        element?: any | null;
-        event?: React.MouseEvent | React.KeyboardEvent;
-        firstSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
-        secondSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
+        type: string;
+        event?: any;
+        element?: HTMLElement;
+        firstSide?: string;
+        secondSide?: string;
         gap?: number;
+        setNull?: boolean;
     };
-    content?: TMenu | TPopup | TUserCard | TUserProfile;
-};
-
-function Layer({ settings, content }: TLayer) {
+    content: any;
+}) {
     const [transform, setTransform] = useState<string>("");
     const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
 
@@ -130,6 +87,8 @@ function Layer({ settings, content }: TLayer) {
     const firstSide = settings.firstSide;
     const secondSide = settings.secondSide;
     const gap = settings.gap || 10;
+
+    const absolute = settings.event || settings.element;
 
     const layerRef = useCallback(
         (node: HTMLElement | null) => {
@@ -147,7 +106,7 @@ function Layer({ settings, content }: TLayer) {
     );
 
     useEffect(() => {
-        if (!currentNode) return;
+        if (!currentNode || !absolute) return;
 
         const width = currentNode.offsetWidth;
         const height = currentNode.offsetHeight;
@@ -159,9 +118,7 @@ function Layer({ settings, content }: TLayer) {
         let left = 0;
 
         if (settings.event) {
-            // @ts-expect-error
             const mouseX = settings.event.pageX;
-            // @ts-expect-error
             const mouseY = settings.event.pageY;
 
             top = mouseY;
@@ -222,8 +179,6 @@ function Layer({ settings, content }: TLayer) {
             }
 
             setTransform(`translate(${left}px, ${top}px)`);
-        } else {
-            setTransform("translate(-50%, -50%)");
         }
     }, [currentNode]);
 
@@ -245,9 +200,7 @@ function Layer({ settings, content }: TLayer) {
 
         document.addEventListener("keydown", handleEscKey);
         return () => document.removeEventListener("keydown", handleEscKey);
-    }, [currentNode, settings?.type, layers]);
-
-    if (!settings?.type) return null;
+    }, [currentNode, layers]);
 
     const indexes = {
         MENU: 1004,
@@ -256,24 +209,18 @@ function Layer({ settings, content }: TLayer) {
         USER_PROFILE: 1003,
     };
 
-    const index = ["PINNED_MESSAGES", "CREATE_DM"].includes(content.type)
-        ? 1001
-        : indexes[settings.type];
+    const index = popoutTypes.includes(content.type) ? 1001 : indexes[settings.type];
 
     return (
         <div
             ref={layerRef}
-            className={`${styles.layer} ${
-                settings.type === "POPUP" || settings.type === "POPUP" ? styles.popup : ""
-            }`}
+            className={`${styles.layer} ${!absolute ? styles.static : ""}`}
             style={{
                 zIndex: index,
-                opacity: transform !== "" ? 1 : 0,
-                top: !settings?.event && !settings?.element ? "50%" : "",
-                left: !settings?.event && !settings?.element ? "50%" : "",
-                transform: transform,
+                opacity: transform !== "" || !absolute ? 1 : 0,
+                pointerEvents: transform !== "" || !absolute ? "auto" : "none",
+                transform: !absolute ? "" : transform,
             }}
-            onMouseDown={(e) => e.stopPropagation()}
         >
             {settings.type === "MENU" && <Menu content={content} />}
             {settings.type === "POPUP" && (

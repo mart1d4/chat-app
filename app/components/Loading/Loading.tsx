@@ -86,10 +86,7 @@ export function Loading({ children, data }: Props) {
                 });
 
             if (response.token) {
-                setUser({
-                    ...data.user,
-                    id: parseInt(data.user.id),
-                });
+                setUser(data.user);
                 setFriends(data.friends);
                 setBlocked(data.blocked);
                 setReceived(data.received);

@@ -1,4 +1,5 @@
 import {
+    getChannel,
     getInvite,
     getInvites,
     getRandomId,
@@ -64,29 +65,13 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
     const { maxUses, maxAge, temporary } = await req.json();
 
     try {
-        const channel = await db
-            .selectFrom("channels")
-            .select("id")
-            // .where(({ eb, and, exists, selectFrom }) =>
-            //     and([
-            //         eb("id", "=", channelId),
-            //         eb("guildId", "is not", null),
-            //         exists(
-            //             selectFrom("guildmembers")
-            //                 .select("userId")
-            //                 .where("userId", "=", senderId)
-            //                 .whereRef("guildId", "=", "channels.guildId")
-            //         ),
-            //     ])
-            // )
-            .where("id", "=", channelId)
-            .executeTakeFirst();
+        const channel = await getChannel(channelId, ["id", "guildId"]);
 
         if (!channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Channel not found or you are not in this channel",
+                    message: "No channel found with this ID.",
                 },
                 { status: 404 }
             );
@@ -120,7 +105,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
             return NextResponse.json(
                 {
                     success: true,
-                    message: "Successfully found invite with same settings",
+                    message: "Successfully found invite with same settings.",
                     invite: invite,
                 },
                 { status: 200 }
@@ -136,7 +121,7 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                     guildId: channel.guildId,
                     maxUses: maxUses,
                     maxAge: maxAge,
-                    expiresAt: maxAge ? new Date(Date.now() + maxAge) : null,
+                    expiresAt: new Date(Date.now() + (maxAge || 86400) * 1000),
                     temporary: temporary,
                     inviterId: senderId,
                     code: code,

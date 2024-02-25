@@ -197,9 +197,14 @@ export default function useFetchHelper() {
             body: method !== "GET" ? body : undefined,
         });
 
-        const res = await response.json();
+        let res;
+        try {
+            res = await response.json();
+        } catch (error) {
+            console.log(error);
+        }
 
-        if (response.status === 401 && res.message === "Unauthorized") {
+        if (response.status === 401) {
             const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",

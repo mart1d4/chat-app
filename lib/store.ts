@@ -78,52 +78,71 @@ interface LayersState {
         ["USER_CARD"]: TLayer | null;
         ["USER_PROFILE"]: TLayer | null;
     };
-    setLayers: (layer: TLayer) => void;
+    setLayers: (layer: TLayer, keepPopout?: boolean) => void;
 }
+
+const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
 
 export const useLayers = create<LayersState>()((set) => ({
     layers: {
-        MENU: null,
         POPUP: [],
+        MENU: null,
         USER_CARD: null,
         USER_PROFILE: null,
     },
-    setLayers: (layer) => {
+
+    setLayers: (layer, keepPopout) => {
         set((state) => {
+            // Set tooltip to null if not setNull
             if (!layer.settings.setNull) {
                 const setTooltip = useTooltip.getState().setTooltip;
                 setTooltip(null);
             }
 
             if (layer.settings.type === "POPUP") {
-                // If add, add to array, otherwise remove last
                 if (!layer.settings.setNull) {
-                    // if type already exists in array, don't add it
-                    if (
-                        (state.layers[layer.settings.type] as TLayer[]).find(
-                            (l) => l.content.type === layer.content.type
-                        )
-                    ) {
-                        return state;
+                    if (popoutTypes.includes(layer.content.type)) {
+                        if (
+                            state.layers.POPUP[0]?.content?.type === layer.content.type &&
+                            state.layers.POPUP[0]?.settings.element === layer.settings.element
+                        ) {
+                            return {
+                                layers: {
+                                    ...state.layers,
+                                    POPUP: [],
+                                    MENU: null,
+                                },
+                            };
+                        }
+
+                        return {
+                            layers: {
+                                ...state.layers,
+                                POPUP: [layer],
+                                MENU: null,
+                            },
+                        };
+                    }
+
+                    let newLayers = state.layers.POPUP;
+                    if (!keepPopout) {
+                        newLayers = newLayers.filter((l) => !popoutTypes.includes(l.content.type));
                     }
 
                     return {
                         layers: {
                             ...state.layers,
-                            [layer.settings.type]: [
-                                ...(state.layers[layer.settings.type] as TLayer[]),
-                                layer,
-                            ],
+                            POPUP: [...newLayers, layer],
                             MENU: null,
                         },
                     };
                 } else {
-                    const layers = state.layers[layer.settings.type] as TLayer[];
+                    const layers = state.layers.POPUP;
 
                     return {
                         layers: {
                             ...state.layers,
-                            [layer.settings.type]: layers.slice(0, layers.length - 1),
+                            POPUP: layers.slice(0, layers.length - 1),
                             MENU: null,
                         },
                     };
@@ -135,6 +154,18 @@ export const useLayers = create<LayersState>()((set) => ({
                     layers: {
                         ...state.layers,
                         [layer.settings.type]: layer.settings.setNull ? null : layer,
+                        MENU: null,
+                    },
+                };
+            }
+
+            if (
+                layer.settings.type !== "MENU" &&
+                state.layers.MENU?.settings?.element === layer.settings.element
+            ) {
+                return {
+                    layers: {
+                        ...state.layers,
                         MENU: null,
                     },
                 };
@@ -859,3 +890,39 @@ export const usePusher = create<PusherState>((set) => ({
     pusher: null,
     setPusher: (pusher) => set(() => ({ pusher })),
 }));
+
+interface CollapsedCategoriesState {
+    collapsedCategories: {
+        [key: string]: boolean;
+    };
+    setCollapsedCategory: (key: string, val: boolean) => void;
+}
+
+export const useCollapsedCategories = create(
+    persist<CollapsedCategoriesState>(
+        (set) => ({
+            collapsedCategories: {},
+            setCollapsedCategory: (key, val) => {
+                // If val is false, remove the key from the object
+                if (!val) {
+                    return set((state) => {
+                        const newState = { ...state.collapsedCategories };
+                        delete newState[key];
+                        return { collapsedCategories: newState };
+                    });
+                }
+
+                return set((state) => ({
+                    collapsedCategories: {
+                        ...state.collapsedCategories,
+                        [key]: val,
+                    },
+                }));
+            },
+        }),
+        {
+            name: "collapsedCategories",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);

@@ -46,7 +46,12 @@ export default function LanguagePicker() {
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
-            if (!(langMenu.current?.contains(e.target as Node) || langButton.current?.contains(e.target as Node))) {
+            if (
+                !(
+                    langMenu.current?.contains(e.target as Node) ||
+                    langButton.current?.contains(e.target as Node)
+                )
+            ) {
                 setShowPopover(false);
             }
         };
@@ -104,7 +109,10 @@ export default function LanguagePicker() {
                                 }}
                             >
                                 <div>
-                                    <img src={`/assets/flags/${language.flag}.png`} alt={`${language.name} flag`} />
+                                    <img
+                                        src={`/assets/flags/${language.flag}.png`}
+                                        alt={`${language.name} flag`}
+                                    />
                                     <div>{language.name}</div>
                                 </div>
                             </div>
@@ -125,11 +133,14 @@ export default function LanguagePicker() {
                     }}
                 >
                     <div>
-                        <img src={`/assets/flags/${lang?.flag}.png`} alt={`${lang?.name} flag`} />
+                        <img
+                            src={`/assets/flags/${lang?.flag}.png`}
+                            alt={`${lang?.name} flag`}
+                        />
                         <div>{lang?.name}</div>
                     </div>
 
-                    <Icon name="arrow" />
+                    <Icon name="caret" />
                 </div>
             </div>
         </div>

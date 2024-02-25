@@ -7,7 +7,7 @@ import { kv } from "@vercel/kv";
 const ratelimit = new Ratelimit({
     redis: kv,
     // 5 requests from the same IP in 10 seconds
-    limiter: Ratelimit.slidingWindow(5, "10 s"),
+    limiter: Ratelimit.slidingWindow(10, "10 s"),
 });
 
 export const config = {
@@ -17,7 +17,6 @@ export const config = {
 export async function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
     const ip = req.ip ?? "127.0.0.1";
-    console.log(ip);
 
     const token = req.headers.get("Authorization")?.split(" ")[1];
     const refreshToken = req.cookies.get("token")?.value;

@@ -346,13 +346,13 @@ function MyAccount({ setActiveTab }: any) {
         },
         {
             title: "Email",
-            value: user.email ?? "Not set",
-            edit: user.email,
+            value: user.email ?? "You haven't added an email yet.",
+            edit: !!user.email,
         },
         {
             title: "Phone Number",
-            value: user.phone ?? "Not set",
-            edit: user.phone,
+            value: user.phone || "You haven't added a phone number yet.",
+            edit: !!user.phone,
         },
     ];
 
@@ -458,19 +458,48 @@ function MyAccount({ setActiveTab }: any) {
                     Change Password
                 </button>
 
-                <h3>SMS Backup Authentication</h3>
+                <h3>Authenticator App</h3>
                 <div className={styles.accountRemoval}>
                     <div>
-                        Add your phone as a backup 2FA method in case you lose your authentication
-                        app or backup codes. Your current phone number is 0001.
+                        Protect your account with an extra layer of security. Once configured,
+                        you'll be required to enter your password and complete one additional step
+                        in order to sign in.
                     </div>
 
                     <div className={styles.buttonsContainer}>
-                        <button className=" button blue">Enable SMS Authentication</button>
-
-                        <button className="button underline">Change phone number</button>
+                        <button className="button blue disabled">Enable Authenticator App</button>
                     </div>
                 </div>
+
+                <h3>Security keys</h3>
+                <div className={styles.accountRemoval}>
+                    <div>
+                        Add an additional layer of protection to your account with a Security Key.
+                    </div>
+
+                    <div className={styles.buttonsContainer}>
+                        <button className="button blue disabled">Register a Security Key</button>
+                    </div>
+                </div>
+
+                {user.phone && (
+                    <>
+                        <h3>SMS Backup Authentication</h3>
+                        <div className={styles.accountRemoval}>
+                            <div>
+                                Add your phone as a backup 2FA method in case you lose your
+                                authentication app or backup codes. Your current phone number is
+                                0001.
+                            </div>
+
+                            <div className={styles.buttonsContainer}>
+                                <button className="button blue">Enable SMS Authentication</button>
+
+                                <button className="button underline">Change phone number</button>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className={styles.divider} />
@@ -671,13 +700,16 @@ function Profiles() {
                     onClick={() => avatarInputRef.current?.click()}
                 />
 
-                <div className={styles.avatarOverlay}>{`Change\nAvatar`}</div>
-                <div
+                <div className={styles.avatarOverlay}>
+                    <Icon name="edit" />
+                </div>
+
+                {/* <div
                     className={styles.imageUpload}
                     style={{
                         backgroundImage: `url('https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/')`,
                     }}
-                />
+                /> */}
 
                 <div className={styles.cardAvatarStatus}>
                     <div style={{ backgroundColor: "black" }} />

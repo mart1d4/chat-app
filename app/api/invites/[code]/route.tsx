@@ -1,4 +1,4 @@
-import { validInviteChannelTypes } from "@/lib/verifications";
+import { isInviteExpired, validInviteChannelTypes } from "@/lib/verifications";
 import { defaultPermissions } from "@/lib/permissions/data";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
@@ -17,7 +17,12 @@ export async function GET(req: NextRequest, { params }: { params: { code: string
     const { code } = params;
 
     try {
-        const invite = await getInvite(code);
+        let invite = await getInvite(code);
+
+        if (invite && isInviteExpired(invite)) {
+            await db.deleteFrom("invites").where("code", "=", code).execute();
+            invite = null;
+        }
 
         return NextResponse.json(
             {
@@ -52,11 +57,11 @@ export async function POST(req: NextRequest, { params }: { params: { code: strin
             );
         }
 
-        if (invite.uses >= invite.maxUses || Date.now() > invite.expiresAt.getTime()) {
+        if (invite.uses >= invite.maxUses || isInviteExpired(invite)) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Invite has expired.",
+                    message: "Invite has expired or has reached its maximum uses.",
                 },
                 { status: 400 }
             );
@@ -107,7 +112,7 @@ export async function POST(req: NextRequest, { params }: { params: { code: strin
                 );
             }
         } else {
-            if (!invite.guildId) {
+            if (!invite.guild?.id) {
                 return NextResponse.json(
                     {
                         success: false,
@@ -115,7 +120,7 @@ export async function POST(req: NextRequest, { params }: { params: { code: strin
                     },
                     { status: 400 }
                 );
-            } else if (await isUserInGuild(user.id, invite.guildId)) {
+            } else if (await isUserInGuild(user.id, invite.guild.id)) {
                 return NextResponse.json(
                     {
                         success: false,
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest, { params }: { params: { code: strin
                     { status: 400 }
                 );
             } else {
-                const guild = await getGuild(invite.guildId);
+                const guild = await getGuild(invite.guild.id);
 
                 if (!guild) {
                     return NextResponse.json(

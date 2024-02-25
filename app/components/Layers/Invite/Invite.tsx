@@ -11,7 +11,7 @@ type TContent = {
     channel: TChannel;
 };
 
-export function Invite({ content }: { content: TContent }) {
+export function InvitePopup({ content }: { content: TContent }) {
     const [filteredList, setFilteredList] = useState<TChannel[]>([]);
     const [search, setSearch] = useState<string>("");
     const [copied, setCopied] = useState<boolean>(false);
@@ -48,7 +48,10 @@ export function Invite({ content }: { content: TContent }) {
     }, []);
 
     useEffect(() => {
-        if (search) setFilteredList(channels.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase())));
+        if (search)
+            setFilteredList(
+                channels.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
+            );
         else setFilteredList(channels);
     }, [search, channels]);
 
@@ -117,6 +120,7 @@ export function Invite({ content }: { content: TContent }) {
                 )}
 
                 <button
+                    className="button"
                     onClick={() =>
                         setLayers({
                             settings: {
@@ -170,8 +174,9 @@ export function Invite({ content }: { content: TContent }) {
                                                     params: {
                                                         channelId:
                                                             channel.id ||
-                                                            (content.guild.channels.find((c) => c.type === 0)
-                                                                ?.id as string),
+                                                            (content.guild.channels.find(
+                                                                (c) => c.type === 0
+                                                            )?.id as string),
                                                     },
                                                     data: {
                                                         message: {
@@ -228,9 +233,11 @@ export function Invite({ content }: { content: TContent }) {
                             </div>
 
                             <button
-                                className={copied ? "green" : "blue"}
+                                className={copied ? "button green" : "button blue"}
                                 onClick={() => {
-                                    navigator.clipboard.writeText(`https://chat-app.mart1d4.dev/${inviteLink}`);
+                                    navigator.clipboard.writeText(
+                                        `https://chat-app.mart1d4.dev/${inviteLink}`
+                                    );
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 1000);
                                 }}

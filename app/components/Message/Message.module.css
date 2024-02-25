@@ -459,6 +459,10 @@
     width: 100%;
 }
 
+.image:hover .deleteImage {
+    visibility: visible;
+}
+
 .image > div:not(.deleteImage, .spoilerButton) {
     height: 100%;
     width: 100%;
@@ -502,6 +506,7 @@
 }
 
 .deleteImage {
+    visibility: hidden;
     position: absolute;
     top: 4px;
     right: 4px;
@@ -517,6 +522,11 @@
 .deleteImage:hover {
     color: var(--foreground-1);
     background-color: var(--error-1);
+}
+
+.deleteImage > svg {
+    width: 20px;
+    height: 20px;
 }
 
 .image .spoilerButton {
@@ -934,4 +944,127 @@
 
 .translation > span:hover {
     text-decoration: underline;
+}
+
+.embed {
+    max-width: 332px;
+    display: grid;
+    position: relative;
+    border-radius: 4px;
+    align-self: start;
+    justify-self: auto;
+    background-color: var(--background-3);
+    border-left: 4px solid var(--background-1);
+    font-size: 1rem;
+    line-height: 1.375rem;
+    white-space: break-spaces;
+    word-wrap: break-word;
+    user-select: text;
+    color: var(--foreground-2);
+}
+
+.embed > div {
+    max-width: 516px;
+}
+
+.embed > div > div {
+    width: 100%;
+    padding: 0.5rem 1rem 1rem 0.75rem;
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto;
+}
+
+.embedRemove {
+    position: absolute;
+    opacity: 0;
+    top: -2px;
+    right: -20px;
+    cursor: pointer;
+    padding: 2px;
+    color: var(--foreground-3);
+}
+
+.embedRemove:hover {
+    color: var(--foreground-1);
+}
+
+.embedRemove > svg {
+    width: 16px;
+    height: 16px;
+}
+
+.embed:hover .embedRemove {
+    opacity: 1;
+}
+
+.embed .url {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 400;
+    grid-column: 1 / 1;
+    margin-top: 8px;
+}
+
+.embed .title {
+    color: var(--accent-light);
+    font-weight: 600;
+    display: inline-block;
+    word-break: break-word;
+    cursor: pointer;
+    font-size: 1rem;
+    grid-column: 1 / 1;
+    margin-top: 8px;
+    text-decoration: none;
+}
+
+.embed .title:hover {
+    text-decoration: underline;
+}
+
+.embed .desc {
+    font-size: 0.875rem;
+    line-height: 1.125rem;
+    font-weight: 400;
+    white-space: pre-line;
+    grid-column: 1 / 1;
+    margin-top: 8px;
+}
+
+.embed .img {
+    width: 100%;
+    height: 100%;
+    margin-top: 16px;
+    display: flex;
+    flex-flow: column nowrap;
+    grid-column: 1 / 1;
+    border-radius: 4px;
+    contain: paint;
+    object-fit: fill;
+}
+
+.embed .img > div {
+    display: flex;
+    flex-flow: row nowrap;
+    flex: auto;
+    width: 100%;
+    height: 100%;
+}
+
+.embed .img > div > div {
+    max-width: 300px;
+    width: 100%;
+    aspect-ratio: 300 / 300;
+    cursor: pointer;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+    user-select: text;
+}
+
+.embed .img > div > div > img {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    object-fit: cover;
 }

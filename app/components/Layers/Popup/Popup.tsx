@@ -7,11 +7,11 @@ import {
     Popout,
     Checkbox,
     Avatar,
-    Invite,
+    InvitePopup,
     EmojiPicker,
 } from "@components";
 import { translateCap, sanitizeString } from "@/lib/strings";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { base } from "@uploadcare/upload-client";
 import { useData, useLayers } from "@/lib/store";
@@ -27,9 +27,11 @@ type TProps = {
     [key: string]: {
         title: string;
         description?: string;
+        tip?: string;
         buttonColor: string;
         buttonText: string;
         buttonDisabled?: boolean;
+        onlyButton?: boolean;
         function: () => void;
         centered?: boolean;
         skipClose?: boolean;
@@ -59,10 +61,10 @@ const statuses = {
     Offline: "OFFLINE",
 };
 
-export function Popup({ content, friends, element }: any) {
-    const user = useData((state) => state.user) as TCleanUser;
+export function Popup({ content, friends, element }: { content: any; friends: any; element: any }) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
+    const user = useData((state) => state.user);
 
     const addGuild = useData((state) => state.addGuild);
     const { sendRequest } = useFetchHelper();
@@ -113,42 +115,7 @@ export function Popup({ content, friends, element }: any) {
         setImageLoading(true);
     }, [imgIndex]);
 
-    useEffect(() => {
-        // Reset all state when popup is closed
-        if (!layers.POPUP) {
-            setIsLoading(false);
-            setUID(user.username);
-            setPassword("");
-            setPassword1("");
-            setNewPassword("");
-            setConfirmPassword("");
-            setPassword1Error("");
-
-            setFilename("");
-            setDescription("");
-            setIsSpoiler(false);
-
-            setJoin(false);
-            setGuildTemplate(0);
-            setGuildName(`${user.username}'s server`);
-            setGuildIcon(null);
-
-            setChannelName("");
-            setChannelType(2);
-            setChannelLocked(false);
-        }
-    }, [layers.POPUP]);
-
-    useEffect(() => {
-        if (!content.file) return;
-
-        setIsImage(content.attachment.isImage);
-        setFilename(content.attachment.name);
-        setDescription(content.attachment.description ?? "");
-        setIsSpoiler(content.attachment.isSpoiler);
-    }, [content.attachment]);
-
-    const handleUsernameSubmit = async () => {
+    async function handleUsernameSubmit() {
         setIsLoading(true);
 
         const username = sanitizeString(uid);
@@ -193,9 +160,9 @@ export function Popup({ content, friends, element }: any) {
         }
 
         setIsLoading(false);
-    };
+    }
 
-    const handlePasswordSubmit = async () => {
+    async function handlePasswordSubmit() {
         setIsLoading(true);
 
         if (!password1) {
@@ -218,32 +185,42 @@ export function Popup({ content, friends, element }: any) {
             return setIsLoading(false);
         }
 
-        const response = await sendRequest({
-            query: "UPDATE_USER",
-            data: {
-                password: password1,
-                newPassword: newPassword,
-            },
-        });
-
-        if (!response.success) {
-            setPassword1Error(response.message || "Couldn't update password.");
-        } else {
-            setPassword1("");
-            setNewPassword("");
-            setConfirmPassword("");
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
+        if (password1 === newPassword) {
+            setNewPasswordError("New password cannot be the same as your current password.");
+            return setIsLoading(false);
         }
 
-        setIsLoading(false);
-    };
+        try {
+            const response = await sendRequest({
+                query: "UPDATE_USER",
+                data: {
+                    password: password1,
+                    newPassword: newPassword,
+                },
+            });
 
-    const createGuild = async () => {
+            if (!response.success) {
+                setPassword1Error(response.message || "Couldn't update password.");
+            } else {
+                setPassword1("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+            }
+
+            setIsLoading(false);
+        } catch (err) {
+            console.error(err);
+            setIsLoading(false);
+        }
+    }
+
+    async function createGuild() {
         if (!guildTemplate || !guildName) return;
         setIsLoading(true);
         let uploadedIcon = null;
@@ -291,7 +268,7 @@ export function Popup({ content, friends, element }: any) {
         }
 
         setIsLoading(false);
-    };
+    }
 
     const props: TProps = {
         CREATE_GUILD: {
@@ -534,17 +511,17 @@ export function Popup({ content, friends, element }: any) {
             onlyButton: true,
             function: () => {},
         },
+        REMOVE_EMBEDS: {
+            title: "Are you sure?",
+            description: "This will remove all embeds on this message for everyone.",
+            tip: "Hold shift when clearing embeds to skip this modal.",
+            buttonColor: "red",
+            buttonText: "Remove All Embeds",
+            function: () => content.onConfirm(),
+        },
     };
 
     const prop = props[type as keyof typeof props] ?? null;
-
-    useEffect(() => {
-        if (!content.attachment) return;
-        setIsImage(content.attachment.isImage);
-        setFilename(content.attachment.name);
-        setDescription(content.attachment.description ?? "");
-        setIsSpoiler(content.attachment.isSpoiler);
-    }, [content.attachment]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -578,6 +555,17 @@ export function Popup({ content, friends, element }: any) {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [layers, isLoading, prop]);
 
+    const currentImage = useMemo(
+        () =>
+            content.attachments?.length
+                ? {
+                      ...content.attachments[imgIndex],
+                      dimensions: getDimensions(content.attachments[imgIndex].dimensions),
+                  }
+                : null,
+        [content.attachments, imgIndex]
+    );
+
     if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
         return (
             <Popout
@@ -589,10 +577,51 @@ export function Popup({ content, friends, element }: any) {
     }
 
     if (type === "GUILD_INVITE") {
-        return <Invite content={content} />;
+        return <InvitePopup content={content} />;
     }
 
-    const currentImage = content.attachments?.length ? content.attachments[imgIndex] : null;
+    function getDimensions(img) {
+        if (!img) return null;
+
+        const ratio = img.width / img.height;
+        const { innerWidth, innerHeight } = window;
+
+        // Image max height is 75% of the window height minux 80px
+        const maxHeight = innerHeight * 0.75 - 80;
+
+        // Image max width is 75% of the window width
+        const maxWidth = innerWidth * 0.75;
+
+        const dimensions = {
+            width: img.width,
+            height: img.height,
+            ratio,
+            aspectRatio: `${img.width / img.height}`,
+        };
+
+        // If the image is taller than it is wide
+        if (ratio < 1) {
+            // If the image is taller than the window
+            if (img.height > maxHeight) {
+                // Set the height to the max height
+                dimensions.height = maxHeight;
+
+                // Set the width to the max height times the ratio
+                dimensions.width = maxHeight * ratio;
+            }
+        } else {
+            // If the image is wider than the window
+            if (img.width > maxWidth) {
+                // Set the width to the max width
+                dimensions.width = maxWidth;
+
+                // Set the height to the max width divided by the ratio
+                dimensions.height = maxWidth / ratio;
+            }
+        }
+
+        return dimensions;
+    }
 
     return (
         <AnimatePresence>
@@ -809,99 +838,77 @@ export function Popup({ content, friends, element }: any) {
                     ref={popupRef}
                     role="dialog"
                     aria-modal="true"
-                    className={styles.container}
                     onContextMenu={(e) => e.preventDefault()}
                 >
-                    <div className={styles.attachmentContainer}>
-                        {content.attachments.length > 1 && (
-                            <button
-                                className={styles.imageNav}
-                                onClick={() => {
-                                    const length = content.attachments.length;
-                                    if (imgIndex == 0) setImgIndex(length - 1);
-                                    else setImgIndex((prev: number) => prev - 1);
-                                }}
-                            >
-                                <Icon name="arrowBig" />
-                            </button>
-                        )}
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == 0) setImgIndex(length - 1);
+                                else setImgIndex((prev: number) => prev - 1);
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
 
-                        <div className={styles.imagePreview}>
-                            <div
-                                onContextMenu={(e) => {
-                                    setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
-                                        content: {
-                                            type: "IMAGE",
-                                            attachment: currentImage,
-                                        },
-                                    });
-                                }}
-                            >
-                                {imageLoading && (
-                                    <div
-                                        style={{
-                                            maxWidth: `minmax(${currentImage.dimensions.width}px, 80dvw)`,
-                                            maxHeight: `minmax(${currentImage.dimensions.height}px, 80dvh)`,
-                                            width: currentImage.dimensions.width,
-                                            height: currentImage.dimensions.height,
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            backgroundColor: "hsla(0, 0%, 0%, 0.3)",
-                                        }}
-                                    >
-                                        <LoadingDots />
-                                    </div>
-                                )}
-
-                                <Image
-                                    style={{
-                                        maxWidth: `minmax(${currentImage.dimensions.width}px, 80dvw)`,
-                                        maxHeight: `minmax(${currentImage.dimensions.height}px, 80dvh)`,
-                                        aspectRatio: `${currentImage.dimensions.width}/${currentImage.dimensions.height}`,
-                                        position: imageLoading ? "absolute" : "relative",
-                                        objectFit: "contain",
-                                    }}
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}/${
-                                        currentImage.id
-                                    }/-/resize/${
-                                        currentImage.dimensions.width >= window.innerWidth
-                                            ? Math.ceil(window.innerWidth * 0.9)
-                                            : currentImage.dimensions.width
-                                    }x/`}
-                                    alt={currentImage.description || "Image"}
-                                    width={currentImage.dimensions.width}
-                                    height={currentImage.dimensions.height}
-                                    onLoad={() => setImageLoading(false)}
-                                />
-                            </div>
-
-                            <a
-                                target="_blank"
-                                className={styles.imageLink}
-                                href={`${process.env.NEXT_PUBLIC_CDN_URL}/${currentImage.id}/`}
-                            >
-                                Open in new tab
-                            </a>
+                    <div
+                        className={styles.imagePreview}
+                        style={{
+                            width: currentImage.dimensions.width,
+                            height: currentImage.dimensions.height,
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: currentImage.dimensions.width,
+                                height: currentImage.dimensions.height,
+                            }}
+                            onContextMenu={(e) => {
+                                setLayers({
+                                    settings: {
+                                        type: "MENU",
+                                        event: e,
+                                    },
+                                    content: {
+                                        type: "IMAGE",
+                                        attachment: currentImage,
+                                    },
+                                });
+                            }}
+                        >
+                            <Image
+                                style={{ aspectRatio: currentImage.dimensions.aspectRatio }}
+                                src={currentImage.url}
+                                alt={currentImage.description || "Image"}
+                                width={currentImage.dimensions.width}
+                                height={currentImage.dimensions.height}
+                                onLoad={() => setImageLoading(false)}
+                            />
                         </div>
 
-                        {content.attachments.length > 1 && (
-                            <button
-                                className={styles.imageNav}
-                                onClick={() => {
-                                    const length = content.attachments.length;
-                                    if (imgIndex == length - 1) setImgIndex(0);
-                                    else setImgIndex((prev: number) => prev + 1);
-                                }}
-                            >
-                                <Icon name="arrowBig" />
-                            </button>
-                        )}
+                        <a
+                            target="_blank"
+                            className={styles.imageLink}
+                            href={`${process.env.NEXT_PUBLIC_CDN_URL}/${currentImage.id}/`}
+                        >
+                            Open in new tab
+                        </a>
                     </div>
+
+                    {content.attachments.length > 1 && (
+                        <button
+                            className={styles.imageNav}
+                            onClick={() => {
+                                const length = content.attachments.length;
+                                if (imgIndex == length - 1) setImgIndex(0);
+                                else setImgIndex((prev: number) => prev + 1);
+                            }}
+                        >
+                            <Icon name="arrowBig" />
+                        </button>
+                    )}
                 </div>
             ) : type === "WARNING" ? (
                 <div
@@ -909,7 +916,6 @@ export function Popup({ content, friends, element }: any) {
                     ref={popupRef}
                     role="dialog"
                     aria-modal="true"
-                    className={styles.container}
                     onContextMenu={(e) => e.preventDefault()}
                 >
                     <div
@@ -1047,6 +1053,10 @@ export function Popup({ content, friends, element }: any) {
                                     >
                                         {prop.description}
                                     </div>
+                                )}
+
+                                {prop.tip && (
+                                    <div style={{ color: "var(--foreground-5)" }}>{prop.tip}</div>
                                 )}
 
                                 {content.message && type !== "DELETE_ATTACHMENT" && (
@@ -1479,6 +1489,7 @@ export function Popup({ content, friends, element }: any) {
                                             </span>
                                         )}
                                     </label>
+
                                     <div className={styles.inputContainer}>
                                         <input
                                             id="filename"
@@ -1514,6 +1525,7 @@ export function Popup({ content, friends, element }: any) {
                                             </span>
                                         )}
                                     </label>
+
                                     <div className={styles.inputContainer}>
                                         <input
                                             id="description"
@@ -1651,6 +1663,7 @@ export function Popup({ content, friends, element }: any) {
                                             </span>
                                         )}
                                     </label>
+
                                     <div className={styles.inputContainer}>
                                         <input
                                             ref={passwordRef}
@@ -1659,13 +1672,16 @@ export function Popup({ content, friends, element }: any) {
                                             name="password"
                                             aria-label="Password"
                                             autoCapitalize="off"
-                                            autoComplete="off"
+                                            autoComplete="current-password"
                                             autoCorrect="off"
                                             spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
+                                            aria-labelledby="current-password"
+                                            aria-describedby="current-password"
                                             value={password1}
-                                            onChange={(e) => setPassword1(e.target.value)}
+                                            onChange={(e) => {
+                                                setPassword1(e.target.value);
+                                                setPassword1Error("");
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -1689,6 +1705,7 @@ export function Popup({ content, friends, element }: any) {
                                             </span>
                                         )}
                                     </label>
+
                                     <div className={styles.inputContainer}>
                                         <input
                                             id="newPassword"
@@ -1696,14 +1713,17 @@ export function Popup({ content, friends, element }: any) {
                                             name="password"
                                             aria-label="New Password"
                                             autoCapitalize="off"
-                                            autoComplete="off"
+                                            autoComplete="new-password"
                                             autoCorrect="off"
                                             spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
+                                            aria-labelledby="new-password"
+                                            aria-describedby="new-password"
                                             value={newPassword}
                                             maxLength={256}
-                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                setNewPassword(e.target.value);
+                                                setNewPasswordError("");
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -1724,6 +1744,7 @@ export function Popup({ content, friends, element }: any) {
                                             </span>
                                         )}
                                     </label>
+
                                     <div className={styles.inputContainer}>
                                         <input
                                             id="confirmPassword"
@@ -1731,14 +1752,17 @@ export function Popup({ content, friends, element }: any) {
                                             name="password"
                                             aria-label="Confirm Password"
                                             autoCapitalize="off"
-                                            autoComplete="off"
+                                            autoComplete="new-password"
                                             autoCorrect="off"
                                             spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
+                                            aria-labelledby="confirm-password"
+                                            aria-describedby="confirm-password"
                                             value={confirmPassword}
                                             maxLength={256}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                setConfirmPassword(e.target.value);
+                                                setNewPasswordError("");
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -1746,10 +1770,7 @@ export function Popup({ content, friends, element }: any) {
                         )}
                     </div>
 
-                    <div
-                        className={styles.footerButtons}
-                        style={{ margin: type === "FILE_EDIT" ? "0 -4px" : "" }}
-                    >
+                    <div className={styles.footerButtons}>
                         {!prop.onlyButton && (
                             <button
                                 ref={cancelRef}

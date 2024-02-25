@@ -8,6 +8,7 @@
         var(--card-accent-color)
     );
     border-radius: 8px;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cardContainer > div {
@@ -378,7 +379,8 @@
     position: absolute;
     top: 14px;
     right: 16px;
-    height: auto;
+    width: 34px;
+    height: 34px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -393,6 +395,11 @@
 
 .editProfileButton:hover {
     background-color: var(--background-hover-dark-2);
+}
+
+.editProfileButton > svg {
+    width: 18px;
+    height: 18px;
 }
 
 .contentNav {
@@ -476,6 +483,7 @@
     cursor: pointer;
     line-height: 30px;
     padding: 4px;
+    background-color: transparent;
     color: var(--foreground-2);
     border-radius: 4px;
     margin: 1px 0;
@@ -514,4 +522,20 @@
     height: 40px;
     border-radius: 33%;
     background-color: var(--accent-1);
+}
+
+.divider {
+    margin-top: 16px;
+    border-top: 1px solid var(--card-divider-color);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }

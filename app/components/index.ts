@@ -8,7 +8,7 @@ export { UserCard } from "./Layers/UserCard/UserCard";
 export { UserProfile } from "./Layers/UserProfile/UserProfile";
 export { Popout } from "./Layers/Popout/Popout";
 export { Popup } from "./Layers/Popup/Popup";
-export { Invite } from "./Layers/Invite/Invite";
+export { InvitePopup } from "./Layers/Invite/Invite";
 
 export { Icon } from "./Icon/Icon";
 
@@ -41,4 +41,8 @@ export { FixedMessage } from "./Message/FixedMessage";
 export { TextArea, EmojiPicker } from "./TextArea/TextArea";
 
 export { ClickLayer } from "./ClickLayer/ClickLayer";
-export { UserMention } from "./Message/Message";
+export { UserMention } from "./Message/Mention";
+export { MessageInvite } from "./Message/Invite";
+export { MessageAttachments } from "./Message/Attachments";
+export { MessageMenu } from "./Message/Menu";
+export { MessageEmbeds } from "./Message/Embeds";

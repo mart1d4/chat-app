@@ -39,9 +39,10 @@ export default function HomePage() {
                         <div className={styles.heroText}>
                             <h1>Discover a future</h1>
                             <div>
-                                A future of communication with our web app. Our platform offers advanced features and
-                                tools that allow you to communicate in new and exciting ways. From video calls to voice
-                                messages and more, you'll be able to express yourself like never before.
+                                A future of communication with our web app. Our platform offers
+                                advanced features and tools that allow you to communicate in new and
+                                exciting ways. From video calls to voice messages and more, you'll
+                                be able to express yourself like never before.
                             </div>
                         </div>
 
@@ -69,9 +70,10 @@ export default function HomePage() {
                             <h2>Connect with Friends and Communities</h2>
 
                             <div>
-                                Get in touch and communicate with your friends and communities. With features such as
-                                voice and video calls, messaging, and channels, you can easily stay connected and engage
-                                with others who share your interests.
+                                Get in touch and communicate with your friends and communities. With
+                                features such as voice and video calls, messaging, and channels, you
+                                can easily stay connected and engage with others who share your
+                                interests.
                             </div>
                         </div>
                     </div>
@@ -88,9 +90,10 @@ export default function HomePage() {
                             <h2>Stay On Anytime, Anywhere</h2>
 
                             <div>
-                                Stay connected with your friends and communities anytime, anywhere. With our responsive
-                                design and mobile app support, access your conversations on any device. Never miss out
-                                on a conversation or update again.
+                                Stay connected with your friends and communities anytime, anywhere.
+                                With our responsive design and mobile app support, access your
+                                conversations on any device. Never miss out on a conversation or
+                                update again.
                             </div>
                         </div>
                     </div>
@@ -107,9 +110,10 @@ export default function HomePage() {
                             <h2>Your Personal Communication Hub</h2>
 
                             <div>
-                                Connect with your friends, collaborate with your team, and build your community all in
-                                one place. With features such as server customization and mobile support, you'll be able
-                                to communicate on your terms.
+                                Connect with your friends, collaborate with your team, and build
+                                your community all in one place. With features such as server
+                                customization and mobile support, you'll be able to communicate on
+                                your terms.
                             </div>
                         </div>
                     </div>
@@ -121,9 +125,10 @@ export default function HomePage() {
                             <h2>Unleash Your Potential</h2>
 
                             <div>
-                                Connect with people in ways you never thought possible. From voice and video calls to
-                                messaging and channels, our platform provides a seamless experience that allows you to
-                                communicate with friends, teams, and communities.
+                                Connect with people in ways you never thought possible. From voice
+                                and video calls to messaging and channels, our platform provides a
+                                seamless experience that allows you to communicate with friends,
+                                teams, and communities.
                             </div>
                         </div>
 
@@ -139,7 +144,11 @@ export default function HomePage() {
                         <h3>Ready to begin on your journey?</h3>
 
                         <Link href="/download">
-                            <svg width="24" height="24" viewBox="0 0 24 24">
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                            >
                                 <g fill="currentColor">
                                     <path d="M17.707 10.708L16.293 9.29398L13 12.587V2.00098H11V12.587L7.70697 9.29398L6.29297 10.708L12 16.415L17.707 10.708Z" />
                                     <path d="M18 18.001V20.001H6V18.001H4V20.001C4 21.103 4.897 22.001 6 22.001H18C19.104 22.001 20 21.103 20 20.001V18.001H18Z" />

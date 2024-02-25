@@ -145,16 +145,19 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                         height="24"
                         viewBox="0 0 24 24"
                         onClick={() =>
-                            setLayers({
-                                settings: {
-                                    type: "POPUP",
+                            setLayers(
+                                {
+                                    settings: {
+                                        type: "POPUP",
+                                    },
+                                    content: {
+                                        type: "UNPIN_MESSAGE",
+                                        channelId: message.channelId,
+                                        message: message,
+                                    },
                                 },
-                                content: {
-                                    type: "UNPIN_MESSAGE",
-                                    channelId: message.channelId,
-                                    message: message,
-                                },
-                            })
+                                true
+                            )
                         }
                     >
                         <path

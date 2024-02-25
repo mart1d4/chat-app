@@ -215,9 +215,9 @@ const FirstMessage = ({
     const { sendRequest } = useFetchHelper();
 
     const mutualGuilds = guilds.filter((guild) =>
-        guild.members.map((m) => m.id).includes(friend?.id)
+        guild.members.map((m) => m.userId).includes(friend?.id)
     );
-    const guildIcons = guilds.filter((guild) => !!guild.icon);
+    const guildIcons = mutualGuilds.filter((guild) => !!guild.icon);
 
     return (
         <div className={styles.firstTimeMessageContainer}>

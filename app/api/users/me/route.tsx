@@ -148,20 +148,43 @@ export async function PATCH(req: Request) {
 
             await db.updateTable("users").set({ username }).where("id", "=", userId).execute();
         } else {
-            [displayName, description, customStatus, primaryColor, accentColor, status].forEach(
-                (item) => {
-                    const varName = Object.keys({ item })[0] as keyof typeof regexes;
-                    if (typeof item === "string" && !regexes[varName].test(item)) {
-                        return NextResponse.json(
-                            {
-                                success: false,
-                                message: `The ${varName} you provided is invalid.`,
-                            },
-                            { status: 400 }
-                        );
-                    }
+            [
+                {
+                    item: displayName,
+                    name: "displayName",
+                },
+                {
+                    item: description,
+                    name: "description",
+                },
+                {
+                    item: customStatus,
+                    name: "customStatus",
+                },
+                {
+                    item: primaryColor,
+                    name: "primaryColor",
+                },
+                {
+                    item: accentColor,
+                    name: "accentColor",
+                },
+                {
+                    item: status,
+                    name: "status",
+                },
+            ].forEach((obj) => {
+                // @ts-ignore
+                if (typeof obj.item === "string" && !regexes[obj.name].test(obj.item)) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message: `The ${obj.name} you provided is invalid.`,
+                        },
+                        { status: 400 }
+                    );
                 }
-            );
+            });
 
             if (avatar === null && user.avatar) {
                 removeImage(user.avatar);

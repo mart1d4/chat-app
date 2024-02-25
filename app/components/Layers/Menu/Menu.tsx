@@ -98,7 +98,7 @@ export function Menu({ content }: { content: any }) {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Tab") {
+            if (e.key == "Tab") {
                 e.preventDefault();
             }
         };
@@ -115,37 +115,37 @@ export function Menu({ content }: { content: any }) {
 
     useEffect(() => {
         const handlekeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key == "Escape") {
                 setLayers({
                     settings: {
                         type: "MENU",
                         setNull: true,
                     },
                 });
-            } else if (e.key === "ArrowDown") {
-                if (hover === null) {
+            } else if (e.key == "ArrowDown") {
+                if (hover == null) {
                     setHover(filteredItems[0].name as string);
                 } else {
-                    const index = filteredItems.findIndex((item) => item.name === hover);
+                    const index = filteredItems.findIndex((item) => item.name == hover);
                     if (index < filteredItems.length - 1) {
                         setHover(filteredItems[index + 1].name as string);
                     } else {
                         setHover(filteredItems[0].name as string);
                     }
                 }
-            } else if (e.key === "ArrowUp") {
-                if (hover === null) {
+            } else if (e.key == "ArrowUp") {
+                if (hover == null) {
                     setHover(filteredItems[filteredItems.length - 1].name as string);
                 } else {
-                    const index = filteredItems.findIndex((item) => item.name === hover);
+                    const index = filteredItems.findIndex((item) => item.name == hover);
                     if (index > 0) {
                         setHover(filteredItems[index - 1].name as string);
                     } else {
                         setHover(filteredItems[filteredItems.length - 1].name as string);
                     }
                 }
-            } else if (e.key === "Enter") {
-                const item = filteredItems.find((item) => item.name === hover);
+            } else if (e.key == "Enter") {
+                const item = filteredItems.find((item) => item.name == hover);
                 if (item) {
                     if (item.funcShift && e.shiftKey) item.funcShift();
                     else if (item.func) item.func();
@@ -167,22 +167,22 @@ export function Menu({ content }: { content: any }) {
     useEffect(() => {
         if (content?.user) {
             setUserProps({
-                isSelf: content.user.id === currentUser.id,
+                isSelf: content.user.id == currentUser.id,
                 isFriend: friends.map((f) => f.id).includes(content.user.id),
                 isBlocked: blockedUsers.map((f) => f.id).includes(content.user.id),
                 sentRequest: requestsSent.map((f) => f.id).includes(content.user.id),
                 receivedRequest: requestsReceived.map((f) => f.id).includes(content.user.id),
             });
         } else if (content?.message) {
-            setUserProps({ isSelf: content.message.author.id === currentUser.id });
+            setUserProps({ isSelf: content.message.author.id == currentUser.id });
         } else {
             setUserProps(null);
         }
     }, [content, friends, blockedUsers, requestsSent, requestsReceived]);
 
     const canDeleteMessage = useCallback(() => {
-        if (message.author.id === currentUser.id) return true;
-        if (content.guildOwnerId) return content.guildOwnerId === currentUser.id;
+        if (message.author.id == currentUser.id) return true;
+        if (content.guildOwnerId) return content.guildOwnerId == currentUser.id;
         return false;
     }, [content, userProps]);
 
@@ -264,7 +264,7 @@ export function Menu({ content }: { content: any }) {
     useEffect(() => {
         if (!type || (user && !userProps)) return;
 
-        if (type === "FILE_INPUT") {
+        if (type == "FILE_INPUT") {
             setItems([
                 {
                     name: "Upload a File",
@@ -281,7 +281,7 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "GUILD_CHANNEL_LIST") {
+        if (type == "GUILD_CHANNEL_LIST") {
             setItems([
                 {
                     name: "Hide Muted Channels",
@@ -337,8 +337,8 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "GUILD_CHANNEL") {
-            if (content.channel.type === 4) {
+        if (type == "GUILD_CHANNEL") {
+            if (content.channel.type == 4) {
                 setItems([
                     {
                         name: "Mark As Read",
@@ -432,14 +432,14 @@ export function Menu({ content }: { content: any }) {
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 3 ? "Divider" : null,
+                        name: content.channel.type == 3 ? "Divider" : null,
                     },
                     {
-                        name: content.channel.type === 3 ? "Open Chat" : null,
+                        name: content.channel.type == 3 ? "Open Chat" : null,
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 3 ? "Hide Names" : null,
+                        name: content.channel.type == 3 ? "Hide Names" : null,
                         checked: true,
                         func: () => {},
                     },
@@ -452,7 +452,7 @@ export function Menu({ content }: { content: any }) {
                         func: () => {},
                     },
                     {
-                        name: content.channel.type === 2 ? "Notifications Settings" : null,
+                        name: content.channel.type == 2 ? "Notifications Settings" : null,
                         items: notificationItems,
                         func: () => {},
                     },
@@ -468,13 +468,13 @@ export function Menu({ content }: { content: any }) {
                         func: () => {},
                     },
                     {
-                        name: `Create ${content.channel.type === 2 ? "Text" : "Voice"} Channel`,
+                        name: `Create ${content.channel.type == 2 ? "Text" : "Voice"} Channel`,
                         func: () => {
                             const guild = guilds.find(
-                                (guild: TGuild) => guild.id === content.channel.guildId
+                                (guild: TGuild) => guild.id == content.channel.guildId
                             );
                             const category = guild?.channels.find(
-                                (channel: TChannel) => channel.id === content.channel?.parentId
+                                (channel: TChannel) => channel.id == content.channel?.parentId
                             );
 
                             setLayers({
@@ -517,8 +517,8 @@ export function Menu({ content }: { content: any }) {
             }
         }
 
-        if (type === "GUILD_ICON") {
-            // const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+        if (type == "GUILD_ICON") {
+            // const textChan = content.guild.channels.find((c: TChannel) => c.type == 2);
             const textChan = null;
             setItems([
                 {
@@ -599,7 +599,7 @@ export function Menu({ content }: { content: any }) {
                 },
                 {
                     name:
-                        content.guild.ownerId === currentUser.id ? "Delete Server" : "Leave Server",
+                        content.guild.ownerId == currentUser.id ? "Delete Server" : "Leave Server",
                     danger: true,
                     func: () => {
                         setLayers({
@@ -609,7 +609,7 @@ export function Menu({ content }: { content: any }) {
                             content: {
                                 type: "LEAVE_CONFIRM",
                                 guild: content.guild,
-                                isOwner: content.guild.ownerId === currentUser.id,
+                                isOwner: content.guild.ownerId == currentUser.id,
                             },
                         });
                     },
@@ -626,8 +626,8 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "GUILD") {
-            // const textChan = content.guild.channels.find((c: TChannel) => c.type === 2);
+        if (type == "GUILD") {
+            // const textChan = content.guild.channels.find((c: TChannel) => c.type == 2);
             const textChan = null;
             setItems([
                 {
@@ -744,7 +744,7 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "INPUT") {
+        if (type == "INPUT") {
             setItems([
                 {
                     name: content.sendButton && "Send Message Button",
@@ -766,7 +766,7 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "IMAGE") {
+        if (type == "IMAGE") {
             setItems([
                 {
                     name: content.attachment ? "Copy Image" : null,
@@ -814,7 +814,7 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "MESSAGE") {
+        if (type == "MESSAGE") {
             if (shouldDisplayInlined(message.type)) {
                 setItems([
                     {
@@ -990,7 +990,7 @@ export function Menu({ content }: { content: any }) {
             }
         }
 
-        if (type === "USER_SMALL") {
+        if (type == "USER_SMALL") {
             setItems([
                 {
                     name: "Start Video Call",
@@ -1014,7 +1014,7 @@ export function Menu({ content }: { content: any }) {
             ]);
         }
 
-        if (type === "USER" || type === "CHANNEL") {
+        if (type == "USER" || type == "CHANNEL") {
             if (user) {
                 if (userProps?.isSelf) {
                     setItems([
@@ -1352,7 +1352,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: "Leave Group",
                         func: () => {
-                            if (content.channel.recipients.length === 1) {
+                            if (content.channel.recipients.length == 1) {
                                 sendRequest({
                                     query: "CHANNEL_DELETE",
                                     params: {
@@ -1383,7 +1383,7 @@ export function Menu({ content }: { content: any }) {
             }
         }
 
-        if (type === "USER_GROUP") {
+        if (type == "USER_GROUP") {
             if (userProps?.isSelf) {
                 setItems([
                     {
@@ -1478,11 +1478,11 @@ export function Menu({ content }: { content: any }) {
                         func: () => {},
                     },
                     {
-                        name: content.channel.ownerId === currentUser.id ? "Divider" : null,
+                        name: content.channel.ownerId == currentUser.id ? "Divider" : null,
                     },
                     {
                         name:
-                            content.channel.ownerId === currentUser.id ? "Remove From Group" : null,
+                            content.channel.ownerId == currentUser.id ? "Remove From Group" : null,
                         func: () => {
                             sendRequest({
                                 query: "CHANNEL_RECIPIENT_REMOVE",
@@ -1495,8 +1495,7 @@ export function Menu({ content }: { content: any }) {
                         danger: true,
                     },
                     {
-                        name:
-                            content.channel.ownerId === currentUser.id ? "Make Group Owner" : null,
+                        name: content.channel.ownerId == currentUser.id ? "Make Group Owner" : null,
                         func: () => {
                             setLayers({
                                 settings: {
@@ -1557,7 +1556,7 @@ export function Menu({ content }: { content: any }) {
                     },
                 ]);
             }
-        } else if (type === "STATUS") {
+        } else if (type == "STATUS") {
             setItems([
                 {
                     name: "Online",
@@ -1647,18 +1646,18 @@ export function Menu({ content }: { content: any }) {
     return (
         <div
             ref={menuRef}
-            className={`${styles.container} ${type === "GUILD" ? "big" : ""}`}
+            className={`${styles.container} ${type == "GUILD" ? "big" : ""}`}
             // onMouseLeave={() => setHover("")}
             style={{
-                width: type === "GUILD" ? 220 : "",
-                transform: type === "GUILD" ? "translateX(+10px)" : "",
+                width: type == "GUILD" ? 220 : "",
+                transform: type == "GUILD" ? "translateX(+10px)" : "",
                 visibility: items?.length ? "visible" : "hidden",
             }}
         >
             <ul>
                 {items?.map((item, index) => {
                     if (!item.name) return;
-                    else if (item.name === "Divider")
+                    else if (item.name == "Divider")
                         return (
                             <div
                                 key={index}
@@ -1697,7 +1696,7 @@ export function Menu({ content }: { content: any }) {
                                         </div>
                                     )}
 
-                                    {content.type === "STATUS" && (
+                                    {content.type == "STATUS" && (
                                         <div className={styles.statusIcon}>
                                             <svg
                                                 width={10}
@@ -1742,9 +1741,9 @@ export function Menu({ content }: { content: any }) {
                                                 }
                                                 size={item.items ? 16 : 18}
                                                 viewbox={
-                                                    item.icon === "boost"
+                                                    item.icon == "boost"
                                                         ? "0 0 8 12"
-                                                        : item.icon === "translate"
+                                                        : item.icon == "translate"
                                                         ? "0 96 960 960"
                                                         : ""
                                                 }
@@ -1761,7 +1760,7 @@ export function Menu({ content }: { content: any }) {
                                     <div
                                         className={styles.tip}
                                         style={{
-                                            marginLeft: content.type === "STATUS" ? "18px" : "",
+                                            marginLeft: content.type == "STATUS" ? "18px" : "",
                                         }}
                                     >
                                         {item.tip}

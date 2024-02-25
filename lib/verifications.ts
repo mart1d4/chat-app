@@ -30,3 +30,7 @@ export const regexes = {
 };
 
 export const validInviteChannelTypes = [1, 2, 3];
+
+export const isInviteExpired = (invite: { expiresAt: Date }) => {
+    return invite.expiresAt && new Date() > invite.expiresAt;
+};

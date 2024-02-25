@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef, SetStateAction, Dispatch } from "react";
-import { useData, useLayers, useMention, useMessages, useTooltip } from "@/lib/store";
+import { useData, useLayers, useMessages, useTooltip } from "@/lib/store";
 import { getFullChannel, sanitizeString } from "@/lib/strings";
-import { usePathname, useRouter } from "next/navigation";
-import { TextArea, Icon, Avatar } from "@components";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Message.module.css";
 import Link from "next/link";
-import { v4 } from "uuid";
 import {
-    ComputableProgressInfo,
-    UnknownProgressInfo,
+    Icon,
+    Avatar,
+    MessageInvite,
+    TextArea,
+    MessageMenu,
+    UserMention,
+    MessageEmbeds,
+    MessageAttachments,
+} from "@components";
+import {
     uploadFileGroup,
+    UnknownProgressInfo,
+    ComputableProgressInfo,
 } from "@uploadcare/upload-client";
 
 type Message = Partial<MessageTable> & {
@@ -59,15 +66,12 @@ export function Message({
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
     const setTooltip = useTooltip((state) => state.setTooltip);
-    const setMention = useMention((state) => state.setMention);
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
     const setEdit = useMessages((state) => state.setEdit);
-    const channels = useData((state) => state.channels);
     const layers = useLayers((state) => state.layers);
     const edits = useMessages((state) => state.edits);
-    const guilds = useData((state) => state.guilds);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
@@ -79,8 +83,6 @@ export function Message({
     const controller = useMemo(() => new AbortController(), []);
     const inline = shouldDisplayInlined(message.type);
     const hasRendered = useRef(false);
-    const pathname = usePathname();
-    const router = useRouter();
 
     const userRegex = /<([@][0-9]{18})>/g;
     const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
@@ -199,7 +201,7 @@ export function Message({
         if (message.waiting || message.needsToBeSent || message.error) return;
         const env = process.env.NODE_ENV;
 
-        const getInvite = async (code: string) => {
+        async function getInvite(code: string) {
             const response = await sendRequest({
                 query: "GET_INVITE",
                 params: { inviteId: code },
@@ -215,13 +217,10 @@ export function Message({
                     ? { code: code, type: "notfound" }
                     : {
                           ...response.invite,
-                          channel: getFullChannel(
-                              response.invite.channel,
-                              response.invite.channelId
-                          ),
+                          channel: getFullChannel(response.invite.channel, user),
                       },
             ]);
-        };
+        }
 
         if (env === "development" && !hasRendered.current) {
             return () => {
@@ -237,23 +236,23 @@ export function Message({
     useEffect(() => {
         if (!edit || edit.messageId !== message.id) return;
 
-        const handleKeyDown = (e: KeyboardEvent) => {
+        function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 sendEditedMessage();
             }
-        };
+        }
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit]);
 
-    const deleteLocalMessage = async () => {
+    function deleteLocalMessage() {
         setMessages((messages) => messages.filter((m) => m.id !== message.id));
-    };
+    }
 
-    const retrySendMessage = async (prevMessage: Message) => {
+    async function retrySendMessage(prevMessage: Message) {
         if (
             !prevMessage ||
             (!prevMessage.waiting && !prevMessage.error && !prevMessage.needsToBeSent)
@@ -372,7 +371,7 @@ export function Message({
                 });
             }
         }
-    };
+    }
 
     useEffect(() => {
         if (process.env.NODE_ENV === "development" && !hasRendered.current) {
@@ -384,7 +383,7 @@ export function Message({
         if (message.needsToBeSent) retrySendMessage(message);
     }, []);
 
-    const deletePopup = () => {
+    function deletePopup() {
         setLayers({
             settings: {
                 type: "POPUP",
@@ -395,9 +394,9 @@ export function Message({
                 message: message,
             },
         });
-    };
+    }
 
-    const pinPopup = () => {
+    function pinPopup() {
         setLayers({
             settings: {
                 type: "POPUP",
@@ -408,9 +407,9 @@ export function Message({
                 message: message,
             },
         });
-    };
+    }
 
-    const unpinPopup = () => {
+    function unpinPopup() {
         setLayers({
             settings: {
                 type: "POPUP",
@@ -421,13 +420,13 @@ export function Message({
                 message: message,
             },
         });
-    };
+    }
 
-    const editMessageState = () => {
+    function editMessageState() {
         setEdit(channel.id, message.id, message.content || "");
-    };
+    }
 
-    const sendEditedMessage = async () => {
+    async function sendEditedMessage() {
         if (edit?.messageId !== message.id) return;
         const content = sanitizeString(edit?.content || "");
 
@@ -472,13 +471,13 @@ export function Message({
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
-    const replyToMessageState = () => {
+    function replyToMessageState() {
         setReply(channel.id, message.id, message.author.username);
-    };
+    }
 
-    const getLongDate = (date: Date) => {
+    function getLongDate(date: Date) {
         return new Intl.DateTimeFormat("en-US", {
             weekday: "long",
             year: "numeric",
@@ -488,9 +487,9 @@ export function Message({
             minute: "numeric",
             second: "numeric",
         }).format(new Date(date));
-    };
+    }
 
-    const getMidDate = (date: Date) => {
+    function getMidDate(date: Date) {
         return new Intl.DateTimeFormat("en-US", {
             month: "numeric",
             day: "numeric",
@@ -498,14 +497,23 @@ export function Message({
             hour: "numeric",
             minute: "numeric",
         }).format(new Date(date));
-    };
+    }
 
-    const getShortDate = (date: Date) => {
+    function getShortDate(date: Date) {
         return new Intl.DateTimeFormat("en-US", {
             hour: "numeric",
             minute: "numeric",
         }).format(new Date(date));
-    };
+    }
+
+    async function removeEmbeds() {
+        // const response = await sendRequest({
+        //     query: "REMOVE_EMBEDS",
+        //     params: { messageId: message.id },
+        // });
+
+        console.log("removeEmbeds");
+    }
 
     const functions = {
         deletePopup,
@@ -516,6 +524,7 @@ export function Message({
         deleteLocalMessage,
         retrySendMessage,
         translateMessage,
+        removeEmbeds,
     };
 
     if (inline) {
@@ -1096,6 +1105,14 @@ export function Message({
                                         />
                                     )}
 
+                                {message.embeds?.length > 0 &&
+                                    !(message.error || message.waiting) && (
+                                        <MessageEmbeds
+                                            message={message}
+                                            functions={functions}
+                                        />
+                                    )}
+
                                 {message.attachments?.length > 0 &&
                                     (message.waiting || message.error) && (
                                         <div className={styles.imagesUpload}>
@@ -1184,281 +1201,11 @@ export function Message({
                             {invites.length > 0 && (
                                 <div className={styles.messageAccessories}>
                                     {invites.map((invite) => (
-                                        <div
-                                            key={v4()}
-                                            className={styles.guildInvite}
-                                        >
-                                            <h3>
-                                                {!("type" in invite)
-                                                    ? user.id === invite.inviterId
-                                                        ? `You sent an invite to join a ${
-                                                              invite.guild ? "server" : "group dm"
-                                                          }`
-                                                        : `You've been invited to join a ${
-                                                              invite.guild ? "server" : "group dm"
-                                                          }`
-                                                    : user.id === message.author.id
-                                                    ? "You sent an invite, but..."
-                                                    : "You received an invite, but..."}
-                                            </h3>
-
-                                            <div className={styles.content}>
-                                                <div className={styles.headline}>
-                                                    <div
-                                                        className={
-                                                            "type" in invite
-                                                                ? styles.inviteIconPoop
-                                                                : !invite.guild || invite.guild.icon
-                                                                ? styles.inviteIcon
-                                                                : styles.inviteAcronym
-                                                        }
-                                                        style={{
-                                                            backgroundImage:
-                                                                "type" in invite
-                                                                    ? "url(https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/)"
-                                                                    : invite.guild
-                                                                    ? invite.guild.icon &&
-                                                                      `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`
-                                                                    : `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.channel.icon}/)`,
-                                                        }}
-                                                    >
-                                                        {!("type" in invite) &&
-                                                            invite.guild &&
-                                                            !invite.guild?.icon &&
-                                                            (invite.guild.name
-                                                                .toLowerCase()
-                                                                .match(/\b(\w)/g)
-                                                                ?.join("") ??
-                                                                "")}
-                                                    </div>
-
-                                                    <div>
-                                                        <h3
-                                                            style={{
-                                                                color:
-                                                                    "type" in invite &&
-                                                                    invite.type === "notfound"
-                                                                        ? "var(--error-1)"
-                                                                        : "",
-                                                            }}
-                                                            className={
-                                                                !("type" in invite) &&
-                                                                (guilds.find(
-                                                                    (guild) =>
-                                                                        guild.id ===
-                                                                        invite.guild?.id
-                                                                ) ||
-                                                                    channels.find(
-                                                                        (channel) =>
-                                                                            channel.id ===
-                                                                            invite.channel.id
-                                                                    ))
-                                                                    ? styles.link
-                                                                    : ""
-                                                            }
-                                                            onClick={() => {
-                                                                if (!("type" in invite)) {
-                                                                    if (invite.guild) {
-                                                                        if (
-                                                                            guilds.find(
-                                                                                (guild) =>
-                                                                                    guild.id ===
-                                                                                    invite.guild?.id
-                                                                            )
-                                                                        ) {
-                                                                            if (
-                                                                                pathname !==
-                                                                                `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                            ) {
-                                                                                router.push(
-                                                                                    `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                                );
-                                                                            }
-                                                                        } else {
-                                                                            sendRequest({
-                                                                                query: "ACCEPT_INVITE",
-                                                                                params: {
-                                                                                    inviteId:
-                                                                                        invite.code,
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    } else {
-                                                                        if (
-                                                                            channels.find(
-                                                                                (channel) =>
-                                                                                    channel.id ===
-                                                                                    invite.channelId
-                                                                            )
-                                                                        ) {
-                                                                            if (
-                                                                                pathname !==
-                                                                                `/channels/me/${invite.channel.id}`
-                                                                            ) {
-                                                                                router.push(
-                                                                                    `/channels/me/${invite.channel.id}`
-                                                                                );
-                                                                            }
-                                                                        } else {
-                                                                            sendRequest({
-                                                                                query: "ACCEPT_INVITE",
-                                                                                params: {
-                                                                                    inviteId:
-                                                                                        invite.code,
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }}
-                                                        >
-                                                            {"type" in invite
-                                                                ? invite.type === "notfound"
-                                                                    ? "Invalid Invite"
-                                                                    : "Something Went Wrong"
-                                                                : invite.guild?.name ??
-                                                                  invite.channel.name}
-                                                        </h3>
-                                                        <strong>
-                                                            {"type" in invite ? (
-                                                                invite.type === "notfound" ? (
-                                                                    user.id ===
-                                                                    message.author.id ? (
-                                                                        "Try sending a new invite!"
-                                                                    ) : (
-                                                                        `Ask ${message.author.username} for a new invite!`
-                                                                    )
-                                                                ) : (
-                                                                    "Try again later"
-                                                                )
-                                                            ) : (
-                                                                <>
-                                                                    <span>
-                                                                        <span
-                                                                            className={
-                                                                                styles.onlineDot
-                                                                            }
-                                                                        />
-                                                                        {invite.guild
-                                                                            ? invite.guild
-                                                                                  ?.rawMemberIds
-                                                                                  .length
-                                                                            : invite.channel
-                                                                                  .recipients
-                                                                                  .length}{" "}
-                                                                        Online
-                                                                    </span>
-
-                                                                    <span>
-                                                                        <span
-                                                                            className={
-                                                                                styles.offlineDot
-                                                                            }
-                                                                        />
-                                                                        {invite.guild
-                                                                            ? invite.guild
-                                                                                  ?.rawMemberIds
-                                                                                  .length
-                                                                            : invite.channel
-                                                                                  .recipients
-                                                                                  .length}{" "}
-                                                                        Member
-                                                                        {(invite.guild
-                                                                            ? invite.guild
-                                                                                  ?.rawMemberIds
-                                                                                  .length
-                                                                            : invite.channel
-                                                                                  .recipients
-                                                                                  .length) > 1 &&
-                                                                            "s"}
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                        </strong>
-                                                    </div>
-                                                </div>
-
-                                                {!("type" in invite) && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (invite.guild) {
-                                                                if (
-                                                                    guilds.find(
-                                                                        (guild) =>
-                                                                            guild.id ===
-                                                                            invite.guild?.id
-                                                                    )
-                                                                ) {
-                                                                    if (
-                                                                        pathname !==
-                                                                        `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                    ) {
-                                                                        router.push(
-                                                                            `/channels/${invite.guild.id}/${invite.channel.id}`
-                                                                        );
-                                                                    }
-                                                                } else {
-                                                                    sendRequest({
-                                                                        query: "ACCEPT_INVITE",
-                                                                        params: {
-                                                                            inviteId: invite.code,
-                                                                        },
-                                                                    });
-                                                                }
-                                                            } else {
-                                                                if (
-                                                                    channels.find(
-                                                                        (channel) =>
-                                                                            channel.id ===
-                                                                            invite.channelId
-                                                                    )
-                                                                ) {
-                                                                    if (
-                                                                        pathname !==
-                                                                        `/channels/me/${invite.channel.id}`
-                                                                    ) {
-                                                                        router.push(
-                                                                            `/channels/me/${invite.channel.id}`
-                                                                        );
-                                                                    }
-                                                                } else {
-                                                                    sendRequest({
-                                                                        query: "ACCEPT_INVITE",
-                                                                        params: {
-                                                                            inviteId: invite.code,
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }
-                                                        }}
-                                                        className="button green"
-                                                    >
-                                                        {guilds.find(
-                                                            (guild) => guild.id === invite.guildId
-                                                        ) ||
-                                                        channels.find(
-                                                            (channel) =>
-                                                                channel.id === invite.channelId
-                                                        )
-                                                            ? "Joined"
-                                                            : "Join"}
-                                                    </button>
-                                                )}
-
-                                                {"type" in invite &&
-                                                    invite.type === "notfound" &&
-                                                    user.id !== message.author.id && (
-                                                        <button
-                                                            className="button blue"
-                                                            onClick={() =>
-                                                                setMention(message.author)
-                                                            }
-                                                        >
-                                                            Mention
-                                                        </button>
-                                                    )}
-                                            </div>
-                                        </div>
+                                        <MessageInvite
+                                            key={invite.code}
+                                            invite={invite}
+                                            message={message}
+                                        />
                                     ))}
                                 </div>
                             )}
@@ -1467,866 +1214,5 @@ export function Message({
                 </li>
             ),
         [message, edit, reply, layers.MENU, fileProgress, invites, translation]
-    );
-}
-
-export function UserMention({
-    user,
-    full,
-    editor,
-}: {
-    user: Partial<UserTable>;
-    full?: boolean;
-    editor?: boolean;
-}) {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
-
-    return (
-        <span
-            className={
-                full ? `${styles.mention} ${editor ? styles.editor : ""}` : styles.inlineMention
-            }
-            onClick={(e) => {
-                if (layers.USER_CARD?.settings?.element === e.currentTarget || editor) {
-                    return;
-                }
-
-                setLayers({
-                    settings: {
-                        type: "USER_CARD",
-                        element: e.currentTarget,
-                        firstSide: "RIGHT",
-                        gap: 10,
-                    },
-                    content: {
-                        user: user,
-                    },
-                });
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (layers.MENU?.settings?.element === e.currentTarget || editor) {
-                    return;
-                }
-
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: "USER",
-                        user: user,
-                    },
-                });
-            }}
-        >
-            {full && "@"}
-            {user.username || "Unknown User"}
-        </span>
-    );
-}
-
-function MessageAttachments({ message, functions }: { message: TMessage; functions: any }) {
-    const ImageComponent = ({ attachment }) => (
-        <Image
-            attachment={attachment}
-            message={message}
-            functions={functions}
-        />
-    );
-
-    return (
-        <div className={styles.attachments}>
-            <div>
-                {message.attachments.length === 1 && (
-                    <div className={styles.gridOneBig}>
-                        <ImageComponent
-                            key={message.attachments[0].id}
-                            attachment={message.attachments[0]}
-                        />
-                    </div>
-                )}
-
-                {message.attachments.length == 2 && (
-                    <div className={styles.gridTwo}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length == 3 && (
-                    <div className={styles.gridTwo}>
-                        <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridTwoColumn}>
-                            <div>
-                                <div>
-                                    {message.attachments.slice(1, 2).map((attachment) => (
-                                        <ImageComponent
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                        />
-                                    ))}
-                                </div>
-
-                                <div>
-                                    {message.attachments.slice(2, 3).map((attachment) => (
-                                        <ImageComponent
-                                            key={attachment.id}
-                                            attachment={attachment}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {message.attachments.length == 4 && (
-                    <div className={styles.gridFour}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length == 5 && (
-                    <>
-                        <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length == 6 && (
-                    <div className={styles.gridThree}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length == 7 && (
-                    <>
-                        <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length == 8 && (
-                    <>
-                        <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length == 9 && (
-                    <div className={styles.gridThree}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent
-                                key={attachment.id}
-                                attachment={attachment}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length == 10 && (
-                    <>
-                        <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment) => (
-                                <ImageComponent
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-}
-
-type MenuProps = {
-    message: TMessage;
-    large: boolean;
-    functions: any;
-    channel: TChannel;
-    guild?: TGuild | null;
-    inline: boolean;
-    show: boolean;
-    hide: boolean;
-};
-
-function MessageMenu({ message, large, functions, channel, guild, inline, show, hide }: MenuProps) {
-    const [shift, setShift] = useState(false);
-
-    const setTooltip = useTooltip((state) => state.setTooltip);
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
-    const user = useData((state) => state.user);
-    const { sendRequest } = useFetchHelper();
-
-    const menuSender = message.author.id === user.id;
-
-    if (message.waiting || typeof menuSender !== "boolean") return null;
-
-    const writeText = async (text: string) => {
-        await navigator.clipboard.writeText(text);
-    };
-
-    return (
-        <div
-            className={styles.buttonContainer}
-            style={{ visibility: show ? "visible" : hide ? "hidden" : undefined }}
-        >
-            <div
-                className={styles.buttonWrapper}
-                style={{ top: large ? "-16px" : "-25px" }}
-            >
-                <div className={styles.buttons}>
-                    {!message.error ? (
-                        <>
-                            {shift && !inline && (
-                                <>
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message ID",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(message.id);
-                                        }}
-                                    >
-                                        <Icon name="id" />
-                                    </div>
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: `${message.pinned ? "Unpin" : "Pin"} Message`,
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            sendRequest({
-                                                query: message.pinned
-                                                    ? "UNPIN_MESSAGE"
-                                                    : "PIN_MESSAGE",
-                                                params: {
-                                                    channelId: message.channelId,
-                                                    messageId: message.id,
-                                                },
-                                            });
-                                        }}
-                                    >
-                                        <Icon name="pin" />
-                                    </div>
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Copy Text",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                writeText(message.content as string);
-                                            }}
-                                        >
-                                            <Icon name="copy" />
-                                        </div>
-                                    )}
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Translate",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                functions.translateMessage();
-                                            }}
-                                        >
-                                            <Icon
-                                                name="translate"
-                                                viewbox="0 96 960 960"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Mark Unread",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {}}
-                                    >
-                                        <Icon name="mark" />
-                                    </div>
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message Link",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(
-                                                `/channels/@me/${message.channelId}/${message.id}`
-                                            );
-                                        }}
-                                    >
-                                        <Icon name="link" />
-                                    </div>
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Speak Message",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                const msg = new SpeechSynthesisUtterance();
-                                                msg.text = `${message.author.username} said ${message.content}`;
-                                                window.speechSynthesis.speak(msg);
-                                            }}
-                                        >
-                                            <Icon name="speak" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {inline && shift && (
-                                <>
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message ID",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(message.id);
-                                        }}
-                                    >
-                                        <Icon name="id" />
-                                    </div>
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: "Copy Text",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                writeText(message.content as string);
-                                            }}
-                                        >
-                                            <Icon name="copy" />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Mark Unread",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {}}
-                                    >
-                                        <Icon name="mark" />
-                                    </div>
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message Link",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(
-                                                `/channels/@me/${message.channelId}/${message.id}`
-                                            );
-                                        }}
-                                    >
-                                        <Icon name="link" />
-                                    </div>
-                                </>
-                            )}
-
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Add Reaction",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                            >
-                                <Icon name="addReaction" />
-                            </div>
-
-                            {!inline && (
-                                <>
-                                    {menuSender ? (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Edit",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                setTooltip(null);
-                                                functions.editMessageState();
-                                            }}
-                                        >
-                                            <Icon name="edit" />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Reply",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                setTooltip(null);
-                                                functions.replyToMessageState();
-                                            }}
-                                        >
-                                            <Icon name="reply" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {!shift || inline ? (
-                                <div
-                                    role="button"
-                                    onMouseEnter={(e) => {
-                                        setTooltip({
-                                            text: "More",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (layers.MENU?.settings.element === e.currentTarget) {
-                                            setLayers({
-                                                settings: {
-                                                    type: "MENU",
-                                                    setNull: true,
-                                                },
-                                            });
-                                        } else {
-                                            setLayers({
-                                                settings: {
-                                                    type: "MENU",
-                                                    element: e.currentTarget,
-                                                    firstSide: "LEFT",
-                                                    gap: 5,
-                                                },
-                                                content: {
-                                                    type: "MESSAGE",
-                                                    message: message,
-                                                    channelType: channel.type,
-                                                    channelOwnerId: channel.ownerId,
-                                                    guildOwnerId: guild?.ownerId,
-                                                    functions: functions,
-                                                },
-                                            });
-                                            setTooltip(null);
-                                        }
-                                    }}
-                                >
-                                    <Icon name="dots" />
-                                </div>
-                            ) : (
-                                <>
-                                    {menuSender ? (
-                                        <div
-                                            className={styles.red}
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Delete",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                sendRequest({
-                                                    query: "DELETE_MESSAGE",
-                                                    params: {
-                                                        channelId: message.channelId,
-                                                        messageId: message.id,
-                                                    },
-                                                });
-                                            }}
-                                        >
-                                            <Icon name="delete" />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className={styles.red}
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Report Message",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                // functions.reportPopup();
-                                            }}
-                                        >
-                                            <Icon name="report" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    ) : message.waiting ? (
-                        <></>
-                    ) : (
-                        <>
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Retry",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setTooltip(null);
-                                    functions.retrySendMessage(message);
-                                }}
-                            >
-                                <Icon name="retry" />
-                            </div>
-
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Delete",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setTooltip(null);
-                                    functions.deleteLocalMessage();
-                                }}
-                            >
-                                <Icon name="delete" />
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-type ImageComponent = {
-    attachment: TAttachment;
-    message: TMessage;
-    functions: any;
-};
-
-function Image({ attachment, message, functions }: ImageComponent) {
-    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
-    const [showDelete, setShowDelete] = useState<boolean>(false);
-
-    const setTooltip = useTooltip((state) => state.setTooltip);
-    const setLayers = useLayers((state) => state.setLayers);
-    const user = useData((state) => state.user);
-
-    return useMemo(
-        () => (
-            <div
-                className={styles.image}
-                onMouseEnter={() => {
-                    if (user.id !== message.author.id) return;
-                    setShowDelete(true);
-                }}
-                onMouseLeave={() => {
-                    if (user.id !== message.author.id) return;
-                    setShowDelete(false);
-                }}
-                onClick={() => {
-                    if (attachment.isSpoiler && !hideSpoiler) {
-                        return setHideSpoiler(true);
-                    }
-
-                    const index = message.attachments.findIndex((a) => a.id === attachment.id);
-
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                        },
-                        content: {
-                            type: "ATTACHMENT_PREVIEW",
-                            attachments: message.attachments,
-                            current: index,
-                        },
-                    });
-                }}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "MESSAGE",
-                            message: message,
-                            attachment: attachment,
-                            functions: functions,
-                        },
-                    });
-                }}
-            >
-                <div>
-                    <div>
-                        <div>
-                            <div>
-                                <img
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${
-                                        attachment.id
-                                    }/-/resize/x${
-                                        attachment.dimensions?.height >= 350
-                                            ? 350
-                                            : attachment.dimensions?.height
-                                    }/-/format/webp/`}
-                                    alt={attachment.name}
-                                    style={{
-                                        filter:
-                                            attachment.isSpoiler && !hideSpoiler
-                                                ? "blur(44px)"
-                                                : "none",
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {showDelete && (!attachment.isSpoiler || hideSpoiler) && (
-                    <div
-                        className={styles.deleteImage}
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text: "Delete",
-                                element: e.currentTarget,
-                                gap: 2,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (user.id !== message.author.id) return;
-
-                            if (message.attachments.length === 1 && !message.content) {
-                                return setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                    },
-                                    content: {
-                                        type: "DELETE_MESSAGE",
-                                        channelId: message.channelId,
-                                        message: message,
-                                    },
-                                });
-                            }
-
-                            const updatedAttachments = message.attachments
-                                .map((file) => file.id)
-                                .filter((id: string) => id !== attachment.id);
-
-                            setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "DELETE_ATTACHMENT",
-                                    message: message,
-                                    attachments: updatedAttachments,
-                                },
-                            });
-                        }}
-                    >
-                        <Icon
-                            name="delete"
-                            size={20}
-                        />
-                    </div>
-                )}
-
-                {attachment.isSpoiler && !hideSpoiler && (
-                    <div className={styles.spoilerButton}>Spoiler</div>
-                )}
-                {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
-                    <button
-                        className={styles.imageAlt}
-                        onMouseEnter={(e) => {
-                            if (!attachment.description) return;
-                            setTooltip({
-                                text: attachment.description,
-                                element: e.currentTarget,
-                                gap: 2,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        ALT
-                    </button>
-                )}
-            </div>
-        ),
-        [attachment, showDelete, hideSpoiler]
     );
 }

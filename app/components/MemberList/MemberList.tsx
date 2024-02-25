@@ -50,7 +50,7 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
     const { sendRequest } = useFetchHelper();
 
     const recipients = guild
-        ? guilds.find((g) => g.id === guild.id)?.rawMembers ?? []
+        ? guilds.find((g) => g.id === guild.id)?.members ?? []
         : channel
         ? channel.recipients ?? []
         : [];
@@ -91,7 +91,7 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
         // const mutualGuilds = guilds.filter((g: TGuild) => friend.guildIds.includes(g.id));
 
         const mutualFriends = [];
-        const mutualGuilds = [];
+        const mutualGuilds = guilds.filter((g) => g.members.some((m) => m.userId == friend.id));
 
         return (
             <aside
@@ -279,11 +279,10 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
 
                                     <div>
                                         <Icon
-                                            name="chevron"
-                                            size={24}
+                                            name="caret"
                                             style={{
                                                 transform: `rotate(${
-                                                    !showGuilds ? "-90deg" : "0deg"
+                                                    showGuilds ? "90deg" : "0deg"
                                                 })`,
                                             }}
                                         />

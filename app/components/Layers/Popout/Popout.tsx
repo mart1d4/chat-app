@@ -5,30 +5,24 @@ import { FixedMessage, Icon, Avatar } from "@components";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import pusher from "@/lib/pusher/client-connection";
 import styles from "./Popout.module.css";
 
-type TMessageData = {
-    channelId: TChannel["id"];
-    message: TMessage;
-};
-
 export function Popout({ content, element }: any) {
-    const [filteredList, setFilteredList] = useState<TCleanUser[]>([]);
-    const [search, setSearch] = useState<string>("");
-    const [chosen, setChosen] = useState<TCleanUser[]>([]);
-    const [copied, setCopied] = useState<boolean>(false);
-    const [placesLeft, setPlacesLeft] = useState<number>(9);
-    const [pinned, setPinned] = useState<TMessage[]>([]);
-    const [inviteLink, setInviteLink] = useState<string>("");
+    const [filteredList, setFilteredList] = useState([]);
+    const [inviteLink, setInviteLink] = useState("");
+    const [placesLeft, setPlacesLeft] = useState(9);
+    const [copied, setCopied] = useState(false);
+    const [search, setSearch] = useState("");
+    const [chosen, setChosen] = useState([]);
+    const [pinned, setPinned] = useState([]);
 
     const setSettings = useSettings((state) => state.setSettings);
-    const user = useData((state) => state.user) as TCleanUser;
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
-    const layers = useLayers((state) => state.layers);
     const friends = useData((state) => state.friends);
+    const layers = useLayers((state) => state.layers);
     const token = useData((state) => state.token);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
@@ -38,13 +32,10 @@ export function Popout({ content, element }: any) {
     const router = useRouter();
 
     useEffect(() => {
-        if (layers.POPUP.length !== 1) return;
+        if (layers.POPUP.length !== 1 || !containerRef.current) return;
 
         const handleClickOutside = (e: MouseEvent) => {
-            if (
-                !containerRef.current?.contains(e.target as Node) &&
-                !element.contains(e.target as Node)
-            ) {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -57,25 +48,6 @@ export function Popout({ content, element }: any) {
         document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
     }, [layers, containerRef]);
-
-    useEffect(() => {
-        const handleKeyDown = async (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                if (layers.POPUP.length > 2 || layers.MENU) {
-                    return;
-                }
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [layers]);
 
     useEffect(() => {
         if (content.type === "PINNED_MESSAGES") {
@@ -93,8 +65,11 @@ export function Popout({ content, element }: any) {
             fetchPinned();
         } else {
             if (content.channel) {
+                console.log(friends);
+                console.log(content.channel.recipients);
+
                 const filtered = friends.filter(
-                    (friend) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
+                    (f) => !content.channel.recipients.map((r) => r.id).includes(parseInt(f.id))
                 );
                 setFilteredList(filtered);
                 setPlacesLeft(10 - content.channel.recipients.length);
@@ -106,7 +81,7 @@ export function Popout({ content, element }: any) {
     }, [content]);
 
     useEffect(() => {
-        if (content.type === "PINNED_MESSAGES") return;
+        if (content.pinned) return;
 
         if (content.channel) {
             if (chosen?.length === 0) setPlacesLeft(10 - content.channel.recipients.length);
@@ -122,7 +97,7 @@ export function Popout({ content, element }: any) {
 
         if (content.channel) {
             const filtered = friends.filter(
-                (friend) => !content.channel.recipients.map((r) => r.id).includes(friend.id)
+                (f) => !content.channel.recipients.map((r) => r.id).includes(parseInt(f.id))
             );
 
             if (search)
@@ -143,14 +118,41 @@ export function Popout({ content, element }: any) {
         }
     }, [search, friends]);
 
-    const createChan = async () => {
+    function channelExists(recipients: string[]) {
+        return channels.find(
+            (channel) =>
+                channel.recipients.length === recipients.length &&
+                channel.recipients.every((r) => recipients.includes(r.id.toString()))
+        );
+    }
+
+    async function createChan(skip?: boolean) {
         const recipients = chosen.map((user) => user.id);
 
         if (content.channel) {
+            const channel = channelExists([
+                ...content.channel.recipients.map((r) => r.id.toString()),
+                ...recipients,
+            ]);
+
+            if (channel && !skip) {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                    },
+                    content: {
+                        type: "CHANNEL_EXISTS",
+                        channel: channel,
+                        addUsers: createChan(true),
+                    },
+                });
+                return;
+            }
+
             if (content.channel.type === 0) {
-                const currentRecipient = content.channel.recipientIds.find(
-                    (recipient: string) => recipient !== user.id
-                );
+                const currentRecipient = content.channel.recipients
+                    .map((r) => r.id.toString())
+                    .find((id) => id != user.id);
 
                 sendRequest({
                     query: "CHANNEL_CREATE",
@@ -159,47 +161,15 @@ export function Popout({ content, element }: any) {
                     },
                 });
             } else if (content.channel.type === 1) {
-                const channelExists = (recipients: string[]) => {
-                    const channel = channels.find((channel) => {
-                        return (
-                            channel.recipients.length === recipients.length &&
-                            channel.recipientIds.every((recipient: string) =>
-                                recipients.includes(recipient)
-                            )
-                        );
-                    });
-
-                    return channel;
-                };
-
-                const addUsers = () => {
-                    recipients.forEach((recipient) => {
-                        sendRequest({
-                            query: "CHANNEL_RECIPIENT_ADD",
-                            params: {
-                                channelId: content?.channel.id,
-                                recipientId: recipient,
-                            },
-                        });
-                    });
-                };
-
-                const channel = channelExists([...content.channel.recipientIds, ...recipients]);
-
-                if (channel) {
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                        },
-                        content: {
-                            type: "CHANNEL_EXISTS",
-                            channel: channel,
-                            addUsers: addUsers,
+                recipients.forEach((recipient) => {
+                    sendRequest({
+                        query: "CHANNEL_RECIPIENT_ADD",
+                        params: {
+                            channelId: content.channel.id,
+                            recipientId: recipient,
                         },
                     });
-                } else {
-                    addUsers();
-                }
+                });
             }
         } else {
             sendRequest({
@@ -209,14 +179,13 @@ export function Popout({ content, element }: any) {
                 },
             });
         }
-    };
+    }
 
     if (content.type === "PINNED_MESSAGES") {
         return (
             <div
                 ref={containerRef}
                 className={styles.pinContainer}
-                onContextMenu={(e) => e.preventDefault()}
             >
                 <div>
                     <h1>Pinned Messages</h1>
@@ -318,20 +287,21 @@ export function Popout({ content, element }: any) {
                             <div className={styles.input}>
                                 <div>
                                     <div>
-                                        {chosen.map((friend) => (
+                                        {filteredList.map((friend) => (
                                             <button
-                                                key={friend.username}
+                                                key={friend.id}
                                                 className={styles.friendChip}
-                                                onClick={(e) => {
-                                                    console.log("wikshnawuiodgbwuao");
-
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
+                                                onClick={() => {
                                                     setChosen(
                                                         chosen?.filter(
                                                             (user) => user.id !== friend.id
                                                         )
                                                     );
+                                                }}
+                                                style={{
+                                                    display: chosen.includes(friend)
+                                                        ? "flex"
+                                                        : "none",
                                                 }}
                                             >
                                                 {friend.username}
@@ -472,7 +442,13 @@ export function Popout({ content, element }: any) {
                                         </div>
 
                                         <div className={styles.friendCheck}>
-                                            <div>
+                                            <div
+                                                style={{
+                                                    borderColor: chosen.includes(friend)
+                                                        ? "hsl(235, 86.1%, 77.5%)"
+                                                        : "var(--foreground-5)",
+                                                }}
+                                            >
                                                 {chosen.includes(friend) && (
                                                     <Icon
                                                         name="checkmark"

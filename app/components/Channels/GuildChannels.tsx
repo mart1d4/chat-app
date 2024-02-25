@@ -3,7 +3,13 @@
 import { ChannelTable, GuildTable, UserTable } from "@/lib/db/types";
 import { useState, SetStateAction, Dispatch } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { useLayers, useShowChannels, useTooltip, useWidthThresholds } from "@/lib/store";
+import {
+    useCollapsedCategories,
+    useLayers,
+    useShowChannels,
+    useTooltip,
+    useWidthThresholds,
+} from "@/lib/store";
 import styles from "./GuildChannels.module.css";
 import { Icon, UserSection } from "@components";
 import { motion } from "framer-motion";
@@ -16,9 +22,10 @@ interface Props {
 }
 
 export const GuildChannels = ({ user, guild, initChannels }: Props) => {
-    const [hiddenCategories, setHiddenCategories] = useState([]);
     const [channels, setChannels] = useState(initChannels.sort((a, b) => a.position - b.position));
 
+    const collapsed = Object.keys(useCollapsedCategories((state) => state.collapsedCategories));
+    const setCollapsed = useCollapsedCategories((state) => state.setCollapsedCategory);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const params = useParams();
@@ -80,7 +87,7 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                         <div
                             style={{
                                 transform:
-                                    layers.MENU?.content.type !== "GUILD" ? "rotate(-90deg)" : "",
+                                    layers.MENU?.content?.type !== "GUILD" ? "rotate(-90deg)" : "",
                             }}
                         >
                             {layers.MENU?.content.type === "GUILD" ? (
@@ -111,7 +118,7 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                         {channels[0]?.type !== 4 && <div></div>}
 
                         {channels.length > 0 ? (
-                            channels.map((channel: TChannel) => {
+                            channels.map((channel) => {
                                 if (channel.type === 4) {
                                     return (
                                         <ChannelItem
@@ -119,21 +126,27 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                                             channel={channel}
                                             guild={guild}
                                             member={member}
-                                            hidden={hiddenCategories.includes(channel.id)}
-                                            setHidden={setHiddenCategories}
+                                            hidden={collapsed.includes(channel.id)}
+                                            setHidden={() => {
+                                                setCollapsed(
+                                                    channel.id,
+                                                    !collapsed.includes(channel.id)
+                                                );
+                                            }}
                                         />
                                     );
                                 }
 
                                 if (
-                                    hiddenCategories.includes(channel?.parentId) &&
+                                    collapsed.includes(channel?.parentId) &&
                                     params?.channelId !== channel.id
-                                )
-                                    return;
+                                ) {
+                                    return null;
+                                }
 
                                 if (channel.parentId) {
                                     const category = channels.find(
-                                        (channel: TChannel) => channel.id === channel.parentId
+                                        (channel) => channel.id === channel.parentId
                                     );
 
                                     return (
@@ -170,17 +183,22 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
     );
 };
 
-type ChannelItemProps = {
-    channel: TChannel;
-    guild: TGuild;
-    member: TCleanUser;
+const ChannelItem = ({
+    channel,
+    guild,
+    member,
+    hidden,
+    setHidden,
+}: {
+    channel: Partial<ChannelTable>;
+    guild: Partial<GuildTable>;
+    member: Partial<UserTable>;
     hidden?: boolean;
-    setHidden?: Dispatch<SetStateAction<string[]>>;
-};
-
-const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemProps) => {
+    setHidden?: any;
+}) => {
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
+
     const pathname = usePathname();
     const params = useParams();
 
@@ -192,14 +210,7 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                 dragSnapToOrigin={true}
                 draggable={true}
                 className={`${styles.category} ${hidden ? styles.hide : ""}`}
-                onClick={() => {
-                    if (!setHidden) return;
-                    if (!hidden) {
-                        setHidden((prev: string[]) => [...prev, channel.id]);
-                    } else {
-                        setHidden((prev: string[]) => prev.filter((id) => id !== channel.id));
-                    }
-                }}
+                onClick={() => setHidden && setHidden()}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -391,6 +402,20 @@ const ChannelItem = ({ channel, guild, member, hidden, setHidden }: ChannelItemP
                                     style={{
                                         display: params.channelId === channel.id ? "flex" : "",
                                         flex: params.channelId === channel.id ? "0 0 auto" : "",
+                                    }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setLayers({
+                                            settings: {
+                                                type: "POPUP",
+                                            },
+                                            content: {
+                                                type: "GUILD_INVITE",
+                                                channel: channel,
+                                                guild: guild,
+                                            },
+                                        });
                                     }}
                                 >
                                     <Icon name="addUser" />
