@@ -67,6 +67,8 @@ export function Image({
                 });
             }}
             onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setLayers({
                     settings: {
                         type: "MENU",
@@ -75,7 +77,7 @@ export function Image({
                     content: {
                         type: "MESSAGE",
                         message: message,
-                        embed: embed,
+                        attachment: embed,
                         functions: functions,
                     },
                 });
@@ -109,7 +111,10 @@ export function Embed({
     const setLayers = useLayers((state) => state.setLayers);
 
     return (
-        <div className={styles.embed}>
+        <div
+            className={styles.embed}
+            style={{ borderColor: embed.color ? `#${embed.color}` : "" }}
+        >
             <div>
                 <div>
                     <div
@@ -175,6 +180,8 @@ export function Embed({
                                         });
                                     }}
                                     onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         setLayers({
                                             settings: {
                                                 type: "MENU",
@@ -183,7 +190,7 @@ export function Embed({
                                             content: {
                                                 type: "MESSAGE",
                                                 message: message,
-                                                embed: embed,
+                                                attachment: embed.image,
                                                 functions: functions,
                                             },
                                         });

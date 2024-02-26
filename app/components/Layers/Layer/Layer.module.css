@@ -47,6 +47,10 @@
         width: 100dvw;
         height: 100dvh;
     }
+
+    .layer.popout {
+        transform: translate(0, 0) !important;
+    }
 }
 
 @keyframes fadeIn {

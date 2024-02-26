@@ -216,6 +216,8 @@ export function Image({
                 });
             }}
             onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setLayers({
                     settings: {
                         type: "MENU",
@@ -255,7 +257,7 @@ export function Image({
                 </div>
             </div>
 
-            {(!attachment.isSpoiler || hideSpoiler) && (
+            {(!attachment.isSpoiler || hideSpoiler) && user.id == message.author.id && (
                 <div
                     className={styles.deleteImage}
                     onMouseEnter={(e) => {
@@ -268,7 +270,6 @@ export function Image({
                     onMouseLeave={() => setTooltip(null)}
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (user.id !== message.author.id) return;
 
                         if (length === 1 && !message.content) {
                             return setLayers({

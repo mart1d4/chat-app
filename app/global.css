@@ -424,4 +424,7 @@ input:focus-visible {
 .public-DraftEditorPlaceholder-inner {
     color: var(--foreground-5);
     user-select: none;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

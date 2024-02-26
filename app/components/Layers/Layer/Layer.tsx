@@ -214,7 +214,9 @@ function Layer({
     return (
         <div
             ref={layerRef}
-            className={`${styles.layer} ${!absolute ? styles.static : ""}`}
+            className={`${styles.layer} ${!absolute ? styles.static : ""} ${
+                popoutTypes.includes(content.type) ? styles.popout : ""
+            }`}
             style={{
                 zIndex: index,
                 opacity: transform !== "" || !absolute ? 1 : 0,

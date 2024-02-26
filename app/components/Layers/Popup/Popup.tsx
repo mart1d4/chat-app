@@ -599,25 +599,26 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             aspectRatio: `${img.width / img.height}`,
         };
 
-        // If the image is taller than it is wide
-        if (ratio < 1) {
-            // If the image is taller than the window
-            if (img.height > maxHeight) {
-                // Set the height to the max height
+        const isImageWiderThanWindow = img.width > maxWidth;
+        const isImageTallerThanWindow = img.height > maxHeight;
+
+        console.log(maxHeight, maxWidth, img.width, img.height);
+
+        // If both, make dimensions depends on the smaller side of the window
+        if (isImageWiderThanWindow && isImageTallerThanWindow) {
+            if (maxWidth > maxHeight) {
                 dimensions.height = maxHeight;
-
-                // Set the width to the max height times the ratio
                 dimensions.width = maxHeight * ratio;
-            }
-        } else {
-            // If the image is wider than the window
-            if (img.width > maxWidth) {
-                // Set the width to the max width
+            } else {
                 dimensions.width = maxWidth;
-
-                // Set the height to the max width divided by the ratio
                 dimensions.height = maxWidth / ratio;
             }
+        } else if (isImageWiderThanWindow) {
+            dimensions.width = maxWidth;
+            dimensions.height = maxWidth / ratio;
+        } else if (isImageTallerThanWindow) {
+            dimensions.height = maxHeight;
+            dimensions.width = maxHeight * ratio;
         }
 
         return dimensions;
@@ -1056,7 +1057,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                 )}
 
                                 {prop.tip && (
-                                    <div style={{ color: "var(--foreground-5)" }}>{prop.tip}</div>
+                                    <div
+                                        style={{ color: "var(--foreground-5)", userSelect: "none" }}
+                                    >
+                                        {prop.tip}
+                                    </div>
                                 )}
 
                                 {content.message && type !== "DELETE_ATTACHMENT" && (

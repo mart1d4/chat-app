@@ -63,25 +63,17 @@ const Content = ({
     //     };
     // }, []);
 
-    const scrollContainer = useCallback(
-        (node: HTMLDivElement) => {
-            if (node === null) return;
-            setScrollerNode(node);
-            const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) node.scrollTop = node.scrollHeight;
-            });
-            resizeObserver.observe(node);
-        },
-        [isAtBottom]
-    );
+    const scrollContainer = useCallback((node: HTMLDivElement) => {
+        setScrollerNode(node);
+    }, []);
 
     const scrollContainerChild = useCallback(
         (node: HTMLDivElement) => {
             if (node === null || !scrollerNode) return;
-            const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
-            });
-            resizeObserver.observe(node);
+
+            new ResizeObserver(() => {
+                scrollerNode.scrollTop = scrollerNode.scrollHeight;
+            }).observe(node);
         },
         [isAtBottom, scrollerNode]
     );
@@ -127,16 +119,6 @@ const Content = ({
                     <div
                         ref={scrollContainer}
                         className={styles.messagesScrollableContainer + " scrollbar"}
-                        onScroll={(e) => {
-                            if (
-                                e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
-                                e.currentTarget.scrollHeight
-                            ) {
-                                if (!isAtBottom) setIsAtBottom(true);
-                            } else if (isAtBottom) {
-                                setIsAtBottom(false);
-                            }
-                        }}
                     >
                         <div
                             ref={scrollContainerChild}

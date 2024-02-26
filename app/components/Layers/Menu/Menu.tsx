@@ -935,9 +935,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: content?.attachment ? "Copy Image" : null,
                         func: () => {
-                            const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
-
-                            fetch(url)
+                            fetch(content.attachment.url)
                                 .then((res) => res.blob())
                                 .then((blob) => {
                                     navigator.clipboard.write([
@@ -951,9 +949,7 @@ export function Menu({ content }: { content: any }) {
                     {
                         name: content?.attachment ? "Save Image" : null,
                         func: () => {
-                            const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`;
-
-                            fetch(url)
+                            fetch(content.attachment.url)
                                 .then((res) => res.blob())
                                 .then((blob) => {
                                     const a = document.createElement("a");
@@ -966,18 +962,11 @@ export function Menu({ content }: { content: any }) {
                     { name: content?.attachment ? "Divider" : null },
                     {
                         name: content?.attachment ? "Copy Link" : null,
-                        func: () =>
-                            writeText(
-                                `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`
-                            ),
+                        func: () => writeText(content?.attachment?.url),
                     },
                     {
                         name: content?.attachment ? "Open Link" : null,
-                        func: () => {
-                            window.open(
-                                `${process.env.NEXT_PUBLIC_CDN_URL}/${content.attachment.id}/`
-                            );
-                        },
+                        func: () => window.open(content?.attachment?.url),
                     },
                     { name: "Divider" },
                     {

@@ -1,7 +1,9 @@
+import pusher from "@/lib/pusher/server-connection";
 import { NextResponse } from "next/server";
 import { removeImage } from "@/lib/cdn";
 import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
+import probe from "probe-image-size";
 import { db } from "@/lib/db/db";
 import {
     areUsersBlocked,
@@ -10,8 +12,79 @@ import {
     getRandomId,
     isUserInChannel,
 } from "@/lib/db/helpers";
-import pusher from "@/lib/pusher/server-connection";
-import probe from "probe-image-size";
+
+const embedColors: [RegExp, string][] = [
+    [
+        // Youtube
+        /https?:\/\/(www\.)?youtube.com/,
+        "ff0000",
+    ],
+    [
+        // youtu.be
+        /https?:\/\/youtu.be/,
+        "ff0000",
+    ],
+    [
+        // Twitter
+        /https?:\/\/(www\.)?twitter.com/,
+        "1da1f2",
+    ],
+    [
+        // Instagram
+        /https?:\/\/(www\.)?instagram.com/,
+        "e1306c",
+    ],
+    [
+        // Reddit
+        /https?:\/\/(www\.)?reddit.com/,
+        "ff4500",
+    ],
+    [
+        // Github
+        /https?:\/\/(www\.)?github.com/,
+        "6e5494",
+    ],
+    [
+        // Discord
+        /https?:\/\/(www\.)?discord.com/,
+        "5865f2",
+    ],
+    [
+        // Twitch
+        /https?:\/\/(www\.)?twitch.tv/,
+        "6441a5",
+    ],
+    [
+        // Spotify
+        /https?:\/\/(www\.)?open.spotify.com/,
+        "1db954",
+    ],
+    [
+        // Soundcloud
+        /https?:\/\/(www\.)?soundcloud.com/,
+        "ff5500",
+    ],
+    [
+        // Steam
+        /https?:\/\/(www\.)?store.steampowered.com/,
+        "1b2838",
+    ],
+    [
+        // Wikipedia
+        /https?:\/\/(www\.)?wikipedia.org/,
+        "000000",
+    ],
+    [
+        // Facebook
+        /https?:\/\/(www\.)?facebook.com/,
+        "1877f2",
+    ],
+    [
+        // Chat App (chat-app.mart1d4.dev or localhost:3000)
+        /https?:\/\/(localhost:3000|chat-app.mart1d4.dev)/,
+        "5865f2",
+    ],
+];
 
 export async function POST(req: Request, { params }: { params: { channelId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "0");
@@ -137,54 +210,70 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
 
         // embeds are either images or links
         const embeds = await Promise.all(
-            (message.content.match(/https?:\/\/[^\s]+/g) || [])
-                .map(async (url) => {
-                    try {
-                        const isImage = /\.(jpe?g|png|gif|bmp)$/i.test(url);
+            (message.content.match(/https?:\/\/[^\s]+/g) || []).map(async (url: string) => {
+                const inviteRegex =
+                    /https?:\/\/(localhost:3000|chat-app.mart1d4.dev)\/[a-zA-Z0-9]{8}/;
+                if (inviteRegex.test(url)) {
+                    return null;
+                }
 
-                        const res = await fetch(url);
-                        const contentType = res.headers.get("content-type");
-
-                        if (isImage || contentType?.startsWith("image")) {
-                            const result = await probe(url);
-                            console.log(result);
-
-                            return {
-                                type: "image",
-                                url: url,
-                                dimensions: {
-                                    width: result.width,
-                                    height: result.height,
-                                },
-                                mime: result.mime,
-                            };
-                        }
-
-                        const metadata = await fetch(
-                            `https://api.microlink.io/?url=${encodeURIComponent(url)}`
-                        ).then((res) => res.json());
-
-                        if (metadata.status === "success") {
-                            return {
-                                type: "link",
-                                url: url,
-                                title: metadata.data.title,
-                                description: metadata.data.description,
-                                image: metadata.data.image,
-                            };
-                        }
-
-                        return null;
-                    } catch (error) {
-                        console.log(error);
-                        return null;
+                let color;
+                // If domain matches a known embed type, make color the embed color
+                for (const embedColor of embedColors) {
+                    if (embedColor[0].test(url)) {
+                        color = embedColor[1];
+                        break;
                     }
-                })
-                .filter((r) => r !== null)
+                }
+
+                try {
+                    const isImage = /\.(jpe?g|png|gif|bmp)$/i.test(url);
+
+                    const res = await fetch(url);
+                    const contentType = res.headers.get("content-type");
+
+                    if (isImage || contentType?.startsWith("image")) {
+                        const result = await probe(url);
+                        console.log(result);
+
+                        return {
+                            type: "image",
+                            url: url,
+                            dimensions: {
+                                width: result.width,
+                                height: result.height,
+                            },
+                            mime: result.mime,
+                        };
+                    }
+
+                    const metadata = await fetch(
+                        `https://api.microlink.io/?url=${encodeURIComponent(url)}`
+                    ).then((res) => res.json());
+
+                    if (metadata.status === "success") {
+                        return {
+                            type: "link",
+                            url: url,
+                            title: metadata.data.title,
+                            description: metadata.data.description,
+                            image: metadata.data.image,
+                            color: color,
+                        };
+                    }
+
+                    return null;
+                } catch (error) {
+                    console.log(error);
+                    return null;
+                }
+            })
         );
 
         // Remove duplicate urls
-        const uniqueEmbeds = embeds.filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i);
+        const uniqueEmbeds = embeds
+            .filter((r: any) => r !== null)
+            .filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i);
 
         const id = getRandomId();
 

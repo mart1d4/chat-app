@@ -148,6 +148,9 @@ export function Message({
                                 target={part.includes("chat-app.mart1d4.dev") ? "_self" : "_blank"}
                                 rel="noopener noreferrer"
                                 className={styles.messageLink}
+                                style={{
+                                    color: message.error ? "var(--error-1)" : "",
+                                }}
                             >
                                 {part}
                             </Link>
@@ -185,6 +188,9 @@ export function Message({
                             <span
                                 key={`${message.id}-link-${i}`}
                                 className={styles.messageLink}
+                                style={{
+                                    color: message.error ? "var(--error-1)" : "",
+                                }}
                             >
                                 {part}
                             </span>
