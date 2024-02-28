@@ -415,10 +415,6 @@ input::placeholder {
     height: 21px;
 }
 
-input:focus-visible {
-    outline: 4px solid var(--accent-light);
-}
-
 /* Draftjs */
 
 .public-DraftEditorPlaceholder-inner {

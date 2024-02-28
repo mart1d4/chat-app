@@ -104,7 +104,7 @@ export const useLayers = create<LayersState>()((set) => ({
                     if (popoutTypes.includes(layer.content.type)) {
                         if (
                             state.layers.POPUP[0]?.content?.type === layer.content.type &&
-                            state.layers.POPUP[0]?.settings.element === layer.settings.element
+                            state.layers.POPUP[0]?.settings?.element === layer.settings.element
                         ) {
                             return {
                                 layers: {
@@ -831,9 +831,16 @@ export const useUrls = create(
 
 // Settings popup store
 
+type SettingsObject = null | {
+    type: "USER" | "GUILD" | "CHANNEL";
+    tab?: string;
+    guild?: Guild;
+    channel?: Channel;
+};
+
 interface ShowSettingsState {
-    showSettings: string | null;
-    setShowSettings: (val: string | null) => void;
+    showSettings: SettingsObject;
+    setShowSettings: (val: SettingsObject) => void;
 }
 
 export const useShowSettings = create<ShowSettingsState>()((set) => ({

@@ -329,6 +329,17 @@
     border: 1px solid var(--success-1);
 }
 
+.inviteButton.failed {
+    border-color: var(--error-1) !important;
+    background-color: var(--error-1) !important;
+}
+
+.inviteButton.sent {
+    border-color: transparent !important;
+    cursor: not-allowed;
+    background-color: transparent !important;
+}
+
 .friend:hover > .inviteButton:hover {
     background-color: var(--success-2);
     border-color: var(--success-2);
@@ -448,6 +459,12 @@
     width: 100%;
     font-weight: 500;
     color: var(--foreground-1);
+}
+
+.editLink {
+    color: var(--accent-light);
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 @media screen and (max-width: 487px) {

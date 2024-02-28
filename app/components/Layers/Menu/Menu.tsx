@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useData, useLayers, useMention, useSettings } from "@/lib/store";
+import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/lib/store";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -58,17 +58,17 @@ export function Menu({ content }: { content: any }) {
     const [filteredItems, setFilteredItems] = useState<ItemType[]>([]);
     const [userProps, setUserProps] = useState<UserProps | null>(null);
 
-    const requestsReceived = useData((state) => state.received);
-    const currentUser = useData((state) => state.user) as TCleanUser;
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const setSettings = useSettings((state) => state.setSettings);
-    const requestsSent = useData((state) => state.sent);
+    const requestsReceived = useData((state) => state.received);
     const setMention = useMention((state) => state.setMention);
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
     const blockedUsers = useData((state) => state.blocked);
+    const requestsSent = useData((state) => state.sent);
+    const currentUser = useData((state) => state.user);
     const friends = useData((state) => state.friends);
     const layers = useLayers((state) => state.layers);
-    const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
     const type: EMenuType = content.type;
@@ -185,6 +185,8 @@ export function Menu({ content }: { content: any }) {
         if (content.guildOwnerId) return content.guildOwnerId == currentUser.id;
         return false;
     }, [content, userProps]);
+
+    const isGuildOwner = content.guild?.ownerId == currentUser.id;
 
     const muteItems = [
         {
@@ -429,7 +431,10 @@ export function Menu({ content }: { content: any }) {
                     },
                     {
                         name: "Copy Link",
-                        func: () => {},
+                        func: () =>
+                            writeText(
+                                `${process.env.NEXT_PUBLIC_BASE_URL}/channels/${content.channel.guildId}/${content.channel.id}`
+                            ),
                     },
                     {
                         name: content.channel.type == 3 ? "Divider" : null,
@@ -461,30 +466,24 @@ export function Menu({ content }: { content: any }) {
                     },
                     {
                         name: "Edit Channel",
-                        func: () => {},
+                        func: () => setShowSettings({ type: "CHANNEL", channel: content.channel }),
                     },
                     {
                         name: "Duplicate Channel",
                         func: () => {},
                     },
                     {
-                        name: `Create ${content.channel.type == 2 ? "Text" : "Voice"} Channel`,
+                        name: `Create ${content.channel.type === 2 ? "Text" : "Voice"} Channel`,
                         func: () => {
-                            const guild = guilds.find(
-                                (guild: TGuild) => guild.id == content.channel.guildId
-                            );
-                            const category = guild?.channels.find(
-                                (channel: TChannel) => channel.id == content.channel?.parentId
-                            );
-
                             setLayers({
                                 settings: {
                                     type: "POPUP",
                                 },
                                 content: {
                                     type: "GUILD_CHANNEL_CREATE",
-                                    guild: content.channel.guildId,
-                                    category: category ?? null,
+                                    guild: content.guild.id,
+                                    category: content.category,
+                                    voice: content.channel.type === 3,
                                 },
                             });
                         },
@@ -518,8 +517,6 @@ export function Menu({ content }: { content: any }) {
         }
 
         if (type == "GUILD_ICON") {
-            // const textChan = content.guild.channels.find((c: TChannel) => c.type == 2);
-            const textChan = null;
             setItems([
                 {
                     name: "Mark As Read",
@@ -527,10 +524,10 @@ export function Menu({ content }: { content: any }) {
                     func: () => {},
                 },
                 {
-                    name: textChan ? "Divider" : null,
+                    name: null ? "Divider" : null,
                 },
                 {
-                    name: textChan ? "Invite People" : null,
+                    name: null ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -540,7 +537,7 @@ export function Menu({ content }: { content: any }) {
                             content: {
                                 type: "GUILD_INVITE",
                                 guild: content.guild,
-                                channel: textChan,
+                                channel: null,
                             },
                         });
                     },
@@ -584,22 +581,42 @@ export function Menu({ content }: { content: any }) {
                 },
                 {
                     name: "Create Channel",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_CHANNEL_CREATE",
+                                guild: content.guild.id,
+                            },
+                        });
+                    },
                 },
                 {
                     name: "Create Category",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_CHANNEL_CREATE",
+                                guild: content.guild.id,
+                                isCategory: true,
+                            },
+                        });
+                    },
                 },
                 {
                     name: "Create Event",
                     func: () => {},
                 },
                 {
-                    name: "Divider",
+                    name: !isGuildOwner ? "Divider" : null,
                 },
                 {
-                    name:
-                        content.guild.ownerId == currentUser.id ? "Delete Server" : "Leave Server",
+                    name: !isGuildOwner ? "Leave Server" : null,
                     danger: true,
                     func: () => {
                         setLayers({
@@ -627,8 +644,6 @@ export function Menu({ content }: { content: any }) {
         }
 
         if (type == "GUILD") {
-            // const textChan = content.guild.channels.find((c: TChannel) => c.type == 2);
-            const textChan = null;
             setItems([
                 {
                     name: "Server Boost",
@@ -639,7 +654,7 @@ export function Menu({ content }: { content: any }) {
                     name: "Divider",
                 },
                 {
-                    name: textChan ? "Invite People" : null,
+                    name: null ? "Invite People" : null,
                     icon: "addUser",
                     func: () => {
                         setLayers({
@@ -649,7 +664,7 @@ export function Menu({ content }: { content: any }) {
                             content: {
                                 type: "GUILD_INVITE",
                                 guild: content.guild,
-                                channel: textChan,
+                                channel: null,
                             },
                         });
                     },
@@ -657,7 +672,7 @@ export function Menu({ content }: { content: any }) {
                 {
                     name: "Server Settings",
                     icon: "cog",
-                    func: () => {},
+                    func: () => setShowSettings({ type: "GUILD", guild: content.guild }),
                 },
                 {
                     name: "Server Insights",
@@ -667,12 +682,33 @@ export function Menu({ content }: { content: any }) {
                 {
                     name: "Create Channel",
                     icon: "attach",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_CHANNEL_CREATE",
+                                guild: content.guild.id,
+                            },
+                        });
+                    },
                 },
                 {
                     name: "Create Category",
                     icon: "folder",
-                    func: () => {},
+                    func: () => {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "GUILD_CHANNEL_CREATE",
+                                guild: content.guild.id,
+                                isCategory: true,
+                            },
+                        });
+                    },
                 },
                 {
                     name: "Create Event",
@@ -736,7 +772,7 @@ export function Menu({ content }: { content: any }) {
                     danger: true,
                 },
                 {
-                    name: "Leave Server",
+                    name: !isGuildOwner ? "Leave Server" : null,
                     icon: "logout",
                     func: () => {},
                     danger: true,

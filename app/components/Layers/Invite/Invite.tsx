@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers } from "@/lib/store";
+import { useData, useLayers, useTooltip } from "@/lib/store";
 import styles from "./Invite.module.css";
-import { Avatar, Icon } from "@components";
+import { Avatar, Icon, LoadingDots } from "@components";
 
 type TContent = {
     guild: TGuild;
@@ -12,15 +12,19 @@ type TContent = {
 };
 
 export function InvitePopup({ content }: { content: TContent }) {
-    const [filteredList, setFilteredList] = useState<TChannel[]>([]);
-    const [search, setSearch] = useState<string>("");
-    const [copied, setCopied] = useState<boolean>(false);
-    const [inviteLink, setInviteLink] = useState<string>("");
-    const [error, setError] = useState<string>("");
+    const [filteredList, setFilteredList] = useState([]);
+    const [search, setSearch] = useState("");
+    const [copied, setCopied] = useState(false);
+    const [inviteLink, setInviteLink] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState<string[]>([]);
+    const [sentTo, setSentTo] = useState<string[]>([]);
+    const [failed, setFailed] = useState<string[]>([]);
 
-    const user = useData((state) => state.user) as TCleanUser;
+    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
+    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
@@ -89,6 +93,41 @@ export function InvitePopup({ content }: { content: TContent }) {
             getLink();
         }
     }, []);
+
+    async function invite(channelId: string) {
+        if (loading.includes(channelId)) return;
+        setLoading([...loading, channelId]);
+
+        try {
+            const response = await sendRequest({
+                query: "SEND_MESSAGE",
+                params: {
+                    channelId: channelId,
+                },
+                data: {
+                    message: {
+                        content: `https://chat-app.mart1d4.dev/${inviteLink}`,
+                        attachments: [],
+                        messageReference: null,
+                    },
+                },
+            });
+
+            if (response.success) {
+                setSentTo([...sentTo, channelId]);
+                if (failed.includes(channelId)) {
+                    setFailed(failed.filter((id) => id !== channelId));
+                }
+            } else {
+                setFailed([...failed, channelId]);
+            }
+        } catch (error) {
+            console.error(error);
+            setFailed([...failed, channelId]);
+        }
+
+        setLoading(loading.filter((id) => id !== channelId));
+    }
 
     return (
         <div className={styles.popup}>
@@ -166,32 +205,39 @@ export function InvitePopup({ content }: { content: TContent }) {
                                     </div>
 
                                     <button
-                                        className={`button ${styles.inviteButton}`}
-                                        onClick={async () => {
-                                            try {
-                                                const response = await sendRequest({
-                                                    query: "SEND_MESSAGE",
-                                                    params: {
-                                                        channelId:
-                                                            channel.id ||
-                                                            (content.guild.channels.find(
-                                                                (c) => c.type === 0
-                                                            )?.id as string),
-                                                    },
-                                                    data: {
-                                                        message: {
-                                                            content: `https://chat-app.mart1d4.dev/${inviteLink}`,
-                                                            attachments: [],
-                                                            messageReference: null,
-                                                        },
-                                                    },
+                                        className={`
+                                            button ${styles.inviteButton}
+                                            ${failed.includes(channel.id) ? styles.failed : ""}
+                                            ${sentTo.includes(channel.id) ? styles.sent : ""}
+                                        `}
+                                        onClick={() => {
+                                            if (
+                                                sentTo.includes(channel.id) ||
+                                                loading.includes(channel.id)
+                                            ) {
+                                                return;
+                                            }
+                                            invite(channel.id);
+                                        }}
+                                        onMouseMove={(e) => {
+                                            if (failed.includes(channel.id)) {
+                                                setTooltip({
+                                                    element: e.currentTarget,
+                                                    text: "Retry sending invite",
                                                 });
-                                            } catch (error) {
-                                                console.error(error);
                                             }
                                         }}
+                                        onMouseLeave={() => setTooltip(null)}
                                     >
-                                        Invite
+                                        {failed.includes(channel.id) ? (
+                                            "Failed"
+                                        ) : sentTo.includes(channel.id) ? (
+                                            "Sent"
+                                        ) : loading.includes(channel.id) ? (
+                                            <LoadingDots />
+                                        ) : (
+                                            "Invite"
+                                        )}
                                     </button>
                                 </div>
                             ))}

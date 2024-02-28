@@ -28,6 +28,8 @@ export function Popout({ content, element }: any) {
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const hasRun = useRef(false);
+
     const pathname = usePathname();
     const router = useRouter();
 
@@ -50,6 +52,12 @@ export function Popout({ content, element }: any) {
     }, [layers, containerRef]);
 
     useEffect(() => {
+        if (process.env.NODE_ENV === "development" && !hasRun.current) {
+            return () => {
+                hasRun.current = true;
+            };
+        }
+
         if (content.type === "PINNED_MESSAGES") {
             const fetchPinned = async () => {
                 const response = await sendRequest({

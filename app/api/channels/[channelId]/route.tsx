@@ -1,7 +1,8 @@
-import { canUserManageChannel, getUser } from "@/lib/db/helpers";
+import { canUserManageChannel, getChannel, getUser } from "@/lib/db/helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
+import { db } from "@/lib/db/db";
 
 export async function PUT(req: NextRequest, { params }: { params: { channelId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "0");
@@ -102,13 +103,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { channelId
 
     try {
         const user = await getUser({
-            select: {
-                id: true,
-            },
+            id: userId,
             throwOnNotFound: true,
         });
 
-        if (!(await canUserManageChannel(user.id, channelId))) {
+        const channel = await getChannel(channelId);
+
+        if (!channel) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Could not find channel with that ID.",
+                },
+                { status: 404 }
+            );
+        }
+
+        if (!(await canUserManageChannel(user.id, channel.guildId))) {
             return NextResponse.json(
                 {
                     success: false,
@@ -118,152 +129,175 @@ export async function DELETE(req: NextRequest, { params }: { params: { channelId
             );
         }
 
-        if (channel.type !== 4) {
-            await prisma.channel.delete({
-                where: {
-                    id: channelId,
-                },
-            });
+        if (channel.type === 4) {
+            const textChannels = await db
+                .selectFrom("channels")
+                .select(["id", "position"])
+                .where("type", "=", 2)
+                .where("parentId", "=", channelId)
+                .orderBy("position", "asc")
+                .execute();
 
-            await prisma.channel.updateMany({
-                where: {
-                    guildId: channel.guildId,
-                    position: {
-                        gt: channel.position as number,
-                    },
-                },
-                data: {
-                    position: {
-                        decrement: 1,
-                    },
-                },
-            });
+            const voiceChannels = await db
+                .selectFrom("channels")
+                .select(["id", "position"])
+                .where("type", "=", 3)
+                .where("parentId", "=", channelId)
+                .orderBy("position", "asc")
+                .execute();
+
+            if (textChannels.length > 0) {
+                let position = 0;
+
+                const max = (
+                    await db
+                        .selectFrom("channels")
+                        .select((eb) => eb.fn.max("position").as("position"))
+                        .where("guildId", "=", channel.guildId)
+                        .where("type", "=", 2)
+                        .where("parentId", "is", null)
+                        .executeTakeFirstOrThrow()
+                ).position;
+
+                if (max !== null) {
+                    position = max + 1;
+                }
+
+                let i = position;
+
+                for (const textChannel of textChannels) {
+                    console.log(
+                        "Moving channel from position ",
+                        textChannel.position,
+                        " to position ",
+                        i
+                    );
+
+                    await db
+                        .updateTable("channels")
+                        .set({
+                            position: i,
+                            parentId: null,
+                        })
+                        .where("id", "=", textChannel.id)
+                        .execute();
+
+                    i++;
+                }
+
+                await db
+                    .updateTable("channels")
+                    .set((eb) => ({
+                        position: eb("position", "+", textChannels.length),
+                    }))
+                    .where("guildId", "=", channel.guildId)
+                    .where("position", ">=", position)
+                    .where("position", "<=", channel.position)
+                    .where(({ not, eb }) =>
+                        not(
+                            eb(
+                                "id",
+                                "in",
+                                textChannels.map((c) => c.id)
+                            )
+                        )
+                    )
+                    .execute();
+            }
+
+            if (voiceChannels.length > 0) {
+                let position = 0;
+
+                const max = (
+                    await db
+                        .selectFrom("channels")
+                        .select((eb) => eb.fn.max("position").as("position"))
+                        .where("guildId", "=", channel.guildId)
+                        .where(({ eb, or }) => or([eb("type", "=", 3), eb("type", "=", 2)]))
+                        .where("parentId", "is", null)
+                        .executeTakeFirstOrThrow()
+                ).position;
+
+                if (max !== null) {
+                    position = max + 1;
+                }
+
+                let i = position;
+
+                for (const voiceChannel of voiceChannels) {
+                    await db
+                        .updateTable("channels")
+                        .set({
+                            position: i,
+                            parentId: null,
+                        })
+                        .where("id", "=", voiceChannel.id)
+                        .execute();
+
+                    i++;
+                }
+
+                await db
+                    .updateTable("channels")
+                    .set((eb) => ({
+                        position: eb("position", "+", voiceChannels.length),
+                    }))
+                    .where("guildId", "=", channel.guildId)
+                    .where("position", ">=", position)
+                    .where("position", "<=", channel.position + textChannels.length)
+                    .where(({ not, eb }) =>
+                        not(
+                            eb(
+                                "id",
+                                "in",
+                                voiceChannels.map((c) => c.id)
+                            )
+                        )
+                    )
+                    .execute();
+            }
+
+            await db
+                .updateTable("channels")
+                .set({
+                    isDeleted: true,
+                    guildId: null,
+                })
+                .where("id", "=", channelId)
+                .execute();
+
+            await db
+                .updateTable("channels")
+                .set((eb) => ({
+                    position: eb("position", "-", 1),
+                }))
+                .where("guildId", "=", channel.guildId)
+                .where("position", ">", channel.position)
+                .execute();
         } else {
-            const textChannels = await prisma.channel.count({
-                where: {
-                    guildId: channel.guildId,
-                    type: 2,
-                    OR: [
-                        {
-                            parentId: {
-                                isSet: false,
-                            },
-                        },
-                        {
-                            parentId: {
-                                equals: null,
-                            },
-                        },
-                    ],
-                },
-            });
+            await db
+                .updateTable("channels")
+                .set({
+                    isDeleted: true,
+                    guildId: null,
+                })
+                .where("id", "=", channelId)
+                .execute();
 
-            const textToAdd = await prisma.channel.findMany({
-                where: {
-                    guildId: channel.guildId,
-                    type: 2,
-                    parentId: channel.id,
-                },
-            });
-
-            const voiceToAdd = await prisma.channel.findMany({
-                where: {
-                    guildId: channel.guildId,
-                    type: 3,
-                    parentId: channel.id,
-                },
-            });
-
-            await prisma.channel.updateMany({
-                where: {
-                    guildId: channel.guildId,
-                    position: {
-                        gte: textChannels,
-                    },
-                },
-                data: {
-                    position: {
-                        increment: textToAdd.length,
-                    },
-                },
-            });
-
-            textToAdd.forEach(async (textChannel, index) => {
-                await prisma.channel.update({
-                    where: {
-                        id: textChannel.id,
-                    },
-                    data: {
-                        position: textChannels + index,
-                        parentId: null,
-                    },
-                });
-            });
-
-            const voiceChannels = await prisma.channel.count({
-                where: {
-                    guildId: channel.guildId,
-                    type: {
-                        not: 4,
-                    },
-                    OR: [
-                        {
-                            parentId: {
-                                isSet: false,
-                            },
-                        },
-                        {
-                            parentId: {
-                                equals: null,
-                            },
-                        },
-                    ],
-                },
-            });
-
-            await prisma.channel.updateMany({
-                where: {
-                    guildId: channel.guildId,
-                    position: {
-                        gte: voiceChannels,
-                    },
-                },
-                data: {
-                    position: {
-                        increment: voiceToAdd.length,
-                    },
-                },
-            });
-
-            voiceToAdd.forEach(async (voiceChannel, index) => {
-                await prisma.channel.update({
-                    where: {
-                        id: voiceChannel.id,
-                    },
-                    data: {
-                        position: voiceChannels + index,
-                        parentId: null,
-                    },
-                });
-            });
-
-            await prisma.channel.delete({
-                where: {
-                    id: channelId,
-                },
-            });
+            await db
+                .updateTable("channels")
+                .set((eb) => ({
+                    position: eb("position", "-", 1),
+                }))
+                .where("guildId", "=", channel.guildId)
+                .where("position", ">", channel.position)
+                .execute();
         }
-
-        await pusher.trigger("chat-app", "guild-update", {
-            type: "CHANNEL_REMOVED",
-            guildId: channel.guildId,
-            channelId: channelId,
-        });
 
         return NextResponse.json(
             {
                 success: true,
-                message: "Successfully deleted channel",
+                message: `Successfully deleted ${channel.type === 4 ? "category" : "channel"}.`,
             },
             { status: 200 }
         );

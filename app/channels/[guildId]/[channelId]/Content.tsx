@@ -3,7 +3,7 @@
 import { Message, TextArea, MessageSk, Icon } from "@components";
 import { useState, useEffect, useCallback } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
-import { useData, useUrls } from "@/lib/store";
+import { useData, useLayers, useShowSettings, useUrls } from "@/lib/store";
 import styles from "./Channels.module.css";
 import Link from "next/link";
 
@@ -175,23 +175,51 @@ export default function Content({
     );
 }
 
-const FirstMessage = ({ guild, channel }: Props) => {
+const FirstMessage = ({
+    guild,
+    channel,
+}: {
+    guild: Partial<GuildTable>;
+    channel: Partial<ChannelTable>;
+}) => {
+    const setShowSettings = useShowSettings((s) => s.setShowSettings);
+    const setLayers = useLayers((s) => s.setLayers);
+
     const content = [
         {
             text: "Invite your friends",
             icon: "e6a37780-7436-41eb-b818-fdb19e16bb0d",
+            completed: guild.members.length > 1,
+            onClick: () => {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                    },
+                    content: {
+                        type: "GUILD_INVITE",
+                        guild: guild,
+                        channel: channel,
+                    },
+                });
+            },
         },
         {
             text: "Personalize your server with an icon",
             icon: "07a4b38b-38ae-4000-b7ad-68571a2806c6",
+            completed: !!guild.icon,
+            onClick: () => {
+                setShowSettings({ type: "GUILD", guild: guild });
+            },
         },
         {
             text: "Send your first message",
             icon: "c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1",
+            onclick: () => {},
         },
         {
             text: "Add your first app",
             icon: "d5bce184-683e-4746-ae9c-68904a4a876e",
+            onclick: () => {},
         },
     ];
 
@@ -217,14 +245,34 @@ const FirstMessage = ({ guild, channel }: Props) => {
                             <div
                                 key={c.text}
                                 className={styles.welcomeCard}
+                                onClick={c.onClick}
                             >
                                 <div
                                     style={{
                                         backgroundImage: `url("https://ucarecdn.com/${c.icon}/")`,
+                                        opacity: c.completed ? 0.6 : 1,
                                     }}
                                 />
-                                <div>{c.text}</div>
-                                <Icon name="caret" />
+
+                                <div style={{ opacity: c.completed ? 0.6 : 1 }}>{c.text}</div>
+
+                                {c.completed ? (
+                                    <svg
+                                        className={styles.completedMark}
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        width="24"
+                                        height="24"
+                                        fill="none"
+                                    >
+                                        <path
+                                            fill="currentColor"
+                                            d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"
+                                        />
+                                    </svg>
+                                ) : (
+                                    <Icon name="caret" />
+                                )}
                             </div>
                         ))}
                     </div>

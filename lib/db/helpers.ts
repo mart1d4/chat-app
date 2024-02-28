@@ -54,6 +54,8 @@ const channelSelect: (keyof Channels)[] = [
     "icon",
     "ownerId",
     "updatedAt",
+    "guildId",
+    "position",
 ];
 
 const guildSelect: (keyof Guilds)[] = [
@@ -65,6 +67,7 @@ const guildSelect: (keyof Guilds)[] = [
     "members",
     "systemChannelId",
     "createdAt",
+    "ownerId",
 ];
 
 const avatars = [

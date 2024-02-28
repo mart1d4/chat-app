@@ -3,15 +3,13 @@
 import { useData, useShowSettings } from "@/lib/store";
 import { useRouter } from "next/navigation";
 
-const useLogout = () => {
+export default function useLogout() {
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const channels = useData((state) => state.channels);
     const reset = useData((state) => state.reset);
     const router = useRouter();
 
-    const logout = async () => {
-        const channelIds = channels.map((channel) => channel.id);
-
+    async function logout() {
         try {
             await fetch("/api/auth/logout", {
                 method: "POST",
@@ -25,9 +23,7 @@ const useLogout = () => {
             console.error(error);
             throw new Error("Error logging out");
         }
-    };
+    }
 
     return { logout };
-};
-
-export default useLogout;
+}

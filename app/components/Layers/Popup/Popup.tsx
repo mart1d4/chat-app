@@ -95,7 +95,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
     const [guildIcon, setGuildIcon] = useState<null | File>(null);
 
     const [channelName, setChannelName] = useState("");
-    const [channelType, setChannelType] = useState(2);
+    const [channelType, setChannelType] = useState(content.voice ? 3 : 2);
     const [channelLocked, setChannelLocked] = useState(false);
 
     const [imgIndex, setImgIndex] = useState<number>(content.current ?? 0);
@@ -537,7 +537,13 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             }
 
             if (e.key === "Enter" && !e.shiftKey && prop !== null) {
-                if (isLoading || document.activeElement === cancelRef.current) return;
+                if (
+                    isLoading ||
+                    document.activeElement === cancelRef.current ||
+                    prop?.buttonDisabled
+                ) {
+                    return;
+                }
 
                 prop.function();
                 if (!prop.skipClose) {
@@ -1319,8 +1325,15 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                         <h2>Channel Type</h2>
 
                                         <div
+                                            tabIndex={0}
                                             className={styles.typePick}
                                             onClick={() => setChannelType(2)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setChannelType(2);
+                                                }
+                                            }}
                                             style={{
                                                 backgroundColor:
                                                     channelType === 2
@@ -1369,8 +1382,15 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                         </div>
 
                                         <div
+                                            tabIndex={0}
                                             className={styles.typePick}
                                             onClick={() => setChannelType(3)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setChannelType(3);
+                                                }
+                                            }}
                                             style={{
                                                 backgroundColor:
                                                     channelType === 3

@@ -27,16 +27,16 @@ const masks = {
 };
 
 export function UserCard({ content }: any) {
-    const [note, setNote] = useState<string>("");
-    const [originalNote, setOriginalNote] = useState<string>("");
-    const [message, setMessage] = useState<string>("");
-    const [user, setUser] = useState<TCleanUser>(content.user);
+    const [note, setNote] = useState("");
+    const [originalNote, setOriginalNote] = useState("");
+    const [message, setMessage] = useState("");
+    const [user, setUser] = useState(content.user);
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const currentUser = useData((state) => state.user) as TCleanUser;
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
+    const currentUser = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -203,7 +203,7 @@ export function UserCard({ content }: any) {
                                             setNull: true,
                                         },
                                     });
-                                    setShowSettings("Profiles");
+                                    setShowSettings({ type: "USER", tab: "Profiles" });
                                 }}
                             >
                                 <Icon

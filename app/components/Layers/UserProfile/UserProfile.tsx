@@ -27,13 +27,13 @@ const masks = {
 };
 
 export const UserProfile = ({ content }: any): ReactElement => {
-    const [activeNavItem, setActiveNavItem] = useState<number>(0);
-    const [originalNote, setOriginalNote] = useState<string>("");
-    const [note, setNote] = useState<string>("");
+    const [activeNavItem, setActiveNavItem] = useState(0);
+    const [originalNote, setOriginalNote] = useState("");
+    const [note, setNote] = useState("");
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const requestsReceived = useData((state) => state.received);
-    const currentUser = useData((state) => state.user) as User;
+    const currentUser = useData((state) => state.user);
     const requestsSent = useData((state) => state.sent);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
@@ -147,7 +147,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                 },
                             });
                             setTooltip(null);
-                            setShowSettings("Profiles");
+                            setShowSettings({ type: "USER", tab: "Profiles" });
                         }}
                     >
                         <Icon

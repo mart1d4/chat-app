@@ -1,19 +1,20 @@
 "use client";
 
 import { ChannelTable, GuildTable, UserTable } from "@/lib/db/types";
-import { useState, SetStateAction, Dispatch } from "react";
 import { useParams, usePathname } from "next/navigation";
+import styles from "./GuildChannels.module.css";
+import { Icon, UserSection } from "@components";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import Link from "next/link";
 import {
     useCollapsedCategories,
     useLayers,
     useShowChannels,
+    useShowSettings,
     useTooltip,
     useWidthThresholds,
 } from "@/lib/store";
-import styles from "./GuildChannels.module.css";
-import { Icon, UserSection } from "@components";
-import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface Props {
     user: Partial<UserTable>;
@@ -44,7 +45,7 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                     tabIndex={0}
                     className={styles.guildSettings}
                     onClick={(e) => {
-                        if (layers.MENU?.content.guild) return;
+                        if (layers.MENU?.content?.guild) return;
                         setLayers({
                             settings: {
                                 type: "MENU",
@@ -146,13 +147,14 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
 
                                 if (channel.parentId) {
                                     const category = channels.find(
-                                        (channel) => channel.id === channel.parentId
+                                        (c) => c.id === channel.parentId
                                     );
 
                                     return (
                                         <ChannelItem
                                             key={channel.id}
                                             channel={channel}
+                                            category={category}
                                             guild={guild}
                                             member={member}
                                         />
@@ -185,17 +187,18 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
 
 const ChannelItem = ({
     channel,
+    category,
     guild,
-    member,
     hidden,
     setHidden,
 }: {
     channel: Partial<ChannelTable>;
+    category?: Partial<ChannelTable>;
     guild: Partial<GuildTable>;
-    member: Partial<UserTable>;
     hidden?: boolean;
     setHidden?: any;
 }) => {
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
 
@@ -310,6 +313,7 @@ const ChannelItem = ({
                         type: "GUILD_CHANNEL",
                         guild: guild,
                         channel: channel,
+                        category: category,
                     },
                 });
             }}
@@ -320,11 +324,12 @@ const ChannelItem = ({
                         href={`/channels/${channel.guildId}/${channel.id}`}
                         style={{
                             backgroundColor:
-                                params.channelId === channel.id ? "var(--background-hover-2)" : "",
+                                params.channelId == channel.id ? "var(--background-hover-2)" : "",
                         }}
                         onClick={(e) => {
-                            if (channel.type === 3 || pathname.includes(channel.id))
+                            if (channel.type === 3 || pathname.includes(channel.id)) {
                                 e.preventDefault();
+                            }
                         }}
                     >
                         <div>
@@ -434,6 +439,11 @@ const ChannelItem = ({
                                             text: "Edit Channel",
                                             element: e.currentTarget,
                                         });
+                                    }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setShowSettings({ type: "CHANNEL", channel: channel });
                                     }}
                                     onBlur={() => setTooltip(null)}
                                     style={{

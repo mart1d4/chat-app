@@ -16,7 +16,7 @@
 }
 
 .sidebar .closeButton,
-.content .closeButton {
+.contentWrapper > .content .closeButton {
     margin: 0;
     padding: 0;
     align-self: flex-end;
@@ -25,12 +25,12 @@
 }
 
 .sidebar .closeButton > div,
-.content .closeButton > div {
+.contentWrappert > .content .closeButton > div {
     position: static;
 }
 
 .sidebar .closeButton > div > div,
-.content .closeButton > div > div {
+.contentWrapper > .content .closeButton > div > div {
     width: 24px !important;
     height: 24px !important;
     margin: 0 !important;
@@ -174,9 +174,9 @@
     background-color: var(--background-4);
 }
 
-.content {
+.contentWrapper > .content {
     position: relative;
-    padding: 60px 10px 80px 40px;
+    padding: 60px 40px 80px 40px;
     flex: 1 1 auto;
     max-width: 740px;
     min-width: 460px;
@@ -251,7 +251,7 @@
 }
 
 .divider {
-    margin-top: 40px;
+    margin: 40px 0;
     width: 100%;
     height: 1px;
     border-top: thin solid var(--border-light);
@@ -265,7 +265,7 @@
     display: flex;
 }
 
-.content h2 {
+.sectionTitle > h2 {
     margin-bottom: 20px;
     font-weight: 600;
     font-size: 20px;
@@ -275,7 +275,8 @@
     color: var(--foreground-1);
 }
 
-.content h3 {
+.content h3,
+.content label {
     margin-bottom: 8px;
     font-weight: 700;
     font-size: 12px;
@@ -283,7 +284,9 @@
     text-transform: uppercase;
     letter-spacing: 0.02rem;
     cursor: default;
+    display: inline-block;
     color: var(--foreground-3);
+    user-select: none;
 }
 
 .userCard {
@@ -382,12 +385,12 @@
     margin: auto 0;
 }
 
-.accountRemoval {
+.section > .content {
     display: flex;
     flex-direction: column;
 }
 
-.accountRemoval > div {
+.section > .content > div {
     margin-bottom: 16px;
     color: var(--foreground-3);
     font-size: 14px;
@@ -395,7 +398,7 @@
     user-select: none;
 }
 
-.accountRemoval > button {
+.section > .content > button {
     width: fit-content;
 }
 
@@ -453,7 +456,6 @@
 .contentNav {
     display: flex;
     padding-top: 6px;
-    margin-top: 24px;
     margin-bottom: 16px;
     border-bottom: 1px solid var(--border-light);
 }
@@ -470,6 +472,7 @@
     flex-shrink: 0;
     color: var(--foreground-3);
     cursor: pointer;
+    user-select: none;
 }
 
 .contentNav > div:not(:first-child) {
@@ -479,6 +482,11 @@
 .contentNav > div:hover {
     color: var(--foreground-2);
     border-bottom: 2px solid var(--accent-1);
+}
+
+.contentNav > div:active {
+    color: var(--foreground-1);
+    border-color: hsl(235, 86.1%, 77.5%);
 }
 
 .contentInner {
@@ -1064,4 +1072,13 @@
     .contentInner {
         flex-direction: column-reverse;
     }
+}
+
+.footerImage {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: nowrap;
+    margin-top: 60px;
 }
