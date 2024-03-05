@@ -16,10 +16,13 @@ export default async function Header() {
         <>
             <div className={styles.disclaimer}>
                 <div>
-                    Notice: This is not Discord and is not affiliated with Discord in any way. This is a chat
-                    application which follows Discord's design. Passwords are hashed and salted and messages are
-                    end-to-end encrypted. See the source code{" "}
-                    <Link href="https://github.com/mart1d4/chat-app" target="_blank">
+                    Notice: This is not Discord and is not affiliated with Discord in any way. This
+                    is a chat application which follows Discord's design. Passwords are hashed and
+                    salted and messages are safe to send. See the source code{" "}
+                    <Link
+                        href="https://github.com/mart1d4/chat-app"
+                        target="_blank"
+                    >
                         here
                     </Link>
                     .
@@ -28,7 +31,11 @@ export default async function Header() {
 
             <header className={styles.header}>
                 <nav>
-                    <Link href="/" aria-label="Home" className={styles.brand}>
+                    <Link
+                        href="/"
+                        aria-label="Home"
+                        className={styles.brand}
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="58"
@@ -49,7 +56,11 @@ export default async function Header() {
 
                     <div className={styles.navLinks}>
                         {links.map((link) => (
-                            <Link key={link.name} href={link.href} className={styles.navLink}>
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className={styles.navLink}
+                            >
                                 {link.name}
                             </Link>
                         ))}

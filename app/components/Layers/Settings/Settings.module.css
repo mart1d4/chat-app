@@ -993,7 +993,7 @@
     width: 100%;
     margin-top: 12px;
     background-color: var(--card-button-color);
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
 }
 
 .cardBody > .cardSectionLarge > button:hover {

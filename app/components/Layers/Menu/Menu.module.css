@@ -10,6 +10,11 @@
     position: relative;
 }
 
+.container.big {
+    width: 220px;
+    transform: translateX(10px);
+}
+
 .container > ul {
     list-style: none;
     max-width: 320px;
@@ -30,6 +35,7 @@
     line-height: 18px;
     cursor: pointer;
     user-select: none;
+    outline: none;
 }
 
 .item.danger {
@@ -144,4 +150,11 @@
 
 .item.hover .statusIcon rect {
     fill: var(--foreground-1);
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
 }

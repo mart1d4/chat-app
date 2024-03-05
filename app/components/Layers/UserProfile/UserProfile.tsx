@@ -60,7 +60,6 @@ export const UserProfile = ({ content }: any): ReactElement => {
     const isSameUser = () => user.id == currentUser.id;
 
     useEffect(() => {
-        if (content.focusNote) noteRef.current?.focus();
         if (content.guilds) setActiveNavItem(1);
         else setActiveNavItem(0);
         setNote("");
@@ -452,6 +451,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                                             className={styles.cardInput + " scrollbar"}
                                             ref={noteRef}
                                             value={note}
+                                            autoFocus={!!content.focusNote}
                                             placeholder="Click to add a note"
                                             aria-label="Note"
                                             maxLength={256}

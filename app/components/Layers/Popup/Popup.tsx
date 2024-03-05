@@ -632,7 +632,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
 
     return (
         <AnimatePresence>
-            {type === "USER_STATUS" ? (
+            {type === "CHANNEL_TOPIC" ? (
                 <div
                     autoFocus
                     ref={popupRef}
@@ -641,25 +641,34 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                     className={styles.cardContainer}
                     onContextMenu={(e) => e.preventDefault()}
                 >
-                    <img
-                        className={styles.imagePopup}
+                    <div className={styles.titleBlock}>
+                        <h1>{content.channel.name}</h1>
+                    </div>
+
+                    <div className={styles.popupContent + " scrollbar"}>
+                        {content.channel.topic}
+                    </div>
+                </div>
+            ) : type === "USER_STATUS" ? (
+                <div
+                    autoFocus
+                    ref={popupRef}
+                    role="dialog"
+                    aria-modal="true"
+                    className={styles.cardContainer}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <Image
+                        className={styles.headerImage + " " + styles.centered}
                         src="https://ucarecdn.com/2735d6c0-b301-438c-add6-3d116e0ddb45/"
                         alt="Status"
-                        style={{
-                            top: "0",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            width: "200px",
-                            height: "120px",
-                        }}
+                        width={200}
+                        height={120}
                     />
 
                     <div
                         className={styles.titleBlock}
-                        style={{
-                            alignSelf: "center",
-                            paddingTop: "68px",
-                        }}
+                        style={{ alignSelf: "center" }}
                     >
                         <h1>Set a custom status</h1>
                     </div>
@@ -668,14 +677,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                         <div className={styles.input}>
                             <label>What's cookin', {user.username}?</label>
                             <div>
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: "50%",
-                                        left: "2px",
-                                        transform: "translateY(-50%)",
-                                    }}
-                                >
+                                <div className={styles.emojiPicker}>
                                     <EmojiPicker />
                                 </div>
 
@@ -717,28 +719,18 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                 {status}
 
                                 <div
+                                    className={styles.inputIcon}
                                     style={{
-                                        position: "absolute",
-                                        top: "50%",
-                                        right: "8px",
                                         transform: showOptions
-                                            ? "translateY(-50%) rotate(-180deg)"
-                                            : "translateY(-50%)",
-                                        display: "flex",
+                                            ? "translateY(-50%) rotate(-90deg)"
+                                            : "translateY(-50%) rotate(90deg)",
                                     }}
                                 >
-                                    <Icon name="arrow" />
+                                    <Icon name="caret" />
                                 </div>
 
                                 {showOptions && (
-                                    <ul
-                                        className={styles.options}
-                                        style={{
-                                            top: showOptions.getBoundingClientRect().bottom / 2.6,
-                                            left: showOptions.getBoundingClientRect().left / 40,
-                                            width: showOptions.getBoundingClientRect().width,
-                                        }}
-                                    >
+                                    <ul className={styles.options}>
                                         {["Online", "Idle", "Do Not Disturb", "Offline"].map(
                                             (s) => (
                                                 <li
@@ -994,14 +986,16 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                     onContextMenu={(e) => e.preventDefault()}
                 >
                     {type === "FILE_EDIT" && (
-                        <img
-                            className={styles.imagePopup}
+                        <Image
+                            className={styles.headerImage}
                             src={
                                 isImage
                                     ? content.attachment.url
                                     : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
                             }
                             alt={content.attachment.name}
+                            width={104}
+                            height={104}
                         />
                     )}
 

@@ -229,7 +229,7 @@
     font-weight: 600;
 }
 
-.cardContainer > div:last-child {
+.footerButtons {
     flex: 0 0 auto;
     border-radius: 0 0 5px 5px;
     background-color: var(--background-3);
@@ -243,17 +243,28 @@
     justify-content: flex-end;
 }
 
-.cardContainer > div:last-child > button {
+.footerButtons > button {
     height: 38px;
     min-width: 96px;
 }
 
-.imagePopup {
-    width: 104px;
-    height: 104px;
+.headerImage {
     margin: -33px 16px 0 0;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.headerImage.centered {
+    margin: -60px auto 0 auto;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.emojiPicker {
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    transform: translateY(-50%);
 }
 
 .spoilerCheckbox {
@@ -689,9 +700,22 @@
 }
 
 .divInput {
+    position: relative;
     color: var(--foreground-1);
     cursor: pointer;
     user-select: none;
+}
+
+.inputIcon {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    right: 12px;
+}
+
+.inputIcon > svg {
+    width: 18px;
+    height: 18px;
 }
 
 .input.channel > div > svg {
@@ -916,7 +940,10 @@
 }
 
 .options {
-    position: fixed;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 100%;
     background-color: var(--background-3);
     max-height: 166px;
     overflow: hidden scroll;

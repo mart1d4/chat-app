@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Settings.module.css";
 import { LoadingDots } from "@components";
 import { useMemo, useState } from "react";
@@ -9,17 +10,7 @@ export function Overview({ channel }) {
     const [channelName, setChannelName] = useState(channel.name);
     const [channelTopic, setChannelTopic] = useState(channel.topic || "");
 
-    async function saveChannel() {
-        if (isLoading) return;
-        setIsLoading(true);
-
-        try {
-        } catch (err) {
-            console.error(err);
-        }
-
-        setIsLoading(false);
-    }
+    const { sendRequest } = useFetchHelper();
 
     function resetState() {
         setChannelName(channel.name);
@@ -30,6 +21,32 @@ export function Overview({ channel }) {
         () => channelName !== channel.name || channelTopic !== (channel.topic || ""),
         [channelName, channelTopic, channel.name, channel.topic]
     );
+
+    async function saveChannel() {
+        console.log(isLoading, needsSaving);
+
+        if (isLoading || !needsSaving) return;
+        setIsLoading(true);
+
+        try {
+            const response = await sendRequest({
+                query: "CHANNEL_UPDATE",
+                params: { channelId: channel.id },
+                data: {
+                    name: channelName,
+                    topic: channelTopic,
+                },
+            });
+
+            if (response.success) {
+                resetState();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        setIsLoading(false);
+    }
 
     return (
         <div>
@@ -82,21 +99,23 @@ export function Overview({ channel }) {
                     />
                 </section>
 
-                <div className={styles.divider} />
+                {channel.type === 2 && <div className={styles.divider} />}
 
-                <section>
-                    <h3>Channel Topic</h3>
+                {channel.type === 2 && (
+                    <section>
+                        <h3>Channel Topic</h3>
 
-                    <input
-                        className={styles.input}
-                        type="text"
-                        value={channelTopic}
-                        onChange={(e) => setChannelTopic(e.target.value)}
-                        aria-label="Channel Topic"
-                        maxLength={1024}
-                        placeholder="Let everyone know how to use this channel!"
-                    />
-                </section>
+                        <input
+                            className={styles.input}
+                            type="text"
+                            value={channelTopic}
+                            onChange={(e) => setChannelTopic(e.target.value)}
+                            aria-label="Channel Topic"
+                            maxLength={1024}
+                            placeholder="Let everyone know how to use this channel!"
+                        />
+                    </section>
+                )}
 
                 <div className={styles.divider} />
 

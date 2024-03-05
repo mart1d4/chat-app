@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 export default function useLogout() {
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const channels = useData((state) => state.channels);
     const reset = useData((state) => state.reset);
     const router = useRouter();
 

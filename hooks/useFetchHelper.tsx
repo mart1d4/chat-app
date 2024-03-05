@@ -1,4 +1,3 @@
-import { Channel } from "@/lib/db/types";
 import { useData, useLayers } from "@/lib/store";
 import { useRouter } from "next/navigation";
 
@@ -55,7 +54,7 @@ const urls = {
     ["UNBLOCK_USER"]: "/users/:userId/block",
     ["UPDATE_USER"]: "/users/me",
     ["CHANNEL_CREATE"]: "/users/me/channels",
-    ["CHANNEL_UPDATE"]: "/users/me/channels/:channelId",
+    ["CHANNEL_UPDATE"]: "/channels/:channelId",
     ["CHANNEL_DELETE"]: "/users/me/channels/:channelId",
     ["CHANNEL_RECIPIENT_ADD"]: "/channels/:channelId/recipients/:recipientId",
     ["CHANNEL_RECIPIENT_REMOVE"]: "/channels/:channelId/recipients/:recipientId",
@@ -86,7 +85,7 @@ const methods = {
     ["UNBLOCK_USER"]: "DELETE",
     ["UPDATE_USER"]: "PATCH",
     ["CHANNEL_CREATE"]: "POST",
-    ["CHANNEL_UPDATE"]: "PUT",
+    ["CHANNEL_UPDATE"]: "PATCH",
     ["CHANNEL_DELETE"]: "DELETE",
     ["CHANNEL_RECIPIENT_ADD"]: "PUT",
     ["CHANNEL_RECIPIENT_REMOVE"]: "DELETE",

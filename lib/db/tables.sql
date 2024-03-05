@@ -45,7 +45,7 @@ CREATE TABLE `channels` (
 	`type` int NOT NULL,
 
 	`name` varchar(100),
-	`topic` varchar(100),
+	`topic` varchar(1024),
 	`icon` varchar(36),
 	`nsfw` tinyint(1),
 

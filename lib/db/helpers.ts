@@ -532,6 +532,7 @@ export async function getGuildChannels(guildId: id) {
                 "id",
                 "type",
                 "name",
+                "topic",
                 "position",
                 "parentId",
                 "guildId",

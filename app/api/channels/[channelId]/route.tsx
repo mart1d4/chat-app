@@ -4,91 +4,79 @@ import { headers } from "next/headers";
 import { catchError } from "@/lib/api";
 import { db } from "@/lib/db/db";
 
-export async function PUT(req: NextRequest, { params }: { params: { channelId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: { channelId: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "0");
-    const { name, icon } = await req.json();
+    const { name, icon, topic } = await req.json();
     const { channelId } = params;
 
-    if (!name && !icon) {
+    if (!name && !icon && !topic) {
         return NextResponse.json(
             {
                 success: false,
-                message: "A name or icon is required.",
+                message: "You must provide at least one field to update.",
             },
             { status: 400 }
         );
     }
 
     try {
-        const channel = await prisma.channel.findUnique({
-            where: {
-                id: channelId,
-            },
-            select: {
-                id: true,
-                type: true,
-                name: true,
-                icon: true,
-                recipientIds: true,
-            },
-        });
+        const channel = await getChannel(channelId);
 
         if (!channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Channel not found",
+                    message: "Could not find channel with that ID.",
                 },
                 { status: 404 }
             );
         }
 
-        if (!channel.recipientIds.includes(senderId)) {
+        if (
+            !(await canUserManageChannel(senderId, channel.guildId)) &&
+            channel.ownerId !== senderId
+        ) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "You are not in this channel",
+                    message: "You cannot edit this channel.",
                 },
                 { status: 401 }
             );
         }
 
-        if (channel.type !== 1) {
+        if (topic && channel.type !== 2) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "You cannot edit this channel",
+                    message: "You cannot set a topic on a non-text channel.",
                 },
-                { status: 401 }
+                { status: 400 }
             );
         }
 
-        const updatedChannel = await prisma.channel.update({
-            where: {
-                id: channelId,
-            },
-            data: {
-                name: name ?? channel.name,
-                icon: icon ?? channel.icon,
-            },
-            select: {
-                name: true,
-                icon: true,
-            },
-        });
+        if (icon && channel.type !== 1) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "You cannot set an icon on a non-group-dm channel.",
+                },
+                { status: 400 }
+            );
+        }
 
-        await pusher.trigger("chat-app", "guild-update", {
-            type: "CHANNEL_UPDATED",
-            channelId: channelId,
-            name: updatedChannel.name,
-            icon: updatedChannel.icon,
-        });
+        await db
+            .updateTable("channels")
+            .$if(!!name, (q) => q.set({ name }))
+            .$if(!!icon, (q) => q.set({ icon }))
+            .$if(!!topic, (q) => q.set({ topic }))
+            .where("id", "=", channelId)
+            .execute();
 
         return NextResponse.json(
             {
                 success: true,
-                message: "Successfully retrieved channel",
-                channel: channel,
+                message: "Successfully updated channel.",
             },
             { status: 200 }
         );

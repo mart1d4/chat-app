@@ -8,6 +8,7 @@ import { getButtonColor } from "@/lib/getColors";
 import styles from "./Settings.module.css";
 import filetypeinfo from "magic-bytes.js";
 import Image from "next/image";
+import { getRandomAvatar } from "@/lib/avatars";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/apng", "image/webp"];
 
@@ -42,6 +43,8 @@ export function Profiles() {
     const descriptionRef = useRef<HTMLInputElement>(null);
     const primaryColorInputRef = useRef<HTMLInputElement>(null);
     const accentColorInputRef = useRef<HTMLInputElement>(null);
+
+    const randomAvatar = getRandomAvatar(user.id);
 
     useEffect(() => {
         descriptionRef.current!.innerText = description;
@@ -191,7 +194,9 @@ export function Profiles() {
                         backgroundImage: `url(${
                             avatar !== null && typeof avatar !== "string"
                                 ? URL.createObjectURL(avatar)
-                                : `${process.env.NEXT_PUBLIC_CDN_URL}${avatar ?? user.avatar}/`
+                                : `${process.env.NEXT_PUBLIC_CDN_URL}${
+                                      avatar === null ? randomAvatar : avatar ? avatar : user.avatar
+                                  }/`
                         })`,
                     }}
                     onClick={() => avatarInputRef.current?.click()}
@@ -200,13 +205,6 @@ export function Profiles() {
                 <div className={styles.avatarOverlay}>
                     <Icon name="edit" />
                 </div>
-
-                {/* <div
-                    className={styles.imageUpload}
-                    style={{
-                        backgroundImage: `url('https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/')`,
-                    }}
-                /> */}
 
                 <div className={styles.cardAvatarStatus}>
                     <div style={{ backgroundColor: "black" }} />
@@ -441,7 +439,7 @@ export function Profiles() {
                                     Change Avatar
                                 </button>
 
-                                {!avatars.includes(typeof avatar === "string" ? avatar : "") && (
+                                {avatar !== null && (
                                     <button
                                         className="button underline"
                                         onClick={() => setAvatar(null)}

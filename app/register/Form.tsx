@@ -197,7 +197,7 @@ export default function Register() {
 
             <button
                 type="submit"
-                className={styles.buttonSubmit}
+                className={"button " + styles.buttonSubmit}
                 onClick={(e) => {
                     e.preventDefault();
                     handleSubmit();

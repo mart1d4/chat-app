@@ -251,14 +251,18 @@ export async function POST(req: Request, { params }: { params: { channelId: stri
                         `https://api.microlink.io/?url=${encodeURIComponent(url)}`
                     ).then((res) => res.json());
 
+                    console.log(metadata);
+
                     if (metadata.status === "success") {
                         return {
                             type: "link",
                             url: url,
+                            author: metadata.data.author,
                             title: metadata.data.title,
                             description: metadata.data.description,
                             image: metadata.data.image,
                             color: color,
+                            date: metadata.data.date,
                         };
                     }
 

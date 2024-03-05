@@ -81,9 +81,10 @@ export default function LanguagePicker() {
             <div>
                 <div
                     ref={langMenu}
-                    aria-hidden={!showPopover}
-                    aria-expanded={showPopover}
-                    aria-label="Language chooser"
+                    role="listbox"
+                    aria-hidden={`${!showPopover}`}
+                    aria-expanded={`${showPopover}`}
+                    aria-label="Language picker"
                     className={styles.langChooser + " " + (showPopover ? styles.show : "")}
                 >
                     <div>
@@ -94,8 +95,8 @@ export default function LanguagePicker() {
                                 key={language.flag}
                                 className={styles.langItem}
                                 aria-label={language.name}
-                                aria-current={language.name === lang?.name}
-                                aria-selected={language.name === lang?.name}
+                                aria-current={`${language.name === lang?.name}`}
+                                aria-selected={`${language.name === lang?.name}`}
                                 onClick={() => {
                                     setLang(language);
                                     setShowPopover(false);
@@ -124,8 +125,8 @@ export default function LanguagePicker() {
                     tabIndex={0}
                     ref={langButton}
                     aria-label="Language"
-                    aria-haspopup="true"
-                    aria-expanded={showPopover}
+                    aria-haspopup="listbox"
+                    aria-expanded={`${showPopover}`}
                     className={styles.langButton}
                     onClick={() => setShowPopover((prev) => !prev)}
                     onKeyDown={(e) => {

@@ -1,33 +1,44 @@
-.header {
+.container {
     position: relative;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
     width: 100%;
     flex: 0 0 auto;
-    height: 48px;
-    padding: 0 8px;
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 8px;
     font-size: 16px;
     line-height: 20px;
     cursor: default;
-    z-index: 2;
+    z-index: 100;
     user-select: none;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
         0 2px 0 rgba(0, 0, 0, 0.05);
-    overflow-x: auto;
 }
 
-.header::-webkit-scrollbar {
+.container::-webkit-scrollbar {
     width: 0;
     height: 0;
 }
 
-.nav {
+.container * {
+    box-sizing: border-box;
+}
+
+.container > div {
+    display: flex;
+    flex: 1;
+}
+
+.content {
     position: relative;
     flex: 1 1 auto;
     display: flex;
     align-items: center;
     min-width: 0;
+    overflow: hidden;
 }
 
 .icon {
@@ -163,14 +174,12 @@
 }
 
 .toolbar {
-    height: 100%;
     display: flex;
     align-items: center;
     flex: 0 0 auto;
     min-width: 0;
     background-color: var(--background-4);
     box-shadow: -10px 0px 5px -4px var(--background-4), 20px 0px 5px -4px var(--background-4);
-    z-index: 2;
 }
 
 .toolbarIcon {
@@ -257,6 +266,21 @@
 
 .backButton:active {
     color: var(--foreground-1);
+}
+
+.topic {
+    flex: 1 1 auto;
+    position: relative;
+    min-width: 0;
+    margin: 0 0 0 8px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--foreground-3);
+    cursor: pointer;
 }
 
 @media screen and (max-width: 562px) {
