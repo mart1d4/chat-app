@@ -12,14 +12,7 @@ import {
     useWidthThresholds,
 } from "@/lib/store";
 import createMentionPlugin from "@draft-js-plugins/mention";
-import {
-    EditorState,
-    Modifier,
-    ContentState,
-    getDefaultKeyBinding,
-    convertToRaw,
-    convertFromRaw,
-} from "draft-js";
+import { EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import createInlineToolbarPlugin from "@draft-js-plugins/inline-toolbar";
 import { Avatar, Icon, LoadingDots, UserMention } from "@components";
@@ -84,13 +77,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const [usersTyping, setUsersTyping] = useState([]);
     const [editorState, setEditorState] = useState(() => {
         return EditorState.createEmpty();
-        if (editing && edit?.content) {
-            return EditorState.createWithContent(convertFromRaw(JSON.parse(edit?.content)));
-        } else if (draft?.content && draft.content.length > 0) {
-            return EditorState.createWithContent(convertFromRaw(JSON.parse(draft.content)));
-        } else {
-            return EditorState.createEmpty();
-        }
     });
     const [message, setMessage] = useState("");
 
@@ -161,18 +147,146 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         setMessage(editorState.getCurrentContent().getPlainText());
     }, [editorState.getCurrentContent().getPlainText()]);
 
-    // useEffect(() => {
-    //     if (editing) {
-    //         setEdit(
-    //             channel.id,
-    //             edit?.messageId,
-    //             null,
-    //             JSON.stringify(convertToRaw(editorState.getCurrentContent()))
-    //         );
-    //     } else {
-    //         setContent(channel.id, JSON.stringify(convertToRaw(editorState.getCurrentContent())));
-    //     }
-    // }, [editorState]);
+    useEffect(() => {
+        let dragged = false;
+
+        function handleDragEnter(e: DragEvent) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // if element is a file, show the drag file warning
+            if (e.dataTransfer.items.length > 0 && !dragged) {
+                dragged = true;
+
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                    },
+                    content: {
+                        type: "WARNING",
+                        warning: "DRAG_FILE",
+                        channel: channel,
+                    },
+                });
+            }
+        }
+
+        function handleDragLeave(e: DragEvent) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (dragged) {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+                dragged = false;
+            }
+        }
+
+        async function handleDrop(e: DragEvent) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (e.dataTransfer.files.length > 0) {
+                const newFiles = Array.from(e.dataTransfer.files as FileList);
+
+                if (attachments.length + newFiles.length > 10) {
+                    setLayers({
+                        settings: {
+                            type: "POPUP",
+                        },
+                        content: {
+                            type: "WARNING",
+                            warning: "FILE_NUMBER",
+                        },
+                    });
+
+                    return;
+                }
+
+                let checkedFiles = [];
+                const maxFileSize = 1024 * 1024 * 5; // 5MB
+
+                for (const file of newFiles) {
+                    if (file.size > maxFileSize) {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "WARNING",
+                                warning: "FILE_SIZE",
+                            },
+                        });
+
+                        checkedFiles = [];
+                        return;
+                    }
+
+                    const fileBytes = new Uint8Array(await file.arrayBuffer());
+                    const fileType = filetypeinfo(fileBytes);
+
+                    if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
+                        setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "WARNING",
+                                warning: "FILE_TYPE",
+                            },
+                        });
+
+                        return;
+                    }
+
+                    const image = await new Promise<HTMLImageElement>((resolve) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.src = URL.createObjectURL(file);
+                    });
+
+                    const dimensions = {
+                        height: image.height,
+                        width: image.width,
+                    };
+
+                    checkedFiles.push({
+                        id: uuidv4(),
+                        url: URL.createObjectURL(file),
+                        name: file.name ?? "file",
+                        dimensions,
+                        size: file.size,
+                        isSpoiler: false,
+                        isImage: allowedFileTypes.includes(fileType[0]?.mime ?? ""),
+                        description: "",
+                    });
+                }
+
+                setAttachments([...attachments, ...checkedFiles]);
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+                dragged = false;
+            }
+        }
+
+        document.addEventListener("dragenter", handleDragEnter);
+        document.addEventListener("dragleave", handleDragLeave);
+        document.addEventListener("drop", handleDrop);
+
+        return () => {
+            document.removeEventListener("dragenter", handleDragEnter);
+            document.removeEventListener("dragleave", handleDragLeave);
+            document.removeEventListener("drop", handleDrop);
+        };
+    }, [attachments]);
 
     useEffect(() => {
         if (!mention || editing) return;
@@ -472,7 +586,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                         }
 
                                         let checkedFiles = [];
-                                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                                        const maxFileSize = 1024 * 1024 * 5; // 5MB
 
                                         for (const file of newFiles) {
                                             if (file.size > maxFileSize) {
@@ -531,9 +645,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                                 name: file.name ?? "file",
                                                 dimensions,
                                                 size: file.size,
-                                                isSpoiler: file.name
-                                                    ? file.name.startsWith("SPOILER_")
-                                                    : false,
+                                                isSpoiler: false,
                                                 isImage: allowedFileTypes.includes(
                                                     fileType[0]?.mime ?? ""
                                                 ),
@@ -848,7 +960,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                     </div>
 
                     <div className={styles.fileName}>
-                        <div>{isSpoiler ? attachment.name.slice(8) : attachment.name}</div>
+                        <div>{attachment.name}</div>
                     </div>
                 </div>
 
@@ -865,14 +977,11 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                             }
                             onMouseLeave={() => setTooltip(null)}
                             onClick={() => {
-                                setAttachments((attachments: TAttachment[]) =>
-                                    attachments.map((a) =>
+                                setAttachments((prev) =>
+                                    prev.map((a) =>
                                         a.id === attachment.id
                                             ? {
                                                   ...a,
-                                                  name: isSpoiler
-                                                      ? a.name.slice(8)
-                                                      : `SPOILER_${a.name}`,
                                                   isSpoiler: !isSpoiler,
                                               }
                                             : a
@@ -904,7 +1013,7 @@ const FilePreview = ({ attachment, setAttachments }: any) => {
                                     },
                                     content: {
                                         type: "FILE_EDIT",
-                                        attachment,
+                                        file: attachment,
                                         handleFileChange,
                                     },
                                 });

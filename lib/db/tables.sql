@@ -1,3 +1,8 @@
+-- Create Database
+
+CREATE DATABASE IF NOT EXISTS `chat-app` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
 -- User Table
 
 CREATE TABLE `users` (
@@ -23,7 +28,7 @@ CREATE TABLE `users` (
 	`system` tinyint(1) NOT NULL DEFAULT '0',
 	`verified` tinyint(1) NOT NULL DEFAULT '0',
 
-	`notes` json NOT NULL DEFAULT,
+	`notes` json NOT NULL,
 	`notifications` json NOT NULL,
 
 	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),

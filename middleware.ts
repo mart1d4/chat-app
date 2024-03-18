@@ -4,11 +4,11 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@vercel/kv";
 
-const ratelimit = new Ratelimit({
-    redis: kv,
-    // 5 requests from the same IP in 10 seconds
-    limiter: Ratelimit.slidingWindow(10, "10 s"),
-});
+// const ratelimit = new Ratelimit({
+//     redis: kv,
+//     // 5 requests from the same IP in 10 seconds
+//     limiter: Ratelimit.slidingWindow(1000, "10 s"),
+// });
 
 export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
@@ -30,17 +30,17 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith("/api")) {
-        const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
+        // const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
 
-        if (!success) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Rate limit exceeded",
-                },
-                { status: 429 }
-            );
-        }
+        // if (!success) {
+        //     return NextResponse.json(
+        //         {
+        //             success: false,
+        //             message: "Rate limit exceeded",
+        //         },
+        //         { status: 429 }
+        //     );
+        // }
 
         if (pathname.startsWith("/api/test")) return NextResponse.next();
         if (pathname.startsWith("/api/auth")) return NextResponse.next();
@@ -79,7 +79,15 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    const paths = ["/", "/login", "/register", "/download", "/channels/me", "/channels/discover"];
+    const paths = [
+        "/",
+        "/login",
+        "/register",
+        "/download",
+        "/channels/me",
+        "/channels/discover",
+        "/test",
+    ];
     const regex = [/^\/channels\/me\/[0-9]{18}\/?$/, /^\/channels\/[0-9]{18}(\/[0-9]{18})?\/?$/];
 
     if (!paths.includes(pathname) && !regex.some((r) => pathname.match(r))) {

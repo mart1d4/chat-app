@@ -41,17 +41,18 @@ export async function GET(req: NextRequest, { params }: { params: { code: string
 
 export async function POST(req: NextRequest, { params }: { params: { code: string } }) {
     const senderId = parseInt(headers().get("X-UserId") || "0");
+    const { isGuild } = await req.json();
     const { code } = params;
 
     try {
         const user = await getUser({ id: senderId, throwOnNotFound: true });
-        const invite = await getInvite(code);
+        const invite = await getInvite(code, isGuild ? true : false);
 
         if (!invite || !invite.channel) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "No invite was found with that code.",
+                    message: "The invite is invalid or has expired.",
                 },
                 { status: 400 }
             );

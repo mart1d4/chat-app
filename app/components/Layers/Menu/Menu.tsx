@@ -6,7 +6,7 @@ import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/
 import { useEffect, useRef, useMemo, ReactElement } from "react";
 import { shouldDisplayInlined } from "@/lib/message";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { Icon, LoadingDots } from "@components";
+import { Icon, LoadingCubes, LoadingDots } from "@components";
 import { MenuItems } from "./MenuItems";
 import styles from "./Menu.module.css";
 
@@ -176,7 +176,7 @@ export function Menu({
             <ul>
                 {!items.length && (
                     <div className={styles.loading}>
-                        <LoadingDots />
+                        <LoadingCubes />
                     </div>
                 )}
 

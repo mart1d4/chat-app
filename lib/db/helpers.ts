@@ -852,7 +852,7 @@ export async function getInvites(channelId: id) {
     }
 }
 
-export async function getInvite(code: string) {
+export async function getInvite(code: string, isGuild?: boolean) {
     try {
         const invite = await db
             .selectFrom("invites")
@@ -869,6 +869,7 @@ export async function getInvite(code: string) {
                 withChannel(eb, ["id", "type", "name", "icon"]),
             ])
             .where("code", "=", code)
+            .$if(!!isGuild, (q) => q.where("guildId", "!=", null))
             .executeTakeFirst();
 
         return invite;

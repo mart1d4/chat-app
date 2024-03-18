@@ -271,7 +271,7 @@ export function Image({
                     onClick={(e) => {
                         e.stopPropagation();
 
-                        if (length === 1 && !message.content) {
+                        if (message.attachments.length === 1 && !message.content) {
                             return setLayers({
                                 settings: {
                                     type: "POPUP",

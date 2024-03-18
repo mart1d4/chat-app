@@ -9,247 +9,321 @@ import {
     Avatar,
     InvitePopup,
     EmojiPicker,
+    LoadingCubes,
+    Input,
 } from "@components";
-import { translateCap, sanitizeString } from "@/lib/strings";
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useMemo, useCallback, useReducer, Fragment } from "react";
+import { statuses, colors, masks } from "@/lib/statuses";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { base } from "@uploadcare/upload-client";
+import { useKeenSlider } from "keen-slider/react";
 import { useData, useLayers } from "@/lib/store";
-import { AnimatePresence } from "framer-motion";
+import { sanitizeString } from "@/lib/strings";
+import useRequests from "@/hooks/useRequests";
+import { getRelativeDate } from "@/lib/time";
 import { useRouter } from "next/navigation";
 import useLogout from "@/hooks/useLogout";
-import filetypeinfo from "magic-bytes.js";
+import "keen-slider/keen-slider.min.css";
+import useFiles from "@/hooks/useFiles";
 import styles from "./Popup.module.css";
 import Image from "next/image";
-import { getRelativeDate } from "@/lib/time";
 
-type TProps = {
+type PopupContent = {
     [key: string]: {
         title: string;
         description?: string;
         tip?: string;
-        buttonColor: string;
-        buttonText: string;
-        buttonDisabled?: boolean;
-        onlyButton?: boolean;
-        function: () => void;
+        button: {
+            color: "blue" | "red" | "grey";
+            text: string;
+            disabled?: boolean;
+            big?: boolean;
+        };
+        noButtons?: boolean;
         centered?: boolean;
         skipClose?: boolean;
+        function: () => Promise<void>;
     };
 };
 
-const colors = {
-    online: "#22A559",
-    idle: "#F0B232",
-    dnd: "#F23F43",
-    invisible: "#80848E",
-    offline: "#80848E",
-};
+function reducer(state, action) {
+    switch (action.type) {
+        case "SET_IMAGE_LOADING":
+            return {
+                ...state,
+                image: {
+                    ...state.image,
+                    loading: action.payload,
+                },
+            };
 
-const masks = {
-    online: "",
-    idle: "status-mask-idle",
-    dnd: "status-mask-dnd",
-    invisible: "status-mask-offline",
-    offline: "status-mask-offline",
-};
+        case "SET_USERNAME":
+            return {
+                ...state,
+                username: action.payload,
+            };
 
-const statuses = {
-    Online: "ONLINE",
-    Idle: "IDLE",
-    "Do Not Disturb": "DO_NOT_DISTURB",
-    Offline: "OFFLINE",
-};
+        case "SET_PASSWORD":
+            return {
+                ...state,
+                password: action.payload,
+            };
 
-export function Popup({ content, friends, element }: { content: any; friends: any; element: any }) {
+        case "SET_NEW_PASSWORD":
+            return {
+                ...state,
+                newPassword: action.payload,
+            };
+
+        case "SET_CONFIRM_PASSWORD":
+            return {
+                ...state,
+                confirmPassword: action.payload,
+            };
+
+        case "SET_FILE":
+            return {
+                ...state,
+                file: {
+                    ...state.file,
+                    ...action.payload,
+                },
+            };
+
+        case "SET_CHANNEL":
+            return {
+                ...state,
+                channel: {
+                    ...state.channel,
+                    ...action.payload,
+                },
+            };
+
+        case "SET_GUILD":
+            return {
+                ...state,
+                guild: {
+                    ...state.guild,
+                    ...action.payload,
+                },
+            };
+
+        case "SET_IMAGE_INDEX":
+            return {
+                ...state,
+                image: {
+                    ...state.image,
+                    index: action.payload,
+                },
+            };
+
+        case "SET_STATUS":
+            return {
+                ...state,
+                status: action.payload,
+            };
+
+        case "SET_CUSTOM_STATUS":
+            return {
+                ...state,
+                customStatus: action.payload,
+            };
+
+        case "SET_SHOW_OPTIONS":
+            return {
+                ...state,
+                showOptions: action.payload,
+            };
+
+        case "SET_ERRORS":
+            return {
+                ...state,
+                errors: {
+                    ...state.errors,
+                    ...action.payload,
+                },
+            };
+
+        case "SET_LOADING":
+            return {
+                ...state,
+                loading: action.payload,
+            };
+
+        default:
+            return state;
+    }
+}
+
+export function Popup({
+    content,
+    element,
+    closing,
+}: {
+    content: any;
+    element: any;
+    closing: boolean;
+}) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user);
 
+    const { modifyUsername, createGuild } = useRequests();
     const addGuild = useData((state) => state.addGuild);
     const { sendRequest } = useFetchHelper();
+    const { onFileChange } = useFiles();
     const { logout } = useLogout();
     const router = useRouter();
     const type = content.type;
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [uid, setUID] = useState(user.username);
-    const [usernameError, setUsernameError] = useState("");
-    const [passwordError, setPasswordError] = useState("");
-    const [password, setPassword] = useState("");
+    const initState = useMemo(
+        () => ({
+            loading: false,
+            errors: {},
+            username: user.username,
+            password: "",
+            newUsername: "",
+            confirmPassword: "",
+            newPassword: "",
+            file: {
+                name: content.file?.name,
+                description: content.file?.description,
+                isSpoiler: content.file?.isSpoiler,
+            },
+            channel: {
+                name: "",
+                type: content.voice ? 3 : 2,
+                locked: false,
+            },
+            guild: {
+                join: false,
+                invite: "",
+                template: 0,
+                name: `${user.username}'s server`,
+                icon: null,
+            },
+            image: {
+                index: content.current ?? 0,
+                loading: true,
+            },
+            status: user.status,
+            customStatus: user.customStatus ?? "",
+            showOptions: null,
+        }),
+        []
+    );
 
-    const [password1, setPassword1] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [password1Error, setPassword1Error] = useState("");
-    const [newPasswordError, setNewPasswordError] = useState("");
+    const [state, dispatch] = useReducer(reducer, initState);
 
-    const [isImage, setIsImage] = useState<boolean>(false);
-    const [filename, setFilename] = useState("");
-    const [description, setDescription] = useState("");
-    const [isSpoiler, setIsSpoiler] = useState(false);
-
-    const [join, setJoin] = useState(false);
-    const [guildTemplate, setGuildTemplate] = useState<number>(0);
-    const [guildName, setGuildName] = useState(`${user.username}'s server`);
-    const [guildIcon, setGuildIcon] = useState<null | File>(null);
-
-    const [channelName, setChannelName] = useState("");
-    const [channelType, setChannelType] = useState(content.voice ? 3 : 2);
-    const [channelLocked, setChannelLocked] = useState(false);
-
-    const [imgIndex, setImgIndex] = useState<number>(content.current ?? 0);
-    const [imageLoading, setImageLoading] = useState(true);
-
-    const [status, setStatus] = useState<string>(translateCap(user.status));
-    const [customStatus, setCustomStatus] = useState<string>(user.customStatus ?? "");
-    const [showOptions, setShowOptions] = useState<(EventTarget & HTMLDivElement) | null>(null);
-
-    const popupRef = useRef<HTMLDivElement>(null);
-    const uidInputRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
     const guildIconInput = useRef<HTMLInputElement>(null);
     const cancelRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
-        setImageLoading(true);
-    }, [imgIndex]);
+        dispatch({
+            type: "SET_IMAGE_LOADING",
+            payload: true,
+        });
+    }, [state.image.index]);
 
-    async function handleUsernameSubmit() {
-        setIsLoading(true);
+    const [sliderRef, instanceRef] = useKeenSlider(
+        {
+            initial: 0,
+            drag: false,
+        },
+        []
+    );
 
-        const username = sanitizeString(uid);
-
-        if (!username) {
-            setUsernameError("Username cannot be empty.");
-            return setIsLoading(false);
-        }
-
-        if (username.length < 2 || username.length > 32) {
-            setUsernameError("Username must be between 2 and 32 characters.");
-            return setIsLoading(false);
-        }
-
-        if (user.username === username) {
-            setUsernameError("Username cannot be the same as your current username.");
-            return setIsLoading(false);
-        }
-
-        if (!password) {
-            setPasswordError("Password cannot be empty.");
-            return setIsLoading(false);
-        }
-
-        const response = await sendRequest({
-            query: "UPDATE_USER",
-            data: {
-                username: username,
-                password: password,
+    async function submitUsername() {
+        await modifyUsername({
+            username: sanitizeString(state.username),
+            current: user.username,
+            password: state.password,
+            onSuccess: () => {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+            },
+            setErrors: (errors) => {
+                dispatch({
+                    type: "SET_ERRORS",
+                    payload: errors,
+                });
+            },
+            setLoading: (loading) => {
+                dispatch({
+                    type: "SET_LOADING",
+                    payload: loading,
+                });
             },
         });
-
-        if (!response.success) {
-            setUsernameError(response.message ?? "Couldn't update username.");
-        } else {
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
-        }
-
-        setIsLoading(false);
     }
 
     async function handlePasswordSubmit() {
-        setIsLoading(true);
+        dispatch({ type: "SET_LOADING", payload: true });
 
-        if (!password1) {
-            setPassword1Error("Current password cannot be empty.");
-            return setIsLoading(false);
+        if (!state.password) {
+            dispatch({ type: "SET_ERRORS", payload: { password: "Password cannot be empty." } });
+            return dispatch({ type: "SET_LOADING", payload: false });
         }
 
-        if (!newPassword) {
-            setNewPasswordError("New password cannot be empty.");
-            return setIsLoading(false);
+        if (!state.newPassword) {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: { newPassword: "New password cannot be empty." },
+            });
+            return dispatch({ type: "SET_LOADING", payload: false });
         }
 
-        if (newPassword.length < 8 || newPassword.length > 256) {
-            setNewPasswordError("Must be between 8 and 256 characters.");
-            return setIsLoading(false);
+        if (state.newPassword.length < 8 || state.newPassword.length > 256) {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: {
+                    newPassword: "Password must be between 8 and 256 characters.",
+                },
+            });
+            return dispatch({ type: "SET_LOADING", payload: false });
         }
 
-        if (newPassword !== confirmPassword) {
-            setNewPasswordError("Passwords do not match.");
-            return setIsLoading(false);
+        if (state.newPassword !== state.confirmPassword) {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: {
+                    newPassword: "Passwords do not match.",
+                    confirmPassword: "Passwords do not match.",
+                },
+            });
+            return dispatch({ type: "SET_LOADING", payload: false });
         }
 
-        if (password1 === newPassword) {
-            setNewPasswordError("New password cannot be the same as your current password.");
-            return setIsLoading(false);
+        if (state.password === state.newPassword) {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: {
+                    newPassword: "New password cannot be the same as your current password.",
+                    confirmPassword: "New password cannot be the same as your current password.",
+                },
+            });
+            return dispatch({ type: "SET_LOADING", payload: false });
         }
 
         try {
             const response = await sendRequest({
                 query: "UPDATE_USER",
                 data: {
-                    password: password1,
-                    newPassword: newPassword,
+                    password: state.password,
+                    newPassword: state.newPassword,
                 },
             });
 
             if (!response.success) {
-                setPassword1Error(response.message || "Couldn't update password.");
-            } else {
-                setPassword1("");
-                setNewPassword("");
-                setConfirmPassword("");
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
+                dispatch({
+                    type: "SET_ERRORS",
+                    payload: {
+                        password: response.message,
                     },
                 });
-            }
-
-            setIsLoading(false);
-        } catch (err) {
-            console.error(err);
-            setIsLoading(false);
-        }
-    }
-
-    async function createGuild() {
-        if (!guildTemplate || !guildName) return;
-        setIsLoading(true);
-        let uploadedIcon = null;
-
-        try {
-            const getIcon = async () => {
-                if (!guildIcon) return null;
-
-                const result = await base(guildIcon, {
-                    publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                    store: "auto",
-                });
-
-                if (!result.file) console.error(result);
-                else uploadedIcon = result.file;
-            };
-
-            await getIcon();
-            const response = await sendRequest({
-                query: "GUILD_CREATE",
-                data: {
-                    name: guildName,
-                    icon: uploadedIcon,
-                    template: guildTemplate,
-                },
-            });
-
-            if (!response.success) {
-                return alert(response.message ?? "Something went wrong. Try again later.");
             } else {
                 setLayers({
                     settings: {
@@ -257,41 +331,109 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                         setNull: true,
                     },
                 });
-
-                if (response.guild) {
-                    addGuild(response.guild);
-                    router.push(`/channels/${response.guild.id}`);
-                }
             }
         } catch (err) {
             console.error(err);
         }
 
-        setIsLoading(false);
+        dispatch({ type: "SET_LOADING", payload: false });
     }
 
-    const props: TProps = {
-        CREATE_GUILD: {
-            title: join || guildTemplate ? "Customize your server" : "Create a server",
-            description:
-                join || guildTemplate
-                    ? "Give your new server a personality with a name and an icon. You can always change it later"
-                    : "Your server is where you and your friends hang out. Make yours and start talking.",
-            buttonColor: join || guildTemplate ? "blue" : "grey",
-            buttonText: join ? "Join server" : guildTemplate ? "Create" : "Join a server",
-            buttonDisabled: guildTemplate && !guildName ? true : false,
-            function: async () => {
-                if (!guildTemplate && !join) {
-                    setGuildTemplate(1);
-                } else if (guildTemplate) {
-                    await createGuild();
-                } else if (join) {
-                    // Join server with invite code
+    async function submitInvite() {
+        dispatch({
+            type: "SET_LOADING",
+            payload: true,
+        });
+
+        // state.guild.invite can be anything, so we need to check if it's a valid invite
+
+        let code = state.guild.invite;
+
+        if (code.length < 2 || code.length > 100) {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: { guildInvite: "Invalid invite link." },
+            });
+            dispatch({
+                type: "SET_LOADING",
+                payload: false,
+            });
+            return;
+        }
+
+        if (code.includes("https://chat-app.mart1d4.dev/")) {
+            code = code.split("/").pop();
+        }
+
+        const response = await sendRequest({
+            query: "ACCEPT_INVITE",
+            params: {
+                inviteId: code,
+            },
+            data: {
+                isGuild: true,
+            },
+        });
+
+        if (response.success) {
+            setLayers({
+                settings: {
+                    type: "POPUP",
+                    setNull: true,
+                },
+            });
+
+            if (response.guild) {
+                addGuild(response.guild);
+                router.push(`/channels/${response.guild.id}`);
+            }
+        } else {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: { guildInvite: response.message },
+            });
+        }
+
+        dispatch({
+            type: "SET_LOADING",
+            payload: false,
+        });
+    }
+
+    async function submitGuild() {
+        await createGuild({
+            template: state.guild.template,
+            name: state.guild.name,
+            icon: state.guild.icon,
+            onSuccess: (data) => {
+                setLayers({
+                    settings: {
+                        type: "POPUP",
+                        setNull: true,
+                    },
+                });
+
+                if (data.guild) {
+                    addGuild(data.guild);
+                    router.push(`/channels/${data.guild.id}`);
                 }
             },
-            centered: true,
-            skipClose: true,
-        },
+            setErrors: (errors) => {
+                dispatch({
+                    type: "SET_ERRORS",
+                    payload: errors,
+                });
+            },
+            setLoading: (loading) => {
+                dispatch({
+                    type: "SET_LOADING",
+                    payload: loading,
+                });
+            },
+        });
+    }
+
+    const props: PopupContent = {
         GUILD_CHANNEL_CREATE: {
             title: `Create ${content.isCategory ? "Category" : "Channel"}`,
             description: content.category
@@ -299,22 +441,24 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                 : content.isCategory
                 ? undefined
                 : " ",
-            buttonColor: "blue",
-            buttonText: channelLocked
-                ? "Next"
-                : `Create ${content.isCategory ? "Category" : "Channel"}`,
-            buttonDisabled: !channelName || channelLocked,
-            function: () => {
-                if (!channelName || channelLocked) return;
+            button: {
+                color: "blue",
+                text: state.channel.locked
+                    ? "Next"
+                    : `Create ${content.isCategory ? "Category" : "Channel"}`,
+                disabled: !state.channel.name || state.channel.locked,
+            },
+            function: async () => {
+                if (!state.channel.name || state.channel.locked) return;
                 sendRequest({
                     query: "GUILD_CHANNEL_CREATE",
                     params: {
                         guildId: content.guild,
                     },
                     data: {
-                        name: channelName,
-                        type: content.isCategory ? 4 : channelType,
-                        locked: channelLocked,
+                        name: state.channel.name,
+                        type: content.isCategory ? 4 : state.channel.type,
+                        locked: state.channel.locked,
                         categoryId: content.category?.id,
                     },
                 });
@@ -325,9 +469,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             description: `Are you sure you want to delete ${
                 content.channel?.type === 2 ? "#" : ""
             }${content.channel?.name}? This cannot be undone.`,
-            buttonColor: "red",
-            buttonText: `Delete ${content.channel?.type === 4 ? "Category" : "Channel"}`,
-            function: () => {
+            button: {
+                color: "red",
+                text: `Delete ${content.channel?.type === 4 ? "Category" : "Channel"}`,
+            },
+            function: async () => {
                 sendRequest({
                     query: "GUILD_CHANNEL_DELETE",
                     params: {
@@ -339,17 +485,23 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         UPDATE_USERNAME: {
             title: "Change your username",
             description: "Enter a new username and your existing password.",
-            buttonColor: "blue",
-            buttonText: "Done",
-            function: handleUsernameSubmit,
+            button: {
+                color: "blue",
+                text: "Done",
+                disabled: !state.username || !state.password,
+            },
+            function: submitUsername,
             centered: true,
             skipClose: true,
         },
         UPDATE_PASSWORD: {
             title: "Update your password",
             description: "Enter your current password and a new password.",
-            buttonColor: "blue",
-            buttonText: "Done",
+            button: {
+                color: "blue",
+                text: "Done",
+                disabled: !state.password || !state.newPassword || !state.confirmPassword,
+            },
             function: handlePasswordSubmit,
             centered: true,
             skipClose: true,
@@ -357,9 +509,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         DELETE_MESSAGE: {
             title: "Delete Message",
             description: "Are you sure you want to delete this message?",
-            buttonColor: "red",
-            buttonText: "Delete",
-            function: () => {
+            button: {
+                color: "red",
+                text: "Delete",
+            },
+            function: async () => {
                 sendRequest({
                     query: "DELETE_MESSAGE",
                     params: {
@@ -373,9 +527,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             title: "Pin It. Pin It Good.",
             description:
                 "Hey, just double checking that you want to pin this message to the current channel for posterity and greatness?",
-            buttonColor: "blue",
-            buttonText: "Oh yeah. Pin it",
-            function: () => {
+            button: {
+                color: "blue",
+                text: "Oh yeah. Pin it",
+            },
+            function: async () => {
                 sendRequest({
                     query: "PIN_MESSAGE",
                     params: {
@@ -388,9 +544,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         UNPIN_MESSAGE: {
             title: "Unpin Message",
             description: "You sure you want to remove this pinned message?",
-            buttonColor: "red",
-            buttonText: "Remove it please!",
-            function: () => {
+            button: {
+                color: "red",
+                text: "Remove it please!",
+            },
+            function: async () => {
                 sendRequest({
                     query: "UNPIN_MESSAGE",
                     params: {
@@ -401,33 +559,36 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             },
         },
         FILE_EDIT: {
-            title: content?.attachment?.isSpoiler
-                ? content?.attachment?.name.slice(8)
-                : content?.attachment?.name,
-            description: "",
-            buttonColor: "blue",
-            buttonText: "Save",
-            function: () => {
+            title: content?.file?.name,
+            button: {
+                color: "blue",
+                text: "Save",
+            },
+            function: async () => {
                 content.handleFileChange({
-                    filename: filename,
-                    description: description,
-                    isSpoiler: isSpoiler,
+                    filename: state.file.name,
+                    description: state.file.description,
+                    isSpoiler: state.file.isSpoiler,
                 });
             },
         },
         LOGOUT: {
             title: "Log Out",
             description: "Are you sure you want to logout?",
-            buttonColor: "red",
-            buttonText: "Log Out",
-            function: () => logout(),
+            button: {
+                color: "red",
+                text: "Log Out",
+            },
+            function: async () => logout(),
         },
         DELETE_ATTACHMENT: {
             title: "Are you sure?",
             description: "This will remove this attachment from this message permanently.",
-            buttonColor: "red",
-            buttonText: "Remove Attachment",
-            function: () => {
+            button: {
+                color: "red",
+                text: "Remove Attachment",
+            },
+            function: async () => {
                 sendRequest({
                     query: "UPDATE_MESSAGE",
                     params: {
@@ -444,9 +605,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             title: "Confirm New Group",
             description:
                 "You already have a group with these people! Are you sure you want to create a new one?",
-            buttonColor: "blue",
-            buttonText: "Create Group",
-            function: () => {
+            button: {
+                color: "blue",
+                text: "Create New Group",
+            },
+            function: async () => {
                 if (content?.addUsers) {
                     content.addUsers();
                 } else if (content.recipients) {
@@ -462,9 +625,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         },
         GROUP_OWNER_CHANGE: {
             title: "Transfer Group Ownership",
-            buttonColor: "red",
-            buttonText: "Confirm",
-            function: () => {
+            button: {
+                color: "blue",
+                text: "Confirm",
+            },
+            function: async () => {
                 sendRequest({
                     query: "CHANNEL_RECIPIENT_OWNER",
                     params: {
@@ -481,9 +646,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             }? You won't be able to rejoin this ${
                 content.guild ? "server" : "group"
             } unless your are re-invited.`,
-            buttonColor: "red",
-            buttonText: `Leave ${content.channel ? "Group" : "Server"}`,
-            function: () => {
+            button: {
+                color: "red",
+                text: `Leave ${content.channel ? "Group" : "Server"}`,
+            },
+            function: async () => {
                 if (content.channel) {
                     sendRequest({
                         query: "CHANNEL_RECIPIENT_REMOVE",
@@ -506,18 +673,51 @@ export function Popup({ content, friends, element }: { content: any; friends: an
             title: "WOAH THERE. WAY TOO SPICY",
             centered: true,
             description: "You're sending messages to quickly",
-            buttonColor: "blue",
-            buttonText: "Enter the chill zone",
-            onlyButton: true,
-            function: () => {},
+            button: {
+                color: "blue",
+                text: "Enter the chill zone",
+                big: true,
+            },
+            function: async () => {},
         },
         REMOVE_EMBEDS: {
             title: "Are you sure?",
             description: "This will remove all embeds on this message for everyone.",
             tip: "Hold shift when clearing embeds to skip this modal.",
-            buttonColor: "red",
-            buttonText: "Remove All Embeds",
-            function: () => content.onConfirm(),
+            button: {
+                color: "red",
+                text: "Remove All Embeds",
+            },
+            function: async () => content.onConfirm(),
+        },
+        CHANNEL_TOPIC: {
+            title: content?.channel?.name,
+            description: content?.channel?.topic,
+            noButtons: true,
+            function: async () => {},
+        },
+        USER_STATUS: {
+            title: "Set a custom status",
+            button: {
+                color: "blue",
+                text: "Save",
+            },
+            function: async () => {
+                const correctStatus = statuses[state.status];
+
+                if (correctStatus !== user.status || state.customStatus !== user.customStatus) {
+                    const response = await sendRequest({
+                        query: "UPDATE_USER",
+                        data: {
+                            status: correctStatus === user.status ? null : correctStatus,
+                            customStatus:
+                                state.customStatus === user.customStatus
+                                    ? null
+                                    : sanitizeString(state.customStatus),
+                        },
+                    });
+                }
+            },
         },
     };
 
@@ -527,7 +727,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         const handleKeyDown = (e: KeyboardEvent) => {
             if (layers.POPUP.length === 0) return;
 
-            if (e.key === "Escape" && !layers.MENU) {
+            if (e.key === "Escape" && !layers.MENU && !state.loading) {
                 setLayers({
                     settings: {
                         type: "POPUP",
@@ -538,9 +738,9 @@ export function Popup({ content, friends, element }: { content: any; friends: an
 
             if (e.key === "Enter" && !e.shiftKey && prop !== null) {
                 if (
-                    isLoading ||
+                    state.loading ||
                     document.activeElement === cancelRef.current ||
-                    prop?.buttonDisabled
+                    prop?.button?.disabled
                 ) {
                     return;
                 }
@@ -559,34 +759,9 @@ export function Popup({ content, friends, element }: { content: any; friends: an
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [layers, isLoading, prop]);
+    }, [layers, state.loading, prop]);
 
-    const currentImage = useMemo(
-        () =>
-            content.attachments?.length
-                ? {
-                      ...content.attachments[imgIndex],
-                      dimensions: getDimensions(content.attachments[imgIndex].dimensions),
-                  }
-                : null,
-        [content.attachments, imgIndex]
-    );
-
-    if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
-        return (
-            <Popout
-                content={content}
-                friends={friends}
-                element={element}
-            />
-        );
-    }
-
-    if (type === "GUILD_INVITE") {
-        return <InvitePopup content={content} />;
-    }
-
-    function getDimensions(img) {
+    const getDimensions = useCallback((img: any) => {
         if (!img) return null;
 
         const ratio = img.width / img.height;
@@ -608,8 +783,6 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         const isImageWiderThanWindow = img.width > maxWidth;
         const isImageTallerThanWindow = img.height > maxHeight;
 
-        console.log(maxHeight, maxWidth, img.width, img.height);
-
         // If both, make dimensions depends on the smaller side of the window
         if (isImageWiderThanWindow && isImageTallerThanWindow) {
             if (maxWidth > maxHeight) {
@@ -628,224 +801,379 @@ export function Popup({ content, friends, element }: { content: any; friends: an
         }
 
         return dimensions;
+    }, []);
+
+    const currentImage = useMemo(
+        () =>
+            content.attachments?.length
+                ? {
+                      ...content.attachments[state.image.index],
+                      dimensions: getDimensions(content.attachments[state.image.index].dimensions),
+                  }
+                : null,
+        [content.attachments, state.image.index]
+    );
+
+    const CloseButton = useMemo(
+        () => (
+            <button
+                type="button"
+                className={styles.closeButton}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setLayers({
+                        settings: {
+                            type: "POPUP",
+                            setNull: true,
+                        },
+                    });
+                }}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                >
+                    <path
+                        fill="currentColor"
+                        d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
+                    />
+                </svg>
+            </button>
+        ),
+        []
+    );
+
+    const warnings = {
+        FILE_TYPE: {
+            title: "Invalid File Type",
+            description: "Hm.. I don't think we support that type of file",
+        },
+        FILE_SIZE: {
+            title: "Your files are too powerful",
+            description: "Max file size is 5.00 MB please.",
+        },
+        FILE_NUMBER: {
+            title: "Too many uploads!",
+            description: "You can only upload 10 files at a time!",
+        },
+        UPLOAD_FAILED: {
+            title: "Upload Failed",
+            description: "Something went wrong. try again later",
+        },
+    };
+
+    if (type === "PINNED_MESSAGES" || type === "CREATE_DM") {
+        return (
+            <Popout
+                content={content}
+                element={element}
+            />
+        );
+    }
+
+    if (type === "GUILD_INVITE") {
+        return (
+            <InvitePopup
+                content={content}
+                closing={closing}
+            />
+        );
     }
 
     return (
-        <AnimatePresence>
-            {type === "CHANNEL_TOPIC" ? (
+        <>
+            {type === "CREATE_GUILD" ? (
                 <div
-                    autoFocus
-                    ref={popupRef}
-                    role="dialog"
-                    aria-modal="true"
-                    className={styles.cardContainer}
-                    onContextMenu={(e) => e.preventDefault()}
+                    ref={sliderRef}
+                    className={`${styles.container} keen-slider`}
+                    style={{
+                        animationName: closing ? styles.popOut : "",
+                        flexDirection: "row",
+                        width: 440,
+                    }}
                 >
-                    <div className={styles.titleBlock}>
-                        <h1>{content.channel.name}</h1>
-                    </div>
-
-                    <div className={styles.popupContent + " scrollbar"}>
-                        {content.channel.topic}
-                    </div>
-                </div>
-            ) : type === "USER_STATUS" ? (
-                <div
-                    autoFocus
-                    ref={popupRef}
-                    role="dialog"
-                    aria-modal="true"
-                    className={styles.cardContainer}
-                    onContextMenu={(e) => e.preventDefault()}
-                >
-                    <Image
-                        className={styles.headerImage + " " + styles.centered}
-                        src="https://ucarecdn.com/2735d6c0-b301-438c-add6-3d116e0ddb45/"
-                        alt="Status"
-                        width={200}
-                        height={120}
-                    />
-
                     <div
-                        className={styles.titleBlock}
-                        style={{ alignSelf: "center" }}
+                        className={`${styles.slider} keen-slider__slide`}
+                        style={{ maxHeight: 558 }}
                     >
-                        <h1>Set a custom status</h1>
-                    </div>
-
-                    <div className={styles.popupContent + " scrollbar"}>
-                        <div className={styles.input}>
-                            <label>What's cookin', {user.username}?</label>
+                        <header className={styles.centered}>
+                            <div>Customize your server</div>
                             <div>
-                                <div className={styles.emojiPicker}>
-                                    <EmojiPicker />
-                                </div>
-
-                                <input
-                                    type="text"
-                                    maxLength={100}
-                                    value={customStatus}
-                                    placeholder="Support has arrived!"
-                                    onChange={(e) => setCustomStatus(e.target.value)}
-                                    style={{ padding: "10px 36px 10px 42px" }}
-                                />
-
-                                {customStatus && (
-                                    <div
-                                        onClick={() => setCustomStatus("")}
-                                        className={styles.clearInput}
-                                    >
-                                        <Icon
-                                            name="closeFilled"
-                                            viewbox="0 0 14 14"
-                                        />
-                                    </div>
-                                )}
+                                Give your new server a personality with a name and an icon. You can
+                                always change it later
                             </div>
-                        </div>
 
-                        <div className={styles.divider} />
+                            {CloseButton}
+                        </header>
 
-                        <div className={styles.input}>
-                            <label>Status</label>
-                            <div
-                                className={styles.divInput}
-                                style={{ borderRadius: showOptions ? "4px 4px 0 0" : "" }}
-                                onClick={(e) => {
-                                    if (showOptions) setShowOptions(null);
-                                    else setShowOptions(e.currentTarget);
+                        <main className={`${styles.content} scrollbar`}>
+                            <div>
+                                {[
+                                    ["Create My Own", "2699b806-e43b-4fea-aa0b-da3bde1972b4"],
+                                    ["Gaming", "34bdb748-aea8-4542-b534-610ac9ad347f"],
+                                    ["School Club", "d0460999-065f-4289-9021-5f9c4cf2ddd7"],
+                                    ["Study Group", "fe757867-ce50-4353-9c9b-cb64ec3968b6"],
+                                    ["Friends", "fcfc0474-e405-47df-b7ef-1373bfe83070"],
+                                    ["Artists & Creators", "6057e335-8633-4909-b7c8-970182095185"],
+                                    ["Local Community", "bca2a8ed-2498-42a1-a964-9af6f8479d7f"],
+                                ].map((template, index) => (
+                                    <Fragment key={template[1]}>
+                                        <button
+                                            className={styles.serverTemplate}
+                                            onClick={() => {
+                                                dispatch({
+                                                    type: "SET_GUILD",
+                                                    payload: { template: index + 1 },
+                                                });
+                                                instanceRef.current?.next();
+                                            }}
+                                        >
+                                            <img
+                                                src={`https://ucarecdn.com/${template[1]}/`}
+                                                alt={template[0]}
+                                            />
+                                            <div>{template[0]} </div>
+                                            <Icon name="caret" />
+                                        </button>
+
+                                        {index === 0 && (
+                                            <div className={styles.serverTemplateTitle}>
+                                                Start from a template
+                                            </div>
+                                        )}
+                                    </Fragment>
+                                ))}
+                            </div>
+                        </main>
+
+                        <footer className={styles.column}>
+                            <h2>Have an invite already?</h2>
+
+                            <button
+                                className={`grey button ${styles.big}`}
+                                onClick={() => {
+                                    dispatch({
+                                        type: "SET_GUILD",
+                                        payload: { join: true },
+                                    });
+                                    instanceRef.current?.next();
                                 }}
                             >
-                                {status}
-
-                                <div
-                                    className={styles.inputIcon}
-                                    style={{
-                                        transform: showOptions
-                                            ? "translateY(-50%) rotate(-90deg)"
-                                            : "translateY(-50%) rotate(90deg)",
-                                    }}
-                                >
-                                    <Icon name="caret" />
-                                </div>
-
-                                {showOptions && (
-                                    <ul className={styles.options}>
-                                        {["Online", "Idle", "Do Not Disturb", "Offline"].map(
-                                            (s) => (
-                                                <li
-                                                    className={status === s ? styles.selected : ""}
-                                                    key={s}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setStatus(s);
-                                                        setShowOptions(null);
-                                                    }}
-                                                >
-                                                    <div>
-                                                        <svg className={styles.settingStatus}>
-                                                            <rect
-                                                                height="10px"
-                                                                width="10px"
-                                                                rx={8}
-                                                                ry={8}
-                                                                // @ts-ignore
-                                                                fill={
-                                                                    colors[
-                                                                        statuses[s] as EUserStatus
-                                                                    ]
-                                                                }
-                                                                // @ts-ignore
-                                                                mask={`url(#${
-                                                                    masks[
-                                                                        statuses[s] as EUserStatus
-                                                                    ]
-                                                                })`}
-                                                            />
-                                                        </svg>
-                                                        {s}
-                                                    </div>
-
-                                                    {status === s && (
-                                                        <Icon
-                                                            name="selected"
-                                                            fill="var(--accent-1)"
-                                                        />
-                                                    )}
-                                                </li>
-                                            )
-                                        )}
-                                    </ul>
-                                )}
-                            </div>
-                        </div>
+                                Join server
+                            </button>
+                        </footer>
                     </div>
 
-                    <div>
-                        <button
-                            className="button underline"
-                            onClick={() => {
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                        setNull: true,
-                                    },
-                                });
-                            }}
-                        >
-                            Cancel
-                        </button>
+                    <div
+                        className={`${styles.slider} keen-slider__slide`}
+                        style={{ maxHeight: 396 }}
+                    >
+                        <header className={styles.centered}>
+                            {state.guild.join ? (
+                                <>
+                                    <div>Join a Server</div>
+                                    <div>Enter an invite below to join an existing server</div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>Create a server</div>
+                                    <div>
+                                        Your server is where you and your friends hang out. Make
+                                        yours and start talking.
+                                    </div>
+                                </>
+                            )}
 
-                        <button
-                            className="button blue"
-                            onClick={async () => {
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                        setNull: true,
-                                    },
-                                });
+                            {CloseButton}
+                        </header>
 
-                                const correctStatus = statuses[status as keyof typeof statuses];
-                                if (
-                                    correctStatus !== user.status ||
-                                    customStatus !== user.customStatus
-                                ) {
-                                    const response = await sendRequest({
-                                        query: "UPDATE_USER",
-                                        data: {
-                                            status:
-                                                correctStatus === user.status
-                                                    ? null
-                                                    : correctStatus,
-                                            customStatus:
-                                                customStatus === user.customStatus
-                                                    ? null
-                                                    : sanitizeString(customStatus),
-                                        },
+                        <main className={`${styles.content} scrollbar`}>
+                            {state.guild.join ? (
+                                <div>
+                                    <Input
+                                        required
+                                        maxLength={100}
+                                        name="guild-invite"
+                                        label="Invite Link"
+                                        value={state.guild.invite}
+                                        error={state.errors.guildInvite}
+                                        placeholder="https://chat-app.mart1d4.dev/hTKzmak"
+                                        onChange={(value) => {
+                                            dispatch({
+                                                type: "SET_GUILD",
+                                                payload: { invite: value },
+                                            });
+                                            dispatch({
+                                                type: "SET_ERRORS",
+                                                payload: { guildInvite: "" },
+                                            });
+                                        }}
+                                    />
+
+                                    <div className={styles.input}>
+                                        <label htmlFor="">Invites should look like</label>
+
+                                        <ol
+                                            style={{
+                                                listStyle: "none",
+                                                color: "var(--foreground-1)",
+                                            }}
+                                        >
+                                            {[
+                                                "hTKzmak",
+                                                "https://chat-app.mart1d4.dev/hTKzmak",
+                                                "https://chat-app.mart1d4.dev/cool-invite",
+                                            ].map((invite) => (
+                                                <li
+                                                    key={invite}
+                                                    onClick={() => {
+                                                        dispatch({
+                                                            type: "SET_GUILD",
+                                                            payload: { invite },
+                                                        });
+                                                    }}
+                                                >
+                                                    {invite}
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                </div>
+                            ) : (
+                                <form>
+                                    <div className={styles.uploadIcon}>
+                                        <div>
+                                            {state.guild.icon ? (
+                                                <Image
+                                                    src={URL.createObjectURL(state.guild.icon)}
+                                                    alt="Guild Icon"
+                                                    width={80}
+                                                    height={80}
+                                                    style={{
+                                                        borderRadius: "50%",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <Icon
+                                                    size={80}
+                                                    name="fileUpload"
+                                                    viewbox="0 0 80 80"
+                                                />
+                                            )}
+
+                                            <div
+                                                role="button"
+                                                aria-label="Upload a Server Icon"
+                                                onClick={() => guildIconInput.current?.click()}
+                                            />
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            ref={guildIconInput}
+                                            accept="image/png, image/jpeg, image/gif, image/apng, image/webp"
+                                            onChange={async (e) => {
+                                                const file = await onFileChange(e);
+                                                if (file) {
+                                                    dispatch({
+                                                        type: "SET_GUILD",
+                                                        payload: { icon: file },
+                                                    });
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    <Input
+                                        required
+                                        maxLength={100}
+                                        name="guild-name"
+                                        label="Server name"
+                                        value={state.guild.name}
+                                        error={state.errors.name}
+                                        onChange={(value) => {
+                                            dispatch({
+                                                type: "SET_GUILD",
+                                                payload: { name: value },
+                                            });
+                                        }}
+                                    />
+                                </form>
+                            )}
+                        </main>
+
+                        <footer className={styles.spaced}>
+                            <button
+                                type="button"
+                                className="button underline"
+                                onClick={() => {
+                                    dispatch({
+                                        type: "SET_GUILD",
+                                        payload: { template: 0 },
                                     });
-                                }
-                            }}
-                        >
-                            {isLoading ? <LoadingDots /> : "Save"}
-                        </button>
+                                    if (state.guild.join) {
+                                        dispatch({
+                                            type: "SET_GUILD",
+                                            payload: { join: false },
+                                        });
+                                    }
+                                    instanceRef.current?.prev();
+                                }}
+                            >
+                                Back
+                            </button>
+
+                            <button
+                                type="button"
+                                className={`blue button ${
+                                    state.guild.template && !state.guild.name ? "disabled" : ""
+                                }`}
+                                onClick={async () => {
+                                    const disabled = state.guild.template && !state.guild.name;
+                                    if (state.loading || disabled) return;
+
+                                    if (state.guild.join && state.guild.invite) {
+                                        await submitInvite();
+                                    } else {
+                                        await submitGuild();
+                                    }
+                                }}
+                            >
+                                {state.loading ? (
+                                    <LoadingDots />
+                                ) : state.guild.join ? (
+                                    "Join Server"
+                                ) : (
+                                    "Create"
+                                )}
+                            </button>
+                        </footer>
                     </div>
                 </div>
             ) : type === "ATTACHMENT_PREVIEW" ? (
                 <div
-                    autoFocus
-                    ref={popupRef}
                     role="dialog"
                     aria-modal="true"
+                    className={styles.animation}
                     onContextMenu={(e) => e.preventDefault()}
+                    style={{ animationName: closing ? styles.popOut : "" }}
                 >
                     {content.attachments.length > 1 && (
                         <button
                             className={styles.imageNav}
                             onClick={() => {
                                 const length = content.attachments.length;
-                                if (imgIndex == 0) setImgIndex(length - 1);
-                                else setImgIndex((prev: number) => prev - 1);
+                                if (state.image.index === 0) {
+                                    dispatch({ type: "SET_IMAGE_INDEX", payload: length - 1 });
+                                } else {
+                                    dispatch({
+                                        type: "SET_IMAGE_INDEX",
+                                        payload: state.image.index - 1,
+                                    });
+                                }
                             }}
                         >
                             <Icon name="arrowBig" />
@@ -877,13 +1205,25 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                 });
                             }}
                         >
+                            {state.image.loading && (
+                                <div className={styles.imageLoading}>
+                                    <LoadingCubes />
+                                </div>
+                            )}
+
                             <Image
-                                style={{ aspectRatio: currentImage.dimensions.aspectRatio }}
+                                style={{
+                                    aspectRatio: currentImage.dimensions.aspectRatio,
+                                    opacity: state.image.loading ? 0 : 1,
+                                }}
                                 src={currentImage.url}
                                 alt={currentImage.description || "Image"}
                                 width={currentImage.dimensions.width}
                                 height={currentImage.dimensions.height}
-                                onLoad={() => setImageLoading(false)}
+                                onLoad={() =>
+                                    dispatch({ type: "SET_IMAGE_LOADING", payload: false })
+                                }
+                                priority
                             />
                         </div>
 
@@ -901,8 +1241,14 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                             className={styles.imageNav}
                             onClick={() => {
                                 const length = content.attachments.length;
-                                if (imgIndex == length - 1) setImgIndex(0);
-                                else setImgIndex((prev: number) => prev + 1);
+                                if (state.image.index === length - 1) {
+                                    dispatch({ type: "SET_IMAGE_INDEX", payload: 0 });
+                                } else {
+                                    dispatch({
+                                        type: "SET_IMAGE_INDEX",
+                                        payload: state.image.index + 1,
+                                    });
+                                }
                             }}
                         >
                             <Icon name="arrowBig" />
@@ -911,11 +1257,11 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                 </div>
             ) : type === "WARNING" ? (
                 <div
-                    autoFocus
-                    ref={popupRef}
                     role="dialog"
                     aria-modal="true"
+                    className={styles.animation}
                     onContextMenu={(e) => e.preventDefault()}
+                    style={{ animationName: closing ? styles.popOut : "" }}
                 >
                     <div
                         className={styles.warning}
@@ -938,10 +1284,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                             </div>
 
                             <div className={styles.title}>
-                                {content.warning === "FILE_SIZE" && "Your files are too powerful"}
-                                {content.warning === "FILE_TYPE" && "Invalid File Type"}
-                                {content.warning === "FILE_NUMBER" && "Too many uploads!"}
-                                {content.warning === "UPLOAD_FAILED" && "Upload Failed"}
+                                {content.warning !== "DRAG_FILE" && warnings[content.warning].title}
                                 {content.warning === "DRAG_FILE" &&
                                     `Upload to ${
                                         content.channel?.type === 0
@@ -953,14 +1296,8 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                             </div>
 
                             <div className={styles.description}>
-                                {content.warning === "FILE_SIZE" &&
-                                    "Max file size is 10.00 MB please."}
-                                {content.warning === "FILE_TYPE" &&
-                                    "Hm.. I don't think we support that type of file"}
-                                {content.warning === "FILE_NUMBER" &&
-                                    "You can only upload 10 files at a time!"}
-                                {content.warning === "UPLOAD_FAILED" &&
-                                    "Something went wrong. try again later"}
+                                {content.warning !== "DRAG_FILE" &&
+                                    warnings[content.warning].description}
                                 {content.warning === "DRAG_FILE" && (
                                     <>
                                         You can add comments before uploading.
@@ -972,107 +1309,199 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                         </div>
                     </div>
                 </div>
-            ) : prop ? (
+            ) : (
                 <div
-                    autoFocus
-                    ref={popupRef}
-                    className={`${styles.cardContainer} ${
+                    className={`${styles.container} ${
                         type === "FILE_EDIT"
                             ? styles.fileEdit
                             : type === "GUILD_CHANNEL_CREATE"
                             ? styles.guildChannelCreate
                             : ""
-                    }`}
+                    } ${type === "CREATE_GUILD" ? "keen-slider" : ""}`}
                     onContextMenu={(e) => e.preventDefault()}
+                    style={{ animationName: closing ? styles.popOut : "" }}
                 >
                     {type === "FILE_EDIT" && (
                         <Image
                             className={styles.headerImage}
                             src={
-                                isImage
-                                    ? content.attachment.url
+                                true
+                                    ? content.file.url
                                     : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
                             }
-                            alt={content.attachment.name}
+                            alt={content.file.name}
                             width={104}
                             height={104}
+                            style={{ marginLeft: 16 }}
                         />
                     )}
 
-                    {!prop.centered ? (
-                        <div
-                            className={styles.titleBlock}
-                            style={{
-                                paddingBottom:
-                                    type === "GUILD_CHANNEL_CREATE" && prop.description !== " "
-                                        ? "0"
-                                        : "",
-                            }}
-                        >
-                            <h1>{prop.title}</h1>
-                        </div>
-                    ) : (
-                        <div className={styles.titleBlockCentered}>
-                            <div>{prop.title}</div>
-                            <div>{prop.description}</div>
-
-                            <button
-                                className="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                            setNull: true,
-                                        },
-                                    });
-                                }}
-                            >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    width="24"
-                                    height="24"
-                                    role="image"
-                                >
-                                    <path
-                                        fill="currentColor"
-                                        d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
+                    {type === "USER_STATUS" && (
+                        <Image
+                            className={styles.headerImage + " " + styles.centered}
+                            src="https://ucarecdn.com/2735d6c0-b301-438c-add6-3d116e0ddb45/"
+                            alt="Status"
+                            width={200}
+                            height={120}
+                        />
                     )}
 
-                    <div className={styles.popupContent + " scrollbar"}>
-                        {!prop.centered && (
-                            <>
-                                {prop.description && (
-                                    <div
-                                        className={`${styles.description} ${
-                                            type === "GUILD_CHANNEL_CREATE" ? styles.small : ""
-                                        }`}
-                                    >
-                                        {prop.description}
-                                    </div>
-                                )}
+                    <header
+                        className={prop.centered ? styles.centered : ""}
+                        style={{
+                            justifyContent: type === "USER_STATUS" ? "center" : "left",
+                        }}
+                    >
+                        <h1>{prop.title}</h1>
+                        {prop.centered && <p>{prop.description}</p>}
+                        {prop.centered && CloseButton}
+                    </header>
 
-                                {prop.tip && (
-                                    <div
-                                        style={{ color: "var(--foreground-5)", userSelect: "none" }}
-                                    >
-                                        {prop.tip}
-                                    </div>
-                                )}
+                    <main className={`${styles.content} scrollbar`}>
+                        {!prop.centered && prop.description && (
+                            <div
+                                className={`${styles.description} ${
+                                    type === "GUILD_CHANNEL_CREATE" ? styles.small : ""
+                                }`}
+                            >
+                                {prop.description}
+                            </div>
+                        )}
 
-                                {content.message && type !== "DELETE_ATTACHMENT" && (
-                                    <div className={styles.messagesContainer}>
-                                        <FixedMessage
-                                            message={content.message}
-                                            pinned={false}
-                                        />
+                        {!prop.centered && prop.tip && (
+                            <div style={{ color: "var(--foreground-5)", userSelect: "none" }}>
+                                {prop.tip}
+                            </div>
+                        )}
+
+                        {!prop.centered && content.message && type !== "DELETE_ATTACHMENT" && (
+                            <div className={styles.messagesContainer}>
+                                <FixedMessage
+                                    message={content.message}
+                                    pinned={false}
+                                />
+                            </div>
+                        )}
+
+                        {type === "USER_STATUS" && (
+                            <form>
+                                <Input
+                                    label={`What's cookin', ${user.username}?`}
+                                    maxLength={100}
+                                    value={state.customStatus}
+                                    error={state.errors.customStatus}
+                                    placeholder="Support has arrived!"
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_CUSTOM_STATUS",
+                                            payload: value,
+                                        });
+                                    }}
+                                    leftItem={<EmojiPicker />}
+                                    rightItem={
+                                        state.customStatus && (
+                                            <div
+                                                onClick={() => {
+                                                    dispatch({
+                                                        type: "SET_CUSTOM_STATUS",
+                                                        payload: "",
+                                                    });
+                                                }}
+                                                className={styles.clearInput}
+                                            >
+                                                <Icon
+                                                    name="closeFilled"
+                                                    viewbox="0 0 14 14"
+                                                />
+                                            </div>
+                                        )
+                                    }
+                                />
+
+                                <div className={styles.divider} />
+
+                                <div className={styles.input}>
+                                    <label>Status</label>
+                                    <div
+                                        className={styles.divInput}
+                                        style={{
+                                            borderRadius: state.showOptions ? "4px 4px 0 0" : "",
+                                        }}
+                                        onClick={(e) => {
+                                            if (state.showOptions)
+                                                dispatch({
+                                                    type: "SET_SHOW_OPTIONS",
+                                                    payload: null,
+                                                });
+                                            else
+                                                dispatch({
+                                                    type: "SET_SHOW_OPTIONS",
+                                                    payload: e.currentTarget,
+                                                });
+                                        }}
+                                    >
+                                        {statuses[state.status as keyof typeof statuses]}
+
+                                        <div
+                                            className={styles.inputIcon}
+                                            style={{
+                                                transform: state.showOptions
+                                                    ? "translateY(-50%) rotate(-90deg)"
+                                                    : "translateY(-50%) rotate(90deg)",
+                                            }}
+                                        >
+                                            <Icon name="caret" />
+                                        </div>
+
+                                        {state.showOptions && (
+                                            <ul className={styles.options}>
+                                                {["online", "idle", "dnd", "offline"].map((s) => (
+                                                    <li
+                                                        className={
+                                                            state.status === s
+                                                                ? styles.selected
+                                                                : ""
+                                                        }
+                                                        key={s}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            dispatch({
+                                                                type: "SET_STATUS",
+                                                                payload: s,
+                                                            });
+                                                            dispatch({
+                                                                type: "SET_SHOW_OPTIONS",
+                                                                payload: null,
+                                                            });
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <svg className={styles.settingStatus}>
+                                                                <rect
+                                                                    height="10px"
+                                                                    width="10px"
+                                                                    rx={8}
+                                                                    ry={8}
+                                                                    fill={colors[s]}
+                                                                    mask={`url(#${masks[s]})`}
+                                                                />
+                                                            </svg>
+                                                            {statuses[s]}
+                                                        </div>
+
+                                                        {state.status === s && (
+                                                            <Icon
+                                                                name="selected"
+                                                                fill="var(--accent-1)"
+                                                            />
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
                                     </div>
-                                )}
-                            </>
+                                </div>
+                            </form>
                         )}
 
                         {(type === "DELETE_MESSAGE" || type === "UNPIN_MESSAGE") && (
@@ -1119,10 +1548,10 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                         {type === "GROUP_OWNER_CHANGE" && (
                             <div className={styles.ownerChange}>
                                 <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 80 16"
                                     height="16"
                                     width="80"
-                                    viewBox="0 0 80 16"
-                                    xmlns="http://www.w3.org/2000/svg"
                                 >
                                     <g
                                         fill="none"
@@ -1167,151 +1596,6 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                             </div>
                         )}
 
-                        {type === "CREATE_GUILD" && !guildTemplate && !join && (
-                            <>
-                                <button
-                                    className={styles.serverTemplate}
-                                    onClick={() => setGuildTemplate(1)}
-                                >
-                                    <img
-                                        src="https://ucarecdn.com/2699b806-e43b-4fea-aa0b-da3bde1972b4/"
-                                        alt="Create My Own"
-                                    />
-                                    <div>Create My Own</div>
-                                    <Icon name="caret" />
-                                </button>
-
-                                <div className={styles.serverTemplateTitle}>
-                                    Start from a template
-                                </div>
-
-                                {[
-                                    ["Gaming", "34bdb748-aea8-4542-b534-610ac9ad347f"],
-                                    ["School Club", "d0460999-065f-4289-9021-5f9c4cf2ddd7"],
-                                    ["Study Group", "fe757867-ce50-4353-9c9b-cb64ec3968b6"],
-                                    ["Friends", "fcfc0474-e405-47df-b7ef-1373bfe83070"],
-                                    ["Artists & Creators", "6057e335-8633-4909-b7c8-970182095185"],
-                                    ["Local Community", "bca2a8ed-2498-42a1-a964-9af6f8479d7f"],
-                                ].map((template, index) => (
-                                    <button
-                                        key={template[1]}
-                                        className={styles.serverTemplate}
-                                        onClick={() => setGuildTemplate(index + 2)}
-                                    >
-                                        <img
-                                            src={`https://ucarecdn.com/${template[1]}/`}
-                                            alt={template[0]}
-                                        />
-                                        <div>{template[0]} </div>
-                                        <Icon name="caret" />
-                                    </button>
-                                ))}
-                            </>
-                        )}
-
-                        {type === "CREATE_GUILD" && guildTemplate !== 0 && (
-                            <>
-                                <div className={styles.uploadIcon}>
-                                    <div>
-                                        {guildIcon ? (
-                                            <Image
-                                                src={URL.createObjectURL(guildIcon)}
-                                                alt="Guild Icon"
-                                                width={80}
-                                                height={80}
-                                                style={{
-                                                    borderRadius: "50%",
-                                                }}
-                                            />
-                                        ) : (
-                                            <Icon
-                                                name="fileUpload"
-                                                size={80}
-                                                viewbox="0 0 80 80"
-                                            />
-                                        )}
-
-                                        <div
-                                            role="button"
-                                            aria-label="Upload a Server Icon"
-                                            onClick={() => guildIconInput.current?.click()}
-                                        />
-                                    </div>
-
-                                    <input
-                                        type="file"
-                                        ref={guildIconInput}
-                                        accept="image/png, image/jpeg, image/gif, image/apng, image/webp"
-                                        onChange={async (e) => {
-                                            const allowedFileTypes = [
-                                                "image/png",
-                                                "image/jpeg",
-                                                "image/gif",
-                                                "image/apng",
-                                                "image/webp",
-                                            ];
-
-                                            const file = e.target.files ? e.target.files[0] : null;
-                                            if (!file) return (e.target.value = "");
-
-                                            // Run checks
-                                            const maxFileSize = 1024 * 1024 * 10; // 10MB
-                                            if (file.size > maxFileSize) {
-                                                setLayers({
-                                                    settings: {
-                                                        type: "POPUP",
-                                                    },
-                                                    content: {
-                                                        type: "WARNING",
-                                                        warning: "FILE_SIZE",
-                                                    },
-                                                });
-                                                return (e.target.value = "");
-                                            }
-
-                                            const fileBytes = new Uint8Array(
-                                                await file.arrayBuffer()
-                                            );
-                                            const fileType =
-                                                filetypeinfo(fileBytes)?.[0].mime?.toString();
-
-                                            if (!fileType || !allowedFileTypes.includes(fileType)) {
-                                                setLayers({
-                                                    settings: {
-                                                        type: "POPUP",
-                                                    },
-                                                    content: {
-                                                        type: "WARNING",
-                                                        warning: "FILE_TYPE",
-                                                    },
-                                                });
-                                                return (e.target.value = "");
-                                            }
-
-                                            const newFile = new File([file], "image", {
-                                                type: file.type,
-                                            });
-
-                                            setGuildIcon(newFile);
-                                            e.target.value = "";
-                                        }}
-                                    />
-                                </div>
-
-                                <div className={styles.input}>
-                                    <label>Server name</label>
-                                    <div>
-                                        <input
-                                            type="text"
-                                            maxLength={100}
-                                            value={guildName}
-                                            onChange={(e) => setGuildName(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
                         {type === "GUILD_CHANNEL_CREATE" && (
                             <>
                                 {!content.isCategory && (
@@ -1321,16 +1605,24 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                         <div
                                             tabIndex={0}
                                             className={styles.typePick}
-                                            onClick={() => setChannelType(2)}
+                                            onClick={() =>
+                                                dispatch({
+                                                    type: "SET_CHANNEL",
+                                                    payload: { type: 2 },
+                                                })
+                                            }
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
                                                     e.preventDefault();
-                                                    setChannelType(2);
+                                                    dispatch({
+                                                        type: "SET_CHANNEL",
+                                                        payload: { type: 2 },
+                                                    });
                                                 }
                                             }}
                                             style={{
                                                 backgroundColor:
-                                                    channelType === 2
+                                                    state.channel.type === 2
                                                         ? "var(--background-hover-2)"
                                                         : "",
                                             }}
@@ -1339,14 +1631,14 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                                 <div
                                                     style={{
                                                         color:
-                                                            channelType === 2
+                                                            state.channel.type === 2
                                                                 ? "var(--foreground-1)"
                                                                 : "",
                                                     }}
                                                 >
                                                     <Icon
                                                         name={
-                                                            channelType === 2
+                                                            state.channel.type === 2
                                                                 ? "circleChecked"
                                                                 : "circle"
                                                         }
@@ -1357,7 +1649,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                                     <div>
                                                         <Icon
                                                             name={
-                                                                channelLocked
+                                                                state.channel.locked
                                                                     ? "hashtagLock"
                                                                     : "hashtag"
                                                             }
@@ -1378,16 +1670,24 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                         <div
                                             tabIndex={0}
                                             className={styles.typePick}
-                                            onClick={() => setChannelType(3)}
+                                            onClick={() =>
+                                                dispatch({
+                                                    type: "SET_CHANNEL",
+                                                    payload: { type: 3 },
+                                                })
+                                            }
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
                                                     e.preventDefault();
-                                                    setChannelType(3);
+                                                    dispatch({
+                                                        type: "SET_CHANNEL",
+                                                        payload: { type: 3 },
+                                                    });
                                                 }
                                             }}
                                             style={{
                                                 backgroundColor:
-                                                    channelType === 3
+                                                    state.channel.type === 3
                                                         ? "var(--background-hover-2)"
                                                         : "",
                                             }}
@@ -1396,14 +1696,14 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                                 <div
                                                     style={{
                                                         color:
-                                                            channelType === 3
+                                                            state.channel.type === 3
                                                                 ? "var(--foreground-1)"
                                                                 : "",
                                                     }}
                                                 >
                                                     <Icon
                                                         name={
-                                                            channelType === 3
+                                                            state.channel.type === 3
                                                                 ? "circleChecked"
                                                                 : "circle"
                                                         }
@@ -1414,7 +1714,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                                     <div>
                                                         <Icon
                                                             name={
-                                                                channelLocked
+                                                                state.channel.locked
                                                                     ? "voiceLock"
                                                                     : "voice"
                                                             }
@@ -1434,41 +1734,48 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                     </div>
                                 )}
 
-                                <div
-                                    className={`${styles.input} ${
-                                        !content.isCategory && styles.channel
-                                    }`}
-                                >
-                                    <label>Channel name</label>
-                                    <div>
-                                        {!content.isCategory && (
+                                <Input
+                                    required
+                                    maxLength={100}
+                                    name="channel-name"
+                                    label="Channel name"
+                                    value={state.channel.name}
+                                    error={state.errors.channelName}
+                                    placeholder={
+                                        content.isCategory ? "New Category" : "new-channel"
+                                    }
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_CHANNEL",
+                                            payload: { name: value },
+                                        });
+                                    }}
+                                    leftItem={
+                                        !content.isCategory && (
                                             <Icon
                                                 name={
-                                                    channelType === 2
-                                                        ? channelLocked
+                                                    state.channel.type === 2
+                                                        ? state.channel.locked
                                                             ? "hashtagLock"
                                                             : "hashtag"
-                                                        : channelLocked
+                                                        : state.channel.locked
                                                         ? "voiceLock"
                                                         : "voice"
                                                 }
                                             />
-                                        )}
-
-                                        <input
-                                            type="text"
-                                            maxLength={100}
-                                            value={channelName}
-                                            placeholder={
-                                                content.isCategory ? "New Category" : "new-channel"
-                                            }
-                                            onChange={(e) => setChannelName(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
+                                        )
+                                    }
+                                />
 
                                 <div className={styles.privateCheck}>
-                                    <div onClick={() => setChannelLocked((prev) => !prev)}>
+                                    <div
+                                        onClick={() =>
+                                            dispatch({
+                                                type: "SET_CHANNEL",
+                                                payload: { locked: !state.channel.locked },
+                                            })
+                                        }
+                                    >
                                         <label>
                                             <Icon name="lock" />
                                             {content.isCategory
@@ -1477,7 +1784,7 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                                         </label>
 
                                         <div>
-                                            <Checkbox checked={channelLocked} />
+                                            <Checkbox checked={state.channel.locked} />
                                         </div>
                                     </div>
 
@@ -1492,96 +1799,66 @@ export function Popup({ content, friends, element }: { content: any; friends: an
 
                         {type === "FILE_EDIT" && (
                             <>
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="uid"
-                                        style={{
-                                            color: usernameError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Filename
-                                        {usernameError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {usernameError}
-                                            </span>
-                                        )}
-                                    </label>
+                                <Input
+                                    maxLength={999}
+                                    name="filename"
+                                    label="Filename"
+                                    value={state.file.name}
+                                    error={state.errors.filename}
+                                    placeholder="https://chat-app.mart1d4.dev/hTKzmak"
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_FILE",
+                                            payload: { name: value },
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { fileName: "" },
+                                        });
+                                    }}
+                                />
 
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="filename"
-                                            type="text"
-                                            name="filename"
-                                            aria-label="Filename"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="filename"
-                                            aria-describedby="filename"
-                                            value={filename}
-                                            maxLength={999}
-                                            onChange={(e) => setFilename(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="password"
-                                        style={{
-                                            color: passwordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Description (alt text)
-                                        {passwordError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {passwordError}
-                                            </span>
-                                        )}
-                                    </label>
-
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="description"
-                                            type="text"
-                                            name="description"
-                                            placeholder="Add a description"
-                                            aria-label="Description"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="description"
-                                            aria-describedby="description"
-                                            value={description}
-                                            maxLength={999}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
+                                <Input
+                                    maxLength={999}
+                                    name="description"
+                                    label="Description (alt text)"
+                                    value={state.file.description}
+                                    error={state.errors.fileDescription}
+                                    placeholder="Add a description"
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_FILE",
+                                            payload: { description: value },
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { fileDescription: "" },
+                                        });
+                                    }}
+                                />
 
                                 <label
                                     className={styles.spoilerCheckbox}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setIsSpoiler(!isSpoiler);
+                                        dispatch({
+                                            type: "SET_FILE",
+                                            payload: { isSpoiler: !state.file.isSpoiler },
+                                        });
                                     }}
                                 >
                                     <input type="checkbox" />
 
                                     <div
                                         style={{
-                                            borderColor: isSpoiler ? "var(--accent-border)" : "",
+                                            borderColor: state.file.isSpoiler
+                                                ? "var(--accent-border)"
+                                                : "",
                                             color: "var(--accent-1)",
                                         }}
                                     >
-                                        {isSpoiler && <Icon name="checkmark" />}
+                                        {state.file.isSpoiler && <Icon name="checkmark" />}
                                     </div>
 
                                     <div>
@@ -1592,254 +1869,150 @@ export function Popup({ content, friends, element }: { content: any; friends: an
                         )}
 
                         {type === "UPDATE_USERNAME" && (
-                            <>
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="uid"
-                                        style={{
-                                            color: usernameError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Username
-                                        {usernameError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {usernameError}
-                                            </span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            ref={uidInputRef}
-                                            id="uid"
-                                            type="text"
-                                            name="username"
-                                            aria-label="Username"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="uid"
-                                            aria-describedby="uid"
-                                            value={uid}
-                                            onChange={(e) => setUID(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
+                            <form>
+                                <Input
+                                    minLength={2}
+                                    maxLength={32}
+                                    name="username"
+                                    label="Username"
+                                    value={state.username}
+                                    error={state.errors.username}
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_USERNAME",
+                                            payload: value,
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { username: "" },
+                                        });
+                                    }}
+                                />
 
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="password"
-                                        style={{
-                                            color: passwordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Current Password
-                                        {passwordError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {passwordError}
-                                            </span>
-                                        )}
-                                    </label>
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            aria-label="Password"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="password"
-                                            aria-describedby="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </>
+                                <Input
+                                    type="password"
+                                    name="current-password"
+                                    label="Current Password"
+                                    value={state.password}
+                                    error={state.errors.password}
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_PASSWORD",
+                                            payload: value,
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { password: "" },
+                                        });
+                                    }}
+                                />
+                            </form>
                         )}
 
                         {type === "UPDATE_PASSWORD" && (
-                            <>
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="password1"
-                                        style={{
-                                            color: password1Error.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Current Password
-                                        {password1Error.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {password1Error}
-                                            </span>
-                                        )}
-                                    </label>
+                            <form>
+                                <Input
+                                    type="password"
+                                    name="current-password"
+                                    label="Current Password"
+                                    value={state.password}
+                                    error={state.errors.password}
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_PASSWORD",
+                                            payload: value,
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { password: "" },
+                                        });
+                                    }}
+                                />
 
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            ref={passwordRef}
-                                            id="password1"
-                                            type="password"
-                                            name="password"
-                                            aria-label="Password"
-                                            autoCapitalize="off"
-                                            autoComplete="current-password"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="current-password"
-                                            aria-describedby="current-password"
-                                            value={password1}
-                                            onChange={(e) => {
-                                                setPassword1(e.target.value);
-                                                setPassword1Error("");
-                                            }}
-                                        />
-                                    </div>
-                                </div>
+                                <Input
+                                    type="password"
+                                    name="new-password"
+                                    label="New Password"
+                                    value={state.newPassword}
+                                    error={state.errors.newPassword}
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_NEW_PASSWORD",
+                                            payload: value,
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { newPassword: "" },
+                                        });
+                                    }}
+                                />
 
-                                <div
-                                    className={styles.input}
-                                    style={{ marginBottom: "20px" }}
-                                >
-                                    <label
-                                        htmlFor="newPassword"
-                                        style={{
-                                            color: newPasswordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        New Password
-                                        {newPasswordError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {newPasswordError}
-                                            </span>
-                                        )}
-                                    </label>
-
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="newPassword"
-                                            type="password"
-                                            name="password"
-                                            aria-label="New Password"
-                                            autoCapitalize="off"
-                                            autoComplete="new-password"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="new-password"
-                                            aria-describedby="new-password"
-                                            value={newPassword}
-                                            maxLength={256}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                setNewPasswordError("");
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className={styles.input}>
-                                    <label
-                                        htmlFor="confirmPassword"
-                                        style={{
-                                            color: newPasswordError.length
-                                                ? "var(--error-light)"
-                                                : "var(--foreground-3)",
-                                        }}
-                                    >
-                                        Confirm New Password
-                                        {newPasswordError.length > 0 && (
-                                            <span className={styles.errorLabel}>
-                                                - {newPasswordError}
-                                            </span>
-                                        )}
-                                    </label>
-
-                                    <div className={styles.inputContainer}>
-                                        <input
-                                            id="confirmPassword"
-                                            type="password"
-                                            name="password"
-                                            aria-label="Confirm Password"
-                                            autoCapitalize="off"
-                                            autoComplete="new-password"
-                                            autoCorrect="off"
-                                            spellCheck="false"
-                                            aria-labelledby="confirm-password"
-                                            aria-describedby="confirm-password"
-                                            value={confirmPassword}
-                                            maxLength={256}
-                                            onChange={(e) => {
-                                                setConfirmPassword(e.target.value);
-                                                setNewPasswordError("");
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </>
+                                <Input
+                                    type="password"
+                                    name="confirm-password"
+                                    label="Confirm New Password"
+                                    value={state.confirmPassword}
+                                    error={state.errors.confirmPassword}
+                                    onChange={(value) => {
+                                        dispatch({
+                                            type: "SET_CONFIRM_PASSWORD",
+                                            payload: value,
+                                        });
+                                        dispatch({
+                                            type: "SET_ERRORS",
+                                            payload: { confirmPassword: "" },
+                                        });
+                                    }}
+                                />
+                            </form>
                         )}
-                    </div>
+                    </main>
 
-                    <div className={styles.footerButtons}>
-                        {!prop.onlyButton && (
+                    {!prop.noButtons && (
+                        <footer>
+                            {!prop.button.big && (
+                                <button
+                                    type="button"
+                                    ref={cancelRef}
+                                    className="button underline"
+                                    onClick={() => {
+                                        setLayers({
+                                            settings: {
+                                                type: "POPUP",
+                                                setNull: true,
+                                            },
+                                        });
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            )}
+
                             <button
-                                ref={cancelRef}
-                                className="button underline"
-                                onClick={(e) => {
-                                    e.stopPropagation();
+                                type="button"
+                                className={`button ${prop.button.color} ${
+                                    prop.button.disabled ? "disabled" : ""
+                                } ${prop.button.big ? styles.big : ""}`}
+                                onClick={async () => {
+                                    if (state.loading || prop.button.disabled) return;
 
-                                    if (type === "CREATE_GUILD") {
-                                        if (guildTemplate !== 0) return setGuildTemplate(0);
-                                        else if (join) return setJoin(false);
+                                    await prop.function();
+                                    if (!prop.skipClose) {
+                                        setLayers({
+                                            settings: {
+                                                type: "POPUP",
+                                                setNull: true,
+                                            },
+                                        });
                                     }
-
-                                    setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                            setNull: true,
-                                        },
-                                    });
                                 }}
                             >
-                                {guildTemplate || join ? "Back" : "Cancel"}
+                                {state.loading ? <LoadingDots /> : prop.button.text}
                             </button>
-                        )}
-
-                        <button
-                            className={`${prop.buttonColor} ${
-                                prop.buttonDisabled ? "button disabled" : "button"
-                            } ${prop.onlyButton ? styles.big : ""}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (isLoading || prop.buttonDisabled) return;
-
-                                prop.function();
-                                if (!prop.skipClose) {
-                                    setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                            setNull: true,
-                                        },
-                                    });
-                                }
-                            }}
-                        >
-                            {isLoading ? <LoadingDots /> : prop.buttonText}
-                        </button>
-                    </div>
+                        </footer>
+                    )}
                 </div>
-            ) : (
-                <></>
             )}
-        </AnimatePresence>
+        </>
     );
 }

@@ -94,7 +94,7 @@
         --success-3: hsl(138, 47%, 22%);
         --success-light: hsla(145, 65%, 39.2%, 1);
 
-        --error-1: hsl(359, 67%, 54%);
+        --error-1: hsl(359, 87%, 60%);
         --error-2: hsl(359, 56%, 40%);
         --error-3: hsl(359, 56%, 35%);
         --error-light: hsl(359, 82%, 74%);
@@ -165,7 +165,7 @@
         --success-3: hsl(138, 47%, 22%);
         --success-light: hsla(145, 65%, 39.2%, 1);
 
-        --error-1: hsl(359, 67%, 54%);
+        --error-1: hsl(359, 87%, 60%);
         --error-2: hsl(359, 56%, 40%);
         --error-3: hsl(359, 56%, 35%);
         --error-light: hsl(359, 82%, 74%);
@@ -356,6 +356,10 @@ input::placeholder {
 
 .button.grey:not(.disabled):active {
     background-color: var(--default-3);
+}
+
+.button.underline {
+    margin-right: 8px;
 }
 
 .button.underline:hover {

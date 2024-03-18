@@ -58,7 +58,7 @@ type TUserProfile = null | {
     focusNote?: boolean;
 };
 
-type TLayer = {
+export type TLayer = {
     settings: {
         type: "MENU" | "POPUP" | "USER_CARD" | "USER_PROFILE";
         setNull?: boolean;
@@ -67,6 +67,7 @@ type TLayer = {
         firstSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         secondSide?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "CENTER";
         gap?: number;
+        closing?: boolean;
     };
     content?: TMenu | TPopup | TUserCard | TUserProfile;
 };
@@ -79,11 +80,12 @@ interface LayersState {
         ["USER_PROFILE"]: TLayer | null;
     };
     setLayers: (layer: TLayer, keepPopout?: boolean) => void;
+    reallySetLayers: (layer: TLayer, keepPopout?: boolean) => void;
 }
 
 const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
 
-export const useLayers = create<LayersState>()((set) => ({
+export const useLayers = create<LayersState>()((set, get) => ({
     layers: {
         POPUP: [],
         MENU: null,
@@ -91,7 +93,67 @@ export const useLayers = create<LayersState>()((set) => ({
         USER_PROFILE: null,
     },
 
+    // Set Layers adds the closing property to the layer before setting it to null with reallySetLayers
     setLayers: (layer, keepPopout) => {
+        let last: TLayer | null;
+
+        set((state) => {
+            if (layer.settings.type !== "MENU" && layer.settings.setNull) {
+                if (layer.settings.type === "POPUP") {
+                    const layers = state.layers.POPUP;
+                    last = layers[layers.length - 1];
+
+                    return {
+                        layers: {
+                            ...state.layers,
+                            POPUP: [
+                                ...layers.slice(0, layers.length - 1),
+                                {
+                                    ...last,
+                                    settings: {
+                                        ...last.settings,
+                                        closing: true,
+                                    },
+                                },
+                            ],
+                        },
+                    };
+                }
+
+                const current = state.layers[layer.settings.type];
+
+                return {
+                    layers: {
+                        ...state.layers,
+                        [layer.settings.type]: {
+                            ...current,
+                            settings: {
+                                ...current?.settings,
+                                closing: true,
+                            },
+                        },
+                    },
+                };
+            } else {
+                return state;
+            }
+        });
+
+        const noTimeout =
+            layer.settings.type === "MENU" ||
+            layer.settings.type === "USER_CARD" ||
+            !layer.settings.setNull ||
+            ["PINNED_MESSAGES", "CREATE_DM"].includes(last?.content?.type || "");
+
+        setTimeout(
+            () => {
+                get().reallySetLayers(layer, keepPopout);
+            },
+            noTimeout ? 0 : 200
+        );
+    },
+
+    reallySetLayers: (layer, keepPopout) => {
         set((state) => {
             // Set tooltip to null if not setNull
             if (!layer.settings.setNull) {

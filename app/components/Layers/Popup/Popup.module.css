@@ -1,4 +1,4 @@
-.cardContainer {
+.container {
     display: flex;
     flex-direction: column;
     width: 440px;
@@ -10,18 +10,22 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     box-shadow: var(--elevation-high), var(--elevation-low);
-    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
-.cardContainer.fileEdit {
+.container.fileEdit {
     width: 530px;
 }
 
-.cardContainer.guildChannelCreate {
+.container.guildChannelCreate {
     width: 460px;
 }
 
-.titleBlock {
+.animation {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.container header {
     flex: 0 0 auto;
     border-radius: 4px 4px 0 0;
     word-wrap: break-word;
@@ -33,14 +37,14 @@
     align-items: center;
 }
 
-.titleBlock > h1 {
+.container header > h1 {
     color: var(--foreground-1);
     font-size: 20px;
     line-height: 24px;
     font-weight: 600;
 }
 
-.titleBlockCentered {
+.container header.centered {
     display: flex;
     flex: 0 0 auto;
     flex-direction: column;
@@ -52,7 +56,7 @@
     user-select: none;
 }
 
-.titleBlockCentered > div:first-child {
+.container header.centered > div:first-child {
     text-align: center;
     font-weight: 700;
     font-size: 24px;
@@ -60,7 +64,7 @@
     color: var(--foreground-1);
 }
 
-.titleBlockCentered > div:nth-child(2) {
+.container header.centered > div:nth-child(2) {
     color: var(--foreground-3);
     margin-top: 8px;
     text-align: center;
@@ -69,7 +73,10 @@
     font-weight: 400;
 }
 
-.titleBlockCentered > button {
+.closeButton {
+    display: flex;
+    border: none;
+    background-color: transparent;
     position: absolute;
     top: 16px;
     right: 16px;
@@ -80,8 +87,8 @@
     color: var(--foreground-3);
 }
 
-.titleBlockCentered > button:hover,
-.titleBlockCentered > button:focus-visible {
+.closeButton:hover,
+.closeButton:focus-visible {
     opacity: 1;
 }
 
@@ -89,54 +96,7 @@
     user-select: none;
 }
 
-.input label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02rem;
-    user-select: none;
-}
-
-.input label > span {
-    color: var(--error-light);
-    padding-left: 4px;
-}
-
-.errorLabel {
-    font-size: 12px;
-    font-weight: 500;
-    font-style: italic;
-    text-transform: none;
-}
-
-.errorLabel > span {
-    padding: 0 4px;
-}
-
-.inputContainer {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    border-radius: 3px;
-    background-color: var(--background-1);
-    border: none;
-}
-
-.inputContainer > input {
-    width: 100%;
-    border: none;
-    background-color: transparent;
-    padding: 10px;
-    height: 40px;
-    outline: none;
-    color: var(--foreground-3);
-}
-
-.popupContent {
+main.content {
     overflow: hidden scroll;
     padding-right: 8px;
     padding-bottom: 20px;
@@ -147,27 +107,27 @@
 }
 
 @-moz-document url-prefix() {
-    .popupContent {
+    main.content {
         padding-right: 16px;
     }
 }
 
-.popupContent::-webkit-scrollbar {
+main.content::-webkit-scrollbar {
     width: 8px;
 }
 
-.popupContent::-webkit-scrollbar-track {
+main.content::-webkit-scrollbar-track {
     border: 2px var(--background-4) solid;
     background-color: var(--background-4);
 }
 
-.popupContent::-webkit-scrollbar-thumb {
+main.content::-webkit-scrollbar-thumb {
     border: 2px var(--background-dark-1) solid;
     border-color: transparent;
     background-color: var(--background-dark-1);
 }
 
-.popupContent > div:first-child {
+main.content > div:first-child {
     margin-bottom: 20px;
     font-size: 16px;
     line-height: 20px;
@@ -175,13 +135,17 @@
     color: var(--foreground-2);
 }
 
-.popupContent > div:first-child.small {
+main.content > div:first-child.small {
     color: var(--foreground-3);
     display: flex;
     align-items: center;
     font-size: 12px;
     line-height: 16px;
     font-weight: 400;
+}
+
+main.content > form > *:not(:last-child) {
+    margin-bottom: 24px;
 }
 
 .messagesContainer {
@@ -229,7 +193,7 @@
     font-weight: 600;
 }
 
-.footerButtons {
+.container footer {
     flex: 0 0 auto;
     border-radius: 0 0 5px 5px;
     background-color: var(--background-3);
@@ -243,9 +207,31 @@
     justify-content: flex-end;
 }
 
-.footerButtons > button {
+.container footer.column {
+    flex-direction: column;
+}
+
+.container footer.spaced {
+    justify-content: space-between;
+}
+
+.container footer > button {
     height: 38px;
     min-width: 96px;
+}
+
+.container footer.spaced > button:first-child {
+    min-width: 0;
+    padding: 2px 4px;
+}
+
+.container footer > h2 {
+    margin-bottom: 8px;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--foreground-1);
+    text-align: center;
 }
 
 .headerImage {
@@ -526,6 +512,10 @@
     user-select: text;
 }
 
+.imagePreview > div > img {
+    user-select: none;
+}
+
 .imageLink {
     position: absolute;
     top: 100%;
@@ -540,6 +530,7 @@
     width: 100px;
     border-radius: 4px;
     outline-offset: 0px;
+    user-select: none;
 }
 
 .imageLink:hover,
@@ -1027,8 +1018,21 @@
     pointer-events: all;
 }
 
+.big {
+    flex: 1 1 auto;
+}
+
+.imageLoading {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: hsla(0, 0%, 0%, 0.5);
+}
+
 @media screen and (max-width: 487px) {
-    .cardContainer {
+    .container {
         width: 100vw !important;
         max-width: 100vw;
         height: 100vh;
@@ -1038,11 +1042,8 @@
         height: 100dvh;
         max-height: 100dvh;
         border-radius: 0;
+        animation-duration: 0s;
     }
-}
-
-.big {
-    flex: 1 1 auto;
 }
 
 @keyframes popIn {
@@ -1062,7 +1063,12 @@
         opacity: 1;
     }
     100% {
-        transform: scale(0.35);
+        transform: scale(0.7);
         opacity: 0;
     }
+}
+
+.slider {
+    display: flex;
+    flex-direction: column;
 }

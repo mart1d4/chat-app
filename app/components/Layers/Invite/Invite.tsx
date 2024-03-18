@@ -11,7 +11,7 @@ type TContent = {
     channel: TChannel;
 };
 
-export function InvitePopup({ content }: { content: TContent }) {
+export function InvitePopup({ content, closing }: { content: TContent; closing: boolean }) {
     const [filteredList, setFilteredList] = useState([]);
     const [search, setSearch] = useState("");
     const [copied, setCopied] = useState(false);
@@ -130,7 +130,10 @@ export function InvitePopup({ content }: { content: TContent }) {
     }
 
     return (
-        <div className={styles.popup}>
+        <div
+            className={styles.popup}
+            style={{ animationName: closing ? styles.popOut : "" }}
+        >
             <div className={styles.header}>
                 <h1>Invite Friends to {content.guild.name}</h1>
                 {channels.length > 0 && (

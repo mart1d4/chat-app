@@ -1,6 +1,6 @@
 "use client";
 
-import { useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
+import { TLayer, useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
 import { useEffect, useRef, useState, ReactElement } from "react";
 import { sanitizeString, translateCap } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -26,7 +26,13 @@ const masks = {
     offline: "status-mask-offline",
 };
 
-export const UserProfile = ({ content }: any): ReactElement => {
+export const UserProfile = ({
+    content,
+    closing,
+}: {
+    content: TLayer["content"];
+    closing: boolean;
+}): ReactElement => {
     const [activeNavItem, setActiveNavItem] = useState(0);
     const [originalNote, setOriginalNote] = useState("");
     const [note, setNote] = useState("");
@@ -115,6 +121,7 @@ export const UserProfile = ({ content }: any): ReactElement => {
                         user.accentColor as string
                     ),
                     "--card-border-color": user.primaryColor,
+                    animationName: closing ? styles.popOut : "",
                 } as React.CSSProperties
             }
         >

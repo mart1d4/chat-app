@@ -1,9 +1,9 @@
 "use client";
 
 import { Menu, Popup, UserCard, UserProfile } from "@components";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "./Layer.module.css";
-import { useLayers } from "@/lib/store";
+import { TLayer, useLayers } from "@/lib/store";
 
 const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
 
@@ -14,6 +14,31 @@ export function Layers() {
     const showFilter =
         layers.POPUP.find((obj) => !popoutTypes.includes(obj.content.type)) ||
         layers.USER_PROFILE !== null;
+
+    const closing = useMemo(() => {
+        // closing if there's only one layer left and the layer is closing
+        if (
+            (layers.POPUP.length === 1 &&
+                !layers.MENU &&
+                !layers.USER_CARD &&
+                !layers.USER_PROFILE &&
+                layers.POPUP[0].settings.closing) ||
+            (layers.USER_PROFILE &&
+                layers.USER_PROFILE.settings.closing &&
+                !layers.POPUP.length &&
+                !layers.MENU &&
+                !layers.USER_CARD) ||
+            (layers.USER_CARD &&
+                layers.USER_CARD.settings.closing &&
+                !layers.POPUP.length &&
+                !layers.MENU &&
+                !layers.USER_PROFILE)
+        ) {
+            return true;
+        }
+
+        return false;
+    }, [layers]);
 
     return (
         <div className={`${styles.container} ${showFilter ? styles.showFilter : ""}`}>
@@ -29,6 +54,7 @@ export function Layers() {
                         });
                     }
                 }}
+                style={{ animationName: closing ? styles.fadeOut : "" }}
             />
 
             {layers.POPUP.map((_, index: number) => (
@@ -67,16 +93,8 @@ function Layer({
     settings,
     content,
 }: {
-    settings: {
-        type: string;
-        event?: any;
-        element?: HTMLElement;
-        firstSide?: string;
-        secondSide?: string;
-        gap?: number;
-        setNull?: boolean;
-    };
-    content: any;
+    settings: TLayer["settings"];
+    content: TLayer["content"];
 }) {
     const [transform, setTransform] = useState<string>("");
     const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
@@ -216,23 +234,38 @@ function Layer({
             ref={layerRef}
             className={`${styles.layer} ${!absolute ? styles.static : ""} ${
                 popoutTypes.includes(content.type) ? styles.popout : ""
-            }`}
+            } ${content.type === "ATTACHMENT_PREVIEW" ? styles.attachment : ""}`}
             style={{
                 zIndex: index,
                 opacity: transform !== "" || !absolute ? 1 : 0,
                 pointerEvents: transform !== "" || !absolute ? "auto" : "none",
                 transform: !absolute ? "" : transform,
+                top: settings.type === "MENU" ? "0" : "",
             }}
         >
-            {settings.type === "MENU" && <Menu content={content} />}
-            {settings.type === "POPUP" && (
-                <Popup
+            {settings.type === "MENU" && (
+                <Menu
                     content={content}
                     element={settings.element}
                 />
             )}
+
+            {settings.type === "POPUP" && (
+                <Popup
+                    content={content}
+                    element={settings.element}
+                    closing={!!settings.closing}
+                />
+            )}
+
+            {settings.type === "USER_PROFILE" && (
+                <UserProfile
+                    content={content}
+                    closing={!!settings.closing}
+                />
+            )}
+
             {settings.type === "USER_CARD" && <UserCard content={content} />}
-            {settings.type === "USER_PROFILE" && <UserProfile content={content} />}
         </div>
     );
 }

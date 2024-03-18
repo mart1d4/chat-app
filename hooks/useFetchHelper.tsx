@@ -203,7 +203,7 @@ export default function useFetchHelper() {
             console.log(error);
         }
 
-        if (response.status === 401) {
+        if (response.status === 401 && false) {
             const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
                 method: "GET",
                 credentials: "include",
