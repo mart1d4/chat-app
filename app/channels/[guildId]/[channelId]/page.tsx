@@ -1,18 +1,8 @@
-import {
-    getGuild,
-    getGuildChannels,
-    getUser,
-    isUserInGuild,
-    getMessages,
-    getGuildMembers,
-} from "@/lib/db/helpers";
 import { GuildChannels, AppHeader, MemberList, ClickLayer } from "@components";
+import { getGuild, getUser, isUserInGuild } from "@/lib/db/helpers";
 import styles from "../../me/FriendsPage.module.css";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { db } from "@/lib/db/db";
 import Content from "./Content";
-import { getFullChannel } from "@/lib/strings";
 
 export default async function GuildChannelPage({
     params,
@@ -23,28 +13,34 @@ export default async function GuildChannelPage({
     if (!user) redirect("/login");
 
     const guildId = parseInt(params.guildId);
-    const channelId = params.channelId;
+    const channelId = parseInt(params.channelId);
 
-    if (!isUserInGuild(user.id, guildId)) redirect("/channels/me");
-    const guild = await getGuild(guildId);
+    if (!(await isUserInGuild(user.id, guildId))) redirect("/channels/me");
 
-    const channels = await getGuildChannels(guildId);
-    const channel = channels.find((c) => c.id === channelId);
+    const guild = await getGuild({
+        id: guildId,
+        select: ["id", "name", "icon", "ownerId", "systemChannelId"],
+        getMembers: true,
+        getChannels: true,
+        getRoles: true,
+    });
+
+    if (!guild) redirect("/channels/me");
+
+    const channel = guild.channels?.find((c) => c.id === channelId);
 
     if (!channel) {
-        const textChannel = channels.find((c) => c.type === 2);
+        const textChannel = guild.channels?.find((c) => c.type === 2);
         if (textChannel) redirect(`/channels/${guildId}/${textChannel.id}`);
         redirect(`/channels/${guildId}`);
     }
-
-    const members = await getGuildMembers(guildId);
 
     return (
         <>
             <GuildChannels
                 guild={guild}
                 user={user}
-                initChannels={channels}
+                initChannels={guild.channels}
             />
 
             <ClickLayer>
@@ -52,55 +48,23 @@ export default async function GuildChannelPage({
                     <AppHeader channel={channel} />
 
                     <div className={styles.content}>
-                        <Suspense
-                            fallback={
-                                <Content
-                                    guild={guild}
-                                    channel={{
-                                        ...channel,
-                                        recipients: members,
-                                    }}
-                                    messagesLoading={true}
-                                />
-                            }
-                        >
-                            <FetchMessage
-                                guild={guild}
-                                channel={{
-                                    ...channel,
-                                    recipients: members,
-                                }}
-                            />
-                        </Suspense>
+                        <Content
+                            guild={guild}
+                            channel={{
+                                ...channel,
+                                recipients: guild.members,
+                            }}
+                        />
 
                         <MemberList
                             channel={{
                                 ...channel,
-                                recipients: members,
+                                recipients: guild.members,
                             }}
                         />
                     </div>
                 </div>
             </ClickLayer>
         </>
-    );
-}
-
-async function FetchMessage({ guild, channel }: { guild: Guild; channel: Channel }) {
-    const messages = await getMessages(channel.id, 50);
-
-    const hasMore = await db
-        .selectFrom("messages")
-        .select((eb) => eb.fn.count("id").as("count"))
-        .where("channelId", "=", channel.id)
-        .execute();
-
-    return (
-        <Content
-            guild={guild}
-            channel={channel}
-            initMessages={messages.reverse()}
-            initHasMore={hasMore[0].count > 50}
-        />
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useData, useNotifications, useShowChannels, useWidthThresholds } from "@/lib/store";
+import { useData, useNotifications, useShowChannels, useWindowSettings } from "@/store";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
 
@@ -10,7 +10,7 @@ export const AppNav = () => {
     const channels = useData((state) => state.channels);
     const guilds = useData((state) => state.guilds);
 
-    const widthLimitPassed = useWidthThresholds((state) => state.widthThresholds)[562];
+    const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
     const showChannels = useShowChannels((state) => state.showChannels);
 
     if (!showChannels && !widthLimitPassed) return null;
@@ -114,7 +114,7 @@ export const AppNav = () => {
 
                 <NavIcon
                     green={true}
-                    name="Discover Servers"
+                    name="Explore Discoverable Servers"
                     link={"/channels/discover"}
                     svg={discoverIcon}
                     count={0}

@@ -1,11 +1,9 @@
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
-import { Channels, Guilds, Messages, Users } from "./types";
-import { ExpressionBuilder, sql } from "kysely";
-import { NextResponse } from "next/server";
+import { Channels, DB, Guilds, Messages, Users } from "./types";
+import { ExpressionBuilder, Selectable, sql } from "kysely";
 import { cookies } from "next/headers";
 import { db } from "./db";
-
-type id = string | number;
+import type { Message } from "@/type";
 
 export const selfUserSelect: (keyof Users)[] = [
     "id",
@@ -40,8 +38,8 @@ const messageSelect: (keyof Messages)[] = [
     "edited",
     "pinned",
     "mentionEveryone",
-    "mentions",
-    "mentionRoleIds",
+    "userMentions",
+    "roleMentions",
     "createdAt",
     "channelId",
 ];
@@ -56,6 +54,7 @@ const channelSelect: (keyof Channels)[] = [
     "updatedAt",
     "guildId",
     "position",
+    "parentId",
 ];
 
 const guildSelect: (keyof Guilds)[] = [
@@ -64,195 +63,56 @@ const guildSelect: (keyof Guilds)[] = [
     "icon",
     "banner",
     "description",
-    "members",
     "systemChannelId",
     "createdAt",
     "ownerId",
 ];
 
-const avatars = [
-    {
-        avatar: "178ba6e1-5551-42f3-b199-ddb9fc0f80de",
-        color: "#5865F2",
-    },
-    {
-        avatar: "9a5bf989-b884-4f81-b26c-ca1995cdce5e",
-        color: "#3BA45C",
-    },
-    {
-        avatar: "7cb3f75d-4cad-4023-a643-18c329b5b469",
-        color: "#737C89",
-    },
-    {
-        avatar: "220b2392-c4c5-4226-8b91-2b60c5a13d0f",
-        color: "#ED4245",
-    },
-    {
-        avatar: "51073721-c1b9-4d47-a2f3-34f0fbb1c0a8",
-        color: "#FAA51A",
-    },
-];
-
-export function getRandomProfile() {
-    const index = Math.floor(Math.random() * avatars.length);
-    return { avatar: avatars[index].avatar, color: avatars[index].color };
-}
-
-export function getRandomId() {
-    const timestamp = Date.now().toString();
-    const first9Digits = timestamp.slice(0, 9);
-
-    let randomDigits = "";
-    for (let i = 0; i < 8; i++) {
-        randomDigits += Math.floor(Math.random() * 10);
-    }
-
-    randomDigits += Math.floor(Math.random() * 9) + 1;
-    const result = first9Digits + randomDigits;
-    return parseInt(result, 10);
-}
-
-export async function doesUserExist({ id, username, email }: Partial<Users>) {
-    if (!id && !username && !email) return false;
-    let query = db.selectFrom("users").select("id");
-
-    try {
-        if (id) {
-            query = query.where("id", "=", id);
-        } else if (username) {
-            // @ts-expect-error
-            query = query.where(sql`username = BINARY ${username}`);
-        } else if (email) {
-            query = query.where("email", "=", email);
-        }
-
-        const user = await query.executeTakeFirst();
-        return !!user;
-    } catch (error) {
-        return false;
-    }
-}
-
-export async function createUser(user: Partial<Users>) {
-    if (!user.username || !user.password) {
-        return null;
-    }
-
-    const id = getRandomId();
-
-    try {
-        const profile = getRandomProfile();
-
-        const newUser = await db
-            .insertInto("users")
-            .values({
-                id: id,
-                username: user.username,
-                displayName: user.username,
-                password: user.password,
-                avatar: profile.avatar,
-                primaryColor: profile.color,
-                accentColor: profile.color,
-                notes: "[]",
-                notifications: "[]",
-                refreshTokens: "[]",
-            })
-            .executeTakeFirst();
-
-        return newUser;
-    } catch (error) {
-        console.error(error);
-        await db.deleteFrom("users").where("id", "=", id).execute();
-        throw new Error("Failed to create user");
-    }
-}
-
-export async function getUser({
-    id,
-    username,
-    select,
-    throwOnNotFound,
-}: {
-    id?: id;
-    username?: string;
-    select?: {
-        [K in keyof Users]?: boolean;
-    };
-    throwOnNotFound?: boolean;
-}): Promise<Partial<Users> | NextResponse | null> {
-    const refreshToken = cookies().get("token")?.value;
-
-    if (!id && !username && !refreshToken) {
-        if (throwOnNotFound) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "User not found",
-                },
-                { status: 404 }
-            );
-        }
-
-        return null;
-    }
+export async function doesUserExist({ id, username }: Selectable<Users>) {
+    if (!id && !username) return false;
 
     try {
         const user = await db
             .selectFrom("users")
             .select("id")
-            .$if(!!select?.username, (q) => q.select("username"))
-            .$if(!!select?.displayName, (q) => q.select("displayName"))
-            .$if(!!select?.email, (q) => q.select("email"))
-            .$if(!!select?.phone, (q) => q.select("phone"))
-            .$if(!!select?.avatar, (q) => q.select("avatar"))
-            .$if(!!select?.banner, (q) => q.select("banner"))
-            .$if(!!select?.primaryColor, (q) => q.select("primaryColor"))
-            .$if(!!select?.accentColor, (q) => q.select("accentColor"))
-            .$if(!!select?.description, (q) => q.select("description"))
-            .$if(!!select?.customStatus, (q) => q.select("customStatus"))
-            .$if(!!select?.password, (q) => q.select("password"))
-            .$if(!!select?.refreshTokens, (q) => q.select("refreshTokens"))
-            .$if(!!select?.status, (q) => q.select("status"))
-            .$if(!!select?.system, (q) => q.select("system"))
-            .$if(!!select?.verified, (q) => q.select("verified"))
-            .$if(!!select?.notes, (q) => q.select("notes"))
-            .$if(!!select?.notifications, (q) => q.select("notifications"))
-            .$if(!!select?.createdAt, (q) => q.select("createdAt"))
-            .$if(!id && !username, (q) =>
-                q.where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
-            )
             .$if(!!id, (q) => q.where("id", "=", id))
-            .$if(!!username, (q) => q.where(sql`username = BINARY ${username}`))
+            .$if(!!username, (q) => q.where("username", "=", sql<string>`BINARY ${username}`))
             .executeTakeFirst();
 
-        if (!user) {
-            if (throwOnNotFound) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: "User not found",
-                    },
-                    { status: 404 }
-                );
-            }
-
-            return null;
-        }
-
-        return user;
+        return !!user;
     } catch (error) {
         console.error(error);
+        return false;
+    }
+}
 
-        if (throwOnNotFound) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Unauthorized",
-                },
-                { status: 401 }
-            );
-        }
+export async function getUser({
+    where,
+    select,
+}: {
+    where?: Partial<Selectable<Users>>;
+    select?: (keyof Users)[] | keyof Users;
+}): Promise<Selectable<Users> | null> {
+    const refreshToken = cookies().get("token")?.value;
+    if (!where?.id && !where?.username && !refreshToken) return null;
 
+    try {
+        const user = await db
+            .selectFrom("users")
+            .select("id")
+            .$if(select!?.length > 0, (q) => q.select(select))
+            .$if(!where?.id && !where?.username, (q) =>
+                q.where(sql<string>`JSON_CONTAINS(tokens, JSON_OBJECT('token', ${refreshToken}))`)
+            )
+            .$if(!!where?.id, (q) => q.where("id", "=", where?.id))
+            .$if(!!where?.username, (q) =>
+                q.where("username", "=", sql<string>`BINARY ${where?.username}`)
+            )
+            .executeTakeFirst();
+
+        return user || null;
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }
@@ -278,12 +138,9 @@ export async function getInitialData() {
     if (!refreshToken) return null;
 
     try {
-        const user = await db
-            .selectFrom("users")
-            .select(selfUserSelect)
-            .where(sql`JSON_CONTAINS(refresh_tokens, JSON_OBJECT('token', ${refreshToken}))`)
-            .executeTakeFirst();
-
+        const user = await getUser({
+            select: [...userSelect, "status", "customStatus", "createdAt"],
+        });
         if (!user) return null;
 
         const friends = await getFriends(user.id);
@@ -291,8 +148,19 @@ export async function getInitialData() {
         const received = await getRequestsReceived(user.id);
         const sent = await getRequestsSent(user.id);
 
-        const channels = await getChannels(user.id);
-        const guilds = await getGuilds(user.id);
+        const channels = await getUserChannels({
+            userId: user.id,
+            select: channelSelect,
+            getRecipients: true,
+        });
+
+        const guilds = await getUserGuilds({
+            userId: user.id,
+            select: guildSelect,
+            getMembers: true,
+            getChannels: true,
+            getRoles: true,
+        });
 
         return {
             user,
@@ -309,7 +177,7 @@ export async function getInitialData() {
     }
 }
 
-export async function getFriends(userId: id) {
+export async function getFriends(userId: number) {
     try {
         const friends = await db
             .selectFrom("friends")
@@ -341,7 +209,7 @@ export async function getFriends(userId: id) {
     }
 }
 
-export async function getRequestsSent(userId: id) {
+export async function getRequestsSent(userId: number) {
     try {
         const requests = await db
             .selectFrom("requests")
@@ -360,7 +228,7 @@ export async function getRequestsSent(userId: id) {
     }
 }
 
-export async function getRequestsReceived(userId: id) {
+export async function getRequestsReceived(userId: number) {
     try {
         const requests = await db
             .selectFrom("requests")
@@ -379,7 +247,7 @@ export async function getRequestsReceived(userId: id) {
     }
 }
 
-export async function getBlocked(userId: id) {
+export async function getBlocked(userId: number) {
     try {
         const blocked = await db
             .selectFrom("blocked")
@@ -398,7 +266,7 @@ export async function getBlocked(userId: id) {
     }
 }
 
-export async function getBlockedBy(userId: id) {
+export async function getBlockedBy(userId: number) {
     try {
         const blocked = await db
             .selectFrom("blocked")
@@ -417,29 +285,29 @@ export async function getBlockedBy(userId: id) {
     }
 }
 
-export function withRecipients(eb: ExpressionBuilder<DB, "users">, select = selfUserSelect) {
-    return jsonArrayFrom(
-        eb
-            .selectFrom("channelrecipients")
-            .innerJoin(
-                (eb) => eb.selectFrom("users as recipient").select(select).as("recipient"),
-                (join) => join.onRef("recipient.id", "=", "channelrecipients.userId")
-            )
-            .select(select)
-            .whereRef("channelrecipients.channelId", "=", "channels.id")
-    ).as("recipients");
-}
+/////////////////
+/// Channels  ///
+/////////////////
 
-export async function getChannels(userId: id) {
+export async function getUserChannels({
+    userId,
+    select,
+    getRecipients = false,
+}: {
+    userId: number;
+    select?: (keyof Channels)[];
+    getRecipients?: boolean;
+}) {
     try {
         const channels = await db
             .selectFrom("channels")
-            .select(channelSelect)
-            .select((eb) => withRecipients(eb))
+            .select("id")
+            .$if(!!select && select.length > 0, (q) => q.select(select))
+            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb)))
             .where(({ exists, selectFrom }) =>
                 exists(
                     selectFrom("channelrecipients")
-                        .select("id")
+                        .select("userId")
                         .where("channelrecipients.userId", "=", userId)
                         .whereRef("channelrecipients.channelId", "=", "channels.id")
                 )
@@ -454,23 +322,32 @@ export async function getChannels(userId: id) {
     }
 }
 
-export async function getChannel(channelId: id, select?: (keyof Channels)[]) {
+export async function getChannel({
+    id,
+    select,
+    getRecipients = false,
+}: {
+    id: number;
+    select?: (keyof Channels)[];
+    getRecipients?: boolean;
+}) {
     try {
         const channel = await db
             .selectFrom("channels")
-            .$if(!!select, (q) => q.select(select))
-            .$if(!select, (q) => q.select(channelSelect))
-            .$if(!select, (q) => q.select((eb) => withRecipients(eb)))
-            .where("id", "=", channelId)
+            .select("id")
+            .$if(!!select && select.length > 0, (q) => q.select(select))
+            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb)))
+            .where("id", "=", id)
             .executeTakeFirst();
 
-        return channel;
+        return channel || null;
     } catch (error) {
-        return error;
+        console.error(error);
+        return null;
     }
 }
 
-export async function getChannelRecipientCount(channelId: id) {
+export async function getChannelRecipientCount(channelId: number) {
     try {
         const result = await db
             .selectFrom("channelrecipients")
@@ -485,192 +362,20 @@ export async function getChannelRecipientCount(channelId: id) {
     }
 }
 
-export async function getGuilds(userId: id) {
-    try {
-        const guilds = await db
-            .selectFrom("guildmembers")
+export function withRecipients(eb: ExpressionBuilder<DB, "channels">, select = selfUserSelect) {
+    return jsonArrayFrom(
+        eb
+            .selectFrom("channelrecipients")
             .innerJoin(
-                (eb) => eb.selectFrom("guilds").select(guildSelect).as("guilds"),
-                (join) => join.onRef("guilds.id", "=", "guildmembers.guildId")
+                (eb) => eb.selectFrom("users as recipient").select(select).as("recipient"),
+                (join) => join.onRef("recipient.id", "=", "channelrecipients.userId")
             )
-            .select(guildSelect)
-            .where("guildmembers.userId", "=", userId)
-            .orderBy("createdAt", "desc")
-            .execute();
-
-        return guilds || [];
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
+            .select(select)
+            .whereRef("channelrecipients.channelId", "=", "channels.id")
+    ).as("recipients");
 }
 
-export async function getGuild(guildId: id) {
-    if (!guildId) return null;
-
-    try {
-        const guild = await db
-            .selectFrom("guilds")
-            .select(guildSelect)
-            .where("id", "=", guildId)
-            .executeTakeFirst();
-
-        return guild;
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
-}
-
-export async function getGuildChannels(guildId: id) {
-    if (!guildId) return [];
-
-    try {
-        const channels = await db
-            .selectFrom("channels")
-            .select([
-                "id",
-                "type",
-                "name",
-                "topic",
-                "position",
-                "parentId",
-                "guildId",
-                "permissionOverwrites",
-            ])
-            .where("guildId", "=", guildId)
-            .execute();
-
-        return channels || [];
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}
-
-export async function getGuildMembers(guildId: id) {
-    try {
-        const members = await db
-            .selectFrom("guildmembers")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "guildmembers.userId")
-            )
-            .select(selfUserSelect)
-            .where("guildId", "=", guildId)
-            .execute();
-
-        return members || [];
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}
-
-export async function hasUserBlocked(userId: id, blockedId: id) {
-    try {
-        const blocked = await db
-            .selectFrom("blocked")
-            .select("blockedId")
-            .where("blockerId", "=", userId)
-            .where("blockedId", "=", blockedId)
-            .executeTakeFirst();
-
-        return !!blocked;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function isUserBlockedBy(userId: id, blockerId: id) {
-    try {
-        const blocked = await db
-            .selectFrom("blocked")
-            .select("blockedId")
-            .where("blockerId", "=", blockerId)
-            .where("blockedId", "=", userId)
-            .executeTakeFirst();
-
-        return !!blocked;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function areFriends(userId: id, friendId: id) {
-    try {
-        const friends = await db
-            .selectFrom("friends")
-            .select("A")
-            .where(({ eb, or, and }) =>
-                or([
-                    and([eb("A", "=", userId), eb("B", "=", friendId)]),
-                    and([eb("A", "=", friendId), eb("B", "=", userId)]),
-                ])
-            )
-            .executeTakeFirst();
-
-        return !!friends;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function removeFriends(user1: id, user2: id) {
-    try {
-        const result = await db
-            .deleteFrom("friends")
-            .where(({ eb, or, and }) =>
-                or([
-                    and([eb("A", "=", user1), eb("B", "=", user2)]),
-                    and([eb("A", "=", user2), eb("B", "=", user1)]),
-                ])
-            )
-            .execute();
-
-        return !!result;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function hasUserSentRequest(userId: id, requestedId: id) {
-    try {
-        const request = await db
-            .selectFrom("requests")
-            .select("requesterId")
-            .where("requesterId", "=", userId)
-            .where("requestedId", "=", requestedId)
-            .executeTakeFirst();
-
-        return !!request;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function hasUserReceivedRequest(userId: id, requesterId: id) {
-    try {
-        const request = await db
-            .selectFrom("requests")
-            .select("requesterId")
-            .where("requesterId", "=", requesterId)
-            .where("requestedId", "=", userId)
-            .executeTakeFirst();
-
-        return !!request;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function isUserInChannel(userId: id, channelId: id) {
+export async function isUserInChannel(userId: number, channelId: number) {
     try {
         const channel = await db
             .selectFrom("channelrecipients")
@@ -686,9 +391,134 @@ export async function isUserInChannel(userId: id, channelId: id) {
     }
 }
 
-export async function isUserInGuild(userId: id, guildId: id) {
-    if (!userId || !guildId) return false;
+/////////////////
+////  Guild  ////
+/////////////////
 
+export async function getUserGuilds({
+    userId,
+    select,
+    getMembers = false,
+    getChannels = false,
+    getRoles = false,
+}: {
+    userId: number;
+    select?: (keyof Guilds)[];
+    getMembers?: boolean;
+    getChannels?: boolean;
+    getRoles?: boolean;
+}) {
+    try {
+        const guilds = await db
+            .selectFrom("guilds")
+            .select("id")
+            .$if(!!select && select.length > 0, (q) => q.select(select))
+            .$if(getMembers, (q) => q.select((eb) => withMembers(eb)))
+            .$if(getChannels, (q) => q.select((eb) => withChannels(eb)))
+            .$if(getRoles, (q) => q.select((eb) => withRoles(eb)))
+            .where(({ exists, selectFrom }) =>
+                exists(
+                    selectFrom("guildmembers")
+                        .select("userId")
+                        .where("guildmembers.userId", "=", userId)
+                        .whereRef("guildmembers.guildId", "=", "guilds.id")
+                )
+            )
+            .orderBy("createdAt", "desc")
+            .execute();
+
+        return guilds || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getGuild({
+    id,
+    select,
+    getMembers = false,
+    getChannels = false,
+    getRoles = false,
+}: {
+    id: number;
+    select?: (keyof Guilds)[];
+    getMembers?: boolean;
+    getChannels?: boolean;
+    getRoles?: boolean;
+}) {
+    try {
+        const guild = await db
+            .selectFrom("guilds")
+            .select("id")
+            .$if(!!select && select.length > 0, (q) => q.select(select))
+            .$if(getMembers, (q) => q.select((eb) => withMembers(eb)))
+            .$if(getChannels, (q) => q.select((eb) => withChannels(eb)))
+            .$if(getRoles, (q) => q.select((eb) => withRoles(eb)))
+            .where("id", "=", id)
+            .executeTakeFirst();
+
+        return guild || null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+export async function getGuildMemberCount(guildId: number) {
+    try {
+        const result = await db
+            .selectFrom("guildmembers")
+            .select((eb) => eb.fn.countAll<number>().as("count"))
+            .where("guildId", "=", guildId)
+            .executeTakeFirst();
+
+        return result?.count || 0;
+    } catch (error) {
+        console.error(error);
+        return 0;
+    }
+}
+
+export function withMembers(eb: ExpressionBuilder<DB, "guilds">, select = userSelect) {
+    return jsonArrayFrom(
+        eb
+            .selectFrom("guildmembers")
+            .innerJoin(
+                (eb) => eb.selectFrom("users as member").select(select).as("member"),
+                (join) => join.onRef("member.id", "=", "guildmembers.userId")
+            )
+            .select(select)
+            .select("profile")
+            .whereRef("guildmembers.guildId", "=", "guilds.id")
+    ).as("members");
+}
+
+export function withChannels(eb: ExpressionBuilder<DB, "guilds">, select = channelSelect) {
+    // Need to also return a `permission` field for each channel
+    // taking into consideration the user's role permissions and the channel's overwrites
+    // So the client can determine if the user can read, send, manage, etc
+    // without having to check each time using the server
+    return jsonArrayFrom(
+        eb
+            .selectFrom("channels")
+            .select(select)
+            .whereRef("channels.guildId", "=", "guilds.id")
+            .orderBy("position", "asc")
+    ).as("channels");
+}
+
+export function withRoles(eb: ExpressionBuilder<DB, "guilds">) {
+    return jsonArrayFrom(
+        eb
+            .selectFrom("roles")
+            .select(["id", "name", "color", "permissions", "position"])
+            .whereRef("roles.guildId", "=", "guilds.id")
+            .orderBy("position", "asc")
+    ).as("roles");
+}
+
+export async function isUserInGuild(userId: number, guildId: number) {
     try {
         const guild = await db
             .selectFrom("guildmembers")
@@ -704,82 +534,57 @@ export async function isUserInGuild(userId: id, guildId: id) {
     }
 }
 
-export async function areUsersBlocked([firstUserId, secondUserId]: [id, id]) {
+/////////////////
+//// Message ////
+/////////////////
+
+export const defaultMessageSelect: (keyof Messages)[] = [
+    "id",
+    "type",
+    "content",
+    "attachments",
+    "embeds",
+    "edited",
+    "pinned",
+    "channelId",
+    "createdAt",
+];
+
+export const defaultAuthorSelect: (keyof Users)[] = ["id", "displayName", "avatar"];
+
+export async function getChannelMessages({
+    channelId,
+    select = ["id"],
+    getAuthor = false,
+    getMentions = false,
+    getReference = false,
+    authorSelect = ["id"],
+    limit = 50,
+    pinned = false,
+}: {
+    channelId: number;
+    select?: (keyof Messages)[];
+    getAuthor?: boolean;
+    getMentions?: boolean;
+    getReference?: boolean;
+    authorSelect?: (keyof Users)[];
+    limit?: number;
+    pinned?: boolean;
+}) {
     try {
-        const blocked = await db
-            .selectFrom("blocked")
-            .select("blockedId")
-            .where(({ eb, or, and }) =>
-                or([
-                    and([eb("blockerId", "=", firstUserId), eb("blockedId", "=", secondUserId)]),
-                    and([eb("blockerId", "=", secondUserId), eb("blockedId", "=", firstUserId)]),
-                ])
-            )
-            .executeTakeFirst();
-
-        return !!blocked;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function didUserHideChannel(userId: id, channelId: id) {
-    try {
-        const hidden = await db
-            .selectFrom("channelrecipients")
-            .select("isHidden")
-            .where("userId", "=", userId)
-            .where("channelId", "=", channelId)
-            .executeTakeFirst();
-
-        return hidden ? hidden.isHidden : false;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export function withAuthor(eb: ExpressionBuilder<DB, "users">) {
-    return jsonObjectFrom(
-        eb
-            .selectFrom("users as author")
-            .select([...userSelect, "createdAt", "status"])
-            .whereRef("author.id", "=", "messages.authorId")
-    ).as("author");
-}
-
-export function withMentions(eb: ExpressionBuilder<DB, "users">) {
-    return jsonArrayFrom(
-        eb
-            .selectFrom("users as mention")
-            .select(userSelect)
-            // Where mention id is in the mentions arraym which is a JSON array
-            .where("mention.id", "=", "messages.authorId")
-    ).as("mentions");
-}
-
-export function withReference(eb: ExpressionBuilder<DB, "messages">) {
-    return jsonObjectFrom(
-        eb
-            .selectFrom("messages as reference")
-            .select((eb) => [...messageSelect, withAuthor(eb)])
-            .whereRef("reference.id", "=", "messages.messageReferenceId")
-    ).as("reference");
-}
-
-export async function getMessages(channelId: id, limit: number = 50, pinned: boolean = false) {
-    try {
-        const messages = await db
+        let query = db
             .selectFrom("messages")
-            .select(messageSelect)
-            .select((eb) => [withAuthor(eb), withMentions(eb), withReference(eb)])
+            .select(select)
             .where("channelId", "=", channelId)
-            .$if(pinned, (q) => q.where("pinned", "is not", null))
-            .orderBy("createdAt", "desc")
-            .limit(limit)
-            .execute();
+            .orderBy("createdAt", "asc")
+            .limit(limit);
 
+        if (getAuthor) query = query.select((eb) => withAuthor({ eb, select: authorSelect }));
+        if (getMentions) query = query.select((eb) => withMentions({ eb, select: authorSelect }));
+        if (getReference) query = query.select((eb) => withReference({ eb, select, authorSelect }));
+        if (pinned) query = query.where("pinned", "is not", null);
+
+        const messages = await query.execute();
         return messages || [];
     } catch (error) {
         console.error(error);
@@ -787,15 +592,29 @@ export async function getMessages(channelId: id, limit: number = 50, pinned: boo
     }
 }
 
-export async function getMessage(messageId: id) {
+export async function getMessage({
+    id,
+    select = ["id"],
+    getAuthor = false,
+    getMentions = false,
+    getReference = false,
+    authorSelect = ["id"],
+}: {
+    id: number;
+    select?: (keyof Messages)[];
+    getAuthor?: boolean;
+    getMentions?: boolean;
+    getReference?: boolean;
+    authorSelect?: (keyof Users)[];
+}) {
     try {
-        const message = await db
-            .selectFrom("messages")
-            .select(messageSelect)
-            .select((eb) => [withAuthor(eb), withMentions(eb), withReference(eb)])
-            .where("id", "=", messageId)
-            .executeTakeFirst();
+        let query = db.selectFrom("messages").select(select).where("id", "=", id);
 
+        if (getAuthor) query = query.select((eb) => withAuthor({ eb, select: authorSelect }));
+        if (getMentions) query = query.select((eb) => withMentions({ eb, select: authorSelect }));
+        if (getReference) query = query.select((eb) => withReference({ eb, select, authorSelect }));
+
+        const message = await query.executeTakeFirst();
         return message;
     } catch (error) {
         console.error(error);
@@ -803,127 +622,60 @@ export async function getMessage(messageId: id) {
     }
 }
 
-export function withInviter(eb: ExpressionBuilder<DB, "users">, select = selfUserSelect) {
+export function withAuthor({
+    eb,
+    select = ["id"],
+}: {
+    eb: ExpressionBuilder<DB, "messages">;
+    select?: (keyof Users)[];
+}) {
     return jsonObjectFrom(
         eb
-            .selectFrom("users as inviter")
+            .selectFrom("users as author")
             .select(select)
-            .whereRef("inviter.id", "=", "invites.inviterId")
-    ).as("inviter");
+            .whereRef("author.id", "=", "messages.authorId")
+    ).as("author");
 }
 
-export function withGuild(eb: ExpressionBuilder<DB, "guilds">) {
-    return jsonObjectFrom(
-        eb.selectFrom("guilds").select(guildSelect).whereRef("guilds.id", "=", "invites.guildId")
-    ).as("guild");
-}
-
-export function withChannel(eb: ExpressionBuilder<DB, "channels">, select = channelSelect) {
-    return jsonObjectFrom(
+export function withMentions({
+    eb,
+    select = ["id"],
+}: {
+    eb: ExpressionBuilder<DB, "messages">;
+    select?: (keyof Users)[];
+}) {
+    return jsonArrayFrom(
         eb
-            .selectFrom("channels")
-            .select((eb) => [...select, withRecipients(eb, ["id", "displayName"])])
-            .whereRef("channels.id", "=", "invites.channelId")
-    ).as("channel");
+            .selectFrom("users as mention")
+            .select(select)
+            .where(({ ref }) => {
+                return sql`JSON_CONTAINS(${ref("messages.userMentions")}, JSON_ARRAY(${ref(
+                    "mention.id"
+                )}))`;
+            })
+    ).as("userMentions");
 }
 
-export async function getInvites(channelId: id) {
-    try {
-        const invites = await db
-            .selectFrom("invites")
-            .select((eb) => [
-                "id",
-                "code",
-                "maxUses",
-                "maxAge",
-                "temporary",
-                withInviter(eb),
-                withGuild(eb),
-                withChannel(eb),
-            ])
+export function withReference({
+    eb,
+    select = ["id"],
+    getAuthor = true,
+    authorSelect = ["id"],
+    getMentions = true,
+}: {
+    eb: ExpressionBuilder<DB, "messages">;
+    select?: (keyof Messages)[];
+    getAuthor?: boolean;
+    authorSelect?: (keyof Users)[];
+    getMentions?: boolean;
+}) {
+    let query = eb
+        .selectFrom("messages as reference")
+        .select(select)
+        .whereRef("reference.id", "=", "messages.messageReferenceId");
 
-            .where("channelId", "=", channelId)
-            .execute();
+    if (getAuthor) query = query.select((eb) => withAuthor({ eb, select: authorSelect }));
+    if (getMentions) query = query.select((eb) => withMentions({ eb, select: authorSelect }));
 
-        return invites || [];
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}
-
-export async function getInvite(code: string, isGuild?: boolean) {
-    try {
-        const invite = await db
-            .selectFrom("invites")
-            .select((eb) => [
-                "id",
-                "code",
-                "uses",
-                "maxUses",
-                "maxAge",
-                "temporary",
-                "inviterId",
-                "expiresAt",
-                withGuild(eb),
-                withChannel(eb, ["id", "type", "name", "icon"]),
-            ])
-            .where("code", "=", code)
-            .$if(!!isGuild, (q) => q.where("guildId", "!=", null))
-            .executeTakeFirst();
-
-        return invite;
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
-}
-
-export async function isUserGuildOwner(userId: id, guildId: id) {
-    try {
-        const guild = await db
-            .selectFrom("guilds")
-            .select("ownerId")
-            .where("id", "=", guildId)
-            .executeTakeFirst();
-
-        return guild?.ownerId === userId;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function isUserChannelOwner(userId: id, channelId: id) {
-    try {
-        const channel = await db
-            .selectFrom("channels")
-            .select("ownerId")
-            .where("id", "=", channelId)
-            .executeTakeFirst();
-
-        return channel?.ownerId === userId;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-export async function canUserManageChannel(userId: id, guildId: id) {
-    // In the future, in addition to checking if the user is the guild owner,
-    // check if user has the "MANAGE_CHANNELS" permission (4)
-    // through the user's roles in the guild
-
-    try {
-        const guild = await db
-            .selectFrom("guilds")
-            .select("ownerId")
-            .where("id", "=", guildId)
-            .executeTakeFirst();
-
-        return guild?.ownerId == userId;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
+    return jsonObjectFrom(query).as("reference");
 }

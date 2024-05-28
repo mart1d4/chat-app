@@ -1,34 +1,66 @@
 "use client";
 
-import {
-    useData,
-    useLayers,
-    useSettings,
-    useShowChannels,
-    useTooltip,
-    useWidthThresholds,
-} from "@/lib/store";
-import { ChannelTable, UserTable } from "@/lib/db/types";
+import { useWindowSettings, useShowChannels, useSettings, useLayers, useData } from "@/store";
+import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
+import useRequestHelper from "@/hooks/useFetchHelper";
+import type { Channel, User } from "@/type";
 import styles from "./AppHeader.module.css";
 import { Icon, Avatar } from "@components";
+import { useState } from "react";
 
-interface Props {
-    channel?: Partial<ChannelTable>;
-    friend?: Partial<UserTable>;
+export function AppHeader({
+    channel,
+    friend,
+}: {
+    channel?: Channel;
+    friend?: User;
     requests?: number;
-}
+}) {
+    const [name, setName] = useState(channel?.name || "");
+    const [loading, setLoading] = useState(false);
 
-export function AppHeader({ channel, friend }: Props) {
-    const width1200 = useWidthThresholds((state) => state.widthThresholds)[1200];
-    const width562 = useWidthThresholds((state) => state.widthThresholds)[562];
+    const width1200 = useWindowSettings((state) => state.widthThresholds)[1200];
+    const width562 = useWindowSettings((state) => state.widthThresholds)[562];
 
     const setShowChannels = useShowChannels((state) => state.setShowChannels);
 
     const setSettings = useSettings((state) => state.setSettings);
-    const requests = useData((state) => state.received);
-    const setTooltip = useTooltip((state) => state.setTooltip);
+    const updateChannel = useData((state) => state.updateChannel);
     const setLayers = useLayers((state) => state.setLayers);
     const settings = useSettings((state) => state.settings);
+    const requests = useData((state) => state.received);
+
+    const { sendRequest } = useRequestHelper();
+
+    async function updateName(e) {
+        e.preventDefault();
+
+        if (loading || !channel?.name || channel.type !== 1 || name === channel.name) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await sendRequest({
+                query: "CHANNEL_UPDATE",
+                params: { channelId: channel.id },
+                body: { name },
+            });
+
+            if (response?.ok) {
+                updateChannel(channel.id, {
+                    name: name,
+                });
+            } else {
+                setName(channel.name);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading(false);
+    }
 
     const tabs = [
         { name: "Online", func: "online" },
@@ -155,15 +187,6 @@ export function AppHeader({ channel, friend }: Props) {
               },
           ];
 
-    const func = (e: any, text: string) => {
-        setTooltip({
-            text: text,
-            element: e.currentTarget,
-            position: "BOTTOM",
-            gap: 5,
-        });
-    };
-
     return (
         <section className={styles.container}>
             <div>
@@ -221,33 +244,53 @@ export function AppHeader({ channel, friend }: Props) {
                                         size={24}
                                         src={channel.icon}
                                         alt={channel.name}
+                                        type="icons"
                                         status={friend ? friend.status : undefined}
                                     />
                                 )}
                             </div>
 
-                            <h1
-                                className={styles.titleFriend}
-                                onMouseEnter={(e) => {
-                                    if (channel.guildId) return;
-                                    func(e, channel.name);
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    if (channel.type !== 0) return;
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_PROFILE",
-                                        },
-                                        content: {
-                                            user: friend,
-                                        },
-                                    });
-                                }}
-                                style={{ cursor: channel.guildId ? "default" : "" }}
-                            >
-                                {channel.name}
-                            </h1>
+                            {channel.type === 0 ? (
+                                <h1
+                                    className={styles.titleFriend}
+                                    onMouseEnter={(e) => {
+                                        if (channel.guildId) return;
+                                        func(e, channel.name);
+                                    }}
+                                    onClick={() => {
+                                        if (channel.type !== 0) return;
+                                        setLayers({
+                                            settings: {
+                                                type: "USER_PROFILE",
+                                            },
+                                            content: {
+                                                user: friend,
+                                            },
+                                        });
+                                    }}
+                                    style={{ cursor: channel.guildId ? "default" : "" }}
+                                >
+                                    {channel.name}
+                                </h1>
+                            ) : (
+                                <div className={styles.contentWrapper}>
+                                    <div className={styles.channelName}>
+                                        <div>
+                                            <input
+                                                id="channelName"
+                                                className={styles.titleFriend}
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                maxLength={100}
+                                                onBlur={updateName}
+                                            />
+
+                                            <div>{name}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {channel.topic && <div className={styles.divider} />}
 
@@ -256,9 +299,7 @@ export function AppHeader({ channel, friend }: Props) {
                                     className={styles.topic}
                                     onClick={() => {
                                         setLayers({
-                                            settings: {
-                                                type: "POPUP",
-                                            },
+                                            settings: { type: "POPUP" },
                                             content: {
                                                 type: "CHANNEL_TOPIC",
                                                 channel: channel,
@@ -301,59 +342,55 @@ export function AppHeader({ channel, friend }: Props) {
                         </div>
                     )}
 
-                    <button
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) => func(e, "Inbox")}
-                        onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) => func(e, "Inbox")}
-                        onBlur={() => setTooltip(null)}
-                    >
-                        <Icon name="inbox" />
-                    </button>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <button className={styles.toolbarIcon}>
+                                <Icon name="inbox" />
+                            </button>
+                        </TooltipTrigger>
 
-                    <a
-                        href="/en-US/support"
-                        className={styles.toolbarIcon}
-                        onMouseEnter={(e) => func(e, "Help")}
-                        onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) => func(e, "Help")}
-                        onBlur={() => setTooltip(null)}
-                    >
-                        <Icon name="help" />
-                    </a>
+                        <TooltipContent>Inbox</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <a
+                                href="/en-US/support"
+                                className={styles.toolbarIcon}
+                            >
+                                <Icon name="help" />
+                            </a>
+                        </TooltipTrigger>
+
+                        <TooltipContent>Help</TooltipContent>
+                    </Tooltip>
                 </div>
             </div>
         </section>
     );
 }
 
-const ToolbarIcon = ({ item }: any) => {
-    const setTooltip = useTooltip((state) => state.setTooltip);
-    const func = (e: any) => {
-        setTooltip({
-            text: `${item.name}${item.disabled ? " (Unavailable)" : ""}`,
-            element: e.currentTarget,
-            position: "BOTTOM",
-            gap: 5,
-        });
-    };
-
+function ToolbarIcon({ item }: any) {
     return (
-        <button
-            className={`${styles.toolbarIcon} ${item.disabled ? styles.disabled : ""} ${
-                !!item.active ? styles.hideOnMobile : ""
-            }`}
-            onClick={(e) => {
-                if (item.disabled) return;
-                item.func(e);
-            }}
-            onMouseEnter={(e) => func(e)}
-            onMouseLeave={() => setTooltip(null)}
-            onFocus={(e) => func(e)}
-            onBlur={() => setTooltip(null)}
-            style={{ color: item.active && !item.disabled ? "var(--foreground-2)" : "" }}
-        >
-            <Icon name={item.icon} />
-        </button>
+        <Tooltip>
+            <TooltipTrigger>
+                <button
+                    className={`${styles.toolbarIcon} ${item.disabled ? styles.disabled : ""} ${
+                        !!item.active ? styles.hideOnMobile : ""
+                    }`}
+                    onClick={(e) => {
+                        if (item.disabled) return;
+                        item.func(e);
+                    }}
+                    style={{ color: item.active && !item.disabled ? "var(--foreground-2)" : "" }}
+                >
+                    <Icon name={item.icon} />
+                </button>
+            </TooltipTrigger>
+
+            <TooltipContent>
+                {`${item.name}${item.disabled ? " (Unavailable)" : ""}`}
+            </TooltipContent>
+        </Tooltip>
     );
-};
+}

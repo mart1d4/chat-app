@@ -1,23 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import type { Invites, Messages } from "@/lib/db/types";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Message.module.css";
-import { useData } from "@/lib/store";
+import { assets } from "@/lib/assets";
+import { useData } from "@/store";
 
-export function MessageInvite({
-    invite,
-    message,
-}: {
-    invite: {
-        code: string;
-        type: string;
-        inviterId: string;
-        channel: ChannelTable;
-        guild?: GuildTable;
-    };
-    message: MessageTable;
-}) {
+export function MessageInvite({ invite, message }: { invite: Invites; message: Messages }) {
     const channels = useData((state) => state.channels);
     const guilds = useData((state) => state.guilds);
     const user = useData((state) => state.user);
@@ -51,7 +41,7 @@ export function MessageInvite({
                         style={{
                             backgroundImage:
                                 "type" in invite
-                                    ? "url(https://ucarecdn.com/968c5fbf-9c28-40ae-9bba-7d54d582abe7/)"
+                                    ? `url(/assets/system/poop.svg)`
                                     : invite.guild
                                     ? invite.guild.icon &&
                                       `url(${process.env.NEXT_PUBLIC_CDN_URL}/${invite.guild.icon}/)`

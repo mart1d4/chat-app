@@ -1,13 +1,15 @@
 "use client";
 
-import { useData, useLayers, useShowSettings, useTooltip } from "@/lib/store";
-import { translateCap, sanitizeString } from "@/lib/strings";
+import { TooltipContent, TooltipTrigger, Tooltip } from "../Tooltip/Tooltip";
+import { useData, useLayers, useShowSettings } from "@/store";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
+import { sanitizeString } from "@/lib/strings";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
+import { statuses } from "@/lib/statuses";
 import { Icon } from "@components";
 
 const colors = {
@@ -33,7 +35,6 @@ export function UserCard({ content }: any) {
     const [user, setUser] = useState(content.user);
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
     const currentUser = useData((state) => state.user);
@@ -41,7 +42,6 @@ export function UserCard({ content }: any) {
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const hasRendered = useRef<boolean>(false);
     const animation = content?.animation;
     const router = useRouter();
 
@@ -59,35 +59,42 @@ export function UserCard({ content }: any) {
     }, [noteRef, note]);
 
     useEffect(() => {
-        const handleKeyDown = async (e: KeyboardEvent) => {
-            if (e.key === "Enter" && e.shiftKey === false) {
-                e.preventDefault();
+        async function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === "Enter") {
                 if (message.length > 0) {
                     setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            setNull: true,
-                        },
+                        settings: { type: "USER_CARD", setNull: true },
                     });
 
-                    const channel = channels.find(
-                        (channel) => channel.type === 0 && channel.recipientIds.includes(user.id)
-                    );
+                    // Check whether channel exists
+                    const channel = channels.find((channel) => {
+                        if (channel.type === 0) {
+                            return channel.recipients.every((r) =>
+                                [user.id, currentUser.id].includes(r)
+                            );
+                        }
+                    });
 
-                    let data;
+                    let channelId;
                     if (!channel) {
-                        data = await sendRequest({
+                        const response = await sendRequest({
                             query: "CHANNEL_CREATE",
-                            data: { recipients: [user.id] },
+                            body: { recipients: [user.id] },
                         });
+
+                        if (response.data.channel) {
+                            channelId = response.data.channel.id;
+                        } else {
+                            return console.error("Failed to create channel");
+                        }
                     }
 
-                    const response = await sendRequest({
+                    await sendRequest({
                         query: "SEND_MESSAGE",
                         params: {
-                            channelId: channel?.id || (data?.channelId as string),
+                            channelId: channel ? channel.id : channelId,
                         },
-                        data: {
+                        body: {
                             message: {
                                 content: sanitizeString(message),
                                 attachments: [],
@@ -96,19 +103,19 @@ export function UserCard({ content }: any) {
                         },
                     });
 
-                    if (channel) router.push(`/channels/me/${channel.id}`);
+                    if (channel || channelId) {
+                        router.push(`/channels/me/${channel.id || channelId}`);
+                    }
                 }
             }
-        };
+        }
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [message]);
 
     useEffect(() => {
-        if (!user) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
+        function handleClick(e: MouseEvent) {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setLayers({
                     settings: {
@@ -117,11 +124,11 @@ export function UserCard({ content }: any) {
                     },
                 });
             }
-        };
+        }
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [user]);
+        document.addEventListener("click", handleClick);
+        return () => document.removeEventListener("click", handleClick);
+    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -129,27 +136,17 @@ export function UserCard({ content }: any) {
         const getNote = async () => {
             const response = await sendRequest({
                 query: "GET_NOTE",
-                params: {
-                    userId: user.id,
-                },
+                params: { userId: user.id },
             });
 
-            if (response.success) {
-                setNote(response.note);
-                setOriginalNote(response.note);
+            if (response?.ok) {
+                const data = await response.json();
+                setNote(data.note);
+                setOriginalNote(data.note);
             }
         };
 
-        const env = process.env.NODE_ENV;
-
-        if (env == "development") {
-            if (hasRendered.current) getNote();
-            return () => {
-                hasRendered.current = true;
-            };
-        } else if (env == "production") {
-            getNote();
-        }
+        getNote();
     }, [user]);
 
     return (
@@ -185,32 +182,23 @@ export function UserCard({ content }: any) {
                 >
                     <div>
                         {currentUser.id === user.id && (
-                            <div
-                                className={styles.editProfileButton}
-                                aria-label="Edit Profile"
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Edit Profile",
-                                        element: e.currentTarget,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_CARD",
-                                            setNull: true,
-                                        },
-                                    });
-                                    setShowSettings({ type: "USER", tab: "Profiles" });
-                                }}
-                            >
-                                <Icon
-                                    name="edit"
-                                    size={18}
-                                />
-                            </div>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <button
+                                        className={styles.editProfileButton}
+                                        onClick={() =>
+                                            setShowSettings({ type: "USER", tab: "Profiles" })
+                                        }
+                                    >
+                                        <Icon
+                                            name="edit"
+                                            size={18}
+                                        />
+                                    </button>
+                                </TooltipTrigger>
+
+                                <TooltipContent>Edit Profile</TooltipContent>
+                            </Tooltip>
                         )}
 
                         <svg
@@ -247,7 +235,7 @@ export function UserCard({ content }: any) {
                                         style={{
                                             backgroundColor: !user.banner ? user.primaryColor : "",
                                             backgroundImage: user.banner
-                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
+                                                ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}`
                                                 : "",
                                             height: user.banner ? "120px" : "90px",
                                         }}
@@ -263,52 +251,40 @@ export function UserCard({ content }: any) {
                             <div
                                 className={styles.avatarImage}
                                 style={{
-                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
+                                    backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}`,
                                 }}
                                 onClick={() => {
                                     setLayers({
-                                        settings: {
-                                            type: "USER_CARD",
-                                            setNull: true,
-                                        },
-                                    });
-                                    setLayers({
-                                        settings: {
-                                            type: "USER_PROFILE",
-                                        },
-                                        content: {
-                                            user,
-                                        },
+                                        settings: { type: "USER_PROFILE" },
+                                        content: { user },
                                     });
                                 }}
                             />
 
                             <div className={styles.avatarOverlay}>{`View Profile`}</div>
 
-                            <div
-                                className={styles.cardAvatarStatus}
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: translateCap(user.status),
-                                        element: e.currentTarget,
-                                        gap: 5,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                            >
-                                <div style={{ backgroundColor: "black" }} />
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <div className={styles.cardAvatarStatus}>
+                                        <div style={{ backgroundColor: "black" }} />
 
-                                <svg>
-                                    <rect
-                                        height="100%"
-                                        width="100%"
-                                        rx={8}
-                                        ry={8}
-                                        fill={colors[user.status as keyof typeof colors]}
-                                        mask={`url(#${masks[user.status as keyof typeof masks]})`}
-                                    />
-                                </svg>
-                            </div>
+                                        <svg>
+                                            <rect
+                                                height="100%"
+                                                width="100%"
+                                                rx={8}
+                                                ry={8}
+                                                fill={colors[user.status as keyof typeof colors]}
+                                                mask={`url(#${
+                                                    masks[user.status as keyof typeof masks]
+                                                })`}
+                                            />
+                                        </svg>
+                                    </div>
+                                </TooltipTrigger>
+
+                                <TooltipContent>{statuses[user.status]}</TooltipContent>
+                            </Tooltip>
                         </div>
 
                         <div className={styles.cardBadges}></div>
@@ -335,7 +311,7 @@ export function UserCard({ content }: any) {
                             )}
 
                             <div className={styles.cardSection}>
-                                <h4>Chat App Member Since</h4>
+                                <h4>Spark Member Since</h4>
                                 <div>
                                     {new Intl.DateTimeFormat("en-US", {
                                         year: "numeric",
@@ -363,12 +339,8 @@ export function UserCard({ content }: any) {
                                             if (note !== originalNote) {
                                                 const response = await sendRequest({
                                                     query: "SET_NOTE",
-                                                    params: {
-                                                        userId: user.id,
-                                                    },
-                                                    data: {
-                                                        newNote: sanitizeString(note),
-                                                    },
+                                                    params: { userId: user.id },
+                                                    body: { note: sanitizeString(note) },
                                                 });
 
                                                 if (response.success) {
@@ -380,7 +352,7 @@ export function UserCard({ content }: any) {
                                 </div>
                             </div>
 
-                            {currentUser.id != user.id && (
+                            {currentUser.id !== user.id && (
                                 <div className={styles.cardSection}>
                                     <input
                                         className={styles.cardMessage}
@@ -409,10 +381,19 @@ export function UserCard({ content }: any) {
                                                     gap: 20,
                                                     firstSide: "RIGHT",
                                                 },
-                                                content: {
-                                                    type: "STATUS",
-                                                },
+                                                content: { type: "STATUS" },
                                             });
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const menu = document.querySelector("#status-menu");
+                                            if (!menu?.contains(e.relatedTarget as Node)) {
+                                                setLayers({
+                                                    settings: {
+                                                        type: "MENU",
+                                                        setNull: true,
+                                                    },
+                                                });
+                                            }
                                         }}
                                         onFocus={(e) => {
                                             setLayers({
@@ -422,17 +403,12 @@ export function UserCard({ content }: any) {
                                                     gap: 20,
                                                     firstSide: "RIGHT",
                                                 },
-                                                content: {
-                                                    type: "STATUS",
-                                                },
+                                                content: { type: "STATUS" },
                                             });
                                         }}
                                         onBlur={() => {
                                             setLayers({
-                                                settings: {
-                                                    type: "MENU",
-                                                    setNull: true,
-                                                },
+                                                settings: { type: "MENU", setNull: true },
                                             });
                                         }}
                                     >
@@ -449,8 +425,8 @@ export function UserCard({ content }: any) {
                                                 })`}
                                             />
                                         </svg>
-                                        <div>{translateCap(user.status)}</div>
-                                        <Icon name="arrow" />
+                                        <div>{statuses[user.status]}</div>
+                                        <Icon name="caret" />
                                     </button>
 
                                     <button
@@ -463,31 +439,18 @@ export function UserCard({ content }: any) {
                                                 },
                                             });
                                             setLayers({
-                                                settings: {
-                                                    type: "POPUP",
-                                                },
-                                                content: {
-                                                    type: "USER_STATUS",
-                                                    user,
-                                                },
+                                                settings: { type: "POPUP" },
+                                                content: { type: "USER_STATUS", user },
                                             });
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 setLayers({
-                                                    settings: {
-                                                        type: "USER_CARD",
-                                                        setNull: true,
-                                                    },
+                                                    settings: { type: "USER_CARD", setNull: true },
                                                 });
                                                 setLayers({
-                                                    settings: {
-                                                        type: "POPUP",
-                                                    },
-                                                    content: {
-                                                        type: "USER_STATUS",
-                                                        user,
-                                                    },
+                                                    settings: { type: "POPUP" },
+                                                    content: { type: "USER_STATUS", user },
                                                 });
                                             }
                                         }}
@@ -500,11 +463,11 @@ export function UserCard({ content }: any) {
                                         {user.customStatus && (
                                             <div
                                                 className={styles.deleteStatus}
-                                                onClick={async (e) => {
+                                                onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const response = await sendRequest({
+                                                    sendRequest({
                                                         query: "UPDATE_USER",
-                                                        data: {
+                                                        body: {
                                                             customStatus: "",
                                                         },
                                                     });
@@ -522,14 +485,59 @@ export function UserCard({ content }: any) {
 
                                     <button
                                         className={styles.button}
+                                        onMouseEnter={(e) => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    element: e.currentTarget,
+                                                    gap: 20,
+                                                    firstSide: "RIGHT",
+                                                },
+                                                content: { type: "STATUS" },
+                                            });
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const menu = document.querySelector("#status-menu");
+                                            if (!menu?.contains(e.relatedTarget as Node)) {
+                                                setLayers({
+                                                    settings: { type: "MENU", setNull: true },
+                                                });
+                                            }
+                                        }}
+                                        onFocus={(e) => {
+                                            setLayers({
+                                                settings: {
+                                                    type: "MENU",
+                                                    element: e.currentTarget,
+                                                    gap: 20,
+                                                    firstSide: "RIGHT",
+                                                },
+                                                content: { type: "STATUS" },
+                                            });
+                                        }}
+                                        onBlur={() => {
+                                            setLayers({
+                                                settings: { type: "MENU", setNull: true },
+                                            });
+                                        }}
+                                    >
+                                        <Icon
+                                            name="switch"
+                                            viewbox="0 0 18 18"
+                                        />
+                                        <div>Switch Accounts</div>
+                                        <Icon name="caret" />
+                                    </button>
+
+                                    <div className={styles.cardDivider + " " + styles.double} />
+
+                                    <button
+                                        className={styles.button}
                                         style={{ marginBottom: "8px" }}
                                         onClick={() => {
                                             navigator.clipboard.writeText(user.id);
                                             setLayers({
-                                                settings: {
-                                                    type: "USER_CARD",
-                                                    setNull: true,
-                                                },
+                                                settings: { type: "USER_CARD", setNull: true },
                                             });
                                         }}
                                         onKeyDown={(e) => {

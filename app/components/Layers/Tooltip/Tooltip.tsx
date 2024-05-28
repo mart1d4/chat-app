@@ -1,151 +1,223 @@
-"use client";
+import type { Placement } from "@floating-ui/react";
+import {
+    useInteractions,
+    FloatingPortal,
+    useMergeRefs,
+    useFloating,
+    autoUpdate,
+    useDismiss,
+    useHover,
+    useFocus,
+    useRole,
+    offset,
+    shift,
+    flip,
+    arrow,
+    FloatingArrow,
+    useTransitionStyles,
+} from "@floating-ui/react";
+import {
+    type HTMLProps,
+    isValidElement,
+    createContext,
+    cloneElement,
+    useContext,
+    forwardRef,
+    useState,
+    useMemo,
+    useRef,
+} from "react";
 
-import { useEffect, useState, ReactElement, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import styles from "./Tooltip.module.css";
-import { useTooltip } from "@/lib/store";
 
-export const Tooltip = (): ReactElement => {
-    const [positions, setPositions] = useState<any>({});
-    const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
-    const [arrowPositions, setArrowPositions] = useState<any>({});
+interface TooltipOptions {
+    initialOpen?: boolean;
+    placement?: Placement;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    delay?: number;
+    gap?: number;
+    avatar?: boolean;
+    big?: boolean;
+    wide?: boolean;
+    showOn?: boolean;
+}
 
-    const tooltip = useTooltip((state) => state.tooltip);
-    const text = tooltip?.text || null;
-    const element = tooltip?.element || null;
-    const position = tooltip?.position || "TOP";
-    const gap = tooltip?.gap || 0;
-    const big = tooltip?.big || false;
-    const color = tooltip?.color || "var(--background-dark-1)";
-    const delay = (tooltip?.delay || 0) / 1000;
-    const arrow = tooltip?.arrow || true;
-    const wide = tooltip?.wide || false;
+export function useTooltip({
+    initialOpen = false,
+    placement = "top",
+    open: controlledOpen,
+    onOpenChange: setControlledOpen,
+    delay = 0,
+    gap = 0,
+    avatar = false,
+    big = false,
+    wide = false,
+    showOn,
+}: TooltipOptions = {}) {
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
 
-    const tooltipRef = useCallback((node: HTMLElement | null) => {
-        if (node) {
-            setCurrentNode(node);
-        }
-    }, []);
+    const open = (controlledOpen ?? uncontrolledOpen) && (showOn ?? true);
+    // const open = true;
+    const setOpen = setControlledOpen ?? setUncontrolledOpen;
+    const arrowRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        if (!tooltip || !currentNode) return;
+    const ARROW_HEIGHT = 5;
+    const GAP = 4;
 
-        let pos: any = {};
-        let arrowPos: any = {};
+    const data = useFloating({
+        placement,
+        open,
+        onOpenChange: setOpen,
+        whileElementsMounted: autoUpdate,
+        middleware: [
+            offset(ARROW_HEIGHT + (gap || GAP)),
+            flip({
+                crossAxis: placement.includes("-"),
+                fallbackAxisSideDirection: "start",
+                padding: 10,
+            }),
+            shift({ padding: 10 }),
+            arrow({ element: arrowRef }),
+        ],
+    });
 
-        const container = element?.getBoundingClientRect();
-        const screenX = window.innerWidth;
-        const screenY = window.innerHeight;
+    const context = data.context;
 
-        if (!container) return;
+    const hover = useHover(context, {
+        move: false,
+        enabled: controlledOpen == null,
+        delay: {
+            open: delay,
+        },
+    });
 
-        if (position === "TOP") {
-            pos = {
-                bottom: screenY - container.top + gap + 6,
-                left: container.left + container.width / 2,
-                transform: "translateX(-50%)",
-            };
+    const focus = useFocus(context, {
+        enabled: controlledOpen == null,
+    });
 
-            arrowPos = {
-                top: "100%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                borderTopColor: color,
-            };
-        } else if (position === "BOTTOM") {
-            pos = {
-                top: container.bottom + gap + 5,
-                left: container.left + container.width / 2,
-                transform: "translateX(-50%)",
-            };
+    const dismiss = useDismiss(context);
+    const role = useRole(context, { role: "tooltip" });
 
-            arrowPos = {
-                bottom: "100%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                borderBottomColor: color,
-            };
-        } else if (position === "LEFT") {
-            pos = {
-                top: container.top + container.height / 2,
-                right: screenX - container.left + gap + 6,
-                transform: "translateY(-50%)",
-            };
-
-            arrowPos = {
-                top: "50%",
-                left: "100%",
-                transform: "translateY(-50%)",
-                borderLeftColor: color,
-            };
-        } else if (position === "RIGHT") {
-            pos = {
-                top: container.top + container.height / 2,
-                left: container.right + gap + 5,
-                transform: "translateY(-50%)",
-            };
-
-            arrowPos = {
-                right: "100%",
-                top: "50%",
-                transform: "translateY(-50%)",
-                borderRightColor: color,
-            };
-        }
-
-        const tooltipWidth = currentNode.offsetWidth;
-        const tooltipHeight = currentNode.offsetHeight;
-        // Not enough space to the right, set right to 14
-        if (screenX - 10 - pos.left < tooltipWidth) {
-            pos.left = screenX - tooltipWidth - 14;
-            arrowPos.left = tooltipWidth - 14;
-        }
-
-        setPositions(pos);
-        setArrowPositions(arrowPos);
-    }, [currentNode, tooltip, position, gap, color, text, wide]);
+    const interactions = useInteractions([hover, focus, dismiss, role]);
 
     return useMemo(
-        () => (
-            <AnimatePresence>
-                {tooltip && (
-                    <div ref={tooltipRef} style={{ ...positions }} className={styles.container}>
-                        <motion.div
-                            className={big ? styles.tooltip + " " + styles.big : styles.tooltip}
-                            initial={{
-                                opacity: 0,
-                                scale: 0.95,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                scale: 1,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                scale: 0.95,
-                                transition: {
-                                    duration: 0.1,
-                                    ease: "backOut",
-                                    delay: 0,
-                                },
-                            }}
-                            transition={{
-                                duration: 0.2,
-                                ease: "backOut",
-                                delay: delay,
-                            }}
-                            style={{
-                                maxWidth: wide ? "300px" : "196px",
-                                backgroundColor: color,
-                            }}
-                        >
-                            {text}
-                            {arrow && <span style={{ ...arrowPositions }} />}
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-        ),
-        [positions, arrowPositions, text]
+        () => ({
+            open,
+            setOpen,
+            ...interactions,
+            ...data,
+            arrowRef,
+            avatar,
+            big,
+            wide,
+        }),
+        [open, setOpen, interactions, data, arrowRef, avatar, big]
     );
+}
+
+type ContextType = ReturnType<typeof useTooltip> | null;
+
+const TooltipContext = createContext<ContextType>(null);
+
+export const useTooltipContext = () => {
+    const context = useContext(TooltipContext);
+
+    if (context == null) {
+        throw new Error("Tooltip components must be wrapped in <Tooltip />");
+    }
+
+    return context;
 };
+
+export function Tooltip({ children, ...options }: { children: React.ReactNode } & TooltipOptions) {
+    // This can accept any props as options, e.g. `placement`,
+    // or other positioning options.
+    const tooltip = useTooltip(options);
+    return <TooltipContext.Provider value={tooltip}>{children}</TooltipContext.Provider>;
+}
+
+export const TooltipTrigger = forwardRef<
+    HTMLElement,
+    HTMLProps<HTMLElement> & { asChild?: boolean }
+>(function TooltipTrigger({ children, asChild = true, ...props }, propRef) {
+    const context = useTooltipContext();
+    const childrenRef = (children as any).ref;
+    const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
+
+    // `asChild` allows the user to pass any element as the anchor
+    if (asChild && isValidElement(children)) {
+        return cloneElement(
+            children,
+            context.getReferenceProps({
+                ref,
+                ...props,
+                ...children.props,
+                "data-state": context.open ? "open" : "closed",
+            })
+        );
+    }
+
+    return (
+        <button
+            ref={ref}
+            data-state={context.open ? "open" : "closed"}
+            {...context.getReferenceProps(props)}
+        >
+            {children}
+        </button>
+    );
+});
+
+export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>(
+    function TooltipContent({ style, ...props }, propRef) {
+        const context = useTooltipContext();
+        const ref = useMergeRefs([context.refs.setFloating, propRef]);
+
+        const { isMounted, styles: tStyles } = useTransitionStyles(context, {
+            duration: 100,
+            initial: {
+                transform: "scale(0.95)",
+                opacity: 0,
+            },
+            close: {
+                transform: "scale(0.98)",
+                opacity: 0,
+            },
+        });
+
+        if (!isMounted) return null;
+
+        return (
+            <FloatingPortal>
+                <div
+                    ref={ref}
+                    style={{
+                        ...context.floatingStyles,
+                        ...style,
+                        zIndex: 1000,
+                    }}
+                    {...context.getFloatingProps(props)}
+                >
+                    <div style={{ ...tStyles }}>
+                        <FloatingArrow
+                            ref={context.arrowRef}
+                            context={context}
+                            width={10}
+                            height={5}
+                            fill="var(--background-dark-1)"
+                        />
+
+                        <div
+                            className={`${styles.tooltip} ${context.avatar ? styles.avatar : ""} ${
+                                context.big ? styles.big : ""
+                            }`}
+                        >
+                            {props.children}
+                        </div>
+                    </div>
+                </div>
+            </FloatingPortal>
+        );
+    }
+);

@@ -1,48 +1,16 @@
-import { canUserAccessChannel, getUser, getChannel, getMessages } from "@/lib/db/helpers";
+import { canUserAccessChannel, getChannel, getUser } from "@/lib/db/helpers";
 import { AppHeader, MemberList } from "@components";
 import styles from "../FriendsPage.module.css";
-import { Channel, User } from "@/lib/db/types";
 import { getFullChannel } from "@/lib/strings";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { db } from "@/lib/db/db";
+import type { Channel } from "@/type";
 import Content from "./Content";
 
-async function getFriend(userId: string, channelId: string) {
-    const friend = await db
-        .selectFrom("channelrecipients as cr")
-        .innerJoin(
-            (eb) =>
-                eb
-                    .selectFrom("users")
-                    .select([
-                        "id",
-                        "username",
-                        "displayName",
-                        "avatar",
-                        "status",
-                        "primaryColor",
-                        "accentColor",
-                        "createdAt",
-                    ])
-                    .as("users"),
-            (join) => join.onRef("users.id", "=", "cr.userId")
-        )
-        .select([
-            "id",
-            "username",
-            "displayName",
-            "avatar",
-            "status",
-            "primaryColor",
-            "accentColor",
-            "createdAt",
-        ])
-        .where("channelId", "=", channelId)
-        .where("userId", "!=", userId)
-        .executeTakeFirst();
-
-    return friend;
+function getFriend(userId: number, channel: Channel) {
+    if (channel.type === 0) {
+        return channel.recipients.find((r) => r.id !== userId);
+    }
+    return null;
 }
 
 export default async function ChannelPage({ params }: { params: { channelId: string } }) {
@@ -51,38 +19,32 @@ export default async function ChannelPage({ params }: { params: { channelId: str
 
     const channelId = parseInt(params.channelId);
 
-    if (!canUserAccessChannel(user.id, channelId)) {
+    if (!(await canUserAccessChannel(user.id, channelId))) {
         redirect("/channels/me");
     }
 
-    const channelFetch = await getChannel(channelId);
+    const channelFetch = await getChannel({
+        id: channelId,
+        select: ["id", "icon", "name", "type", "ownerId"],
+        getRecipients: true,
+    });
     if (!channelFetch) redirect("/channels/me");
 
     const channel = getFullChannel(channelFetch, user);
-
-    const friend = channel.type === 0 ? await getFriend(user.id, channel.id) : undefined;
+    const friend = getFriend(user.id, channel);
 
     return (
         <div className={styles.main}>
-            <AppHeader channel={channel} />
+            <AppHeader
+                channel={channel}
+                friend={friend}
+            />
 
             <div className={styles.content}>
-                <Suspense
-                    fallback={
-                        <Content
-                            user={user}
-                            friend={friend}
-                            channel={channel}
-                            messagesLoading={true}
-                        />
-                    }
-                >
-                    <FetchMessage
-                        user={user}
-                        friend={friend}
-                        channel={channel}
-                    />
-                </Suspense>
+                <Content
+                    friend={friend}
+                    channel={channel}
+                />
 
                 <MemberList
                     channel={channel}
@@ -90,34 +52,5 @@ export default async function ChannelPage({ params }: { params: { channelId: str
                 />
             </div>
         </div>
-    );
-}
-
-async function FetchMessage({
-    user,
-    friend,
-    channel,
-}: {
-    user: User;
-    friend: User;
-    channel: Channel;
-}) {
-    const limit = 500;
-    const messages = await getMessages(channel.id, limit);
-
-    const hasMore = await db
-        .selectFrom("messages")
-        .select((eb) => eb.fn.count("id").as("count"))
-        .where("channelId", "=", channel.id)
-        .execute();
-
-    return (
-        <Content
-            user={user}
-            friend={friend}
-            channel={channel}
-            initMessages={messages.reverse()}
-            initHasMore={hasMore[0].count > limit}
-        />
     );
 }

@@ -1,23 +1,22 @@
-# Chat-App
+# Spark
 
-Chat-App is a web application built with Next.js, React, and MongoDB that allows users to chat and talk with people in real-time. Similar to Discord, Chat-App lets users add friends, block users, create channels, groups, or guilds. Users can also make voice and video calls with one another. Chat-App is an excellent solution for individuals or groups who want to communicate effectively and efficiently.
+Spark is a web application built with Next.js, React, and MySQL that allows users to chat and talk with people in real-time. Similar to Discord, Spark lets users add friends, block users, create DMs, or servers. Users can also make voice and video calls with one another (well, not yet). Spark is an excellent solution for individuals or groups who want to communicate effectively and efficiently (at least once it'll be finished).
 
-## Installation
-
-1. Clone the repository: `git clone https://github.com/mart1d4/chat-app.git`
+1. Clone the repository: `git clone https://github.com/mart1d4/spark.git`
 2. Install dependencies: `npm install`
-3. Run the development server: `npm run dev`
+3. Create an `env.local` file in the root directory and follow the example from the `.env.example` file
+4. Run the development server: `npm run dev`
 
 ## Features
 
--   Real-time chat
+-   Send messages in real-time
 -   Voice calling (coming soon)
 -   Video calling (coming soon)
 -   Add friends
 -   Block users
 -   Create channels
 -   Create groups
--   Create guilds
+-   Create servers
 
 ## Issue Tracker
 
@@ -36,20 +35,23 @@ Chat-App is a web application built with Next.js, React, and MongoDB that allows
 -   [x] Editing an image data using `enter` to submit the form doesn't always work
 -   [x] `UserCard` and `UserProfile` banner's `foreignObject` acting very weirdly when rendering with another foreignObject in the background
 -   [x] Requesting a friend adds the user twice to the friends list (only way to fix is to refresh the page)
--   [ ] Clicking on an image to preview it sometimes takes a while to load and messes up the layout
--   [ ] Textarea still needs improvements; e.g. pasting text while having text selected doesn't always work as expected
+-   [x] Clicking on an image to preview it sometimes takes a while to load and messes up the layout
+-   [x] Textarea still needs improvements; e.g. pasting text while having text selected doesn't always work as expected
 -   [x] Textarea content doesn't get cleared when sending a message
 -   [x] Clicking an element that rerenders in a `FixedLayer` component closes the layer
 -   [ ] Deleting a large message doesn't make the one below large if it needs to be
 
-Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/chat-app/issues).
+Please report any issues or bugs on the [GitHub Issue Tracker](https://github.com/mart1d4/spark/issues).
+Bear in mind that I'm doing this project alone and am not working on it full-time.
 
 ## Technologies Used
 
 -   Next.js
 -   React
--   MongoDB
--   Prisma
+-   MongoDB (main branch)
+-   Prisma (main branch)
+-   MySQL (sql branch)
+-   Kysely (sql branch)
 -   Pusher
 -   Zustand
 

@@ -1,27 +1,27 @@
-.messageContainer {
+.container {
     position: relative;
     list-style: none;
 }
 
-.messageContainer:hover {
+.container:hover {
     background-color: var(--background-hover-4);
 }
 
-.messageContainer.reply {
+.container.reply {
     background-color: var(--background-message-highlight);
 }
 
-.messageContainer.reply:hover {
+.container.reply:hover {
     background-color: var(--background-message-highlight-hover);
 }
 
-.inlined > div:last-child {
+.inline > div:last-child {
     margin-top: 0.125rem;
     margin-bottom: 0.125rem;
 }
 
-.messageContainer.reply::before,
-.messageContainer.mentioned::before {
+.container.reply::before,
+.container.mentioned::before {
     content: "";
     position: absolute;
     left: 0;
@@ -33,7 +33,7 @@
     background-color: var(--accent-1);
 }
 
-.messageContainer.large > div:not(.buttonContainer, .messageReply) {
+.container.large > div:not(.buttonContainer, .messageReply) {
     margin-top: 1.0625rem;
     min-height: 2.75rem;
     padding: 0.125rem 48px 0.125rem 72px;
@@ -42,11 +42,11 @@
     user-select: text;
 }
 
-.messageContainer.mentioned {
+.container.mentioned {
     background-color: var(--background-message-mentioned);
 }
 
-.messageContainer.mentioned::before {
+.container.mentioned::before {
     background-color: var(--background-message-mentioned-hover);
 }
 
@@ -58,11 +58,166 @@
     min-height: 1.375rem;
 }
 
-.messageContent {
+.content {
     position: static;
     margin-left: 0;
     padding-left: 0;
     text-indent: 0;
+}
+
+.content strong {
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content em {
+    font-style: italic;
+}
+
+.content del {
+    text-decoration: line-through;
+}
+
+.content u {
+    text-decoration: underline;
+}
+
+.content pre {
+    box-sizing: border-box;
+    border-radius: 4px;
+    padding: 0;
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    margin-top: 6px;
+    max-width: 90%;
+    white-space: pre-wrap;
+    background-clip: border-box;
+}
+
+/* Inline code */
+.content div > code {
+    padding: 0.2rem;
+    margin: -0.2rem 0;
+    border-radius: 3px;
+    font-size: 85%;
+    font-family: var(--font-code);
+    background-color: var(--background-3);
+    text-indent: 0;
+    border: none;
+    white-space: pre-wrap;
+    line-height: 1.125rem;
+}
+
+/* Block code */
+.content pre code {
+    font-size: 0.875rem;
+    line-height: 1.125rem;
+    text-indent: 0;
+    white-space: pre-wrap;
+    background-color: var(--background-3);
+    border: 1px solid var(--background-1);
+    display: block;
+    overflow-x: auto;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-size-adjust: none;
+    color: var(--foreground-2);
+    font-family: var(--font-code);
+}
+
+.content .spoiler {
+    cursor: pointer;
+    border-radius: 4px;
+    background-color: var(--background-1);
+}
+
+.content .spoiler:hover {
+    background-color: var(--background-2);
+}
+
+.content .spoiler > span {
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+}
+
+.content .spoiler.display {
+    background-color: var(--background-6);
+    cursor: text;
+}
+
+.content .spoiler.display > span {
+    opacity: 1;
+}
+
+.content blockquote {
+    padding: 0 8px 0 12px;
+    box-sizing: border-box;
+    text-indent: 0;
+    max-width: 90%;
+    position: relative;
+}
+
+.content blockquote::before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 4px;
+    background-color: var(--background-6);
+}
+
+.content h1 {
+    font-size: 1.5rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content h2 {
+    font-size: 1.25rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content h3 {
+    font-size: 1.125rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content h4 {
+    font-size: 1rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content h5 {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content h6 {
+    font-size: 0.75rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.content li {
+    margin-left: 1rem;
+}
+
+.content li::marker {
+    color: var(--foreground-1);
 }
 
 .userAvatar {
@@ -83,7 +238,7 @@
     cursor: pointer;
 }
 
-.messageContent h3 {
+.content h3 {
     display: block;
     position: relative;
     line-height: 1.375rem;
@@ -120,7 +275,7 @@
     user-select: text;
 }
 
-.messageContent > .mainContent {
+.content > .mainContent {
     font-weight: 300;
     font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     user-select: text;
@@ -134,7 +289,7 @@
     color: var(--foreground-2);
 }
 
-.inlined .messageContent > div:not(.editHint, .userAvatar, .contentTimestamp) {
+.inline .content > div:not(.editHint, .userAvatar, .contentTimestamp) {
     color: var(--foreground-4);
 }
 
@@ -142,10 +297,9 @@
     display: flex;
 }
 
-.specialIcon > div > svg {
-    width: 18px;
-    height: 18px;
-    color: var(--foreground-4);
+.bold {
+    font-weight: 600;
+    color: var(--foreground-1);
 }
 
 .messageTimestamp {
@@ -167,7 +321,7 @@
     color: var(--foreground-4);
 }
 
-.messageContainer:hover .messageTimestamp {
+.container:hover .messageTimestamp {
     visibility: visible;
 }
 
@@ -269,7 +423,7 @@
     text-decoration: underline;
 }
 
-.referenceContent {
+.contentRef {
     cursor: pointer;
     text-overflow: ellipsis;
     flex: 0 1 auto;
@@ -277,7 +431,7 @@
     white-space: nowrap;
 }
 
-.referenceContent:hover {
+.contentRef:hover {
     color: var(--foreground-1);
 }
 
@@ -334,7 +488,7 @@
 
 /* Message menu */
 
-.messageContainer:hover .buttonContainer {
+.container:hover .buttonContainer {
     visibility: visible;
 }
 
@@ -371,7 +525,7 @@
     box-shadow: var(--elevation-low), var(--elevation-medium);
 }
 
-.buttons > div {
+.buttons > button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -381,38 +535,39 @@
     cursor: pointer;
     position: relative;
     color: var(--foreground-3);
+    background-color: transparent;
 }
 
-.buttons > div.red {
+.buttons > button.red {
     color: var(--error-1) !important;
 }
 
-.buttons > div > svg {
+.buttons > button > svg {
     transition: transform 0s ease-out;
 }
 
-.buttons > div:active > svg {
+.buttons > button:active > svg {
     transform: translateY(1px);
 }
 
-.buttons > div:first-child {
+.buttons > button:first-child {
     border-radius: 4px 0 0 4px;
 }
 
-.buttons > div:last-child {
+.buttons > button:last-child {
     border-radius: 0 4px 4px 0;
 }
 
-.buttons > div:hover {
+.buttons > button:hover {
     background-color: var(--background-hover-1);
     color: var(--foreground-2);
 }
 
-.buttons > div:active {
+.buttons > button:active {
     background-color: var(--background-hover-2);
 }
 
-.buttons > div > svg {
+.buttons > button > svg {
     width: 20px;
     height: 20px;
     display: block;
@@ -699,6 +854,17 @@
 
 .mention.editor {
     cursor: default;
+}
+
+.tooltip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.tooltip > :first-child {
+    margin-right: 8px;
 }
 
 .mention:hover:not(.editor) {

@@ -1,5 +1,5 @@
 import filetypeinfo from "magic-bytes.js";
-import { useLayers } from "@/lib/store";
+import { useLayers } from "@/store";
 
 const imageTypes = ["image/png", "image/jpeg", "image/gif", "image/apng", "image/webp"];
 
@@ -18,16 +18,12 @@ export default function useFiles() {
         const maxFileSize = 1024 * 1024 * 5; // 5MB
 
         const files = [];
-        const allowedFileTypes = isImage
-            ? imageTypes
-            : [...imageTypes, "audio/mpeg", "audio/ogg", "audio/wav"];
+        const allowedTypes = isImage ? imageTypes : "*";
 
-        for (const file of uploadedFiles) {
+        for await (const file of uploadedFiles) {
             if (file.size > maxFileSize) {
                 setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
+                    settings: { type: "POPUP" },
                     content: {
                         type: "WARNING",
                         warning: "FILE_SIZE",
@@ -39,11 +35,9 @@ export default function useFiles() {
             const fileBytes = new Uint8Array(await file.arrayBuffer());
             const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
 
-            if (!fileType || !allowedFileTypes.includes(fileType)) {
+            if (isImage && (!fileType || !allowedTypes.includes(fileType))) {
                 setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
+                    settings: { type: "POPUP" },
                     content: {
                         type: "WARNING",
                         warning: "FILE_TYPE",
@@ -65,7 +59,5 @@ export default function useFiles() {
         return files[0];
     }
 
-    return {
-        onFileChange,
-    };
+    return { onFileChange };
 }

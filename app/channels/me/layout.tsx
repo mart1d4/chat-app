@@ -1,8 +1,6 @@
-import { ClickLayer } from "@/app/components/ClickLayer/ClickLayer";
-import { UserChannels } from "@components";
-import { ReactElement } from "react";
+import { UserChannels, ClickLayer } from "@components";
 
-export default function ChannelsLayout({ children }: { children: ReactElement }) {
+export default function ChannelsLayout({ children }) {
     return (
         <>
             <UserChannels />

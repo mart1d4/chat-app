@@ -296,6 +296,7 @@
     border-radius: 2px;
     outline-offset: 3px;
     color: var(--foreground-4);
+    background-color: transparent;
 }
 
 .liContainer:focus-visible .closeButton,

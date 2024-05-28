@@ -2,11 +2,10 @@
 
 "use client";
 
-import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/lib/store";
+import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/store";
 import { useEffect, useRef, useMemo, ReactElement } from "react";
-import { shouldDisplayInlined } from "@/lib/message";
-import useFetchHelper from "@/hooks/useFetchHelper";
 import { Icon, LoadingCubes, LoadingDots } from "@components";
+import useFetchHelper from "@/hooks/useFetchHelper";
 import { MenuItems } from "./MenuItems";
 import styles from "./Menu.module.css";
 
@@ -36,7 +35,6 @@ export function Menu({
     const blocked = useData((state) => state.blocked);
     const sent = useData((state) => state.sent);
 
-    const { sendRequest } = useFetchHelper();
     const getItems = MenuItems();
 
     const container = useRef(null);
@@ -156,22 +154,27 @@ export function Menu({
                 content,
                 relationships,
                 settings,
-                setSettings: setSettings,
-                setMention: setMention,
-                setShowSettings: setShowSettings,
-                setLayers: setLayers,
-                sendRequest: sendRequest,
-                shouldDisplayInlined: shouldDisplayInlined,
             });
         }
 
         return [];
-    }, [content.type, relationships, settings]);
+    }, [content, relationships, settings]);
 
     return (
         <div
+            id={content.type == "STATUS" ? "status-menu" : ""}
             ref={container}
             className={`${styles.container} ${content.type === "GUILD" ? styles.big : ""}`}
+            onMouseLeave={() => {
+                if (content.type == "STATUS") {
+                    setLayers({
+                        settings: {
+                            type: "MENU",
+                            setNull: true,
+                        },
+                    });
+                }
+            }}
         >
             <ul>
                 {!items.length && (
@@ -214,7 +217,16 @@ export function Menu({
                                     if (e.shiftKey && item.funcShift) item.funcShift();
                                     else if (item.func) item.func();
 
-                                    if (!"checked" in item) {
+                                    if (item.hideCard) {
+                                        setLayers({
+                                            settings: {
+                                                type: "USER_CARD",
+                                                setNull: true,
+                                            },
+                                        });
+                                    }
+
+                                    if (!("checked" in item)) {
                                         setLayers({
                                             settings: {
                                                 type: "MENU",

@@ -1,31 +1,80 @@
 "use client";
 
-import {
-    FixedMessage,
-    LoadingDots,
-    Icon,
-    Popout,
-    Checkbox,
-    Avatar,
-    InvitePopup,
-    EmojiPicker,
-    LoadingCubes,
-    Input,
-} from "@components";
 import { useRef, useEffect, useMemo, useCallback, useReducer, Fragment } from "react";
 import { statuses, colors, masks } from "@/lib/statuses";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useKeenSlider } from "keen-slider/react";
-import { useData, useLayers } from "@/lib/store";
 import { sanitizeString } from "@/lib/strings";
 import useRequests from "@/hooks/useRequests";
+import { useData, useLayers } from "@/store";
 import { getRelativeDate } from "@/lib/time";
 import { useRouter } from "next/navigation";
-import useLogout from "@/hooks/useLogout";
 import "keen-slider/keen-slider.min.css";
+import type { Attachment } from "@/type";
 import useFiles from "@/hooks/useFiles";
 import styles from "./Popup.module.css";
 import Image from "next/image";
+import {
+    FixedMessage,
+    LoadingCubes,
+    InvitePopup,
+    LoadingDots,
+    EmojiPicker,
+    Checkbox,
+    Popout,
+    Avatar,
+    Input,
+    Icon,
+} from "@components";
+
+function getFileStyle(file: Attachment) {
+    if (!file || !file.width || !file.height) return {};
+
+    const maxWidth = 416;
+    const maxHeight = 158;
+
+    let width = file.width;
+    let height = file.height;
+
+    const wGreater = file.width > file.height;
+    const hGreater = file.height > file.width;
+    const sizeSame = file.width === file.height;
+
+    if (wGreater) {
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = (maxHeight / file.height) * file.width;
+        }
+
+        if (width > maxWidth) {
+            width = maxWidth;
+            height = (maxWidth / file.width) * file.height;
+        }
+    } else if (hGreater) {
+        if (width > maxWidth) {
+            width = maxWidth;
+            height = (maxWidth / file.width) * file.height;
+        }
+
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = (maxHeight / file.height) * file.width;
+        }
+    } else if (sizeSame) {
+        width = 103;
+        height = 103;
+    }
+
+    return {
+        width: width,
+        height: height,
+        marginLeft: 16,
+        marginRight: 16,
+        marginTop: sizeSame ? -33 : wGreater ? -33 : -86,
+    };
+}
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 type PopupContent = {
     [key: string]: {
@@ -41,7 +90,7 @@ type PopupContent = {
         noButtons?: boolean;
         centered?: boolean;
         skipClose?: boolean;
-        function: () => Promise<void>;
+        function: () => void;
     };
 };
 
@@ -149,6 +198,12 @@ function reducer(state, action) {
                 loading: action.payload,
             };
 
+        case "SET_NOTIFY":
+            return {
+                ...state,
+                notify: action.payload,
+            };
+
         default:
             return state;
     }
@@ -167,11 +222,10 @@ export function Popup({
     const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user);
 
-    const { modifyUsername, createGuild } = useRequests();
+    const { modifyUsername } = useRequests();
     const addGuild = useData((state) => state.addGuild);
     const { sendRequest } = useFetchHelper();
     const { onFileChange } = useFiles();
-    const { logout } = useLogout();
     const router = useRouter();
     const type = content.type;
 
@@ -185,9 +239,9 @@ export function Popup({
             confirmPassword: "",
             newPassword: "",
             file: {
-                name: content.file?.name,
-                description: content.file?.description,
-                isSpoiler: content.file?.isSpoiler,
+                name: content?.file?.name,
+                description: content?.file?.description,
+                spoiler: content?.file?.spoiler,
             },
             channel: {
                 name: "",
@@ -208,6 +262,7 @@ export function Popup({
             status: user.status,
             customStatus: user.customStatus ?? "",
             showOptions: null,
+            notify: false,
         }),
         []
     );
@@ -311,7 +366,7 @@ export function Popup({
         try {
             const response = await sendRequest({
                 query: "UPDATE_USER",
-                data: {
+                body: {
                     password: state.password,
                     newPassword: state.newPassword,
                 },
@@ -361,7 +416,7 @@ export function Popup({
             return;
         }
 
-        if (code.includes("https://chat-app.mart1d4.dev/")) {
+        if (code.includes("https://spark.mart1d4.dev/")) {
             code = code.split("/").pop();
         }
 
@@ -370,7 +425,7 @@ export function Popup({
             params: {
                 inviteId: code,
             },
-            data: {
+            body: {
                 isGuild: true,
             },
         });
@@ -401,35 +456,45 @@ export function Popup({
     }
 
     async function submitGuild() {
-        await createGuild({
-            template: state.guild.template,
-            name: state.guild.name,
-            icon: state.guild.icon,
-            onSuccess: (data) => {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+        if (state.loading) return;
+        dispatch({
+            type: "SET_LOADING",
+            payload: true,
+        });
 
-                if (data.guild) {
-                    addGuild(data.guild);
-                    router.push(`/channels/${data.guild.id}`);
-                }
+        const response = await sendRequest({
+            query: "GUILD_CREATE",
+            body: {
+                name: state.guild.name,
+                icon: state.guild.icon,
+                template: state.guild.template,
             },
-            setErrors: (errors) => {
-                dispatch({
-                    type: "SET_ERRORS",
-                    payload: errors,
-                });
-            },
-            setLoading: (loading) => {
-                dispatch({
-                    type: "SET_LOADING",
-                    payload: loading,
-                });
-            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            setLayers({
+                settings: {
+                    type: "POPUP",
+                    setNull: true,
+                },
+            });
+
+            if (data.data.guild) {
+                addGuild(data.data.guild);
+                router.push(`/channels/${data.data.guild.id}`);
+            }
+        } else {
+            dispatch({
+                type: "SET_ERRORS",
+                payload: data.data.errors,
+            });
+        }
+
+        dispatch({
+            type: "SET_LOADING",
+            payload: false,
         });
     }
 
@@ -448,14 +513,14 @@ export function Popup({
                     : `Create ${content.isCategory ? "Category" : "Channel"}`,
                 disabled: !state.channel.name || state.channel.locked,
             },
-            function: async () => {
+            function: () => {
                 if (!state.channel.name || state.channel.locked) return;
                 sendRequest({
                     query: "GUILD_CHANNEL_CREATE",
                     params: {
                         guildId: content.guild,
                     },
-                    data: {
+                    body: {
                         name: state.channel.name,
                         type: content.isCategory ? 4 : state.channel.type,
                         locked: state.channel.locked,
@@ -473,7 +538,7 @@ export function Popup({
                 color: "red",
                 text: `Delete ${content.channel?.type === 4 ? "Category" : "Channel"}`,
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "GUILD_CHANNEL_DELETE",
                     params: {
@@ -513,7 +578,7 @@ export function Popup({
                 color: "red",
                 text: "Delete",
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "DELETE_MESSAGE",
                     params: {
@@ -531,7 +596,7 @@ export function Popup({
                 color: "blue",
                 text: "Oh yeah. Pin it",
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "PIN_MESSAGE",
                     params: {
@@ -548,7 +613,7 @@ export function Popup({
                 color: "red",
                 text: "Remove it please!",
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "UNPIN_MESSAGE",
                     params: {
@@ -564,11 +629,11 @@ export function Popup({
                 color: "blue",
                 text: "Save",
             },
-            function: async () => {
+            function: () => {
                 content.handleFileChange({
-                    filename: state.file.name,
+                    name: state.file.name,
                     description: state.file.description,
-                    isSpoiler: state.file.isSpoiler,
+                    spoiler: state.file.spoiler,
                 });
             },
         },
@@ -579,7 +644,12 @@ export function Popup({
                 color: "red",
                 text: "Log Out",
             },
-            function: async () => logout(),
+            function: () => {
+                fetch(`${apiUrl}/auth/logout`, {
+                    method: "POST",
+                    credentials: "include",
+                }).then(() => router.refresh());
+            },
         },
         DELETE_ATTACHMENT: {
             title: "Are you sure?",
@@ -588,14 +658,14 @@ export function Popup({
                 color: "red",
                 text: "Remove Attachment",
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "UPDATE_MESSAGE",
                     params: {
                         channelId: content.message.channelId,
                         messageId: content.message.id,
                     },
-                    data: {
+                    body: {
                         attachments: content.attachments,
                     },
                 });
@@ -609,13 +679,13 @@ export function Popup({
                 color: "blue",
                 text: "Create New Group",
             },
-            function: async () => {
-                if (content?.addUsers) {
+            function: () => {
+                if (content.addUsers) {
                     content.addUsers();
                 } else if (content.recipients) {
                     sendRequest({
                         query: "CHANNEL_CREATE",
-                        data: {
+                        body: {
                             recipients: content.recipients,
                         },
                         skipCheck: true,
@@ -629,7 +699,7 @@ export function Popup({
                 color: "blue",
                 text: "Confirm",
             },
-            function: async () => {
+            function: () => {
                 sendRequest({
                     query: "CHANNEL_RECIPIENT_OWNER",
                     params: {
@@ -650,20 +720,21 @@ export function Popup({
                 color: "red",
                 text: `Leave ${content.channel ? "Group" : "Server"}`,
             },
-            function: async () => {
+            function: () => {
                 if (content.channel) {
                     sendRequest({
                         query: "CHANNEL_RECIPIENT_REMOVE",
                         params: {
                             channelId: content.channel?.id,
                             recipientId: user.id,
+                            hideDeparture: state.notify,
                         },
                     });
-                } else if (content.guild && content.isOwner) {
+                } else if (content.guild && !content.isOwner) {
                     sendRequest({
-                        query: "GUILD_DELETE",
+                        query: "GUILD_MEMBER_LEAVE",
                         params: {
-                            guildId: content.guild?.id,
+                            guildId: content.guild.id,
                         },
                     });
                 }
@@ -678,7 +749,7 @@ export function Popup({
                 text: "Enter the chill zone",
                 big: true,
             },
-            function: async () => {},
+            function: () => {},
         },
         REMOVE_EMBEDS: {
             title: "Are you sure?",
@@ -688,13 +759,13 @@ export function Popup({
                 color: "red",
                 text: "Remove All Embeds",
             },
-            function: async () => content.onConfirm(),
+            function: () => content.onConfirm(),
         },
         CHANNEL_TOPIC: {
             title: content?.channel?.name,
             description: content?.channel?.topic,
             noButtons: true,
-            function: async () => {},
+            function: () => {},
         },
         USER_STATUS: {
             title: "Set a custom status",
@@ -702,11 +773,11 @@ export function Popup({
                 color: "blue",
                 text: "Save",
             },
-            function: async () => {
+            function: () => {
                 const correctStatus = statuses[state.status];
 
                 if (correctStatus !== user.status || state.customStatus !== user.customStatus) {
-                    const response = await sendRequest({
+                    sendRequest({
                         query: "UPDATE_USER",
                         data: {
                             status: correctStatus === user.status ? null : correctStatus,
@@ -912,13 +983,13 @@ export function Popup({
                         <main className={`${styles.content} scrollbar`}>
                             <div>
                                 {[
-                                    ["Create My Own", "2699b806-e43b-4fea-aa0b-da3bde1972b4"],
-                                    ["Gaming", "34bdb748-aea8-4542-b534-610ac9ad347f"],
-                                    ["School Club", "d0460999-065f-4289-9021-5f9c4cf2ddd7"],
-                                    ["Study Group", "fe757867-ce50-4353-9c9b-cb64ec3968b6"],
-                                    ["Friends", "fcfc0474-e405-47df-b7ef-1373bfe83070"],
-                                    ["Artists & Creators", "6057e335-8633-4909-b7c8-970182095185"],
-                                    ["Local Community", "bca2a8ed-2498-42a1-a964-9af6f8479d7f"],
+                                    ["Create My Own", "/assets/system/own.svg"],
+                                    ["Gaming", "/assets/system/gaming.svg"],
+                                    ["School Club", "/assets/system/school.svg"],
+                                    ["Study Group", "/assets/system/study.svg"],
+                                    ["Friends", "/assets/system/friends.svg"],
+                                    ["Artists & Creators", "/assets/system/artists.svg"],
+                                    ["Local Community", "/assets/system/community.svg"],
                                 ].map((template, index) => (
                                     <Fragment key={template[1]}>
                                         <button
@@ -932,7 +1003,7 @@ export function Popup({
                                             }}
                                         >
                                             <img
-                                                src={`https://ucarecdn.com/${template[1]}/`}
+                                                src={template[1]}
                                                 alt={template[0]}
                                             />
                                             <div>{template[0]} </div>
@@ -1000,7 +1071,7 @@ export function Popup({
                                         label="Invite Link"
                                         value={state.guild.invite}
                                         error={state.errors.guildInvite}
-                                        placeholder="https://chat-app.mart1d4.dev/hTKzmak"
+                                        placeholder="https://spark.mart1d4.dev/hTKzmak"
                                         onChange={(value) => {
                                             dispatch({
                                                 type: "SET_GUILD",
@@ -1024,8 +1095,8 @@ export function Popup({
                                         >
                                             {[
                                                 "hTKzmak",
-                                                "https://chat-app.mart1d4.dev/hTKzmak",
-                                                "https://chat-app.mart1d4.dev/cool-invite",
+                                                "https://spark.mart1d4.dev/hTKzmak",
+                                                "https://spark.mart1d4.dev/cool-invite",
                                             ].map((invite) => (
                                                 <li
                                                     key={invite}
@@ -1322,24 +1393,18 @@ export function Popup({
                     style={{ animationName: closing ? styles.popOut : "" }}
                 >
                     {type === "FILE_EDIT" && (
-                        <Image
+                        <img
                             className={styles.headerImage}
-                            src={
-                                true
-                                    ? content.file.url
-                                    : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
-                            }
+                            src={true ? content.file.url : `/assets/system/file-text.svg`}
                             alt={content.file.name}
-                            width={104}
-                            height={104}
-                            style={{ marginLeft: 16 }}
+                            style={getFileStyle(content.file)}
                         />
                     )}
 
                     {type === "USER_STATUS" && (
                         <Image
                             className={styles.headerImage + " " + styles.centered}
-                            src="https://ucarecdn.com/2735d6c0-b301-438c-add6-3d116e0ddb45/"
+                            src="/assets/system/user-status.svg"
                             alt="Status"
                             width={200}
                             height={120}
@@ -1380,6 +1445,26 @@ export function Popup({
                                     message={content.message}
                                     pinned={false}
                                 />
+                            </div>
+                        )}
+
+                        {content.type === "LEAVE_CONFIRM" && content.channel && (
+                            <div className={styles.checkbox}>
+                                <Checkbox
+                                    checked={state.notify}
+                                    onChange={() => {
+                                        dispatch({
+                                            type: "SET_NOTIFY",
+                                            payload: !state.notify,
+                                        });
+                                    }}
+                                    inputFor={`leave-${content.channel.id}`}
+                                    box
+                                />
+
+                                <label htmlFor={`leave-${content.channel.id}`}>
+                                    Leave without notifying other members
+                                </label>
                             </div>
                         )}
 
@@ -1537,6 +1622,7 @@ export function Popup({
                                 <Avatar
                                     src={content.channel.icon}
                                     alt={content.channel.name}
+                                    type="icons"
                                     size={24}
                                 />
 
@@ -1576,6 +1662,7 @@ export function Popup({
                                         <Avatar
                                             src={user.avatar}
                                             alt={user.username}
+                                            type="avatars"
                                             size={80}
                                         />
                                     </div>
@@ -1584,6 +1671,7 @@ export function Popup({
                                         <Avatar
                                             src={content.recipient.avatar}
                                             alt={content.recipient.username}
+                                            type="avatars"
                                             size={80}
                                         />
                                     </div>
@@ -1805,7 +1893,7 @@ export function Popup({
                                     label="Filename"
                                     value={state.file.name}
                                     error={state.errors.filename}
-                                    placeholder="https://chat-app.mart1d4.dev/hTKzmak"
+                                    placeholder="https://spark.mart1d4.dev/hTKzmak"
                                     onChange={(value) => {
                                         dispatch({
                                             type: "SET_FILE",
@@ -1844,7 +1932,7 @@ export function Popup({
                                         e.stopPropagation();
                                         dispatch({
                                             type: "SET_FILE",
-                                            payload: { isSpoiler: !state.file.isSpoiler },
+                                            payload: { spoiler: !state.file.spoiler },
                                         });
                                     }}
                                 >
@@ -1858,7 +1946,7 @@ export function Popup({
                                             color: "var(--accent-1)",
                                         }}
                                     >
-                                        {state.file.isSpoiler && <Icon name="checkmark" />}
+                                        {state.file.spoiler && <Icon name="checkmark" />}
                                     </div>
 
                                     <div>
@@ -1996,7 +2084,7 @@ export function Popup({
                                 onClick={async () => {
                                     if (state.loading || prop.button.disabled) return;
 
-                                    await prop.function();
+                                    prop.function();
                                     if (!prop.skipClose) {
                                         setLayers({
                                             settings: {

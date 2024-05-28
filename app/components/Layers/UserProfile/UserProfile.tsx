@@ -1,30 +1,16 @@
 "use client";
 
-import { TLayer, useData, useLayers, useShowSettings, useTooltip, useUrls } from "@/lib/store";
-import { useEffect, useRef, useState, ReactElement } from "react";
-import { sanitizeString, translateCap } from "@/lib/strings";
+import { TLayer, useData, useLayers, useShowSettings, useUrls } from "@/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Tooltip/Tooltip";
+import { useEffect, useRef, useState } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
+import { sanitizeString } from "@/lib/strings";
 import styles from "./UserProfile.module.css";
-import { Guild, User } from "@/lib/db/types";
+import { masks, colors } from "@/lib/avatars";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
-
-const colors = {
-    online: "#22A559",
-    idle: "#F0B232",
-    dnd: "#F23F43",
-    invisible: "#80848E",
-    offline: "#80848E",
-};
-
-const masks = {
-    online: "",
-    idle: "status-mask-idle",
-    dnd: "status-mask-dnd",
-    invisible: "status-mask-offline",
-    offline: "status-mask-offline",
-};
+import { statuses } from "@/lib/statuses";
 
 export const UserProfile = ({
     content,
@@ -32,7 +18,7 @@ export const UserProfile = ({
 }: {
     content: TLayer["content"];
     closing: boolean;
-}): ReactElement => {
+}) => {
     const [activeNavItem, setActiveNavItem] = useState(0);
     const [originalNote, setOriginalNote] = useState("");
     const [note, setNote] = useState("");
@@ -41,7 +27,6 @@ export const UserProfile = ({
     const requestsReceived = useData((state) => state.received);
     const currentUser = useData((state) => state.user);
     const requestsSent = useData((state) => state.sent);
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const friends = useData((state) => state.friends);
     const blocked = useData((state) => state.blocked);
@@ -61,9 +46,8 @@ export const UserProfile = ({
 
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
-    const hasRendered = useRef<boolean>(false);
 
-    const isSameUser = () => user.id == currentUser.id;
+    const isSameUser = user.id === currentUser.id;
 
     useEffect(() => {
         if (content.guilds) setActiveNavItem(1);
@@ -75,33 +59,23 @@ export const UserProfile = ({
         const getNote = async () => {
             const response = await sendRequest({
                 query: "GET_NOTE",
-                params: {
-                    userId: user.id,
-                },
+                params: { userId: user.id },
             });
 
-            if (response.success) {
-                setNote(response.note);
-                setOriginalNote(response.note);
+            if (response?.ok) {
+                const data = await response.json();
+                setNote(data.note);
+                setOriginalNote(data.note);
             }
         };
 
-        const env = process.env.NODE_ENV;
-
-        if (env == "development") {
-            if (hasRendered.current) getNote();
-            return () => {
-                hasRendered.current = true;
-            };
-        } else if (env == "production") {
-            getNote();
-        }
+        getNote();
     }, []);
 
-    const sectionNavItems = isSameUser()
+    const sectionNavItems = isSameUser
         ? ["User Info"]
         : ["User Info", "Mutual Servers", "Mutual Friends"];
-    if (!user || layers.POPUP.length > 0) return <></>;
+    if (!user || layers.POPUP.length > 0) return null;
 
     return (
         <div
@@ -126,41 +100,22 @@ export const UserProfile = ({
             }
         >
             <div>
-                {isSameUser() && (
-                    <button
-                        className={styles.editProfileButton}
-                        aria-label="Edit Profile"
-                        role="button"
-                        onMouseEnter={(e) => {
-                            setTooltip({
-                                text: "Edit Profile",
-                                element: e.currentTarget,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                        onFocus={(e) => {
-                            setTooltip({
-                                text: "Edit Profile",
-                                element: e.currentTarget,
-                            });
-                        }}
-                        onBlur={() => setTooltip(null)}
-                        onClick={() => {
-                            setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                    setNull: true,
-                                },
-                            });
-                            setTooltip(null);
-                            setShowSettings({ type: "USER", tab: "Profiles" });
-                        }}
-                    >
-                        <Icon
-                            name="edit"
-                            size={24}
-                        />
-                    </button>
+                {isSameUser && (
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <button
+                                className={styles.editProfileButton}
+                                onClick={() => setShowSettings({ type: "USER", tab: "Profiles" })}
+                            >
+                                <Icon
+                                    name="edit"
+                                    size={24}
+                                />
+                            </button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>Edit Profile</TooltipContent>
+                    </Tooltip>
                 )}
 
                 <svg
@@ -201,7 +156,7 @@ export const UserProfile = ({
                                 style={{
                                     backgroundColor: !user.banner ? user.primaryColor : "",
                                     backgroundImage: user.banner
-                                        ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}/`
+                                        ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.banner}`
                                         : "",
                                     height: user.banner ? "212px" : "106px",
                                 }}
@@ -217,42 +172,36 @@ export const UserProfile = ({
                     <div
                         className={styles.avatarImage}
                         style={{
-                            backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}/`,
+                            backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${user.avatar}`,
                         }}
                     />
 
-                    <div
-                        className={styles.cardAvatarStatus}
-                        onMouseEnter={(e) => {
-                            setTooltip({
-                                text: translateCap(user.status ?? "Offline"),
-                                element: e.currentTarget,
-                                gap: 5,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        <div style={{ backgroundColor: "black" }} />
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <div className={styles.cardAvatarStatus}>
+                                <div style={{ backgroundColor: "black" }} />
 
-                        <svg>
-                            <rect
-                                height="100%"
-                                width="100%"
-                                rx={12}
-                                ry={12}
-                                // @ts-ignore
-                                fill={colors[user.status || "OFFLINE"]}
-                                // @ts-ignore
-                                mask={`url(#${masks[user.status || "OFFLINE"]})`}
-                            />
-                        </svg>
-                    </div>
+                                <svg>
+                                    <rect
+                                        height="100%"
+                                        width="100%"
+                                        rx={12}
+                                        ry={12}
+                                        fill={colors[user.status || "OFFLINE"]}
+                                        mask={`url(#${masks[user.status || "OFFLINE"]})`}
+                                    />
+                                </svg>
+                            </div>
+                        </TooltipTrigger>
+
+                        <TooltipContent>{statuses[user.status]}</TooltipContent>
+                    </Tooltip>
                 </div>
 
                 <div className={styles.cardHeader}>
                     <div className={styles.cardBadges}></div>
 
-                    {!isSameUser() && (
+                    {!isSameUser && (
                         <div className={styles.cardTools}>
                             {!blocked.map((u) => u.id).includes(user.id) && (
                                 <>
@@ -263,7 +212,7 @@ export const UserProfile = ({
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "ADD_FRIEND",
-                                                        data: { username: user.username },
+                                                        body: { username: user.username },
                                                     })
                                                 }
                                             >
@@ -275,7 +224,7 @@ export const UserProfile = ({
                                                 onClick={() =>
                                                     sendRequest({
                                                         query: "REMOVE_FRIEND",
-                                                        data: {
+                                                        body: {
                                                             username: user.username,
                                                         },
                                                     })
@@ -290,7 +239,7 @@ export const UserProfile = ({
                                             onClick={() => {
                                                 sendRequest({
                                                     query: "CHANNEL_CREATE",
-                                                    data: {
+                                                    body: {
                                                         recipients: [user.id],
                                                     },
                                                 });
@@ -306,44 +255,47 @@ export const UserProfile = ({
                                         </button>
                                     ) : (
                                         <div>
-                                            <button
-                                                className={
-                                                    requestsSent.map((u) => u.id).includes(user.id)
-                                                        ? "button green disabled"
-                                                        : "button green"
-                                                }
-                                                onClick={() => {
-                                                    if (
-                                                        requestsSent
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <button
+                                                        className={
+                                                            requestsSent
+                                                                .map((u) => u.id)
+                                                                .includes(user.id)
+                                                                ? "button green disabled"
+                                                                : "button green"
+                                                        }
+                                                        onClick={() => {
+                                                            if (
+                                                                !requestsSent
+                                                                    .map((u) => u.id)
+                                                                    .includes(user.id)
+                                                            ) {
+                                                                sendRequest({
+                                                                    query: "ADD_FRIEND",
+                                                                    body: {
+                                                                        username: user.username,
+                                                                    },
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        {requestsSent
                                                             .map((u) => u.id)
                                                             .includes(user.id)
-                                                    ) {
-                                                        return;
-                                                    }
-                                                    sendRequest({
-                                                        query: "ADD_FRIEND",
-                                                        data: { username: user.username },
-                                                    });
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    if (
-                                                        !requestsSent
-                                                            .map((u) => u.id)
-                                                            .includes(user.id)
-                                                    )
-                                                        return;
-                                                    setTooltip({
-                                                        text: "You sent a friend request to this user.",
-                                                        element: e.currentTarget,
-                                                        gap: 5,
-                                                    });
-                                                }}
-                                                onMouseLeave={() => setTooltip(null)}
-                                            >
-                                                {requestsSent.map((u) => u.id).includes(user.id)
-                                                    ? "Friend Request Sent"
-                                                    : "Send Friend Request"}
-                                            </button>
+                                                            ? "Friend Request Sent"
+                                                            : "Send Friend Request"}
+                                                    </button>
+                                                </TooltipTrigger>
+
+                                                <TooltipContent>
+                                                    {!requestsSent
+                                                        .map((u) => u.id)
+                                                        .includes(user.id)
+                                                        ? "You sent a friend request to this user."
+                                                        : null}
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     )}
                                 </>
@@ -354,10 +306,7 @@ export const UserProfile = ({
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
+                                        settings: { type: "MENU", event: e },
                                         content: {
                                             type: "USER",
                                             user: user,
@@ -384,9 +333,9 @@ export const UserProfile = ({
                         </div>
                     )}
 
-                    {isSameUser() && <div className={styles.divider} />}
+                    {isSameUser && <div className={styles.divider} />}
 
-                    {!isSameUser() && (
+                    {!isSameUser && (
                         <div className={styles.contentNav}>
                             <div>
                                 {sectionNavItems.map((item, index) => (
@@ -435,7 +384,7 @@ export const UserProfile = ({
                                 )}
 
                                 <div className={styles.cardSection}>
-                                    <h4>Chat App Member Since</h4>
+                                    <h4>Spark Member Since</h4>
                                     <div>
                                         {new Intl.DateTimeFormat("en-US", {
                                             year: "numeric",
@@ -470,7 +419,7 @@ export const UserProfile = ({
                                                     const response = await sendRequest({
                                                         query: "SET_NOTE",
                                                         params: { userId: user.id },
-                                                        data: { newNote: trimmed },
+                                                        data: { note: trimmed },
                                                     });
 
                                                     if (response.success) setOriginalNote(trimmed);
@@ -495,7 +444,7 @@ export const UserProfile = ({
                                     <div className={styles.empty}>
                                         <div
                                             style={{
-                                                backgroundImage: `url("https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/")`,
+                                                backgroundImage: `url(/assets/system/no-servers.svg)`,
                                             }}
                                         />
                                         <div>No servers in common</div>
@@ -517,7 +466,7 @@ export const UserProfile = ({
                                     <div className={styles.empty + " " + styles.noFriends}>
                                         <div
                                             style={{
-                                                backgroundImage: `url("https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/")`,
+                                                backgroundImage: `url(/assets/system/no-friends.svg)`,
                                             }}
                                         />
                                         <div>No friends in common</div>
@@ -586,6 +535,7 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
                     <Avatar
                         src={friend.avatar}
                         alt={friend.username}
+                        type="avatars"
                         size={40}
                         status={friend.status ?? "Offline"}
                     />
@@ -602,6 +552,7 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
                             <Avatar
                                 src={guild.icon}
                                 alt={guild.name}
+                                type="icons"
                                 size={40}
                             />
                         ) : (

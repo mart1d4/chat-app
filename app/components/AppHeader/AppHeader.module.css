@@ -43,10 +43,10 @@
 
 .icon {
     position: relative;
-    height: 24px;
     width: 24px;
+    height: 24px;
+    margin: 0 12px 0 8px;
     flex: 0 0 auto;
-    margin: 0 8px;
 }
 
 .icon > svg {
@@ -78,6 +78,74 @@
 
 .titleFriend {
     cursor: pointer;
+}
+
+.contentWrapper {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.channelName {
+    box-sizing: border-box;
+    flex: 0 1 auto;
+    position: relative;
+    padding-right: 4px;
+    min-width: 0;
+    max-width: 100%;
+    margin-left: -6px;
+    font-weight: 600;
+}
+
+.channelName > div {
+    box-sizing: border-box;
+    display: flex;
+    position: relative;
+}
+
+.channelName > div > input,
+.channelName > div > div {
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 32px;
+    height: 32px;
+    padding: 0 6px;
+    border: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: pre;
+    border-radius: 3px;
+    background-color: transparent;
+    color: var(--foreground-2);
+    cursor: text;
+}
+
+.channelName > div > input {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    z-index: 2;
+    outline: none;
+}
+
+.channelName:hover > div > input,
+.channelName:hover > div > div,
+.channelName > div > input:focus {
+    background-color: var(--background-4);
+    box-shadow: inset 0 0 0 1px var(--background-2);
+}
+
+.channelName > div > input:focus {
+    background-color: var(--background-3);
+    box-shadow: inset 0 0 0 1px var(--background-1);
+    opacity: 1;
+}
+
+.channelName > div > input:focus + div {
+    opacity: 0;
 }
 
 .divider {

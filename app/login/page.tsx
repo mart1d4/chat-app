@@ -16,7 +16,7 @@ export default async function LoginPage() {
                     is a chat application which follows Discord's design. Passwords are hashed and
                     salted and messages are safe to send. See the source code{" "}
                     <Link
-                        href="https://github.com/mart1d4/chat-app"
+                        href="https://github.com/mart1d4/spark"
                         target="_blank"
                     >
                         here

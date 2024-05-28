@@ -1,19 +1,12 @@
 "use client";
 
-import { useLayers, useTooltip } from "@/lib/store";
-import { ReactElement, useRef } from "react";
-import styles from "./UserItem.module.css";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
 import { Avatar, Icon } from "@components";
+import styles from "./UserItem.module.css";
+import { useLayers } from "@/store";
+import { useRef } from "react";
 
-type Props = {
-    user: TCleanUser;
-    channel: TChannel;
-    offline?: boolean;
-    isOwner: boolean;
-};
-
-export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactElement => {
-    const setTooltip = useTooltip((state) => state.setTooltip);
+export function UserItem({ user, channel, offline, isOwner }) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const liRef = useRef(null);
@@ -56,8 +49,14 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
             }}
             style={{
                 opacity: offline && layers.USER_CARD?.settings.element !== liRef.current ? 0.3 : 1,
-                backgroundColor: layers.USER_CARD?.settings.element === liRef.current ? "var(--background-5)" : "",
-                color: layers.USER_CARD?.settings.element === liRef.current ? "var(--foreground-2)" : "",
+                backgroundColor:
+                    layers.USER_CARD?.settings.element === liRef.current
+                        ? "var(--background-5)"
+                        : "",
+                color:
+                    layers.USER_CARD?.settings.element === liRef.current
+                        ? "var(--foreground-2)"
+                        : "",
             }}
         >
             <div className={styles.liWrapper}>
@@ -68,6 +67,7 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                                 <Avatar
                                     src={user.avatar}
                                     alt={`${user.username}'s avatar`}
+                                    type="avatars"
                                     size={32}
                                     status={offline ? undefined : user.status}
                                     tooltip={true}
@@ -78,31 +78,37 @@ export const UserItem = ({ user, channel, offline, isOwner }: Props): ReactEleme
                         <div className={styles.layoutContent}>
                             <div className={styles.contentName}>
                                 <div>{user.displayName}</div>
-                                <span
-                                    onMouseEnter={(e) => {
-                                        e.stopPropagation();
-                                        setTooltip({
-                                            text: `${channel.guildId ? "Server" : "Group"} Owner`,
-                                            element: e.currentTarget,
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                >
-                                    {isOwner && (
-                                        <Icon
-                                            name="crown"
-                                            size={18}
-                                            viewbox="0 0 20 20"
-                                        />
-                                    )}
-                                </span>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        {isOwner && (
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                width="14"
+                                                height="14"
+                                                fill="none"
+                                            >
+                                                <path
+                                                    fill="currentColor"
+                                                    d="M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04 7.76a1 1 0 0 0-1.52 1.15l2.25 6.42a1 1 0 0 0 .94.67h14.55a1 1 0 0 0 .95-.71l1.94-6.45a1 1 0 0 0-1.55-1.1l-4.11 3-3.55-5.33.82-.82a.83.83 0 0 0 0-1.18l-1.17-1.17a.83.83 0 0 0-1.18 0l-1.17 1.17a.83.83 0 0 0 0 1.18l.82.82-3.61 5.42-4.41-3.07Z"
+                                                />
+                                            </svg>
+                                        )}
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>
+                                        {channel.guildId ? "Server" : "Group"} Owner
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
 
-                            {user?.customStatus && <div className={styles.contentStatus}>{user.customStatus}</div>}
+                            {user?.customStatus && (
+                                <div className={styles.contentStatus}>{user.customStatus}</div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
         </li>
     );
-};
+}

@@ -1,131 +1,41 @@
 "use client";
 
-import { useLayers, useTooltip } from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { getLongDate, getMidDate } from "@/lib/time";
 import styles from "./FixedMessage.module.css";
 import { Avatar, Icon } from "@components";
 import { useState, useMemo } from "react";
-import { v4 } from "uuid";
+import { FormatMessage } from "./Format";
+import type { Message } from "@/type";
+import { useLayers } from "@/store";
 
-export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: boolean }) => {
-    const setTooltip = useTooltip((state) => state.setTooltip);
+export function FixedMessage({ message, pinned }: { message: Message; pinned?: boolean }) {
+    const [messageContent, setMessageContent] = useState<JSX.Element | null>(null);
+    const [referenceContent, setReferenceContent] = useState<JSX.Element | null>(null);
+
     const setLayers = useLayers((state) => state.setLayers);
 
-    const getLongDate = (date: Date) => {
-        return new Intl.DateTimeFormat("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            second: "numeric",
-        }).format(new Date(date));
-    };
-
-    const getMidDate = (date: Date) => {
-        return new Intl.DateTimeFormat("en-US", {
-            month: "numeric",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-        }).format(new Date(date));
-    };
-
-    const UserMention = ({ user, full }: { user: TCleanUser; full: boolean }) => {
-        if (!user) return null;
-        return (
-            <span className={full ? styles.mention : styles.inlineMention}>@{user.username}</span>
-        );
-    };
-
-    const userRegex: RegExp = /<([@][a-zA-Z0-9]{24})>/g;
-    const urlRegex = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
-
-    let messageContent: JSX.Element | null = null;
-    if (message.content) {
-        messageContent = (
-            <span>
-                {message.content.split(/(\s+)/).map((part, index) => {
-                    if (userRegex.test(part)) {
-                        const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find(
-                            (user) => user.id === userId
-                        ) as TCleanUser;
-                        return (
-                            <UserMention
-                                key={v4()}
-                                user={user}
-                                full={true}
-                            />
-                        );
-                    } else if (urlRegex.test(part)) {
-                        return (
-                            <span
-                                key={v4()}
-                                className={styles.messageLink}
-                            >
-                                {part}
-                            </span>
-                        );
-                    } else {
-                        return part;
-                    }
-                })}
-            </span>
-        );
+    if (message.content && messageContent === null) {
+        setMessageContent(FormatMessage({ message: message, fixed: true }));
     }
 
-    let referencedContent: JSX.Element | null = null;
-    if (message.messageReference?.content) {
-        referencedContent = (
-            <span>
-                {message.messageReference?.content.split(/(\s+)/).map((part, index) => {
-                    if (userRegex.test(part)) {
-                        const userId = part.substring(2).slice(0, -1);
-                        const user = message.mentions?.find(
-                            (user) => user.id === userId
-                        ) as TCleanUser;
-                        return (
-                            <UserMention
-                                key={v4()}
-                                user={user}
-                                full={true}
-                            />
-                        );
-                    } else if (urlRegex.test(part)) {
-                        return (
-                            <span
-                                key={v4()}
-                                className={styles.messageLink}
-                            >
-                                {part}
-                            </span>
-                        );
-                    } else {
-                        return part;
-                    }
-                })}
-            </span>
-        );
+    if (message.reference?.content && referenceContent === null) {
+        setReferenceContent(FormatMessage({ message: message.reference, fixed: true }));
     }
 
-    function edited(time) {
+    function edited(time: Date) {
         return (
             <div className={styles.contentTimestamp}>
-                <span
-                    onMouseEnter={(e) => {
-                        setTooltip({
-                            text: getLongDate(time),
-                            element: e.currentTarget,
-                            delay: 1000,
-                            wide: true,
-                        });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
+                <Tooltip
+                    delay={500}
+                    gap={1}
                 >
-                    (edited)
-                </span>
+                    <TooltipTrigger>
+                        <span>(edited)</span>
+                    </TooltipTrigger>
+
+                    <TooltipContent>{getLongDate(time)}</TooltipContent>
+                </Tooltip>
             </div>
         );
     }
@@ -144,12 +54,10 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
-                        onClick={() =>
+                        onClick={() => {
                             setLayers(
                                 {
-                                    settings: {
-                                        type: "POPUP",
-                                    },
+                                    settings: { type: "POPUP" },
                                     content: {
                                         type: "UNPIN_MESSAGE",
                                         channelId: message.channelId,
@@ -157,8 +65,8 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                                     },
                                 },
                                 true
-                            )
-                        }
+                            );
+                        }}
                     >
                         <path
                             fill="currentColor"
@@ -175,7 +83,8 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                             <div className={styles.userAvatarReply}>
                                 <Avatar
                                     src={message.messageReference?.author.avatar}
-                                    alt={message.messageReference?.author.username}
+                                    alt={message.messageReference?.author.displayName}
+                                    type="avatars"
                                     size={16}
                                 />
                             </div>
@@ -198,21 +107,20 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                             <span>{message.messageReference.author.displayName}</span>
                         )}
 
-                        {referencedContent ? (
+                        {referenceContent ? (
                             <div className={styles.referenceContent}>
-                                {referencedContent}{" "}
-                                {message.messageReference.edited &&
-                                    edited(message.messageReference.edited)}
+                                {referenceContent}{" "}
+                                {message.reference.edited && edited(message.reference.edited)}
                             </div>
                         ) : (
                             <div className={styles.italic}>
-                                {message.messageReference?.attachments.length > 0
+                                {message.reference?.attachments.length > 0
                                     ? "Click to see attachment"
                                     : "Original message was deleted"}
                             </div>
                         )}
 
-                        {message.messageReference?.attachments?.length > 0 && (
+                        {message.reference?.attachments?.length > 0 && (
                             <Icon
                                 name="image"
                                 size={20}
@@ -225,36 +133,29 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
                     <div className={styles.userAvatar}>
                         <Avatar
                             src={message.author.avatar}
-                            alt={message.author.username}
+                            alt={message.author.displayName}
+                            type="avatars"
                             size={40}
                         />
                     </div>
 
                     <h3>
                         <span className={styles.titleUsername}>{message.author?.displayName}</span>
-                        <span
-                            className={styles.titleTimestamp}
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: getLongDate(message.createdAt),
-                                    element: e.currentTarget,
-                                    delay: 1000,
-                                    wide: true,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
+                        <Tooltip
+                            delay={500}
+                            gap={1}
                         >
-                            {getMidDate(message.createdAt)}
-                        </span>
+                            <TooltipTrigger>
+                                <span className={styles.titleTimestamp}>
+                                    {getMidDate(message.createdAt)}
+                                </span>
+                            </TooltipTrigger>
+
+                            <TooltipContent>{getLongDate(message.createdAt)}</TooltipContent>
+                        </Tooltip>
                     </h3>
 
-                    <div
-                        style={{
-                            whiteSpace: "pre-line",
-                            opacity: message.waiting ? 0.5 : 1,
-                            color: message.error ? "var(--error-1)" : "",
-                        }}
-                    >
+                    <div style={{ whiteSpace: "pre-line" }}>
                         {messageContent && (
                             <>
                                 {messageContent}{" "}
@@ -271,10 +172,10 @@ export const FixedMessage = ({ message, pinned }: { message: TMessage; pinned?: 
             </div>
         </li>
     );
-};
+}
 
-const MessageAttachments = ({ message }: { message: TMessage }) => {
-    const ImageComponent = ({ attachment }: { attachment: TAttachment }) => (
+const MessageAttachments = ({ message }: { message: Message }) => {
+    const ImageComponent = ({ attachment }: { attachment }) => (
         <Image
             key={attachment.id}
             attachment={attachment}
@@ -417,14 +318,8 @@ const MessageAttachments = ({ message }: { message: TMessage }) => {
     );
 };
 
-type ImageComponent = {
-    attachment: TAttachment;
-    message: TMessage;
-};
-
-const Image = ({ attachment }: ImageComponent) => {
+const Image = ({ attachment }) => {
     const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const isHidden = attachment.isSpoiler && !hideSpoiler;
 
     return useMemo(
@@ -459,21 +354,14 @@ const Image = ({ attachment }: ImageComponent) => {
                 </div>
 
                 {isHidden && <div className={styles.spoilerButton}>Spoiler</div>}
-                {attachment?.description && (!attachment.isSpoiler || hideSpoiler) && (
-                    <button
-                        className={styles.imageAlt}
-                        onMouseEnter={(e) => {
-                            if (!attachment.description) return;
-                            setTooltip({
-                                text: attachment.description,
-                                element: e.currentTarget,
-                                gap: 2,
-                            });
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        ALT
-                    </button>
+                {attachment.description && (!attachment.isSpoiler || hideSpoiler) && (
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <button className={styles.imageAlt}>ALT</button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>{attachment.description}</TooltipContent>
+                    </Tooltip>
                 )}
             </div>
         ),

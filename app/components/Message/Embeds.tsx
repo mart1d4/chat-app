@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./Message.module.css";
-import { useLayers } from "@/lib/store";
+import { useLayers } from "@/store";
 import { Icon } from "@components";
 
 export function MessageEmbeds({ message, functions }: { message: TMessage; functions: any }) {

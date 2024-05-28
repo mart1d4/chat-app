@@ -1,38 +1,34 @@
--- Create Database
-
-CREATE DATABASE IF NOT EXISTS `chat-app` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-
 -- User Table
 
-CREATE TABLE `users` (
-	`id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `users` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`username` varchar(32) NOT NULL,
-	`display_name` varchar(32) NOT NULL,
-	`email` varchar(255),
-	`phone` varchar(15),
+	-- Need this for case sensitivity
+	`username` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL UNIQUE,
+	`display_name` VARCHAR(32) NOT NULL,
+	`email` VARCHAR(255) UNIQUE,
+	`phone` VARCHAR(15) UNIQUE,
 
-	`avatar` varchar(36) NOT NULL,
-	`banner` varchar(36),
-	`primary_color` varchar(7) NOT NULL,
-	`accent_color` varchar(7) NOT NULL,
+	`avatar` VARCHAR(100) NOT NULL,
+	`banner` VARCHAR(100),
+	`primary_color` VARCHAR(7) NOT NULL,
+	`accent_color` VARCHAR(7) NOT NULL,
 
-	`description` varchar(190),
-	`custom_status` varchar(128),
+	`description` VARCHAR(190),
+	`custom_status` VARCHAR(128),
 	`status` enum('online', 'idle', 'dnd', 'invisible', 'offline') NOT NULL DEFAULT 'offline',
 
-	`password` varchar(256) NOT NULL,
-	`refresh_tokens` json NOT NULL,
+	`password` VARCHAR(256) NOT NULL,
+	`tokens` JSON NOT NULL,
 
-	`system` tinyint(1) NOT NULL DEFAULT '0',
-	`verified` tinyint(1) NOT NULL DEFAULT '0',
+	`system` TINYINT(1) NOT NULL DEFAULT '0',
+	`verified` TINYINT(1) NOT NULL DEFAULT '0',
 
-	`notes` json NOT NULL,
-	`notifications` json NOT NULL,
+	`notes` JSON NOT NULL,
+	`notifications` JSON NOT NULL,
 
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
-	`is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
+	`is_deleted` TINYINT(1) NOT NULL DEFAULT '0',
 
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `users_username_key` (`username`),
@@ -45,36 +41,36 @@ CREATE TABLE `users` (
 
 -- Channel Table
 
-CREATE TABLE `channels` (
-	`id` bigint NOT NULL,
-	`type` int NOT NULL,
+CREATE TABLE IF NOT EXISTS `channels` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
+	`type` INT NOT NULL,
 
-	`name` varchar(100),
-	`topic` varchar(1024),
-	`icon` varchar(36),
-	`nsfw` tinyint(1),
+	`name` VARCHAR(100),
+	`topic` VARCHAR(1024),
+	`icon` VARCHAR(100),
+	`nsfw` TINYINT(1),
 
-	`position` int,
-	`parent_id` bigint,
+	`position` INT,
+	`parent_id` BIGINT,
 
-	`last_message_id` bigint,
-	`last_pin_timestamp` datetime(3),
+	`last_message_id` BIGINT,
+	`last_pin_timestamp` DATETIME(3),
 
-	`bitrate` int,
-	`rate_limit` int,
-	`user_limit` int,
+	`bitrate` INT,
+	`rate_limit` INT,
+	`user_limit` INT,
 
-	`rtc_region` varchar(191),
-	`video_quality_mode` varchar(191),
+	`rtc_region` VARCHAR(191),
+	`video_quality_mode` VARCHAR(191),
 
-	`owner_id` bigint,
-	`guild_id` bigint,
+	`owner_id` BIGINT,
+	`guild_id` BIGINT,
 
-	`permission_overwrites` json NOT NULL,
+	`permission_overwrites` JSON NOT NULL,
 
-	`createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
-	`updated_at` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
-	`is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+	`createdAt` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
+	`updated_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
+	`is_deleted` TINYINT(1) NOT NULL DEFAULT '0',
 
 	PRIMARY KEY (`id`),
     KEY `parent_id_idx` (`parent_id`),
@@ -87,27 +83,26 @@ CREATE TABLE `channels` (
 
 -- Guild Table
 
-CREATE TABLE `guilds` (
-	`id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `guilds` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` varchar(100) NOT NULL,
-	`icon` varchar(36),
-	`banner` varchar(36),
-	`description` varchar(256),
+	`name` VARCHAR(100) NOT NULL,
+	`icon` VARCHAR(100),
+	`banner` VARCHAR(100),
+	`description` VARCHAR(256),
 
-	`system_channel_id` bigint,
-	`afk_channel_id` bigint,
-	`afk_timeout` int,
+	`system_channel_id` BIGINT,
+	`afk_channel_id` BIGINT,
+	`afk_timeout` INT,
     
-	`vanity_url` varchar(32),
-	`vanity_url_uses` int,
-	`welcome_screen` json,
+	`vanity_url` VARCHAR(100),
+	`vanity_url_uses` INT,
+	`welcome_screen` JSON,
 
-	`owner_id` bigint NOT NULL,
-	`members` json NOT NULL,
+	`owner_id` BIGINT NOT NULL,
 
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
-	`is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
+	`is_deleted` TINYINT(1) NOT NULL DEFAULT '0',
 
 	PRIMARY KEY (`id`),
     KEY `owner_id_idx` (`owner_id`),
@@ -120,29 +115,29 @@ CREATE TABLE `guilds` (
 
 -- Message Table
 
-CREATE TABLE `messages` (
-	`id` bigint NOT NULL,
-	`type` int NOT NULL,
+CREATE TABLE IF NOT EXISTS `messages` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
+	`type` INT NOT NULL,
 
-	`content` varchar(4000),
-	`attachments` json,
-	`embeds` json,
+	`content` VARCHAR(16000),
+	`attachments` JSON NOT NULL,
+	`embeds` JSON NOT NULL,
 
-	`edited` datetime(3),
-	`pinned` datetime(3),
+	`edited` DATETIME(3),
+	`pinned` DATETIME(3),
 
-	`reactions` json,
-	`message_reference_id` bigint,
+	`reactions` JSON NOT NULL,
+	`message_reference_id` BIGINT,
 
-	`mentions` json,
-	`mention_role_ids` json,
-	`mention_channel_ids` json,
-	`mention_everyone` tinyint(1) NOT NULL DEFAULT '0',
+	`user_mentions` JSON NOT NULL,
+	`role_mentions` JSON NOT NULL,
+	`channel_mentions` JSON NOT NULL,
+	`mention_everyone` TINYINT(1) NOT NULL DEFAULT '0',
 
-	`author_id` bigint NOT NULL,
-	`channel_id` bigint NOT NULL,
+	`author_id` BIGINT NOT NULL,
+	`channel_id` BIGINT NOT NULL,
 
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
 
 	PRIMARY KEY (`id`),
     KEY `author_id_idx` (`author_id`),
@@ -155,16 +150,16 @@ CREATE TABLE `messages` (
 
 -- Emoji Table
 
-CREATE TABLE `emojis` (
-	`id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `emojis` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` varchar(32) NOT NULL,
-	`url` varchar(256) NOT NULL,
-	`animated` tinyint(1) NOT NULL DEFAULT '0',
+	`name` VARCHAR(32) NOT NULL,
+	`url` VARCHAR(256) NOT NULL,
+	`animated` TINYINT(1) NOT NULL DEFAULT '0',
 
-	`guild_id` bigint NOT NULL,
+	`guild_id` BIGINT NOT NULL,
 
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
 
 	PRIMARY KEY (`id`),
     KEY `guild_id_idx` (`guild_id`)
@@ -175,21 +170,21 @@ CREATE TABLE `emojis` (
 
 -- Role Table
 
-CREATE TABLE `roles` (
-	`id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `roles` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` varchar(32) NOT NULL,
-	`color` varchar(7) NOT NULL DEFAULT '#99AAB5',
+	`name` VARCHAR(32) NOT NULL,
+	`color` VARCHAR(7) NOT NULL DEFAULT '#99AAB5',
 
-	`hoist` tinyint(1) NOT NULL DEFAULT '0',
-	`position` int NOT NULL,
+	`hoist` TINYINT(1) NOT NULL DEFAULT '0',
+	`position` INT NOT NULL,
 
-	`permissions` json NOT NULL,
-	`mentionable` tinyint(1) NOT NULL DEFAULT '0',
+	`permissions` BIGINT NOT NULL,
+	`mentionable` TINYINT(1) NOT NULL DEFAULT '0',
 
-	`guild_id` bigint NOT NULL,
+	`guild_id` BIGINT NOT NULL,
 
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
 
 	PRIMARY KEY (`id`),
     KEY `guild_id_idx` (`guild_id`)
@@ -200,22 +195,22 @@ CREATE TABLE `roles` (
 
 -- Invite Table
 
-CREATE TABLE `invites` (
-	`id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `invites` (
+	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`code` varchar(8) NOT NULL,
-	`uses` int NOT NULL DEFAULT '0',
-	`temporary` tinyint(1) NOT NULL DEFAULT '0',
+	`code` VARCHAR(8) NOT NULL UNIQUE,
+	`uses` INT NOT NULL DEFAULT '0',
+	`temporary` TINYINT(1) NOT NULL DEFAULT '0',
 
-	`max_age` int NOT NULL DEFAULT '86400',
-	`max_uses` int NOT NULL DEFAULT '100',
+	`max_age` INT NOT NULL DEFAULT '86400',
+	`max_uses` INT NOT NULL DEFAULT '100',
 
-	`inviter_id` bigint NOT NULL,
-	`channel_id` bigint NOT NULL,
-	`guild_id` bigint,
+	`inviter_id` BIGINT NOT NULL,
+	`channel_id` BIGINT NOT NULL,
+	`guild_id` BIGINT,
 
-	`expires_at` datetime(3) NOT NULL,
-	`created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+	`expires_at` DATETIME(3) NOT NULL,
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
 
 	PRIMARY KEY (`id`),
 
@@ -228,17 +223,11 @@ CREATE TABLE `invites` (
   COLLATE utf8mb4_unicode_ci;
 
 
-
---------------------
---    Relations   --
---------------------
-
-
 -- Friends
 
-CREATE TABLE `friends` (
-    `A` bigint NOT NULL,
-    `B` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `friends` (
+    `A` BIGINT NOT NULL,
+    `B` BIGINT NOT NULL,
 
     UNIQUE KEY `friends_AB_idx` (`A`, `B`),
     UNIQUE KEY `friends_BA_idx` (`B`, `A`)
@@ -249,9 +238,9 @@ CREATE TABLE `friends` (
 
 -- Blocked
 
-CREATE TABLE `blocked` (
-    `blocker_id` bigint NOT NULL,
-    `blocked_id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `blocked` (
+    `blocker_id` BIGINT NOT NULL,
+    `blocked_id` BIGINT NOT NULL,
 
     UNIQUE KEY `blocker_id_idx` (`blocker_id`, `blocked_id`),
     KEY `blocked_id_idx` (`blocked_id`)
@@ -262,9 +251,9 @@ CREATE TABLE `blocked` (
 
 -- Requests
 
-CREATE TABLE `requests` (
-    `requester_id` bigint NOT NULL,
-    `requested_id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `requests` (
+    `requester_id` BIGINT NOT NULL,
+    `requested_id` BIGINT NOT NULL,
 
     UNIQUE KEY `requester_id_idx` (`requester_id`, `requested_id`),
     UNIQUE KEY `requested_id_idx` (`requested_id`, `requester_id`)
@@ -275,10 +264,10 @@ CREATE TABLE `requests` (
 
 -- ChannelRecipients
 
-CREATE TABLE `channelrecipients` (
-    `channel_id` bigint NOT NULL,
-    `user_id` bigint NOT NULL,
-	`is_hidden` tinyint(1) NOT NULL DEFAULT '0',
+CREATE TABLE IF NOT EXISTS `channelrecipients` (
+    `channel_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+	`is_hidden` TINYINT(1) NOT NULL DEFAULT '0',
 
     UNIQUE KEY `recipients_channel_id_idx` (`channel_id`, `user_id`),
     KEY `recipients_user_id_idx` (`user_id`)
@@ -289,9 +278,10 @@ CREATE TABLE `channelrecipients` (
 
 -- GuildMembers
 
-CREATE TABLE `guildmembers` (
-    `guild_id` bigint NOT NULL,
-    `user_id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `guildmembers` (
+    `guild_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+	`profile` JSON NOT NULL,
 
     UNIQUE KEY `members_guild_id_idx` (`guild_id`, `user_id`),
     KEY `members_user_id_idx` (`user_id`)
@@ -302,9 +292,9 @@ CREATE TABLE `guildmembers` (
 
 -- ChannelMessages
 
-CREATE TABLE `channelmessages` (
-    `channel_id` bigint NOT NULL,
-    `message_id` bigint NOT NULL,
+CREATE TABLE IF NOT EXISTS `channelmessages` (
+    `channel_id` BIGINT NOT NULL,
+    `message_id` BIGINT NOT NULL,
 
     UNIQUE KEY `messages_channel_id_idx` (`channel_id`, `message_id`),
     KEY `messages_message_id_idx` (`message_id`)

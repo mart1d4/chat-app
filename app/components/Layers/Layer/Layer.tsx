@@ -1,9 +1,9 @@
 "use client";
 
-import { Menu, Popup, UserCard, UserProfile } from "@components";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { Menu, Popup, UserCard, UserProfile } from "@components";
+import { TLayer, useLayers } from "@/store";
 import styles from "./Layer.module.css";
-import { TLayer, useLayers } from "@/lib/store";
 
 const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
 
@@ -41,51 +41,53 @@ export function Layers() {
     }, [layers]);
 
     return (
-        <div className={`${styles.container} ${showFilter ? styles.showFilter : ""}`}>
-            <div
-                className={styles.filter}
-                onClick={() => {
-                    if (layers.USER_PROFILE || layers.POPUP.length) {
-                        setLayers({
-                            settings: {
-                                type: layers.POPUP.length ? "POPUP" : "USER_PROFILE",
-                                setNull: true,
-                            },
-                        });
-                    }
-                }}
-                style={{ animationName: closing ? styles.fadeOut : "" }}
-            />
-
-            {layers.POPUP.map((_, index: number) => (
-                <Layer
-                    key={index}
-                    settings={layers.POPUP[index].settings}
-                    content={layers.POPUP[index].content}
+        <>
+            <div className={`${styles.container} ${showFilter ? styles.showFilter : ""}`}>
+                <div
+                    className={styles.filter}
+                    onClick={() => {
+                        if (layers.USER_PROFILE || layers.POPUP.length) {
+                            setLayers({
+                                settings: {
+                                    type: layers.POPUP.length ? "POPUP" : "USER_PROFILE",
+                                    setNull: true,
+                                },
+                            });
+                        }
+                    }}
+                    style={{ animationName: closing ? styles.fadeOut : "" }}
                 />
-            ))}
 
-            {layers.MENU && (
-                <Layer
-                    settings={layers.MENU.settings}
-                    content={layers.MENU.content}
-                />
-            )}
+                {layers.POPUP.map((_, index: number) => (
+                    <Layer
+                        key={index}
+                        settings={layers.POPUP[index].settings}
+                        content={layers.POPUP[index].content}
+                    />
+                ))}
 
-            {layers.USER_CARD && (
-                <Layer
-                    settings={layers.USER_CARD.settings}
-                    content={layers.USER_CARD.content}
-                />
-            )}
+                {layers.MENU && (
+                    <Layer
+                        settings={layers.MENU.settings}
+                        content={layers.MENU.content}
+                    />
+                )}
 
-            {layers.USER_PROFILE && (
-                <Layer
-                    settings={layers.USER_PROFILE.settings}
-                    content={layers.USER_PROFILE.content}
-                />
-            )}
-        </div>
+                {layers.USER_CARD && (
+                    <Layer
+                        settings={layers.USER_CARD.settings}
+                        content={layers.USER_CARD.content}
+                    />
+                )}
+
+                {layers.USER_PROFILE && (
+                    <Layer
+                        settings={layers.USER_PROFILE.settings}
+                        content={layers.USER_PROFILE.content}
+                    />
+                )}
+            </div>{" "}
+        </>
     );
 }
 
@@ -227,7 +229,7 @@ function Layer({
         USER_PROFILE: 1003,
     };
 
-    const index = popoutTypes.includes(content.type) ? 1001 : indexes[settings.type];
+    const index = popoutTypes.includes(content.type) ? 998 : indexes[settings.type];
 
     return (
         <div

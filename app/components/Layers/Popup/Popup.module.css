@@ -235,15 +235,14 @@ main.content > form > *:not(:last-child) {
 }
 
 .headerImage {
-    margin: -33px 16px 0 0;
+    width: 100px;
+    height: 130px;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .headerImage.centered {
     margin: -60px auto 0 auto;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
 .emojiPicker {
@@ -1071,4 +1070,17 @@ main.content > form > *:not(:last-child) {
 .slider {
     display: flex;
     flex-direction: column;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox > label {
+    padding-left: 8px;
+    cursor: pointer;
+    flex-grow: 1;
 }

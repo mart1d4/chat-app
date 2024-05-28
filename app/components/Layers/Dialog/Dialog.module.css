@@ -1,0 +1,195 @@
+.overlay {
+    display: grid;
+    place-items: center;
+    background-color: hsla(0, 0%, 0%, 0.8);
+    animation: fadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    z-index: 999;
+}
+
+.dialog {
+    display: flex;
+    flex-direction: column;
+    width: 440px;
+    max-height: min(720px, calc(100dvh - 40px));
+    min-height: 200px;
+    background-color: var(--background-4);
+    border-radius: 4px;
+    box-shadow: var(--elevation-high), var(--elevation-low);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.header {
+    flex: 0 0 auto;
+    border-radius: 4px 4px 0 0;
+    word-wrap: break-word;
+    position: relative;
+    padding: 16px;
+    overflow: hidden;
+    flex-wrap: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.header.centered {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    word-wrap: break-word;
+    position: relative;
+    padding: 24px 16px;
+    overflow-x: hidden;
+    user-select: none;
+}
+
+.header.centered > div:first-child {
+    text-align: center;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 30px;
+    color: var(--foreground-1);
+}
+
+.header.centered > div:nth-child(2) {
+    color: var(--foreground-3);
+    margin-top: 8px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.dialog > header > h2 {
+    color: var(--foreground-1);
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+}
+
+.close {
+    display: flex;
+    border: none;
+    background-color: transparent;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px;
+    opacity: 0.5;
+    cursor: pointer;
+    border-radius: 3px;
+    color: var(--foreground-3);
+}
+
+.close:hover,
+.close:focus-visible {
+    opacity: 1;
+}
+
+.content {
+    overflow: hidden scroll;
+    padding-right: 8px;
+    padding-bottom: 20px;
+    position: relative;
+    border-radius: 5px 5px 0 0;
+    padding-left: 16px;
+    flex: 1 1 auto;
+    user-select: none;
+}
+
+@-moz-document url-prefix() {
+    .content {
+        padding-right: 16px;
+    }
+}
+
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content > div:first-child {
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.content > div:first-child.small {
+    color: var(--foreground-3);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+}
+
+.content > form > *:not(:last-child) {
+    margin-bottom: 24px;
+}
+
+.footer {
+    flex: 0 0 auto;
+    border-radius: 0 0 5px 5px;
+    background-color: var(--background-3);
+    padding: 16px;
+    overflow-x: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 0 hsla(220, 6.5%, 18%, 0.6);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    flex-direction: row-reverse;
+}
+
+.footer.column {
+    flex-direction: column;
+}
+
+.footer.spaced {
+    justify-content: space-between;
+}
+
+.footer > button {
+    height: 38px;
+    min-width: 96px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+}

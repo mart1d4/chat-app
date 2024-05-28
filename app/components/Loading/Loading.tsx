@@ -1,51 +1,43 @@
 "use client";
 
-import { useData, useNotifications, usePusher, useWidthThresholds } from "@/lib/store";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useData, usePusher, useWindowSettings } from "@/store";
+import { Channels, Guilds, Users } from "@/lib/db/types";
 import styles from "./Loading.module.css";
+import { use, useEffect } from "react";
 import Pusher from "pusher-js";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export function Loading({ children, data }: Props) {
+export function Loading({
+    children,
+    data,
+}: {
+    children: React.ReactNode;
+    data: {
+        user: Partial<Users>;
+        friends: Partial<Users>[];
+        blocked: Partial<Users>[];
+        received: Partial<Users>[];
+        sent: Partial<Users>[];
+        channels: Partial<Channels>[];
+        guilds: Partial<Guilds>[];
+    };
+}) {
     const setReceived = useData((state) => state.setReceived);
     const setChannels = useData((state) => state.setChannels);
     const setFriends = useData((state) => state.setFriends);
     const setBlocked = useData((state) => state.setBlocked);
     const setGuilds = useData((state) => state.setGuilds);
-    const setToken = useData((state) => state.setToken);
     const setSent = useData((state) => state.setSent);
     const setUser = useData((state) => state.setUser);
 
-    const removeUser = useData((state) => state.removeUser);
-    const modifyUser = useData((state) => state.modifyUser);
-    const addUser = useData((state) => state.addUser);
-
-    const updateChannel = useData((state) => state.updateChannel);
-    const removeChannel = useData((state) => state.removeChannel);
-    const moveChannelUp = useData((state) => state.moveChannelUp);
-    const removeGuild = useData((state) => state.removeGuild);
-    const updateGuild = useData((state) => state.updateGuild);
-    const addChannel = useData((state) => state.addChannel);
-    const addGuild = useData((state) => state.addGuild);
-
-    const setWidthThreshold = useWidthThresholds((state) => state.setWidthThreshold);
-    const widthThresholds = useWidthThresholds((state) => state.widthThresholds);
+    const setWidthThreshold = useWindowSettings((state) => state.setWidthThreshold);
+    const widthThresholds = useWindowSettings((state) => state.widthThresholds);
+    const setShiftDown = useWindowSettings((state) => state.setShiftKeyDown);
 
     const setPusher = usePusher((state) => state.setPusher);
     const pusher = usePusher((state) => state.pusher);
-
-    const addPing = useNotifications((state) => state.addPing);
-
-    const channels = useData((state) => state.channels);
-    const guilds = useData((state) => state.guilds);
-
-    const token = useData((state) => state.token);
     const user = useData((state) => state.user);
-
-    const hasRendered = useRef(false);
-    const pathname = usePathname();
 
     function updateWidths(width: number) {
         for (const [k, value] of Object.entries(widthThresholds)) {
@@ -73,41 +65,45 @@ export function Loading({ children, data }: Props) {
     }, [widthThresholds]);
 
     useEffect(() => {
-        const env = process.env.NODE_ENV;
-
-        const setAuthContext = async () => {
-            const response = await fetch(`${apiUrl}/auth/refresh`, {
-                method: "GET",
-                credentials: "include",
-            })
-                .then((res) => res.json())
-                .catch(() => {
-                    console.log("Error fetching /auth/refresh");
-                });
-
-            if (response.token) {
-                setUser(data.user);
-                setFriends(data.friends);
-                setBlocked(data.blocked);
-                setReceived(data.received);
-                setSent(data.sent);
-                setChannels(data.channels);
-                setGuilds(data.guilds);
-                setToken(response.token);
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === "Shift") {
+                setShiftDown(true);
             }
-        };
-
-        if (env === "development" && !hasRendered.current) {
-            return () => {
-                hasRendered.current = true;
-            };
         }
 
-        setAuthContext();
+        function handleKeyUp(e: KeyboardEvent) {
+            if (e.key === "Shift") {
+                setShiftDown(false);
+            }
+        }
+
+        function handleWindowBlur() {
+            setShiftDown(false);
+        }
+
+        window.addEventListener("blur", handleWindowBlur);
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+
+        return () => {
+            window.removeEventListener("blur", handleWindowBlur);
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
     }, []);
 
     useEffect(() => {
-        if (!token) return;
+        setUser(data.user);
+        setFriends(data.friends);
+        setBlocked(data.blocked);
+        setReceived(data.received);
+        setSent(data.sent);
+        setChannels(data.channels);
+        setGuilds(data.guilds);
+    }, []);
+
+    useEffect(() => {
+        return;
 
         const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
         const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
@@ -140,7 +136,7 @@ export function Loading({ children, data }: Props) {
         return () => {
             pusher.disconnect();
         };
-    }, [token]);
+    }, []);
 
     useEffect(() => {
         if (!pusher || !user) return;
@@ -158,32 +154,6 @@ export function Loading({ children, data }: Props) {
         };
     }, [pusher, user]);
 
-    // useEffect(() => {
-    //     console.log("Pathname changed", pathname);
-
-    //     pusher.bind("message", (data) => {
-    //         console.log("Received message");
-
-    //         if (channels.find((channel) => channel.id == data.channelId)) {
-    //             if (!pathname.includes(data.channelId)) {
-    //                 // Play sound
-    //                 const audio = new Audio("/assets/sounds/ping.mp3");
-    //                 audio.volume = 0.5;
-    //                 audio.play();
-    //                 addPing(data.channelId);
-    //             }
-
-    //             if (channels[0].id != data.channelId) {
-    //                 moveChannelUp(data.channelId);
-    //             }
-    //         }
-    //     });
-
-    //     return () => {
-    //         pusher.unbind("message");
-    //     };
-    // }, [channels, pathname]);
-
     return (
         <div
             onDrag={(e) => e.preventDefault()}
@@ -192,7 +162,7 @@ export function Loading({ children, data }: Props) {
             onDragStart={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
         >
-            {token ? (
+            {user ? (
                 children
             ) : (
                 <div className={styles.container}>

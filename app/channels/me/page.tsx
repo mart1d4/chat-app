@@ -5,7 +5,7 @@ import Content from "./Content";
 import Aside from "./Aside";
 
 export const metadata: Metadata = {
-    title: "Chat App | Friends",
+    title: "Spark | Friends",
 };
 
 export default function FriendsPage() {

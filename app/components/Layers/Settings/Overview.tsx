@@ -32,7 +32,7 @@ export function Overview({ channel }) {
             const response = await sendRequest({
                 query: "CHANNEL_UPDATE",
                 params: { channelId: channel.id },
-                data: {
+                body: {
                     name: channelName,
                     topic: channelTopic,
                 },

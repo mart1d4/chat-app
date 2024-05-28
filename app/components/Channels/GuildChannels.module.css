@@ -484,7 +484,9 @@
     height: auto;
 }
 
-.channel a:hover .tools > button {
+.channel a:hover .tools > button,
+.channel a:focus-within .tools > button,
+.channel a .tools.show > button {
     display: flex;
     flex: 0 0 auto;
 }

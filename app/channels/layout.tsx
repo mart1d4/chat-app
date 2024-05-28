@@ -1,4 +1,4 @@
-import { AppNav, Settings, Layers, Tooltip, Loading } from "@components";
+import { AppNav, Settings, Layers, Loading } from "@components";
 import { getInitialData } from "@/lib/db/helpers";
 import { redirect } from "next/navigation";
 import styles from "./Layout.module.css";
@@ -6,7 +6,7 @@ import { ReactElement } from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Chat App | Friends",
+    title: "Spark | Friends",
 };
 
 export default async function Layout({ children }: { children: ReactElement }) {
@@ -14,18 +14,7 @@ export default async function Layout({ children }: { children: ReactElement }) {
     if (!data) redirect("/login");
 
     return (
-        <Loading
-            data={{
-                user: data.user,
-                friends: data.friends,
-                blocked: data.blocked,
-                blockedBy: data.blockedBy,
-                received: data.received,
-                sent: data.sent,
-                channels: data.channels,
-                guilds: data.guilds,
-            }}
-        >
+        <Loading data={data}>
             <div className={styles.appContainer}>
                 <AppNav />
 
@@ -36,7 +25,6 @@ export default async function Layout({ children }: { children: ReactElement }) {
                 <div className={styles.layers}>
                     <Settings />
                     <Layers />
-                    <Tooltip />
                 </div>
             </div>
         </Loading>

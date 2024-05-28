@@ -54,7 +54,7 @@ export default function useRequests() {
         try {
             const response = await sendRequest({
                 query: "UPDATE_USER",
-                data: {
+                body: {
                     username: username,
                     password: password,
                 },
@@ -86,87 +86,7 @@ export default function useRequests() {
         setLoading && setLoading(false);
     }
 
-    async function createGuild({
-        template,
-        name,
-        icon,
-        onSuccess,
-        onError,
-        setErrors,
-        setLoading,
-    }: {
-        template: number;
-        name: string;
-        icon?: File;
-        onSuccess?: (response: any) => void;
-        onError?: () => void;
-        setErrors?: (errors: Errors) => void;
-        setLoading?: (loading: boolean) => void;
-    }) {
-        if (setLoading) setLoading(true);
-        const errors: Errors = {};
-
-        if (template < 0 || template > 7) {
-            errors.template = "Template is required";
-        }
-
-        if (!name) {
-            errors.name = "Name is required";
-        }
-
-        if (name.length < 2 || name.length > 100) {
-            errors.name = "Name must be between 2 and 100 characters long";
-        }
-
-        if (Object.keys(errors).length > 0) {
-            setErrors && setErrors(errors);
-            onError && onError();
-            setLoading && setLoading(false);
-            return { errors };
-        }
-
-        try {
-            const uploadedIcon = await (async () => {
-                if (!icon) return null;
-                const key = process.env.NEXT_PUBLIC_CDN_TOKEN;
-                if (!key) throw new Error("No CDN token found");
-
-                const result = await base(icon, {
-                    publicKey: key,
-                    store: "auto",
-                });
-
-                if (!result.file) {
-                    throw new Error("No file returned");
-                } else {
-                    return result.file;
-                }
-            })();
-
-            const response = await sendRequest({
-                query: "GUILD_CREATE",
-                data: {
-                    name: name,
-                    icon: uploadedIcon,
-                    template: template,
-                },
-            });
-
-            if (!response.success) {
-                errors.name = response.message;
-            } else {
-                onSuccess && onSuccess(response);
-            }
-        } catch (err) {
-            console.error(`[useRequests] createGuild: ${err}`);
-            onError && onError();
-        }
-
-        setLoading && setLoading(false);
-    }
-
     return {
         modifyUsername,
-        createGuild,
     };
 }

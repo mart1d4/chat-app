@@ -1,39 +1,51 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { usernameRegex } from "@/lib/verifications";
 import styles from "./AddFriend.module.css";
-import { useLayers } from "@/lib/store";
+import { useLayers } from "@/store";
+import { useState } from "react";
 import Image from "next/image";
 
-const defaultMessage = "Hm, didn't work. Double check that the username is correct.";
-
-export const AddFriend = () => {
-    const [input, setInput] = useState<string>("");
-    const [error, setError] = useState<string>("");
-    const [valid, setValid] = useState<string>("");
-    const [loading, setLoading] = useState<boolean>(false);
+export function AddFriend() {
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [loading, setLoading] = useState(false);
+    const [input, setInput] = useState("");
+    const [valid, setValid] = useState("");
 
     const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    const pasteText = async () => {
+    async function pasteText() {
         const text = await navigator.clipboard.readText();
         setInput((prev) => prev + text);
-        inputRef.current?.focus();
-    };
+        const input = document.getElementById(styles.input) as HTMLInputElement;
+        input.focus();
+    }
 
-    useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
+    async function handleSubmit(e: React.MouseEvent | React.KeyboardEvent) {
+        e.preventDefault();
+        if (!input.length || loading) return;
+        setLoading(true);
 
-    useEffect(() => {
-        if (error.length > 0) setValid("");
-        if (valid.length > 0) setError("");
-    }, [error, valid]);
+        try {
+            const response = await sendRequest({
+                query: "ADD_FRIEND",
+                body: { username: input },
+            });
+
+            if (!response.errors) {
+                setValid(response.message);
+            } else {
+                setErrors(response.errors);
+            }
+        } catch (error) {
+            setErrors({ server: "Something went wrong." });
+        }
+
+        setLoading(false);
+    }
+
+    const isError = errors?.username || errors?.server;
 
     return (
         <div className={styles.content}>
@@ -42,70 +54,38 @@ export const AddFriend = () => {
 
                 <form autoComplete="off">
                     <div className={styles.description}>
-                        You can add friends with their Chat App username.
+                        You can add friends with their Spark username.
                     </div>
 
                     <div
                         className={styles.inputWrapper}
                         style={{
-                            outline:
-                                error.length > 0
-                                    ? "1px solid var(--error-1)"
-                                    : valid.length > 0
-                                    ? "1px solid var(--success-1)"
-                                    : "",
+                            outline: isError
+                                ? "1px solid var(--error-1)"
+                                : !!valid.length
+                                ? "1px solid var(--success-1)"
+                                : "",
                         }}
                     >
                         <div>
                             <input
-                                ref={inputRef}
+                                ref={(el) => el?.focus()}
+                                id={styles.input}
                                 type="text"
                                 autoComplete="off"
-                                placeholder="You can add friends with their Chat App username."
+                                placeholder="You can add friends with their Spark username."
                                 aria-label="username"
                                 minLength={2}
                                 maxLength={32}
                                 value={input}
                                 onChange={(e) => {
                                     setInput(e.target.value);
-                                    setError("");
+                                    setErrors({});
                                     setValid("");
                                 }}
-                                onKeyDown={async (e) => {
-                                    if (e.key === "Enter") {
-                                        if (!input.length || loading) {
-                                            return inputRef.current?.focus();
-                                        }
-
-                                        setLoading(true);
-
-                                        if (!usernameRegex.test(input)) {
-                                            setError(defaultMessage);
-                                            return setLoading(false);
-                                        }
-
-                                        const res = await sendRequest({
-                                            query: "ADD_FRIEND",
-                                            data: { username: input },
-                                        });
-
-                                        if (!res.success) {
-                                            setError(res.message);
-                                        } else {
-                                            setValid(res.message);
-                                            setInput("");
-                                        }
-
-                                        setLoading(false);
-                                    }
-                                }}
                                 onContextMenu={(e) => {
-                                    e.preventDefault();
                                     setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
+                                        settings: { type: "MENU", event: e },
                                         content: {
                                             type: "INPUT",
                                             input: true,
@@ -117,49 +97,25 @@ export const AddFriend = () => {
                         </div>
 
                         <button
-                            className={input.length > 0 ? "button blue" : "button blue disabled"}
-                            onClick={async (e) => {
-                                e.preventDefault();
-                                if (!input.length || loading) {
-                                    return inputRef.current?.focus();
-                                }
-
-                                setLoading(true);
-
-                                if (!usernameRegex.test(input)) {
-                                    setError(defaultMessage);
-                                    return setLoading(false);
-                                }
-
-                                const res = await sendRequest({
-                                    query: "ADD_FRIEND",
-                                    data: { username: input },
-                                });
-
-                                if (!res.success) {
-                                    setError(res.message);
-                                } else {
-                                    setValid(res.message);
-                                    setInput("");
-                                }
-
-                                setLoading(false);
-                            }}
+                            className={`button blue ${!input.length ? "disabled" : ""}`}
+                            onClick={(e) => handleSubmit(e)}
                         >
                             Send Friend Request
                         </button>
                     </div>
 
-                    {error.length > 0 && <div className={styles.error}>{error}</div>}
+                    {(errors.username || errors.server) && (
+                        <div className={styles.error}>{errors.username || errors.server}</div>
+                    )}
 
-                    {valid.length > 0 && <div className={styles.valid}>{valid}</div>}
+                    {!!valid.length && <div className={styles.valid}>{valid}</div>}
                 </form>
             </header>
 
             <div className={styles.content}>
                 <div className={styles.noData}>
                     <Image
-                        src="https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/"
+                        src="/assets/system/add-friend.svg"
                         alt="Add Friend"
                         width={376}
                         height={162}
@@ -171,4 +127,4 @@ export const AddFriend = () => {
             </div>
         </div>
     );
-};
+}

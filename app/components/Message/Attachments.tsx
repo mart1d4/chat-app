@@ -1,9 +1,12 @@
 "use client";
 
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { useData, useLayers } from "@/store";
 import styles from "./Message.module.css";
 import { Icon } from "@components";
 import { useState } from "react";
+
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function MessageAttachments({ message, functions }: { message: TMessage; functions: any }) {
     const ImageComponent = ({ attachment }) => (
@@ -188,9 +191,8 @@ export function Image({
     message: TMessage;
     functions: any;
 }) {
-    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
+    const [hideSpoiler, setHideSpoiler] = useState(false);
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user);
 
@@ -237,19 +239,16 @@ export function Image({
                     <div>
                         <div>
                             <img
-                                src={`${process.env.NEXT_PUBLIC_CDN_URL}${
-                                    attachment.id
-                                }/-/resize/x${
-                                    attachment.dimensions?.height >= 350
-                                        ? 350
-                                        : attachment.dimensions?.height
-                                }/-/format/webp/`}
+                                src={`${cdnUrl}/${attachment.id}`}
                                 alt={attachment.name}
                                 style={{
-                                    filter:
-                                        attachment.isSpoiler && !hideSpoiler
-                                            ? "blur(44px)"
-                                            : "none",
+                                    filter: attachment.isSpoiler ? "blur(44px)" : "",
+                                    width: attachment.dimensions.width,
+                                    height: attachment.dimensions.height,
+                                }}
+                                onError={({ currentTarget }) => {
+                                    currentTarget.onerror = null;
+                                    currentTarget.src = `/assets/system/poop.svg`;
                                 }}
                             />
                         </div>
@@ -258,50 +257,46 @@ export function Image({
             </div>
 
             {(!attachment.isSpoiler || hideSpoiler) && user.id == message.author.id && (
-                <div
-                    className={styles.deleteImage}
-                    onMouseEnter={(e) => {
-                        setTooltip({
-                            text: "Delete",
-                            element: e.currentTarget,
-                            gap: 2,
-                        });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                    onClick={(e) => {
-                        e.stopPropagation();
+                <Tooltip>
+                    <TooltipTrigger>
+                        <button
+                            className={styles.deleteImage}
+                            onClick={(e) => {
+                                e.stopPropagation();
 
-                        if (message.attachments.length === 1 && !message.content) {
-                            return setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "DELETE_MESSAGE",
-                                    channelId: message.channelId,
-                                    message: message,
-                                },
-                            });
-                        }
+                                if (message.attachments.length === 1 && !message.content) {
+                                    return setLayers({
+                                        settings: {
+                                            type: "POPUP",
+                                        },
+                                        content: {
+                                            type: "DELETE_MESSAGE",
+                                            channelId: message.channelId,
+                                            message: message,
+                                        },
+                                    });
+                                }
 
-                        const updatedAttachments = message.attachments
-                            .map((file) => file.id)
-                            .filter((id: string) => id !== attachment.id);
+                                const updatedAttachments = message.attachments
+                                    .map((file) => file.id)
+                                    .filter((id: string) => id !== attachment.id);
 
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
-                            content: {
-                                type: "DELETE_ATTACHMENT",
-                                message: message,
-                                attachments: updatedAttachments,
-                            },
-                        });
-                    }}
-                >
-                    <Icon name="delete" />
-                </div>
+                                setLayers({
+                                    settings: { type: "POPUP" },
+                                    content: {
+                                        type: "DELETE_ATTACHMENT",
+                                        message: message,
+                                        attachments: updatedAttachments,
+                                    },
+                                });
+                            }}
+                        >
+                            <Icon name="delete" />
+                        </button>
+                    </TooltipTrigger>
+
+                    <TooltipContent>Delete</TooltipContent>
+                </Tooltip>
             )}
 
             {attachment.isSpoiler && !hideSpoiler && (
@@ -309,19 +304,13 @@ export function Image({
             )}
 
             {attachment.description && (!attachment.isSpoiler || hideSpoiler) && (
-                <button
-                    className={styles.imageAlt}
-                    onMouseEnter={(e) => {
-                        setTooltip({
-                            text: attachment.description,
-                            element: e.currentTarget,
-                            gap: 2,
-                        });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                >
-                    ALT
-                </button>
+                <Tooltip>
+                    <TooltipTrigger>
+                        <button className={styles.imageAlt}>ALT</button>
+                    </TooltipTrigger>
+
+                    <TooltipContent>{attachment.description}</TooltipContent>
+                </Tooltip>
             )}
         </div>
     );

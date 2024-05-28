@@ -1,8 +1,8 @@
 "use client";
 
 import { FriendRequests, MyAccount, Profiles, Overview } from "./index";
-import { useLayers, useShowSettings, useTooltip } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLayers, useShowSettings } from "@/store";
 import { useEffect, useState } from "react";
 import styles from "./Settings.module.css";
 import { Icon } from "@components";
@@ -14,7 +14,6 @@ export function Settings() {
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const showSettings = useShowSettings((state) => state.showSettings);
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
 
@@ -297,12 +296,7 @@ export function Settings() {
                                     {!!minified && (
                                         <div className={styles.closeButton}>
                                             <div>
-                                                <div
-                                                    onClick={() => {
-                                                        setTooltip(null);
-                                                        setHideNav(false);
-                                                    }}
-                                                >
+                                                <div onClick={() => setHideNav(false)}>
                                                     <Icon
                                                         name="close"
                                                         size={16}
@@ -318,12 +312,7 @@ export function Settings() {
                                 {!minified && (
                                     <div className={styles.closeButton}>
                                         <div>
-                                            <div
-                                                onClick={() => {
-                                                    setTooltip(null);
-                                                    setShowSettings(null);
-                                                }}
-                                            >
+                                            <div onClick={() => setShowSettings(null)}>
                                                 <Icon
                                                     name="close"
                                                     size={18}

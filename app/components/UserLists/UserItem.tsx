@@ -1,20 +1,14 @@
 "use client";
 
+import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useLayers, useTooltip } from "@/lib/store";
-import { ReactElement, useRef } from "react";
 import { translateCap } from "@/lib/strings";
 import styles from "./UserItem.module.css";
 import { Avatar, Icon } from "@components";
-import { UserTable } from "@/lib/db/types";
+import { useLayers } from "@/store";
+import { useRef } from "react";
 
-type Props = {
-    content: string;
-    user: Partial<UserTable>;
-};
-
-export const UserItem = ({ content, user }: Props): ReactElement => {
-    const setTooltip = useTooltip((state) => state.setTooltip);
+export function UserItem({ content, user }) {
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const { sendRequest } = useFetchHelper();
@@ -34,7 +28,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
                 sendRequest({
                     query: "CHANNEL_CREATE",
-                    data: { recipients: [user.id] },
+                    body: { recipients: [user.id] },
                 });
             }}
             onContextMenu={(e) => {
@@ -67,7 +61,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
 
                     sendRequest({
                         query: "CHANNEL_CREATE",
-                        data: { recipients: [user.id] },
+                        body: { recipients: [user.id] },
                     });
                 } else if (e.key === "Enter" && e.shiftKey) {
                     setLayers({
@@ -90,6 +84,7 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                         <Avatar
                             src={user.avatar}
                             alt={user.username}
+                            type="avatars"
                             size={32}
                             status={content !== "pending" && content !== "blocked" && user.status}
                         />
@@ -120,185 +115,134 @@ export const UserItem = ({ content, user }: Props): ReactElement => {
                 <div className={styles.actions}>
                     {(content === "all" || content === "online") && (
                         <>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    sendRequest({
-                                        query: "CHANNEL_CREATE",
-                                        data: { recipients: [user.id] },
-                                    });
-                                }}
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Message",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onFocus={(e) => {
-                                    setTooltip({
-                                        text: "Message",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onBlur={() => setTooltip(null)}
-                            >
-                                <Icon
-                                    name="message"
-                                    size={20}
-                                />
-                            </button>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            sendRequest({
+                                                query: "CHANNEL_CREATE",
+                                                body: { recipients: [user.id] },
+                                            });
+                                        }}
+                                    >
+                                        <Icon
+                                            name="message"
+                                            size={20}
+                                        />
+                                    </button>
+                                </TooltipTrigger>
 
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
-                                        content: {
-                                            type: "USER_SMALL",
-                                            user: user,
-                                            userlist: true,
-                                            refElement: liRef.current,
-                                        },
-                                    });
-                                }}
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "More",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onFocus={(e) => {
-                                    setTooltip({
-                                        text: "More",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onBlur={() => setTooltip(null)}
-                            >
-                                <Icon
-                                    name="more"
-                                    size={20}
-                                />
-                            </button>
+                                <TooltipContent>Message</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setLayers({
+                                                settings: { type: "MENU", event: e },
+                                                content: {
+                                                    type: "USER_SMALL",
+                                                    user: user,
+                                                    userlist: true,
+                                                    refElement: liRef.current,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        <Icon
+                                            name="more"
+                                            size={20}
+                                        />
+                                    </button>
+                                </TooltipTrigger>
+
+                                <TooltipContent>More</TooltipContent>
+                            </Tooltip>
                         </>
                     )}
 
                     {content === "pending" && (
                         <>
                             {user.req === "Received" && (
-                                <button
-                                    className={styles.green}
-                                    onClick={async (e) => {
-                                        e.stopPropagation();
-                                        sendRequest({
-                                            query: "ADD_FRIEND",
-                                            data: { username: user.username },
-                                        });
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        setTooltip({
-                                            text: "Accept",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                    onFocus={(e) => {
-                                        setTooltip({
-                                            text: "Accept",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        });
-                                    }}
-                                    onBlur={() => setTooltip(null)}
-                                >
-                                    <Icon
-                                        name="checkmark"
-                                        size={20}
-                                    />
-                                </button>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <button
+                                            className={styles.green}
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                sendRequest({
+                                                    query: "ADD_FRIEND",
+                                                    body: { username: user.username },
+                                                });
+                                            }}
+                                        >
+                                            <Icon
+                                                name="checkmark"
+                                                size={20}
+                                            />
+                                        </button>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>Accept</TooltipContent>
+                                </Tooltip>
                             )}
 
-                            <button
-                                className={styles.red}
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    sendRequest({
-                                        query: "REMOVE_FRIEND",
-                                        data: {
-                                            username: user.username,
-                                        },
-                                    });
-                                }}
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: user.req === "Sent" ? "Cancel" : "Ignore",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onFocus={(e) => {
-                                    setTooltip({
-                                        text: user.req === "Sent" ? "Cancel" : "Ignore",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onBlur={() => setTooltip(null)}
-                            >
-                                <Icon
-                                    name="cancel"
-                                    size={20}
-                                />
-                            </button>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <button
+                                        className={styles.red}
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            sendRequest({
+                                                query: "REMOVE_FRIEND",
+                                                body: {
+                                                    username: user.username,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        <Icon
+                                            name="cancel"
+                                            size={20}
+                                        />
+                                    </button>
+                                </TooltipTrigger>
+
+                                <TooltipContent>
+                                    {user.req === "Sent" ? "Cancel" : "Ignore"}
+                                </TooltipContent>
+                            </Tooltip>
                         </>
                     )}
 
                     {content === "blocked" && (
-                        <button
-                            className={styles.red}
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                sendRequest({
-                                    query: "UNBLOCK_USER",
-                                    params: { userId: user.id },
-                                });
-                            }}
-                            onMouseEnter={(e) => {
-                                setTooltip({
-                                    text: "Unblock",
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                });
-                            }}
-                            onMouseLeave={() => setTooltip(null)}
-                            onFocus={(e) => {
-                                setTooltip({
-                                    text: "Unblock",
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                });
-                            }}
-                            onBlur={() => setTooltip(null)}
-                        >
-                            <Icon
-                                name="unblock"
-                                size={20}
-                            />
-                        </button>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <button
+                                    className={styles.red}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        sendRequest({
+                                            query: "UNBLOCK_USER",
+                                            params: { userId: user.id },
+                                        });
+                                    }}
+                                >
+                                    <Icon
+                                        name="unblock"
+                                        size={20}
+                                    />
+                                </button>
+                            </TooltipTrigger>
+
+                            <TooltipContent>Unblock</TooltipContent>
+                        </Tooltip>
                     )}
                 </div>
             </div>
         </li>
     );
-};
+}

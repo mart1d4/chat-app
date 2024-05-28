@@ -1,75 +1,58 @@
 "use client";
 
-import { translateCap } from "@/lib/strings";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../Layers/Tooltip/Tooltip";
+import { colors, labels, masks, rectPlacements, rectSizes } from "@/lib/avatars";
 import styles from "./Avatar.module.css";
-import { useTooltip } from "@/lib/store";
-import { User } from "@/lib/db/types";
-import { useEffect } from "react";
 import Image from "next/image";
 
-type Props = {
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+
+if (!cdnUrl) {
+    throw new Error("NEXT_PUBLIC_CDN_URL is not defined.");
+}
+
+export function Avatar({
+    src,
+    type,
+    alt,
+    size,
+    status,
+    tooltip,
+    tooltipGap,
+    relativeSrc,
+}: {
     src: string;
-    srcAs?: "png" | "jpeg" | "gif" | "webp";
     alt: string;
     size: 16 | 24 | 32 | 40 | 80 | 120;
-    status?: User["status"] | undefined;
+    type: "avatars" | "banners" | "icons" | "system";
+    status?: Users["status"];
     tooltip?: boolean;
     tooltipGap?: number;
     relativeSrc?: boolean;
-};
+}) {
+    const url = relativeSrc ? src : `${cdnUrl}${src}`;
+    const rectPlacement = rectPlacements[size];
+    const rectSize = rectSizes[size];
 
-const colors = {
-    online: "#22A559",
-    idle: "#F0B232",
-    dnd: "#F23F43",
-    invisible: "#80848E",
-    offline: "#80848E",
-};
+    const statusObject = (
+        <rect
+            x={rectPlacement}
+            y={rectPlacement}
+            width={rectSize}
+            height={rectSize}
+            rx={rectSize / 2}
+            ry={rectSize / 2}
+            fill={colors[status]}
+            mask={`url(#${masks[status]})`}
+        />
+    );
 
-const rectSizes = {
-    16: 6,
-    24: 8,
-    32: 10,
-    40: 12,
-    80: 16,
-    120: 24,
-};
-
-const rectPlacements = {
-    16: 5.5,
-    24: 16.5,
-    32: 22,
-    40: 28,
-    80: 60,
-    120: 90,
-};
-
-const masks = {
-    online: "",
-    idle: "status-mask-idle",
-    dnd: "status-mask-dnd",
-    invisible: "status-mask-offline",
-    offline: "status-mask-offline",
-};
-
-export function Avatar(props: Props) {
-    const setTooltip = useTooltip((state) => state.setTooltip);
-
-    const rectSize = rectSizes[props.size];
-    const rectPlacement = rectPlacements[props.size];
-
-    useEffect(() => {
-        return () => setTooltip(null);
-    }, []);
-
-    if (!props.src) return <></>;
-
-    if (props.status) {
+    if (status) {
         return (
             <svg
-                width={props.size + 8}
-                height={props.size + 8}
-                viewBox={`0 0 ${props.size + 8} ${props.size + 8}`}
+                width={size}
+                height={size}
+                viewBox={`0 0 ${size} ${size}`}
                 aria-hidden="true"
                 className={styles.svg}
             >
@@ -238,45 +221,30 @@ export function Avatar(props: Props) {
                 <foreignObject
                     x={0}
                     y={0}
-                    width={props.size}
-                    height={props.size}
+                    width={size}
+                    height={size}
                     overflow="visible"
-                    mask={`url(#status-mask-${props.size})`}
+                    mask={`url(#status-mask-${size})`}
                 >
                     <div className={styles.container}>
                         <Image
-                            src={
-                                props.relativeSrc
-                                    ? props.src
-                                    : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size * 2}x/`
-                            }
-                            alt={props.alt}
-                            width={props.size}
-                            height={props.size}
+                            src={url}
+                            alt={alt}
+                            width={size}
+                            height={size}
                             draggable={false}
                         />
                     </div>
                 </foreignObject>
 
-                <rect
-                    onMouseEnter={(e) => {
-                        if (!props.tooltip) return;
-                        setTooltip({
-                            text: translateCap(props.status || "offline"),
-                            element: e.currentTarget,
-                            gap: props.tooltipGap || 0,
-                        });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                    x={rectPlacement}
-                    y={rectPlacement}
-                    width={rectSize}
-                    height={rectSize}
-                    rx={rectSize / 2}
-                    ry={rectSize / 2}
-                    fill={colors[props.status]}
-                    mask={`url(#${masks[props.status]})`}
-                />
+                {status && tooltip && (
+                    <Tooltip>
+                        <TooltipTrigger>{statusObject}</TooltipTrigger>
+                        <TooltipContent>{labels[status]}</TooltipContent>
+                    </Tooltip>
+                )}
+
+                {status && !tooltip && statusObject}
             </svg>
         );
     }
@@ -284,14 +252,10 @@ export function Avatar(props: Props) {
     return (
         <div className={styles.container}>
             <Image
-                src={
-                    props.relativeSrc
-                        ? props.src
-                        : `${process.env.NEXT_PUBLIC_CDN_URL}${props.src}/-/resize/${props.size * 2}x/`
-                }
-                alt={props.alt}
-                width={props.size}
-                height={props.size}
+                src={url}
+                alt={alt}
+                width={size}
+                height={size}
                 draggable={false}
             />
         </div>

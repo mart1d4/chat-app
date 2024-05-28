@@ -1,0 +1,166 @@
+export const availableLocales = [
+    "af",
+    "sq",
+    "am",
+    "ar",
+    "hy",
+    "as",
+    "ay",
+    "az",
+    "bm",
+    "eu",
+    "be",
+    "bn",
+    "bho",
+    "bs",
+    "bg",
+    "ca",
+    "ceb",
+    "zh-CN",
+    "zh-TW",
+    "co",
+    "hr",
+    "cs",
+    "da",
+    "dv",
+    "doi",
+    "nl",
+    "en",
+    "eo",
+    "et",
+    "ee",
+    "fil",
+    "fi",
+    "fr",
+    "fy",
+    "gl",
+    "ka",
+    "de",
+    "el",
+    "gn",
+    "gu",
+    "ht",
+    "ha",
+    "haw",
+    "he",
+    "hi",
+    "hmn",
+    "hu",
+    "is",
+    "ig",
+    "ilo",
+    "id",
+    "ga",
+    "it",
+    "ja",
+    "jv",
+    "kn",
+    "kk",
+    "km",
+    "rw",
+    "gom",
+    "ko",
+    "kri",
+    "ku",
+    "ckb",
+    "ky",
+    "lo",
+    "la",
+    "lv",
+    "ln",
+    "lt",
+    "lg",
+    "lb",
+    "mk",
+    "mai",
+    "mg",
+    "ms",
+    "ml",
+    "mt",
+    "mi",
+    "mr",
+    "mni-Mtei",
+    "lus",
+    "mn",
+    "my",
+    "ne",
+    "no",
+    "ny",
+    "or",
+    "om",
+    "ps",
+    "fa",
+    "pl",
+    "pt",
+    "pa",
+    "qu",
+    "ro",
+    "ru",
+    "sm",
+    "sa",
+    "gd",
+    "nso",
+    "sr",
+    "st",
+    "sn",
+    "sd",
+    "si",
+    "sk",
+    "sl",
+    "so",
+    "es",
+    "su",
+    "sw",
+    "sv",
+    "tl",
+    "tg",
+    "ta",
+    "tt",
+    "te",
+    "th",
+    "ti",
+    "ts",
+    "tr",
+    "tk",
+    "ak",
+    "uk",
+    "ur",
+    "ug",
+    "uz",
+    "vi",
+    "cy",
+    "xh",
+    "yi",
+    "yo",
+    "zu",
+];
+
+type Locale = (typeof availableLocales)[number];
+
+export function getTranslateUrl(locale: Locale) {
+    return `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${locale}&dt=t&q=`;
+}
+
+export async function translateString(str: string, locale: Locale = "en") {
+    if (!str || str.length === 0) {
+        throw new Error("Invalid string.");
+    }
+
+    const translateUrl = getTranslateUrl(locale);
+    const contents = [];
+
+    // Split the message into chunks of 2000 characters
+    for (let i = 0; i < str.length; i += 2000) {
+        contents.push(str.substring(i, i + 2000));
+    }
+
+    const translations = await Promise.all(
+        contents.map(async (content) => {
+            const response = await fetch(translateUrl + content);
+            const data = await response.json();
+            return data[0].map((chunk: string[]) => chunk[0]);
+        })
+    );
+
+    return translations.flat().join("");
+}

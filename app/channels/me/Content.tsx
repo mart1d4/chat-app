@@ -1,7 +1,7 @@
 "use client";
 
 import { AddFriend, UserLists } from "@components";
-import { useSettings, useUrls } from "@/lib/store";
+import { useSettings, useUrls } from "@/store";
 import { ReactElement, useEffect } from "react";
 
 const Content = (): ReactElement => {
@@ -10,7 +10,7 @@ const Content = (): ReactElement => {
     const tab = settings.friendTab;
 
     useEffect(() => {
-        document.title = "Chat App | Friends";
+        document.title = "Spark | Friends";
         setChannelUrl("/channels/me");
     }, []);
 

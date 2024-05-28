@@ -59,6 +59,7 @@
         --background-dark-1: hsl(220, 9%, 7%);
         --background-dark-2: hsla(0, 0%, 0%, 0.9);
         --background-dark-3: hsla(0, 0%, 0%, 0.8);
+        --background-dark-4: hsla(0, 0%, 0%, 1);
 
         --background-hover-1: hsl(228, 6%, 32.5%, 0.3);
         --background-hover-2: hsl(228, 6%, 32.5%, 0.6);
@@ -117,6 +118,93 @@
         --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console",
             "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
             "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+    }
+
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-meta .hljs-keyword,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-variable.language_ {
+        color: #ff7b72;
+    }
+
+    .hljs-title,
+    .hljs-title.class_,
+    .hljs-title.class_.inherited__,
+    .hljs-title.function_ {
+        color: #d2a8ff;
+    }
+
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-literal,
+    .hljs-meta,
+    .hljs-number,
+    .hljs-operator,
+    .hljs-variable,
+    .hljs-selector-attr,
+    .hljs-selector-class,
+    .hljs-selector-id {
+        color: #79c0ff;
+    }
+
+    .hljs-regexp,
+    .hljs-string,
+    .hljs-meta .hljs-string {
+        color: #a5d6ff;
+    }
+
+    .hljs-built_in,
+    .hljs-symbol {
+        color: #ffa657;
+    }
+
+    .hljs-comment,
+    .hljs-code,
+    .hljs-formula {
+        color: #8b949e;
+    }
+
+    .hljs-name,
+    .hljs-quote,
+    .hljs-selector-tag,
+    .hljs-selector-pseudo {
+        color: #7ee787;
+    }
+
+    .hljs-subst {
+        color: #c9d1d9;
+    }
+
+    .hljs-section {
+        color: #1f6feb;
+        font-weight: 700;
+    }
+
+    .hljs-bullet {
+        color: #f2cc60;
+    }
+
+    .hljs-emphasis {
+        color: #c9d1d9;
+        font-style: italic;
+    }
+
+    .hljs-strong {
+        color: #c9d1d9;
+        font-weight: 700;
+    }
+
+    .hljs-addition {
+        color: #aff5b4;
+        background-color: #033a16;
+    }
+
+    .hljs-deletion {
+        color: #ffdcd7;
+        background-color: #67060c;
     }
 }
 
@@ -188,6 +276,93 @@
         --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console",
             "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
             "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+    }
+
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-meta .hljs-keyword,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-variable.language_ {
+        color: #d73a49;
+    }
+
+    .hljs-title,
+    .hljs-title.class_,
+    .hljs-title.class_.inherited__,
+    .hljs-title.function_ {
+        color: #6f42c1;
+    }
+
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-literal,
+    .hljs-meta,
+    .hljs-number,
+    .hljs-operator,
+    .hljs-variable,
+    .hljs-selector-attr,
+    .hljs-selector-class,
+    .hljs-selector-id {
+        color: #005cc5;
+    }
+
+    .hljs-regexp,
+    .hljs-string,
+    .hljs-meta .hljs-string {
+        color: #032f62;
+    }
+
+    .hljs-built_in,
+    .hljs-symbol {
+        color: #e36209;
+    }
+
+    .hljs-comment,
+    .hljs-code,
+    .hljs-formula {
+        color: #6a737d;
+    }
+
+    .hljs-name,
+    .hljs-quote,
+    .hljs-selector-tag,
+    .hljs-selector-pseudo {
+        color: #22863a;
+    }
+
+    .hljs-subst {
+        color: #24292e;
+    }
+
+    .hljs-section {
+        color: #005cc5;
+        font-weight: 700;
+    }
+
+    .hljs-bullet {
+        color: #735c0f;
+    }
+
+    .hljs-emphasis {
+        color: #24292e;
+        font-style: italic;
+    }
+
+    .hljs-strong {
+        color: #24292e;
+        font-weight: 700;
+    }
+
+    .hljs-addition {
+        color: #22863a;
+        background-color: #f0fff4;
+    }
+
+    .hljs-deletion {
+        color: #b31d28;
+        background-color: #ffeef0;
     }
 }
 
@@ -420,12 +595,24 @@ input::placeholder {
     height: 21px;
 }
 
-/* Draftjs */
+/* Basic editor styles */
+.tiptap {
+    > * + * {
+        margin-top: 0.75em;
+    }
 
-.public-DraftEditorPlaceholder-inner {
-    color: var(--foreground-5);
-    user-select: none;
-    white-space: nowrap !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    pre {
+        background: #0d0d0d;
+        border-radius: 0.5rem;
+        color: #fff;
+        font-family: "JetBrainsMono", monospace;
+        padding: 0.75rem 1rem;
+
+        code {
+            background: none;
+            color: inherit;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+    }
 }

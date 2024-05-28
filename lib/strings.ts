@@ -1,4 +1,4 @@
-import { ChannelTable, UserTable } from "./db/types";
+import type { Channel, User } from "@/type";
 
 export function translateCap(str: string) {
     if (typeof str !== "string") {
@@ -39,30 +39,16 @@ export function sanitizeString(content: string) {
     return content;
 }
 
-export function getChannelName(
-    channel: ChannelTable & {
-        recipients: UserTable[];
-    },
-    user: UserTable
-) {
-    if (!channel) return "";
+export function getChannelName(channel: Channel, user: User) {
     if (channel.name) return channel.name;
 
-    if (!channel.recipients) {
-        console.error("Channel has no recipients");
-        return "";
-    }
-
-    if (channel.recipients.length === 0) {
-        console.error("Channel has no recipients");
-        return "";
-    } else if (channel.recipients.length === 1) {
+    if (channel.recipients.length === 1) {
         return `${channel.recipients[0].displayName}'s Group`;
     } else {
         let name = "";
 
         for (const recipient of channel.recipients) {
-            if (recipient.id != user.id) {
+            if (recipient.id !== user.id) {
                 name += recipient.displayName + ", ";
             }
         }
@@ -71,30 +57,21 @@ export function getChannelName(
     }
 }
 
-export function getChannelIcon(
-    channel: ChannelTable & {
-        recipients: UserTable[];
-    },
-    user: UserTable
-) {
-    if (!channel) return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
+export function getChannelIcon(channel: Channel, user: User) {
     if (channel.icon) return channel.icon;
-    if (!channel.recipients) return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
 
-    const recipients = channel.recipients.filter((r) => r.id != user.id);
-    if (recipients.length === 1) return recipients[0].avatar;
-    else return "178ba6e1-5551-42f3-b199-ddb9fc0f80de";
+    const recipients = channel.recipients.filter((r) => r.id !== user.id);
+    return recipients[0].avatar;
 }
 
-export function getFullChannel(
-    channel: ChannelTable & {
-        recipients: UserTable[];
-    },
-    user: UserTable
-) {
+export function getFullChannel(channel: Channel, user: User) {
     return {
         ...channel,
         name: getChannelName(channel, user),
         icon: getChannelIcon(channel, user),
     };
+}
+
+export function lowercaseContains(str1: string, str2: string) {
+    return str1.toLowerCase().includes(str2.toLowerCase());
 }

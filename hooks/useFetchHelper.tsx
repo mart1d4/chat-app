@@ -1,248 +1,287 @@
-import { useData, useLayers } from "@/lib/store";
+import { useData, useLayers } from "@/store";
 import { useRouter } from "next/navigation";
 
-type TQuery =
-    | "SEND_MESSAGE"
-    | "UPDATE_MESSAGE"
-    | "PIN_MESSAGE"
-    | "UNPIN_MESSAGE"
-    | "DELETE_MESSAGE"
-    | "ADD_FRIEND"
-    | "REMOVE_FRIEND"
-    | "BLOCK_USER"
-    | "UNBLOCK_USER"
-    | "UPDATE_USER"
-    | "CHANNEL_CREATE"
-    | "CHANNEL_UPDATE"
-    | "CHANNEL_DELETE"
-    | "CHANNEL_RECIPIENT_ADD"
-    | "CHANNEL_RECIPIENT_REMOVE"
-    | "CHANNEL_RECIPIENT_OWNER"
-    | "CHANNEL_PINNED_MESSAGES"
-    | "GUILD_CREATE"
-    | "GUILD_DELETE"
-    | "GUILD_CHANNEL_CREATE"
-    | "GUILD_CHANNEL_UPDATE"
-    | "GUILD_CHANNEL_DELETE"
-    | "GET_NOTE"
-    | "SET_NOTE"
-    | "GET_INVITE"
-    | "CREATE_INVITE"
-    | "ACCEPT_INVITE"
-    | "DELETE_INVITE";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-type Props = {
-    query: TQuery;
-    params?: {
-        [key: string]: string;
-    };
-    data?: {
-        [key: string]: any;
-    };
-    skipCheck?: boolean;
+const queries = {
+    GET_MESSAGES: {
+        url: "/channels/:channelId/messages",
+        method: "GET",
+    },
+    SEND_MESSAGE: {
+        url: "/channels/:channelId/messages",
+        method: "POST",
+    },
+    UPDATE_MESSAGE: {
+        url: "/channels/:channelId/messages/:messageId",
+        method: "PUT",
+    },
+    PIN_MESSAGE: {
+        url: "/channels/:channelId/messages/:messageId/pin",
+        method: "PUT",
+    },
+    UNPIN_MESSAGE: {
+        url: "/channels/:channelId/messages/:messageId/pin",
+        method: "DELETE",
+    },
+    DELETE_MESSAGE: {
+        url: "/channels/:channelId/messages/:messageId",
+        method: "DELETE",
+    },
+    ADD_FRIEND: {
+        url: "/users/@me/relationships",
+        method: "POST",
+    },
+    REMOVE_FRIEND: {
+        url: "/users/@me/relationships",
+        method: "DELETE",
+    },
+    BLOCK_USER: {
+        url: "/users/@me/block/:userId",
+        method: "POST",
+    },
+    UNBLOCK_USER: {
+        url: "/users/@me/block/:userId",
+        method: "DELETE",
+    },
+    UPDATE_USER: {
+        url: "/users/@me",
+        method: "PATCH",
+    },
+    CHANNEL_CREATE: {
+        url: "/users/@me/channels",
+        method: "POST",
+    },
+    CHANNEL_UPDATE: {
+        url: "/channels/:channelId",
+        method: "PATCH",
+    },
+    CHANNEL_DELETE: {
+        url: "/users/@me/channels/:channelId",
+        method: "DELETE",
+    },
+    CHANNEL_RECIPIENT_ADD: {
+        url: "/channels/:channelId/recipients/:recipientId",
+        method: "PUT",
+    },
+    CHANNEL_RECIPIENT_REMOVE: {
+        url: "/channels/:channelId/recipients/:recipientId",
+        method: "DELETE",
+    },
+    CHANNEL_RECIPIENT_OWNER: {
+        url: "/channels/:channelId/recipients/:recipientId/owner",
+        method: "PUT",
+    },
+    CHANNEL_PINNED_MESSAGES: {
+        url: "/channels/:channelId/messages/pinned",
+        method: "GET",
+    },
+    GUILD_CREATE: {
+        url: "/guilds",
+        method: "POST",
+    },
+    GUILD_DELETE: {
+        url: "/guilds/:guildId",
+        method: "DELETE",
+    },
+    GUILD_CHANNEL_CREATE: {
+        url: "/guilds/:guildId/channels",
+        method: "POST",
+    },
+    GUILD_CHANNEL_UPDATE: {
+        url: "/channels/:channelId",
+        method: "PUT",
+    },
+    GUILD_CHANNEL_DELETE: {
+        url: "/channels/:channelId",
+        method: "DELETE",
+    },
+    GET_NOTE: {
+        url: "/users/@me/notes/:userId",
+        method: "GET",
+    },
+    SET_NOTE: {
+        url: "/users/@me/notes/:userId",
+        method: "PUT",
+    },
+    GET_INVITE: {
+        url: "/invites/:inviteId",
+        method: "GET",
+    },
+    CREATE_INVITE: {
+        url: "/channels/:channelId/invites",
+        method: "POST",
+    },
+    ACCEPT_INVITE: {
+        url: "/invites/:inviteId",
+        method: "POST",
+    },
+    DELETE_INVITE: {
+        url: "/invites/:inviteId",
+        method: "DELETE",
+    },
+    GET_USER_PROFILE: {
+        url: "/users/:userId/profile",
+        method: "GET",
+    },
 };
 
-const urls = {
-    ["SEND_MESSAGE"]: "/channels/:channelId/messages",
-    ["UPDATE_MESSAGE"]: "/channels/:channelId/messages/:messageId",
-    ["PIN_MESSAGE"]: "/channels/:channelId/messages/:messageId/pin",
-    ["UNPIN_MESSAGE"]: "/channels/:channelId/messages/:messageId/pin",
-    ["DELETE_MESSAGE"]: "/channels/:channelId/messages/:messageId",
-    ["ADD_FRIEND"]: "/users/me/relationships",
-    ["REMOVE_FRIEND"]: "/users/me/relationships",
-    ["BLOCK_USER"]: "/users/:userId/block",
-    ["UNBLOCK_USER"]: "/users/:userId/block",
-    ["UPDATE_USER"]: "/users/me",
-    ["CHANNEL_CREATE"]: "/users/me/channels",
-    ["CHANNEL_UPDATE"]: "/channels/:channelId",
-    ["CHANNEL_DELETE"]: "/users/me/channels/:channelId",
-    ["CHANNEL_RECIPIENT_ADD"]: "/channels/:channelId/recipients/:recipientId",
-    ["CHANNEL_RECIPIENT_REMOVE"]: "/channels/:channelId/recipients/:recipientId",
-    ["CHANNEL_RECIPIENT_OWNER"]: "/channels/:channelId/recipients/:recipientId/owner",
-    ["CHANNEL_PINNED_MESSAGES"]: "/channels/:channelId/messages/pinned",
-    ["GUILD_CREATE"]: "/guilds",
-    ["GUILD_DELETE"]: "/guilds/:guildId",
-    ["GUILD_CHANNEL_CREATE"]: "/guilds/:guildId/channels",
-    ["GUILD_CHANNEL_UPDATE"]: "/channels/:channelId",
-    ["GUILD_CHANNEL_DELETE"]: "/channels/:channelId",
-    ["GET_NOTE"]: "/users/me/notes/:userId",
-    ["SET_NOTE"]: "/users/me/notes/:userId",
-    ["GET_INVITE"]: "/invites/:inviteId",
-    ["CREATE_INVITE"]: "/channels/:channelId/invites",
-    ["ACCEPT_INVITE"]: "/invites/:inviteId",
-    ["DELETE_INVITE"]: "/invites/:inviteId",
-};
-
-const methods = {
-    ["SEND_MESSAGE"]: "POST",
-    ["UPDATE_MESSAGE"]: "PUT",
-    ["PIN_MESSAGE"]: "POST",
-    ["UNPIN_MESSAGE"]: "DELETE",
-    ["DELETE_MESSAGE"]: "DELETE",
-    ["ADD_FRIEND"]: "POST",
-    ["REMOVE_FRIEND"]: "DELETE",
-    ["BLOCK_USER"]: "POST",
-    ["UNBLOCK_USER"]: "DELETE",
-    ["UPDATE_USER"]: "PATCH",
-    ["CHANNEL_CREATE"]: "POST",
-    ["CHANNEL_UPDATE"]: "PATCH",
-    ["CHANNEL_DELETE"]: "DELETE",
-    ["CHANNEL_RECIPIENT_ADD"]: "PUT",
-    ["CHANNEL_RECIPIENT_REMOVE"]: "DELETE",
-    ["CHANNEL_RECIPIENT_OWNER"]: "PUT",
-    ["CHANNEL_PINNED_MESSAGES"]: "GET",
-    ["GUILD_CREATE"]: "POST",
-    ["GUILD_DELETE"]: "DELETE",
-    ["GUILD_CHANNEL_CREATE"]: "POST",
-    ["GUILD_CHANNEL_UPDATE"]: "PUT",
-    ["GUILD_CHANNEL_DELETE"]: "DELETE",
-    ["GET_NOTE"]: "GET",
-    ["SET_NOTE"]: "PUT",
-    ["GET_INVITE"]: "GET",
-    ["CREATE_INVITE"]: "POST",
-    ["ACCEPT_INVITE"]: "POST",
-    ["DELETE_INVITE"]: "DELETE",
-};
-
-export default function useFetchHelper() {
+export default function useRequestHelper() {
     const setLayers = useLayers((state) => state.setLayers);
-    const setToken = useData((state) => state.setToken);
     const channels = useData((state) => state.channels);
-    const token = useData((state) => state.token);
     const user = useData((state) => state.user);
 
     const router = useRouter();
 
-    const channelExists = (recipients: string[], searchDM: boolean) => {
-        return channels.find((channel: Channel) => {
-            return (
-                channel.recipients.length === recipients.length &&
-                channel.recipients
-                    .map((r) => r.id.toString())
-                    .every((id) => recipients.includes(id)) &&
-                (searchDM ? channel.type === 0 : true)
-            );
-        });
-    };
+    function channelExists(recipients: number[], searchDM: boolean) {
+        return channels.find(
+            (c) =>
+                c.recipients.length === recipients.length &&
+                c.recipients.every((r) => recipients.includes(r.id)) &&
+                (searchDM ? c.type === 0 : true)
+        );
+    }
 
-    const sendRequest = async ({ query, params, data, skipCheck }: Props) => {
-        // If user wants to create a channel that already exists,
-        // prevent it if it's a DM, or ask confirmation if it's a group DM
-        if (query === "CHANNEL_CREATE" && data && !skipCheck) {
-            const channel =
-                data.recipients.length === 1
-                    ? channelExists([...data.recipients, user.id.toString()], true)
-                    : channelExists([...data.recipients, user.id.toString()], false);
+    async function sendRequest({
+        query,
+        params,
+        body,
+        attemps = 0,
+        skipChannelCheck,
+    }: {
+        query: keyof typeof queries;
+        params?: {
+            [key: string]: string | number;
+        };
+        body?: {
+            [key: string]: any;
+        };
+        attemps?: number;
+        skipChannelCheck?: boolean;
+    }) {
+        try {
+            if (attemps > 3) {
+                throw new Error("Request failed after 3 attemps");
+            }
 
-            if (channel) {
-                if (channel.type === 0) {
-                    return router.push(`/channels/me/${channel.id}`);
-                } else if (channel.type === 1 && channel.recipients.length !== 1) {
-                    return setLayers({
-                        settings: {
-                            type: "POPUP",
-                        },
-                        content: {
-                            type: "CHANNEL_EXISTS",
-                            channel: channel,
-                            recipients: channel.recipients,
-                        },
-                    });
+            // If user wants to create a channel that already exists,
+            // prevent it if it's a DM, or ask confirmation if it's a group DM
+            if (query === "CHANNEL_CREATE" && body && !skipChannelCheck) {
+                if (!user) return router.push("/login");
+
+                const channel = channelExists(
+                    [...body.recipients, user.id],
+                    body.recipients.length === 1
+                );
+
+                if (channel) {
+                    if (channel.type === 0) {
+                        return router.push(`/channels/me/${channel.id}`);
+                    } else if (channel.type === 1 && channel.recipients.length !== 1) {
+                        return setLayers({
+                            settings: {
+                                type: "POPUP",
+                            },
+                            content: {
+                                type: "CHANNEL_EXISTS",
+                                channel: channel,
+                                recipients: channel.recipients,
+                                addUsers: () => {
+                                    sendRequest({
+                                        query: "CHANNEL_CREATE",
+                                        body: body,
+                                        skipChannelCheck: true,
+                                    });
+                                },
+                            },
+                        });
+                    }
                 }
             }
-        }
 
-        const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        };
+            const token = localStorage.getItem("token");
+            let url = queries[query].url;
 
-        const body = JSON.stringify(data ?? {});
+            const paramsArr = [
+                ":channelId",
+                ":messageId",
+                ":username",
+                ":recipientId",
+                ":userId",
+                ":guildId",
+                ":inviteId",
+            ];
 
-        let url: string = urls[query];
-        let method: string = methods[query];
+            paramsArr.forEach((param) => {
+                const sub = param.substring(1);
 
-        if (url.includes(":channelId") && !params?.channelId) {
-            throw new Error("[useFetchHelper] A channelId is required");
-        }
+                if (url.includes(param) && !params?.[sub]) {
+                    throw new Error(`[useFetchHelper] A ${param} is required`);
+                } else if (url.includes(param)) {
+                    url = url.replace(param, params?.[sub]?.toString() ?? "");
+                }
+            });
 
-        if (url.includes(":messageId") && !params?.messageId) {
-            throw new Error("[useFetchHelper] A messageId is required");
-        }
+            // For all params that aren't part of the paramsArr
+            // add them to the url as query params
+            if (params) {
+                const queryArr = Object.entries(params)
+                    .filter(([key]) => !paramsArr.includes(`:${key}`))
+                    .map(([key, value]) => `${key}=${value}`);
 
-        if (url.includes(":username") && !params?.username) {
-            throw new Error("[useFetchHelper] A username is required");
-        }
+                if (queryArr.length) {
+                    url += `?${queryArr.join("&")}`;
+                }
+            }
 
-        if (url.includes(":recipientId") && !params?.recipientId) {
-            throw new Error("[useFetchHelper] A recipientId is required");
-        }
+            const response = await fetch(`${apiUrl}${url}`, {
+                method: queries[query].method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: queries[query].method !== "GET" ? JSON.stringify(body || {}) : undefined,
+            });
 
-        if (url.includes(":guildId") && !params?.guildId) {
-            throw new Error("[useFetchHelper] A guildId is required");
-        }
-
-        url = url.replace(":channelId", params?.channelId ?? "");
-        url = url.replace(":messageId", params?.messageId ?? "");
-        url = url.replace(":username", params?.username ?? "");
-        url = url.replace(":recipientId", params?.recipientId ?? "");
-        url = url.replace(":userId", params?.userId ?? "");
-        url = url.replace(":guildId", params?.guildId ?? "");
-        url = url.replace(":inviteId", params?.inviteId ?? "");
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-            method: method,
-            headers: headers,
-            body: method !== "GET" ? body : undefined,
-        });
-
-        let res;
-        try {
-            res = await response.json();
-        } catch (error) {
-            console.log(error);
-        }
-
-        if (response.status === 401 && false) {
-            const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
-                method: "GET",
-                credentials: "include",
-            }).then((res) => res.json());
-
-            if (!tokenRes.token) {
-                throw new Error("[useFetchHelper] No token found");
-            } else {
-                setToken(tokenRes.token);
-
-                const newResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-                    method: method,
-                    headers: {
-                        ...headers,
-                        Authorization: `Bearer ${tokenRes.token}`,
-                    },
-                    body: method !== "GET" ? body : undefined,
+            if (
+                response.status === 401 &&
+                !response.headers.get("Content-Type")?.includes("application/json")
+            ) {
+                const refreshResponse = await fetch(`${apiUrl}/auth/refresh`, {
+                    method: "POST",
+                    credentials: "include",
                 });
 
-                if (newResponse.status === 401) {
-                    throw new Error("[useFetchHelper] Unauthorized");
-                } else {
-                    const res = await newResponse.json();
-                    return res;
+                if (refreshResponse.status === 401) {
+                    localStorage.removeItem("token");
+                    return router.push("/login");
                 }
+
+                const data = await refreshResponse.json();
+                localStorage.setItem("token", data.token);
+
+                return sendRequest({ query, params, body, attemps: attemps + 1 });
+            } else if (response.status === 429) {
+                setLayers({
+                    settings: { type: "POPUP" },
+                    content: { type: "RATE_LIMIT" },
+                });
+
+                const retryAfter = response.headers.get("Retry-After");
+                const after = parseInt(retryAfter || "5") * 1000;
+
+                await new Promise((resolve) => setTimeout(resolve, after));
+                return sendRequest({ query, params, body, attemps: attemps + 1 });
+            } else {
+                const data = await response.json();
+                return data;
             }
-        } else if (response.status === 429) {
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                },
-                content: {
-                    type: "RATE_LIMIT",
-                },
-            });
-        } else {
-            return res;
+        } catch (error: any) {
+            return {
+                error: error?.message || "An error occurred.",
+            };
         }
-    };
+    }
 
     return { sendRequest };
 }

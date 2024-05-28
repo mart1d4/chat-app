@@ -5,6 +5,9 @@ import styles from "./Home.module.css";
 import type { Metadata } from "next";
 import { Icon } from "@components";
 import Link from "next/link";
+import { assets } from "@/lib/assets";
+
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export const metadata: Metadata = {
     title: appMetadata.homeTitle,
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
                 url: appMetadata.images.home,
                 width: 128,
                 height: 128,
-                alt: "Chat App Logo",
+                alt: "Spark Logo",
             },
         ],
     },
@@ -39,10 +42,10 @@ export default function HomePage() {
                         <div className={styles.heroText}>
                             <h1>Discover a future</h1>
                             <div>
-                                A future of communication with our web app. Our platform offers
-                                advanced features and tools that allow you to communicate in new and
-                                exciting ways. From video calls to voice messages and more, you'll
-                                be able to express yourself like never before.
+                                A future of communication with our app. Spark offers advanced
+                                features and tools that allow you to communicate in new and exciting
+                                ways. From video calls to voice messages and more, you'll be able to
+                                express yourself like never before.
                             </div>
                         </div>
 
@@ -52,7 +55,7 @@ export default function HomePage() {
                                 Download for Windows
                             </Link>
 
-                            <Link href="/login">Open Chat App in your browser</Link>
+                            <Link href="/login">Open Spark in your browser</Link>
                         </div>
                     </div>
                 </div>
@@ -62,7 +65,7 @@ export default function HomePage() {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src="https://ucarecdn.com/fbb73e90-e5a5-4ec6-b2d4-4a7a17657fbd/"
+                            src="/assets/system/communicate.svg"
                             alt="Stylized image of friends talking and communicating with each other."
                         />
 
@@ -82,8 +85,8 @@ export default function HomePage() {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src="https://ucarecdn.com/6017a425-258a-4665-944c-14f4a09f45d5/"
-                            alt="Stylized image showing the world connected through Chat App."
+                            src="/assets/system/connected.svg"
+                            alt="Stylized image showing the world connected through Spark."
                         />
 
                         <div>
@@ -102,7 +105,7 @@ export default function HomePage() {
                 <div className={styles.contentGrid}>
                     <div>
                         <img
-                            src="https://ucarecdn.com/bd719cc4-d77a-4c75-8fe7-80bf86ad33bc/"
+                            src="/assets/system/group.svg"
                             alt="Stylized image showing friends displaying their interests and hobbies."
                         />
 
@@ -133,7 +136,7 @@ export default function HomePage() {
                         </div>
 
                         <img
-                            src="https://ucarecdn.com/87faf419-4c2b-4434-843c-6d2ec2cfe338/"
+                            src="/assets/system/video.svg"
                             alt="Stylized image showing friends video talking with each other on desktop."
                         />
                     </div>

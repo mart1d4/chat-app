@@ -1,11 +1,14 @@
 "use client";
 
-import { useData, useLayers, useSettings } from "@/lib/store";
+import { useData, useLayers, useSettings } from "@/store";
 import { FixedMessage, Icon, Avatar } from "@components";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Popout.module.css";
+import { assets } from "@/lib/assets";
+
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function Popout({ content, element }: any) {
     const [filteredList, setFilteredList] = useState([]);
@@ -67,15 +70,17 @@ export function Popout({ content, element }: any) {
                     },
                 });
 
-                setPinned(response.pinned);
+                if (response?.ok) {
+                    const data = await response.json();
+                    setPinned(data.data.messages);
+                } else {
+                    console.error(response);
+                }
             };
 
             fetchPinned();
         } else {
             if (content.channel) {
-                console.log(friends);
-                console.log(content.channel.recipients);
-
                 const filtered = friends.filter(
                     (f) => !content.channel.recipients.map((r) => r.id).includes(parseInt(f.id))
                 );
@@ -126,47 +131,16 @@ export function Popout({ content, element }: any) {
         }
     }, [search, friends]);
 
-    function channelExists(recipients: string[]) {
-        return channels.find(
-            (channel) =>
-                channel.recipients.length === recipients.length &&
-                channel.recipients.every((r) => recipients.includes(r.id.toString()))
-        );
-    }
-
-    async function createChan(skip?: boolean) {
+    async function createChan() {
         const recipients = chosen.map((user) => user.id);
 
         if (content.channel) {
-            const channel = channelExists([
-                ...content.channel.recipients.map((r) => r.id.toString()),
-                ...recipients,
-            ]);
-
-            if (channel && !skip) {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
-                    content: {
-                        type: "CHANNEL_EXISTS",
-                        channel: channel,
-                        addUsers: createChan(true),
-                    },
-                });
-                return;
-            }
-
             if (content.channel.type === 0) {
-                const currentRecipient = content.channel.recipients
-                    .map((r) => r.id.toString())
-                    .find((id) => id != user.id);
+                const friend = content.channel.recipients.find((r) => r.id !== user.id);
 
                 sendRequest({
                     query: "CHANNEL_CREATE",
-                    data: {
-                        recipients: [currentRecipient, ...recipients],
-                    },
+                    body: { recipients: [friend.id, ...recipients] },
                 });
             } else if (content.channel.type === 1) {
                 recipients.forEach((recipient) => {
@@ -182,9 +156,7 @@ export function Popout({ content, element }: any) {
         } else {
             sendRequest({
                 query: "CHANNEL_CREATE",
-                data: {
-                    recipients: recipients,
-                },
+                body: { recipients: recipients },
             });
         }
     }
@@ -228,7 +200,7 @@ export function Popout({ content, element }: any) {
                         <div className={styles.noPinnedContent}>
                             <div
                                 style={{
-                                    backgroundImage: `url("https://ucarecdn.com/c56ac798-38b6-481d-b920-2c4ee270f53d/")`,
+                                    backgroundImage: `url(/assets/system/no-pinned.svg)`,
                                 }}
                             />
 
@@ -439,6 +411,7 @@ export function Popout({ content, element }: any) {
                                             <Avatar
                                                 src={friend.avatar}
                                                 alt={friend.username}
+                                                type="avatars"
                                                 size={32}
                                                 status={friend.status}
                                             />
@@ -482,32 +455,31 @@ export function Popout({ content, element }: any) {
                                             ref={inputLinkRef}
                                             type="text"
                                             readOnly
-                                            placeholder="https://chat-app.mart1d4.dev/example"
+                                            placeholder="https://spark.mart1d4.dev/example"
                                             value={
                                                 inviteLink &&
-                                                `https://chat-app.mart1d4.dev/${inviteLink}`
+                                                `https://spark.mart1d4.dev/${inviteLink}`
                                             }
                                             onClick={async () => {
-                                                const getLink = async () => {
+                                                if (!inviteLink) {
                                                     const response = await sendRequest({
                                                         query: "CREATE_INVITE",
                                                         params: {
                                                             channelId: content.channel.id,
                                                         },
-                                                        data: {
+                                                        body: {
                                                             maxUses: 100,
                                                             maxAge: 86400,
                                                             temporary: false,
-                                                            inviterId: user.id,
                                                         },
                                                     });
 
-                                                    if (!response.success) return;
-                                                    else setInviteLink(response.invite.code);
-                                                };
-
-                                                if (!inviteLink) {
-                                                    await getLink();
+                                                    if (response.ok) {
+                                                        const data = await response.json();
+                                                        setInviteLink(data.data.invite.code);
+                                                    } else {
+                                                        return;
+                                                    }
                                                 }
 
                                                 inputLinkRef.current?.select();
@@ -524,11 +496,10 @@ export function Popout({ content, element }: any) {
                                                     params: {
                                                         channelId: content.channel.id,
                                                     },
-                                                    data: {
+                                                    body: {
                                                         maxUses: 100,
                                                         maxAge: 86400,
                                                         temporary: false,
-                                                        inviterId: user.id,
                                                     },
                                                 });
 
@@ -540,7 +511,7 @@ export function Popout({ content, element }: any) {
                                                 await getLink();
                                             } else {
                                                 navigator.clipboard.writeText(
-                                                    `https://chat-app.mart1d4.dev/${inviteLink}`
+                                                    `https://spark.mart1d4.dev/${inviteLink}`
                                                 );
                                                 setCopied(true);
                                                 setTimeout(() => setCopied(false), 1000);
@@ -589,7 +560,7 @@ export function Popout({ content, element }: any) {
                         >
                             <div
                                 style={{
-                                    backgroundImage: `url(https://ucarecdn.com/501ad905-28df-4c05-ae41-de0499966f4f/)`,
+                                    backgroundImage: `url(/assets/system/nothing-found.svg)`,
                                     width: "85px",
                                     height: "85px",
                                 }}
@@ -614,10 +585,10 @@ export function Popout({ content, element }: any) {
                                             ref={inputLinkRef}
                                             type="text"
                                             readOnly
-                                            placeholder="https://chat-app.mart1d4.dev/example"
+                                            placeholder="https://spark.mart1d4.dev/example"
                                             value={
                                                 inviteLink &&
-                                                `https://chat-app.mart1d4.dev/${inviteLink}`
+                                                `https://spark.mart1d4.dev/${inviteLink}`
                                             }
                                             onClick={async () => {
                                                 const getLink = async () => {
@@ -626,11 +597,10 @@ export function Popout({ content, element }: any) {
                                                         params: {
                                                             channelId: content.channel.id,
                                                         },
-                                                        data: {
+                                                        body: {
                                                             maxUses: 100,
                                                             maxAge: 86400,
                                                             temporary: false,
-                                                            inviterId: user.id,
                                                         },
                                                     });
 
@@ -677,7 +647,7 @@ export function Popout({ content, element }: any) {
                                                 await getLink();
                                             } else {
                                                 navigator.clipboard.writeText(
-                                                    `https://chat-app.mart1d4.dev/${inviteLink}`
+                                                    `https://spark.mart1d4.dev/${inviteLink}`
                                                 );
                                                 setCopied(true);
                                                 setTimeout(() => setCopied(false), 1000);
@@ -717,7 +687,7 @@ export function Popout({ content, element }: any) {
                     <div className={styles.noFriends}>
                         <div
                             style={{
-                                backgroundImage: `url("https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/")`,
+                                backgroundImage: `url(/assets/system/no-friends-popout.svg)`,
                             }}
                         />
 

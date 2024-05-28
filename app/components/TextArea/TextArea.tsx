@@ -1,61 +1,146 @@
 "use client";
 
-// @refresh reset
-
-import {
-    useData,
-    useLayers,
-    useMention,
-    useMessages,
-    useSettings,
-    useTooltip,
-    useWidthThresholds,
-} from "@/lib/store";
-import createMentionPlugin from "@draft-js-plugins/mention";
-import { EditorState, Modifier, ContentState, getDefaultKeyBinding } from "draft-js";
-import { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import createInlineToolbarPlugin from "@draft-js-plugins/inline-toolbar";
-import { Avatar, Icon, LoadingDots, UserMention } from "@components";
-import createLinkifyPlugin from "@draft-js-plugins/linkify";
+import { Avatar, EmojiPicker, FilePreview, Icon, LoadingDots, UserMention } from "@components";
+import { type ChangeEvent, useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
+import type { Attachment, Channel, ChannelRecipient, Message } from "@/type";
+import { Editor, Transforms, Range, createEditor, Point } from "slate";
+import { Slate, Editable, withReact, ReactEditor } from "slate-react";
+import { lowercaseContains, sanitizeString } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { sanitizeString } from "@/lib/strings";
-import Editor from "@draft-js-plugins/editor";
+import { getNanoIdInt } from "@/lib/insertions";
+import type { CustomEditor } from "@/slate";
+import { withHistory } from "slate-history";
 import styles from "./TextArea.module.css";
 import filetypeinfo from "magic-bytes.js";
-import { v4 as uuidv4 } from "uuid";
-import "draft-js/dist/Draft.css";
+import { nanoid } from "nanoid";
+import {
+    useWindowSettings,
+    useSettings,
+    useMessages,
+    useMention,
+    useLayers,
+    useData,
+} from "@/store";
 
-const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/apng"];
+let dragged = false;
 
-function Entry(props) {
-    const { mention, theme, searchValue, isFocused, ...parentProps } = props;
+function withMentions(editor: CustomEditor) {
+    const { isInline, isVoid, markableVoid } = editor;
 
+    editor.isInline = (element) => {
+        return element.type === "mention" ? true : isInline(element);
+    };
+
+    editor.isVoid = (element) => {
+        return element.type === "mention" ? true : isVoid(element);
+    };
+
+    editor.markableVoid = (element) => {
+        return element.type === "mention" || markableVoid(element);
+    };
+
+    return editor;
+}
+
+function insertMention(editor: CustomEditor, recipient: ChannelRecipient) {
+    const mention = {
+        type: "mention",
+        recipient,
+        children: [{ text: "" }],
+    };
+    Transforms.insertNodes(editor, mention);
+    Transforms.move(editor);
+    Editor.insertText(editor, " ");
+}
+
+// Borrow Leaf renderer from the Rich Text example.
+// In a real project you would get this via `withRichText(editor)` or similar.
+function Leaf({ attributes, children, leaf }) {
+    if (leaf.bold) {
+        children = <strong>{children}</strong>;
+    }
+
+    if (leaf.code) {
+        children = <code>{children}</code>;
+    }
+
+    if (leaf.italic) {
+        children = <em>{children}</em>;
+    }
+
+    if (leaf.underline) {
+        children = <u>{children}</u>;
+    }
+
+    if (leaf.strikethrough) {
+        children = <s>{children}</s>;
+    }
+
+    if (leaf.spoiler) {
+        children = <span className={styles.spoiler}>{children}</span>;
+    }
+
+    if (leaf.link) {
+        children = <span className={styles.link}>{children}</span>;
+    }
+
+    return <span {...attributes}>{children}</span>;
+}
+
+function Element(props) {
+    const { attributes, children, element } = props;
+
+    if (element.type === "mention") {
+        return <Mention {...props} />;
+    }
+
+    if (element.type === "code") {
+        return (
+            <pre {...attributes}>
+                <code>{children}</code>
+            </pre>
+        );
+    }
+
+    return <p {...attributes}>{children}</p>;
+}
+
+function Mention({ attributes, children, element }) {
     return (
-        <div {...parentProps}>
-            <div className={styles.mentionContainer}>
-                <div>
-                    <div className={styles.avatar}>
-                        <Avatar
-                            size={24}
-                            src={mention.avatar}
-                            alt={mention.username}
-                            // status={mention.status}
-                        />
-                    </div>
+        <span
+            {...attributes}
+            contentEditable={false}
+            data-cy={`mention-${element.recipient.id}`}
+        >
+            <UserMention
+                user={element.recipient}
+                full
+                editor
+            />
 
-                    <div className={styles.displayName}>{mention.displayName}</div>
-                    <div className={styles.username}>{mention.username}</div>
-                </div>
-            </div>
-        </div>
+            <span style={{ display: "none" }}>{children}</span>
+        </span>
     );
 }
 
-export const TextArea = ({ channel, setMessages, editing }: any) => {
-    const setMessageAttachment = useMessages((state) => state.setAttachments);
-    const setContent = useMessages((state) => state.setContent);
-    const setTooltip = useTooltip((state) => state.setTooltip);
+export function TextArea({
+    channel,
+    setMessages,
+    messageObject,
+    edit,
+}: {
+    channel: Channel;
+    setMessages: InfiniteKeyedMutator;
+    messageObject?: Message;
+    edit?: {
+        messageId: number;
+        content: string | undefined;
+    };
+}) {
+    const width562 = useWindowSettings((state) => state.widthThresholds)[562];
     const setMention = useMention((state) => state.setMention);
+    const setDraft = useMessages((state) => state.setDraft);
     const settings = useSettings((state) => state.settings);
     const setLayers = useLayers((state) => state.setLayers);
     const setReply = useMessages((state) => state.setReply);
@@ -63,105 +148,153 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     const setEdit = useMessages((state) => state.setEdit);
     const mention = useMention((state) => state.userId);
     const drafts = useMessages((state) => state.drafts);
-    const edits = useMessages((state) => state.edits);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
-    const width562 = useWidthThresholds((state) => state.widthThresholds)[562];
-
     const reply = replies.find((r) => r.channelId === channel.id);
     const draft = drafts.find((d) => d.channelId === channel.id);
-    const edit = edits.find((e) => e.channelId === channel.id);
 
-    const [attachments, setAttachments] = useState(draft?.attachments || []);
-    const [usersTyping, setUsersTyping] = useState([]);
-    const [editorState, setEditorState] = useState(() => {
-        return EditorState.createEmpty();
-    });
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [usersTyping, setUsersTyping] = useState<string[]>([]);
     const [message, setMessage] = useState("");
-
-    const editorRef = useRef(null);
-
-    const [suggestions, setSuggestions] = useState(
-        channel.recipients.map((r) => ({
-            name: `<@${r.id}>`,
-            ...r,
-        }))
-    );
-    const [open, setOpen] = useState(false);
-
-    const { MentionSuggestions, InlineToolbar, plugins } = useMemo(() => {
-        const mentionPlugin = createMentionPlugin({
-            entityMutability: "IMMUTABLE",
-            mentionTrigger: "@",
-            supportWhitespace: false,
-            mentionComponent: (mention) => (
-                <UserMention
-                    user={mention.mention}
-                    full
-                    editor
-                />
-            ),
-        });
-
-        const linkifyPlugin = createLinkifyPlugin({
-            component: (props) => (
-                <span
-                    {...props}
-                    style={{ color: "var(--accent-light)" }}
-                />
-            ),
-        });
-
-        const inlineToolbarPlugin = createInlineToolbarPlugin();
-
-        return {
-            MentionSuggestions: mentionPlugin.MentionSuggestions,
-            InlineToolbar: inlineToolbarPlugin.InlineToolbar,
-            plugins: [mentionPlugin, linkifyPlugin, inlineToolbarPlugin],
-        };
-    }, []);
-
-    const onOpenChange = useCallback((open: boolean) => {
-        setOpen(open);
-    }, []);
-
-    const onSearchChange = useCallback(({ value }: { value: string }) => {
-        setSuggestions(
-            channel.recipients
-                .map((r) => ({
-                    name: `<@${r.id}>`,
-                    ...r,
-                }))
-                .filter((s) => s.username.toLowerCase().includes(value.toLowerCase()))
-        );
-    }, []);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
     const blocked = useData((state) => state.blocked).map((user) => user.id);
-    const friend = channel.recipients?.find((r: any) => r.id !== user.id);
+    const friend = channel.recipients.find((r) => r.id !== user?.id);
+    const canSend = message.length > 0 || attachments.length > 0;
+
+    const [target, setTarget] = useState<Range | null>(null);
+    const [index, setIndex] = useState(0);
+    const [search, setSearch] = useState("");
+
+    const renderElement = useCallback((props) => <Element {...props} />, []);
+    const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
+    const editor = useMemo(() => withMentions(withReact(withHistory(createEditor()))), []);
+
+    const recipients = channel.recipients.filter((r) => lowercaseContains(r.displayName, search));
+
+    const onKeyDown = useCallback(
+        (event: KeyboardEvent) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+
+            if (target && recipients.length > 0) {
+                if (["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key)) {
+                    event.preventDefault();
+                }
+
+                switch (event.key) {
+                    case "ArrowDown":
+                        const prevIndex = index >= recipients.length - 1 ? 0 : index + 1;
+                        setIndex(prevIndex);
+                        break;
+                    case "ArrowUp":
+                        const nextIndex = index <= 0 ? recipients.length - 1 : index - 1;
+                        setIndex(nextIndex);
+                        break;
+                    case "Enter":
+                        Transforms.select(editor, target);
+                        insertMention(editor, recipients[index]);
+                        setTarget(null);
+                        break;
+                    case "Escape":
+                        setTarget(null);
+                        break;
+                }
+            }
+        },
+        [recipients, editor, index, target]
+    );
+
+    async function handleFileSubmit(files: File[], e: DragEvent | ChangeEvent<HTMLInputElement>) {
+        if (files.length === 0) return;
+
+        if (attachments.length + files.length > 10) {
+            setLayers({
+                settings: { type: "POPUP" },
+                content: {
+                    type: "WARNING",
+                    warning: "FILE_NUMBER",
+                },
+            });
+
+            if (e.target instanceof HTMLInputElement) {
+                return (e.target.value = "");
+            }
+            return;
+        }
+
+        let checkedFiles = [];
+        const maxFileSize = 1024 * 1024 * 50; // 50MB
+
+        for (const file of files) {
+            if (file.size > maxFileSize) {
+                setLayers({
+                    settings: { type: "POPUP" },
+                    content: {
+                        type: "WARNING",
+                        warning: "FILE_SIZE",
+                    },
+                });
+
+                checkedFiles = [];
+                if (e.target instanceof HTMLInputElement) {
+                    return (e.target.value = "");
+                }
+                return;
+            }
+
+            const bytes = new Uint8Array(await file.arrayBuffer());
+            const types = filetypeinfo(bytes);
+            const type = types[0]?.mime ?? "";
+
+            const { width, height } = await new Promise<HTMLImageElement>((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = URL.createObjectURL(file);
+            });
+
+            checkedFiles.push({
+                id: getNanoIdInt(),
+                file,
+
+                name: file.name ?? "",
+                size: file.size,
+                type,
+
+                url: URL.createObjectURL(file),
+                proxyUrl: "",
+
+                height,
+                width,
+
+                spoiler: false,
+                description: "",
+            });
+        }
+
+        setAttachments((prev) => [...prev, ...checkedFiles]);
+        if (e.target instanceof HTMLInputElement) {
+            return (e.target.value = "");
+        }
+        return;
+    }
 
     useEffect(() => {
-        setMessage(editorState.getCurrentContent().getPlainText());
-    }, [editorState.getCurrentContent().getPlainText()]);
-
-    useEffect(() => {
-        let dragged = false;
-
         function handleDragEnter(e: DragEvent) {
             e.preventDefault();
             e.stopPropagation();
 
-            // if element is a file, show the drag file warning
-            if (e.dataTransfer.items.length > 0 && !dragged) {
+            // If element is a file, show the drag file warning
+            if ((e.dataTransfer?.items.length || 0) > 0 && !dragged) {
                 dragged = true;
 
                 setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
+                    settings: { type: "POPUP" },
                     content: {
                         type: "WARNING",
                         warning: "DRAG_FILE",
@@ -176,12 +309,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             e.stopPropagation();
 
             if (dragged) {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+                setLayers({ settings: { type: "POPUP", setNull: true } });
                 dragged = false;
             }
         }
@@ -190,90 +318,18 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             e.preventDefault();
             e.stopPropagation();
 
-            if (e.dataTransfer.files.length > 0) {
-                const newFiles = Array.from(e.dataTransfer.files as FileList);
+            if ((e.dataTransfer?.files.length || 0) > 0 && dragged) {
+                dragged = false;
 
-                if (attachments.length + newFiles.length > 10) {
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                        },
-                        content: {
-                            type: "WARNING",
-                            warning: "FILE_NUMBER",
-                        },
-                    });
+                const files = Array.from(e.dataTransfer?.files || []);
+                await handleFileSubmit(files, e);
 
-                    return;
-                }
-
-                let checkedFiles = [];
-                const maxFileSize = 1024 * 1024 * 5; // 5MB
-
-                for (const file of newFiles) {
-                    if (file.size > maxFileSize) {
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
-                            content: {
-                                type: "WARNING",
-                                warning: "FILE_SIZE",
-                            },
-                        });
-
-                        checkedFiles = [];
-                        return;
-                    }
-
-                    const fileBytes = new Uint8Array(await file.arrayBuffer());
-                    const fileType = filetypeinfo(fileBytes);
-
-                    if (!fileType || !allowedFileTypes.includes(fileType[0]?.mime ?? "")) {
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
-                            content: {
-                                type: "WARNING",
-                                warning: "FILE_TYPE",
-                            },
-                        });
-
-                        return;
-                    }
-
-                    const image = await new Promise<HTMLImageElement>((resolve) => {
-                        const img = new Image();
-                        img.onload = () => resolve(img);
-                        img.src = URL.createObjectURL(file);
-                    });
-
-                    const dimensions = {
-                        height: image.height,
-                        width: image.width,
-                    };
-
-                    checkedFiles.push({
-                        id: uuidv4(),
-                        url: URL.createObjectURL(file),
-                        name: file.name ?? "file",
-                        dimensions,
-                        size: file.size,
-                        isSpoiler: false,
-                        isImage: allowedFileTypes.includes(fileType[0]?.mime ?? ""),
-                        description: "",
-                    });
-                }
-
-                setAttachments([...attachments, ...checkedFiles]);
                 setLayers({
                     settings: {
                         type: "POPUP",
                         setNull: true,
                     },
                 });
-                dragged = false;
             }
         }
 
@@ -289,46 +345,25 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
     }, [attachments]);
 
     useEffect(() => {
-        if (!mention || editing) return;
-
-        // Get whether some text has been selected
-        // If so, replace instead of inserting
-
-        const hasSelection = !editorState.getSelection().isCollapsed();
-
-        if (hasSelection) {
-            const newEditor = Modifier.replaceText(
-                editorState.getCurrentContent(),
-                editorState.getSelection(),
-                `<@${mention}>`
-            );
-
-            setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
-            EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
-        } else {
-            const newEditor = Modifier.insertText(
-                editorState.getCurrentContent(),
-                editorState.getSelection(),
-                `<@${mention}>`
-            );
-
-            setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
-            EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
-        }
+        if (!mention || edit) return;
+        insertMention(editor, mention);
         setMention(null);
     }, [mention]);
 
     useEffect(() => {
-        if (edit || reply) {
-            editorRef.current.focus();
-        }
-
-        const handleKeyDown = (e: KeyboardEvent) => {
+        function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                setEdit(channel.id, null);
-                setReply(channel.id, null, null);
+                console.log("Escape key pressed");
+
+                if (edit) {
+                    setEdit(edit.messageId, null);
+                }
+
+                if (reply) {
+                    setReply(channel.id, null);
+                }
             }
-        };
+        }
 
         document.addEventListener("keydown", handleKeyDown);
 
@@ -337,19 +372,13 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
         };
     }, [edit, reply]);
 
-    useEffect(() => {
-        setMessageAttachment(channel.id, attachments);
-    }, [attachments]);
+    function sendMessage() {
+        let content = sanitizeString(message);
 
-    const sendMessage = async () => {
-        let messageContent = sanitizeString(message);
-
-        if (!messageContent && attachments.length === 0) return;
-        if (messageContent && messageContent.length > 16000) {
+        if (!canSend) return;
+        if (content && content.length > 16000) {
             return setLayers({
-                settings: {
-                    type: "POPUP",
-                },
+                settings: { type: "POPUP" },
                 content: {
                     type: "WARNING",
                     warning: "MESSAGE_LIMIT",
@@ -357,55 +386,35 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             });
         }
 
-        const tempMessage = {
-            id: uuidv4(),
-            content: messageContent,
-            attachments: attachments,
+        const temp = {
+            id: nanoid(),
+            content,
+            attachments,
             author: user,
             channelId: [channel.id],
             reference: reply?.messageId ?? null,
             createdAt: new Date(),
-            needsToBeSent: true,
+            send: true,
         };
 
         // Reset the editor state
-        const newState = EditorState.push(
-            editorState,
-            ContentState.createFromText(""),
-            "remove-range"
-        );
+        // First set caret to the start of the editor and select nothing
 
-        setEditorState(newState);
+        editor.selection = {
+            anchor: { path: [0, 0], offset: 0 },
+            focus: { path: [0, 0], offset: 0 },
+        };
+        editor.children = [{ type: "paragraph", children: [{ text: "" }] }];
 
         setAttachments([]);
-        setMessages((messages) => [...messages, tempMessage]);
+        setMessages(temp);
 
-        if (reply?.messageId) setReply(channel.id, null, "");
-    };
-
-    function myKeyBindingFn(e: SyntheticKeyboardEvent): string | null {
-        if (e.key === "Enter" && !e.shiftKey && width562) {
-            return "message-send";
-        }
-        return getDefaultKeyBinding(e);
-    }
-
-    function handleKeyCommand(command: string): DraftHandleValue {
-        if (command === "message-send") {
-            return sendMessage();
-        }
-        return "not-handled";
+        if (reply?.messageId) setReply(channel.id, null);
     }
 
     function pasteText(text: string) {
-        const newEditor = Modifier.insertText(
-            editorState.getCurrentContent(),
-            editorState.getSelection(),
-            text
-        );
-
-        setEditorState(EditorState.push(editorState, newEditor, "insert-characters"));
-        EditorState.forceSelection(editorState, newEditor.getSelectionAfter());
+        Transforms.insertText(editor, text);
+        Transforms.move(editor);
     }
 
     const textContainer = (
@@ -418,10 +427,7 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                 className={styles.textbox}
                 onContextMenu={(e) => {
                     setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
+                        settings: { type: "MENU", event: e },
                         content: {
                             type: "INPUT",
                             input: true,
@@ -431,31 +437,92 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     });
                 }}
             >
-                {/* <InlineToolbar /> */}
+                <Slate
+                    editor={editor}
+                    initialValue={[
+                        {
+                            type: "paragraph",
+                            children: [{ text: (edit ? edit.content : draft?.content) || "" }],
+                        },
+                    ]}
+                    onChange={(value) => {
+                        if (editor.operations.some((op: any) => "set_selection" !== op.type)) {
+                            const content = JSON.stringify(value);
+                            // localStorage.setItem('content', content)
+                            console.log(content);
+                        }
 
-                <Editor
-                    editorKey="editor"
-                    editorState={editorState}
-                    onChange={setEditorState}
-                    placeholder={
-                        editing
-                            ? "Edit Message"
-                            : `Message ${channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""}${
-                                  channel.name
-                              }`
-                    }
-                    spellCheck={true}
-                    stripPastedStyles={true}
-                    handleKeyCommand={handleKeyCommand}
-                    keyBindingFn={myKeyBindingFn}
-                    plugins={plugins}
-                    ref={editorRef}
-                />
+                        const text = Editor.string(editor, editor);
+                        console.log("Text: ", text);
+
+                        setMessage(text);
+                        if (edit && messageObject) {
+                            setEdit(messageObject.id, text);
+                        } else {
+                            setDraft(channel.id, text);
+                        }
+
+                        const { selection } = editor;
+
+                        if (selection && Range.isCollapsed(selection)) {
+                            const [start] = Range.edges(selection);
+
+                            const before = Editor.before(editor, start, { unit: "character" });
+                            const beforeRange = before && Editor.range(editor, before, start);
+                            const beforeText = beforeRange && Editor.string(editor, beforeRange);
+
+                            const range =
+                                beforeRange &&
+                                word(editor, beforeRange, {
+                                    terminator: [" "],
+                                    directions: "both",
+                                    include: true,
+                                });
+
+                            let text = range && Editor.string(editor, range);
+
+                            // If text includes spaces and text after those spaces,
+                            // only keep the text after the space
+                            if (
+                                text &&
+                                text.includes(" ") &&
+                                text.split(" ").length > 1 &&
+                                text.split(" ").pop() !== ""
+                            ) {
+                                text = text.split(" ").pop() || "";
+                            }
+
+                            const match = text && text.match(/(?<=^|\s)@(\S*)/);
+
+                            if (match && beforeText !== " ") {
+                                setTarget(beforeRange);
+                                setSearch(match[1]);
+                                setIndex(0);
+                                return;
+                            }
+                        }
+
+                        setTarget(null);
+                    }}
+                >
+                    <Editable
+                        renderElement={renderElement}
+                        renderLeaf={renderLeaf}
+                        onKeyDown={onKeyDown}
+                        placeholder={
+                            edit
+                                ? "Edit Message"
+                                : `Message ${
+                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
+                                  }${channel.name}`
+                        }
+                    />
+                </Slate>
             </div>
         </div>
     );
 
-    if (edit?.messageId && editing) {
+    if (edit) {
         return (
             <form
                 className={styles.form}
@@ -465,26 +532,6 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     className={styles.textArea}
                     style={{ marginBottom: "0" }}
                 >
-                    <MentionSuggestions
-                        open={open}
-                        onOpenChange={onOpenChange}
-                        suggestions={suggestions}
-                        onSearchChange={onSearchChange}
-                        onAddMention={() => {
-                            // get the mention object selected
-                        }}
-                        entryComponent={Entry}
-                        popoverContainer={({ children }) => (
-                            <div className={`${styles.mentionPopover} scrollbar`}>
-                                <div>
-                                    <h3>Members</h3>
-                                </div>
-
-                                {children}
-                            </div>
-                        )}
-                    />
-
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div className={styles.input}>
                             {textContainer}
@@ -497,10 +544,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                 </div>
             </form>
         );
-    } else if (!blocked.includes(friend?.id)) {
+    } else if (!blocked.includes(friend?.id ?? 0)) {
         return (
             <form className={styles.form}>
-                {reply?.messageId && !editing && (
+                {reply && !edit && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
                             Replying to <span>{reply?.username || "User"}</span>
@@ -525,25 +572,51 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     className={styles.textArea}
                     style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
-                    <MentionSuggestions
-                        open={open}
-                        onOpenChange={onOpenChange}
-                        suggestions={suggestions}
-                        onSearchChange={onSearchChange}
-                        onAddMention={() => {
-                            // get the mention object selected
-                        }}
-                        entryComponent={Entry}
-                        popoverContainer={({ children }) => (
-                            <div className={`${styles.mentionPopover} scrollbar`}>
-                                <div>
-                                    <h3>Members</h3>
-                                </div>
-
-                                {children}
+                    {target && recipients.length > 0 && (
+                        <div
+                            className={`${styles.mentionPopover} scrollbar`}
+                            data-cy="mentions-portal"
+                        >
+                            <div>
+                                <h3>Members</h3>
                             </div>
-                        )}
-                    />
+
+                            {recipients.map((recipient, i) => (
+                                <div
+                                    key={recipient.id}
+                                    className={styles.mentionContainer}
+                                >
+                                    <div
+                                        onMouseEnter={() => setIndex(i)}
+                                        onClick={() => {
+                                            Transforms.select(editor, target);
+                                            insertMention(editor, recipient);
+                                            setTarget(null);
+                                        }}
+                                        style={{
+                                            backgroundColor:
+                                                i === index ? "var(--background-4)" : "",
+                                        }}
+                                    >
+                                        <div className={styles.avatar}>
+                                            <Avatar
+                                                size={24}
+                                                src={recipient.avatar}
+                                                alt={recipient.displayName}
+                                                status={recipient.status}
+                                                type="avatars"
+                                            />
+                                        </div>
+
+                                        <div className={styles.displayName}>
+                                            {recipient.displayName}
+                                        </div>
+                                        <div className={styles.username}>{recipient.username}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {attachments.length > 0 && (
@@ -569,92 +642,8 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                                     accept="*"
                                     multiple
                                     onChange={async (e) => {
-                                        const newFiles = Array.from(e.target.files as FileList);
-
-                                        if (attachments.length + newFiles.length > 10) {
-                                            setLayers({
-                                                settings: {
-                                                    type: "POPUP",
-                                                },
-                                                content: {
-                                                    type: "WARNING",
-                                                    warning: "FILE_NUMBER",
-                                                },
-                                            });
-
-                                            return (e.target.value = "");
-                                        }
-
-                                        let checkedFiles = [];
-                                        const maxFileSize = 1024 * 1024 * 5; // 5MB
-
-                                        for (const file of newFiles) {
-                                            if (file.size > maxFileSize) {
-                                                setLayers({
-                                                    settings: {
-                                                        type: "POPUP",
-                                                    },
-                                                    content: {
-                                                        type: "WARNING",
-                                                        warning: "FILE_SIZE",
-                                                    },
-                                                });
-
-                                                checkedFiles = [];
-                                                return (e.target.value = "");
-                                            }
-
-                                            const fileBytes = new Uint8Array(
-                                                await file.arrayBuffer()
-                                            );
-                                            const fileType = filetypeinfo(fileBytes);
-
-                                            if (
-                                                !fileType ||
-                                                !allowedFileTypes.includes(fileType[0]?.mime ?? "")
-                                            ) {
-                                                setLayers({
-                                                    settings: {
-                                                        type: "POPUP",
-                                                    },
-                                                    content: {
-                                                        type: "WARNING",
-                                                        warning: "FILE_TYPE",
-                                                    },
-                                                });
-
-                                                return (e.target.value = "");
-                                            }
-
-                                            const image = await new Promise<HTMLImageElement>(
-                                                (resolve) => {
-                                                    const img = new Image();
-                                                    img.onload = () => resolve(img);
-                                                    img.src = URL.createObjectURL(file);
-                                                }
-                                            );
-
-                                            const dimensions = {
-                                                height: image.height,
-                                                width: image.width,
-                                            };
-
-                                            checkedFiles.push({
-                                                id: uuidv4(),
-                                                url: URL.createObjectURL(file),
-                                                name: file.name ?? "file",
-                                                dimensions,
-                                                size: file.size,
-                                                isSpoiler: false,
-                                                isImage: allowedFileTypes.includes(
-                                                    fileType[0]?.mime ?? ""
-                                                ),
-                                                description: "",
-                                            });
-                                        }
-
-                                        setAttachments([...attachments, ...checkedFiles]);
-                                        e.target.value = "";
+                                        const files = Array.from(e.target.files as FileList);
+                                        await handleFileSubmit(files, e);
                                     }}
                                     style={{ display: "none" }}
                                 />
@@ -696,11 +685,17 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                             {textContainer}
 
                             <div className={styles.toolsContainer}>
-                                <button onClick={(e) => e.preventDefault()}>
+                                <button
+                                    type="button"
+                                    onClick={() => {}}
+                                >
                                     <Icon name="gif" />
                                 </button>
 
-                                <button onClick={(e) => e.preventDefault()}>
+                                <button
+                                    type="button"
+                                    onClick={() => {}}
+                                >
                                     <Icon name="sticker" />
                                 </button>
 
@@ -708,31 +703,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
 
                                 {(settings.sendButton || !width562) && (
                                     <button
-                                        className={`${styles.sendButton} ${
-                                            !message.length && !attachments.length
-                                                ? styles.empty
-                                                : ""
-                                        }`}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (edit?.messageId) return;
-                                            sendMessage();
-                                        }}
-                                        disabled={message.length === 0 && attachments.length === 0}
-                                        style={{
-                                            cursor:
-                                                message.length === 0 && attachments.length === 0
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                            opacity:
-                                                message.length === 0 && attachments.length === 0
-                                                    ? 0.3
-                                                    : 1,
-                                            color:
-                                                message.length === 0 && attachments.length === 0
-                                                    ? "var(--foreground-5)"
-                                                    : "",
-                                        }}
+                                        type="button"
+                                        className={`${styles.send} ${!canSend ? styles.empty : ""}`}
+                                        onClick={() => !edit && sendMessage()}
+                                        disabled={!canSend}
                                     >
                                         <div>
                                             <svg
@@ -769,30 +743,30 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                         )}
                     </div>
 
-                    <div
-                        className={styles.counterContainer}
-                        onMouseEnter={(e) =>
-                            setTooltip({
-                                text:
-                                    message.length > 16000
-                                        ? "Message is too long"
-                                        : `${16000 - message.length} characters remaining`,
-                                element: e.currentTarget,
-                            })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                    >
-                        <span
-                            style={{
-                                color:
-                                    message.length > 16000
-                                        ? "var(--error-1)"
-                                        : "var(--foreground-3)",
-                            }}
-                        >
-                            {message.length}
-                        </span>
-                        /16000
+                    <div className={styles.counterContainer}>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <span>
+                                    <span
+                                        style={{
+                                            color:
+                                                message.length > 16000
+                                                    ? "var(--error-1)"
+                                                    : "var(--foreground-3)",
+                                        }}
+                                    >
+                                        {message.length}
+                                    </span>
+                                    /16000
+                                </span>
+                            </TooltipTrigger>
+
+                            <TooltipContent>
+                                {message.length > 16000
+                                    ? "Message is too long"
+                                    : `${16000 - message.length} characters remaining`}
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
                 </div>
             </form>
@@ -804,10 +778,10 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
                     <div>You cannot send messages to a user you have blocked.</div>
 
                     <button
+                        type="button"
                         className="button grey"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
+                        onClick={() => {
+                            if (!friend) return;
                             sendRequest({
                                 query: "UNBLOCK_USER",
                                 params: { userId: friend.id },
@@ -820,237 +794,81 @@ export const TextArea = ({ channel, setMessages, editing }: any) => {
             </form>
         );
     }
-};
+}
 
-const emojisPos = [
-    { x: 0, y: 0 },
-    { x: 0, y: -22 },
-    { x: 0, y: -44 },
-    { x: 0, y: -66 },
-    { x: 0, y: -88 },
-    { x: -22, y: 0 },
-    { x: -22, y: -22 },
-    { x: -22, y: -44 },
-    { x: -22, y: -66 },
-    { x: -22, y: -88 },
-    { x: -44, y: 0 },
-    { x: -44, y: -22 },
-    { x: -44, y: -44 },
-    { x: -44, y: -66 },
-    { x: -44, y: -88 },
-    { x: -66, y: 0 },
-    { x: -66, y: -22 },
-    { x: -66, y: -44 },
-    { x: -66, y: -66 },
-    { x: -66, y: -88 },
-    { x: -88, y: 0 },
-    { x: -88, y: -22 },
-    { x: -88, y: -44 },
-    { x: -88, y: -66 },
-    { x: -88, y: -88 },
-    { x: -110, y: 0 },
-    { x: -110, y: -22 },
-    { x: -110, y: -44 },
-    { x: -110, y: -66 },
-    { x: -110, y: -88 },
-    { x: -132, y: 0 },
-    { x: -132, y: -22 },
-    { x: -132, y: -44 },
-    { x: -132, y: -66 },
-    { x: -154, y: 0 },
-    { x: -154, y: -22 },
-    { x: -154, y: -44 },
-    { x: -154, y: -66 },
-    { x: -176, y: 0 },
-    { x: -176, y: -22 },
-    { x: -176, y: -44 },
-    { x: -176, y: -66 },
-    { x: -198, y: 0 },
-    { x: -198, y: -22 },
-    { x: -198, y: -44 },
-    { x: -198, y: -66 },
-    { x: -220, y: 0 },
-    { x: -220, y: -22 },
-    { x: -220, y: -44 },
-    { x: -220, y: -66 },
-];
+function word(
+    editor: ReactEditor,
+    location: Range,
+    options: {
+        terminator?: string[];
+        include?: boolean;
+        directions?: "both" | "left" | "right";
+    } = {}
+): Range | undefined {
+    const { terminator = [" "], include = false, directions = "both" } = options;
 
-export const EmojiPicker = () => {
-    const [emojisPosIndex, setEmojisPosIndex] = useState(
-        Math.floor(Math.random() * emojisPos.length)
-    );
+    const { selection } = editor;
+    if (!selection) return;
 
-    return (
-        <button
-            onMouseEnter={() => setEmojisPosIndex(Math.floor(Math.random() * emojisPos.length))}
-            onClick={(e) => e.preventDefault()}
-            className={styles.buttonContainer}
-        >
-            <div
-                className={styles.emoji}
-                style={{
-                    backgroundImage:
-                        "url('https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/')",
-                    backgroundPosition: `${emojisPos[emojisPosIndex].x}px ${emojisPos[emojisPosIndex].y}px`,
-                }}
-            />
-        </button>
-    );
-};
+    // Get start and end, modify it as we move along.
+    let [start, end] = Range.edges(location);
 
-const FilePreview = ({ attachment, setAttachments }: any) => {
-    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
+    let point: Point = start;
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
-    const setLayers = useLayers((state) => state.setLayers);
+    function move(direction: "right" | "left"): boolean {
+        const next =
+            direction === "right"
+                ? Editor.after(editor, point, {
+                      unit: "character",
+                  })
+                : Editor.before(editor, point, { unit: "character" });
 
-    const isSpoiler = attachment.isSpoiler;
-    const isImage = attachment.isImage;
+        const wordNext =
+            next &&
+            Editor.string(
+                editor,
+                direction === "right"
+                    ? { anchor: point, focus: next }
+                    : { anchor: next, focus: point }
+            );
 
-    const handleFileChange = (data: any) => {
-        setAttachments((attachments: TAttachment[]) =>
-            attachments.map((a) =>
-                a.id === a.id
-                    ? {
-                          ...a,
-                          name: data.filename,
-                          isSpoiler: data.isSpoiler,
-                          description: data.description,
-                      }
-                    : a
-            )
-        );
-    };
+        const last = wordNext && wordNext[direction === "right" ? 0 : wordNext.length - 1];
+        if (next && last && !terminator.includes(last)) {
+            point = next;
 
-    return useMemo(() => {
-        if (typeof isImage !== "boolean") {
-            return <></>;
+            if (point.offset === 0) {
+                // Means we've wrapped to beginning of another block
+                return false;
+            }
+        } else {
+            return false;
         }
 
-        return (
-            <li className={styles.fileItem}>
-                <div className={styles.fileItemContainer}>
-                    <div
-                        className={styles.image}
-                        style={{
-                            backgroundColor:
-                                isSpoiler && !hideSpoiler ? "var(--background-dark-3)" : "",
-                            cursor: isSpoiler && !hideSpoiler ? "pointer" : "default",
-                        }}
-                        onClick={() => isSpoiler && setHideSpoiler(true)}
-                    >
-                        {isSpoiler && !hideSpoiler && (
-                            <div className={styles.spoilerButton}>Spoiler</div>
-                        )}
+        return true;
+    }
 
-                        <img
-                            src={
-                                isImage
-                                    ? attachment.url
-                                    : "https://ucarecdn.com/d2524731-0ab6-4360-b6c8-fc9d5b8147c8/"
-                            }
-                            alt="File Preview"
-                            style={{ filter: isSpoiler && !hideSpoiler ? "blur(44px)" : "none" }}
-                        />
+    // Move point and update start & end ranges
 
-                        <div className={styles.imageTags}>
-                            {attachment.description && <span>Alt</span>}
-                            {isSpoiler && hideSpoiler && <span>Spoiler</span>}
-                        </div>
-                    </div>
+    // Move forwards
+    if (directions !== "left") {
+        point = end;
+        while (move("right"));
+        end = point;
+    }
 
-                    <div className={styles.fileName}>
-                        <div>{attachment.name}</div>
-                    </div>
-                </div>
+    // Move backwards
+    if (directions !== "right") {
+        point = start;
+        while (move("left"));
+        start = point;
+    }
 
-                <div className={styles.fileMenu}>
-                    <div>
-                        <div
-                            className={styles.fileMenuButton}
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: "Spoiler Attachment",
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
-                            onClick={() => {
-                                setAttachments((prev) =>
-                                    prev.map((a) =>
-                                        a.id === attachment.id
-                                            ? {
-                                                  ...a,
-                                                  isSpoiler: !isSpoiler,
-                                              }
-                                            : a
-                                    )
-                                );
-                            }}
-                        >
-                            <Icon
-                                name={isSpoiler ? "eyeSlash" : "eye"}
-                                size={20}
-                            />
-                        </div>
+    if (include) {
+        return {
+            anchor: Editor.before(editor, start, { unit: "offset" }) ?? start,
+            focus: Editor.after(editor, end, { unit: "offset" }) ?? end,
+        };
+    }
 
-                        <div
-                            className={styles.fileMenuButton}
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: "Modify Attachment",
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
-                            onClick={() => {
-                                setTooltip(null);
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                    },
-                                    content: {
-                                        type: "FILE_EDIT",
-                                        file: attachment,
-                                        handleFileChange,
-                                    },
-                                });
-                            }}
-                        >
-                            <Icon
-                                name="edit"
-                                size={20}
-                            />
-                        </div>
-
-                        <div
-                            className={styles.fileMenuButton + " " + styles.danger}
-                            onMouseEnter={(e) =>
-                                setTooltip({
-                                    text: "Remove Attachment",
-                                    element: e.currentTarget,
-                                    gap: 3,
-                                })
-                            }
-                            onMouseLeave={() => setTooltip(null)}
-                            onClick={() => {
-                                setAttachments((attachments: TAttachment[]) =>
-                                    attachments.filter((a) => a.id !== attachment.id)
-                                );
-                                setTooltip(null);
-                            }}
-                        >
-                            <Icon
-                                name="delete"
-                                size={20}
-                                fill="var(--error-1)"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </li>
-        );
-    }, [attachment, hideSpoiler]);
-};
+    return { anchor: start, focus: end };
+}

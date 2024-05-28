@@ -1,18 +1,18 @@
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { useData, useLayers } from "@/store";
 import styles from "./Settings.module.css";
 import { useState, useRef } from "react";
 import { Avatar } from "@components";
 
 export function MyAccount({ setActiveTab }: any) {
+    return null;
     const [showTooltip, setShowTooltip] = useState(false);
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user);
 
     const usernameRef = useRef<HTMLDivElement>(null);
 
-    const copyToClipboard = async () => {
+    async function copyToClipboard() {
         if (!usernameRef.current) return;
 
         try {
@@ -37,7 +37,7 @@ export function MyAccount({ setActiveTab }: any) {
             setTooltip(null);
             setShowTooltip(false);
         }, 5000);
-    };
+    }
 
     const fields = [
         {
@@ -90,6 +90,7 @@ export function MyAccount({ setActiveTab }: any) {
                             <Avatar
                                 src={user.avatar}
                                 alt={user.username}
+                                type="avatars"
                                 size={80}
                                 status={user.status}
                             />

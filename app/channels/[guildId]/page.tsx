@@ -1,4 +1,4 @@
-import { getGuild, getGuildChannels, getUser, isUserInGuild } from "@/lib/db/helpers";
+import { getGuild, getUser, isUserInGuild } from "@/lib/db/helpers";
 import { GuildChannels, ClickLayer } from "@components";
 import { redirect } from "next/navigation";
 import styles from "./page.module.css";
@@ -8,12 +8,17 @@ export default async function GuildPage({ params }: { params: { guildId: string 
     if (!user) redirect("/login");
 
     const guildId = parseInt(params.guildId);
+    if (!(await isUserInGuild(user.id, guildId))) redirect("/channels/me");
 
-    if (!isUserInGuild(user.id, guildId)) redirect("/channels/me");
-    const guild = await getGuild(guildId);
+    const guild = await getGuild({
+        id: guildId,
+        getMembers: true,
+        getChannels: true,
+    });
 
-    const channels = await getGuildChannels(guildId);
-    const textChannel = channels.find((c) => c.type === 2);
+    if (!guild) redirect("/channels/me");
+
+    const textChannel = guild.channels.find((c) => c.type === 2);
     if (textChannel) redirect(`/channels/${guildId}/${textChannel.id}`);
 
     return (
@@ -21,7 +26,7 @@ export default async function GuildPage({ params }: { params: { guildId: string 
             <GuildChannels
                 guild={guild}
                 user={user}
-                initChannels={channels}
+                initChannels={guild.channels}
             />
 
             <ClickLayer>

@@ -1,46 +1,188 @@
 "use client";
 
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { useData, useLayers, useWindowSettings } from "@/store";
+import type { Channel, Guild, Message } from "@/type";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRef, type LegacyRef } from "react";
 import styles from "./Message.module.css";
-import { useRef, useState } from "react";
 import { Icon } from "@components";
 
 export function MessageMenu({
     message,
-    large,
-    functions,
     channel,
     guild,
+    large,
     inline,
     show,
     hide,
 }: {
     message: Message;
-    large?: boolean;
-    functions: MessageFunctions;
     channel: Channel;
     guild?: Guild;
+    large?: boolean;
     inline?: boolean;
     show?: boolean;
     hide?: boolean;
 }) {
-    const [shift, setShift] = useState(false);
+    const shift = useWindowSettings((state) => state.shiftKeyDown);
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
     const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
-    const menuSender = message.author.id === user.id;
-    const moreButton = useRef<HTMLDivElement>(null);
+    const moreButton = useRef<HTMLButtonElement>(null);
+    const menuSender = message.author.id === user?.id;
 
-    if (message.waiting || typeof menuSender !== "boolean") return null;
+    if (message.loading) return null;
 
-    const writeText = async (text: string) => {
-        await navigator.clipboard.writeText(text);
+    const buttons: {
+        [key: string]: {
+            text: string;
+            onClick: () => void;
+            icon: string;
+            iconViewbox?: string;
+            dangerous?: boolean;
+            ref?: LegacyRef<HTMLButtonElement>;
+        };
+    } = {
+        COPY_ID: {
+            text: "Copy Message ID",
+            onClick: () => message.functions?.copyId(),
+            icon: "id",
+        },
+        PIN_MESSAGE: {
+            text: `${message.pinned ? "Unpin" : "Pin"} Message`,
+            onClick: () => {
+                sendRequest({
+                    query: message.pinned ? "UNPIN_MESSAGE" : "PIN_MESSAGE",
+                    params: {
+                        channelId: message.channelId,
+                        messageId: message.id,
+                    },
+                });
+            },
+            icon: "pin",
+        },
+        COPY_TEXT: {
+            text: "Copy Text",
+            onClick: () => message.functions?.copyText(),
+            icon: "copy",
+        },
+        TRANSLATE: {
+            text: "Translate",
+            onClick: () => message.functions?.translate(),
+            icon: "translate",
+            iconViewbox: "0 96 960 960",
+        },
+        MARK_UNREAD: {
+            text: "Mark Unread",
+            onClick: () => {},
+            icon: "mark",
+        },
+        COPY_LINK: {
+            text: "Copy Message Link",
+            onClick: () => message.functions?.copyLink(),
+            icon: "link",
+        },
+        SPEAK: {
+            text: "Speak Message",
+            onClick: () => message.functions?.speak(),
+            icon: "speak",
+        },
+        ADD_REACTION: {
+            text: "Add Reaction",
+            onClick: () => {},
+            icon: "addReaction",
+        },
+        EDIT: {
+            text: "Edit",
+            onClick: () => message.functions?.editState(),
+            icon: "edit",
+        },
+        REPLY: {
+            text: "Reply",
+            onClick: () => message.functions?.replyState(),
+            icon: "reply",
+        },
+        MORE: {
+            text: "More",
+            onClick: () => {
+                setLayers({
+                    settings: {
+                        type: "MENU",
+                        element: moreButton.current,
+                        firstSide: "LEFT",
+                        gap: 5,
+                    },
+                    content: {
+                        type: "MESSAGE",
+                        message,
+                        channel,
+                        guild,
+                    },
+                });
+            },
+            icon: "dots",
+            ref: moreButton,
+        },
+        DELETE: {
+            text: "Delete",
+            onClick: () => {
+                sendRequest({
+                    query: "DELETE_MESSAGE",
+                    params: {
+                        channelId: message.channelId,
+                        messageId: message.id,
+                    },
+                });
+            },
+            icon: "delete",
+            dangerous: true,
+        },
+        REPORT: {
+            text: "Report Message",
+            onClick: () => message.functions?.report(),
+            icon: "report",
+            dangerous: true,
+        },
+        RETRY: {
+            text: "Retry",
+            onClick: () => message.functions?.retry(),
+            icon: "retry",
+        },
     };
+
+    function renderButton(button: keyof typeof buttons) {
+        const { text, onClick, icon, iconViewbox, dangerous, ref } = buttons[button];
+        let backgroundColor = "";
+
+        if (ref && layers.MENU?.settings?.element === ref.current) {
+            backgroundColor = "var(--background-hover-2)";
+        }
+
+        return (
+            <Tooltip>
+                <TooltipTrigger>
+                    <button
+                        key={text}
+                        onClick={onClick}
+                        ref={ref ? ref : undefined}
+                        style={{ backgroundColor }}
+                        className={dangerous ? styles.red : undefined}
+                    >
+                        <Icon
+                            name={icon}
+                            viewbox={iconViewbox || undefined}
+                        />
+                    </button>
+                </TooltipTrigger>
+
+                <TooltipContent>{text}</TooltipContent>
+            </Tooltip>
+        );
+    }
 
     return (
         <div
@@ -56,403 +198,42 @@ export function MessageMenu({
                         <>
                             {shift && !inline && (
                                 <>
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message ID",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(message.id);
-                                        }}
-                                    >
-                                        <Icon name="id" />
-                                    </div>
+                                    {renderButton("COPY_ID")}
+                                    {renderButton("PIN_MESSAGE")}
 
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: `${message.pinned ? "Unpin" : "Pin"} Message`,
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            sendRequest({
-                                                query: message.pinned
-                                                    ? "UNPIN_MESSAGE"
-                                                    : "PIN_MESSAGE",
-                                                params: {
-                                                    channelId: message.channelId,
-                                                    messageId: message.id,
-                                                },
-                                            });
-                                        }}
-                                    >
-                                        <Icon name="pin" />
-                                    </div>
+                                    {message.content && renderButton("COPY_TEXT")}
+                                    {message.content && renderButton("TRANSLATE")}
 
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Copy Text",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                writeText(message.content as string);
-                                            }}
-                                        >
-                                            <Icon name="copy" />
-                                        </div>
-                                    )}
+                                    {renderButton("MARK_UNREAD")}
+                                    {renderButton("COPY_LINK")}
 
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Translate",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                functions.translateMessage();
-                                            }}
-                                        >
-                                            <Icon
-                                                name="translate"
-                                                viewbox="0 96 960 960"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Mark Unread",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {}}
-                                    >
-                                        <Icon name="mark" />
-                                    </div>
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message Link",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(
-                                                `/channels/@me/${message.channelId}/${message.id}`
-                                            );
-                                        }}
-                                    >
-                                        <Icon name="link" />
-                                    </div>
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Speak Message",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                const msg = new SpeechSynthesisUtterance();
-                                                msg.text = `${message.author.username} said ${message.content}`;
-                                                window.speechSynthesis.speak(msg);
-                                            }}
-                                        >
-                                            <Icon name="speak" />
-                                        </div>
-                                    )}
+                                    {message.content && renderButton("SPEAK")}
                                 </>
                             )}
 
                             {inline && shift && (
                                 <>
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message ID",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(message.id);
-                                        }}
-                                    >
-                                        <Icon name="id" />
-                                    </div>
-
-                                    {message.content && (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) =>
-                                                setTooltip({
-                                                    text: "Copy Text",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                })
-                                            }
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                writeText(message.content as string);
-                                            }}
-                                        >
-                                            <Icon name="copy" />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Mark Unread",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {}}
-                                    >
-                                        <Icon name="mark" />
-                                    </div>
-
-                                    <div
-                                        role="button"
-                                        onMouseEnter={(e) => {
-                                            setTooltip({
-                                                text: "Copy Message Link",
-                                                element: e.currentTarget,
-                                                gap: 3,
-                                            });
-                                        }}
-                                        onMouseLeave={() => setTooltip(null)}
-                                        onClick={() => {
-                                            writeText(
-                                                `/channels/@me/${message.channelId}/${message.id}`
-                                            );
-                                        }}
-                                    >
-                                        <Icon name="link" />
-                                    </div>
+                                    {renderButton("COPY_ID")}
+                                    {message.content && renderButton("COPY_TEXT")}
+                                    {renderButton("MARK_UNREAD")}
+                                    {message.content && renderButton("COPY_LINK")}
                                 </>
                             )}
 
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Add Reaction",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                            >
-                                <Icon name="addReaction" />
-                            </div>
+                            {renderButton("ADD_REACTION")}
 
-                            {!inline && (
-                                <>
-                                    {menuSender ? (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Edit",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                setTooltip(null);
-                                                functions.editMessageState();
-                                            }}
-                                        >
-                                            <Icon name="edit" />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Reply",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                setTooltip(null);
-                                                functions.replyToMessageState();
-                                            }}
-                                        >
-                                            <Icon name="reply" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                            {!inline && (menuSender ? renderButton("EDIT") : renderButton("REPLY"))}
 
-                            {!shift || inline ? (
-                                <div
-                                    ref={moreButton}
-                                    role="button"
-                                    onMouseEnter={(e) => {
-                                        setTooltip({
-                                            text: "More",
-                                            element: e.currentTarget,
-                                            gap: 3,
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                element: moreButton.current,
-                                                firstSide: "LEFT",
-                                                gap: 5,
-                                            },
-                                            content: {
-                                                type: "MESSAGE",
-                                                message: message,
-                                                channelType: channel.type,
-                                                channelOwnerId: channel.ownerId,
-                                                guildOwnerId: guild?.ownerId,
-                                                functions: functions,
-                                            },
-                                        });
-                                    }}
-                                    style={{
-                                        backgroundColor:
-                                            layers.MENU?.settings?.element === moreButton.current
-                                                ? "var(--background-hover-2)"
-                                                : "",
-                                    }}
-                                >
-                                    <Icon name="dots" />
-                                </div>
-                            ) : (
-                                <>
-                                    {menuSender ? (
-                                        <div
-                                            className={styles.red}
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Delete",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                sendRequest({
-                                                    query: "DELETE_MESSAGE",
-                                                    params: {
-                                                        channelId: message.channelId,
-                                                        messageId: message.id,
-                                                    },
-                                                });
-                                            }}
-                                        >
-                                            <Icon name="delete" />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className={styles.red}
-                                            role="button"
-                                            onMouseEnter={(e) => {
-                                                setTooltip({
-                                                    text: "Report Message",
-                                                    element: e.currentTarget,
-                                                    gap: 3,
-                                                });
-                                            }}
-                                            onMouseLeave={() => setTooltip(null)}
-                                            onClick={() => {
-                                                // functions.reportPopup();
-                                            }}
-                                        >
-                                            <Icon name="report" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                            {!shift || inline
+                                ? renderButton("MORE")
+                                : menuSender
+                                ? renderButton("DELETE")
+                                : renderButton("REPORT")}
                         </>
-                    ) : message.waiting ? (
-                        <></>
                     ) : (
                         <>
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Retry",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setTooltip(null);
-                                    functions.retrySendMessage(message);
-                                }}
-                            >
-                                <Icon name="retry" />
-                            </div>
-
-                            <div
-                                role="button"
-                                onMouseEnter={(e) => {
-                                    setTooltip({
-                                        text: "Delete",
-                                        element: e.currentTarget,
-                                        gap: 3,
-                                    });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                                onClick={() => {
-                                    setTooltip(null);
-                                    functions.deleteLocalMessage();
-                                }}
-                            >
-                                <Icon name="delete" />
-                            </div>
+                            {renderButton("RETRY")}
+                            {renderButton("DELETE")}
                         </>
                     )}
                 </div>

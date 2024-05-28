@@ -1,11 +1,11 @@
-import styles from './MessageSk.module.css';
-import { v4 } from 'uuid';
-import React from 'react';
+import styles from "./MessageSk.module.css";
+import { nanoid } from "nanoid";
+import React from "react";
 
 export const MessageSk = () => {
     const mainBlob = (width: number) => (
         <div
-            key={v4()}
+            key={nanoid()}
             className={styles.blob}
             style={{ width: `${width}rem` }}
         />
@@ -17,20 +17,22 @@ export const MessageSk = () => {
                 const blobNumber = Math.floor(Math.random() * (3 - 0 + 1) + 0);
 
                 return (
-                    <React.Fragment key={v4()}>
+                    <React.Fragment key={nanoid()}>
                         <div
-                            aria-hidden='true'
+                            aria-hidden="true"
                             className={styles.wrapper}
-                            style={{ marginTop: '1rem' }}
+                            style={{ marginTop: "1rem" }}
                         >
                             <div>
                                 <div className={styles.avatar} />
 
-                                <h3 className={styles.username}>{mainBlob(Math.random() * (7.375 - 5 + 1) + 5)}</h3>
+                                <h3 className={styles.username}>
+                                    {mainBlob(Math.random() * (7.375 - 5 + 1) + 5)}
+                                </h3>
 
                                 <div className={styles.blobContainer}>
-                                    {[...Array(Math.floor(Math.random() * (8 - 3 + 1) + 3))].map(() =>
-                                        mainBlob(Math.random() * (4.825 - 1.875 + 1) + 1.875)
+                                    {[...Array(Math.floor(Math.random() * (8 - 3 + 1) + 3))].map(
+                                        () => mainBlob(Math.random() * (4.825 - 1.875 + 1) + 1.875)
                                     )}
                                 </div>
                             </div>
@@ -42,15 +44,19 @@ export const MessageSk = () => {
                             if (randomNum === 1) {
                                 return (
                                     <div
-                                        key={v4()}
-                                        aria-hidden='true'
+                                        key={nanoid()}
+                                        aria-hidden="true"
                                         className={styles.wrapper}
                                     >
                                         <div className={styles.attachement}>
                                             <div
                                                 style={{
-                                                    width: `${Math.floor(Math.random() * (400 - 150 + 1) + 150)}px`,
-                                                    height: `${Math.floor(Math.random() * (400 - 150 + 1) + 150)}px`,
+                                                    width: `${Math.floor(
+                                                        Math.random() * (400 - 150 + 1) + 150
+                                                    )}px`,
+                                                    height: `${Math.floor(
+                                                        Math.random() * (400 - 150 + 1) + 150
+                                                    )}px`,
                                                 }}
                                             ></div>
                                         </div>
@@ -59,14 +65,20 @@ export const MessageSk = () => {
                             } else {
                                 return (
                                     <div
-                                        key={v4()}
-                                        aria-hidden='true'
+                                        key={nanoid()}
+                                        aria-hidden="true"
                                         className={styles.wrapper}
                                     >
                                         <div>
                                             <div className={styles.blobContainer}>
-                                                {[...Array(Math.floor(Math.random() * (8 - 3 + 1) + 3))].map(() =>
-                                                    mainBlob(Math.random() * (4.825 - 1.875 + 1) + 1.875)
+                                                {[
+                                                    ...Array(
+                                                        Math.floor(Math.random() * (8 - 3 + 1) + 3)
+                                                    ),
+                                                ].map(() =>
+                                                    mainBlob(
+                                                        Math.random() * (4.825 - 1.875 + 1) + 1.875
+                                                    )
                                                 )}
                                             </div>
                                         </div>

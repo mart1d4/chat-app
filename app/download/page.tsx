@@ -2,12 +2,14 @@ import PopoverButton from "../web-components/PopoverButton/Popover";
 import Header from "../web-components/Header/Header";
 import Footer from "../web-components/Footer/Footer";
 import styles from "./Download.module.css";
+import { assets } from "@/lib/assets";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+
 export const metadata: Metadata = {
-    title: "Download Chat App to Talk, Chat and Hang Out",
+    title: "Download Spark to Talk, Chat and Hang Out",
 };
 
 const cardItems: {
@@ -17,17 +19,17 @@ const cardItems: {
 }[] = [
     {
         name: "iOS",
-        image: "19dadf2d-b78c-47e7-b3c5-aa19402832de",
+        image: "/assets/system/ios.svg",
         urls: "",
     },
     {
         name: "Android",
-        image: "6d7ad58c-9235-4667-bc42-31ee3698bf22",
+        image: "/assets/system/android.svg",
         urls: "",
     },
     {
         name: "Linux",
-        image: "ec81e85f-b758-400f-bb7a-4e24924dcbd2",
+        image: "/assets/system/linux.svg",
         urls: [
             ["deb", ""],
             ["tar.gz", ""],
@@ -35,7 +37,7 @@ const cardItems: {
     },
     {
         name: "Mac",
-        image: "d326513a-bcfc-4522-ae57-0fa44bb962ce",
+        image: "/assets/system/mac.svg",
         urls: "",
     },
     {
@@ -59,11 +61,12 @@ export default function DownloadPage() {
                 <div className={styles.hero}>
                     <div>
                         <div>
-                            <h1>Get Chat App for any device</h1>
+                            <h1>Get Spark for any device</h1>
 
                             <div>
-                                Embark on an exciting journey with Chat App. Share thrilling moments with friends on our
-                                desktop app and continue the excitement on the go with seamless mobile conversations.
+                                Embark on an exciting journey with Spark. Share thrilling moments
+                                with friends on our desktop app and continue the excitement on the
+                                go with seamless mobile conversations.
                             </div>
                         </div>
 
@@ -91,7 +94,7 @@ export default function DownloadPage() {
 
                     <div>
                         <img
-                            src="https://ucarecdn.com/f326c4c9-e67f-4971-9461-9b76dce08c3b/"
+                            src="/assets/system/laptop_call.svg"
                             alt="People hanging out in voice chat."
                         />
                     </div>
@@ -111,7 +114,8 @@ export default function DownloadPage() {
                                         <h3>Ready to experiment?</h3>
 
                                         <div>
-                                            Discover new features before they launch with Chat App's Public Test Build.
+                                            Discover new features before they launch with Spark's
+                                            Public Test Build.
                                         </div>
 
                                         <PopoverButton links={item.urls} />
@@ -129,7 +133,7 @@ export default function DownloadPage() {
 
                                         {item.image !== "" && (
                                             <img
-                                                src={`https://ucarecdn.com/${item.image}/`}
+                                                src={item.image}
                                                 alt={item.name}
                                                 loading="lazy"
                                             />

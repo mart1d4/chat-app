@@ -1,25 +1,4 @@
 .container {
-    min-height: 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    overflow: hidden;
-    position: relative;
-    background-color: var(--background-4);
-}
-
-.content {
-    min-height: 0;
-    min-width: 0;
-    flex: 1 1 auto;
-    display: flex;
-    justify-content: stretch;
-    align-items: stretch;
-    position: relative;
-}
-
-.main {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -28,7 +7,7 @@
     flex: 1 1 auto;
 }
 
-.messagesWrapper {
+.container > div {
     display: flex;
     position: relative;
     flex: 1 1 auto;
@@ -37,7 +16,7 @@
     z-index: 0;
 }
 
-.messagesScrollableContainer {
+.scroller {
     position: absolute;
     top: 0;
     left: 0;
@@ -49,11 +28,11 @@
     flex: 1 1 auto;
 }
 
-.messagesScrollableContainer::-webkit-scrollbar-track {
+.scroller::-webkit-scrollbar-track {
     margin-bottom: 8px;
 }
 
-.scrollContent {
+.scroller > div {
     overflow-anchor: none;
     display: flex;
     flex-direction: column;
@@ -63,10 +42,48 @@
     position: relative;
 }
 
-.scrollContentInner {
+.scroller > div > ol {
     min-height: 0;
     overflow: hidden;
     list-style: none;
+}
+
+.spacer {
+    display: block;
+    height: 30px;
+    width: 1px;
+    pointer-events: none;
+}
+
+.divider {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    left: auto;
+    right: auto;
+    z-index: 1;
+    height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    margin-left: 1rem;
+    margin-right: 0.875rem;
+    border-top: thin solid var(--border-light);
+}
+
+.divider span {
+    display: block;
+    flex: 0 0 auto;
+    padding: 2px 4px;
+    line-height: 13px;
+    font-size: 12px;
+    margin-top: -1px;
+    font-weight: 600;
+    border-radius: 8px;
+    color: var(--foreground-3);
+    background-color: var(--background-4);
 }
 
 .firstTimeMessageContainer {
@@ -132,44 +149,6 @@
     height: 24px;
     min-width: 52px;
     pointer-events: all;
-}
-
-.scrollerSpacer {
-    display: block;
-    height: 30px;
-    width: 1px;
-    pointer-events: none;
-}
-
-.messageDivider {
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
-    position: relative;
-    left: auto;
-    right: auto;
-    z-index: 1;
-    height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    user-select: none;
-    margin-left: 1rem;
-    margin-right: 0.875rem;
-    border-top: thin solid var(--border-light);
-}
-
-.messageDivider span {
-    display: block;
-    flex: 0 0 auto;
-    padding: 2px 4px;
-    line-height: 13px;
-    font-size: 12px;
-    margin-top: -1px;
-    font-weight: 600;
-    border-radius: 8px;
-    color: var(--foreground-3);
-    background-color: var(--background-4);
 }
 
 .systemChannel {

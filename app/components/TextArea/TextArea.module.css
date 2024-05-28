@@ -184,7 +184,6 @@
 }
 
 .textbox {
-    outline: none;
     position: relative;
     overflow-wrap: break-word;
     padding: 11px 10px 11px 0;
@@ -193,6 +192,10 @@
     text-align: left;
     word-break: break-word;
     white-space: break-spaces;
+}
+
+.textbox > div {
+    outline: none;
 }
 
 .toolsContainer {
@@ -209,7 +212,7 @@
     }
 }
 
-.toolsContainer > button:not(.sendButton) {
+.toolsContainer > button:not(.send) {
     padding: 4px;
     height: 44px;
     width: 40px;
@@ -391,6 +394,7 @@
     cursor: pointer;
     position: relative;
     color: var(--foreground-3);
+    background-color: transparent;
 }
 
 .fileMenuButton:nth-child(3) {
@@ -514,7 +518,7 @@
     user-select: none;
 }
 
-.sendButton {
+.send {
     padding: 0;
     width: 44px;
     height: 44px;
@@ -524,9 +528,10 @@
     justify-content: center;
     border-radius: 3px;
     background-color: transparent;
+    cursor: pointer;
 }
 
-.sendButton::before {
+.send::before {
     content: "";
     border-left: 1px solid var(--foreground-2);
     opacity: 0.1;
@@ -535,7 +540,13 @@
     margin-bottom: auto;
 }
 
-.sendButton > div {
+.send.empty {
+    cursor: not-allowed;
+    opacity: 0.3;
+    color: var(--foreground-5);
+}
+
+.send > div {
     padding: 4px;
     margin-left: 12px;
     margin-right: 4px;
@@ -546,15 +557,15 @@
     transition: opacity 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
-.sendButton:not(.empty) > div {
+.send:not(.empty) > div {
     color: hsl(235, 86.1%, 77.5%);
 }
 
-.sendButton:not(.empty):hover > div {
+.send:not(.empty):hover > div {
     color: hsl(235, 85.7%, 69.8%);
 }
 
-.sendButton:not(.empty):active > div {
+.send:not(.empty):active > div {
     color: var(--accent-1);
 }
 

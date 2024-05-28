@@ -1,15 +1,21 @@
 "use client";
 
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { useData, useLayers } from "@/lib/store";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useData, useLayers } from "@/store";
 import { Icon, UserItem } from "@components";
 import styles from "./UserLists.module.css";
 import Image from "next/image";
-import { User } from "@/lib/db/types";
+import { lowercaseContains } from "@/lib/strings";
+
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+
+if (!cdnUrl) {
+    throw new Error("NEXT_PUBLIC_CDN_URL is not defined.");
+}
 
 const contentData: contentType = {
     all: {
-        src: "https://ucarecdn.com/7b76d926-7e1b-4491-84c8-7074c4def321/",
+        src: "/assets/system/no-friends.svg",
         width: 376,
         height: 162,
         description: "We are waiting on friends. You don't have to though!",
@@ -17,7 +23,7 @@ const contentData: contentType = {
         title: "All Friends",
     },
     online: {
-        src: "https://ucarecdn.com/11a4ecb1-1c4c-46a5-8a41-ad1a9347af2c/",
+        src: "/assets/system/no-online.svg",
         width: 421,
         height: 218,
         description: "No one's around to play with us.",
@@ -25,7 +31,7 @@ const contentData: contentType = {
         title: "Online",
     },
     pending: {
-        src: "https://ucarecdn.com/357cdafa-b30c-4074-accb-4316074f1442/",
+        src: "/assets/system/no-pending.svg",
         width: 415,
         height: 200,
         description: "There are no pending requests. Here's us for now.",
@@ -33,7 +39,7 @@ const contentData: contentType = {
         title: "Pending",
     },
     blocked: {
-        src: "https://ucarecdn.com/86b8a3de-5045-4b0b-8e02-23e701f8850c/",
+        src: "/assets/system/no-blocked.svg",
         width: 433,
         height: 232,
         description: "You can't unblock us.",
@@ -41,7 +47,7 @@ const contentData: contentType = {
         title: "Blocked",
     },
     noSearch: {
-        src: "https://ucarecdn.com/11a4ecb1-1c4c-46a5-8a41-ad1a9347af2c/",
+        src: "/assets/system/nothing-found.svg",
         width: 421,
         height: 218,
         description: "We looked, but couldn't find anyone with that name.",
@@ -61,10 +67,8 @@ type contentType = {
     };
 };
 
-export const UserLists = ({ content }: { content: string }): ReactElement => {
-    const [search, setSearch] = useState<string>("");
-    const [list, setList] = useState<Partial<User>[]>([]);
-    const [filteredList, setFilteredList] = useState<Partial<User>[]>([]);
+export const UserLists = ({ content }: { content: string }) => {
+    const [search, setSearch] = useState("");
 
     const requestsReceived = useData((state) => state.received);
     const requestsSent = useData((state) => state.sent);
@@ -79,26 +83,26 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
         searchBar.current?.focus();
     };
 
-    useEffect(() => {
+    const list = useMemo(() => {
         if (content === "online") {
-            setList(friends.filter((user) => user.status !== "offline"));
+            return friends.filter((user) => user.status !== "offline");
         } else if (content === "all") {
-            setList(friends);
+            return friends;
         } else if (content === "pending") {
             const a = requestsReceived.map((user) => ({ ...user, req: "Received" }));
             const b = requestsSent.map((user) => ({ ...user, req: "Sent" }));
-            setList([...a, ...b].sort((a, b) => a.username.localeCompare(b.username)));
+            return [...a, ...b].sort((a, b) => a.username.localeCompare(b.username));
         } else {
-            setList(blockedUsers);
+            return blockedUsers;
         }
     }, [content, friends, requestsReceived, requestsSent, blockedUsers]);
 
-    useEffect(() => {
-        if (search)
-            setFilteredList(
-                list.filter((user) => user.username.toLowerCase().includes(search.toLowerCase()))
-            );
-        else setFilteredList(list);
+    const filteredList = useMemo(() => {
+        if (search) {
+            return list.filter((user) => lowercaseContains(user.username, search));
+        }
+
+        return list;
     }, [list, search]);
 
     const UserItems = useMemo(
@@ -115,10 +119,7 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
                             onContextMenu={(e) => {
                                 e.preventDefault();
                                 setLayers({
-                                    settings: {
-                                        type: "MENU",
-                                        event: e,
-                                    },
+                                    settings: { type: "MENU", event: e },
                                     content: {
                                         type: "INPUT",
                                         input: true,
@@ -170,11 +171,11 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
             <div className={styles.content}>
                 <div className={styles.noData}>
                     <Image
-                        src={contentData[content].src}
+                        priority
                         alt="No Users"
+                        src={contentData[content].src}
                         width={contentData[content].width}
                         height={contentData[content].height}
-                        priority
                     />
 
                     <div>{contentData[content].description}</div>
@@ -220,11 +221,11 @@ export const UserLists = ({ content }: { content: string }): ReactElement => {
 
                 <div className={styles.noData}>
                     <Image
+                        priority
                         src={contentData.noSearch.src}
                         alt="Nobody found with that username"
                         width={contentData.noSearch.width}
                         height={contentData.noSearch.height}
-                        priority
                     />
 
                     <div>{contentData.noSearch.description}</div>

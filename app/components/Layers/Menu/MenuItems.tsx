@@ -1,7 +1,24 @@
-import { useData } from "@/lib/store";
+import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/store";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { isInline } from "@/lib/message";
+import type { Message } from "@/type";
+
+function canDeleteMessage() {
+    return true;
+}
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function MenuItems() {
+    const setShowSettings = useShowSettings((state) => state.setShowSettings);
+    const setSettings = useSettings((state) => state.setSettings);
+    const setMention = useMention((state) => state.setMention);
+    const settings = useSettings((state) => state.settings);
+    const setLayers = useLayers((state) => state.setLayers);
     const currentUser = useData((state) => state.user);
+
+    const { sendRequest } = useFetchHelper();
 
     async function writeToClip(text: string) {
         try {
@@ -116,7 +133,7 @@ export function MenuItems() {
             {
                 name: "Create Channel",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -130,7 +147,7 @@ export function MenuItems() {
             {
                 name: "Create Category",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -145,7 +162,7 @@ export function MenuItems() {
             {
                 name: "Invite People",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -160,7 +177,7 @@ export function MenuItems() {
     }
 
     function getGuildChannel({ ...props }) {
-        const channel = props.channel;
+        const channel = props.content.channel;
 
         if (channel.type === 4) {
             return [
@@ -199,13 +216,15 @@ export function MenuItems() {
                 },
                 {
                     name: "Edit Category",
-                    func: () => {},
+                    func: () => {
+                        setShowSettings({ type: "CHANNEL", channel });
+                    },
                 },
                 {
                     name: "Delete Category",
                     danger: true,
                     func: () => {
-                        props.setLayers({
+                        setLayers({
                             settings: {
                                 type: "POPUP",
                             },
@@ -239,7 +258,7 @@ export function MenuItems() {
                 {
                     name: "Invite People",
                     func: () => {
-                        props.setLayers({
+                        setLayers({
                             settings: {
                                 type: "POPUP",
                             },
@@ -253,10 +272,7 @@ export function MenuItems() {
                 },
                 {
                     name: "Copy Link",
-                    func: () =>
-                        writeToClip(
-                            `${process.env.NEXT_PUBLIC_BASE_URL}/channels/${channel.guildId}/${channel.id}`
-                        ),
+                    func: () => writeToClip(`${baseUrl}/channels/${channel.guildId}/${channel.id}`),
                 },
                 {
                     name: channel.type == 3 ? "Divider" : null,
@@ -288,7 +304,7 @@ export function MenuItems() {
                 },
                 {
                     name: "Edit Channel",
-                    func: () => props.setShowSettings({ type: "CHANNEL", channel: channel }),
+                    func: () => setShowSettings({ type: "CHANNEL", channel: channel }),
                 },
                 {
                     name: "Duplicate Channel",
@@ -297,7 +313,7 @@ export function MenuItems() {
                 {
                     name: `Create ${channel.type === 2 ? "Text" : "Voice"} Channel`,
                     func: () => {
-                        props.setLayers({
+                        setLayers({
                             settings: {
                                 type: "POPUP",
                             },
@@ -314,7 +330,7 @@ export function MenuItems() {
                     name: "Delete Channel",
                     danger: true,
                     func: () => {
-                        props.setLayers({
+                        setLayers({
                             settings: {
                                 type: "POPUP",
                             },
@@ -351,7 +367,7 @@ export function MenuItems() {
                 name: null ? "Invite People" : null,
                 icon: "addUser",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -366,7 +382,7 @@ export function MenuItems() {
             {
                 name: "Server Settings",
                 icon: "cog",
-                func: () => props.setShowSettings({ type: "GUILD", guild: props.content.guild }),
+                func: () => setShowSettings({ type: "GUILD", guild: props.content.guild }),
             },
             {
                 name: "Server Insights",
@@ -377,7 +393,7 @@ export function MenuItems() {
                 name: "Create Channel",
                 icon: "attach",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -392,7 +408,7 @@ export function MenuItems() {
                 name: "Create Category",
                 icon: "folder",
                 func: () => {
-                    props.setLayers({
+                    setLayers({
                         settings: {
                             type: "POPUP",
                         },
@@ -478,14 +494,14 @@ export function MenuItems() {
         return [
             {
                 name: props.content.sendButton && "Send Message Button",
-                checked: props.settings.sendButton,
-                func: () => props.setSettings("sendButton", !props.settings.sendButton),
+                checked: settings.sendButton,
+                func: () => setSettings("sendButton", !settings.sendButton),
             },
             { name: props.content.sendButton && "Divider" },
             {
                 name: "Spellcheck",
-                checked: props.settings.spellcheck,
-                func: () => props.setSettings("spellcheck", !props.settings.spellcheck),
+                checked: settings.spellcheck,
+                func: () => setSettings("spellcheck", !settings.spellcheck),
             },
             { name: "Divider" },
             {
@@ -501,7 +517,7 @@ export function MenuItems() {
             {
                 name: props.content.attachment ? "Copy Image" : null,
                 func: () => {
-                    const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${props.content.attachment.id}/`;
+                    const url = `${cdnUrl}/${props.content.attachment.id}/`;
 
                     fetch(url)
                         .then((res) => res.blob())
@@ -517,7 +533,7 @@ export function MenuItems() {
             {
                 name: props.content.attachment ? "Save Image" : null,
                 func: () => {
-                    const url = `${process.env.NEXT_PUBLIC_CDN_URL}/${props.content.attachment.id}/`;
+                    const url = `${cdnUrl}/${props.content.attachment.id}/`;
 
                     fetch(url)
                         .then((res) => res.blob())
@@ -526,33 +542,27 @@ export function MenuItems() {
                             a.href = URL.createObjectURL(blob);
                             a.download = props.content.attachment.name;
                             a.click();
+                            a.remove();
                         });
                 },
             },
             { name: props.content.attachment ? "Divider" : null },
             {
                 name: props.content.attachment ? "Copy Link" : null,
-                func: () =>
-                    writeToClip(
-                        `${process.env.NEXT_PUBLIC_CDN_URL}/${props.content.attachment.id}/`
-                    ),
+                func: () => writeToClip(`${cdnUrl}/${props.content.attachment.id}/`),
             },
             {
                 name: props.content.attachment ? "Open Link" : null,
-                func: () => {
-                    window.open(
-                        `${process.env.NEXT_PUBLIC_CDN_URL}/${props.content.attachment.id}/`
-                    );
-                },
+                func: () => window.open(`${cdnUrl}/${props.content.attachment.id}/`),
             },
         ];
     }
 
     function getMessage({ ...props }) {
-        console.log(props);
+        const message: Message = props.content.message;
+        const functions = message.functions;
 
-        props.message = props.content.message;
-        if (props.shouldDisplayInlined(props.message.type)) {
+        if (isInline(message.type)) {
             return [
                 {
                     name: "Add Reaction",
@@ -561,23 +571,22 @@ export function MenuItems() {
                     func: () => {},
                 },
                 {
-                    name: props.message.content ? "Copy Text" : null,
+                    name: message.content ? "Copy Text" : null,
                     icon: "copy",
-                    func: () => writeToClip(props.message.content as string),
+                    func: functions?.copyText,
                 },
                 { name: "Mark Unread", icon: "mark", func: () => {} },
                 {
                     name: "Copy Message Link",
                     icon: "link",
-                    func: () =>
-                        writeToClip(`/channels/@me/${props.message.channelId}/${props.message.id}`),
+                    func: functions?.copyLink,
                 },
                 { name: "Divider" },
                 {
                     name: "Copy Message ID",
                     icon: "id",
 
-                    func: () => writeToClip(props.message.id),
+                    func: functions?.copyId,
                 },
             ];
         } else {
@@ -591,83 +600,51 @@ export function MenuItems() {
                 {
                     name: !!props.relationships.self ? "Edit Message" : null,
                     icon: "edit",
-                    func: () => props.content?.functions?.editMessageState(),
+                    func: functions?.editState,
                 },
                 {
-                    name: props.message.pinned ? "Unpin Message" : "Pin Message",
+                    name: message.pinned ? "Unpin Message" : "Pin Message",
                     icon: "pin",
-                    func: props.message?.pinned
-                        ? () => props.content?.functions?.unpinPopup()
-                        : () => props.content?.functions?.pinPopup(),
-                    funcShift: props.message.pinned
-                        ? () => {
-                              props.sendRequest({
-                                  query: "UNPIN_MESSAGE",
-                                  params: {
-                                      channelId: props.message.channelId,
-                                      messageId: props.message.id,
-                                  },
-                              });
-                          }
-                        : () => {
-                              props.sendRequest({
-                                  query: "PIN_MESSAGE",
-                                  params: {
-                                      channelId: props.message.channelId,
-                                      messageId: props.message.id,
-                                  },
-                              });
-                          },
+                    func: message?.pinned ? functions?.unpinPopup : functions?.pinPopup,
+                    funcShift: message.pinned ? functions?.unpin : functions?.pin,
                 },
                 {
                     name: "Reply",
                     icon: "reply",
-                    func: () => props.content?.functions?.replyToMessageState(),
+                    func: functions?.replyState,
                 },
                 {
-                    name: props.message.content ? "Copy Text" : null,
+                    name: message.content ? "Copy Text" : null,
                     icon: "copy",
-                    func: () => writeToClip(props.message.content as string),
+                    func: functions?.copyText,
                 },
                 {
-                    name: props.message.content ? "Translate" : null,
+                    name: message.content ? "Translate" : null,
                     icon: "translate",
-                    func: () => props.content?.functions?.translateMessage(),
+                    func: functions?.translate,
                 },
                 { name: "Mark Unread", icon: "mark", func: () => {} },
                 {
                     name: "Copy Message Link",
                     icon: "link",
-                    func: () =>
-                        writeToClip(`/channels/@me/${props.message.channelId}/${props.message.id}`),
+                    func: functions?.copyLink,
                 },
                 {
-                    name: props.message.content ? "Speak Message" : null,
+                    name: message.content ? "Speak Message" : null,
                     icon: "speak",
-                    func: () => {
-                        const msg = new SpeechSynthesisUtterance();
-                        msg.text = `${props.message.author.username} said ${props.message.content}`;
-                        window.speechSynthesis.speak(msg);
-                    },
+                    func: functions?.speak,
                 },
                 {
-                    name: props.canDeleteMessage() ? "Delete Message" : null,
+                    name: canDeleteMessage() ? "Delete Message" : null,
                     icon: "delete",
-                    func: () => props.content?.functions?.deletePopup(),
-                    funcShift: () =>
-                        props.sendRequest({
-                            query: "DELETE_MESSAGE",
-                            params: {
-                                channelId: props.message.channelId,
-                                messageId: props.message.id,
-                            },
-                        }),
+                    func: functions?.deletePopup,
+                    funcShift: functions?.delete,
                     danger: true,
                 },
                 {
                     name: !props.relationships.self ? "Report Message" : null,
                     icon: "report",
-                    func: () => {},
+                    func: functions?.report,
                     danger: true,
                 },
                 { name: props.content?.attachment ? "Divider" : null },
@@ -701,18 +678,18 @@ export function MenuItems() {
                 { name: props.content?.attachment ? "Divider" : null },
                 {
                     name: props.content?.attachment ? "Copy Link" : null,
-                    func: () => writeToClip(props.content?.attachment?.url),
+                    func: () => writeToClip(props.content.attachment.url),
                 },
                 {
                     name: props.content?.attachment ? "Open Link" : null,
-                    func: () => window.open(props.content?.attachment?.url),
+                    func: () => window.open(props.content.attachment.url),
                 },
                 { name: "Divider" },
                 {
                     name: "Copy Message ID",
                     icon: "id",
 
-                    func: () => writeToClip(props.message.id),
+                    func: functions?.copyId,
                 },
             ];
         }
@@ -732,13 +709,12 @@ export function MenuItems() {
             },
             {
                 name: "Remove Friend",
-                func: () =>
-                    props.sendRequest({
+                func: () => {
+                    sendRequest({
                         query: "REMOVE_FRIEND",
-                        data: {
-                            username: user.username,
-                        },
-                    }),
+                        body: { username: user.username },
+                    });
+                },
                 danger: true,
             },
         ];
@@ -746,6 +722,7 @@ export function MenuItems() {
 
     function getChannel({ ...props }) {
         const user = props.content.user;
+        const channel = props.content.channel;
 
         if (user) {
             if (props.relationships.self) {
@@ -753,19 +730,15 @@ export function MenuItems() {
                     {
                         name: "Profile",
                         func: () => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: currentUser,
-                                },
+                            setLayers({
+                                settings: { type: "USER_PROFILE" },
+                                content: { user: currentUser },
                             });
                         },
                     },
                     {
                         name: "Mention",
-                        func: () => props.setMention(currentUser),
+                        func: () => setMention(currentUser),
                     },
                     { name: "Divider" },
                     {
@@ -774,7 +747,7 @@ export function MenuItems() {
                         icon: "id",
                     },
                 ];
-            } else if (props.content?.userprofile) {
+            } else if (props.content.userprofile) {
                 return [
                     {
                         name: !props.relationships.blocked
@@ -786,48 +759,47 @@ export function MenuItems() {
                                 ? "Remove Friend"
                                 : "Add Friend"
                             : null,
-                        func: () =>
-                            props.relationships.sent || props.relationships.friend
-                                ? props.sendRequest({
-                                      query: "REMOVE_FRIEND",
-                                      data: {
-                                          username: user.username,
-                                      },
-                                  })
-                                : props.sendRequest({
-                                      query: "ADD_FRIEND",
-                                      data: { username: user.username },
-                                  }),
+                        func: () => {
+                            if (props.relationships.sent || props.relationships.friend) {
+                                sendRequest({
+                                    query: "REMOVE_FRIEND",
+                                    body: { username: user.username },
+                                });
+                            } else {
+                                sendRequest({
+                                    query: "ADD_FRIEND",
+                                    body: { username: user.username },
+                                });
+                            }
+                        },
                         danger: props.relationships.sent || props.relationships.friend,
                     },
                     {
                         name: props.relationships.blocked ? "Unblock" : "Block",
-                        func: () =>
-                            props.relationships.blocked
-                                ? props.sendRequest({
-                                      query: "UNBLOCK_USER",
-                                      params: { userId: user.id },
-                                  })
-                                : props.sendRequest({
-                                      query: "BLOCK_USER",
-                                      params: { userId: user.id },
-                                  }),
+                        func: () => {
+                            if (props.relationships.blocked) {
+                                sendRequest({
+                                    query: "UNBLOCK_USER",
+                                    params: { userId: user.id },
+                                });
+                            } else {
+                                sendRequest({
+                                    query: "BLOCK_USER",
+                                    params: { userId: user.id },
+                                });
+                            }
+                        },
                         danger: !props.relationships.blocked,
                     },
                     {
                         name: !props.relationships.blocked ? "Message" : null,
                         func: () => {
-                            props.sendRequest({
+                            sendRequest({
                                 query: "CHANNEL_CREATE",
-                                data: {
-                                    recipients: [user.id],
-                                },
+                                body: { recipients: [user.id] },
                             });
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                    setNull: true,
-                                },
+                            setLayers({
+                                settings: { type: "USER_PROFILE", setNull: true },
                             });
                         },
                     },
@@ -841,55 +813,46 @@ export function MenuItems() {
             } else if (props.relationships.blocked) {
                 return [
                     {
-                        name: props.content?.channel && "Mark As Read",
+                        name: channel ? "Mark As Read" : null,
                         func: () => {},
                         disabled: true,
                     },
-                    { name: props.content?.channel && "Divider" },
+                    { name: channel ? "Divider" : null },
                     {
                         name: "Profile",
                         func: () => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: user,
-                                },
+                            setLayers({
+                                settings: { type: "USER_PROFILE" },
+                                content: { user },
                             });
                         },
                     },
                     {
                         name: "Message",
-                        func: () =>
-                            props.sendRequest({
-                                query: "CHANNEL_CREATE",
-                                data: {
-                                    recipients: [user.id],
-                                },
-                            }),
-                    },
-                    {
-                        name: "Add Note",
                         func: () => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: user,
-                                    focusNote: true,
-                                },
+                            sendRequest({
+                                query: "CHANNEL_CREATE",
+                                body: { recipients: [user.id] },
                             });
                         },
                     },
                     {
-                        name: props.content?.channel && "Close DM",
-                        func: () =>
-                            props.sendRequest({
+                        name: "Add Note",
+                        func: () => {
+                            setLayers({
+                                settings: { type: "USER_PROFILE" },
+                                content: { user, focusNote: true },
+                            });
+                        },
+                    },
+                    {
+                        name: channel ? "Close DM" : null,
+                        func: () => {
+                            sendRequest({
                                 query: "CHANNEL_DELETE",
-                                params: { channelId: props.content.channel.id },
-                            }),
+                                params: { channelId: channel.id },
+                            });
+                        },
                     },
                     { name: "Divider" },
                     {
@@ -899,59 +862,54 @@ export function MenuItems() {
                     },
                     {
                         name: "Unblock User",
-                        func: () =>
-                            props.sendRequest({
+                        func: () => {
+                            sendRequest({
                                 query: "UNBLOCK_USER",
                                 params: { userId: user.id },
-                            }),
+                            });
+                        },
                     },
                     { name: "Divider" },
                     {
-                        name: props.content?.channel && `Mute @${user.username}`,
+                        name: channel ? `Mute @${user.username}` : null,
                         items: muteItems,
                         func: () => {},
                     },
-                    { name: props.content?.channel && "Divider" },
+                    { name: channel ? "Divider" : null },
                     {
                         name: "Copy User ID",
                         func: () => writeToClip(user.id),
                         icon: "id",
                     },
                     {
-                        name: props.content?.channel && "Copy Channel ID",
-                        func: () => writeToClip(props.content.channel.id),
+                        name: channel ? "Copy Channel ID" : null,
+                        func: () => writeToClip(channel.id),
                         icon: "id",
                     },
                 ];
             } else {
                 return [
                     {
-                        name: props.content?.channel && "Mark As Read",
+                        name: channel ? "Mark As Read" : null,
                         func: () => {},
                         disabled: true,
                     },
-                    { name: props.content?.channel && "Divider" },
+                    { name: channel ? "Divider" : null },
                     {
                         name: "Profile",
                         func: () => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: user,
-                                },
+                            setLayers({
+                                settings: { type: "USER_PROFILE" },
+                                content: { user },
                             });
                         },
                     },
                     {
                         name: "Message",
                         func: () =>
-                            props.sendRequest({
+                            sendRequest({
                                 query: "CHANNEL_CREATE",
-                                data: {
-                                    recipients: [user.id],
-                                },
+                                body: { recipients: [user.id] },
                             }),
                     },
                     {
@@ -961,14 +919,9 @@ export function MenuItems() {
                     {
                         name: "Add Note",
                         func: () => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: user,
-                                    focusNote: true,
-                                },
+                            setLayers({
+                                settings: { type: "USER_PROFILE" },
+                                content: { user, focusNote: true },
                             });
                         },
                     },
@@ -983,12 +936,13 @@ export function MenuItems() {
                         func: () => {},
                     },
                     {
-                        name: props.content?.channel && "Close DM",
-                        func: () =>
-                            props.sendRequest({
+                        name: channel ? "Close DM" : null,
+                        func: () => {
+                            sendRequest({
                                 query: "CHANNEL_DELETE",
-                                params: { channelId: props.content.channel.id },
-                            }),
+                                params: { channelId: channel.id },
+                            });
+                        },
                     },
                     { name: "Divider" },
                     {
@@ -1004,45 +958,51 @@ export function MenuItems() {
                             : props.relationships.friend
                             ? "Remove Friend"
                             : "Add Friend",
-                        func: () =>
-                            props.relationships.sent || props.relationships.friend
-                                ? props.sendRequest({
-                                      query: "REMOVE_FRIEND",
-                                      data: { username: user.username },
-                                  })
-                                : props.sendRequest({
-                                      query: "ADD_FRIEND",
-                                      data: { username: user.username },
-                                  }),
+                        func: () => {
+                            if (props.relationships.sent || props.relationships.friend) {
+                                sendRequest({
+                                    query: "REMOVE_FRIEND",
+                                    body: { username: user.username },
+                                });
+                            } else {
+                                sendRequest({
+                                    query: "ADD_FRIEND",
+                                    body: { username: user.username },
+                                });
+                            }
+                        },
                     },
                     {
                         name: props.relationships.blocked ? "Unblock" : "Block",
-                        func: () =>
-                            props.relationships.blocked
-                                ? props.sendRequest({
-                                      query: "UNBLOCK_USER",
-                                      params: { userId: user.id },
-                                  })
-                                : props.sendRequest({
-                                      query: "BLOCK_USER",
-                                      params: { userId: user.id },
-                                  }),
+                        func: () => {
+                            if (props.relationships.blocked) {
+                                sendRequest({
+                                    query: "UNBLOCK_USER",
+                                    params: { userId: user.id },
+                                });
+                            } else {
+                                sendRequest({
+                                    query: "BLOCK_USER",
+                                    params: { userId: user.id },
+                                });
+                            }
+                        },
                         danger: !props.relationships.blocked,
                     },
                     { name: "Divider" },
                     {
-                        name: props.content?.channel && `Mute @${user.username}`,
+                        name: channel ? `Mute @${user.username}` : null,
                         items: muteItems,
                         func: () => {},
                     },
-                    { name: props.content?.channel && "Divider" },
+                    { name: channel ? "Divider" : null },
                     {
                         name: "Copy User ID",
                         func: () => writeToClip(user.id),
                         icon: "id",
                     },
                     {
-                        name: props.content?.channel && "Copy Channel ID",
+                        name: channel ? "Copy Channel ID" : null,
                         func: () => writeToClip(props.content.channel.id),
                         icon: "id",
                     },
@@ -1074,22 +1034,15 @@ export function MenuItems() {
                 {
                     name: "Leave Group",
                     func: () => {
-                        if (props.content.channel.recipients.length == 1) {
-                            props.sendRequest({
+                        if (channel.recipients.length == 1) {
+                            sendRequest({
                                 query: "CHANNEL_DELETE",
-                                params: {
-                                    channelId: props.content.channel.id,
-                                },
+                                params: { channelId: channel.id },
                             });
                         } else {
-                            props.setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
-                                content: {
-                                    type: "LEAVE_CONFIRM",
-                                    channel: props.content.channel,
-                                },
+                            setLayers({
+                                settings: { type: "POPUP" },
+                                content: { type: "LEAVE_CONFIRM", channel },
                             });
                         }
                     },
@@ -1098,7 +1051,7 @@ export function MenuItems() {
                 { name: "Divider" },
                 {
                     name: "Copy Channel ID",
-                    func: () => writeToClip(props.content.channel.id),
+                    func: () => writeToClip(channel.id),
                     icon: "id",
                 },
             ];
@@ -1106,37 +1059,28 @@ export function MenuItems() {
     }
 
     function getUserGroup({ ...props }) {
+        const user = props.content.user;
+        const channel = props.content.channel;
+
         if (props.relationships.self) {
             return [
                 {
                     name: "Profile",
                     func: () => {
-                        props.setLayers({
-                            settings: {
-                                type: "USER_PROFILE",
-                                setNull: true,
-                            },
+                        setLayers({
+                            settings: { type: "USER_PROFILE" },
+                            content: { user },
                         });
-                        setTimeout(() => {
-                            props.setLayers({
-                                settings: {
-                                    type: "USER_PROFILE",
-                                },
-                                content: {
-                                    user: props.user,
-                                },
-                            });
-                        }, 50);
                     },
                 },
                 {
                     name: "Mention",
-                    func: () => props.setMention(props.user),
+                    func: () => setMention(user),
                 },
                 { name: "Divider" },
                 {
                     name: "Copy User ID",
-                    func: () => writeToClip(props.user.id),
+                    func: () => writeToClip(user.id),
                     icon: "id",
                 },
             ];
@@ -1145,28 +1089,22 @@ export function MenuItems() {
                 {
                     name: "Profile",
                     func: () => {
-                        props.setLayers({
-                            settings: {
-                                type: "USER_PROFILE",
-                            },
-                            content: {
-                                user: props.user,
-                            },
+                        setLayers({
+                            settings: { type: "USER_PROFILE" },
+                            content: { user },
                         });
                     },
                 },
                 {
                     name: "Mention",
-                    func: () => props.setMention(props.user),
+                    func: () => setMention(user),
                 },
                 {
                     name: "Message",
                     func: () =>
-                        props.sendRequest({
+                        sendRequest({
                             query: "CHANNEL_CREATE",
-                            data: {
-                                recipients: [props.user.id],
-                            },
+                            body: { recipients: [user.id] },
                         }),
                 },
                 {
@@ -1176,14 +1114,9 @@ export function MenuItems() {
                 {
                     name: "Add Note",
                     func: () => {
-                        props.setLayers({
-                            settings: {
-                                type: "USER_PROFILE",
-                            },
-                            content: {
-                                user: props.user,
-                                focusNote: true,
-                            },
+                        setLayers({
+                            settings: { type: "USER_PROFILE" },
+                            content: { user: user, focusNote: true },
                         });
                     },
                 },
@@ -1198,36 +1131,30 @@ export function MenuItems() {
                     func: () => {},
                 },
                 {
-                    name: props.content.channel.ownerId == currentUser.id ? "Divider" : null,
+                    name: channel.ownerId == currentUser.id ? "Divider" : null,
                 },
                 {
-                    name:
-                        props.content.channel.ownerId == currentUser.id
-                            ? "Remove From Group"
-                            : null,
+                    name: channel.ownerId == currentUser.id ? "Remove From Group" : null,
                     func: () => {
-                        props.sendRequest({
+                        sendRequest({
                             query: "CHANNEL_RECIPIENT_REMOVE",
                             params: {
-                                channelId: props.content.channel.id,
-                                recipientId: props.user.id,
+                                channelId: channel.id,
+                                recipientId: user.id,
                             },
                         });
                     },
                     danger: true,
                 },
                 {
-                    name:
-                        props.content.channel.ownerId == currentUser.id ? "Make Group Owner" : null,
+                    name: channel.ownerId === currentUser.id ? "Make Group Owner" : null,
                     func: () => {
-                        props.setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
+                        setLayers({
+                            settings: { type: "POPUP" },
                             content: {
                                 type: "GROUP_OWNER_CHANGE",
-                                channelId: props.content.channel.id,
-                                recipient: props.user,
+                                channelId: channel.id,
+                                recipient: user,
                             },
                         });
                     },
@@ -1247,124 +1174,74 @@ export function MenuItems() {
                         : props.relationships.friend
                         ? "Remove Friend"
                         : "Add Friend",
-                    func: () =>
-                        props.relationships.sent || props.relationships.friend
-                            ? props.sendRequest({
-                                  query: "REMOVE_FRIEND",
-                                  data: { username: props.user.username },
-                              })
-                            : props.sendRequest({
-                                  query: "ADD_FRIEND",
-                                  data: { username: props.user.username },
-                              }),
+                    func: () => {
+                        if (props.relationships.sent || props.relationships.friend) {
+                            sendRequest({
+                                query: "REMOVE_FRIEND",
+                                body: { username: user.username },
+                            });
+                        } else {
+                            sendRequest({
+                                query: "ADD_FRIEND",
+                                body: { username: user.username },
+                            });
+                        }
+                    },
                 },
                 {
                     name: props.relationships.blocked ? "Unblock" : "Block",
-                    func: () =>
-                        props.relationships.blocked
-                            ? props.sendRequest({
-                                  query: "UNBLOCK_USER",
-                                  params: { userId: props.user.id },
-                              })
-                            : props.sendRequest({
-                                  query: "BLOCK_USER",
-                                  params: { userId: props.user.id },
-                              }),
+                    func: () => {
+                        if (props.relationships.blocked) {
+                            sendRequest({
+                                query: "UNBLOCK_USER",
+                                params: { userId: props.content.user.id },
+                            });
+                        } else {
+                            sendRequest({
+                                query: "BLOCK_USER",
+                                params: { userId: props.content.user.id },
+                            });
+                        }
+                    },
                 },
-                { name: props.content?.channel && "Divider" },
+                { name: channel ? "Divider" : null },
                 {
                     name: "Copy User ID",
-                    func: () => writeToClip(props.user.id),
+                    func: () => writeToClip(user.id),
                     icon: "id",
                 },
             ];
         }
     }
 
-    function getStatus({ ...props }) {
-        return [
-            {
-                name: "Online",
-                func: async () => {
-                    props.setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            setNull: true,
-                        },
-                    });
-                    if (currentUser.status !== "ONLINE") {
-                        await props.sendRequest({
+    function getStatus() {
+        const statuses = [
+            ["Online", "online"],
+            ["Divider"],
+            ["Idle", "idle"],
+            ["Do Not Disturb", "dnd", "You will not receive any desktop notifications."],
+            [
+                "Invisible",
+                "invisible",
+                "You will not appear online, but will have full access to all of Spark.",
+            ],
+        ].map((status) => {
+            return {
+                name: status[0],
+                tip: status[2],
+                func: () => {
+                    if (currentUser.status !== status[1]) {
+                        sendRequest({
                             query: "UPDATE_USER",
-                            data: {
-                                status: "ONLINE",
-                            },
+                            body: { status: status[1] },
                         });
                     }
                 },
-            },
-            {
-                name: "Divider",
-            },
-            {
-                name: "Idle",
-                func: async () => {
-                    props.setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            setNull: true,
-                        },
-                    });
-                    if (currentUser.status !== "IDLE") {
-                        await props.sendRequest({
-                            query: "UPDATE_USER",
-                            data: {
-                                status: "IDLE",
-                            },
-                        });
-                    }
-                },
-            },
-            {
-                name: "Do Not Disturb",
-                tip: "You will not receive any desktop notifications.",
-                func: async () => {
-                    props.setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            setNull: true,
-                        },
-                    });
-                    if (currentUser.status !== "DO_NOT_DISTURB") {
-                        await props.sendRequest({
-                            query: "UPDATE_USER",
-                            data: {
-                                status: "DO_NOT_DISTURB",
-                            },
-                        });
-                    }
-                },
-            },
-            {
-                name: "Invisible",
-                tip: "You will not appear online, but will have full access to all of Chat App.",
-                func: async () => {
-                    props.setLayers({
-                        settings: {
-                            type: "USER_CARD",
-                            setNull: true,
-                        },
-                    });
-                    if (currentUser.status !== "INVISIBLE") {
-                        await props.sendRequest({
-                            query: "UPDATE_USER",
-                            data: {
-                                status: "INVISIBLE",
-                            },
-                        });
-                    }
-                },
-            },
-        ];
+                hideCard: true,
+            };
+        });
+
+        return statuses;
     }
 
     return {

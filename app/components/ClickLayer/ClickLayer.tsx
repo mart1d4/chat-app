@@ -1,6 +1,6 @@
 "use client";
 
-import { useShowChannels } from "@/lib/store";
+import { useShowChannels } from "@/store";
 import styles from "./ClickLayer.module.css";
 
 export function ClickLayer({ children }) {

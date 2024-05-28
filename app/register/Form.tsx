@@ -8,15 +8,18 @@ import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Register() {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-
-    const [username, setUsername] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [passwordMatch, setPasswordMatch] = useState<string>("");
-
-    const [usernameError, setUsernameError] = useState<string>("");
-    const [passwordError, setPasswordError] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [passwordMatch, setPasswordMatch] = useState("");
+    const [errors, setErrors] = useState<{
+        username?: string;
+        password?: string;
+        server?: string;
+    }>({});
 
     const uidInputRef = useRef<HTMLInputElement>(null);
     const linkRef = useRef<HTMLAnchorElement>(null);
@@ -35,67 +38,74 @@ export default function Register() {
 
     useEffect(() => {
         uidInputRef.current?.focus();
-    }, [usernameError]);
+    }, [errors?.username]);
 
     useEffect(() => {
-        setUsernameError("");
+        setErrors((prev) => ({ ...prev, username: "" }));
     }, [username]);
 
     useEffect(() => {
-        setPasswordError("");
+        setErrors((prev) => ({ ...prev, password: "" }));
     }, [password, passwordMatch]);
 
-    const handleSubmit = async () => {
+    async function handleSubmit() {
         if (isLoading) return;
         setIsLoading(true);
 
         if (!usernameRegex.test(username)) {
-            const correctLength = username.length >= 2 && username.length <= 32;
-
-            setUsernameError(
-                correctLength
-                    ? "Username contains restricted characters"
-                    : "Username must be between 2 and 32 characters"
-            );
+            setErrors((prev) => ({
+                ...prev,
+                username: "Username can only use letters, numbers, underscores and periods.",
+            }));
             return setIsLoading(false);
         }
 
-        if (!passwordRegex.test(password)) {
-            setPasswordError("Password must be between 8 and 256 characters");
+        if (username.length < 2) {
+            setErrors((prev) => ({ ...prev, username: "Must be at least 2 characters." }));
+            return setIsLoading(false);
+        }
+
+        if (username.length > 32) {
+            setErrors((prev) => ({ ...prev, username: "Cannot be more than 32 characters." }));
+            return setIsLoading(false);
+        }
+
+        if (password.length < 6) {
+            setErrors((prev) => ({ ...prev, password: "Must be at least 6 characters." }));
+            return setIsLoading(false);
+        }
+
+        if (password.length > 72) {
+            setErrors((prev) => ({ ...prev, password: "Cannot be more than 72 characters." }));
             return setIsLoading(false);
         }
 
         if (password !== passwordMatch) {
-            setPasswordError("Passwords do not match");
+            setErrors((prev) => ({ ...prev, password: "Passwords do not match." }));
             return setIsLoading(false);
         }
 
-        const response = await fetch("/api/auth/register", {
+        const response = await fetch(`${apiUrl}/auth/register`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username: sanitizeString(username), password }),
-        }).then((res) => res.json());
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                username: sanitizeString(username),
+                password,
+            }),
+        });
 
-        if (!response.success) {
-            if (response.message.includes("Username")) {
-                setUsernameError(response.message);
-            } else if (response.message.includes("Password")) {
-                setPasswordError(response.message);
-            } else {
-                setUsernameError(response.message);
-                setPasswordError(response.message);
-            }
-            setIsLoading(false);
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem("token", data.token);
+            router.push("/channels/me");
         } else {
-            setUsername("");
-            setPassword("");
-            setPasswordMatch("");
-            setIsLoading(false);
-            router.push("/login");
+            setErrors(data.errors);
         }
-    };
+
+        setIsLoading(false);
+    }
 
     return (
         <div className={styles.loginBlock}>
@@ -103,12 +113,17 @@ export default function Register() {
                 <label
                     htmlFor="username"
                     style={{
-                        color: usernameError.length ? "var(--error-light)" : "var(--foreground-3)",
+                        color:
+                            errors.username?.length || errors.server?.length
+                                ? "var(--error-light)"
+                                : "var(--foreground-3)",
                     }}
                 >
                     Username
-                    {usernameError.length > 0 && (
-                        <span className={styles.errorLabel}>- {usernameError}</span>
+                    {(!!errors.username?.length || !!errors.server?.length) && (
+                        <span className={styles.errorLabel}>
+                            - {errors.username || errors.server}
+                        </span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -137,12 +152,14 @@ export default function Register() {
                 <label
                     htmlFor="password"
                     style={{
-                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                        color: errors.password?.length
+                            ? "var(--error-light)"
+                            : "var(--foreground-3)",
                     }}
                 >
                     Password
-                    {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>- {passwordError}</span>
+                    {!!errors.password?.length && (
+                        <span className={styles.errorLabel}>- {errors.password}</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>
@@ -168,12 +185,14 @@ export default function Register() {
                 <label
                     htmlFor="password-match"
                     style={{
-                        color: passwordError.length ? "var(--error-light)" : "var(--foreground-3)",
+                        color: errors.password?.length
+                            ? "var(--error-light)"
+                            : "var(--foreground-3)",
                     }}
                 >
                     Confirm Password
-                    {passwordError.length > 0 && (
-                        <span className={styles.errorLabel}>- {passwordError}</span>
+                    {!!errors.password?.length && (
+                        <span className={styles.errorLabel}>- {errors.password}</span>
                     )}
                 </label>
                 <div className={styles.inputContainer}>

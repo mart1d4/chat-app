@@ -20,7 +20,7 @@ export default async function Header() {
                     is a chat application which follows Discord's design. Passwords are hashed and
                     salted and messages are safe to send. See the source code{" "}
                     <Link
-                        href="https://github.com/mart1d4/chat-app"
+                        href="https://github.com/mart1d4/spark"
                         target="_blank"
                     >
                         here
@@ -67,7 +67,7 @@ export default async function Header() {
                     </div>
 
                     <div className={styles.appButton}>
-                        <Link href="login">{user ? "Open Chat App" : "Login"}</Link>
+                        <Link href="login">{user ? "Open Spark" : "Login"}</Link>
                     </div>
                 </nav>
             </header>

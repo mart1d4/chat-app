@@ -7,11 +7,17 @@ import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
 import Link from "next/link";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Form() {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [username, setUsername] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [error, setError] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState<{
+        username?: string;
+        password?: string;
+        server?: string;
+    }>({});
 
     const usernameInputRef = useRef<HTMLInputElement>(null);
     const linkRef = useRef<HTMLAnchorElement>(null);
@@ -29,44 +35,63 @@ export default function Form() {
     }, [username, password, isLoading]);
 
     useEffect(() => {
-        setError("");
+        setErrors({});
     }, [username, password]);
 
-    const handleSubmit = async () => {
+    async function handleSubmit() {
         if (isLoading || !username || !password) return;
         setIsLoading(true);
 
-        const response = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: sanitizeString(username), password }),
-        }).then((res) => res.json());
+        try {
+            const response = await fetch(`${apiUrl}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: sanitizeString(username),
+                    password,
+                }),
+            });
 
-        if (!response.success) {
-            setError(response.message || "An error occurred");
-        } else {
-            setUsername("");
-            setPassword("");
-            router.refresh();
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                router.push("/channels/me");
+            } else {
+                setErrors(data.errors);
+            }
+        } catch (error) {
+            console.error("An unexpected error occurred:", error);
+            setErrors({ username: "An unexpected error occurred. Please try again." });
         }
 
         setIsLoading(false);
-    };
+    }
 
     return (
         <div className={styles.loginBlock}>
             <div>
                 <label
                     htmlFor="username"
-                    style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
+                    style={{
+                        color:
+                            errors.username || errors.server
+                                ? "var(--error-light)"
+                                : "var(--foreground-3)",
+                    }}
                 >
                     Email or Username
-                    {error.length ? (
-                        <span className={styles.errorLabel}> - {error}</span>
+                    {errors.username || errors.server ? (
+                        <span className={styles.errorLabel}>
+                            {" "}
+                            - {errors.username || errors.server}
+                        </span>
                     ) : (
                         <span> *</span>
                     )}
                 </label>
+
                 <div className={styles.inputContainer}>
                     <input
                         ref={usernameInputRef}
@@ -90,11 +115,15 @@ export default function Form() {
             <div style={{ marginBottom: 0 }}>
                 <label
                     htmlFor="password"
-                    style={{ color: error.length ? "var(--error-light)" : "var(--foreground-3)" }}
+                    style={{
+                        color: errors.username?.length
+                            ? "var(--error-light)"
+                            : "var(--foreground-3)",
+                    }}
                 >
                     Password
-                    {error.length ? (
-                        <span className={styles.errorLabel}>- {error}</span>
+                    {errors.username?.length ? (
+                        <span className={styles.errorLabel}>- {errors.username}</span>
                     ) : (
                         <span>*</span>
                     )}

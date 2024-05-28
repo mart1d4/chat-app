@@ -430,10 +430,6 @@
     margin-right: 10px;
 }
 
-.button > svg:last-child {
-    transform: rotate(-90deg);
-}
-
 .button .settingStatus {
     width: 12px;
     height: 12px;

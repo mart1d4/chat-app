@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import styles from "./Input.module.css";
-import { useLayers } from "@/lib/store";
+import { useLayers } from "@/store";
 
 export function Input({
     type = "text",

@@ -85,8 +85,13 @@
     text-overflow: ellipsis;
 }
 
-.contentName > span {
-    display: flex;
+.contentName > svg {
+    width: 14px;
+    height: 14px;
+    top: 1px;
+    flex: 0 0 auto;
+    position: relative;
+    flex-shrink: 0;
     color: var(--warning-1);
     margin-left: 4px;
 }

@@ -1,4 +1,4 @@
-export const getButtonColor = (hex1: string, hex2: string) => {
+export function getButtonColor(hex1: string, hex2: string) {
     if (!hex1 || !hex2) {
         console.error("Invalid input colors");
         return null;
@@ -82,4 +82,4 @@ export const getButtonColor = (hex1: string, hex2: string) => {
     ];
 
     return rgbToHSLA(calculatedColor, 1);
-};
+}

@@ -1,200 +1,198 @@
 "use client";
 
+import type { Channel, Guild, Message as TMessage } from "@/type";
 import { Message, TextArea, MessageSk, Icon } from "@components";
-import { useState, useEffect, useCallback } from "react";
-import { shouldDisplayInlined } from "@/lib/message";
-import { useData, useLayers, useShowSettings, useUrls } from "@/lib/store";
+import { useLayers, useShowSettings, useUrls } from "@/store";
+import { useIntersection } from "@/hooks/useIntersection";
+import type { SWRInfiniteKeyLoader } from "swr/infinite";
+import { useRef, useEffect, useMemo } from "react";
+import { isLarge, isNewDay } from "@/lib/message";
 import styles from "./Channels.module.css";
+import useSWRInfinite from "swr/infinite";
+import fetchHelper from "@/hooks/useSwr";
+import { getDayDate } from "@/lib/time";
 import Link from "next/link";
 
-export default function Content({
-    channel,
-    guild,
-    messagesLoading,
-    initMessages,
-    initHasMore,
-}: {
-    channel: Partial<ChannelTable>;
-    guild: Partial<GuildTable>;
-    messagesLoading: boolean;
-    initMessages: Partial<MessageTable>[];
-    initHasMore: boolean;
-}) {
-    const [scrollerNode, setScrollerNode] = useState(null);
-    const [isAtBottom, setIsAtBottom] = useState(true);
-    const [messages, setMessages] = useState(initMessages);
-    const [hasMore, setHasMore] = useState(initHasMore);
-    const [loading, setLoading] = useState(false);
+let initMessagesFetch = false;
+let sendingMessage = false;
+let lastScrollHeight = 0;
+const limit = 50;
 
-    const setGuildUrl = useUrls((s) => s.setGuild);
-    const user = useData((s) => s.user);
+export default function Content({ guild, channel }: { guild: Guild; channel: Channel }) {
+    const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
+        const baseUrl = `/channels/${channel.id}/messages?limit=`;
 
-    useEffect(() => {
-        document.title = `Chat App | #${channel.name} | ${guild.name}`;
-        setGuildUrl(guild.id, channel.id);
-    }, []);
+        if (previousData) {
+            if (previousData.length < limit) {
+                return null;
+            }
 
-    // useEffect(() => {
-    //     pusher.bind("message", (data) => {
-    //         if (data.channelId == channel.id && data.message.author.id != user.id) {
-    //             setMessages((prev) => [...prev, data.message]);
-    //         }
-    //     });
-
-    //     pusher.bind("message-deleted", (data) => {
-    //         if (data.channelId == channel.id) {
-    //             setMessages((prev) => prev.filter((m) => m.id != data.messageId));
-    //         }
-    //     });
-
-    //     return () => {
-    //         pusher.unbind("message");
-    //         pusher.unbind("message-delete");
-    //     };
-    // }, []);
-
-    const scrollContainer = useCallback(
-        (node: HTMLDivElement) => {
-            if (node === null) return;
-            setScrollerNode(node);
-            const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) node.scrollTop = node.scrollHeight;
-            });
-            resizeObserver.observe(node);
-        },
-        [isAtBottom]
-    );
-
-    const scrollContainerChild = useCallback(
-        (node: HTMLDivElement) => {
-            if (node === null || !scrollerNode) return;
-            const resizeObserver = new ResizeObserver(() => {
-                if (isAtBottom) scrollerNode.scrollTop = scrollerNode.scrollHeight;
-            });
-            resizeObserver.observe(node);
-        },
-        [isAtBottom, scrollerNode]
-    );
-
-    const moreThan5Minutes = (firstDate: Date, secondDate: Date) => {
-        const diff = Math.abs(new Date(firstDate).getTime() - new Date(secondDate).getTime());
-        return diff / (1000 * 60) >= 5;
-    };
-
-    const shouldBeLarge = (index: number) => {
-        if (index === 0 || messages[index].type === 1) return true;
-
-        if (shouldDisplayInlined(messages[index].type)) {
-            if (shouldDisplayInlined(messages[index - 1].type)) return false;
-            return true;
+            const last = previousData[previousData.length - 1];
+            return `${baseUrl}${limit}&before=${last.createdAt}`;
         }
 
-        if (![0, 1].includes(messages[index - 1].type)) return true;
-
-        if (messages[index - 1].author.id !== messages[index].author.id) return true;
-        if (moreThan5Minutes(messages[index - 1].createdAt, messages[index].createdAt)) return true;
-
-        return false;
+        return `${baseUrl}${limit}`;
     };
 
-    const isNewDay = (index: number) => {
-        if (index === 0) return true;
+    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<TMessage[], Error>(
+        getKey,
+        fetchHelper().request,
+        {
+            errorRetryCount: 3,
+            revalidateIfStale: false,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+        }
+    );
 
-        const firstDate = new Date(messages[index - 1].createdAt);
-        const secondDate = new Date(messages[index].createdAt);
+    const messages = data ? data.flat().reverse() : [];
+    const hasMore = messages.length % limit === 0;
 
-        return (
-            firstDate.getDate() !== secondDate.getDate() ||
-            firstDate.getMonth() !== secondDate.getMonth() ||
-            firstDate.getFullYear() !== secondDate.getFullYear()
-        );
-    };
+    const skeletonEl = useRef<HTMLDivElement>(null);
+    const scrollEl = useRef<HTMLDivElement>(null);
+    const spacerEl = useRef<HTMLDivElement>(null);
 
-    return (
-        <main className={styles.main}>
-            <div className={styles.messagesWrapper}>
-                <div
-                    ref={scrollContainer}
-                    className={styles.messagesScrollableContainer + " scrollbar"}
-                >
+    const setChannelUrl = useUrls((state) => state.setMe);
+    const shouldLoad = useIntersection(skeletonEl, -100);
+
+    document.title = `${channel.name} | ${guild.name} | Spark`;
+    setChannelUrl(channel.id.toString());
+
+    function handleScroll() {
+        if (scrollEl.current) {
+            if (lastScrollHeight === 0 || sendingMessage) {
+                sendingMessage = false;
+
+                const t = setTimeout(() => {
+                    spacerEl.current?.scrollIntoView();
+                }, 50);
+
+                return () => clearTimeout(t);
+            }
+
+            const scrollDif = scrollEl.current.scrollHeight - lastScrollHeight;
+            scrollEl.current.scrollTop += scrollDif;
+        }
+    }
+
+    useEffect(() => {
+        handleScroll();
+    });
+
+    useEffect(() => {
+        const load = shouldLoad && hasMore && !isLoading && messages.length > 0;
+        if (load) setSize(size + 1);
+    }, [shouldLoad]);
+
+    return useMemo(
+        () => (
+            <main className={styles.container}>
+                <div>
                     <div
-                        ref={scrollContainerChild}
-                        className={styles.scrollContent}
+                        ref={scrollEl}
+                        onScroll={() => {
+                            if (!initMessagesFetch && lastScrollHeight === 0) {
+                                initMessagesFetch = true;
+                                return;
+                            }
+
+                            lastScrollHeight = scrollEl.current?.scrollHeight || 0;
+                        }}
+                        className={styles.scroller + " scrollbar"}
                     >
-                        <ol className={styles.scrollContentInner}>
-                            {loading || messagesLoading ? (
-                                <MessageSk />
-                            ) : (
-                                <>
-                                    {hasMore ? (
+                        <div>
+                            <ol>
+                                {hasMore || (isLoading && !messages.length) ? (
+                                    <div ref={hasMore ? skeletonEl : undefined}>
                                         <MessageSk />
-                                    ) : (
-                                        <FirstMessage
-                                            guild={guild}
+                                    </div>
+                                ) : (
+                                    <FirstMessage
+                                        guild={guild}
+                                        channel={channel}
+                                    />
+                                )}
+
+                                {messages.map((message, index) => (
+                                    <div key={message.id}>
+                                        {isNewDay(messages, index) && (
+                                            <div className={styles.divider}>
+                                                <span>{getDayDate(message.createdAt)}</span>
+                                            </div>
+                                        )}
+
+                                        <Message
+                                            message={message}
+                                            setMessages={(
+                                                message: TMessage,
+                                                type: "add" | "update"
+                                            ): void => {
+                                                sendingMessage = true;
+
+                                                if (type === "add") {
+                                                    mutate((prev) => [message, ...(prev || [])], {
+                                                        revalidate: false,
+                                                    });
+                                                } else if (type === "update") {
+                                                    mutate(
+                                                        (prev) => {
+                                                            return prev?.map((a) =>
+                                                                a.map((m) =>
+                                                                    m.id === message.id
+                                                                        ? message
+                                                                        : m
+                                                                )
+                                                            );
+                                                        },
+                                                        { revalidate: false }
+                                                    );
+                                                }
+
+                                                sendingMessage = false;
+                                            }}
+                                            large={isLarge(messages, index)}
                                             channel={channel}
                                         />
-                                    )}
+                                    </div>
+                                ))}
 
-                                    {messages.map((message, index) => (
-                                        <div key={message.id}>
-                                            {isNewDay(index) && (
-                                                <div className={styles.messageDivider}>
-                                                    <span>
-                                                        {new Intl.DateTimeFormat("en-US", {
-                                                            weekday: "long",
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                        }).format(new Date(message.createdAt))}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <Message
-                                                message={message}
-                                                setMessages={setMessages}
-                                                large={shouldBeLarge(index)}
-                                                channel={channel}
-                                            />
-                                        </div>
-                                    ))}
-                                </>
-                            )}
-
-                            <div className={styles.scrollerSpacer} />
-                        </ol>
+                                <div
+                                    className={styles.spacer}
+                                    ref={spacerEl}
+                                />
+                            </ol>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <TextArea
-                channel={channel}
-                setMessages={setMessages}
-            />
-        </main>
+                <TextArea
+                    channel={channel}
+                    setMessages={(message: TMessage) => {
+                        sendingMessage = true;
+                        mutate((prev) => [message, ...prev], {
+                            revalidate: false,
+                        });
+                        sendingMessage = false;
+                    }}
+                />
+            </main>
+        ),
+        [data, isLoading, hasMore]
     );
 }
 
-const FirstMessage = ({
-    guild,
-    channel,
-}: {
-    guild: Partial<GuildTable>;
-    channel: Partial<ChannelTable>;
-}) => {
+export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channel }) {
     const setShowSettings = useShowSettings((s) => s.setShowSettings);
     const setLayers = useLayers((s) => s.setLayers);
 
     const content = [
         {
             text: "Invite your friends",
-            icon: "e6a37780-7436-41eb-b818-fdb19e16bb0d",
+            icon: "/assets/system/invite.svg",
             completed: guild.members.length > 1,
             onClick: () => {
                 setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
+                    settings: { type: "POPUP" },
                     content: {
                         type: "GUILD_INVITE",
                         guild: guild,
@@ -205,20 +203,20 @@ const FirstMessage = ({
         },
         {
             text: "Personalize your server with an icon",
-            icon: "07a4b38b-38ae-4000-b7ad-68571a2806c6",
+            icon: "/assets/system/personalize.svg",
             completed: !!guild.icon,
             onClick: () => {
-                setShowSettings({ type: "GUILD", guild: guild });
+                setShowSettings({ type: "GUILD", guild });
             },
         },
         {
             text: "Send your first message",
-            icon: "c8ecbba1-838c-4fa2-99ba-4f8cb7e0a6e1",
+            icon: "/assets/system/send.svg",
             onclick: () => {},
         },
         {
             text: "Add your first app",
-            icon: "d5bce184-683e-4746-ae9c-68904a4a876e",
+            icon: "/assets/system/app.svg",
             onclick: () => {},
         },
     ];
@@ -249,7 +247,7 @@ const FirstMessage = ({
                             >
                                 <div
                                     style={{
-                                        backgroundImage: `url("https://ucarecdn.com/${c.icon}/")`,
+                                        backgroundImage: `url(${c.icon})`,
                                         opacity: c.completed ? 0.6 : 1,
                                     }}
                                 />
@@ -285,14 +283,14 @@ const FirstMessage = ({
         <div className={styles.firstTimeMessageContainer}>
             <div
                 className={styles.channelIcon}
-                style={{
-                    backgroundImage: `url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/")`,
-                }}
+                style={{ backgroundImage: `url(/assets/system/hashtag.svg)` }}
             />
+
             <h3 className={styles.friendUsername}>Welcome to #{channel.name}!</h3>
+
             <div className={styles.descriptionContainer}>
                 This is the start of the #{channel.name} channel.
             </div>
         </div>
     );
-};
+}

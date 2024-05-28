@@ -1,38 +1,33 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers, useTooltip } from "@/lib/store";
-import styles from "./Invite.module.css";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Avatar, Icon, LoadingDots } from "@components";
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { useData, useLayers } from "@/store";
+import styles from "./Invite.module.css";
 
-type TContent = {
-    guild: TGuild;
-    channel: TChannel;
-};
-
-export function InvitePopup({ content, closing }: { content: TContent; closing: boolean }) {
-    const [filteredList, setFilteredList] = useState([]);
-    const [search, setSearch] = useState("");
+export function InvitePopup({ content, closing }) {
     const [copied, setCopied] = useState(false);
-    const [inviteLink, setInviteLink] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState<string[]>([]);
-    const [sentTo, setSentTo] = useState<string[]>([]);
-    const [failed, setFailed] = useState<string[]>([]);
+    const [search, setSearch] = useState("");
+    const [errors, setErrors] = useState<{
+        invite?: string;
+        server?: string;
+    }>({});
+    const [link, setLink] = useState("");
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
+    const [loading, setLoading] = useState<number[]>([]);
+    const [sentTo, setSentTo] = useState<number[]>([]);
+    const [failed, setFailed] = useState<number[]>([]);
+
     const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
-    const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const hasRendered = useRef<boolean>(false);
 
     useEffect(() => {
-        const handleKeyDown = async (e: KeyboardEvent) => {
+        function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
                 setLayers({
                     settings: {
@@ -41,89 +36,77 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                     },
                 });
             }
-        };
+        }
+
+        getLink();
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    useEffect(() => {
-        setFilteredList(channels);
-    }, []);
-
-    useEffect(() => {
-        if (search)
-            setFilteredList(
-                channels.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
-            );
-        else setFilteredList(channels);
+    const filteredList = useMemo(() => {
+        if (search) {
+            return channels.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+        }
+        return channels;
     }, [search, channels]);
 
-    useEffect(() => {
-        const getLink = async () => {
-            try {
-                const response = await sendRequest({
-                    query: "CREATE_INVITE",
-                    params: {
-                        channelId: content.channel.id,
-                    },
-                    data: {
-                        maxUses: 100,
-                        maxAge: 86400,
-                        temporary: false,
-                        inviterId: user.id,
-                    },
-                });
+    async function getLink() {
+        try {
+            const response = await sendRequest({
+                query: "CREATE_INVITE",
+                params: {
+                    channelId: content.channel.id,
+                },
+                body: {
+                    maxUses: 100,
+                    maxAge: 86400,
+                    temporary: false,
+                },
+            });
 
-                if (!response.success) setError("You are being rate limited.");
-                else setInviteLink(response.invite.code);
-            } catch (error) {
-                setError("Something went wrong. Please try again later.");
+            const data = await response.json();
+
+            if (response.ok) {
+                setLink(data.data.invite.code);
+            } else {
+                setErrors(data.errors);
             }
-        };
-
-        const env = process.env.NODE_ENV;
-
-        if (env == "development") {
-            if (hasRendered.current) getLink();
-            return () => {
-                hasRendered.current = true;
-            };
-        } else if (env == "production") {
-            getLink();
+        } catch (error) {
+            setErrors((prev) => ({ ...prev, server: "Something went wrong" }));
         }
-    }, []);
+    }
 
-    async function invite(channelId: string) {
+    async function invite(channelId: number) {
         if (loading.includes(channelId)) return;
-        setLoading([...loading, channelId]);
+        setLoading((prev) => [...prev, channelId]);
 
         try {
             const response = await sendRequest({
                 query: "SEND_MESSAGE",
                 params: {
-                    channelId: channelId,
+                    channelId,
                 },
-                data: {
+                body: {
                     message: {
-                        content: `https://chat-app.mart1d4.dev/${inviteLink}`,
+                        content: `https://spark.mart1d4.dev/${link}`,
                         attachments: [],
                         messageReference: null,
                     },
                 },
             });
 
-            if (response.success) {
-                setSentTo([...sentTo, channelId]);
+            if (response.ok) {
+                setSentTo((prev) => [...prev, channelId]);
                 if (failed.includes(channelId)) {
                     setFailed(failed.filter((id) => id !== channelId));
                 }
             } else {
-                setFailed([...failed, channelId]);
+                setFailed((prev) => [...prev, channelId]);
             }
         } catch (error) {
             console.error(error);
-            setFailed([...failed, channelId]);
+            setFailed((prev) => [...prev, channelId]);
         }
 
         setLoading(loading.filter((id) => id !== channelId));
@@ -188,7 +171,7 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
 
             {channels.length > 0 && (
                 <>
-                    {filteredList.length > 0 && !error ? (
+                    {filteredList.length > 0 ? (
                         <div className={styles.scroller + " scrollbar"}>
                             {filteredList.map((channel) => (
                                 <div
@@ -198,8 +181,9 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                                     <div>
                                         <div className={styles.friendAvatar}>
                                             <Avatar
-                                                src={channel.icon as string}
-                                                alt={channel.name as string}
+                                                src={channel.icon}
+                                                alt={channel.name}
+                                                type="icons"
                                                 size={32}
                                             />
                                         </div>
@@ -224,13 +208,12 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                                         }}
                                         onMouseMove={(e) => {
                                             if (failed.includes(channel.id)) {
-                                                setTooltip({
-                                                    element: e.currentTarget,
-                                                    text: "Retry sending invite",
-                                                });
+                                                // setTooltip({
+                                                //     element: e.currentTarget,
+                                                //     text: "Retry sending invite",
+                                                // });
                                             }
                                         }}
-                                        onMouseLeave={() => setTooltip(null)}
                                     >
                                         {failed.includes(channel.id) ? (
                                             "Failed"
@@ -255,13 +238,13 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                         >
                             <div
                                 style={{
-                                    backgroundImage: `url(https://ucarecdn.com/501ad905-28df-4c05-ae41-de0499966f4f/)`,
+                                    backgroundImage: `url(/assets/system/nothing-found.svg)`,
                                     width: "85px",
                                     height: "85px",
                                 }}
                             />
 
-                            <div>{error ? "Something went wrong" : "No results found"}</div>
+                            <div>No results found</div>
                         </div>
                     )}
 
@@ -276,7 +259,7 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                                     ref={inputLinkRef}
                                     type="text"
                                     readOnly
-                                    value={`https://chat-app.mart1d4.dev/${inviteLink}`}
+                                    value={`https://spark.mart1d4.dev/${link}`}
                                     onClick={() => inputLinkRef.current?.select()}
                                 />
                             </div>
@@ -285,7 +268,7 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                                 className={copied ? "button green" : "button blue"}
                                 onClick={() => {
                                     navigator.clipboard.writeText(
-                                        `https://chat-app.mart1d4.dev/${inviteLink}`
+                                        `https://spark.mart1d4.dev/${link}`
                                     );
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 1000);
@@ -295,9 +278,13 @@ export function InvitePopup({ content, closing }: { content: TContent; closing: 
                             </button>
                         </div>
 
-                        {error && <div style={{ color: "var(--error-1)" }}>{error}</div>}
+                        {(errors.invite || errors.server) && (
+                            <div style={{ color: "var(--error-1)" }}>
+                                {errors.invite || errors.server}
+                            </div>
+                        )}
 
-                        {!error && (
+                        {link && (
                             <div>
                                 Your invite link expires in 24 hours.{" "}
                                 <span className={styles.editLink}>Edit invite link.</span>

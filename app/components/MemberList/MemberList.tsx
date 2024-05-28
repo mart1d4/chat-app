@@ -1,10 +1,12 @@
 "use client";
 
-import { useData, useLayers, useSettings, useTooltip, useUrls } from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import type { Channel, ChannelRecipient, Guild } from "@/type";
 import { translateCap, sanitizeString } from "@/lib/strings";
-import { getButtonColor } from "@/lib/getColors";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useLayers, useSettings, useUrls } from "@/store";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useState, useEffect, useRef } from "react";
+import { getButtonColor } from "@/lib/getColors";
 import styles from "./MemberList.module.css";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon } from "@components";
@@ -26,73 +28,82 @@ const masks = {
     offline: "status-mask-offline",
 };
 
-interface Props {
-    channelId: TChannel;
-    channel: TChannel;
-    guild?: TGuild;
-    user?: TCleanUser;
-    friend?: TCleanUser | null;
-}
+export function MemberList({
+    channel,
+    guild,
+    friend,
+}: {
+    channel: Channel;
+    guild?: Guild;
+    friend?: ChannelRecipient | null;
+}) {
+    const [showFriends, setShowFriends] = useState(false);
+    const [showGuilds, setShowGuilds] = useState(false);
+    const [originalNote, setOriginalNote] = useState("");
+    const [note, setNote] = useState("");
 
-export function MemberList({ channelId, channel, guild, user, friend }: Props) {
-    const [showFriends, setShowFriends] = useState<boolean>(false);
-    const [showGuilds, setShowGuilds] = useState<boolean>(false);
-    const [originalNote, setOriginalNote] = useState<string>("");
-    const [note, setNote] = useState<string>("");
+    const [mutualFriends, setMutualFriends] = useState([]);
+    const [mutualGuilds, setMutualGuilds] = useState([]);
 
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const settings = useSettings((state) => state.settings);
-    const channels = useData((state) => state.channels);
-    const friends = useData((state) => state.friends);
-    const noteRef = useRef<HTMLTextAreaElement>(null);
-    const guilds = useData((state) => state.guilds);
-    const hasRendered = useRef<boolean>(false);
     const { sendRequest } = useFetchHelper();
+    const noteRef = useRef(null);
 
-    const recipients = guild
-        ? guilds.find((g) => g.id === guild.id)?.members ?? []
-        : channel
-        ? channel.recipients ?? []
-        : [];
+    const recipients = useMemo(() => {
+        if (guild) return guild.members;
+        if (channel) return channel.recipients;
+        return [];
+    }, [guild, channel]);
 
     useEffect(() => {
-        if (!friend) return;
+        async function getNote() {
+            if (!friend) return;
 
-        const getNote = async () => {
             const response = await sendRequest({
                 query: "GET_NOTE",
+                params: { userId: friend.id },
+            });
+
+            const data = await response.json();
+
+            if (response?.ok) {
+                setNote(data.note);
+                setOriginalNote(data.note);
+            } else {
+                console.error(data.errors);
+            }
+        }
+
+        async function getMutuals() {
+            if (!friend) return;
+
+            const response = await sendRequest({
+                query: "GET_USER_PROFILE",
                 params: {
                     userId: friend.id,
+                    withMutualGuilds: true,
+                    withMutualFriends: true,
                 },
             });
 
-            if (response.success) {
-                setNote(response.note);
-                setOriginalNote(response.note);
+            const data = await response.json();
+
+            if (response?.ok) {
+                const user = data.data.user;
+                setMutualFriends(user.mutualFriends ?? []);
+                setMutualGuilds(user.mutualGuilds ?? []);
+            } else {
+                console.error(data.errors);
             }
-        };
-
-        const env = process.env.NODE_ENV;
-
-        if (env == "development") {
-            if (hasRendered.current) getNote();
-            return () => {
-                hasRendered.current = true;
-            };
-        } else if (env == "production") {
-            getNote();
         }
-    }, []);
+
+        getNote();
+        getMutuals();
+    }, [friend]);
 
     if (!settings.showUsers) return null;
 
     if (friend) {
-        // const mutualFriends = friends.filter((f: TCleanUser) => friend.friendIds.includes(f.id));
-        // const mutualGuilds = guilds.filter((g: TGuild) => friend.guildIds.includes(g.id));
-
-        const mutualFriends = [];
-        const mutualGuilds = guilds.filter((g) => g.members.some((m) => m.userId == friend.id));
-
         return (
             <aside
                 className={styles.aside}
@@ -148,7 +159,7 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
                                     style={{
                                         backgroundColor: !friend.banner ? friend.primaryColor : "",
                                         backgroundImage: friend.banner
-                                            ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.banner}/`
+                                            ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.banner})`
                                             : "",
                                         height: "120px",
                                     }}
@@ -161,36 +172,30 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
                         <div
                             className={styles.avatarImage}
                             style={{
-                                backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar}/`,
+                                backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar})`,
                             }}
                         />
 
-                        <div
-                            className={styles.cardAvatarStatus}
-                            onMouseEnter={(e) => {
-                                setTooltip({
-                                    text: translateCap(friend.status),
-                                    element: e.currentTarget,
-                                    gap: 5,
-                                });
-                            }}
-                            onMouseLeave={() => setTooltip(null)}
-                        >
-                            <div style={{ backgroundColor: "black" }} />
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <div className={styles.cardAvatarStatus}>
+                                    <div style={{ backgroundColor: "black" }} />
 
-                            <svg>
-                                <rect
-                                    height="100%"
-                                    width="100%"
-                                    rx={8}
-                                    ry={8}
-                                    // @ts-ignore
-                                    fill={colors[friend.status ?? "offline"]}
-                                    // @ts-ignore
-                                    mask={`url(#${masks[friend.status ?? "offline"]})`}
-                                />
-                            </svg>
-                        </div>
+                                    <svg>
+                                        <rect
+                                            height="100%"
+                                            width="100%"
+                                            rx={8}
+                                            ry={8}
+                                            fill={colors[friend.status ?? "offline"]}
+                                            mask={`url(#${masks[friend.status ?? "offline"]})`}
+                                        />
+                                    </svg>
+                                </div>
+                            </TooltipTrigger>
+
+                            <TooltipContent>{translateCap(friend.status)}</TooltipContent>
+                        </Tooltip>
                     </div>
 
                     <div className={styles.cardBadges}></div>
@@ -217,7 +222,7 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
                         )}
 
                         <div className={styles.cardSection}>
-                            <h4>Chat App Member Since</h4>
+                            <h4>Spark Member Since</h4>
                             <div>
                                 {new Intl.DateTimeFormat("en-US", {
                                     year: "numeric",
@@ -247,12 +252,8 @@ export function MemberList({ channelId, channel, guild, user, friend }: Props) {
                                         if (note !== originalNote) {
                                             const response = await sendRequest({
                                                 query: "SET_NOTE",
-                                                params: {
-                                                    userId: friend.id,
-                                                },
-                                                data: {
-                                                    newNote: sanitizeString(note),
-                                                },
+                                                params: { userId: friend.id },
+                                                body: { note: sanitizeString(note) },
                                             });
 
                                             if (response.success) {
@@ -498,6 +499,7 @@ function MutualItem({ user, guild }: { user?: TCleanUser; guild?: TGuild }) {
                     <Avatar
                         src={user.avatar}
                         alt={user.username}
+                        type="avatars"
                         size={40}
                         status={user.status}
                     />
@@ -512,6 +514,7 @@ function MutualItem({ user, guild }: { user?: TCleanUser; guild?: TGuild }) {
                             <Avatar
                                 src={guild.icon}
                                 alt={guild.name}
+                                type="icons"
                                 size={40}
                             />
                         ) : (

@@ -1,98 +1,83 @@
-import { useData, useLayers, useTooltip } from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../Tooltip/Tooltip";
 import { Icon, LoadingDots, EmojiPicker } from "@components";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { base } from "@uploadcare/upload-client";
 import { getButtonColor } from "@/lib/getColors";
+import { getRandomAvatar } from "@/lib/avatars";
+import { useData, useLayers } from "@/store";
 import styles from "./Settings.module.css";
 import filetypeinfo from "magic-bytes.js";
+import type { User } from "@/type";
 import Image from "next/image";
-import { getRandomAvatar } from "@/lib/avatars";
 
 const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/apng", "image/webp"];
-
-const avatars = [
-    "178ba6e1-5551-42f3-b199-ddb9fc0f80de",
-    "9a5bf989-b884-4f81-b26c-ca1995cdce5e",
-    "7cb3f75d-4cad-4023-a643-18c329b5b469",
-    "220b2392-c4c5-4226-8b91-2b60c5a13d0f",
-    "51073721-c1b9-4d47-a2f3-34f0fbb1c0a8",
-];
+const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function Profiles() {
-    const setTooltip = useTooltip((state) => state.setTooltip);
     const setLayers = useLayers((state) => state.setLayers);
-    const user = useData((state) => state.user);
+    const user = useData((state) => state.user) as User;
+    const setUser = useData((state) => state.setUser);
     const { sendRequest } = useFetchHelper();
 
     const tabs = ["User Profile", "Server Profiles"];
 
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState<{
+        [key: string]: string;
+    }>({});
 
     const [avatar, setAvatar] = useState<string | File>(user.avatar);
-    const [banner, setBanner] = useState<string | File | undefined>(user.banner);
-    const [displayName, setDisplayName] = useState<string>(user.displayName);
-    const [primaryColor, setPrimaryColor] = useState<string>(user.primaryColor);
-    const [accentColor, setAccentColor] = useState<string>(user.accentColor);
-    const [description, setDescription] = useState<string>(user.description ?? "");
+    const [banner, setBanner] = useState<string | File | null>(user.banner);
+    const [displayName, setDisplayName] = useState(user.displayName);
+    const [primaryColor, setPrimaryColor] = useState(user.primaryColor);
+    const [accentColor, setAccentColor] = useState(user.accentColor);
+    const [description, setDescription] = useState(user.description);
 
+    const primaryColorInputRef = useRef<HTMLInputElement>(null);
+    const accentColorInputRef = useRef<HTMLInputElement>(null);
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLInputElement>(null);
-    const primaryColorInputRef = useRef<HTMLInputElement>(null);
-    const accentColorInputRef = useRef<HTMLInputElement>(null);
 
     const randomAvatar = getRandomAvatar(user.id);
 
-    useEffect(() => {
-        descriptionRef.current!.innerText = description;
-    }, []);
+    function resetState() {
+        if (!user) return;
 
-    const resetState = () => {
+        console.log("User: ", user);
+
         setAvatar(user.avatar);
         setBanner(user.banner);
         setDisplayName(user.displayName);
         setPrimaryColor(user.primaryColor);
         setAccentColor(user.accentColor);
-        setDescription(user.description ?? "");
-        const descRef = descriptionRef.current as HTMLInputElement;
-        descRef.innerText = user.description ?? "";
-    };
+        setDescription(user.description);
+        setErrors({});
 
-    const saveUser = async () => {
+        const desc = descriptionRef.current;
+        if (desc) desc.innerText = user.description || "";
+    }
+
+    const needsSaving =
+        avatar !== user.avatar ||
+        banner !== user.banner ||
+        displayName !== user.displayName ||
+        primaryColor !== user.primaryColor ||
+        accentColor !== user.accentColor ||
+        description !== user.description;
+
+    async function saveUser() {
+        if (isLoading) return;
         setIsLoading(true);
-        let avatarUrl, bannerUrl;
 
         try {
-            if (avatar || banner) {
-                if (avatar && typeof avatar !== "string") {
-                    const result = await base(avatar as File, {
-                        publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                        store: "auto",
-                    });
-
-                    if (!result.file) console.error(result);
-                    else avatarUrl = result.file;
-                }
-
-                if (banner && typeof banner !== "string") {
-                    const result = await base(banner as File, {
-                        publicKey: process.env.NEXT_PUBLIC_CDN_TOKEN as string,
-                        store: "auto",
-                    });
-
-                    if (!result.file) console.error(result);
-                    else bannerUrl = result.file;
-                }
-            }
-
             const response = await sendRequest({
                 query: "UPDATE_USER",
-                data: {
-                    avatar: avatarUrl ? avatarUrl : avatar !== user.avatar ? avatar : undefined,
-                    banner: bannerUrl ? bannerUrl : banner !== user.banner ? banner : undefined,
+                body: {
+                    avatar: avatar !== user.avatar ? avatar : undefined,
+                    banner: banner !== user.banner ? banner : undefined,
                     displayName: displayName !== user.displayName ? displayName : undefined,
                     primaryColor: primaryColor !== user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== user.accentColor ? accentColor : undefined,
@@ -100,27 +85,23 @@ export function Profiles() {
                 },
             });
 
-            if (response.success) {
-                if (bannerUrl) setBanner(bannerUrl);
-                if (avatarUrl) setAvatar(avatarUrl);
+            if (response.user) {
+                setUser({ ...user, ...response.user });
+                setErrors({});
+            } else if (response.errors) {
+                setErrors(response.errors);
             }
         } catch (err) {
             console.error(err);
+            setErrors({ server: "An error occurred while saving your profile" });
         }
 
         setIsLoading(false);
-    };
+    }
 
-    const needsSaving = () => {
-        return (
-            avatar !== user.avatar ||
-            banner !== user.banner ||
-            displayName !== user.displayName ||
-            primaryColor !== user.primaryColor ||
-            accentColor !== user.accentColor ||
-            description !== user.description
-        );
-    };
+    useEffect(() => {
+        resetState();
+    }, [user]);
 
     const CardBanner = useMemo(
         () => (
@@ -160,7 +141,7 @@ export function Profiles() {
                                 backgroundImage: banner
                                     ? `url(${
                                           typeof banner === "string"
-                                              ? `${process.env.NEXT_PUBLIC_CDN_URL}${banner}/`
+                                              ? `${cdnUrl}${banner}`
                                               : URL.createObjectURL(banner as File)
                                       })`
                                     : "",
@@ -192,11 +173,9 @@ export function Profiles() {
                     className={styles.avatarImage}
                     style={{
                         backgroundImage: `url(${
-                            avatar !== null && typeof avatar !== "string"
-                                ? URL.createObjectURL(avatar)
-                                : `${process.env.NEXT_PUBLIC_CDN_URL}${
-                                      avatar === null ? randomAvatar : avatar ? avatar : user.avatar
-                                  }/`
+                            typeof avatar === "string"
+                                ? `${cdnUrl}${avatar}`
+                                : URL.createObjectURL(avatar as File)
                         })`,
                     }}
                     onClick={() => avatarInputRef.current?.click()}
@@ -222,14 +201,14 @@ export function Profiles() {
                 </div>
             </div>
         ),
-        [avatar, user.avatar, banner]
+        [avatar, banner]
     );
 
     return (
         <>
             <div>
                 <AnimatePresence>
-                    {needsSaving() && (
+                    {needsSaving && (
                         <motion.div
                             className={styles.saveAlert}
                             initial={{ transform: "translateY(80px)" }}
@@ -237,38 +216,40 @@ export function Profiles() {
                             exit={{ transform: "translateY(80px)" }}
                             transition={{ duration: 0.1 }}
                         >
-                            <p>Careful — you have unsaved changes!</p>
+                            <p>
+                                {errors.server
+                                    ? errors.server
+                                    : "Careful — you have unsaved changes!"}
+                            </p>
 
                             <div>
                                 <button
+                                    type="button"
                                     className="button underline"
                                     onClick={() => resetState()}
                                 >
                                     Reset
                                 </button>
 
-                                <button
-                                    className={
-                                        description.length > 190
-                                            ? "button green disabled"
-                                            : "button green"
-                                    }
-                                    onMouseEnter={(e) => {
-                                        if (description.length > 190) {
-                                            setTooltip({
-                                                text: "About me is too long",
-                                                element: e.currentTarget,
-                                                gap: 12,
-                                            });
-                                        }
-                                    }}
-                                    onMouseLeave={() =>
-                                        description.length > 190 && setTooltip(null)
-                                    }
-                                    onClick={() => description.length <= 190 && saveUser()}
-                                >
-                                    {isLoading ? <LoadingDots /> : "Save Changes"}
-                                </button>
+                                <Tooltip showOn={(description?.length || 0) > 190}>
+                                    <TooltipTrigger>
+                                        <button
+                                            type="button"
+                                            className={
+                                                (description?.length || 0) > 190
+                                                    ? "button green disabled"
+                                                    : "button green"
+                                            }
+                                            onClick={() =>
+                                                (description?.length || 0) <= 190 && saveUser()
+                                            }
+                                        >
+                                            {isLoading ? <LoadingDots /> : "Save Changes"}
+                                        </button>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>About me is too long</TooltipContent>
+                                </Tooltip>
                             </div>
                         </motion.div>
                     )}
@@ -288,9 +269,7 @@ export function Profiles() {
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
                             setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
+                                settings: { type: "POPUP" },
                                 content: {
                                     type: "WARNING",
                                     warning: "FILE_SIZE",
@@ -304,9 +283,7 @@ export function Profiles() {
 
                         if (!fileType || !allowedFileTypes.includes(fileType)) {
                             setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
+                                settings: { type: "POPUP" },
                                 content: {
                                     type: "WARNING",
                                     warning: "FILE_TYPE",
@@ -338,9 +315,7 @@ export function Profiles() {
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
                             setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
+                                settings: { type: "POPUP" },
                                 content: {
                                     type: "WARNING",
                                     warning: "FILE_SIZE",
@@ -354,9 +329,7 @@ export function Profiles() {
 
                         if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
                             setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                },
+                                settings: { type: "POPUP" },
                                 content: {
                                     type: "WARNING",
                                     warning: "FILE_TYPE",
@@ -439,10 +412,10 @@ export function Profiles() {
                                     Change Avatar
                                 </button>
 
-                                {avatar !== null && (
+                                {avatar !== randomAvatar && (
                                     <button
                                         className="button underline"
-                                        onClick={() => setAvatar(null)}
+                                        onClick={() => setAvatar(randomAvatar)}
                                     >
                                         Remove Avatar
                                     </button>
@@ -551,25 +524,28 @@ export function Profiles() {
                                     </div>
                                 </div>
 
-                                <div
-                                    onMouseEnter={(e) => {
-                                        setTooltip({
-                                            text:
-                                                description.length > 190
-                                                    ? "Message is too long"
-                                                    : `${
-                                                          190 - description.length
-                                                      } characters remaining`,
-                                            element: e.currentTarget,
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                    style={{
-                                        color: description.length > 190 ? "var(--error-1)" : "",
-                                    }}
-                                >
-                                    {190 - description.length}
-                                </div>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <div
+                                            style={{
+                                                color:
+                                                    (description?.length || 0) > 190
+                                                        ? "var(--error-1)"
+                                                        : "",
+                                            }}
+                                        >
+                                            {190 - (description?.length || 0)}
+                                        </div>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>
+                                        {(description?.length || 0) > 190
+                                            ? "Message is too long"
+                                            : `${
+                                                  190 - (description?.length || 0)
+                                              } characters remaining`}
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         </div>
                     </div>
@@ -629,7 +605,7 @@ export function Profiles() {
                                             <div>
                                                 <Image
                                                     alt="Fake Activity"
-                                                    src="https://ucarecdn.com/5346d913-15ae-4ab3-af18-cd0df14d7678/"
+                                                    src="/assets/system/fake-activity.png"
                                                     width={48}
                                                     height={48}
                                                     draggable={false}
