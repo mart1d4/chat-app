@@ -471,9 +471,7 @@ export function Popup({
             },
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (response.guild) {
             setLayers({
                 settings: {
                     type: "POPUP",
@@ -481,14 +479,12 @@ export function Popup({
                 },
             });
 
-            if (data.data.guild) {
-                addGuild(data.data.guild);
-                router.push(`/channels/${data.data.guild.id}`);
-            }
-        } else {
+            addGuild(response.guild);
+            router.push(`/channels/${response.guild.id}`);
+        } else if (response.errors) {
             dispatch({
                 type: "SET_ERRORS",
-                payload: data.data.errors,
+                payload: response.errors,
             });
         }
 
@@ -993,6 +989,7 @@ export function Popup({
                                 ].map((template, index) => (
                                     <Fragment key={template[1]}>
                                         <button
+                                            type="button"
                                             className={styles.serverTemplate}
                                             onClick={() => {
                                                 dispatch({
@@ -1024,6 +1021,7 @@ export function Popup({
                             <h2>Have an invite already?</h2>
 
                             <button
+                                type="button"
                                 className={`grey button ${styles.big}`}
                                 onClick={() => {
                                     dispatch({
@@ -1234,6 +1232,7 @@ export function Popup({
                 >
                     {content.attachments.length > 1 && (
                         <button
+                            type="button"
                             className={styles.imageNav}
                             onClick={() => {
                                 const length = content.attachments.length;
@@ -1309,6 +1308,7 @@ export function Popup({
 
                     {content.attachments.length > 1 && (
                         <button
+                            type="button"
                             className={styles.imageNav}
                             onClick={() => {
                                 const length = content.attachments.length;
