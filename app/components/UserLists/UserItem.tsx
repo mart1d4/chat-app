@@ -9,8 +9,6 @@ import { useLayers } from "@/store";
 import { useRef } from "react";
 
 export function UserItem({ content, user }) {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
     const { sendRequest } = useFetchHelper();
     const liRef = useRef(null);
 
@@ -18,11 +16,11 @@ export function UserItem({ content, user }) {
         <li
             ref={liRef}
             tabIndex={0}
-            className={
-                layers.MENU?.content.refElement === liRef.current
-                    ? styles.liContainer + " " + styles.active
-                    : styles.liContainer
-            }
+            // className={
+            //     layers.MENU?.content.refElement === liRef.current
+            //         ? styles.liContainer + " " + styles.active
+            //         : styles.liContainer
+            // }
             onClick={() => {
                 if (!["all", "online"].includes(content)) return;
 
@@ -33,27 +31,27 @@ export function UserItem({ content, user }) {
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: "USER",
-                        user: user,
-                        refElement: liRef.current,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "MENU",
+                //         event: e,
+                //     },
+                //     content: {
+                //         type: "USER",
+                //         user: user,
+                //         refElement: liRef.current,
+                //     },
+                // });
             }}
             onMouseEnter={() => {
-                if (layers.MENU?.content.refElement && layers.MENU?.content.user !== user) {
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            setNull: true,
-                        },
-                    });
-                }
+                // if (layers.MENU?.content.refElement && layers.MENU?.content.user !== user) {
+                //     setLayers({
+                //         settings: {
+                //             type: "MENU",
+                //             setNull: true,
+                //         },
+                //     });
+                // }
             }}
             onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -64,17 +62,17 @@ export function UserItem({ content, user }) {
                         body: { recipients: [user.id] },
                     });
                 } else if (e.key === "Enter" && e.shiftKey) {
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "USER",
-                            user: user,
-                            refElement: liRef.current,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: {
+                    //         type: "MENU",
+                    //         event: e,
+                    //     },
+                    //     content: {
+                    //         type: "USER",
+                    //         user: user,
+                    //         refElement: liRef.current,
+                    //     },
+                    // });
                 }
             }}
         >
@@ -141,15 +139,15 @@ export function UserItem({ content, user }) {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setLayers({
-                                                settings: { type: "MENU", event: e },
-                                                content: {
-                                                    type: "USER_SMALL",
-                                                    user: user,
-                                                    userlist: true,
-                                                    refElement: liRef.current,
-                                                },
-                                            });
+                                            // setLayers({
+                                            //     settings: { type: "MENU", event: e },
+                                            //     content: {
+                                            //         type: "USER_SMALL",
+                                            //         user: user,
+                                            //         userlist: true,
+                                            //         refElement: liRef.current,
+                                            //     },
+                                            // });
                                         }}
                                     >
                                         <Icon

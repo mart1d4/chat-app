@@ -13,8 +13,6 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
     const [messageContent, setMessageContent] = useState<JSX.Element | null>(null);
     const [referenceContent, setReferenceContent] = useState<JSX.Element | null>(null);
 
-    const setLayers = useLayers((state) => state.setLayers);
-
     if (message.content && messageContent === null) {
         setMessageContent(FormatMessage({ message: message, fixed: true }));
     }
@@ -55,17 +53,17 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
                         height="24"
                         viewBox="0 0 24 24"
                         onClick={() => {
-                            setLayers(
-                                {
-                                    settings: { type: "POPUP" },
-                                    content: {
-                                        type: "UNPIN_MESSAGE",
-                                        channelId: message.channelId,
-                                        message: message,
-                                    },
-                                },
-                                true
-                            );
+                            // setLayers(
+                            //     {
+                            //         settings: { type: "POPUP" },
+                            //         content: {
+                            //             type: "UNPIN_MESSAGE",
+                            //             channelId: message.channelId,
+                            //             message: message,
+                            //         },
+                            //     },
+                            //     true
+                            // );
                         }}
                     >
                         <path

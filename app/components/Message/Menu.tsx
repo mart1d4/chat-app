@@ -27,8 +27,6 @@ export function MessageMenu({
 }) {
     const shift = useWindowSettings((state) => state.shiftKeyDown);
 
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
@@ -158,9 +156,9 @@ export function MessageMenu({
         const { text, onClick, icon, iconViewbox, dangerous, ref } = buttons[button];
         let backgroundColor = "";
 
-        if (ref && layers.MENU?.settings?.element === ref.current) {
-            backgroundColor = "var(--background-hover-2)";
-        }
+        // if (ref && layers.MENU?.settings?.element === ref.current) {
+        //     backgroundColor = "var(--background-hover-2)";
+        // }
 
         return (
             <Tooltip>

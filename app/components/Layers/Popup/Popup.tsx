@@ -11,7 +11,6 @@ import { getRelativeDate } from "@/lib/time";
 import { useRouter } from "next/navigation";
 import "keen-slider/keen-slider.min.css";
 import type { Attachment } from "@/type";
-import useFiles from "@/hooks/useFiles";
 import styles from "./Popup.module.css";
 import Image from "next/image";
 import {
@@ -218,14 +217,11 @@ export function Popup({
     element: any;
     closing: boolean;
 }) {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
     const user = useData((state) => state.user);
 
     const { modifyUsername } = useRequests();
     const addGuild = useData((state) => state.addGuild);
     const { sendRequest } = useFetchHelper();
-    const { onFileChange } = useFiles();
     const router = useRouter();
     const type = content.type;
 
@@ -293,12 +289,12 @@ export function Popup({
             current: user.username,
             password: state.password,
             onSuccess: () => {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //         setNull: true,
+                //     },
+                // });
             },
             setErrors: (errors) => {
                 dispatch({
@@ -380,12 +376,12 @@ export function Popup({
                     },
                 });
             } else {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //         setNull: true,
+                //     },
+                // });
             }
         } catch (err) {
             console.error(err);
@@ -431,12 +427,12 @@ export function Popup({
         });
 
         if (response.success) {
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
+            // setLayers({
+            //     settings: {
+            //         type: "POPUP",
+            //         setNull: true,
+            //     },
+            // });
 
             if (response.guild) {
                 addGuild(response.guild);
@@ -472,12 +468,12 @@ export function Popup({
         });
 
         if (response.guild) {
-            setLayers({
-                settings: {
-                    type: "POPUP",
-                    setNull: true,
-                },
-            });
+            // setLayers({
+            //     settings: {
+            //         type: "POPUP",
+            //         setNull: true,
+            //     },
+            // });
 
             addGuild(response.guild);
             router.push(`/channels/${response.guild.id}`);
@@ -792,16 +788,16 @@ export function Popup({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (layers.POPUP.length === 0) return;
+            // if (layers.POPUP.length === 0) return;
 
-            if (e.key === "Escape" && !layers.MENU && !state.loading) {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
-            }
+            // if (e.key === "Escape" && !layers.MENU && !state.loading) {
+            //     // setLayers({
+            //     //     settings: {
+            //     //         type: "POPUP",
+            //     //         setNull: true,
+            //     //     },
+            //     // });
+            // }
 
             if (e.key === "Enter" && !e.shiftKey && prop !== null) {
                 if (
@@ -814,19 +810,19 @@ export function Popup({
 
                 prop.function();
                 if (!prop.skipClose) {
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                            setNull: true,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: {
+                    //         type: "POPUP",
+                    //         setNull: true,
+                    //     },
+                    // });
                 }
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [layers, state.loading, prop]);
+    }, [state.loading, prop]);
 
     const getDimensions = useCallback((img: any) => {
         if (!img) return null;
@@ -889,12 +885,12 @@ export function Popup({
                 onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    setLayers({
-                        settings: {
-                            type: "POPUP",
-                            setNull: true,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: {
+                    //         type: "POPUP",
+                    //         setNull: true,
+                    //     },
+                    // });
                 }}
             >
                 <svg
@@ -1145,13 +1141,7 @@ export function Popup({
                                             ref={guildIconInput}
                                             accept="image/png, image/jpeg, image/gif, image/apng, image/webp"
                                             onChange={async (e) => {
-                                                const file = await onFileChange(e);
-                                                if (file) {
-                                                    dispatch({
-                                                        type: "SET_GUILD",
-                                                        payload: { icon: file },
-                                                    });
-                                                }
+                                                // wmjiodpajwi
                                             }}
                                         />
                                     </div>
@@ -1263,16 +1253,16 @@ export function Popup({
                                 height: currentImage.dimensions.height,
                             }}
                             onContextMenu={(e) => {
-                                setLayers({
-                                    settings: {
-                                        type: "MENU",
-                                        event: e,
-                                    },
-                                    content: {
-                                        type: "IMAGE",
-                                        attachment: currentImage,
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: {
+                                //         type: "MENU",
+                                //         event: e,
+                                //     },
+                                //     content: {
+                                //         type: "IMAGE",
+                                //         attachment: currentImage,
+                                //     },
+                                // });
                             }}
                         >
                             {state.image.loading && (
@@ -1610,12 +1600,12 @@ export function Popup({
                             <div
                                 className={styles.channelItem}
                                 onClick={() => {
-                                    setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                            setNull: true,
-                                        },
-                                    });
+                                    // setLayers({
+                                    //     settings: {
+                                    //         type: "POPUP",
+                                    //         setNull: true,
+                                    //     },
+                                    // });
                                     router.push(`/channels/me/${content.channel.id}`);
                                 }}
                             >
@@ -2064,12 +2054,12 @@ export function Popup({
                                     ref={cancelRef}
                                     className="button underline"
                                     onClick={() => {
-                                        setLayers({
-                                            settings: {
-                                                type: "POPUP",
-                                                setNull: true,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "POPUP",
+                                        //         setNull: true,
+                                        //     },
+                                        // });
                                     }}
                                 >
                                     Cancel
@@ -2086,12 +2076,12 @@ export function Popup({
 
                                     prop.function();
                                     if (!prop.skipClose) {
-                                        setLayers({
-                                            settings: {
-                                                type: "POPUP",
-                                                setNull: true,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "POPUP",
+                                        //         setNull: true,
+                                        //     },
+                                        // });
                                     }
                                 }}
                             >

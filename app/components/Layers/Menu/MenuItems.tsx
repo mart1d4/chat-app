@@ -15,7 +15,7 @@ export function MenuItems() {
     const setSettings = useSettings((state) => state.setSettings);
     const setMention = useMention((state) => state.setMention);
     const settings = useSettings((state) => state.settings);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const currentUser = useData((state) => state.user);
 
     const { sendRequest } = useFetchHelper();

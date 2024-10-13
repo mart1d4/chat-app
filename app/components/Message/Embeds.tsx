@@ -47,40 +47,38 @@ export function Image({
     message: TMessage;
     functions: any;
 }) {
-    const setLayers = useLayers((state) => state.setLayers);
-
     return (
         <div
             className={styles.image}
             onClick={() => {
                 const index = message.embeds.findIndex((a) => a.url === embed.url);
 
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
-                    content: {
-                        type: "ATTACHMENT_PREVIEW",
-                        attachments: message.embeds,
-                        current: index,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //     },
+                //     content: {
+                //         type: "ATTACHMENT_PREVIEW",
+                //         attachments: message.embeds,
+                //         current: index,
+                //     },
+                // });
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: "MESSAGE",
-                        message: message,
-                        attachment: embed,
-                        functions: functions,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "MENU",
+                //         event: e,
+                //     },
+                //     content: {
+                //         type: "MESSAGE",
+                //         message: message,
+                //         attachment: embed,
+                //         functions: functions,
+                //     },
+                // });
             }}
         >
             <div>
@@ -108,8 +106,6 @@ export function Embed({
     message: TMessage;
     functions: any;
 }) {
-    const setLayers = useLayers((state) => state.setLayers);
-
     return (
         <div
             className={styles.embed}
@@ -125,15 +121,15 @@ export function Embed({
                             if (e.shiftKey) {
                                 functions.removeEmbeds();
                             } else {
-                                setLayers({
-                                    settings: {
-                                        type: "POPUP",
-                                    },
-                                    content: {
-                                        type: "REMOVE_EMBEDS",
-                                        onConfirm: () => functions.removeEmbeds(),
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: {
+                                //         type: "POPUP",
+                                //     },
+                                //     content: {
+                                //         type: "REMOVE_EMBEDS",
+                                //         onConfirm: () => functions.removeEmbeds(),
+                                //     },
+                                // });
                             }
                         }}
                     >
@@ -168,32 +164,32 @@ export function Embed({
                                             },
                                         };
 
-                                        setLayers({
-                                            settings: {
-                                                type: "POPUP",
-                                            },
-                                            content: {
-                                                type: "ATTACHMENT_PREVIEW",
-                                                attachments: [attachment],
-                                                current: 0,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "POPUP",
+                                        //     },
+                                        //     content: {
+                                        //         type: "ATTACHMENT_PREVIEW",
+                                        //         attachments: [attachment],
+                                        //         current: 0,
+                                        //     },
+                                        // });
                                     }}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                event: e,
-                                            },
-                                            content: {
-                                                type: "MESSAGE",
-                                                message: message,
-                                                attachment: embed.image,
-                                                functions: functions,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "MENU",
+                                        //         event: e,
+                                        //     },
+                                        //     content: {
+                                        //         type: "MESSAGE",
+                                        //         message: message,
+                                        //         attachment: embed.image,
+                                        //         functions: functions,
+                                        //     },
+                                        // });
                                     }}
                                 >
                                     <img

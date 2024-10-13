@@ -1,9 +1,9 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { Icon, UserSection, Tooltip, TooltipContent, TooltipTrigger } from "@components";
 import { useParams, usePathname } from "next/navigation";
+import type { Channel, Guild, User } from "@/type";
 import styles from "./GuildChannels.module.css";
-import { Icon, UserSection } from "@components";
 import { useCallback } from "react";
 import Link from "next/link";
 import {
@@ -11,22 +11,28 @@ import {
     useWindowSettings,
     useShowChannels,
     useShowSettings,
-    useLayers,
 } from "@/store";
 
-export const GuildChannels = ({ user, guild, initChannels }: Props) => {
+export const GuildChannels = ({
+    user,
+    guild,
+    initChannels,
+}: {
+    user: User;
+    guild: Guild;
+    initChannels: Channel[];
+}) => {
     const channels = initChannels.sort((a, b) => a.position - b.position);
 
     const setCollapsed = useCollapsedCategories((state) => state.setCollapsed);
     const collapsed = useCollapsedCategories((state) => state.collapsed);
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
+
     const params = useParams();
 
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
     const showChannels = useShowChannels((state) => state.showChannels);
 
-    const member = guild.members?.find((member) => member.userId === user.id);
+    const member = guild.members.find((m) => m.userId === user.id);
 
     if (!showChannels && !widthLimitPassed) return null;
 
@@ -42,57 +48,57 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                     tabIndex={0}
                     className={styles.guildSettings}
                     onClick={(e) => {
-                        if (layers.MENU?.content?.guild) return;
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                element: e.currentTarget,
-                                firstSide: "BOTTOM",
-                                secondSide: "CENTER",
-                            },
-                            content: {
-                                type: "GUILD",
-                                guild: guild,
-                            },
-                        });
+                        // if (layers.MENU?.content?.guild) return;
+                        // setLayers({
+                        //     settings: {
+                        //         type: "MENU",
+                        //         element: e.currentTarget,
+                        //         firstSide: "BOTTOM",
+                        //         secondSide: "CENTER",
+                        //     },
+                        //     content: {
+                        //         type: "GUILD",
+                        //         guild: guild,
+                        //     },
+                        // });
                     }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                            if (layers.MENU?.content.guild) return;
-                            setLayers({
-                                settings: {
-                                    type: "MENU",
-                                    element: e.currentTarget,
-                                    firstSide: "BOTTOM",
-                                    secondSide: "CENTER",
-                                },
-                                content: {
-                                    type: "GUILD",
-                                    guild: guild,
-                                },
-                            });
+                            // if (layers.MENU?.content.guild) return;
+                            // setLayers({
+                            //     settings: {
+                            //         type: "MENU",
+                            //         element: e.currentTarget,
+                            //         firstSide: "BOTTOM",
+                            //         secondSide: "CENTER",
+                            //     },
+                            //     content: {
+                            //         type: "GUILD",
+                            //         guild: guild,
+                            //     },
+                            // });
                         }
                     }}
-                    style={{
-                        backgroundColor:
-                            layers.MENU?.content.type === "GUILD"
-                                ? "var(--background-hover-1)"
-                                : "",
-                    }}
+                    // style={{
+                    //     backgroundColor:
+                    //         layers.MENU?.content.type === "GUILD"
+                    //             ? "var(--background-hover-1)"
+                    //             : "",
+                    // }}
                 >
                     <div>
                         <div>{guild.name}</div>
                         <div
-                            style={{
-                                transform:
-                                    layers.MENU?.content?.type !== "GUILD" ? "rotate(-90deg)" : "",
-                            }}
+                        // style={{
+                        //     transform:
+                        //         layers.MENU?.content?.type !== "GUILD" ? "rotate(-90deg)" : "",
+                        // }}
                         >
-                            {layers.MENU?.content.type === "GUILD" ? (
+                            {/* {layers.MENU?.content.type === "GUILD" ? (
                                 <Icon name="close" />
                             ) : (
                                 <Icon name="caret" />
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>
@@ -100,16 +106,16 @@ export const GuildChannels = ({ user, guild, initChannels }: Props) => {
                 <div
                     className={styles.scroller + " scrollbar"}
                     onContextMenu={(e) => {
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                event: e,
-                            },
-                            content: {
-                                type: "GUILD_CHANNEL_LIST",
-                                guild: guild,
-                            },
-                        });
+                        // setLayers({
+                        //     settings: {
+                        //         type: "MENU",
+                        //         event: e,
+                        //     },
+                        //     content: {
+                        //         type: "GUILD_CHANNEL_LIST",
+                        //         guild: guild,
+                        //     },
+                        // });
                     }}
                 >
                     <ul className={styles.channelList}>
@@ -190,7 +196,6 @@ const ChannelItem = ({
     setHidden?: any;
 }) => {
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const setLayers = useLayers((state) => state.setLayers);
 
     const pathname = usePathname();
     const params = useParams();
@@ -206,17 +211,17 @@ const ChannelItem = ({
                 onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "GUILD_CHANNEL",
-                            guild: guild,
-                            channel: channel,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: {
+                    //         type: "MENU",
+                    //         event: e,
+                    //     },
+                    //     content: {
+                    //         type: "GUILD_CHANNEL",
+                    //         guild: guild,
+                    //         channel: channel,
+                    //     },
+                    // });
                 }}
                 onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -229,18 +234,18 @@ const ChannelItem = ({
                     } else if (e.key === "Enter" && e.shiftKey) {
                         e.preventDefault();
                         e.stopPropagation();
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                element: e.currentTarget,
-                                firstSide: "RIGHT",
-                            },
-                            content: {
-                                type: "GUILD_CHANNEL",
-                                guild: guild,
-                                channel: channel,
-                            },
-                        });
+                        // setLayers({
+                        //     settings: {
+                        //         type: "MENU",
+                        //         element: e.currentTarget,
+                        //         firstSide: "RIGHT",
+                        //     },
+                        //     content: {
+                        //         type: "GUILD_CHANNEL",
+                        //         guild: guild,
+                        //         channel: channel,
+                        //     },
+                        // });
                     }
                 }}
             >
@@ -254,14 +259,14 @@ const ChannelItem = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setLayers({
-                                    settings: { type: "POPUP" },
-                                    content: {
-                                        type: "GUILD_CHANNEL_CREATE",
-                                        guild: channel.guildId,
-                                        category: channel,
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: { type: "POPUP" },
+                                //     content: {
+                                //         type: "GUILD_CHANNEL_CREATE",
+                                //         guild: channel.guildId,
+                                //         category: channel,
+                                //     },
+                                // });
                             }}
                         >
                             <Icon name="add" />
@@ -280,15 +285,15 @@ const ChannelItem = ({
             onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setLayers({
-                    settings: { type: "MENU", event: e },
-                    content: {
-                        type: "GUILD_CHANNEL",
-                        guild: guild,
-                        channel: channel,
-                        category: category,
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "MENU", event: e },
+                //     content: {
+                //         type: "GUILD_CHANNEL",
+                //         guild: guild,
+                //         channel: channel,
+                //         category: category,
+                //     },
+                // });
             }}
         >
             <div>
@@ -354,14 +359,14 @@ const ChannelItem = ({
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
-                                                setLayers({
-                                                    settings: { type: "POPUP" },
-                                                    content: {
-                                                        type: "GUILD_INVITE",
-                                                        channel: channel,
-                                                        guild: guild,
-                                                    },
-                                                });
+                                                // setLayers({
+                                                //     settings: { type: "POPUP" },
+                                                //     content: {
+                                                //         type: "GUILD_INVITE",
+                                                //         channel: channel,
+                                                //         guild: guild,
+                                                //     },
+                                                // });
                                             }}
                                         >
                                             <Icon name="addUser" />

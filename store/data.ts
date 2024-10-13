@@ -4,6 +4,8 @@ import { create } from "zustand";
 
 export interface UseDataState {
     user: User | null;
+    token: string | null;
+
     channels: Channel[];
     guilds: Guild[];
     friends: User[];
@@ -12,6 +14,7 @@ export interface UseDataState {
     sent: User[];
 
     setUser: (user: User | null) => void;
+    setToken: (token: string | null | undefined) => void;
 
     setChannels: (channels: Channel[]) => void;
     setGuilds: (guilds: Guild[]) => void;
@@ -40,6 +43,8 @@ export interface UseDataState {
 
 export const useData = create<UseDataState>()((set) => ({
     user: null,
+    token: null,
+
     channels: [],
     guilds: [],
     friends: [],
@@ -48,6 +53,7 @@ export const useData = create<UseDataState>()((set) => ({
     sent: [],
 
     setUser: (user) => set(() => ({ user })),
+    setToken: (token) => set(() => ({ token })),
 
     setChannels: (channels) => {
         set((state) => ({

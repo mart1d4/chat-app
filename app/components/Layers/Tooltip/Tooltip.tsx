@@ -1,7 +1,10 @@
-import type { Placement } from "@floating-ui/react";
+"use client";
+
 import {
+    useTransitionStyles,
     useInteractions,
     FloatingPortal,
+    FloatingArrow,
     useMergeRefs,
     useFloating,
     autoUpdate,
@@ -11,10 +14,9 @@ import {
     useRole,
     offset,
     shift,
-    flip,
     arrow,
-    FloatingArrow,
-    useTransitionStyles,
+    flip,
+    type Placement,
 } from "@floating-ui/react";
 import {
     type HTMLProps,
@@ -175,7 +177,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
         const ref = useMergeRefs([context.refs.setFloating, propRef]);
 
         const { isMounted, styles: tStyles } = useTransitionStyles(context, {
-            duration: 100,
+            duration: 50,
             initial: {
                 transform: "scale(0.95)",
                 opacity: 0,
@@ -196,6 +198,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                         ...context.floatingStyles,
                         ...style,
                         zIndex: 1000,
+                        pointerEvents: "none",
                     }}
                     {...context.getFloatingProps(props)}
                 >

@@ -1,29 +1,36 @@
 "use client";
 
-import { Avatar, EmojiPicker, FilePreview, Icon, LoadingDots, UserMention } from "@components";
 import { type ChangeEvent, useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
+import { useWindowSettings, useSettings, useMessages, useMention, useData } from "@/store";
 import type { Attachment, Channel, ChannelRecipient, Message } from "@/type";
-import { Editor, Transforms, Range, createEditor, Point } from "slate";
+import { Editor, Transforms, Range, createEditor, Point, Node } from "slate";
 import { Slate, Editable, withReact, ReactEditor } from "slate-react";
-import { lowercaseContains, sanitizeString } from "@/lib/strings";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { lowercaseContains } from "@/lib/strings";
 import { getNanoIdInt } from "@/lib/insertions";
 import type { CustomEditor } from "@/slate";
 import { withHistory } from "slate-history";
 import styles from "./TextArea.module.css";
-import filetypeinfo from "magic-bytes.js";
 import { nanoid } from "nanoid";
 import {
-    useWindowSettings,
-    useSettings,
-    useMessages,
-    useMention,
-    useLayers,
-    useData,
-} from "@/store";
+    TooltipTrigger,
+    TooltipContent,
+    EmojiPicker,
+    FilePreview,
+    LoadingDots,
+    UserMention,
+    Tooltip,
+    Avatar,
+    Icon,
+} from "@components";
 
 let dragged = false;
+
+const initialEditorValue = [{ type: "paragraph", children: [{ text: "" }] }];
+
+function serialize(nodes: Node[]) {
+    return nodes.map((n) => Node.string(n)).join("\n");
+}
 
 function withMentions(editor: CustomEditor) {
     const { isInline, isVoid, markableVoid } = editor;
@@ -44,12 +51,11 @@ function withMentions(editor: CustomEditor) {
 }
 
 function insertMention(editor: CustomEditor, recipient: ChannelRecipient) {
-    const mention = {
+    Transforms.insertNodes(editor, {
         type: "mention",
         recipient,
-        children: [{ text: "" }],
-    };
-    Transforms.insertNodes(editor, mention);
+        children: [{ text: `<@${recipient.id}>` }],
+    });
     Transforms.move(editor);
     Editor.insertText(editor, " ");
 }
@@ -142,7 +148,7 @@ export function TextArea({
     const setMention = useMention((state) => state.setMention);
     const setDraft = useMessages((state) => state.setDraft);
     const settings = useSettings((state) => state.settings);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
     const setEdit = useMessages((state) => state.setEdit);
@@ -156,14 +162,12 @@ export function TextArea({
 
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
-    const [message, setMessage] = useState("");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
     const blocked = useData((state) => state.blocked).map((user) => user.id);
     const friend = channel.recipients.find((r) => r.id !== user?.id);
-    const canSend = message.length > 0 || attachments.length > 0;
 
     const [target, setTarget] = useState<Range | null>(null);
     const [index, setIndex] = useState(0);
@@ -173,15 +177,13 @@ export function TextArea({
     const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
     const editor = useMemo(() => withMentions(withReact(withHistory(createEditor()))), []);
 
+    const text = serialize(editor.children);
+    const canSend = text.length > 0 || attachments.length > 0;
+
     const recipients = channel.recipients.filter((r) => lowercaseContains(r.displayName, search));
 
     const onKeyDown = useCallback(
         (event: KeyboardEvent) => {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-
             if (target && recipients.length > 0) {
                 if (["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key)) {
                     event.preventDefault();
@@ -205,6 +207,9 @@ export function TextArea({
                         setTarget(null);
                         break;
                 }
+            } else if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
             }
         },
         [recipients, editor, index, target]
@@ -214,13 +219,13 @@ export function TextArea({
         if (files.length === 0) return;
 
         if (attachments.length + files.length > 10) {
-            setLayers({
-                settings: { type: "POPUP" },
-                content: {
-                    type: "WARNING",
-                    warning: "FILE_NUMBER",
-                },
-            });
+            // setLayers({
+            //     settings: { type: "POPUP" },
+            //     content: {
+            //         type: "WARNING",
+            //         warning: "FILE_NUMBER",
+            //     },
+            // });
 
             if (e.target instanceof HTMLInputElement) {
                 return (e.target.value = "");
@@ -233,13 +238,13 @@ export function TextArea({
 
         for (const file of files) {
             if (file.size > maxFileSize) {
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: {
-                        type: "WARNING",
-                        warning: "FILE_SIZE",
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: {
+                //         type: "WARNING",
+                //         warning: "FILE_SIZE",
+                //     },
+                // });
 
                 checkedFiles = [];
                 if (e.target instanceof HTMLInputElement) {
@@ -247,10 +252,6 @@ export function TextArea({
                 }
                 return;
             }
-
-            const bytes = new Uint8Array(await file.arrayBuffer());
-            const types = filetypeinfo(bytes);
-            const type = types[0]?.mime ?? "";
 
             const { width, height } = await new Promise<HTMLImageElement>((resolve) => {
                 const img = new Image();
@@ -264,7 +265,6 @@ export function TextArea({
 
                 name: file.name ?? "",
                 size: file.size,
-                type,
 
                 url: URL.createObjectURL(file),
                 proxyUrl: "",
@@ -293,14 +293,14 @@ export function TextArea({
             if ((e.dataTransfer?.items.length || 0) > 0 && !dragged) {
                 dragged = true;
 
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: {
-                        type: "WARNING",
-                        warning: "DRAG_FILE",
-                        channel: channel,
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: {
+                //         type: "WARNING",
+                //         warning: "DRAG_FILE",
+                //         channel: channel,
+                //     },
+                // });
             }
         }
 
@@ -309,7 +309,7 @@ export function TextArea({
             e.stopPropagation();
 
             if (dragged) {
-                setLayers({ settings: { type: "POPUP", setNull: true } });
+                // setLayers({ settings: { type: "POPUP", setNull: true } });
                 dragged = false;
             }
         }
@@ -324,12 +324,12 @@ export function TextArea({
                 const files = Array.from(e.dataTransfer?.files || []);
                 await handleFileSubmit(files, e);
 
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //         setNull: true,
+                //     },
+                // });
             }
         }
 
@@ -366,36 +366,43 @@ export function TextArea({
         }
 
         document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [edit, reply]);
 
     function sendMessage() {
-        let content = sanitizeString(message);
-
         if (!canSend) return;
-        if (content && content.length > 16000) {
-            return setLayers({
-                settings: { type: "POPUP" },
-                content: {
-                    type: "WARNING",
-                    warning: "MESSAGE_LIMIT",
-                },
-            });
+
+        if (text.length > 16000) {
+            // return setLayers({
+            //     settings: { type: "POPUP" },
+            //     content: {
+            //         type: "WARNING",
+            //         warning: "MESSAGE_LIMIT",
+            //     },
+            // });
         }
 
         const temp = {
             id: nanoid(),
-            content,
+            content: text,
             attachments,
             author: user,
             channelId: [channel.id],
             reference: reply?.messageId ?? null,
+            mentions: [],
             createdAt: new Date(),
             send: true,
         };
+
+        // Search for mentions, and add them to the mentions array if they exist
+        const mentions = text.match(/<@(\d+)>/g) || [];
+        for (const mention of mentions) {
+            const id = parseInt(mention.replace(/<@|>/g, ""));
+            const recipient = channel.recipients.find((r) => r.id === id);
+            if (recipient && !temp.mentions.map((m) => m.id).includes(recipient.id)) {
+                temp.mentions.push(recipient);
+            }
+        }
 
         // Reset the editor state
         // First set caret to the start of the editor and select nothing
@@ -406,16 +413,19 @@ export function TextArea({
         };
         editor.children = [{ type: "paragraph", children: [{ text: "" }] }];
 
+        if (edit && messageObject) {
+            setEdit(messageObject.id, null);
+        } else {
+            setDraft(channel.id, null);
+        }
+
         setAttachments([]);
         setMessages(temp);
 
         if (reply?.messageId) setReply(channel.id, null);
     }
 
-    function pasteText(text: string) {
-        Transforms.insertText(editor, text);
-        Transforms.move(editor);
-    }
+    // console.log("Text: ", text);
 
     const textContainer = (
         <div
@@ -426,40 +436,32 @@ export function TextArea({
                 ref={textAreaRef}
                 className={styles.textbox}
                 onContextMenu={(e) => {
-                    setLayers({
-                        settings: { type: "MENU", event: e },
-                        content: {
-                            type: "INPUT",
-                            input: true,
-                            sendButton: true,
-                            pasteText,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: { type: "MENU", event: e },
+                    //     content: {
+                    //         type: "INPUT",
+                    //         input: true,
+                    //         sendButton: true,
+                    //         pasteText,
+                    //     },
+                    // });
                 }}
             >
                 <Slate
                     editor={editor}
-                    initialValue={[
-                        {
-                            type: "paragraph",
-                            children: [{ text: (edit ? edit.content : draft?.content) || "" }],
-                        },
-                    ]}
+                    initialValue={JSON.parse(
+                        edit?.content || draft?.content || JSON.stringify(initialEditorValue)
+                    )}
                     onChange={(value) => {
-                        if (editor.operations.some((op: any) => "set_selection" !== op.type)) {
-                            const content = JSON.stringify(value);
-                            // localStorage.setItem('content', content)
-                            console.log(content);
-                        }
+                        // Get current text at cursor
+                        // const currentWord = Editor.string(editor, editor.selection);
 
-                        const text = Editor.string(editor, editor);
-                        console.log("Text: ", text);
+                        const json = JSON.stringify(value);
 
-                        setMessage(text);
                         if (edit && messageObject) {
-                            setEdit(messageObject.id, text);
+                            setEdit(messageObject.id, json);
                         } else {
-                            setDraft(channel.id, text);
+                            setDraft(channel.id, json);
                         }
 
                         const { selection } = editor;
@@ -611,7 +613,9 @@ export function TextArea({
                                         <div className={styles.displayName}>
                                             {recipient.displayName}
                                         </div>
-                                        <div className={styles.username}>{recipient.username}</div>
+                                        <div className={styles.username}>
+                                            {recipient.displayName}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -651,19 +655,19 @@ export function TextArea({
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                element: e.currentTarget,
-                                                firstSide: "TOP",
-                                                secondSide: "RIGHT",
-                                                gap: 10,
-                                            },
-                                            content: {
-                                                type: "FILE_INPUT",
-                                                openInput: () => fileInputRef.current?.click(),
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "MENU",
+                                        //         element: e.currentTarget,
+                                        //         firstSide: "TOP",
+                                        //         secondSide: "RIGHT",
+                                        //         gap: 10,
+                                        //     },
+                                        //     content: {
+                                        //         type: "FILE_INPUT",
+                                        //         openInput: () => fileInputRef.current?.click(),
+                                        //     },
+                                        // });
                                     }}
                                     onDoubleClick={(e) => {
                                         e.preventDefault();
@@ -750,21 +754,21 @@ export function TextArea({
                                     <span
                                         style={{
                                             color:
-                                                message.length > 16000
+                                                text.length > 16000
                                                     ? "var(--error-1)"
                                                     : "var(--foreground-3)",
                                         }}
                                     >
-                                        {message.length}
+                                        {text.length}
                                     </span>
                                     /16000
                                 </span>
                             </TooltipTrigger>
 
                             <TooltipContent>
-                                {message.length > 16000
+                                {text.length > 16000
                                     ? "Message is too long"
-                                    : `${16000 - message.length} characters remaining`}
+                                    : `${16000 - text.length} characters remaining`}
                             </TooltipContent>
                         </Tooltip>
                     </div>

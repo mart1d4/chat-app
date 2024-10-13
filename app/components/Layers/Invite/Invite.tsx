@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Avatar, Icon, LoadingDots } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData, useLayers } from "@/store";
 import styles from "./Invite.module.css";
+import { useData } from "@/store";
 
 export function InvitePopup({ content, closing }) {
     const [copied, setCopied] = useState(false);
@@ -19,7 +19,6 @@ export function InvitePopup({ content, closing }) {
     const [sentTo, setSentTo] = useState<number[]>([]);
     const [failed, setFailed] = useState<number[]>([]);
 
-    const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
     const { sendRequest } = useFetchHelper();
 
@@ -29,12 +28,12 @@ export function InvitePopup({ content, closing }) {
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                        setNull: true,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //         setNull: true,
+                //     },
+                // });
             }
         }
 
@@ -146,13 +145,14 @@ export function InvitePopup({ content, closing }) {
 
                 <button
                     className="button"
-                    onClick={() =>
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                                setNull: true,
-                            },
-                        })
+                    onClick={
+                        () => {}
+                        // setLayers({
+                        //     settings: {
+                        //         type: "POPUP",
+                        //         setNull: true,
+                        //     },
+                        // })
                     }
                 >
                     <svg

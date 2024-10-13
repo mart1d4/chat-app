@@ -230,7 +230,10 @@ CREATE TABLE IF NOT EXISTS `friends` (
     `B` BIGINT NOT NULL,
 
     UNIQUE KEY `friends_AB_idx` (`A`, `B`),
-    UNIQUE KEY `friends_BA_idx` (`B`, `A`)
+    UNIQUE KEY `friends_BA_idx` (`B`, `A`),
+
+	INDEX `idx_friends_a` (`A`),
+    INDEX `idx_friends_b` (`B`)
 ) ENGINE InnoDB,
   CHARSET utf8mb4,
   COLLATE utf8mb4_unicode_ci;
@@ -298,6 +301,51 @@ CREATE TABLE IF NOT EXISTS `channelmessages` (
 
     UNIQUE KEY `messages_channel_id_idx` (`channel_id`, `message_id`),
     KEY `messages_message_id_idx` (`message_id`)
+) ENGINE InnoDB,
+  CHARSET utf8mb4,
+  COLLATE utf8mb4_unicode_ci;
+
+  
+-- Message Mentions
+
+CREATE TABLE IF NOT EXISTS `usermentions` (
+	`message_id` BIGINT NOT NULL,
+	`user_id` BIGINT NOT NULL,
+
+	UNIQUE KEY `mentions_message_id_idx` (`message_id`, `user_id`),
+	KEY `mentions_user_id_idx` (`user_id`)
+) ENGINE InnoDB,
+  CHARSET utf8mb4,
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `rolementions` (
+	`message_id` BIGINT NOT NULL,
+	`role_id` BIGINT NOT NULL,
+
+	UNIQUE KEY `mentions_message_id_idx` (`message_id`, `role_id`),
+	KEY `mentions_role_id_idx` (`role_id`)
+) ENGINE InnoDB,
+  CHARSET utf8mb4,
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `channelmentions` (
+	`message_id` BIGINT NOT NULL,
+	`channel_id` BIGINT NOT NULL,
+
+	UNIQUE KEY `mentions_message_id_idx` (`message_id`, `channel_id`),
+	KEY `mentions_channel_id_idx` (`channel_id`)
+) ENGINE InnoDB,
+  CHARSET utf8mb4,
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `messagereactions` (
+	`message_id` BIGINT NOT NULL,
+	`user_id` BIGINT NOT NULL,
+	`emoji_id` BIGINT NOT NULL,
+
+	UNIQUE KEY `reactions_message_id_idx` (`message_id`, `user_id`, `emoji_id`),
+	KEY `reactions_user_id_idx` (`user_id`),
+	KEY `reactions_emoji_id_idx` (`emoji_id`)
 ) ENGINE InnoDB,
   CHARSET utf8mb4,
   COLLATE utf8mb4_unicode_ci;

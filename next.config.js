@@ -6,7 +6,7 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "f005.backblazeb2.com",
+                hostname: "utfs.io",
             },
         ],
     },

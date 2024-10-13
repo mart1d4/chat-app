@@ -1,10 +1,17 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
-import type { Users } from "@/lib/db/types";
 import styles from "./Message.module.css";
-import { Avatar } from "../Avatar/Avatar";
-import { useLayers } from "@/store";
+import type { User } from "@/type";
+import {
+    PopoverContent,
+    PopoverTrigger,
+    TooltipContent,
+    TooltipTrigger,
+    UserCard,
+    Tooltip,
+    Popover,
+    Avatar,
+} from "@components";
 
 export function UserMention({
     user,
@@ -12,16 +19,13 @@ export function UserMention({
     editor,
     fixed,
 }: {
-    user: Users;
+    user: User;
     full?: boolean;
     editor?: boolean;
     fixed?: boolean;
 }) {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
-
-    const userCardElement = layers.USER_CARD?.settings?.element;
-    const menuElement = layers.MENU?.settings?.element;
+    // const userCardElement = layers.USER_CARD?.settings?.element;
+    // const menuElement = layers.MENU?.settings?.element;
 
     const content = (
         <span
@@ -29,38 +33,11 @@ export function UserMention({
                 full ? `${styles.mention} ${editor ? styles.editor : ""}` : styles.inlineMention
             }
             style={{ pointerEvents: fixed ? "none" : "auto" }}
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (userCardElement === e.currentTarget || editor || fixed) {
-                    return;
-                }
-
-                setLayers({
-                    settings: {
-                        type: "USER_CARD",
-                        element: e.currentTarget,
-                        firstSide: "RIGHT",
-                        gap: 10,
-                    },
-                    content: {
-                        user: user,
-                    },
-                });
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (menuElement === e.currentTarget || editor || fixed) {
-                    return;
-                }
-
-                setLayers({
-                    settings: { type: "MENU", event: e },
-                    content: { type: "USER", user },
-                });
+            onContextMenu={() => {
+                // setLayers({
+                //     settings: { type: "MENU", event: e },
+                //     content: { type: "USER", user },
+                // });
             }}
         >
             {full && "@"}
@@ -78,7 +55,6 @@ export function UserMention({
                 <TooltipContent>
                     <Avatar
                         size={16}
-                        type="avatars"
                         src={user.avatar}
                         alt={user.displayName}
                     />
@@ -89,5 +65,13 @@ export function UserMention({
         );
     }
 
-    return content;
+    return (
+        <Popover placement="right-start">
+            <PopoverTrigger asChild>{content}</PopoverTrigger>
+
+            <PopoverContent>
+                <UserCard user={user} />
+            </PopoverContent>
+        </Popover>
+    );
 }

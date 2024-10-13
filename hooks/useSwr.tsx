@@ -1,10 +1,8 @@
 import { useRouter } from "next/navigation";
-import { useLayers } from "@/store";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function fetchHelper() {
-    const setLayers = useLayers((state) => state.setLayers);
     const router = useRouter();
 
     async function request(url: string, attempts = 1) {
@@ -40,10 +38,10 @@ export default function fetchHelper() {
 
                 return request(url, attempts + 1);
             } else if (response.status === 429) {
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: { type: "RATE_LIMIT" },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: { type: "RATE_LIMIT" },
+                // });
 
                 const retryAfter = response.headers.get("Retry-After");
                 const after = parseInt(retryAfter || "5") * 1000;

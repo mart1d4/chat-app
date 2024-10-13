@@ -1,5 +1,5 @@
 import { appMetadata } from "@/lib/metadata";
-import { ReactElement } from "react";
+import { type ReactElement } from "react";
 import type { Metadata } from "next";
 import "./global.css";
 
@@ -15,7 +15,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactElement }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                {/* For firefox */}
+                <script>0</script>
+
+                {children}
+            </body>
         </html>
     );
 }

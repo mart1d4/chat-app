@@ -1,11 +1,13 @@
 .tooltip {
     display: flex;
-    max-width: 220px;
     font-size: 14px;
-    line-height: 16px;
     font-weight: 500;
-    border-radius: 5px;
+    max-width: 220px;
     padding: 8px 12px;
+    line-height: 16px;
+    user-select: none;
+    border-radius: 5px;
+    width: fit-content;
     color: var(--foreground-2);
     box-shadow: var(--elevation-high);
     background-color: var(--background-dark-1);

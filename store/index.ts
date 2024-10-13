@@ -1,173 +1,12 @@
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { Channel, Guild, User } from "@/type";
 import { create } from "zustand";
+
 export { useData } from "./data";
-
-// Layers
-
-const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
-
-export const useLayers = create<LayersState>()((set, get) => ({
-    layers: {
-        POPUP: [],
-        MENU: null,
-        USER_CARD: null,
-        USER_PROFILE: null,
-    },
-
-    // Set Layers adds the closing property to the layer before setting it to null with reallySetLayers
-    setLayers: (layer, keepPopout) => {
-        let last: TLayer | null;
-
-        set((state) => {
-            if (layer.settings.type !== "MENU" && layer.settings.setNull) {
-                if (layer.settings.type === "POPUP") {
-                    const layers = state.layers.POPUP;
-                    last = layers[layers.length - 1];
-
-                    return {
-                        layers: {
-                            ...state.layers,
-                            POPUP: [
-                                ...layers.slice(0, layers.length - 1),
-                                {
-                                    ...last,
-                                    settings: {
-                                        ...last.settings,
-                                        closing: true,
-                                    },
-                                },
-                            ],
-                        },
-                    };
-                }
-
-                const current = state.layers[layer.settings.type];
-
-                return {
-                    layers: {
-                        ...state.layers,
-                        [layer.settings.type]: {
-                            ...current,
-                            settings: {
-                                ...current?.settings,
-                                closing: true,
-                            },
-                        },
-                    },
-                };
-            } else {
-                return state;
-            }
-        });
-
-        const noTimeout =
-            layer.settings.type === "MENU" ||
-            layer.settings.type === "USER_CARD" ||
-            !layer.settings.setNull ||
-            ["PINNED_MESSAGES", "CREATE_DM"].includes(last?.content?.type || "");
-
-        const timeout = setTimeout(
-            () => get().reallySetLayers(layer, keepPopout),
-            noTimeout ? 0 : 200
-        );
-
-        return () => clearTimeout(timeout);
-    },
-
-    reallySetLayers: ({ settings, content }, keepPopout) => {
-        set((state) => {
-            if (settings.type === "POPUP") {
-                if (!settings.setNull) {
-                    if (popoutTypes.includes(content.type)) {
-                        const first = state.layers.POPUP[0];
-
-                        if (
-                            first?.content?.type === content.type &&
-                            // Get both elements' data-name attribute and compare them
-                            first?.settings?.element?.getAttribute("data-name") ===
-                                settings.element?.getAttribute("data-name")
-                        ) {
-                            return {
-                                layers: {
-                                    ...state.layers,
-                                    POPUP: [],
-                                    MENU: null,
-                                },
-                            };
-                        }
-
-                        return {
-                            layers: {
-                                ...state.layers,
-                                POPUP: [{ settings, content }],
-                                MENU: null,
-                            },
-                        };
-                    }
-
-                    let newLayers = state.layers.POPUP;
-                    if (!keepPopout) {
-                        newLayers = newLayers.filter((l) => !popoutTypes.includes(l.content.type));
-                    }
-
-                    return {
-                        layers: {
-                            ...state.layers,
-                            POPUP: [...newLayers, { settings, content }],
-                            MENU: null,
-                        },
-                    };
-                } else {
-                    const layers = state.layers.POPUP;
-
-                    return {
-                        layers: {
-                            ...state.layers,
-                            POPUP: layers.slice(0, layers.length - 1),
-                            MENU: null,
-                        },
-                    };
-                }
-            }
-
-            if (settings.type !== "MENU") {
-                return {
-                    layers: {
-                        ...state.layers,
-                        [settings.type]: settings.setNull ? null : { settings, content },
-                        MENU: null,
-                    },
-                };
-            }
-
-            if (
-                settings.type !== "MENU" &&
-                state.layers.MENU?.settings?.element?.getAttribute("data-name") ===
-                    settings.element?.getAttribute("data-name")
-            ) {
-                return {
-                    layers: {
-                        ...state.layers,
-                        MENU: null,
-                    },
-                };
-            }
-
-            return {
-                layers: {
-                    ...state.layers,
-                    [settings.type]: settings.setNull ? null : { settings, content },
-                },
-            };
-        });
-    },
-}));
 
 // Settings
 
 type TSettings = {
-    language: "en" | "pl";
+    language: "en" | "fr";
     microphone: boolean;
     sound: boolean;
     camera: boolean;
@@ -521,16 +360,6 @@ export const useWindowSettings = create<WindowSettingsState>()((set) => ({
             },
         })),
     setShiftKeyDown: (val) => set(() => ({ shiftKeyDown: val })),
-}));
-
-interface PusherState {
-    pusher: any;
-    setPusher: (pusher: any) => void;
-}
-
-export const usePusher = create<PusherState>((set) => ({
-    pusher: null,
-    setPusher: (pusher) => set(() => ({ pusher })),
 }));
 
 interface CollapsedCategoriesState {

@@ -1,7 +1,7 @@
 "use client";
 
 import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
-import { useData, useLayers, useSettings, useShowSettings } from "@/store";
+import { useData, useSettings, useShowSettings } from "@/store";
 import styles from "./UserSection.module.css";
 import { Avatar, Icon } from "@components";
 import { statuses } from "@/lib/statuses";
@@ -10,9 +10,9 @@ import { useRef } from "react";
 export function UserSection() {
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const setSettings = useSettings((state) => state.setSettings);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const settings = useSettings((state) => state.settings);
-    const layers = useLayers((state) => state.layers);
+
     const user = useData((state) => state.user);
 
     const userSection = useRef<HTMLDivElement>(null);
@@ -24,45 +24,44 @@ export function UserSection() {
                     tabIndex={0}
                     ref={userSection}
                     className={
-                        styles.avatarWrapper +
-                        " " +
-                        (layers.USER_CARD?.settings.element === userSection.current &&
-                            styles.active)
+                        styles.avatarWrapper + " " + 2
+                        // (layers.USER_CARD?.settings.element === userSection.current &&
+                        //     styles.active)
                     }
                     onClick={(e) => {
-                        if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                        setLayers({
-                            settings: {
-                                type: "USER_CARD",
-                                element: e.currentTarget,
-                                firstSide: "TOP",
-                                secondSide: "RIGHT",
-                                gap: 14,
-                            },
-                            content: {
-                                user: user,
-                                animation: "off",
-                                settings: true,
-                            },
-                        });
+                        // if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                        // setLayers({
+                        //     settings: {
+                        //         type: "USER_CARD",
+                        //         element: e.currentTarget,
+                        //         firstSide: "TOP",
+                        //         secondSide: "RIGHT",
+                        //         gap: 14,
+                        //     },
+                        //     content: {
+                        //         user: user,
+                        //         animation: "off",
+                        //         settings: true,
+                        //     },
+                        // });
                     }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                            if (layers.USER_CARD?.settings.element === e.currentTarget) return;
-                            setLayers({
-                                settings: {
-                                    type: "USER_CARD",
-                                    element: e.currentTarget,
-                                    firstSide: "TOP",
-                                    secondSide: "RIGHT",
-                                    gap: 14,
-                                },
-                                content: {
-                                    user: user,
-                                    animation: "off",
-                                    settings: true,
-                                },
-                            });
+                            // if (layers.USER_CARD?.settings.element === e.currentTarget) return;
+                            // setLayers({
+                            //     settings: {
+                            //         type: "USER_CARD",
+                            //         element: e.currentTarget,
+                            //         firstSide: "TOP",
+                            //         secondSide: "RIGHT",
+                            //         gap: 14,
+                            //     },
+                            //     content: {
+                            //         user: user,
+                            //         animation: "off",
+                            //         settings: true,
+                            //     },
+                            // });
                         }
                     }}
                 >

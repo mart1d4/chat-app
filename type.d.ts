@@ -14,8 +14,7 @@ import type { Selectable } from "kysely";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
-export type MessageAuthor = Partial<Selectable<Users>> &
-    Pick<Users, "id" | "displayName" | "avatar">;
+export type UserLight = Pick<Selectable<Users>, "id" | "displayName" | "avatar">;
 
 export type Attachment = Attachments & {
     file: File;
@@ -35,8 +34,8 @@ export type Message = {
     channelId: number;
     createdAt: Date;
 
-    author: MessageAuthor;
-    userMentions: MessageAuthor[];
+    author: UserLight;
+    mentions: UserLight[];
     reference: Message | null;
 
     loading?: boolean;
@@ -111,7 +110,7 @@ export type Channel = Pick<Channels, "id" | "type" | "name" | "icon"> & {
 };
 
 export type User = Pick<
-    Users,
+    Selectable<Users>,
     | "id"
     | "username"
     | "displayName"
@@ -123,3 +122,50 @@ export type User = Pick<
     | "status"
     | "customStatus"
 >;
+
+// Fetch response types
+
+export type MutualGuildResponse = Pick<Guilds, "id" | "name" | "icon"> & {
+    memberCount?: {
+        all: number;
+        online: number;
+    };
+    userProfileAKA?: Users["username"];
+};
+
+export type MutualFriendResponse = Pick<Users, "id" | "displayName" | "avatar">;
+
+export type UserProfileResponse = Pick<
+    Selectable<Users>,
+    | "id"
+    | "username"
+    | "displayName"
+    | "avatar"
+    | "banner"
+    | "primaryColor"
+    | "accentColor"
+    | "description"
+    | "status"
+    | "customStatus"
+    | "createdAt"
+> & {
+    mutualGuilds: MutualGuildResponse[];
+    mutualFriends: MutualFriendResponse[];
+};
+
+export type MessageResponse = Pick<
+    Messages,
+    | "id"
+    | "type"
+    | "content"
+    | "attachments"
+    | "embeds"
+    | "edited"
+    | "pinned"
+    | "channelId"
+    | "createdAt"
+> & {
+    author: Pick<Users, "id" | "displayName" | "avatar">;
+    mentions: Pick<Users, "id" | "displayName" | "avatar">[];
+    reference?: MessageResponse;
+};

@@ -1,16 +1,25 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
-import type { Channel, ChannelRecipient, Guild } from "@/type";
+import type { Channel, ChannelRecipient, Guild, User } from "@/type";
 import { translateCap, sanitizeString } from "@/lib/strings";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useLayers, useSettings, useUrls } from "@/store";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
+import { useSettings, useUrls } from "@/store";
 import styles from "./MemberList.module.css";
 import { useRouter } from "next/navigation";
-import { Avatar, Icon } from "@components";
 import { UserItem } from "./UserItem";
+import {
+    PopoverContent,
+    TooltipContent,
+    TooltipTrigger,
+    PopoverTrigger,
+    UserCard,
+    Tooltip,
+    Popover,
+    Avatar,
+    Icon,
+} from "@components";
 
 const colors = {
     online: "#22A559",
@@ -42,8 +51,8 @@ export function MemberList({
     const [originalNote, setOriginalNote] = useState("");
     const [note, setNote] = useState("");
 
-    const [mutualFriends, setMutualFriends] = useState([]);
-    const [mutualGuilds, setMutualGuilds] = useState([]);
+    const [mutualFriends, setMutualFriends] = useState<User>([]);
+    const [mutualGuilds, setMutualGuilds] = useState<Guild>([]);
 
     const settings = useSettings((state) => state.settings);
     const { sendRequest } = useFetchHelper();
@@ -59,25 +68,21 @@ export function MemberList({
         async function getNote() {
             if (!friend) return;
 
-            const response = await sendRequest({
+            const { data } = await sendRequest({
                 query: "GET_NOTE",
                 params: { userId: friend.id },
             });
 
-            const data = await response.json();
-
-            if (response?.ok) {
+            if (data) {
                 setNote(data.note);
                 setOriginalNote(data.note);
-            } else {
-                console.error(data.errors);
             }
         }
 
         async function getMutuals() {
             if (!friend) return;
 
-            const response = await sendRequest({
+            const { data } = await sendRequest({
                 query: "GET_USER_PROFILE",
                 params: {
                     userId: friend.id,
@@ -86,14 +91,9 @@ export function MemberList({
                 },
             });
 
-            const data = await response.json();
-
-            if (response?.ok) {
-                const user = data.data.user;
-                setMutualFriends(user.mutualFriends ?? []);
-                setMutualGuilds(user.mutualGuilds ?? []);
-            } else {
-                console.error(data.errors);
+            if (data) {
+                setMutualFriends(data.mutualFriends);
+                setMutualGuilds(data.mutualGuilds);
             }
         }
 
@@ -187,8 +187,8 @@ export function MemberList({
                                             width="100%"
                                             rx={8}
                                             ry={8}
-                                            fill={colors[friend.status ?? "offline"]}
-                                            mask={`url(#${masks[friend.status ?? "offline"]})`}
+                                            fill={colors[friend.status]}
+                                            mask={`url(#${masks[friend.status]})`}
                                         />
                                     </svg>
                                 </div>
@@ -292,7 +292,7 @@ export function MemberList({
 
                                 {showGuilds && (
                                     <ul className={styles.mutualItems}>
-                                        {mutualGuilds.map((guild: TGuild) => (
+                                        {mutualGuilds.map((guild: Guild) => (
                                             <MutualItem
                                                 key={guild.id}
                                                 guild={guild}
@@ -315,21 +315,27 @@ export function MemberList({
                                     </div>
 
                                     <div>
-                                        <Icon
-                                            name="chevron"
-                                            size={24}
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            height="24"
+                                            width="24"
                                             style={{
-                                                transform: `rotate(${
-                                                    !showFriends ? "-90deg" : "0deg"
-                                                })`,
+                                                transform: showFriends ? "rotate(90deg)" : "",
                                             }}
-                                        />
+                                        >
+                                            <path
+                                                fill="currentColor"
+                                                d="M9.3 5.3a1 1 0 0 0 0 1.4l5.29 5.3-5.3 5.3a1 1 0 1 0 1.42 1.4l6-6a1 1 0 0 0 0-1.4l-6-6a1 1 0 0 0-1.42 0Z"
+                                            />
+                                        </svg>
                                     </div>
                                 </button>
 
                                 {showFriends && (
                                     <ul className={styles.mutualItems}>
-                                        {mutualFriends.map((friend: TCleanUser) => (
+                                        {mutualFriends.map((friend) => (
                                             <MutualItem
                                                 key={friend.id}
                                                 user={friend}
@@ -344,7 +350,7 @@ export function MemberList({
             </aside>
         );
     } else {
-        let online, offline: TCleanUser[];
+        let online, offline: User[];
 
         if (guild) {
             online = recipients.filter((r) =>
@@ -396,141 +402,87 @@ export function MemberList({
     }
 }
 
-function MutualItem({ user, guild }: { user?: TCleanUser; guild?: TGuild }) {
-    if (!user && !guild) return <></>;
-    const setLayers = useLayers((state) => state.setLayers);
+function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
+    if (!user && !guild) return null;
+
     const urls = useUrls((state) => state.guilds);
     const router = useRouter();
 
     let url: string | null = null;
+
     if (guild) {
         const guildUrl = urls.find((u) => u.guildId === guild.id);
         if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
     }
 
     return (
-        <div
-            tabIndex={0}
-            className={styles.mutualItem}
-            onClick={() => {
-                if (user) {
-                    setLayers({
-                        settings: {
-                            type: "USER_PROFILE",
-                        },
-                        content: {
-                            user,
-                        },
-                    });
-                } else if (guild) {
-                    router.push(url || `/channels/${guild.id}`);
-                }
-            }}
-            onContextMenu={(e) => {
-                if (user) {
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "USER",
-                            user: user,
-                        },
-                    });
-                } else if (guild) {
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            event: e,
-                        },
-                        content: {
-                            type: "GUILD_ICON",
-                            guild: guild,
-                        },
-                    });
-                }
-            }}
-            onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    if (user) {
-                        setLayers({
-                            settings: {
-                                type: "USER_PROFILE",
-                            },
-                            content: {
-                                user,
-                            },
-                        });
-                    } else if (guild) {
-                        router.push(url || `/channels/${guild.id}`);
-                    }
-                } else if (e.key === "Enter") {
-                    if (user) {
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                element: e.currentTarget,
-                                firstSide: "LEFT",
-                            },
-                            content: {
-                                type: "USER",
-                                user: user,
-                            },
-                        });
-                    } else if (guild) {
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                element: e.currentTarget,
-                                firstSide: "LEFT",
-                            },
-                            content: {
-                                type: "GUILD_ICON",
-                                guild: guild,
-                            },
-                        });
-                    }
-                }
-            }}
-        >
-            <div>
-                {user && (
-                    <Avatar
-                        src={user.avatar}
-                        alt={user.username}
-                        type="avatars"
-                        size={40}
-                        status={user.status}
-                    />
-                )}
-
-                {guild && (
-                    <div
-                        className={styles.guildIcon}
-                        style={{ backgroundColor: guild.icon ? "transparent" : "" }}
-                    >
-                        {guild.icon ? (
+        <Popover placement="left-start">
+            <PopoverTrigger asChild>
+                <div
+                    tabIndex={0}
+                    className={styles.mutualItem}
+                    onClick={() => {
+                        if (user) {
+                        } else if (guild) {
+                            router.push(url || `/channels/${guild.id}`);
+                        }
+                    }}
+                    onContextMenu={(e) => {
+                        //     setLayers({
+                        //         settings: {
+                        //             type: "MENU",
+                        //             event: e,
+                        //         },
+                        //         content: {
+                        //             type: "GUILD_ICON",
+                        //             guild: guild,
+                        //         },
+                        //     });
+                    }}
+                >
+                    <div>
+                        {user && (
                             <Avatar
-                                src={guild.icon}
-                                alt={guild.name}
-                                type="icons"
+                                src={user.avatar}
+                                alt={user.username}
+                                type="avatars"
                                 size={40}
+                                status={user.status}
                             />
-                        ) : (
-                            guild.name
-                                .toLowerCase()
-                                .match(/\b(\w)/g)
-                                ?.join("") ?? ""
+                        )}
+
+                        {guild && (
+                            <div
+                                className={styles.guildIcon}
+                                style={{ backgroundColor: guild.icon ? "transparent" : "" }}
+                            >
+                                {guild.icon ? (
+                                    <Avatar
+                                        src={guild.icon}
+                                        alt={guild.name}
+                                        type="icons"
+                                        size={40}
+                                    />
+                                ) : (
+                                    guild.name
+                                        .toLowerCase()
+                                        .match(/\b(\w)/g)
+                                        ?.join("") ?? ""
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
-            </div>
 
-            <div>
-                {user && user.displayName}
-                {guild && guild.name}
-            </div>
-        </div>
+                    <div>
+                        {user && user.displayName}
+                        {guild && guild.name}
+                    </div>
+                </div>
+            </PopoverTrigger>
+
+            <PopoverContent>
+                {user ? <UserCard user={user} /> : <div>{guild?.description}</div>}
+            </PopoverContent>
+        </Popover>
     );
 }

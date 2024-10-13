@@ -27,10 +27,10 @@ export const UserProfile = ({
     const requestsReceived = useData((state) => state.received);
     const currentUser = useData((state) => state.user);
     const requestsSent = useData((state) => state.sent);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const friends = useData((state) => state.friends);
     const blocked = useData((state) => state.blocked);
-    const layers = useLayers((state) => state.layers);
+
     const guilds = useData((state) => state.guilds);
     const { sendRequest } = useFetchHelper();
 
@@ -56,18 +56,18 @@ export const UserProfile = ({
     }, [user]);
 
     useEffect(() => {
-        const getNote = async () => {
+        async function getNote() {
             const response = await sendRequest({
                 query: "GET_NOTE",
                 params: { userId: user.id },
             });
 
-            if (response?.ok) {
+            if (response.ok) {
                 const data = await response.json();
                 setNote(data.note);
                 setOriginalNote(data.note);
             }
-        };
+        }
 
         getNote();
     }, []);
@@ -75,7 +75,7 @@ export const UserProfile = ({
     const sectionNavItems = isSameUser
         ? ["User Info"]
         : ["User Info", "Mutual Servers", "Mutual Friends"];
-    if (!user || layers.POPUP.length > 0) return null;
+    // if (!user || layers.POPUP.length > 0) return null;
 
     return (
         <div
@@ -243,12 +243,12 @@ export const UserProfile = ({
                                                         recipients: [user.id],
                                                     },
                                                 });
-                                                setLayers({
-                                                    settings: {
-                                                        type: "USER_PROFILE",
-                                                        setNull: true,
-                                                    },
-                                                });
+                                                // setLayers({
+                                                //     settings: {
+                                                //         type: "USER_PROFILE",
+                                                //         setNull: true,
+                                                //     },
+                                                // });
                                             }}
                                         >
                                             Send Message
@@ -305,14 +305,14 @@ export const UserProfile = ({
                                 className={styles.moreButton}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setLayers({
-                                        settings: { type: "MENU", event: e },
-                                        content: {
-                                            type: "USER",
-                                            user: user,
-                                            userprofile: true,
-                                        },
-                                    });
+                                    // setLayers({
+                                    //     settings: { type: "MENU", event: e },
+                                    //     content: {
+                                    //         type: "USER",
+                                    //         user: user,
+                                    //         userprofile: true,
+                                    //     },
+                                    // });
                                 }}
                             >
                                 <Icon name="more" />
@@ -483,7 +483,7 @@ export const UserProfile = ({
 
 function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
     if (!friend && !guild) return <></>;
-    const setLayers = useLayers((state) => state.setLayers);
+
     const urls = useUrls((state) => state.guilds);
     const router = useRouter();
 
@@ -497,37 +497,37 @@ function FriendItem({ friend, guild }: { friend?: User; guild?: Guild }) {
         <button
             className={styles.userItem}
             onClick={() => {
-                if (friend) {
-                    setLayers({
-                        settings: {
-                            type: "USER_PROFILE",
-                        },
-                        content: {
-                            user: friend,
-                        },
-                    });
-                } else if (guild) {
-                    router.push(url || `/channels/${guild.id}`);
-                    setLayers({
-                        settings: {
-                            type: "USER_PROFILE",
-                            setNull: true,
-                        },
-                    });
-                }
+                // if (friend) {
+                //     setLayers({
+                //         settings: {
+                //             type: "USER_PROFILE",
+                //         },
+                //         content: {
+                //             user: friend,
+                //         },
+                //     });
+                // } else if (guild) {
+                //     router.push(url || `/channels/${guild.id}`);
+                //     setLayers({
+                //         settings: {
+                //             type: "USER_PROFILE",
+                //             setNull: true,
+                //         },
+                //     });
+                // }
             }}
             onContextMenu={(e) => {
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: friend ? "USER" : "GUILD_ICON",
-                        user: friend,
-                        guild: guild,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "MENU",
+                //         event: e,
+                //     },
+                //     content: {
+                //         type: friend ? "USER" : "GUILD_ICON",
+                //         user: friend,
+                //         guild: guild,
+                //     },
+                // });
             }}
         >
             <div>

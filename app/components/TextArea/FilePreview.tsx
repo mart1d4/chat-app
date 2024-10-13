@@ -17,8 +17,6 @@ export function FilePreview({
 }) {
     const [hideSpoiler, setHideSpoiler] = useState(false);
 
-    const setLayers = useLayers((state) => state.setLayers);
-
     const spoiler = attachment.spoiler;
     const isImage = isFileImage(attachment.type);
 
@@ -97,14 +95,14 @@ export function FilePreview({
                             <button
                                 className={styles.fileMenuButton}
                                 onClick={() => {
-                                    setLayers({
-                                        settings: { type: "POPUP" },
-                                        content: {
-                                            type: "FILE_EDIT",
-                                            file: attachment,
-                                            handleFileChange,
-                                        },
-                                    });
+                                    // setLayers({
+                                    //     settings: { type: "POPUP" },
+                                    //     content: {
+                                    //         type: "FILE_EDIT",
+                                    //         file: attachment,
+                                    //         handleFileChange,
+                                    //     },
+                                    // });
                                 }}
                             >
                                 <Icon

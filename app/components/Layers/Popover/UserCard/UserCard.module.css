@@ -1,0 +1,274 @@
+.container {
+    gap: 8px;
+    width: 300px;
+    display: flex;
+    overflow: hidden;
+    min-height: 220px;
+    border-radius: 8px;
+    position: relative;
+    flex-direction: column;
+    max-height: calc(100vh - 28px);
+    background-color: var(--background-1);
+}
+
+.loading {
+    width: 300px;
+    height: 200px;
+    display: flex;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-1);
+}
+
+.container > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px 8px 0 0;
+    max-height: calc(100vh - 28px);
+}
+
+.container > header {
+    padding-bottom: 35px;
+}
+
+.banner {
+    z-index: 0;
+    contain: paint;
+    overflow: hidden;
+    min-width: 300px;
+    min-height: 105px;
+}
+
+.banner foreignObject > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    font-size: 12px;
+}
+
+.banner .background {
+    position: inherit;
+    border-radius: 3px 3px 0 0;
+    width: 100%;
+    display: inline-block;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+}
+
+.avatar {
+    top: 61px;
+    left: 16px;
+    z-index: 0;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 50%;
+}
+
+.avatar > div {
+    border-radius: 50%;
+}
+
+.avatar svg {
+    height: 92;
+    width: auto;
+    display: block;
+    content: paint;
+    overflow: hidden;
+    position: absolute;
+    pointer-events: none;
+    overflow-clip-margin: content-box;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    overflow: clip;
+    cursor: pointer;
+    grid-area: 1 / 1;
+    object-fit: cover;
+    pointer-events: none;
+    overflow-clip-margin: content-box;
+}
+
+.avatar foreignObject {
+    overflow: hidden;
+    border-radius: 50%;
+}
+
+.avatar rect {
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: 0px 0px;
+}
+
+.overlay {
+    width: 100%;
+    height: 100%;
+    display: grid;
+}
+
+.overlay::after {
+    top: -1;
+    right: -1;
+    opacity: 0;
+    z-index: 0;
+    content: "";
+    width: 102%;
+    height: 102%;
+    border-radius: 50%;
+    position: absolute;
+    pointer-events: none;
+    background-color: #11111b;
+}
+
+.avatar:hover .overlay::after {
+    opacity: 0.4;
+}
+
+.content {
+    gap: 12px;
+    display: flex;
+    padding: 4px 16px;
+    flex-direction: column;
+}
+
+.message {
+    padding: 4px 16px 16px;
+}
+
+.message > input {
+    height: 40px;
+    outline: none;
+    padding: 0 10px;
+    border-radius: 4px;
+    background-color: var(--background-3);
+}
+
+.editProfile {
+    padding: 0 16px 16px;
+}
+
+.editProfile > button {
+    gap: 6px;
+    height: 32px;
+    background-color: var(--background-6);
+}
+
+.editProfile > button:hover {
+    background-color: var(--background-5);
+}
+
+.content > :first-child > :first-child {
+    gap: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.content h1 {
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1.2;
+    font-weight: 700;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.content h1:hover {
+    text-decoration: underline;
+}
+
+.content > :first-child > :nth-child(2) {
+    gap: 8px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+}
+
+.content > :first-child > :nth-child(2) > p {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    text-overflow: clip;
+    word-break: break-all;
+}
+
+.content > :first-child > :nth-child(2) > p:hover {
+    text-decoration: underline;
+}
+
+.note {
+    display: flex;
+    cursor: pointer;
+    color: var(--fg-3);
+    visibility: hidden;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+
+.note:hover {
+    color: var(--fg-1);
+}
+
+.container:hover .note {
+    visibility: visible;
+}
+
+.mutuals {
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.mutuals > section {
+    gap: 4px;
+    display: flex;
+    cursor: pointer;
+}
+
+.mutuals > section:hover {
+    text-decoration: underline;
+}
+
+.mutuals p {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--fg-2);
+}
+
+.avatars {
+    flex-grow: 0;
+    display: flex;
+    position: relative;
+    align-items: center;
+}
+
+.avatars > div:not(:last-child) {
+    mask: url(/assets/avatars/mask-list-16.svg);
+    mask-size: 100%;
+    mask-type: alpha;
+}
+
+.avatars > div:not(:first-child) {
+    margin-left: -2px;
+}
+
+.dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--fg-2);
+}
+
+.description {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.285;
+}

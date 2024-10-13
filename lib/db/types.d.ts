@@ -155,6 +155,27 @@ export interface GuildMembers {
     profile: JSONColumnType<MembersProfile>;
 }
 
+export interface UserMentions {
+    messageId: number;
+    userId: number;
+}
+
+export interface RoleMentions {
+    messageId: number;
+    roleId: number;
+}
+
+export interface ChannelMentions {
+    messageId: number;
+    channelId: number;
+}
+
+export interface MessageReactions {
+    messageId: number;
+    emojiId: number;
+    userId: number;
+}
+
 export interface DB {
     blocked: Blocked;
     channelmessages: ChannelMessages;
@@ -169,6 +190,10 @@ export interface DB {
     requests: Requests;
     roles: Roles;
     users: Users;
+    usermentions: UserMentions;
+    rolementions: RoleMentions;
+    channelmentions: ChannelMentions;
+    messagereactions: MessageReactions;
 }
 
 // Types created manually

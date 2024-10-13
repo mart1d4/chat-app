@@ -7,7 +7,6 @@ export function MyAccount({ setActiveTab }: any) {
     return null;
     const [showTooltip, setShowTooltip] = useState(false);
 
-    const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user);
 
     const usernameRef = useRef<HTMLDivElement>(null);
@@ -45,14 +44,14 @@ export function MyAccount({ setActiveTab }: any) {
             value: user.username,
             edit: true,
             func: () => {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
-                    content: {
-                        type: "UPDATE_USERNAME",
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //     },
+                //     content: {
+                //         type: "UPDATE_USERNAME",
+                //     },
+                // });
             },
         },
         {
@@ -157,14 +156,14 @@ export function MyAccount({ setActiveTab }: any) {
                     className="button blue"
                     style={{ marginBottom: "28px" }}
                     onClick={() => {
-                        setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
-                            content: {
-                                type: "UPDATE_PASSWORD",
-                            },
-                        });
+                        // setLayers({
+                        //     settings: {
+                        //         type: "POPUP",
+                        //     },
+                        //     content: {
+                        //         type: "UPDATE_PASSWORD",
+                        //     },
+                        // });
                     }}
                 >
                     Change Password

@@ -1,0 +1,11 @@
+.popover {
+    z-index: 1000;
+    max-width: 100%;
+    outline: none !important;
+}
+
+@media (max-width: 480px) {
+    .popover {
+        transform: none !important;
+    }
+}

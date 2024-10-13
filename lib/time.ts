@@ -35,12 +35,22 @@ export function getShortDate(date: Date) {
 }
 
 export function getDayDate(date: Date) {
+    if (typeof date === "string") {
+        date = new Date(date);
+    }
+
+    if (new Date().getDate() === date.getDate()) {
+        return "Today";
+    } else if (new Date().getDate() - date.getDate() === 1) {
+        return "Yesterday";
+    }
+
     return new Intl.DateTimeFormat("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
         year: "numeric",
-    }).format(new Date(date));
+    }).format(date);
 }
 
 export function getRelativeDate(date: Date) {

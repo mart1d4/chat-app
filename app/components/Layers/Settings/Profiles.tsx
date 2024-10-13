@@ -7,7 +7,6 @@ import { getButtonColor } from "@/lib/getColors";
 import { getRandomAvatar } from "@/lib/avatars";
 import { useData, useLayers } from "@/store";
 import styles from "./Settings.module.css";
-import filetypeinfo from "magic-bytes.js";
 import type { User } from "@/type";
 import Image from "next/image";
 
@@ -15,7 +14,6 @@ const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/apng", 
 const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function Profiles() {
-    const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user) as User;
     const setUser = useData((state) => state.setUser);
     const { sendRequest } = useFetchHelper();
@@ -268,27 +266,13 @@ export function Profiles() {
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            setLayers({
-                                settings: { type: "POPUP" },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_SIZE",
-                                },
-                            });
-                            return (e.target.value = "");
-                        }
-
-                        const fileBytes = new Uint8Array(await file.arrayBuffer());
-                        const fileType = filetypeinfo(fileBytes)?.[0].mime?.toString();
-
-                        if (!fileType || !allowedFileTypes.includes(fileType)) {
-                            setLayers({
-                                settings: { type: "POPUP" },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_TYPE",
-                                },
-                            });
+                            // setLayers({
+                            //     settings: { type: "POPUP" },
+                            //     content: {
+                            //         type: "WARNING",
+                            //         warning: "FILE_SIZE",
+                            //     },
+                            // });
                             return (e.target.value = "");
                         }
 
@@ -314,27 +298,13 @@ export function Profiles() {
                         // Run checks
                         const maxFileSize = 1024 * 1024 * 10; // 10MB
                         if (file.size > maxFileSize) {
-                            setLayers({
-                                settings: { type: "POPUP" },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_SIZE",
-                                },
-                            });
-                            return (e.target.value = "");
-                        }
-
-                        const fileBytes = new Uint8Array(await file.arrayBuffer());
-                        const fileType = filetypeinfo(fileBytes);
-
-                        if (!fileType || !allowedFileTypes.includes(fileType[0].mime as string)) {
-                            setLayers({
-                                settings: { type: "POPUP" },
-                                content: {
-                                    type: "WARNING",
-                                    warning: "FILE_TYPE",
-                                },
-                            });
+                            // setLayers({
+                            //     settings: { type: "POPUP" },
+                            //     content: {
+                            //         type: "WARNING",
+                            //         warning: "FILE_SIZE",
+                            //     },
+                            // });
                             return (e.target.value = "");
                         }
 

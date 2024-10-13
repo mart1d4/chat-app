@@ -67,57 +67,59 @@ export const AppNav = () => {
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
-                <NavIcon
-                    special={true}
-                    name="Direct Messages"
-                    link={"/channels/me"}
-                    svg={chatAppIcon}
-                />
-
-                {filteredChannels.map((channel) => (
+                <div>
                     <NavIcon
-                        key={channel.id}
-                        name={channel.name}
-                        link={`/channels/me/${channel.id}`}
-                        src={`${process.env.NEXT_PUBLIC_CDN_URL}/${channel.icon}/`}
-                        count={pings.find((p) => p.channelId === channel.id)?.amount}
-                        user={channel.recipients.find((r) => r.id !== user.id)}
+                        special={true}
+                        name="Direct Messages"
+                        link={"/channels/me"}
+                        svg={chatAppIcon}
                     />
-                ))}
 
-                <div className={styles.listItem}>
-                    <div className={styles.separator} />
+                    {filteredChannels.map((channel) => (
+                        <NavIcon
+                            key={channel.id}
+                            name={channel.name}
+                            link={`/channels/me/${channel.id}`}
+                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${channel.icon}/`}
+                            count={pings.find((p) => p.channelId === channel.id)?.amount}
+                            user={channel.recipients.find((r) => r.id !== user.id)}
+                        />
+                    ))}
+
+                    <div className={styles.listItem}>
+                        <div className={styles.separator} />
+                    </div>
+
+                    {guilds.map((guild) => (
+                        <NavIcon
+                            key={guild.id}
+                            name={guild.name}
+                            guild={guild}
+                            link={`/channels/${guild.id}`}
+                            src={
+                                guild.icon
+                                    ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`
+                                    : undefined
+                            }
+                            count={0}
+                        />
+                    ))}
+
+                    <NavIcon
+                        green
+                        count={0}
+                        name="Add a Server"
+                        svg={addServerIcon}
+                        link={"/channels/add"}
+                    />
                 </div>
 
-                {guilds.map((guild) => (
-                    <NavIcon
-                        key={guild.id}
-                        name={guild.name}
-                        guild={guild}
-                        link={`/channels/${guild.id}`}
-                        src={
-                            guild.icon
-                                ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`
-                                : undefined
-                        }
-                        count={0}
-                    />
-                ))}
-
                 <NavIcon
-                    green={true}
-                    name="Add a Server"
-                    link={"/channels/add"}
-                    svg={addServerIcon}
+                    green
                     count={0}
-                />
-
-                <NavIcon
-                    green={true}
-                    name="Explore Discoverable Servers"
-                    link={"/channels/discover"}
                     svg={discoverIcon}
-                    count={0}
+                    link={"/channels/discover"}
+                    name="Explore Discoverable Servers"
                 />
             </ul>
         </nav>

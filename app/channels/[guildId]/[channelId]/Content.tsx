@@ -2,9 +2,9 @@
 
 import type { Channel, Guild, Message as TMessage } from "@/type";
 import { Message, TextArea, MessageSk, Icon } from "@components";
-import { useLayers, useShowSettings, useUrls } from "@/store";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
+import { useShowSettings, useUrls } from "@/store";
 import { useRef, useEffect, useMemo } from "react";
 import { isLarge, isNewDay } from "@/lib/message";
 import styles from "./Channels.module.css";
@@ -45,15 +45,15 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
         }
     );
 
-    const messages = data ? data.flat().reverse() : [];
-    const hasMore = messages.length % limit === 0;
+    const messages = data?.flat().reverse() || [];
+    const hasMore = true;
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
     const setChannelUrl = useUrls((state) => state.setMe);
-    const shouldLoad = useIntersection(skeletonEl, -100);
+    const shouldLoad = useIntersection(skeletonEl, -150);
 
     document.title = `${channel.name} | ${guild.name} | Spark`;
     setChannelUrl(channel.id.toString());
@@ -80,9 +80,16 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
     });
 
     useEffect(() => {
+        console.log("Should load", shouldLoad);
+        console.log("Has more", hasMore);
+        console.log("Is loading", isLoading);
+        console.log("Messages length", messages.length);
+
         const load = shouldLoad && hasMore && !isLoading && messages.length > 0;
         if (load) setSize(size + 1);
-    }, [shouldLoad]);
+    }, [shouldLoad, hasMore, isLoading, messages.length]);
+
+    console.log("Has more", hasMore);
 
     return useMemo(
         () => (
@@ -102,7 +109,7 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
                     >
                         <div>
                             <ol>
-                                {hasMore || (isLoading && !messages.length) ? (
+                                {hasMore || isLoading ? (
                                     <div ref={hasMore ? skeletonEl : undefined}>
                                         <MessageSk />
                                     </div>
@@ -130,20 +137,23 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
                                                 sendingMessage = true;
 
                                                 if (type === "add") {
-                                                    mutate((prev) => [message, ...(prev || [])], {
+                                                    mutate((prev) => [message, ...prev], {
                                                         revalidate: false,
                                                     });
                                                 } else if (type === "update") {
                                                     mutate(
-                                                        (prev) => {
-                                                            return prev?.map((a) =>
-                                                                a.map((m) =>
-                                                                    m.id === message.id
-                                                                        ? message
-                                                                        : m
-                                                                )
-                                                            );
-                                                        },
+                                                        (prev) =>
+                                                            prev?.map((m) =>
+                                                                m.id === id ? message : m
+                                                            ),
+                                                        { revalidate: false }
+                                                    );
+                                                } else if (type === "delete") {
+                                                    mutate(
+                                                        (prev) =>
+                                                            prev?.map((a) =>
+                                                                a.filter((m) => m.id !== id)
+                                                            ),
                                                         { revalidate: false }
                                                     );
                                                 }
@@ -183,7 +193,6 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
 
 export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channel }) {
     const setShowSettings = useShowSettings((s) => s.setShowSettings);
-    const setLayers = useLayers((s) => s.setLayers);
 
     const content = [
         {
@@ -191,14 +200,14 @@ export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channe
             icon: "/assets/system/invite.svg",
             completed: guild.members.length > 1,
             onClick: () => {
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: {
-                        type: "GUILD_INVITE",
-                        guild: guild,
-                        channel: channel,
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: {
+                //         type: "GUILD_INVITE",
+                //         guild: guild,
+                //         channel: channel,
+                //     },
+                // });
             },
         },
         {

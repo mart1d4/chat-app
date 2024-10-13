@@ -8,9 +8,6 @@ import styles from "./Layer.module.css";
 const popoutTypes = ["PINNED_MESSAGES", "CREATE_DM"];
 
 export function Layers() {
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
-
     const showFilter =
         layers.POPUP.find((obj) => !popoutTypes.includes(obj.content.type)) ||
         layers.USER_PROFILE !== null;
@@ -47,12 +44,12 @@ export function Layers() {
                     className={styles.filter}
                     onClick={() => {
                         if (layers.USER_PROFILE || layers.POPUP.length) {
-                            setLayers({
-                                settings: {
-                                    type: layers.POPUP.length ? "POPUP" : "USER_PROFILE",
-                                    setNull: true,
-                                },
-                            });
+                            // setLayers({
+                            //     settings: {
+                            //         type: layers.POPUP.length ? "POPUP" : "USER_PROFILE",
+                            //         setNull: true,
+                            //     },
+                            // });
                         }
                     }}
                     style={{ animationName: closing ? styles.fadeOut : "" }}
@@ -100,9 +97,6 @@ function Layer({
 }) {
     const [transform, setTransform] = useState<string>("");
     const [currentNode, setCurrentNode] = useState<HTMLElement | null>(null);
-
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
 
     const firstSide = settings.firstSide;
     const secondSide = settings.secondSide;
@@ -209,12 +203,12 @@ function Layer({
             if (e.key === "Escape") {
                 if (settings.type === "POPUP") return;
                 if (settings.type !== "MENU" && layers.MENU) return;
-                setLayers({
-                    settings: {
-                        type: settings.type,
-                        setNull: true,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: settings.type,
+                //         setNull: true,
+                //     },
+                // });
             }
         };
 

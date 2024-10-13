@@ -1,329 +1,287 @@
-// @ts-nocheck
+import {
+    useFloatingParentNodeId,
+    FloatingFocusManager,
+    useFloatingNodeId,
+    useListNavigation,
+    useFloatingTree,
+    useInteractions,
+    FloatingPortal,
+    FloatingNode,
+    FloatingList,
+    FloatingTree,
+    useTypeahead,
+    useMergeRefs,
+    safePolygon,
+    useFloating,
+    useListItem,
+    autoUpdate,
+    useDismiss,
+    useClick,
+    useHover,
+    useRole,
+    offset,
+    shift,
+    flip,
+} from "@floating-ui/react";
+import {
+    createContext,
+    forwardRef,
+    useContext,
+    useEffect,
+    useState,
+    useRef,
+    type ButtonHTMLAttributes,
+    type SetStateAction,
+    type HTMLProps,
+    type ReactNode,
+    type Dispatch,
+} from "react";
 
-"use client";
+const MenuContext = createContext<{
+    getItemProps: (userProps?: HTMLProps<HTMLElement>) => Record<string, unknown>;
+    activeIndex: number | null;
+    setActiveIndex: Dispatch<SetStateAction<number | null>>;
+    setHasFocusInside: Dispatch<SetStateAction<boolean>>;
+    isOpen: boolean;
+}>({
+    getItemProps: () => ({}),
+    activeIndex: null,
+    setActiveIndex: () => {},
+    setHasFocusInside: () => {},
+    isOpen: false,
+});
 
-import { useData, useLayers, useMention, useSettings, useShowSettings } from "@/store";
-import { useEffect, useRef, useMemo, ReactElement } from "react";
-import { Icon, LoadingCubes, LoadingDots } from "@components";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { MenuItems } from "./MenuItems";
-import styles from "./Menu.module.css";
+interface MenuProps {
+    label: string;
+    icon?: ReactNode;
+    nested?: boolean;
+    children?: ReactNode;
+}
 
-const colors = ["#22A559", "", "#F0B232", "#F23F43", "#80848E"];
-const masks = ["", "", "status-mask-idle", "status-mask-dnd", "status-mask-offline"];
+export const MenuComponent = forwardRef<
+    HTMLButtonElement,
+    MenuProps & HTMLProps<HTMLButtonElement>
+>(({ children, label, ...props }, forwardedRef) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [hasFocusInside, setHasFocusInside] = useState(false);
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-export function Menu({
-    content,
-    element,
-}: {
-    content: {
-        [x: string]: any;
-        type: any;
-    };
-    element: ReactElement;
-}) {
-    const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const setSettings = useSettings((state) => state.setSettings);
-    const setMention = useMention((state) => state.setMention);
-    const setLayers = useLayers((state) => state.setLayers);
-    const settings = useSettings((state) => state.settings);
-    const layers = useLayers((state) => state.layers);
+    const elementsRef = useRef<Array<HTMLButtonElement | null>>([]);
+    const labelsRef = useRef<Array<string | null>>([]);
+    const parent = useContext(MenuContext);
 
-    const received = useData((state) => state.received);
-    const currentUser = useData((state) => state.user);
-    const friends = useData((state) => state.friends);
-    const blocked = useData((state) => state.blocked);
-    const sent = useData((state) => state.sent);
+    const tree = useFloatingTree();
+    const nodeId = useFloatingNodeId();
+    const parentId = useFloatingParentNodeId();
+    const item = useListItem();
 
-    const getItems = MenuItems();
+    const isNested = parentId != null;
 
-    const container = useRef(null);
-    const firstItem = useRef(null);
-    const lastItem = useRef(null);
+    const { floatingStyles, refs, context } = useFloating<HTMLButtonElement>({
+        nodeId,
+        open: isOpen,
+        onOpenChange: setIsOpen,
+        placement: isNested ? "right-start" : "bottom-start",
+        middleware: [
+            offset({ mainAxis: isNested ? 0 : 4, alignmentAxis: isNested ? -4 : 0 }),
+            flip(),
+            shift(),
+        ],
+        whileElementsMounted: autoUpdate,
+    });
 
+    const hover = useHover(context, {
+        enabled: isNested,
+        delay: { open: 75 },
+        handleClose: safePolygon({ blockPointerEvents: true }),
+    });
+    const click = useClick(context, {
+        event: "mousedown",
+        toggle: !isNested,
+        ignoreMouse: isNested,
+    });
+    const role = useRole(context, { role: "menu" });
+    const dismiss = useDismiss(context, { bubbles: true });
+    const listNavigation = useListNavigation(context, {
+        listRef: elementsRef,
+        activeIndex,
+        nested: isNested,
+        onNavigate: setActiveIndex,
+    });
+    const typeahead = useTypeahead(context, {
+        listRef: labelsRef,
+        onMatch: isOpen ? setActiveIndex : undefined,
+        activeIndex,
+    });
+
+    const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
+        hover,
+        click,
+        role,
+        dismiss,
+        listNavigation,
+        typeahead,
+    ]);
+
+    // Event emitter allows you to communicate across tree components.
+    // This effect closes all menus when an item gets clicked anywhere
+    // in the tree.
     useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (container.current && !container.current.contains(e.target as Node)) {
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        setNull: true,
-                    },
-                });
+        if (!tree) return;
+
+        function handleTreeClick() {
+            setIsOpen(false);
+        }
+
+        function onSubMenuOpen(event: { nodeId: string; parentId: string }) {
+            if (event.nodeId !== nodeId && event.parentId === parentId) {
+                setIsOpen(false);
             }
         }
 
-        function handlekeyDown(e: KeyboardEvent) {
-            if (["Tab", "Escape", "ArrowDown", "ArrowUp"].includes(e.key)) {
-                e.preventDefault();
-            }
-
-            if (e.key == "Escape") {
-                if (element) {
-                    element.focus();
-                }
-
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        setNull: true,
-                    },
-                });
-            } else if (e.key == "ArrowDown") {
-                if (!container.current.contains(document.activeElement)) {
-                    firstItem.current.focus();
-                } else {
-                    const currentFocused = document.activeElement;
-
-                    if (currentFocused === lastItem.current) {
-                        firstItem.current.focus();
-                        return;
-                    }
-
-                    let nextItem = currentFocused.nextSibling;
-                    if (nextItem?.nodeName === "HR") {
-                        nextItem = nextItem.nextSibling;
-                    }
-
-                    if (nextItem) nextItem.focus();
-                }
-            } else if (e.key == "ArrowUp") {
-                if (!container.current.contains(document.activeElement)) {
-                    lastItem.current.focus();
-                } else {
-                    const currentFocused = document.activeElement;
-
-                    if (currentFocused === firstItem.current) {
-                        lastItem.current.focus();
-                        return;
-                    }
-
-                    let prevItem = currentFocused.previousSibling;
-                    if (prevItem?.nodeName === "HR") {
-                        prevItem = prevItem.previousSibling;
-                    }
-
-                    if (prevItem) prevItem.focus();
-                }
-            }
-        }
-
-        document.addEventListener("click", handleClick);
-        document.addEventListener("keydown", handlekeyDown);
+        tree.events.on("click", handleTreeClick);
+        tree.events.on("menuopen", onSubMenuOpen);
 
         return () => {
-            document.removeEventListener("click", handleClick);
-            document.removeEventListener("keydown", handlekeyDown);
+            tree.events.off("click", handleTreeClick);
+            tree.events.off("menuopen", onSubMenuOpen);
         };
-    }, []);
+    }, [tree, nodeId, parentId]);
 
-    const relationships = useMemo(() => {
-        if (content.user) {
-            return {
-                self: content.user.id == currentUser.id,
-                friend: !!friends.find((f) => f.id == content.user.id),
-                blocked: !!blocked.find((f) => f.id == content.user.id),
-                sent: !!sent.find((f) => f.id == content.user.id),
-                received: !!received.find((f) => f.id == content.user.id),
-            };
+    useEffect(() => {
+        if (isOpen && tree) {
+            tree.events.emit("menuopen", { parentId, nodeId });
         }
-
-        return {};
-    }, [content.user, currentUser, friends, blocked, sent, received]);
-
-    const items = useMemo(() => {
-        const typeItemGenerators = {
-            FILE_INPUT: getItems.getFileInput,
-            GUILD_CHANNEL_LIST: getItems.getGuildChannelList,
-            GUILD_CHANNEL: getItems.getGuildChannel,
-            GUILD: getItems.getGuild,
-            INPUT: getItems.getInput,
-            IMAGE: getItems.getImage,
-            MESSAGE: getItems.getMessage,
-            USER_SMALL: getItems.getUserSmall,
-            USER: getItems.getChannel,
-            CHANNEL: getItems.getChannel,
-            USER_GROUP: getItems.getUserGroup,
-            STATUS: getItems.getStatus,
-        };
-
-        const generateItems = typeItemGenerators[content.type];
-
-        if (generateItems) {
-            return generateItems({
-                content,
-                relationships,
-                settings,
-            });
-        }
-
-        return [];
-    }, [content, relationships, settings]);
+    }, [tree, isOpen, nodeId, parentId]);
 
     return (
-        <div
-            id={content.type == "STATUS" ? "status-menu" : ""}
-            ref={container}
-            className={`${styles.container} ${content.type === "GUILD" ? styles.big : ""}`}
-            onMouseLeave={() => {
-                if (content.type == "STATUS") {
-                    setLayers({
-                        settings: {
-                            type: "MENU",
-                            setNull: true,
+        <FloatingNode id={nodeId}>
+            <button
+                ref={useMergeRefs([refs.setReference, item.ref, forwardedRef])}
+                tabIndex={!isNested ? undefined : parent.activeIndex === item.index ? 0 : -1}
+                role={isNested ? "menuitem" : undefined}
+                data-open={isOpen ? "" : undefined}
+                data-nested={isNested ? "" : undefined}
+                data-focus-inside={hasFocusInside ? "" : undefined}
+                className={isNested ? "MenuItem" : "RootMenu"}
+                {...getReferenceProps(
+                    parent.getItemProps({
+                        ...props,
+                        onFocus(event: FocusEvent<HTMLButtonElement>) {
+                            props.onFocus?.(event);
+                            setHasFocusInside(false);
+                            parent.setHasFocusInside(true);
                         },
-                    });
-                }
-            }}
-        >
-            <ul>
-                {!items.length && (
-                    <div className={styles.loading}>
-                        <LoadingCubes />
-                    </div>
+                    })
                 )}
-
-                {items.map((item, i) => {
-                    if (!item.name) {
-                        return null;
-                    } else if (item.name === "Divider") {
-                        return (
-                            <hr
-                                className={styles.divider}
-                                key={`${content.type}-${i}`}
-                            />
-                        );
-                    } else {
-                        const classNames = [
-                            styles.item,
-                            item.danger && styles.danger,
-                            item.disabled && styles.disabled,
-                        ]
-                            .filter(Boolean)
-                            .join(" ");
-
-                        const ref = i === 0 ? firstItem : i === items.length - 1 ? lastItem : null;
-
-                        return (
-                            <li
-                                ref={ref}
-                                tabIndex={0}
-                                role="button"
-                                className={classNames}
-                                key={`${content.type}-${i}`}
-                                onClick={(e) => {
-                                    if (item.disabled) return;
-
-                                    if (e.shiftKey && item.funcShift) item.funcShift();
-                                    else if (item.func) item.func();
-
-                                    if (item.hideCard) {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                setNull: true,
-                                            },
-                                        });
-                                    }
-
-                                    if (!("checked" in item)) {
-                                        setLayers({
-                                            settings: {
-                                                type: "MENU",
-                                                setNull: true,
-                                            },
-                                        });
-                                    }
-                                }}
+            >
+                {label}
+                {isNested && (
+                    <span
+                        aria-hidden
+                        style={{ marginLeft: 10, fontSize: 10 }}
+                    >
+                        ▶
+                    </span>
+                )}
+            </button>
+            <MenuContext.Provider
+                value={{
+                    activeIndex,
+                    setActiveIndex,
+                    getItemProps,
+                    setHasFocusInside,
+                    isOpen,
+                }}
+            >
+                <FloatingList
+                    elementsRef={elementsRef}
+                    labelsRef={labelsRef}
+                >
+                    {isOpen && (
+                        <FloatingPortal>
+                            <FloatingFocusManager
+                                context={context}
+                                modal={false}
+                                initialFocus={isNested ? -1 : 0}
+                                returnFocus={!isNested}
                             >
-                                <div style={{ justifyContent: item.leftIcon && "flex-start" }}>
-                                    {item.leftIcon && (
-                                        <div className={styles.leftIcon}>
-                                            <Icon name={item.leftIcon} />
-                                        </div>
-                                    )}
-
-                                    {content.type == "STATUS" && (
-                                        <div className={styles.statusIcon}>
-                                            <svg
-                                                width={10}
-                                                height={10}
-                                            >
-                                                <rect
-                                                    height="10px"
-                                                    width="10px"
-                                                    rx={8}
-                                                    ry={8}
-                                                    fill={colors[i]}
-                                                    mask={`url(#${masks[i]})`}
-                                                />
-                                            </svg>
-                                        </div>
-                                    )}
-
-                                    <div
-                                        className={styles.label}
-                                        style={{ fontSize: item.leftIcon ? "14px" : "" }}
-                                    >
-                                        {item.name}
-                                    </div>
-
-                                    {(item.icon || "checked" in item || "items" in item) && (
-                                        <div
-                                            className={`${styles.icon} ${
-                                                "checked" in item && item.checked
-                                                    ? styles.revert
-                                                    : ""
-                                            }`}
-                                        >
-                                            <Icon
-                                                name={
-                                                    "checked" in item
-                                                        ? item.checked
-                                                            ? "checkboxFilled"
-                                                            : "checkbox"
-                                                        : "items" in item
-                                                        ? "caret"
-                                                        : item.icon ?? ""
-                                                }
-                                                size={item.items ? 16 : 18}
-                                                viewbox={
-                                                    item.icon == "boost"
-                                                        ? "0 0 8 12"
-                                                        : item.icon == "translate"
-                                                        ? "0 96 960 960"
-                                                        : ""
-                                                }
-                                            />
-                                        </div>
-                                    )}
-
-                                    {item.textTip && (
-                                        <div className={styles.text}>{item.textTip}</div>
-                                    )}
+                                <div
+                                    ref={refs.setFloating}
+                                    className="Menu"
+                                    style={floatingStyles}
+                                    {...getFloatingProps()}
+                                >
+                                    {children}
                                 </div>
-
-                                {item.tip && (
-                                    <div
-                                        className={styles.tip}
-                                        style={{
-                                            marginLeft: content.type == "STATUS" ? "18px" : "",
-                                        }}
-                                    >
-                                        {item.tip}
-                                        {item.tipIcon && (
-                                            <Icon
-                                                name={item.tipIcon}
-                                                size={16}
-                                            />
-                                        )}
-                                    </div>
-                                )}
-                            </li>
-                        );
-                    }
-                })}
-            </ul>
-        </div>
+                            </FloatingFocusManager>
+                        </FloatingPortal>
+                    )}
+                </FloatingList>
+            </MenuContext.Provider>
+        </FloatingNode>
     );
+});
+
+interface MenuItemProps {
+    label: string;
+    disabled?: boolean;
 }
+
+export const MenuItem = forwardRef<
+    HTMLButtonElement,
+    MenuItemProps & ButtonHTMLAttributes<HTMLButtonElement>
+>(({ label, disabled, ...props }, forwardedRef) => {
+    const menu = useContext(MenuContext);
+    const item = useListItem({ label: disabled ? null : label });
+    const tree = useFloatingTree();
+    const isActive = item.index === menu.activeIndex;
+
+    return (
+        <button
+            {...props}
+            ref={useMergeRefs([item.ref, forwardedRef])}
+            type="button"
+            role="menuitem"
+            className="MenuItem"
+            tabIndex={isActive ? 0 : -1}
+            disabled={disabled}
+            {...menu.getItemProps({
+                onClick(event: MouseEvent<HTMLButtonElement>) {
+                    props.onClick?.(event);
+                    tree?.events.emit("click");
+                },
+                onFocus(event: FocusEvent<HTMLButtonElement>) {
+                    props.onFocus?.(event);
+                    menu.setHasFocusInside(true);
+                },
+            })}
+        >
+            {label}
+        </button>
+    );
+});
+
+export const Menu = forwardRef<HTMLButtonElement, MenuProps & HTMLProps<HTMLButtonElement>>(
+    (props, ref) => {
+        const parentId = useFloatingParentNodeId();
+
+        if (parentId === null) {
+            return (
+                <FloatingTree>
+                    <MenuComponent
+                        {...props}
+                        ref={ref}
+                    />
+                </FloatingTree>
+            );
+        }
+
+        return (
+            <MenuComponent
+                {...props}
+                ref={ref}
+            />
+        );
+    }
+);

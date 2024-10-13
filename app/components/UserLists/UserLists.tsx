@@ -72,7 +72,7 @@ export const UserLists = ({ content }: { content: string }) => {
 
     const requestsReceived = useData((state) => state.received);
     const requestsSent = useData((state) => state.sent);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const blockedUsers = useData((state) => state.blocked);
     const friends = useData((state) => state.friends);
     const searchBar = useRef<HTMLInputElement>(null);
@@ -118,14 +118,14 @@ export const UserLists = ({ content }: { content: string }) => {
                             onChange={(e) => setSearch(e.target.value)}
                             onContextMenu={(e) => {
                                 e.preventDefault();
-                                setLayers({
-                                    settings: { type: "MENU", event: e },
-                                    content: {
-                                        type: "INPUT",
-                                        input: true,
-                                        pasteText,
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: { type: "MENU", event: e },
+                                //     content: {
+                                //         type: "INPUT",
+                                //         input: true,
+                                //         pasteText,
+                                //     },
+                                // });
                             }}
                         />
 

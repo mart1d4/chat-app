@@ -34,7 +34,6 @@ export function Input({
     onChange?: (value: string) => void;
 }) {
     const id = useMemo(() => Math.random().toString(36).substring(2), []);
-    const setLayers = useLayers((state) => state.setLayers);
 
     const classnames = [leftItem && styles.leftItem, rightItem && styles.rightItem]
         .filter(Boolean)
@@ -82,17 +81,17 @@ export function Input({
                     onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setLayers({
-                            settings: {
-                                type: "MENU",
-                                event: e,
-                            },
-                            content: {
-                                type: "INPUT",
-                                input: true,
-                                pasteText: (text: string) => onChange(text),
-                            },
-                        });
+                        // setLayers({
+                        //     settings: {
+                        //         type: "MENU",
+                        //         event: e,
+                        //     },
+                        //     content: {
+                        //         type: "INPUT",
+                        //         input: true,
+                        //         pasteText: (text: string) => onChange(text),
+                        //     },
+                        // });
                     }}
                 />
 

@@ -26,7 +26,7 @@ export function FormatMessage({ message, fixed = false }: { message: Message; fa
         match: (source) => /^<@!?(\d+)>/.exec(source),
         parse: (capture) => ({ id: capture[1] }),
         react: (node) => {
-            const user = message.userMentions?.find((u) => u.id === parseInt(node.id));
+            const user = message.mentions?.find((u) => u.id === parseInt(node.id));
             return (
                 <UserMention
                     key={nanoid()}

@@ -1,5 +1,5 @@
-import { useData, useLayers } from "@/store";
 import { useRouter } from "next/navigation";
+import { useData } from "@/store";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -126,8 +126,14 @@ const queries = {
     },
 };
 
+type ReturnType = {
+    data: any;
+    errors: null | {
+        [key: string]: any;
+    };
+};
+
 export default function useRequestHelper() {
-    const setLayers = useLayers((state) => state.setLayers);
     const channels = useData((state) => state.channels);
     const user = useData((state) => state.user);
 
@@ -151,23 +157,41 @@ export default function useRequestHelper() {
     }: {
         query: keyof typeof queries;
         params?: {
-            [key: string]: string | number;
+            [key: string]: string | number | boolean;
         };
         body?: {
             [key: string]: any;
         };
         attemps?: number;
         skipChannelCheck?: boolean;
-    }) {
+    }): Promise<ReturnType> {
         try {
             if (attemps > 3) {
-                throw new Error("Request failed after 3 attemps");
+                localStorage.removeItem("token");
+                router.push("/login");
+
+                return {
+                    data: null,
+                    errors: {
+                        message: "Too many attemps",
+                        status: 401,
+                    },
+                };
             }
 
             // If user wants to create a channel that already exists,
             // prevent it if it's a DM, or ask confirmation if it's a group DM
             if (query === "CHANNEL_CREATE" && body && !skipChannelCheck) {
-                if (!user) return router.push("/login");
+                if (!user) {
+                    router.push("/login");
+                    return {
+                        data: null,
+                        errors: {
+                            message: "User not found",
+                            status: 401,
+                        },
+                    };
+                }
 
                 const channel = channelExists(
                     [...body.recipients, user.id],
@@ -176,25 +200,32 @@ export default function useRequestHelper() {
 
                 if (channel) {
                     if (channel.type === 0) {
-                        return router.push(`/channels/me/${channel.id}`);
+                        router.push(`/channels/me/${channel.id}`);
+                        return {
+                            data: null,
+                            errors: {
+                                message: "Channel already exists",
+                                status: 409,
+                            },
+                        };
                     } else if (channel.type === 1 && channel.recipients.length !== 1) {
-                        return setLayers({
-                            settings: {
-                                type: "POPUP",
-                            },
-                            content: {
-                                type: "CHANNEL_EXISTS",
-                                channel: channel,
-                                recipients: channel.recipients,
-                                addUsers: () => {
-                                    sendRequest({
-                                        query: "CHANNEL_CREATE",
-                                        body: body,
-                                        skipChannelCheck: true,
-                                    });
-                                },
-                            },
-                        });
+                        // return setLayers({
+                        //     settings: {
+                        //         type: "POPUP",
+                        //     },
+                        //     content: {
+                        //         type: "CHANNEL_EXISTS",
+                        //         channel: channel,
+                        //         recipients: channel.recipients,
+                        //         addUsers: () => {
+                        //             sendRequest({
+                        //                 query: "CHANNEL_CREATE",
+                        //                 body: body,
+                        //                 skipChannelCheck: true,
+                        //             });
+                        //         },
+                        //     },
+                        // });
                     }
                 }
             }
@@ -254,7 +285,15 @@ export default function useRequestHelper() {
 
                 if (refreshResponse.status === 401) {
                     localStorage.removeItem("token");
-                    return router.push("/login");
+                    router.push("/login");
+
+                    return {
+                        data: null,
+                        errors: {
+                            message: "Unauthorized",
+                            status: 401,
+                        },
+                    };
                 }
 
                 const data = await refreshResponse.json();
@@ -262,10 +301,10 @@ export default function useRequestHelper() {
 
                 return sendRequest({ query, params, body, attemps: attemps + 1 });
             } else if (response.status === 429) {
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: { type: "RATE_LIMIT" },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: { type: "RATE_LIMIT" },
+                // });
 
                 const retryAfter = response.headers.get("Retry-After");
                 const after = parseInt(retryAfter || "5") * 1000;
@@ -274,11 +313,19 @@ export default function useRequestHelper() {
                 return sendRequest({ query, params, body, attemps: attemps + 1 });
             } else {
                 const data = await response.json();
-                return data;
+
+                return {
+                    data: data || {},
+                    errors: {},
+                };
             }
         } catch (error: any) {
             return {
-                error: error?.message || "An error occurred.",
+                errors: {
+                    message: error.message,
+                    status: error.status,
+                },
+                data: null,
             };
         }
     }

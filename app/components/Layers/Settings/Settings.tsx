@@ -2,9 +2,9 @@
 
 import { FriendRequests, MyAccount, Profiles, Overview } from "./index";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayers, useShowSettings } from "@/store";
 import { useEffect, useState } from "react";
 import styles from "./Settings.module.css";
+import { useShowSettings } from "@/store";
 import { Icon } from "@components";
 
 export function Settings() {
@@ -14,8 +14,6 @@ export function Settings() {
 
     const setShowSettings = useShowSettings((state) => state.setShowSettings);
     const showSettings = useShowSettings((state) => state.showSettings);
-    const setLayers = useLayers((state) => state.setLayers);
-    const layers = useLayers((state) => state.layers);
 
     const guild = showSettings?.guild;
     const channel = showSettings?.channel;
@@ -46,14 +44,14 @@ export function Settings() {
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                if (layers) return;
+                // if (layers) return;
                 setShowSettings(null);
             }
         };
 
         document.addEventListener("keydown", handleEsc);
         return () => document.removeEventListener("keydown", handleEsc);
-    }, [showSettings, layers]);
+    }, [showSettings]);
 
     const userTabs = [
         { name: "User Settings", type: "title" },
@@ -91,14 +89,14 @@ export function Settings() {
             name: "Log Out",
             icon: "logout",
             onClick: () => {
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
-                    content: {
-                        type: "LOGOUT",
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //     },
+                //     content: {
+                //         type: "LOGOUT",
+                //     },
+                // });
             },
         },
     ];
@@ -150,15 +148,15 @@ export function Settings() {
                   name: "Delete Channel",
                   icon: "delete",
                   onClick: () => {
-                      setLayers({
-                          settings: {
-                              type: "POPUP",
-                          },
-                          content: {
-                              type: "GUILD_CHANNEL_DELETE",
-                              channel: channel,
-                          },
-                      });
+                      //   setLayers({
+                      //       settings: {
+                      //           type: "POPUP",
+                      //       },
+                      //       content: {
+                      //           type: "GUILD_CHANNEL_DELETE",
+                      //           channel: channel,
+                      //       },
+                      //   });
                   },
               },
           ]

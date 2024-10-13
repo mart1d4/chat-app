@@ -3,22 +3,26 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
 import { getLongDate, getMidDate, getShortDate } from "@/lib/time";
 import type { Channel, Guild, Invite, Message } from "@/type";
-import { useData, useLayers, useMessages } from "@/store";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { translateString } from "@/lib/helpers";
 import { sanitizeString } from "@/lib/strings";
+import { useData, useMessages } from "@/store";
 import styles from "./Message.module.css";
 import { useState, useMemo } from "react";
 import { isInline } from "@/lib/message";
 import { FormatMessage } from "./Format";
-
+import { Node } from "slate";
 import {
     MessageAttachments,
+    PopoverTrigger,
+    PopoverContent,
     MessageInvite,
     MessageEmbeds,
     MessageMenu,
     UserMention,
     TextArea,
+    UserCard,
+    Popover,
     Avatar,
     Icon,
 } from "@components";
@@ -31,6 +35,11 @@ const messageIcons = {
     4: "channel-update",
     7: "message-pin",
 };
+
+function serialize(nodes: Node[]) {
+    if (!nodes) return "";
+    return nodes.map((n) => Node.string(n)).join("\n");
+}
 
 export function Message({
     message,
@@ -52,20 +61,21 @@ export function Message({
     const [contentRef, setReferenceContent] = useState<JSX.Element | null>(null);
 
     const moveChannelUp = useData((state) => state.moveChannelUp);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const setReply = useMessages((state) => state.setReply);
     const replies = useMessages((state) => state.replies);
     const setEdit = useMessages((state) => state.setEdit);
-    const layers = useLayers((state) => state.layers);
+
     const edits = useMessages((state) => state.edits);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
 
-    const isMentioned = message.userMentions?.some((m) => m.id === user?.id);
+    const isMentioned = message.mentions?.some((m) => m.id === user?.id);
     const reply = replies.find((r) => r.messageId === message.id);
     const edit = edits.find((e) => e.messageId === message.id);
 
-    const isMenuOpen = layers.MENU?.content?.message?.id === message.id;
+    // const isMenuOpen = layers.MENU?.content?.message?.id === message.id;
+    const isMenuOpen = false;
     const controller = useMemo(() => new AbortController(), []);
     const hasAttachments = message.attachments?.length > 0;
     const isEditing = edit?.messageId === message.id;
@@ -111,13 +121,13 @@ export function Message({
                 setMessages("update", message.id, { ...message, error: true, send: false });
 
                 if (message.attachments.length > 0) {
-                    setLayers({
-                        settings: { type: "POPUP" },
-                        content: {
-                            type: "WARNING",
-                            warning: "UPLOAD_FAILED",
-                        },
-                    });
+                    // setLayers({
+                    //     settings: { type: "POPUP" },
+                    //     content: {
+                    //         type: "WARNING",
+                    //         warning: "UPLOAD_FAILED",
+                    //     },
+                    // });
                 }
             }
         } catch (error) {
@@ -126,20 +136,23 @@ export function Message({
             setMessages("update", message.id, { ...message, error: true, send: false });
 
             if (message.attachments.length > 0) {
-                setLayers({
-                    settings: { type: "POPUP" },
-                    content: {
-                        type: "WARNING",
-                        warning: "UPLOAD_FAILED",
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "POPUP" },
+                //     content: {
+                //         type: "WARNING",
+                //         warning: "UPLOAD_FAILED",
+                //     },
+                // });
             }
         }
 
         sending = false;
     }
 
-    async function editSubmit(str: string) {
+    async function editSubmit() {
+        console.log("Edit content: ", edit?.content);
+        const str = serialize(JSON.parse(edit?.content || ""));
+
         const content = sanitizeString(str);
 
         if (content === message.content) {
@@ -151,13 +164,13 @@ export function Message({
         }
 
         if (content.length > 16000) {
-            return setLayers({
-                settings: { type: "POPUP" },
-                content: {
-                    type: "WARNING",
-                    warning: "MESSAGE_LIMIT",
-                },
-            });
+            // return setLayers({
+            //     settings: { type: "POPUP" },
+            //     content: {
+            //         type: "WARNING",
+            //         warning: "MESSAGE_LIMIT",
+            //     },
+            // });
         }
 
         try {
@@ -177,14 +190,14 @@ export function Message({
     }
 
     function popup(type: "DELETE_MESSAGE" | "PIN_MESSAGE" | "UNPIN_MESSAGE") {
-        setLayers({
-            settings: { type: "POPUP" },
-            content: {
-                type: type,
-                channelId: message.channelId,
-                message: message,
-            },
-        });
+        // setLayers({
+        //     settings: { type: "POPUP" },
+        //     content: {
+        //         type: type,
+        //         channelId: message.channelId,
+        //         message: message,
+        //     },
+        // });
     }
 
     function deleteLocal() {
@@ -192,7 +205,19 @@ export function Message({
     }
 
     function editState() {
-        setEdit(message.id, message.content || null);
+        setEdit(
+            message.id,
+            JSON.stringify([
+                {
+                    type: "paragraph",
+                    children: [
+                        {
+                            text: message.content,
+                        },
+                    ],
+                },
+            ])
+        );
     }
 
     function replyState() {
@@ -321,15 +346,15 @@ export function Message({
             <li
                 className={`${styles.container} ${styles.inline} ${isReply ? styles.reply : ""}`}
                 onContextMenu={(e) => {
-                    setLayers({
-                        settings: { type: "MENU", event: e },
-                        content: {
-                            type: "MESSAGE",
-                            message,
-                            channel,
-                            guild,
-                        },
-                    });
+                    // setLayers({
+                    //     settings: { type: "MENU", event: e },
+                    //     content: {
+                    //         type: "MESSAGE",
+                    //         message,
+                    //         channel,
+                    //         guild,
+                    //     },
+                    // });
                 }}
                 style={{
                     backgroundColor: isMenuOpen ? "var(--background-hover-4)" : "",
@@ -367,10 +392,10 @@ export function Message({
                             {(message.type === 2 || message.type === 3) && (
                                 <span>
                                     <UserMention user={message.author} />{" "}
-                                    {message.author.id !== message.userMentions[0]?.id ? (
+                                    {message.author.id !== message.mentions[0]?.id ? (
                                         <>
                                             {message.type === 2 ? "added " : "removed "}
-                                            <UserMention user={message.userMentions[0]} />{" "}
+                                            <UserMention user={message.mentions[0]} />{" "}
                                             {message.type === 2 ? "to " : "from "}the group.{" "}
                                         </>
                                     ) : (
@@ -403,19 +428,19 @@ export function Message({
                                         className={styles.inlineMention}
                                         onClick={() => {
                                             const pin = document.getElementById("pinnedMessages");
-                                            setLayers({
-                                                settings: {
-                                                    type: "POPUP",
-                                                    element: pin,
-                                                    firstSide: "BOTTOM",
-                                                    secondSide: "LEFT",
-                                                    gap: 10,
-                                                },
-                                                content: {
-                                                    type: "PINNED_MESSAGES",
-                                                    channel: channel,
-                                                },
-                                            });
+                                            // setLayers({
+                                            //     settings: {
+                                            //         type: "POPUP",
+                                            //         element: pin,
+                                            //         firstSide: "BOTTOM",
+                                            //         secondSide: "LEFT",
+                                            //         gap: 10,
+                                            //     },
+                                            //     content: {
+                                            //         type: "PINNED_MESSAGES",
+                                            //         channel: channel,
+                                            //     },
+                                            // });
                                         }}
                                     >
                                         pinned messages
@@ -457,15 +482,15 @@ export function Message({
                     `}
             onContextMenu={(e) => {
                 if (isEditing || message.loading || message.error) return;
-                setLayers({
-                    settings: { type: "MENU", event: e },
-                    content: {
-                        type: "MESSAGE",
-                        message,
-                        channel,
-                        guild,
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "MENU", event: e },
+                //     content: {
+                //         type: "MESSAGE",
+                //         message,
+                //         channel,
+                //         guild,
+                //     },
+                // });
             }}
             style={{ backgroundColor: isMenuOpen || isEditing ? "var(--background-hover-4)" : "" }}
         >
@@ -483,57 +508,39 @@ export function Message({
                 {message.type === 1 && (
                     <div className={styles.messageReply}>
                         {message.reference ? (
-                            <div
-                                className={styles.userAvatarReply}
-                                onDoubleClick={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (
-                                        layers.MENU?.settings.event?.currentTarget ===
-                                        e.currentTarget
-                                    ) {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                setNull: true,
-                                            },
-                                        });
-                                    } else {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                element: e.currentTarget,
-                                                firstSide: "RIGHT",
-                                                gap: 10,
-                                            },
-                                            content: {
-                                                user: message.reference.author,
-                                            },
-                                        });
-                                    }
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setLayers({
-                                        settings: {
-                                            type: "MENU",
-                                            event: e,
-                                        },
-                                        content: {
-                                            type: "USER",
-                                            user: message.reference.author,
-                                        },
-                                    });
-                                }}
-                            >
-                                <Avatar
-                                    src={message.reference.author.avatar}
-                                    alt={message.reference.author.displayName}
-                                    type="avatars"
-                                    size={16}
-                                />
-                            </div>
+                            <Popover placement="right-start">
+                                <PopoverTrigger asChild>
+                                    <div
+                                        className={styles.userAvatarReply}
+                                        onDoubleClick={(e) => e.stopPropagation()}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            // setLayers({
+                                            //     settings: {
+                                            //         type: "MENU",
+                                            //         event: e,
+                                            //     },
+                                            //     content: {
+                                            //         type: "USER",
+                                            //         user: message.reference.author,
+                                            //     },
+                                            // });
+                                        }}
+                                    >
+                                        <Avatar
+                                            src={message.reference.author.avatar}
+                                            alt={message.reference.author.displayName}
+                                            type="avatars"
+                                            size={16}
+                                        />
+                                    </div>
+                                </PopoverTrigger>
+
+                                <PopoverContent>
+                                    <UserCard user={message.reference.author} />
+                                </PopoverContent>
+                            </Popover>
                         ) : (
                             <div className={styles.noReplyBadge}>
                                 <svg
@@ -550,45 +557,33 @@ export function Message({
                         )}
 
                         {message.reference && (
-                            <span
-                                onDoubleClick={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (layers.USER_CARD?.settings.element === e.currentTarget) {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                setNull: true,
-                                            },
-                                        });
-                                    } else {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                element: e.currentTarget,
-                                                firstSide: "RIGHT",
-                                                gap: 10,
-                                            },
-                                            content: {
-                                                user: message.reference.author,
-                                            },
-                                        });
-                                    }
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setLayers({
-                                        settings: { type: "MENU", event: e },
-                                        content: {
-                                            type: "USER",
-                                            user: message.reference.author,
-                                        },
-                                    });
-                                }}
-                            >
-                                {message.reference.author.displayName}
-                            </span>
+                            <Popover placement="right-start">
+                                <PopoverTrigger asChild>
+                                    <span
+                                        onDoubleClick={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                        }}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            // setLayers({
+                                            //     settings: { type: "MENU", event: e },
+                                            //     content: {
+                                            //         type: "USER",
+                                            //         user: message.reference.author,
+                                            //     },
+                                            // });
+                                        }}
+                                    >
+                                        {message.reference.author.displayName}
+                                    </span>
+                                </PopoverTrigger>
+
+                                <PopoverContent>
+                                    <UserCard user={message.reference.author} />
+                                </PopoverContent>
+                            </Popover>
                         )}
 
                         {contentRef ? (
@@ -630,91 +625,64 @@ export function Message({
 
                 <div className={styles.content}>
                     {large && (
-                        <div
-                            className={styles.userAvatar}
-                            onClick={(e) => {
-                                if (layers.USER_CARD?.settings.element === e.currentTarget)
-                                    return setLayers({
-                                        settings: {
-                                            type: "USER_CARD",
-                                            setNull: true,
-                                        },
-                                    });
-                                setLayers({
-                                    settings: {
-                                        type: "USER_CARD",
-                                        element: e.currentTarget,
-                                        firstSide: "RIGHT",
-                                        gap: 10,
-                                    },
-                                    content: {
-                                        user: message.author,
-                                    },
-                                });
-                            }}
-                            onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setLayers({
-                                    settings: { type: "MENU", event: e },
-                                    content: {
-                                        type: "USER",
-                                        user: message.author,
-                                    },
-                                });
-                            }}
-                        >
-                            <Avatar
-                                src={message.author.avatar}
-                                alt={message.author.displayName}
-                                type="avatars"
-                                size={40}
-                            />
-                        </div>
+                        <Popover placement="right-start">
+                            <PopoverTrigger asChild>
+                                <div
+                                    className={styles.userAvatar}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        // setLayers({
+                                        //     settings: { type: "MENU", event: e },
+                                        //     content: {
+                                        //         type: "USER",
+                                        //         user: message.author,
+                                        //     },
+                                        // });
+                                    }}
+                                >
+                                    <Avatar
+                                        src={message.author.avatar}
+                                        alt={message.author.displayName}
+                                        type="avatars"
+                                        size={40}
+                                    />
+                                </div>
+                            </PopoverTrigger>
+
+                            <PopoverContent>
+                                <UserCard user={message.author} />
+                            </PopoverContent>
+                        </Popover>
                     )}
 
                     {large && (
                         <h3>
-                            <span
-                                className={styles.titleUsername}
-                                onDoubleClick={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (layers.USER_CARD?.settings.element === e.currentTarget) {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                setNull: true,
-                                            },
-                                        });
-                                    } else {
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_CARD",
-                                                element: e.currentTarget,
-                                                firstSide: "RIGHT",
-                                                gap: 10,
-                                            },
-                                            content: {
-                                                user: message.author,
-                                            },
-                                        });
-                                    }
-                                }}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setLayers({
-                                        settings: { type: "MENU", event: e },
-                                        content: {
-                                            type: "USER",
-                                            user: message.author,
-                                        },
-                                    });
-                                }}
-                            >
-                                {message.author?.displayName}
-                            </span>
+                            <Popover placement="right-start">
+                                <PopoverTrigger asChild>
+                                    <span
+                                        className={styles.titleUsername}
+                                        onDoubleClick={(e) => e.stopPropagation()}
+                                        onContextMenu={(e) => {
+                                            // e.preventDefault();
+                                            // e.stopPropagation();
+                                            // setLayers({
+                                            //     settings: { type: "MENU", event: e },
+                                            //     content: {
+                                            //         type: "USER",
+                                            //         user: message.author,
+                                            //     },
+                                            // });
+                                        }}
+                                    >
+                                        {message.author?.displayName}
+                                    </span>
+                                </PopoverTrigger>
+
+                                <PopoverContent>
+                                    <UserCard user={message.author} />
+                                </PopoverContent>
+                            </Popover>
 
                             {message.loading && (
                                 <span className={styles.titleTimestamp}>Sending...</span>
@@ -772,23 +740,15 @@ export function Message({
                         {isEditing ? (
                             <>
                                 <TextArea
+                                    edit={edit}
                                     channel={channel}
                                     messageObject={message}
-                                    edit={edit}
                                 />
 
                                 <div className={styles.editHint}>
                                     escape to{" "}
                                     <span onClick={() => setEdit(message.id, null)}>cancel </span>•
-                                    enter to{" "}
-                                    <span
-                                        onClick={() => {
-                                            const str = edit?.content || "";
-                                            editSubmit(str);
-                                        }}
-                                    >
-                                        save{" "}
-                                    </span>
+                                    enter to <span onClick={() => editSubmit()}>save </span>
                                 </div>
                             </>
                         ) : (

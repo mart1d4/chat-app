@@ -1,9 +1,8 @@
+import { type ExpressionBuilder, type Selectable, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
-import { Channels, DB, Guilds, Messages, Users } from "./types";
-import { ExpressionBuilder, Selectable, sql } from "kysely";
+import type { Channels, DB, Guilds, Messages, Users } from "./types";
 import { cookies } from "next/headers";
 import { db } from "./db";
-import type { Message } from "@/type";
 
 export const selfUserSelect: (keyof Users)[] = [
     "id",
@@ -133,44 +132,137 @@ export async function canUserAccessChannel(userId: number, channelId: number) {
     }
 }
 
+export function getUserLight(table: string, withUsername = false) {
+    return ["id", withUsername ? "username" : void 0, "displayName", "avatar"].map(
+        (key) => `${table}.${key}`
+    );
+}
+
 export async function getInitialData() {
     const refreshToken = cookies().get("token")?.value;
     if (!refreshToken) return null;
 
     try {
-        const user = await getUser({
-            select: [...userSelect, "status", "customStatus", "createdAt"],
-        });
-        if (!user) return null;
+        // Calculate time taken to fetch all data
+        let start = Date.now();
 
-        const friends = await getFriends(user.id);
-        const blocked = await getBlocked(user.id);
-        const received = await getRequestsReceived(user.id);
-        const sent = await getRequestsSent(user.id);
+        // Instead of doing what's commented below, fetch the user and add those properties to the user object
+        // and user inner and left joins instead so it's faster
 
-        const channels = await getUserChannels({
-            userId: user.id,
-            select: channelSelect,
-            getRecipients: true,
-        });
+        const user = await db
+            .selectFrom("users")
+            .leftJoin("friends", (join) =>
+                join.on(({ eb, ref, or }) =>
+                    or([
+                        eb("friends.A", "=", ref("users.id")),
+                        eb("friends.B", "=", ref("users.id")),
+                    ])
+                )
+            )
+            .leftJoin("users as f", (join) =>
+                join.on(({ eb, ref, and, or }) =>
+                    and([
+                        or([
+                            eb("f.id", "=", ref("friends.B")), // Friend is `B` and user is `A`
+                            eb("f.id", "=", ref("friends.A")), // Friend is `A` and user is `B`
+                        ]),
+                        eb("f.id", "!=", ref("users.id")), // Don't include the user in the friends list
+                    ])
+                )
+            )
+            // .leftJoin("users as  b", (join) =>
+            //     join.on(({ eb, ref, and, or }) =>
+            //         and([eb("b.id", "=", 1), or([eb("b.id", "=", 1), eb("b.id", "=", 1)])])
+            //     )
+            // )
+            // .leftJoin("users as  r", (join) =>
+            //     join.on(({ eb, ref, and, or }) =>
+            //         and([eb("r.id", "=", 1), or([eb("r.id", "=", 1), eb("r.id", "=", 1)])])
+            //     )
+            // )
+            // .leftJoin("users as  s", (join) =>
+            //     join.on(({ eb, ref, and, or }) =>
+            //         and([eb("s.id", "=", 1), or([eb("s.id", "=", 1), eb("s.id", "=", 1)])])
+            //     )
+            // )
+            // .leftJoin("channels as c", (join) =>
+            //     join.on(({ eb, ref, and, or }) =>
+            //         and([eb("c.id", "=", 1), or([eb("c.id", "=", 1), eb("c.id", "=", 1)])])
+            //     )
+            // )
+            // .leftJoin("guilds as g", (join) =>
+            //     join.on(({ eb, ref, and, or }) =>
+            //         and([eb("g.id", "=", 1), or([eb("g.id", "=", 1), eb("g.id", "=", 1)])])
+            //     )
+            // )
+            .select([
+                "users.id",
+                "users.username",
+                "users.displayName",
+                "users.avatar",
+                "users.banner",
+                "users.primaryColor",
+                "users.accentColor",
+                "users.description",
+                "users.customStatus",
+                "users.status",
+                "users.createdAt",
+                // sql`JSON_ARRAYAGG(JSON_OBJECT('id', f.id, 'username', f.username, 'displayName', f.display_name, 'avatar', f.avatar)) as friends`,
+            ])
+            .where("users.username", "=", "mart1d4")
+            // .groupBy([
+            //     "users.id",
+            //     "users.username",
+            //     "users.displayName",
+            //     "users.avatar",
+            //     "users.banner",
+            //     "users.primaryColor",
+            //     "users.accentColor",
+            //     "users.description",
+            //     "users.customStatus",
+            //     "users.status",
+            //     "users.createdAt",
+            // ])
+            .executeTakeFirst();
 
-        const guilds = await getUserGuilds({
-            userId: user.id,
-            select: guildSelect,
-            getMembers: true,
-            getChannels: true,
-            getRoles: true,
-        });
+        console.log(user);
 
-        return {
-            user,
-            friends,
-            blocked,
-            received,
-            sent,
-            channels,
-            guilds,
-        };
+        // const user = await getUser({
+        //     select: [...userSelect, "status", "customStatus", "createdAt"],
+        // });
+        // if (!user) return null;
+
+        // const friends = await getFriends(user.id);
+        // const blocked = await getBlocked(user.id);
+        // const received = await getRequestsReceived(user.id);
+        // const sent = await getRequestsSent(user.id);
+
+        // const channels = await getUserChannels({
+        //     userId: user.id,
+        //     select: channelSelect,
+        //     getRecipients: true,
+        // });
+
+        // const guilds = await getUserGuilds({
+        //     userId: user.id,
+        //     select: guildSelect,
+        //     getMembers: true,
+        //     getChannels: true,
+        //     getRoles: true,
+        // });
+
+        let end = Date.now();
+        console.log(`Initial data fetched in ${end - start}ms for user ${user?.id}`);
+
+        // return {
+        //     user,
+        //     friends,
+        //     blocked,
+        //     received,
+        //     sent,
+        //     channels,
+        //     guilds,
+        // };
     } catch (error) {
         console.log(error);
         return null;
@@ -653,7 +745,7 @@ export function withMentions({
                     "mention.id"
                 )}))`;
             })
-    ).as("userMentions");
+    ).as("mentions");
 }
 
 export function withReference({

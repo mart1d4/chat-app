@@ -12,7 +12,6 @@ export function AddFriend() {
     const [input, setInput] = useState("");
     const [valid, setValid] = useState("");
 
-    const setLayers = useLayers((state) => state.setLayers);
     const { sendRequest } = useFetchHelper();
 
     async function pasteText() {
@@ -84,14 +83,14 @@ export function AddFriend() {
                                     setValid("");
                                 }}
                                 onContextMenu={(e) => {
-                                    setLayers({
-                                        settings: { type: "MENU", event: e },
-                                        content: {
-                                            type: "INPUT",
-                                            input: true,
-                                            pasteText,
-                                        },
-                                    });
+                                    // setLayers({
+                                    //     settings: { type: "MENU", event: e },
+                                    //     content: {
+                                    //         type: "INPUT",
+                                    //         input: true,
+                                    //         pasteText,
+                                    //     },
+                                    // });
                                 }}
                             />
                         </div>

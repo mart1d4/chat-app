@@ -4,10 +4,10 @@ import type { Channel, Guild, Message as TMessage, User } from "@/type";
 import { Message, TextArea, MessageSk, Avatar } from "@components";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
-import { useData, useLayers, useUrls } from "@/store";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useRef, useEffect, useMemo } from "react";
 import { isLarge, isNewDay } from "@/lib/message";
+import { useData, useUrls } from "@/store";
 import styles from "./Channels.module.css";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
@@ -47,8 +47,12 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
         }
     );
 
-    const messages = data ? data.flat().reverse() : [];
-    const hasMore = messages.length % limit === 0;
+    const messages =
+        data
+            ?.map((d) => d.messages)
+            .flat()
+            .reverse() || [];
+    const hasMore = data?.[data.length - 1].hasMore || false;
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
@@ -133,23 +137,52 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
                                                 sendingMessage = true;
 
                                                 if (type === "add") {
-                                                    mutate((prev) => [message, ...prev], {
-                                                        revalidate: false,
-                                                    });
+                                                    mutate(
+                                                        (prev) => [
+                                                            {
+                                                                messages: [
+                                                                    message,
+                                                                    ...(prev?.[0]?.messages || []),
+                                                                ],
+                                                                hasMore: prev?.[0]?.hasMore,
+                                                            },
+                                                            ...prev,
+                                                        ],
+                                                        {
+                                                            revalidate: false,
+                                                        }
+                                                    );
                                                 } else if (type === "update") {
                                                     mutate(
-                                                        (prev) =>
-                                                            prev?.map((m) =>
-                                                                m.id === id ? message : m
-                                                            ),
+                                                        (prev) => {
+                                                            return prev.map((data) => {
+                                                                return {
+                                                                    messages: data.messages.map(
+                                                                        (m) => {
+                                                                            if (m.id === id) {
+                                                                                return message;
+                                                                            }
+                                                                            return m;
+                                                                        }
+                                                                    ),
+                                                                    hasMore: data.hasMore,
+                                                                };
+                                                            });
+                                                        },
                                                         { revalidate: false }
                                                     );
                                                 } else if (type === "delete") {
                                                     mutate(
-                                                        (prev) =>
-                                                            prev?.map((a) =>
-                                                                a.filter((m) => m.id !== id)
-                                                            ),
+                                                        (prev) => {
+                                                            return prev.map((data) => {
+                                                                return {
+                                                                    messages: data.messages.filter(
+                                                                        (m) => m.id !== id
+                                                                    ),
+                                                                    hasMore: data.hasMore,
+                                                                };
+                                                            });
+                                                        },
                                                         { revalidate: false }
                                                     );
                                                 }
@@ -175,9 +208,18 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
                     channel={channel}
                     setMessages={(message: TMessage) => {
                         sendingMessage = true;
-                        mutate((prev) => [message, ...prev], {
-                            revalidate: false,
-                        });
+                        mutate(
+                            (prev) => [
+                                {
+                                    messages: [message, ...(prev?.[0]?.messages || [])],
+                                    hasMore: prev?.[0]?.hasMore,
+                                },
+                                ...prev,
+                            ],
+                            {
+                                revalidate: false,
+                            }
+                        );
                         sendingMessage = false;
                     }}
                 />
@@ -192,7 +234,7 @@ function FirstMessage({ channel, friend }: { channel: Channel; friend: User }) {
     const requestsS = useData((state) => state.sent).map((u) => u.id);
     const friends = useData((state) => state.friends).map((u) => u.id);
     const blocked = useData((state) => state.blocked).map((u) => u.id);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const { sendRequest } = useFetchHelper();
 
     const mutualGuilds: Guild[] = [];
@@ -246,10 +288,10 @@ function FirstMessage({ channel, friend }: { channel: Channel; friend: User }) {
                             <div
                                 className={styles.mutualGuildText}
                                 onClick={() => {
-                                    setLayers({
-                                        settings: { type: "USER_PROFILE" },
-                                        content: { user: friend, guilds: true },
-                                    });
+                                    // setLayers({
+                                    //     settings: { type: "USER_PROFILE" },
+                                    //     content: { user: friend, guilds: true },
+                                    // });
                                 }}
                             >
                                 {mutualGuilds.length} Mutual Server{mutualGuilds.length > 1 && "s"}

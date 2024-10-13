@@ -193,7 +193,6 @@ export function Image({
 }) {
     const [hideSpoiler, setHideSpoiler] = useState(false);
 
-    const setLayers = useLayers((state) => state.setLayers);
     const user = useData((state) => state.user);
 
     return (
@@ -206,32 +205,32 @@ export function Image({
 
                 const index = message.attachments.findIndex((a) => a.id === attachment.id);
 
-                setLayers({
-                    settings: {
-                        type: "POPUP",
-                    },
-                    content: {
-                        type: "ATTACHMENT_PREVIEW",
-                        attachments: message.attachments,
-                        current: index,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "POPUP",
+                //     },
+                //     content: {
+                //         type: "ATTACHMENT_PREVIEW",
+                //         attachments: message.attachments,
+                //         current: index,
+                //     },
+                // });
             }}
             onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        event: e,
-                    },
-                    content: {
-                        type: "MESSAGE",
-                        message: message,
-                        attachment: attachment,
-                        functions: functions,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "MENU",
+                //         event: e,
+                //     },
+                //     content: {
+                //         type: "MESSAGE",
+                //         message: message,
+                //         attachment: attachment,
+                //         functions: functions,
+                //     },
+                // });
             }}
         >
             <div>
@@ -265,30 +264,30 @@ export function Image({
                                 e.stopPropagation();
 
                                 if (message.attachments.length === 1 && !message.content) {
-                                    return setLayers({
-                                        settings: {
-                                            type: "POPUP",
-                                        },
-                                        content: {
-                                            type: "DELETE_MESSAGE",
-                                            channelId: message.channelId,
-                                            message: message,
-                                        },
-                                    });
+                                    // return setLayers({
+                                    //     settings: {
+                                    //         type: "POPUP",
+                                    //     },
+                                    //     content: {
+                                    //         type: "DELETE_MESSAGE",
+                                    //         channelId: message.channelId,
+                                    //         message: message,
+                                    //     },
+                                    // });
                                 }
 
                                 const updatedAttachments = message.attachments
                                     .map((file) => file.id)
                                     .filter((id: string) => id !== attachment.id);
 
-                                setLayers({
-                                    settings: { type: "POPUP" },
-                                    content: {
-                                        type: "DELETE_ATTACHMENT",
-                                        message: message,
-                                        attachments: updatedAttachments,
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: { type: "POPUP" },
+                                //     content: {
+                                //         type: "DELETE_ATTACHMENT",
+                                //         message: message,
+                                //         attachments: updatedAttachments,
+                                //     },
+                                // });
                             }}
                         >
                             <Icon name="delete" />

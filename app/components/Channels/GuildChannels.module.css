@@ -108,6 +108,7 @@
 
 @-moz-document url-prefix() {
     .scroller {
+        padding-right: 8px;
         scrollbar-width: thin;
     }
 }

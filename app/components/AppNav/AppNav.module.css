@@ -8,14 +8,20 @@
 }
 
 .list {
-    overflow: hidden scroll;
-    padding-right: 0px;
-    user-select: none;
-    padding-top: 12px;
-    background-color: var(--background-1);
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.list {
     min-height: 0;
     flex: 1 1 auto;
+    padding: 12px 0 4px 0;
+    user-select: none;
+    padding-right: 0px;
+    position: relative;
+    overflow: hidden scroll;
+    background-color: var(--background-1);
 }
 
 .list::-webkit-scrollbar {

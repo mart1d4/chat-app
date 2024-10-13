@@ -3,8 +3,8 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useData, useLayers, useUrls } from "@/store";
 import { useState, useEffect } from "react";
+import { useData, useUrls } from "@/store";
 import styles from "./AppNav.module.css";
 import Link from "next/link";
 
@@ -32,10 +32,8 @@ export default function NavIcon({
     const [markHeight, setMarkHeight] = useState(0);
     const [active, setActive] = useState(false);
 
-    const setLayers = useLayers((state) => state.setLayers);
     const requests = useData((state) => state.received);
     const guildUrls = useUrls((state) => state.guilds);
-    const layers = useLayers((state) => state.layers);
     const meUrl = useUrls((state) => state.me);
 
     let url;
@@ -113,14 +111,14 @@ export default function NavIcon({
                             onBlur={() => !active && setMarkHeight(count ? 7 : 0)}
                             onClick={() => router.push(link)}
                             onContextMenu={(event) => {
-                                setLayers({
-                                    settings: { type: "MENU", event },
-                                    content: {
-                                        type: guild ? "GUILD_ICON" : "USER",
-                                        guild,
-                                        user,
-                                    },
-                                });
+                                // setLayers({
+                                //     settings: { type: "MENU", event },
+                                //     content: {
+                                //         type: guild ? "GUILD_ICON" : "USER",
+                                //         guild,
+                                //         user,
+                                //     },
+                                // });
                             }}
                             style={{
                                 fontSize:
@@ -169,16 +167,17 @@ export default function NavIcon({
                     ) : (
                         <button
                             className={`${styles.wrapper} ${styles.add} ${
-                                active ||
-                                layers?.POPUP?.find((obj) => obj.content.type === "CREATE_GUILD")
-                                    ? styles.active
-                                    : ""
+                                // active ||
+                                // layers?.POPUP?.find((obj) => obj.content.type === "CREATE_GUILD")
+                                //     ? styles.active
+                                //     : ""
+                                "e"
                             }`}
                             onClick={() => {
-                                setLayers({
-                                    settings: { type: "POPUP" },
-                                    content: { type: "CREATE_GUILD" },
-                                });
+                                // setLayers({
+                                //     settings: { type: "POPUP" },
+                                //     content: { type: "CREATE_GUILD" },
+                                // });
                             }}
                         >
                             {svg && svg}

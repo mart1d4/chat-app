@@ -3,11 +3,12 @@
 import { useData, useLayers, useNotifications, useShowChannels, useWindowSettings } from "@/store";
 import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
 import { usePathname, useRouter } from "next/navigation";
-import { Icon, Avatar, UserSection } from "@components";
+import { Icon, Avatar, UserSection, Popover, CreateDM } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserChannels.module.css";
 import type { Channel } from "@/type";
 import Link from "next/link";
+import { PopoverContent, PopoverTrigger } from "../Layers/Popover/Popover";
 
 export function UserChannels() {
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
@@ -53,40 +54,46 @@ export function UserChannels() {
 }
 
 function Title() {
-    const setLayers = useLayers((state) => state.setLayers);
-
     return (
         <h2 className={styles.title}>
             <span>Direct Messages</span>
-            <Tooltip>
-                <TooltipTrigger>
-                    <button
-                        onClick={(e) => {
-                            setLayers({
-                                settings: {
-                                    type: "POPUP",
-                                    element: e.currentTarget,
-                                    firstSide: "BOTTOM",
-                                    secondSide: "RIGHT",
-                                    gap: 5,
-                                },
-                                content: { type: "CREATE_DM" },
-                            });
-                        }}
-                    >
-                        <Icon name="add" />
-                    </button>
-                </TooltipTrigger>
+            <Popover placement="bottom-start">
+                <Tooltip>
+                    <TooltipTrigger>
+                        <PopoverTrigger asChild>
+                            <button
+                                onClick={(e) => {
+                                    // setLayers({
+                                    //     settings: {
+                                    //         type: "POPUP",
+                                    //         element: e.currentTarget,
+                                    //         firstSide: "BOTTOM",
+                                    //         secondSide: "RIGHT",
+                                    //         gap: 5,
+                                    //     },
+                                    //     content: { type: "CREATE_DM" },
+                                    // });
+                                }}
+                            >
+                                <Icon name="add" />
+                            </button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
 
-                <TooltipContent>Create DM</TooltipContent>
-            </Tooltip>
+                    <TooltipContent>Create DM</TooltipContent>
+                </Tooltip>
+
+                <PopoverContent>
+                    <CreateDM />
+                </PopoverContent>
+            </Popover>
         </h2>
     );
 }
 
 function ChannelItem({ channel }: { channel?: Channel }) {
     const requests = useData((state) => state.received).length;
-    const setLayers = useLayers((state) => state.setLayers);
+
     const pings = useNotifications((state) => state.pings);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
@@ -140,14 +147,14 @@ function ChannelItem({ channel }: { channel?: Channel }) {
             className={styles.liContainer}
             href={`/channels/me/${channel.id}`}
             onContextMenu={(e) => {
-                setLayers({
-                    settings: { type: "MENU", event: e },
-                    content: {
-                        type: "CHANNEL",
-                        user: friend,
-                        channel: channel,
-                    },
-                });
+                // setLayers({
+                //     settings: { type: "MENU", event: e },
+                //     content: {
+                //         type: "CHANNEL",
+                //         user: friend,
+                //         channel: channel,
+                //     },
+                // });
             }}
             style={{
                 backgroundColor: sameUrl ? "var(--background-5)" : "",
@@ -225,10 +232,10 @@ function ChannelItem({ channel }: { channel?: Channel }) {
                                 router.push("/channels/me");
                             }
                         } else {
-                            setLayers({
-                                settings: { type: "POPUP" },
-                                content: { type: "LEAVE_CONFIRM", channel: channel },
-                            });
+                            // setLayers({
+                            //     settings: { type: "POPUP" },
+                            //     content: { type: "LEAVE_CONFIRM", channel: channel },
+                            // });
                         }
                     }}
                 >

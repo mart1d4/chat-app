@@ -1,11 +1,21 @@
 "use client";
 
-import { useWindowSettings, useShowChannels, useSettings, useLayers, useData } from "@/store";
-import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
+import {
+    Icon,
+    Avatar,
+    TooltipContent,
+    TooltipTrigger,
+    Tooltip,
+    Pinned,
+    CreateDM,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@components";
+import { useWindowSettings, useShowChannels, useSettings, useData } from "@/store";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import type { Channel, User } from "@/type";
 import styles from "./AppHeader.module.css";
-import { Icon, Avatar } from "@components";
 import { useState } from "react";
 
 export function AppHeader({
@@ -26,13 +36,13 @@ export function AppHeader({
 
     const setSettings = useSettings((state) => state.setSettings);
     const updateChannel = useData((state) => state.updateChannel);
-    const setLayers = useLayers((state) => state.setLayers);
+
     const settings = useSettings((state) => state.settings);
     const requests = useData((state) => state.received);
 
     const { sendRequest } = useRequestHelper();
 
-    async function updateName(e) {
+    async function updateName(e: React.FocusEvent<HTMLInputElement>) {
         e.preventDefault();
 
         if (loading || !channel?.name || channel.type !== 1 || name === channel.name) {
@@ -76,32 +86,17 @@ export function AppHeader({
                   {
                       name: "Threads",
                       icon: "threads",
-                      func: {},
+                      func: () => {},
                   },
                   {
                       name: "Notification Settings",
                       icon: "bell",
-                      func: {},
+                      func: () => {},
                   },
                   {
                       name: "Pinned Messages",
                       icon: "pin",
-                      func: (e: MouseEvent | KeyboardEvent) => {
-                          setLayers({
-                              settings: {
-                                  type: "POPUP",
-                                  element: e.currentTarget,
-                                  firstSide: "BOTTOM",
-                                  secondSide: "LEFT",
-                                  gap: 10,
-                              },
-                              content: {
-                                  type: "PINNED_MESSAGES",
-                                  channel: channel,
-                                  pinned: true,
-                              },
-                          });
-                      },
+                      popover: <Pinned channel={channel} />,
                   },
                   {
                       name: settings.showUsers
@@ -119,41 +114,12 @@ export function AppHeader({
                   {
                       name: "Pinned Messages",
                       icon: "pin",
-                      func: (e: MouseEvent | KeyboardEvent) => {
-                          setLayers({
-                              settings: {
-                                  type: "POPUP",
-                                  element: e.currentTarget,
-                                  firstSide: "BOTTOM",
-                                  secondSide: "LEFT",
-                                  gap: 10,
-                              },
-                              content: {
-                                  type: "PINNED_MESSAGES",
-                                  channel: channel,
-                                  pinned: true,
-                              },
-                          });
-                      },
+                      popover: <Pinned channel={channel} />,
                   },
                   {
                       name: "Add Friends to DM",
                       icon: "addUser",
-                      func: (e: any) => {
-                          setLayers({
-                              settings: {
-                                  type: "POPUP",
-                                  element: e.currentTarget,
-                                  firstSide: "BOTTOM",
-                                  secondSide: "RIGHT",
-                                  gap: 10,
-                              },
-                              content: {
-                                  type: "CREATE_DM",
-                                  channel: channel,
-                              },
-                          });
-                      },
+                      popover: <CreateDM channel={channel} />,
                   },
                   {
                       name: settings.showUsers
@@ -169,21 +135,7 @@ export function AppHeader({
               {
                   name: "New Group DM",
                   icon: "newDM",
-                  func: (e: any) => {
-                      setLayers({
-                          settings: {
-                              type: "POPUP",
-                              element: e.currentTarget,
-                              firstSide: "BOTTOM",
-                              secondSide: "RIGHT",
-                              gap: 10,
-                          },
-                          content: {
-                              type: "CREATE_DM",
-                              channel: channel,
-                          },
-                      });
-                  },
+                  popover: <CreateDM />,
               },
           ];
 
@@ -259,14 +211,14 @@ export function AppHeader({
                                     }}
                                     onClick={() => {
                                         if (channel.type !== 0) return;
-                                        setLayers({
-                                            settings: {
-                                                type: "USER_PROFILE",
-                                            },
-                                            content: {
-                                                user: friend,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: {
+                                        //         type: "USER_PROFILE",
+                                        //     },
+                                        //     content: {
+                                        //         user: friend,
+                                        //     },
+                                        // });
                                     }}
                                     style={{ cursor: channel.guildId ? "default" : "" }}
                                 >
@@ -298,13 +250,13 @@ export function AppHeader({
                                 <div
                                     className={styles.topic}
                                     onClick={() => {
-                                        setLayers({
-                                            settings: { type: "POPUP" },
-                                            content: {
-                                                type: "CHANNEL_TOPIC",
-                                                channel: channel,
-                                            },
-                                        });
+                                        // setLayers({
+                                        //     settings: { type: "POPUP" },
+                                        //     content: {
+                                        //         type: "CHANNEL_TOPIC",
+                                        //         channel: channel,
+                                        //     },
+                                        // });
                                     }}
                                 >
                                     {channel.topic}
@@ -371,6 +323,39 @@ export function AppHeader({
 }
 
 function ToolbarIcon({ item }: any) {
+    if (item.popover) {
+        return (
+            <Popover
+                gap={20}
+                placement="bottom-end"
+            >
+                <Tooltip>
+                    <TooltipTrigger>
+                        <PopoverTrigger asChild>
+                            <button
+                                className={`${styles.toolbarIcon} ${
+                                    item.disabled ? styles.disabled : ""
+                                } ${!!item.active ? styles.hideOnMobile : ""}`}
+                                style={{
+                                    color:
+                                        item.active && !item.disabled ? "var(--foreground-2)" : "",
+                                }}
+                            >
+                                <Icon name={item.icon} />
+                            </button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
+
+                    <TooltipContent>
+                        {`${item.name}${item.disabled ? " (Unavailable)" : ""}`}
+                    </TooltipContent>
+                </Tooltip>
+
+                <PopoverContent>{item.popover}</PopoverContent>
+            </Popover>
+        );
+    }
+
     return (
         <Tooltip>
             <TooltipTrigger>

@@ -32,6 +32,12 @@
     margin-bottom: 8px;
 }
 
+@-moz-document url-prefix() {
+    .scroller {
+        padding-right: 12px;
+    }
+}
+
 .scroller > div {
     overflow-anchor: none;
     display: flex;
