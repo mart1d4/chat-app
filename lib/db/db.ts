@@ -1,9 +1,9 @@
 import { Kysely, CamelCasePlugin, MysqlDialect } from "kysely";
 import { createPool } from "mysql2";
-import { DB } from "./types";
+import { DB } from "./db.types";
 
 if (
-    !process.env.DB_DATABASE ||
+    !process.env.DB_NAME ||
     !process.env.DB_HOST ||
     !process.env.DB_USER ||
     !process.env.DB_PASSWORD ||
@@ -22,7 +22,7 @@ export const db =
     new Kysely<DB>({
         dialect: new MysqlDialect({
             pool: createPool({
-                database: process.env.DB_DATABASE,
+                database: process.env.DB_NAME,
                 host: process.env.DB_HOST,
                 user: process.env.DB_USER,
                 password: process.env.DB_PASSWORD,

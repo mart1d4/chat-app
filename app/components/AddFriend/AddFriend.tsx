@@ -2,7 +2,6 @@
 
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./AddFriend.module.css";
-import { useLayers } from "@/store";
 import { useState } from "react";
 import Image from "next/image";
 
@@ -27,16 +26,15 @@ export function AddFriend() {
         setLoading(true);
 
         try {
-            const response = await sendRequest({
+            const { errors, data } = await sendRequest({
                 query: "ADD_FRIEND",
                 body: { username: input },
             });
 
-            if (!response.errors) {
-                setValid(response.message);
-            } else {
-                setErrors(response.errors);
-            }
+            console.log({ errors, data });
+
+            if (data) setValid(data.message);
+            else if (errors) setErrors(errors);
         } catch (error) {
             setErrors({ server: "Something went wrong." });
         }

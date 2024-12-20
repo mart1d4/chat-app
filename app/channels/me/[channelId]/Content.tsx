@@ -47,12 +47,10 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
         }
     );
 
-    const messages =
-        data
-            ?.map((d) => d.messages)
-            .flat()
-            .reverse() || [];
+    const messages = data?.flat().reverse() || [];
     const hasMore = data?.[data.length - 1].hasMore || false;
+
+    console.log("MESSAGES: ", messages);
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
@@ -137,52 +135,23 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
                                                 sendingMessage = true;
 
                                                 if (type === "add") {
-                                                    mutate(
-                                                        (prev) => [
-                                                            {
-                                                                messages: [
-                                                                    message,
-                                                                    ...(prev?.[0]?.messages || []),
-                                                                ],
-                                                                hasMore: prev?.[0]?.hasMore,
-                                                            },
-                                                            ...prev,
-                                                        ],
-                                                        {
-                                                            revalidate: false,
-                                                        }
-                                                    );
+                                                    mutate((prev) => [message, ...prev], {
+                                                        revalidate: false,
+                                                    });
                                                 } else if (type === "update") {
                                                     mutate(
-                                                        (prev) => {
-                                                            return prev.map((data) => {
-                                                                return {
-                                                                    messages: data.messages.map(
-                                                                        (m) => {
-                                                                            if (m.id === id) {
-                                                                                return message;
-                                                                            }
-                                                                            return m;
-                                                                        }
-                                                                    ),
-                                                                    hasMore: data.hasMore,
-                                                                };
-                                                            });
-                                                        },
+                                                        (prev) =>
+                                                            prev?.map((m) =>
+                                                                m.id === id ? message : m
+                                                            ),
                                                         { revalidate: false }
                                                     );
                                                 } else if (type === "delete") {
                                                     mutate(
-                                                        (prev) => {
-                                                            return prev.map((data) => {
-                                                                return {
-                                                                    messages: data.messages.filter(
-                                                                        (m) => m.id !== id
-                                                                    ),
-                                                                    hasMore: data.hasMore,
-                                                                };
-                                                            });
-                                                        },
+                                                        (prev) =>
+                                                            prev?.map((a) =>
+                                                                a.filter((m) => m.id !== id)
+                                                            ),
                                                         { revalidate: false }
                                                     );
                                                 }
@@ -208,18 +177,9 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
                     channel={channel}
                     setMessages={(message: TMessage) => {
                         sendingMessage = true;
-                        mutate(
-                            (prev) => [
-                                {
-                                    messages: [message, ...(prev?.[0]?.messages || [])],
-                                    hasMore: prev?.[0]?.hasMore,
-                                },
-                                ...prev,
-                            ],
-                            {
-                                revalidate: false,
-                            }
-                        );
+                        mutate((prev) => [message, ...prev], {
+                            revalidate: false,
+                        });
                         sendingMessage = false;
                     }}
                 />

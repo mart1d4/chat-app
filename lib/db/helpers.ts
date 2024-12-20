@@ -1,6 +1,6 @@
 import { type ExpressionBuilder, type Selectable, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
-import type { Channels, DB, Guilds, Messages, Users } from "./types";
+import type { Channels, DB, Guilds, Messages, Users } from "./db.types";
 import { cookies } from "next/headers";
 import { db } from "./db";
 
@@ -170,31 +170,42 @@ export async function getInitialData() {
                     ])
                 )
             )
-            // .leftJoin("users as  b", (join) =>
-            //     join.on(({ eb, ref, and, or }) =>
-            //         and([eb("b.id", "=", 1), or([eb("b.id", "=", 1), eb("b.id", "=", 1)])])
-            //     )
-            // )
-            // .leftJoin("users as  r", (join) =>
-            //     join.on(({ eb, ref, and, or }) =>
-            //         and([eb("r.id", "=", 1), or([eb("r.id", "=", 1), eb("r.id", "=", 1)])])
-            //     )
-            // )
-            // .leftJoin("users as  s", (join) =>
-            //     join.on(({ eb, ref, and, or }) =>
-            //         and([eb("s.id", "=", 1), or([eb("s.id", "=", 1), eb("s.id", "=", 1)])])
-            //     )
-            // )
-            // .leftJoin("channels as c", (join) =>
-            //     join.on(({ eb, ref, and, or }) =>
-            //         and([eb("c.id", "=", 1), or([eb("c.id", "=", 1), eb("c.id", "=", 1)])])
-            //     )
-            // )
-            // .leftJoin("guilds as g", (join) =>
-            //     join.on(({ eb, ref, and, or }) =>
-            //         and([eb("g.id", "=", 1), or([eb("g.id", "=", 1), eb("g.id", "=", 1)])])
-            //     )
-            // )
+            .leftJoin("blocked", "blocked.blockerId", "users.id")
+            .leftJoin("users as b", "b.id", "blocked.blockerId")
+            .leftJoin("requests as received", (join) =>
+                join.onRef("received.requestedId", "=", "users.id")
+            )
+            .leftJoin("requests as sent", (join) => join.onRef("sent.requesterId", "=", "users.id"))
+            .leftJoin("users as r", (join) => join.onRef("r.id", "=", "received.requesterId"))
+            .leftJoin("users as s", (join) => join.onRef("s.id", "=", "sent.requestedId"))
+            .leftJoin("channelrecipients", (join) =>
+                join.on(
+                    ({ eb, ref }) => eb("channelrecipients.userId", "=", ref("users.id"))
+                    // .and("channelrecipients.channelId", "=", 1)
+                )
+            )
+            .leftJoin("channels", (join) =>
+                join.on(
+                    ({ eb, ref }) => eb("channels.id", "=", ref("channelrecipients.channelId"))
+                    // .and("channels.id", "=", 1)
+                )
+            )
+            .leftJoin("channelrecipients as cr", (join) =>
+                join.onRef("cr.channelId", "=", "channels.id")
+            )
+            .leftJoin("users as recipient", "recipient.id", "cr.userId")
+            .leftJoin("guildmembers", (join) =>
+                join.on(
+                    ({ eb, ref }) => eb("guildmembers.userId", "=", ref("users.id"))
+                    // .and("guildmembers.guildId", "=", 1)
+                )
+            )
+            .leftJoin("guilds", (join) =>
+                join.on(
+                    ({ eb, ref }) => eb("guilds.id", "=", ref("guildmembers.guildId"))
+                    // .and("guilds.id", "=", 1)
+                )
+            )
             .select([
                 "users.id",
                 "users.username",
@@ -207,62 +218,130 @@ export async function getInitialData() {
                 "users.customStatus",
                 "users.status",
                 "users.createdAt",
-                // sql`JSON_ARRAYAGG(JSON_OBJECT('id', f.id, 'username', f.username, 'displayName', f.display_name, 'avatar', f.avatar)) as friends`,
+                sql`IF(f.id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', f.id, 'username', f.username, 'displayName', f.display_name, 'avatar', f.avatar)), JSON_ARRAY()) as friends`,
+                sql`IF(b.id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', b.id, 'username', b.username, 'displayName', b.display_name, 'avatar', b.avatar)), JSON_ARRAY()) as blocked`,
+                sql`IF(received.requested_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', r.id, 'username', r.username, 'displayName', r.display_name, 'avatar', r.avatar)), JSON_ARRAY()) as received`,
+                sql`IF(sent.requester_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', s.id, 'username', s.username, 'displayName', s.display_name, 'avatar', s.avatar)), JSON_ARRAY()) as sent`,
+                sql`IF(
+                        channelrecipients.user_id IS NOT NULL,
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', channels.id,
+                                'type', channels.type,
+                                'name', channels.name,
+                                'topic', channels.topic,
+                                'icon', channels.icon,
+                                'ownerId', channels.owner_id,
+                                'updatedAt', channels.updated_at
+                            )
+                        ),
+                        JSON_ARRAY()
+                    ) as channels`,
+                //  Get all recipients for each channel
+                sql`IF(
+                    recipient.id IS NOT NULL,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'channelId', channels.id,
+                            'id', recipient.id,
+                            'username', recipient.username,
+                            'displayName', recipient.display_name,
+                            'avatar', recipient.avatar
+                            )
+                        ),
+                        JSON_ARRAY()
+                    ) as channelRecipients`,
+                sql`IF(guildmembers.user_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', guilds.id, 'name', guilds.name, 'icon', guilds.icon, 'banner', guilds.banner, 'description', guilds.description, 'systemChannelId', guilds.system_channel_id, 'createdAt', guilds.created_at, 'ownerId', guilds.owner_id)), JSON_ARRAY()) as guilds`,
             ])
-            .where("users.username", "=", "mart1d4")
-            // .groupBy([
-            //     "users.id",
-            //     "users.username",
-            //     "users.displayName",
-            //     "users.avatar",
-            //     "users.banner",
-            //     "users.primaryColor",
-            //     "users.accentColor",
-            //     "users.description",
-            //     "users.customStatus",
-            //     "users.status",
-            //     "users.createdAt",
-            // ])
+            .where(sql`JSON_CONTAINS(users.tokens, JSON_OBJECT('token', ${refreshToken}))`)
+            .groupBy([
+                "users.id",
+                "users.username",
+                "users.displayName",
+                "users.avatar",
+                "users.banner",
+                "users.primaryColor",
+                "users.accentColor",
+                "users.description",
+                "users.customStatus",
+                "users.status",
+                "users.createdAt",
+                "f.id",
+                "b.id",
+                "r.id",
+                "s.id",
+                "received.requestedId",
+                "sent.requesterId",
+                "channelrecipients.userId",
+                "channels.id",
+                "guildmembers.userId",
+                "guilds.id",
+                "recipient.id",
+            ])
             .executeTakeFirst();
-
-        console.log(user);
-
-        // const user = await getUser({
-        //     select: [...userSelect, "status", "customStatus", "createdAt"],
-        // });
-        // if (!user) return null;
-
-        // const friends = await getFriends(user.id);
-        // const blocked = await getBlocked(user.id);
-        // const received = await getRequestsReceived(user.id);
-        // const sent = await getRequestsSent(user.id);
-
-        // const channels = await getUserChannels({
-        //     userId: user.id,
-        //     select: channelSelect,
-        //     getRecipients: true,
-        // });
-
-        // const guilds = await getUserGuilds({
-        //     userId: user.id,
-        //     select: guildSelect,
-        //     getMembers: true,
-        //     getChannels: true,
-        //     getRoles: true,
-        // });
 
         let end = Date.now();
         console.log(`Initial data fetched in ${end - start}ms for user ${user?.id}`);
+        console.log(user);
 
-        // return {
-        //     user,
-        //     friends,
-        //     blocked,
-        //     received,
-        //     sent,
-        //     channels,
-        //     guilds,
-        // };
+        if (!user) return null;
+
+        const friends = Array.from(user.friends);
+        delete user.friends;
+
+        const blocked = Array.from(user.blocked);
+        delete user.blocked;
+
+        const received = Array.from(user.received);
+        delete user.received;
+
+        const sent = Array.from(user.sent);
+        delete user.sent;
+
+        const channels = Array.from(user.channels).map((channel) => {
+            const recipients = user.channelRecipients.filter(
+                (recipient) => recipient.channelId === channel.id
+            );
+
+            channel.recipients = [
+                ...recipients.map((recipient) => {
+                    delete recipient.channelId;
+                    return recipient;
+                }),
+                {
+                    id: user.id,
+                    username: user.username,
+                    displayName: user.displayName,
+                    avatar: user.avatar,
+                },
+            ];
+
+            return channel;
+        });
+        delete user.channels;
+        delete user.channelRecipients;
+
+        const guilds = Array.from(user.guilds);
+        delete user.guilds;
+
+        console.log({
+            user,
+            friends,
+            received,
+            sent,
+            channels: JSON.stringify(channels, null, 4),
+            guilds,
+        });
+
+        return {
+            user,
+            friends,
+            blocked,
+            received,
+            sent,
+            channels,
+            guilds,
+        };
     } catch (error) {
         console.log(error);
         return null;

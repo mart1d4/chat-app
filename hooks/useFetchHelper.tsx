@@ -311,12 +311,22 @@ export default function useRequestHelper() {
 
                 await new Promise((resolve) => setTimeout(resolve, after));
                 return sendRequest({ query, params, body, attemps: attemps + 1 });
-            } else {
+            } else if (response.ok) {
                 const data = await response.json();
 
                 return {
                     data: data || {},
                     errors: {},
+                };
+            } else {
+                const data = await response.json();
+
+                return {
+                    data: null,
+                    errors: data.errors || {
+                        message: data.message,
+                        status: response.status,
+                    },
                 };
             }
         } catch (error: any) {

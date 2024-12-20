@@ -1,6 +1,6 @@
 "use client";
 
-import { Channels, Guilds, Users } from "@/lib/db/types";
+import { Channels, Guilds, Users } from "@/lib/db/db.types";
 import { AppSpinner } from "./Spinner";
 import { useData } from "@/store";
 import { useEffect } from "react";

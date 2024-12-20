@@ -21,6 +21,7 @@ export function UserItem({ content, user }) {
             //         ? styles.liContainer + " " + styles.active
             //         : styles.liContainer
             // }
+            className={styles.liContainer}
             onClick={() => {
                 if (!["all", "online"].includes(content)) return;
 

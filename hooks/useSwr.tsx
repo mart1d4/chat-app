@@ -52,7 +52,10 @@ export default function fetchHelper() {
                 const data = await response.json();
                 throw { errors: data.errors || { server: "Something went wrong." } };
             } else {
-                return await response.json();
+                const data = await response.json();
+                console.log(data);
+
+                return data;
             }
         } catch (error) {
             throw { errors: { server: "Something went wrong." } };

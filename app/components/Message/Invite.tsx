@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import type { Invites, Messages } from "@/lib/db/types";
+import type { Invites, Messages } from "@/lib/db/db.types";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Message.module.css";
 import { assets } from "@/lib/assets";

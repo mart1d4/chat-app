@@ -144,6 +144,8 @@ export function TextArea({
         content: string | undefined;
     };
 }) {
+    console.log("Channel: ", channel);
+
     const width562 = useWindowSettings((state) => state.widthThresholds)[562];
     const setMention = useMention((state) => state.setMention);
     const setDraft = useMessages((state) => state.setDraft);

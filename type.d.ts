@@ -1,160 +1,80 @@
-import type {
-    GuildMembers,
-    Guilds,
-    Invites,
-    MembersProfile,
-    Messages,
-    Roles,
-    Users,
-    Channels,
-    Attachments,
-    Embeds,
-} from "./lib/db/types";
-import type { Selectable } from "kysely";
+import { Channels, Emojis, Guilds, Invites, Messages, Roles, Users } from "@lib/db/db.type.js";
+import { Selectable } from "kysely";
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+// Environment variables
 
-export type UserLight = Pick<Selectable<Users>, "id" | "displayName" | "avatar">;
+declare module "bun" {
+    interface Env {
+        BASE_URL: string;
+        NEXT_PUBLIC_API_URL: string;
 
-export type Attachment = Attachments & {
-    file: File;
+        DB_NAME: string;
+        DB_HOST: string;
+        DB_USER: string;
+        DB_PASSWORD: string;
+        DB_PORT: number;
+        DB_CONNECTION_LIMIT: number;
+
+        ACCESS_TOKEN_SECRET: string;
+        REFRESH_TOKEN_SECRET: string;
+
+        NEXT_PUBLIC_CDN_URL: string;
+        UPLOADTHING_TOKEN: string;
+    }
+}
+
+// User
+
+export type User = Selectable<Users>;
+export type OptionalUser = Partial<User>;
+export type LightUser = Pick<User, "id" | "displayName" | "avatar">;
+export type LightUserWithUsername = LightUser & Pick<User, "username">;
+export type UserProfile = Pick<
+    User,
+    | "id"
+    | "username"
+    | "displayName"
+    | "description"
+    | "customStatus"
+    | "status"
+    | "avatar"
+    | "banner"
+    | "primaryColor"
+    | "accentColor"
+>;
+
+// Channel
+
+export type Channel = Selectable<Channels>;
+export type OptionalChannel = Partial<Channel>;
+export type LightChannel = Pick<Channel, "id" | "name" | "icon">;
+export type LightChannelWithTopic = LightChannel & Pick<Channel, "topic">;
+export type LightChannelWithRecipients = LightChannel & { recipients: LightUser[] };
+export type LightChannelWithTopicAndRecipients = LightChannelWithTopic & {
+    recipients: LightUser[];
 };
 
-export type Message = {
-    id: number;
-    type: number;
-    content: string | null;
+// Guild
 
-    attachments: Attachments[];
-    embeds: Embeds[];
-
-    edited: Date | null;
-    pinned: boolean;
-
-    channelId: number;
-    createdAt: Date;
-
-    author: UserLight;
-    mentions: UserLight[];
-    reference: Message | null;
-
-    loading?: boolean;
-    error?: boolean;
-    send?: boolean;
-
-    functions?: {
-        edit: (string) => Promise<void>;
-        delete: () => Promise<void>;
-        pin: () => Promise<void>;
-        unpin: () => Promise<void>;
-        editState: () => void;
-        replyState: () => void;
-        deleteLocal: () => void;
-        deletePopup: () => void;
-        pinPopup: () => void;
-        unpinPopup: () => void;
-        copyText: () => Promise<void>;
-        copyLink: () => Promise<void>;
-        copyId: () => Promise<void>;
-        speak: () => Promise<void>;
-        translate: () => Promise<void>;
-        report: () => void;
-        retry: () => void;
-    };
-};
-
-export type InviteGuild = Partial<Selectable<Guilds>> &
-    Pick<Guilds, "id" | "name" | "icon"> & {
-        memberCount: {
-            all: number;
-            online: number;
-        };
-    };
-
-export type InviteChannel = Partial<Selectable<Channels>> & Pick<Channels, "id" | "name">;
-
-export type Invite = Partial<Selectable<Invites>> &
-    Pick<Invites, "id" | "code"> & {
-        guild: InviteGuild | null;
-        channel: InviteChannel;
-    };
-
-export type GuildMemberRole = Partial<Selectable<Roles>> & Pick<Roles, "id" | "name" | "color">;
-
-export type GuildMember = Partial<Selectable<Users>> &
-    Pick<Users, "id" | "displayName" | "avatar"> & {
-        profile: {
-            nickname: string;
-            roles: GuildMemberRole[];
-            permissions: number;
-            color: string;
-            joinedAt: Date;
-        };
-    };
-
-export type GuildChannel = Partial<Selectable<Channels>> &
-    Pick<Channels, "id" | "name" | "topic" | "position" | "parentId">;
-
-export type Guild = Pick<Guilds, "id" | "name" | "icon" | "systemChannelId"> & {
+export type Guild = Selectable<Guilds>;
+export type OptionalGuild = Partial<Guild>;
+export type LightGuild = Pick<Guild, "id" | "name" | "icon">;
+export type LightGuildWithChannels = LightGuild & { channels: LightChannel[] };
+export type GuildMember = LightUser & { nickname: string; joinedAt: Date };
+export type LightGuildWithMembers = LightGuild & { members: GuildMember[] };
+export type LightGuildWithChannelsAndMembers = LightGuild & {
+    channels: LightChannel[];
     members: GuildMember[];
-    channels: GuildChannel[];
 };
 
-export type ChannelRecipient = Pick<
-    Users,
-    "id" | "displayName" | "avatar" | "status" | "customStatus"
->;
+// Message
 
-export type Channel = Pick<Channels, "id" | "type" | "name" | "icon"> & {
-    recipients: ChannelRecipient[];
-};
+export type Message = Selectable<Messages>;
+export type OptionalMessage = Partial<Message>;
 
-export type User = Pick<
-    Selectable<Users>,
-    | "id"
-    | "username"
-    | "displayName"
-    | "avatar"
-    | "banner"
-    | "primaryColor"
-    | "accentColor"
-    | "description"
-    | "status"
-    | "customStatus"
->;
-
-// Fetch response types
-
-export type MutualGuildResponse = Pick<Guilds, "id" | "name" | "icon"> & {
-    memberCount?: {
-        all: number;
-        online: number;
-    };
-    userProfileAKA?: Users["username"];
-};
-
-export type MutualFriendResponse = Pick<Users, "id" | "displayName" | "avatar">;
-
-export type UserProfileResponse = Pick<
-    Selectable<Users>,
-    | "id"
-    | "username"
-    | "displayName"
-    | "avatar"
-    | "banner"
-    | "primaryColor"
-    | "accentColor"
-    | "description"
-    | "status"
-    | "customStatus"
-    | "createdAt"
-> & {
-    mutualGuilds: MutualGuildResponse[];
-    mutualFriends: MutualFriendResponse[];
-};
-
-export type MessageResponse = Pick<
-    Messages,
+// Message object being sent from the API when fetching messages
+export type ReponseMessage = Pick<
+    Message,
     | "id"
     | "type"
     | "content"
@@ -162,10 +82,64 @@ export type MessageResponse = Pick<
     | "embeds"
     | "edited"
     | "pinned"
-    | "channelId"
+    | "mentionEveryone"
     | "createdAt"
-> & {
-    author: Pick<Users, "id" | "displayName" | "avatar">;
-    mentions: Pick<Users, "id" | "displayName" | "avatar">[];
-    reference?: MessageResponse;
+> & { author: LightUser } & { reference: ReponseMessage | null } & { userMentions: LightUser[] } & {
+    roleMentions: RoleResponse[];
+} & { channelMentions: LightChannel[] };
+
+// Message object from TextArea before being sent to the API
+export type TextAreaMessage = Pick<Message, "id" | "content" | "createdAt"> & {
+    attachments: {
+        id: number;
+
+        file: File;
+        type: "image" | "video" | "audio" | "file";
+
+        size: number;
+        filename: string;
+        alt: string;
+        spoiler: boolean;
+
+        width: number | null;
+        height: number | null;
+    }[];
+
+    userMentions: LightUser[];
+
+    sending?: boolean;
+    loading?: boolean;
+    errored?: boolean;
+};
+
+// Emoji
+
+export type Emoji = Selectable<Emojis>;
+export type OptionalEmoji = Partial<Emoji>;
+export type EmojiResponse = Pick<Emoji, "id" | "name" | "url" | "animated">;
+
+// Role
+
+export type Role = Selectable<Roles>;
+export type OptionalRole = Partial<Role>;
+export type RoleResponse = Pick<
+    Role,
+    "id" | "name" | "color" | "hoist" | "position" | "permissions" | "mentionable"
+>;
+
+// Invite
+
+export type Invite = Selectable<Invites>;
+export type OptionalInvite = Partial<Invite>;
+export type InviteResponse = Pick<Invite, "code" | "uses" | "maxUses" | "expiresAt"> & {
+    inviter: LightUser;
+} & { channel: LightChannel } & {
+    guild:
+        | (LightGuild & {
+              memberCount: {
+                  all: number;
+                  online: number;
+              };
+          })
+        | null;
 };
