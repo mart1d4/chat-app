@@ -17,7 +17,26 @@ export function getLongDate(date: Date) {
     return `${formattedDate} ${formattedTime}`;
 }
 
-export function getMidDate(date: Date) {
+export function getMidDate(timestamp: string) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+
+    const timePassedToday = now.getHours() * 60 * 60 * 1000 + now.getMinutes() * 60 * 1000;
+    const timePassedYesterday = timePassedToday + 24 * 60 * 60 * 1000;
+
+    if (diff < timePassedToday) {
+        return `Today at ${new Intl.DateTimeFormat("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+        }).format(date)}`;
+    } else if (diff < timePassedYesterday) {
+        return `Yesterday at ${new Intl.DateTimeFormat("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+        }).format(date)}`;
+    }
+
     return new Intl.DateTimeFormat("en-US", {
         month: "numeric",
         day: "numeric",

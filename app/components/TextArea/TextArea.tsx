@@ -1,13 +1,14 @@
 "use client";
 
+import type { Attachment, AttachmentType, Channel, ChannelRecipient, Message } from "@/type";
 import { type ChangeEvent, useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { useWindowSettings, useSettings, useMessages, useMention, useData } from "@/store";
-import type { Attachment, Channel, ChannelRecipient, Message } from "@/type";
 import { Editor, Transforms, Range, createEditor, Point, Node } from "slate";
 import { Slate, Editable, withReact, ReactEditor } from "slate-react";
+import type { MessageFunctions } from "../Message/Message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { lowercaseContains } from "@/lib/strings";
 import { getNanoIdInt } from "@/lib/insertions";
+import { fileTypeFromStream } from "file-type";
 import type { CustomEditor } from "@/slate";
 import { withHistory } from "slate-history";
 import styles from "./TextArea.module.css";
@@ -23,8 +24,14 @@ import {
     Avatar,
     Icon,
 } from "@components";
-
-let dragged = false;
+import {
+    useWindowSettings,
+    useTriggerDialog,
+    useSettings,
+    useMessages,
+    useMention,
+    useData,
+} from "@/store";
 
 const initialEditorValue = [{ type: "paragraph", children: [{ text: "" }] }];
 
@@ -134,18 +141,18 @@ export function TextArea({
     channel,
     setMessages,
     messageObject,
+    functions,
     edit,
 }: {
     channel: Channel;
     setMessages: InfiniteKeyedMutator;
     messageObject?: Message;
+    functions?: MessageFunctions;
     edit?: {
         messageId: number;
         content: string | undefined;
     };
 }) {
-    console.log("Channel: ", channel);
-
     const width562 = useWindowSettings((state) => state.widthThresholds)[562];
     const setMention = useMention((state) => state.setMention);
     const setDraft = useMessages((state) => state.setDraft);
@@ -164,11 +171,14 @@ export function TextArea({
 
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
+    const [loading, setLoading] = useState<{
+        [key: string]: boolean;
+    }>({});
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
-    const blocked = useData((state) => state.blocked).map((user) => user.id);
+    const { blocked, removeUser } = useData();
     const friend = channel.recipients.find((r) => r.id !== user?.id);
 
     const [target, setTarget] = useState<Range | null>(null);
@@ -217,45 +227,46 @@ export function TextArea({
         [recipients, editor, index, target]
     );
 
+    const { triggerDialog, removeDialog } = useTriggerDialog();
+
     async function handleFileSubmit(files: File[], e: DragEvent | ChangeEvent<HTMLInputElement>) {
         if (files.length === 0) return;
 
         if (attachments.length + files.length > 10) {
-            // setLayers({
-            //     settings: { type: "POPUP" },
-            //     content: {
-            //         type: "WARNING",
-            //         warning: "FILE_NUMBER",
-            //     },
-            // });
+            triggerDialog({ type: "FILE_NUMBER" });
 
             if (e.target instanceof HTMLInputElement) {
                 return (e.target.value = "");
             }
+
             return;
         }
 
         let checkedFiles = [];
-        const maxFileSize = 1024 * 1024 * 50; // 50MB
+        const maxFileSize = 1024 * 1024 * 8; // 8MB
 
         for (const file of files) {
             if (file.size > maxFileSize) {
-                // setLayers({
-                //     settings: { type: "POPUP" },
-                //     content: {
-                //         type: "WARNING",
-                //         warning: "FILE_SIZE",
-                //     },
-                // });
-
+                triggerDialog({ type: "FILE_SIZE" });
                 checkedFiles = [];
+
                 if (e.target instanceof HTMLInputElement) {
                     return (e.target.value = "");
                 }
+
                 return;
             }
 
-            const { width, height } = await new Promise<HTMLImageElement>((resolve) => {
+            const stream = file.stream();
+            const typeObj = await fileTypeFromStream(stream);
+            const mimeType = typeObj?.mime?.split("/")[0];
+            const mime = mimeType ?? file.type.split("/")[0];
+            const type = ["image", "video", "audio"].includes(mime) ? mime : "file";
+
+            const { width, height } = await new Promise<
+                HTMLImageElement | { width: number; height: number }
+            >((resolve) => {
+                if (type !== "image") return resolve({ width: 0, height: 0 });
                 const img = new Image();
                 img.onload = () => resolve(img);
                 img.src = URL.createObjectURL(file);
@@ -263,46 +274,54 @@ export function TextArea({
 
             checkedFiles.push({
                 id: getNanoIdInt(),
+
                 file,
-
-                name: file.name ?? "",
-                size: file.size,
-
+                ext: typeObj?.ext ?? file.name.split(".").pop() ?? "",
                 url: URL.createObjectURL(file),
-                proxyUrl: "",
+                type: type as AttachmentType,
+
+                size: file.size,
+                filename: file.name ?? "",
+                spoiler: false,
+                description: "",
 
                 height,
                 width,
-
-                spoiler: false,
-                description: "",
             });
         }
 
         setAttachments((prev) => [...prev, ...checkedFiles]);
+
         if (e.target instanceof HTMLInputElement) {
             return (e.target.value = "");
         }
+
         return;
     }
 
     useEffect(() => {
+        let dragCounter = 0; // Counter to track active drag events
+        let dragged = false;
+
+        function isFileDrag(event: DragEvent): boolean {
+            return Array.from(event.dataTransfer?.items || []).some((item) => item.kind === "file");
+        }
+
+        function handleDragOver(e: DragEvent) {
+            e.preventDefault();
+            e.stopPropagation(); // Required for allowing drop
+        }
+
         function handleDragEnter(e: DragEvent) {
             e.preventDefault();
             e.stopPropagation();
 
-            // If element is a file, show the drag file warning
-            if ((e.dataTransfer?.items.length || 0) > 0 && !dragged) {
-                dragged = true;
-
-                // setLayers({
-                //     settings: { type: "POPUP" },
-                //     content: {
-                //         type: "WARNING",
-                //         warning: "DRAG_FILE",
-                //         channel: channel,
-                //     },
-                // });
+            if (isFileDrag(e)) {
+                dragCounter++;
+                if (!dragged) {
+                    dragged = true;
+                    triggerDialog({ type: "DRAG_FILE", data: { channel } });
+                }
             }
         }
 
@@ -310,8 +329,9 @@ export function TextArea({
             e.preventDefault();
             e.stopPropagation();
 
-            if (dragged) {
-                // setLayers({ settings: { type: "POPUP", setNull: true } });
+            dragCounter--;
+            if (dragCounter === 0 && dragged) {
+                removeDialog("DRAG_FILE");
                 dragged = false;
             }
         }
@@ -320,26 +340,26 @@ export function TextArea({
             e.preventDefault();
             e.stopPropagation();
 
-            if ((e.dataTransfer?.files.length || 0) > 0 && dragged) {
+            if (dragged && isFileDrag(e)) {
                 dragged = false;
+                dragCounter = 0;
 
                 const files = Array.from(e.dataTransfer?.files || []);
                 await handleFileSubmit(files, e);
 
-                // setLayers({
-                //     settings: {
-                //         type: "POPUP",
-                //         setNull: true,
-                //     },
-                // });
+                removeDialog("DRAG_FILE");
             }
         }
 
+        // Add listeners
+        document.addEventListener("dragover", handleDragOver);
         document.addEventListener("dragenter", handleDragEnter);
         document.addEventListener("dragleave", handleDragLeave);
         document.addEventListener("drop", handleDrop);
 
+        // Cleanup
         return () => {
+            document.removeEventListener("dragover", handleDragOver);
             document.removeEventListener("dragenter", handleDragEnter);
             document.removeEventListener("dragleave", handleDragLeave);
             document.removeEventListener("drop", handleDrop);
@@ -355,15 +375,8 @@ export function TextArea({
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                console.log("Escape key pressed");
-
-                if (edit) {
-                    setEdit(edit.messageId, null);
-                }
-
-                if (reply) {
-                    setReply(channel.id, null);
-                }
+                if (edit) setEdit(edit.messageId, null);
+                if (reply) setReply(channel.id, null);
             }
         }
 
@@ -375,25 +388,26 @@ export function TextArea({
         if (!canSend) return;
 
         if (text.length > 16000) {
-            // return setLayers({
-            //     settings: { type: "POPUP" },
-            //     content: {
-            //         type: "WARNING",
-            //         warning: "MESSAGE_LIMIT",
-            //     },
-            // });
+            triggerDialog({ type: "MESSAGE_LIMIT" });
+            return;
         }
 
         const temp = {
             id: nanoid(),
             content: text,
             attachments,
+            embeds: [],
             author: user,
-            channelId: [channel.id],
             reference: reply?.messageId ?? null,
             mentions: [],
+            roleMentions: [],
+            channelMentions: [],
+            pinned: null,
+            edited: null,
             createdAt: new Date(),
             send: true,
+            error: false,
+            loading: true,
         };
 
         // Search for mentions, and add them to the mentions array if they exist
@@ -416,7 +430,8 @@ export function TextArea({
         editor.children = [{ type: "paragraph", children: [{ text: "" }] }];
 
         if (edit && messageObject) {
-            setEdit(messageObject.id, null);
+            functions.editMessage();
+            return;
         } else {
             setDraft(channel.id, null);
         }
@@ -427,103 +442,127 @@ export function TextArea({
         if (reply?.messageId) setReply(channel.id, null);
     }
 
+    async function unblockUser() {
+        setLoading((prev) => ({ ...prev, unblockUser: true }));
+
+        try {
+            const { errors } = await sendRequest({
+                query: "UNBLOCK_USER",
+                params: { userId: friend?.id },
+            });
+
+            if (!errors) {
+                removeUser(friend?.id, "blocked");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading((prev) => ({ ...prev, unblockUser: false }));
+    }
+
     // console.log("Text: ", text);
 
-    const textContainer = (
-        <div
-            className={styles.textContainer}
-            style={{ height: textAreaRef.current?.scrollHeight || 44 }}
-        >
+    const textContainer = useMemo(
+        () => (
             <div
-                ref={textAreaRef}
-                className={styles.textbox}
-                onContextMenu={(e) => {
-                    // setLayers({
-                    //     settings: { type: "MENU", event: e },
-                    //     content: {
-                    //         type: "INPUT",
-                    //         input: true,
-                    //         sendButton: true,
-                    //         pasteText,
-                    //     },
-                    // });
-                }}
+                className={styles.textContainer}
+                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
             >
-                <Slate
-                    editor={editor}
-                    initialValue={JSON.parse(
-                        edit?.content || draft?.content || JSON.stringify(initialEditorValue)
-                    )}
-                    onChange={(value) => {
-                        // Get current text at cursor
-                        // const currentWord = Editor.string(editor, editor.selection);
-
-                        const json = JSON.stringify(value);
-
-                        if (edit && messageObject) {
-                            setEdit(messageObject.id, json);
-                        } else {
-                            setDraft(channel.id, json);
-                        }
-
-                        const { selection } = editor;
-
-                        if (selection && Range.isCollapsed(selection)) {
-                            const [start] = Range.edges(selection);
-
-                            const before = Editor.before(editor, start, { unit: "character" });
-                            const beforeRange = before && Editor.range(editor, before, start);
-                            const beforeText = beforeRange && Editor.string(editor, beforeRange);
-
-                            const range =
-                                beforeRange &&
-                                word(editor, beforeRange, {
-                                    terminator: [" "],
-                                    directions: "both",
-                                    include: true,
-                                });
-
-                            let text = range && Editor.string(editor, range);
-
-                            // If text includes spaces and text after those spaces,
-                            // only keep the text after the space
-                            if (
-                                text &&
-                                text.includes(" ") &&
-                                text.split(" ").length > 1 &&
-                                text.split(" ").pop() !== ""
-                            ) {
-                                text = text.split(" ").pop() || "";
-                            }
-
-                            const match = text && text.match(/(?<=^|\s)@(\S*)/);
-
-                            if (match && beforeText !== " ") {
-                                setTarget(beforeRange);
-                                setSearch(match[1]);
-                                setIndex(0);
-                                return;
-                            }
-                        }
-
-                        setTarget(null);
+                <div
+                    ref={textAreaRef}
+                    className={styles.textbox}
+                    onContextMenu={(e) => {
+                        // setLayers({
+                        //     settings: { type: "MENU", event: e },
+                        //     content: {
+                        //         type: "INPUT",
+                        //         input: true,
+                        //         sendButton: true,
+                        //         pasteText,
+                        //     },
+                        // });
                     }}
                 >
-                    <Editable
-                        renderElement={renderElement}
-                        renderLeaf={renderLeaf}
-                        onKeyDown={onKeyDown}
-                        placeholder={
-                            edit
-                                ? "Edit Message"
-                                : `Message ${
-                                      channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
-                                  }${channel.name}`
-                        }
-                    />
-                </Slate>
+                    <Slate
+                        editor={editor}
+                        initialValue={JSON.parse(
+                            edit?.content || draft?.content || JSON.stringify(initialEditorValue)
+                        )}
+                        onChange={(value) => {
+                            // Get current text at cursor
+                            // const currentWord = Editor.string(editor, editor.selection);
+
+                            const json = JSON.stringify(value);
+
+                            if (edit && messageObject) {
+                                setEdit(messageObject.id, json);
+                            } else {
+                                setDraft(channel.id, json);
+                            }
+
+                            const { selection } = editor;
+
+                            if (selection && Range.isCollapsed(selection)) {
+                                const [start] = Range.edges(selection);
+
+                                const before = Editor.before(editor, start, { unit: "character" });
+                                const beforeRange = before && Editor.range(editor, before, start);
+                                const beforeText =
+                                    beforeRange && Editor.string(editor, beforeRange);
+
+                                const range =
+                                    beforeRange &&
+                                    word(editor, beforeRange, {
+                                        terminator: [" "],
+                                        directions: "both",
+                                        include: true,
+                                    });
+
+                                let text = range && Editor.string(editor, range);
+
+                                // If text includes spaces and text after those spaces,
+                                // only keep the text after the space
+                                if (
+                                    text &&
+                                    text.includes(" ") &&
+                                    text.split(" ").length > 1 &&
+                                    text.split(" ").pop() !== ""
+                                ) {
+                                    text = text.split(" ").pop() || "";
+                                }
+
+                                const match = text && text.match(/(?<=^|\s)@(\S*)/);
+
+                                if (match && beforeText !== " ") {
+                                    setTarget(beforeRange);
+                                    setSearch(match[1]);
+                                    setIndex(0);
+                                    return;
+                                }
+                            }
+
+                            setTarget(null);
+                        }}
+                    >
+                        <Editable
+                            focus-id="text-area"
+                            renderElement={renderElement}
+                            renderLeaf={renderLeaf}
+                            onKeyDown={onKeyDown}
+                            placeholder={
+                                edit
+                                    ? "Edit Message"
+                                    : `Message ${
+                                          channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
+                                      }${channel.name}`
+                            }
+                        />
+                    </Slate>
+                </div>
             </div>
-        </div>
+        ),
+        [text, attachments, edit, draft]
     );
 
     if (edit) {
@@ -537,7 +576,11 @@ export function TextArea({
                     style={{ marginBottom: "0" }}
                 >
                     <div className={styles.scrollableContainer + " scrollbar"}>
-                        <div className={styles.input}>
+                        <div
+                            id="text-area"
+                            className={styles.input}
+                            style={{ borderRadius: "8px" }}
+                        >
                             {textContainer}
 
                             <div className={styles.toolsContainer}>
@@ -548,7 +591,7 @@ export function TextArea({
                 </div>
             </form>
         );
-    } else if (!blocked.includes(friend?.id ?? 0)) {
+    } else if (!blocked.find((b) => b.id === friend?.id)) {
         return (
             <form className={styles.form}>
                 {reply && !edit && (
@@ -640,7 +683,13 @@ export function TextArea({
                             </>
                         )}
 
-                        <div className={styles.input}>
+                        <div
+                            id="text-area"
+                            className={styles.input}
+                            style={{
+                                borderRadius: attachments.length > 0 ? "0 0 8px 8px" : "8px",
+                            }}
+                        >
                             <div className={styles.attachWrapper}>
                                 <input
                                     ref={fileInputRef}
@@ -786,15 +835,9 @@ export function TextArea({
                     <button
                         type="button"
                         className="button grey"
-                        onClick={() => {
-                            if (!friend) return;
-                            sendRequest({
-                                query: "UNBLOCK_USER",
-                                params: { userId: friend.id },
-                            });
-                        }}
+                        onClick={() => unblockUser()}
                     >
-                        Unblock
+                        {loading.unblockUser ? <LoadingDots /> : "Unblock"}
                     </button>
                 </div>
             </form>

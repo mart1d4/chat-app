@@ -30,5 +30,5 @@ export const regexes = {
 export const validInviteChannelTypes = [1, 2, 3];
 
 export function isFileImage(mime: string) {
-    return mime.startsWith("image/");
+    return mime?.startsWith("image/");
 }

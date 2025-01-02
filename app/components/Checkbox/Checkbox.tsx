@@ -8,7 +8,7 @@ export const Checkbox = ({
     size = 24,
 }: {
     checked: boolean;
-    onChange?: () => void;
+    onChange: (value: boolean) => void;
     inputFor: string;
     box?: boolean;
     size?: number;
@@ -16,22 +16,27 @@ export const Checkbox = ({
     if (box) {
         return (
             <div
-                tabIndex={0}
                 className={styles.box}
                 style={{
-                    backgroundColor: checked ? "var(--accent-1)" : "",
                     borderColor: checked ? "var(--accent-border)" : "",
-                    width: `${size}px`,
+                    backgroundColor: checked ? "var(--accent-1)" : "",
                     height: `${size}px`,
+                    width: `${size}px`,
                 }}
-                onClick={onChange ? onChange : () => {}}
-                onKeyDown={(e) => (e.key === "Enter" && onChange ? onChange() : {})}
             >
                 <input
                     id={inputFor}
-                    tabIndex={-1}
                     type="checkbox"
-                    onChange={onChange ? onChange : () => {}}
+                    checked={checked}
+                    onChange={() => onChange(!checked)}
+                    focus-id={`${inputFor}-label`}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onChange(!checked);
+                        }
+                    }}
                 />
 
                 {checked && (
@@ -74,6 +79,7 @@ export const Checkbox = ({
                     width="20"
                     rx="10"
                 />
+
                 {checked ? (
                     <svg
                         viewBox="0 0 20 20"

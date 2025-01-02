@@ -1,0 +1,634 @@
+.attachments {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    text-indent: 0;
+    row-gap: 0.25rem;
+    position: relative;
+    height: fit-content;
+    grid-auto-flow: row;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+}
+
+.attachments > div {
+    height: 100%;
+    max-width: 550px;
+    overflow: hidden;
+    align-self: start;
+    border-radius: 8px;
+    justify-self: start;
+}
+
+.otherAttachments {
+    overflow: visible;
+}
+
+.otherAttachments > div {
+    max-width: 100%;
+    overflow: visible;
+}
+
+.oneByOneGrid {
+    display: flex;
+    max-height: 280px;
+}
+
+.oneByOneGridSingle {
+    max-height: 350px;
+}
+
+.oneByTwoGrid {
+    gap: 4px;
+    display: flex;
+    max-height: 280px;
+}
+
+.oneByTwoLayoutThreeGrid {
+    max-height: 350px;
+}
+
+.oneByTwoGridItem {
+    flex: 1;
+    min-width: 0;
+}
+
+.oneByTwoSoloItem {
+    flex: 2;
+}
+
+.oneByTwoDuoItem {
+    flex: 1;
+}
+
+.twoByOneGrid {
+    gap: 4px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.twoByOneGridItem {
+    flex: 1;
+    min-height: 0;
+}
+
+.twoByTwoGrid {
+    gap: 4px;
+    display: grid;
+    max-height: 350px;
+    grid-template-rows: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.threeByThreeGrid {
+    gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.oneByOneGrid + .threeByThreeGrid,
+.oneByTwoGrid + .threeByThreeGrid {
+    margin-top: 4px;
+}
+
+.attachment {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    max-width: 100%;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 2px;
+    position: relative;
+    max-height: inherit;
+    align-items: center;
+    flex-flow: row nowrap;
+}
+
+.image {
+    height: 100%;
+    display: block;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+    max-width: calc(100% + 1px);
+}
+
+.image[alt] {
+    text-indent: -9999px;
+}
+
+.deleteImage {
+    visibility: hidden;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    padding: 6px;
+    border-radius: 5px;
+    overflow: hidden;
+    color: var(--foreground-3);
+    background-color: var(--background-4);
+    z-index: 2;
+    cursor: pointer;
+}
+
+.deleteImage:hover {
+    color: var(--foreground-1);
+    background-color: var(--error-1);
+}
+
+.deleteImage > svg {
+    width: 20px;
+    height: 20px;
+}
+
+.attachment:hover .deleteImage {
+    visibility: visible;
+}
+
+.spoilerButton {
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    height: 31px;
+    display: flex;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    user-select: none;
+    padding: 8px 12px;
+    position: absolute;
+    align-items: center;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    flex-direction: column;
+    justify-content: center;
+    text-transform: uppercase;
+    color: var(--foreground-2);
+    transform: translate(-50%, -50%);
+    background-color: var(--background-5);
+}
+
+.attachment:hover .spoilerButton {
+    background-color: var(--background-dark-2);
+}
+
+.imageAlt {
+    left: 4.5px;
+    bottom: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 7px 8px;
+    line-height: 18px;
+    border-radius: 4px;
+    position: absolute;
+    color: var(--foreground-1);
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.imageAlt:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.nonVisualAttachment:not(.text) {
+    width: 432px;
+    padding: 16px;
+    display: flex;
+    max-width: 100%;
+    border-radius: 8px;
+    align-items: center;
+    border: 1px solid var(--background-2);
+    background-color: var(--background-3);
+}
+
+.nonVisualAttachment {
+    position: relative;
+}
+
+.nonVisualAttachment header {
+    display: flex;
+}
+
+.nonVisualAttachment header > svg {
+    width: 30px;
+    height: 40px;
+    margin-right: 8px;
+}
+
+.nonVisualAttachment > .audio > header > svg {
+    width: 24px;
+}
+
+.audio {
+    width: 100%;
+}
+
+.nonVisualAttachment header > div > a {
+    text-decoration: none;
+    color: var(--accent-light);
+}
+
+.nonVisualAttachment header > div > a:hover {
+    text-decoration: underline;
+}
+
+.nonVisualAttachment header > div > p {
+    opacity: 0.7;
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    line-height: 16px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.audioPlayer {
+    width: 100%;
+}
+
+.audioPlayer > div {
+    width: 100%;
+    display: flex;
+    margin-top: 12px;
+    border-radius: 3px;
+    align-items: center;
+    background-color: var(--background-dark-1);
+}
+
+.play,
+.volume {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    display: flex;
+    flex: 0 0 auto;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-4);
+    background-color: transparent;
+    transition: transform 0.15s ease;
+}
+
+.play:hover,
+.volume:hover {
+    color: var(--foreground-1);
+}
+
+.play:active,
+.volume:active {
+    transform: translateY(1px);
+}
+
+.play {
+    margin-right: 8px;
+}
+
+.duration {
+    margin: 4px;
+    height: 12px;
+    flex: 0 0 auto;
+}
+
+.duration > span {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 12px;
+    user-select: none;
+    display: inline-block;
+    vertical-align: text-top;
+    font-family: var(--font-code);
+}
+
+.progressContainer {
+    width: 100%;
+    display: flex;
+    align-self: stretch;
+}
+
+.progressContainer > div {
+    margin: 0 7px;
+    display: flex;
+    flex: 1 1 auto;
+    cursor: pointer;
+    position: relative;
+    align-self: stretch;
+    align-items: center;
+}
+
+.bar {
+    height: 6px;
+    flex: 1 1 auto;
+    position: relative;
+    border-radius: 3px;
+    background-color: hsl(210 9.259% 78.824% /0.3);
+}
+
+.bar > div:not(:last-child) {
+    top: 0;
+    left: 0;
+    height: 100%;
+    position: absolute;
+    border-radius: 3px;
+}
+
+.bar > .progress {
+    z-index: 3;
+    background-color: var(--accent-1);
+}
+
+.bar > .buffer {
+    z-index: 1;
+    opacity: 0.3;
+    background-color: var(--foreground-3);
+}
+
+.bar > .preview {
+    z-index: 2;
+    opacity: 0;
+    background-color: var(--foreground-2);
+}
+
+.progressContainer > div:hover .preview {
+    opacity: 0.3;
+}
+
+.bar > .progress > .grabber {
+    top: 50%;
+    right: 0;
+    z-index: 2;
+    width: 10px;
+    height: 10px;
+    cursor: grab;
+    margin-top: -5px;
+    margin-right: -5px;
+    border-radius: 5px;
+    position: absolute;
+    transform: scale(0);
+    transform-origin: 50% 50%;
+    background-color: var(--accent-2);
+    transition: transform 0.25s ease-in-out, background-color 0.25s linear;
+}
+
+.bubble {
+    opacity: 0;
+    top: -28px;
+    width: auto;
+    height: 18px;
+    display: flex;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    user-select: none;
+    border-radius: 3px;
+    position: absolute;
+    text-align: center;
+    align-items: center;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: opacity 0.2s ease-out;
+    background-color: var(--background-dark-2);
+}
+
+.bubble::before {
+    width: 0;
+    height: 0;
+    top: 100%;
+    left: 50%;
+    content: "";
+    margin-left: -5px;
+    position: absolute;
+    pointer-events: none;
+    border: 5px solid transparent;
+    border-top-color: var(--background-dark-2);
+}
+
+.progressContainer > div:hover .bubble {
+    opacity: 1;
+}
+
+.progressContainer > div:hover .progress > .grabber {
+    transform: scale(1);
+}
+
+.controls > :last-child {
+    position: relative;
+}
+
+.volumeChange {
+    left: 50%;
+    z-index: 4;
+    height: 82px;
+    display: flex;
+    cursor: pointer;
+    padding: 8px 4px;
+    margin: 4px 0 0 0;
+    visibility: hidden;
+    border-radius: 8px;
+    position: absolute;
+    align-items: center;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    background-color: var(--background-dark-1);
+}
+
+.volumeContainer:hover > div {
+    visibility: visible;
+}
+
+.volumeChange > .bar {
+    width: 6px;
+    height: 72px;
+    border-radius: 2px;
+}
+
+.volumeChange .progress > .grabber {
+    top: 0;
+    left: 50%;
+    margin-left: -5px;
+}
+
+.volumeChange:hover .progress > .grabber {
+    transform: scale(1);
+}
+
+.volumeChangeHover {
+    left: 50%;
+    z-index: 3;
+    width: 60px;
+    bottom: 100%;
+    height: 110px;
+    position: absolute;
+    visibility: hidden;
+    transform: translateX(-50%);
+}
+
+.text {
+    max-width: 100%;
+    width: fit-content;
+}
+
+.text > .content {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    min-height: 118px;
+    border-radius: 8px 8px 0 0;
+    background-color: var(--background-3);
+    border: 1px solid var(--background-2);
+}
+
+.text > .content > pre {
+    max-width: none;
+}
+
+.text > .content .code {
+    border: 0;
+    width: 100%;
+    padding: 8px;
+    margin: 8px 8px 0;
+    background-color: transparent;
+    /* lines shouldnt wrap */
+    white-space: pre;
+    overflow: hidden;
+}
+
+.tools {
+    height: 40px;
+    border-top: 0;
+    display: flex;
+    padding: 0 16px;
+    align-items: center;
+    justify-content: flex-end;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--background-2);
+    background-color: var(--background-3);
+}
+
+.tools > * {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tools > button {
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.tools > button:hover {
+    color: var(--foreground-1);
+}
+
+.tools > :first-child {
+    flex-shrink: 0;
+    font-size: 14px;
+    padding-right: 10px;
+    color: var(--foreground-3);
+}
+
+.tools > :nth-child(2) {
+    padding: 4px 10px 0 0;
+    color: var(--foreground-3);
+}
+
+.tools > div {
+    min-width: 20px;
+    flex: 200 0 auto;
+}
+
+.tools > span:first-of-type {
+    flex: 0 1 auto;
+    font-size: 14px;
+    overflow: hidden;
+    text-align: right;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+}
+
+.tools > span:last-of-type {
+    opacity: 0.5;
+    flex: 1 0 auto;
+    font-size: 14px;
+    margin-left: 2px;
+    text-align: right;
+    color: var(--foreground-5);
+}
+
+.tools > span:hover {
+    opacity: 1;
+    color: var(--foreground-1);
+}
+
+.tools > a {
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    margin-left: 4px;
+    color: var(--foreground-3);
+}
+
+.tools > a:hover {
+    color: var(--foreground-1);
+}
+
+.tools > :last-child {
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+    color: var(--foreground-3);
+}
+
+.textModal > :first-child {
+    padding: 4px;
+    overflow: auto;
+    min-height: 400px;
+    border-radius: 8px 8px 0 0;
+    max-height: calc(100vh - 120px);
+    border: 1px solid var(--background-2);
+    background-color: var(--background-3);
+    min-width: min(800px, calc(100vw - 32px));
+    max-width: min(960px, calc(100vw - 32px));
+}
+
+.actions {
+    top: -8px;
+    opacity: 0;
+    z-index: 2;
+    right: -8px;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
+    border-radius: 5px;
+    background-color: var(--background-4);
+    outline: 1px solid var(--background-2);
+}
+
+.actions > button {
+    padding: 6px;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+}
+
+.actions > button:hover {
+    background-color: var(--background-3);
+}
+
+.actions > .delete:hover {
+    color: var(--foreground-1);
+    background-color: var(--error-1);
+}
+
+.nonVisualAttachment:hover:not(:has(.volumeContainer:hover)) > .actions {
+    opacity: 1;
+}

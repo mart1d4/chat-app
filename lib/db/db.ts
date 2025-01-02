@@ -2,15 +2,11 @@ import { Kysely, CamelCasePlugin, MysqlDialect } from "kysely";
 import { createPool } from "mysql2";
 import { DB } from "./db.types";
 
-if (
-    !process.env.DB_NAME ||
-    !process.env.DB_HOST ||
-    !process.env.DB_USER ||
-    !process.env.DB_PASSWORD ||
-    !process.env.DB_PORT ||
-    !process.env.DB_CONNECTION_LIMIT
-) {
-    throw new Error("Missing database configuration");
+const { DB_HOST, DB_NAME, DB_PORT, DB_USER, DB_PASSWORD, DB_CONNECTION_LIMIT } = process.env;
+
+if (!DB_HOST || !DB_NAME || !DB_PORT || !DB_USER || !DB_PASSWORD || !DB_CONNECTION_LIMIT) {
+    console.error("Database configuration is missing. Please check .env file.");
+    process.exit(1);
 }
 
 declare global {

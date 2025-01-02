@@ -2,9 +2,9 @@
 
 import { AddFriend, UserLists } from "@components";
 import { useSettings, useUrls } from "@/store";
-import { ReactElement, useEffect } from "react";
+import { useEffect } from "react";
 
-const Content = (): ReactElement => {
+export default function Content() {
     const settings = useSettings((state) => state.settings);
     const setChannelUrl = useUrls((state) => state.setMe);
     const tab = settings.friendTab;
@@ -16,6 +16,4 @@ const Content = (): ReactElement => {
 
     if (tab === "add") return <AddFriend />;
     else return <UserLists content={tab} />;
-};
-
-export default Content;
+}

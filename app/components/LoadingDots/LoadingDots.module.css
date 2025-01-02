@@ -1,30 +1,44 @@
-.svg {
-    color: white;
+.container {
+    width: 28px;
+    height: auto;
+    display: flex;
+    contain: paint;
+    position: relative;
+    justify-content: center;
 }
 
-.svg > g > circle:nth-child(1) {
-    animation: dot infinite 1.25s ease-in-out 0s;
+.container > span {
+    width: 6px;
+    height: 6px;
+    opacity: 0.3;
+    border-radius: 3px;
+    background-color: hsl(0 0 97.65);
+    animation: pulse 1.4s infinite ease-in-out;
 }
 
-.svg > g > circle:nth-child(2) {
-    animation: dot infinite 1.25s ease-in-out 0.25s;
+.container > span:not(:last-child) {
+    margin-right: 2px;
 }
 
-.svg > g > circle:nth-child(3) {
-    animation: dot infinite 1.25s ease-in-out 0.5s;
+.container > span:nth-child(2) {
+    animation-delay: 0.2s;
 }
 
-@keyframes dot {
+.container > span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes pulse {
     0% {
-        opacity: 0.2;
-        r: 2.8;
-    }
-    30% {
+        transform: scale(1);
         opacity: 1;
-        r: 3.5;
+    }
+    50% {
+        transform: scale(0.8);
+        opacity: 0.3;
     }
     100% {
-        opacity: 0.2;
-        r: 2.8;
+        transform: scale(1);
+        opacity: 1;
     }
 }

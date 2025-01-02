@@ -5,7 +5,6 @@ import useFetchHelper from "@/hooks/useFetchHelper";
 import { translateCap } from "@/lib/strings";
 import styles from "./UserItem.module.css";
 import { Avatar, Icon } from "@components";
-import { useLayers } from "@/store";
 import { useRef } from "react";
 
 export function UserItem({ content, user }) {

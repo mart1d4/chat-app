@@ -1,9 +1,8 @@
-import type { Channel, User } from "@/type";
+import type { AppChannel, AppUser } from "@/type";
 
 export function translateCap(str: string) {
     if (typeof str !== "string") {
-        console.error(`translateCap expected a string, but got ${typeof str}`);
-        return "";
+        throw new Error(`translateCap expected a string, but got ${typeof str}`);
     }
 
     return str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => {
@@ -13,8 +12,7 @@ export function translateCap(str: string) {
 
 export function sanitizeString(content: string) {
     if (typeof content !== "string") {
-        console.error(`sanitizeString expected a string, but got ${typeof content}`);
-        return "";
+        throw new Error(`sanitizeString expected a string, but got ${typeof content}`);
     }
 
     const trimmedChars = ["\n", "\r", "\t", "\b", " "];
@@ -39,7 +37,7 @@ export function sanitizeString(content: string) {
     return content;
 }
 
-export function getChannelName(channel: Channel, user: User) {
+export function getChannelName(channel: AppChannel, user: AppUser): string {
     if (channel.name) return channel.name;
 
     if (channel.recipients.length === 1) {
@@ -57,14 +55,16 @@ export function getChannelName(channel: Channel, user: User) {
     }
 }
 
-export function getChannelIcon(channel: Channel, user: User) {
+export function getChannelIcon(channel: AppChannel, user: AppUser): string {
     if (channel.icon) return channel.icon;
 
     const recipients = channel.recipients.filter((r) => r.id !== user.id);
-    return recipients[0].avatar;
+    return recipients[0]?.avatar || "";
 }
 
-export function getFullChannel(channel: Channel, user: User) {
+export function getFullChannel(channel: AppChannel, user: AppUser | null): AppChannel | null {
+    if (!user) return null;
+
     return {
         ...channel,
         name: getChannelName(channel, user),

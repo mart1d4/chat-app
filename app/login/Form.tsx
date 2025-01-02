@@ -1,54 +1,41 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { sanitizeString } from "@/lib/strings";
+import { Input, LoadingDots } from "@components";
 import { useRouter } from "next/navigation";
-import { LoadingDots } from "@components";
 import styles from "../Auth.module.css";
+import { getApiUrl } from "@/lib/urls";
+import { useState } from "react";
 import Link from "next/link";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
 export default function Form() {
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [errors, setErrors] = useState<{
-        username?: string;
-        password?: string;
-        server?: string;
-    }>({});
 
-    const usernameInputRef = useRef<HTMLInputElement>(null);
-    const linkRef = useRef<HTMLAnchorElement>(null);
     const router = useRouter();
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter" && document.activeElement !== linkRef.current) {
-                handleSubmit();
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [username, password, isLoading]);
-
-    useEffect(() => {
-        setErrors({});
-    }, [username, password]);
-
     async function handleSubmit() {
-        if (isLoading || !username || !password) return;
+        if (isLoading) return;
         setIsLoading(true);
 
+        if (!username || !password) {
+            setErrors({
+                username: !username ? "Please enter your email or username." : "",
+                password: !password ? "Please enter your password." : "",
+            });
+
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            const response = await fetch(`${apiUrl}/auth/login`, {
+            const response = await fetch(`${getApiUrl()}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({
-                    username: sanitizeString(username),
+                    username,
                     password,
                 }),
             });
@@ -70,112 +57,70 @@ export default function Form() {
     }
 
     return (
-        <div className={styles.loginBlock}>
-            <div>
-                <label
-                    htmlFor="username"
-                    style={{
-                        color:
-                            errors.username || errors.server
-                                ? "var(--error-light)"
-                                : "var(--foreground-3)",
-                    }}
-                >
-                    Email or Username
-                    {errors.username || errors.server ? (
-                        <span className={styles.errorLabel}>
-                            {" "}
-                            - {errors.username || errors.server}
-                        </span>
-                    ) : (
-                        <span> *</span>
-                    )}
-                </label>
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+            }}
+        >
+            <div className={styles.loginContainer}>
+                <div className={styles.header}>
+                    <h1>Welcome back!</h1>
+                    <div>We're so excited to see you again!</div>
+                </div>
 
-                <div className={styles.inputContainer}>
-                    <input
-                        ref={usernameInputRef}
-                        id="username"
-                        type="text"
-                        name="username"
-                        aria-label="Email or Username"
-                        autoCapitalize="off"
-                        autoComplete="email username"
-                        autoCorrect="off"
-                        spellCheck="false"
-                        aria-labelledby="username-email"
-                        aria-describedby="username-email"
-                        value={username}
-                        autoFocus
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
+                <div className={styles.loginBlock}>
+                    <div>
+                        <Input
+                            autoFocus
+                            name="username"
+                            value={username}
+                            error={errors.username}
+                            label="Email or Username"
+                            autoComplete="email username"
+                            onChange={(value) => {
+                                setUsername(value);
+                                setErrors((prev) => ({ ...prev, username: "" }));
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: 0 }}>
+                        <Input
+                            name="password"
+                            value={password}
+                            error={errors.password}
+                            label="Password"
+                            type="password"
+                            autoComplete="current-password"
+                            onChange={(value) => {
+                                setPassword(value);
+                                setErrors((prev) => ({ ...prev, password: "" }));
+                            }}
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        className={styles.passwordForgot}
+                        onClick={() => {}}
+                    >
+                        Forgot your password?
+                    </button>
+
+                    <button
+                        type="submit"
+                        className={"button " + styles.submit}
+                    >
+                        {isLoading ? <LoadingDots /> : "Log In"}
+                    </button>
+
+                    <div className={styles.bottomText}>
+                        <span>Need an account?</span>
+                        <Link href="/register">Register</Link>
+                    </div>
                 </div>
             </div>
-
-            <div style={{ marginBottom: 0 }}>
-                <label
-                    htmlFor="password"
-                    style={{
-                        color: errors.username?.length
-                            ? "var(--error-light)"
-                            : "var(--foreground-3)",
-                    }}
-                >
-                    Password
-                    {errors.username?.length ? (
-                        <span className={styles.errorLabel}>- {errors.username}</span>
-                    ) : (
-                        <span>*</span>
-                    )}
-                </label>
-                <div className={styles.inputContainer}>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        aria-label="Password"
-                        autoCapitalize="off"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        spellCheck="false"
-                        aria-labelledby="password"
-                        aria-describedby="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-            </div>
-
-            <button
-                type="button"
-                className={styles.passwordForgot}
-                onClick={(e) => {
-                    e.preventDefault();
-                }}
-            >
-                Forgot your password?
-            </button>
-
-            <button
-                type="submit"
-                className={"button " + styles.buttonSubmit}
-                onClick={(e) => {
-                    e.preventDefault();
-                    handleSubmit();
-                }}
-            >
-                {isLoading ? <LoadingDots /> : "Log In"}
-            </button>
-
-            <div className={styles.bottomText}>
-                <span>Need an account?</span>
-                <Link
-                    ref={linkRef}
-                    href="/register"
-                >
-                    Register
-                </Link>
-            </div>
-        </div>
+        </form>
     );
 }

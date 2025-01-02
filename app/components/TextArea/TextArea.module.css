@@ -454,7 +454,7 @@
     user-select: none;
 }
 
-.fileItemContainer > .image > .spoilerButton {
+.spoilerButton {
     font-family: "gg sans";
     height: 31px;
     display: flex;
@@ -476,12 +476,12 @@
     font-size: 15px;
     user-select: none;
     color: var(--foreground-2);
-    background-color: var(--background-dark-1);
+    background-color: var(--background-4);
     z-index: 1;
 }
 
 .fileItemContainer > .image:hover > .spoilerButton {
-    background-color: var(--background-dark-2);
+    background-color: var(--background-dark-1);
 }
 
 .fileItemContainer > .image > .imageTags {

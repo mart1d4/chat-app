@@ -1,5 +1,6 @@
 import { Channels, Emojis, Guilds, Invites, Messages, Roles, Users } from "@lib/db/db.type.js";
 import { Selectable } from "kysely";
+import type { Embeds } from "./lib/db/db.types";
 
 // Environment variables
 
@@ -17,9 +18,12 @@ declare module "bun" {
 
         ACCESS_TOKEN_SECRET: string;
         REFRESH_TOKEN_SECRET: string;
+        EMAIL_TOKEN_SECRET: string;
 
         NEXT_PUBLIC_CDN_URL: string;
         UPLOADTHING_TOKEN: string;
+
+        RESEND_TOKEN: string;
     }
 }
 
@@ -28,7 +32,8 @@ declare module "bun" {
 export type User = Selectable<Users>;
 export type OptionalUser = Partial<User>;
 export type LightUser = Pick<User, "id" | "displayName" | "avatar">;
-export type LightUserWithUsername = LightUser & Pick<User, "username">;
+export type UnknownUser = LightUser & Pick<User, "username">;
+export type Friend = UnknownUser & { status: User["status"] };
 export type UserProfile = Pick<
     User,
     | "id"
@@ -41,18 +46,20 @@ export type UserProfile = Pick<
     | "banner"
     | "primaryColor"
     | "accentColor"
+    | "createdAt"
 >;
+
+export type AppUser = UserProfile & { email: string; phone: string; twoFactorEnabled: boolean };
 
 // Channel
 
 export type Channel = Selectable<Channels>;
 export type OptionalChannel = Partial<Channel>;
-export type LightChannel = Pick<Channel, "id" | "name" | "icon">;
-export type LightChannelWithTopic = LightChannel & Pick<Channel, "topic">;
-export type LightChannelWithRecipients = LightChannel & { recipients: LightUser[] };
-export type LightChannelWithTopicAndRecipients = LightChannelWithTopic & {
-    recipients: LightUser[];
-};
+export type LightChannel = Pick<Channel, "id" | "type" | "name" | "icon" | "topic" | "ownerId">;
+export type ChannelRecipient = UnknownUser & { status: User["status"] };
+export type LightChannelWithRecipients = LightChannel & { recipients: ChannelRecipient[] };
+
+export type AppChannel = LightChannelWithRecipients;
 
 // Guild
 
@@ -73,44 +80,53 @@ export type Message = Selectable<Messages>;
 export type OptionalMessage = Partial<Message>;
 
 // Message object being sent from the API when fetching messages
-export type ReponseMessage = Pick<
+export type ResponseMessage = Pick<
     Message,
-    | "id"
-    | "type"
-    | "content"
-    | "attachments"
-    | "embeds"
-    | "edited"
-    | "pinned"
-    | "mentionEveryone"
-    | "createdAt"
-> & { author: LightUser } & { reference: ReponseMessage | null } & { userMentions: LightUser[] } & {
+    "id" | "type" | "content" | "edited" | "pinned" | "mentionEveryone" | "createdAt"
+> & {
+    attachments: ResponseAttachment[];
+} & {
+    embeds: Embeds[];
+} & { author: LightUser } & { reference: ResponseMessage | null } & { mentions: LightUser[] } & {
     roleMentions: RoleResponse[];
 } & { channelMentions: LightChannel[] };
 
 // Message object from TextArea before being sent to the API
-export type TextAreaMessage = Pick<Message, "id" | "content" | "createdAt"> & {
-    attachments: {
-        id: number;
 
-        file: File;
-        type: "image" | "video" | "audio" | "file";
+export type AttachmentType = "image" | "video" | "audio" | "file";
 
-        size: number;
-        filename: string;
-        alt: string;
-        spoiler: boolean;
+export type ResponseAttachment = {
+    id: string;
+    ext: string;
+    type: AttachmentType;
 
-        width: number | null;
-        height: number | null;
-    }[];
+    size: number;
+    filename: string;
+    spoiler: boolean;
+    description: string;
 
-    userMentions: LightUser[];
-
-    sending?: boolean;
-    loading?: boolean;
-    errored?: boolean;
+    width: number | null;
+    height: number | null;
 };
+
+export type Attachment = Omit<ResponseAttachment, "id"> & {
+    id: number;
+
+    file: File;
+    url: string;
+};
+
+export type TextAreaMessage = Omit<ResponseMessage, "attachments" | "reference"> & {
+    attachments: Attachment[];
+    reference: number | null;
+
+    send: boolean;
+    error: boolean;
+    loading: boolean;
+};
+
+export type EitherAttachment = ResponseAttachment | Attachment;
+export type AppMessage = ResponseMessage | TextAreaMessage;
 
 // Emoji
 

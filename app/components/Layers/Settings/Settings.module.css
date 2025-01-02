@@ -1005,6 +1005,42 @@
     opacity: 0.7;
 }
 
+.checkSpam {
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 1.285;
+    color: var(--foreground-2);
+    border: 1px solid #ffffff0a;
+    box-shadow: var(--elevation-low);
+    background-color: var(--background-6);
+}
+
+.email {
+    font-weight: 600;
+    color: var(--foreground-2);
+}
+
+.reveal,
+.resendCode {
+    font-size: 14px;
+    margin-left: 4px;
+    background: none;
+    color: var(--accent-light);
+}
+
+.resendCode {
+    margin-left: 0;
+    margin-top: 6px;
+}
+
+.reveal:hover,
+.resendCode:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 /* MEDIA QUERIES */
 
 @media (max-width: 1024px) {

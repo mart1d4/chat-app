@@ -1,26 +1,41 @@
 "use client";
 
-import type { Channel, Guild, Message as TMessage, User } from "@/type";
-import { Message, TextArea, MessageSk, Avatar } from "@components";
+import { Message, TextArea, MessageSk, Avatar, LoadingDots } from "@components";
+import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
+import type { AppChannel, Friend, Guild, ResponseMessage } from "@/type";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { useRef, useEffect, useMemo } from "react";
 import { isLarge, isNewDay } from "@/lib/message";
 import { useData, useUrls } from "@/store";
 import styles from "./Channels.module.css";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
 import { getDayDate } from "@/lib/time";
+import { getCdnUrl } from "@/lib/urls";
 import Image from "next/image";
 
-const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 let initMessagesFetch = false;
 let sendingMessage = false;
 let lastScrollHeight = 0;
 const limit = 50;
 
-export default function Content({ channel, friend }: { channel: Channel; friend: User }) {
+export default function Content({ id, count }: { id: number; count: number }) {
+    const [isAtBottom, setIsAtBottom] = useState(true);
+
+    const channels = useData((state) => state.channels);
+    const channel = channels.find((c) => c.id === id);
+    const user = useAuthenticatedUser();
+
+    if (!channel) return null;
+
+    let friend = null;
+
+    if (channel.type === 0) {
+        friend = channel.recipients.find((r) => r.id !== user!.id);
+    }
+
     const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
         const baseUrl = `/channels/${channel.id}/messages?limit=`;
 
@@ -36,7 +51,7 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
         return `${baseUrl}${limit}`;
     };
 
-    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<TMessage[], Error>(
+    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<ResponseMessage[], Error>(
         getKey,
         fetchHelper().request,
         {
@@ -47,46 +62,122 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
         }
     );
 
-    const messages = data?.flat().reverse() || [];
-    const hasMore = data?.[data.length - 1].hasMore || false;
-
-    console.log("MESSAGES: ", messages);
+    const messages = data ? data.flat().reverse() : [];
+    const hasMore = messages.length < count;
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
     const setChannelUrl = useUrls((state) => state.setMe);
-    const shouldLoad = useIntersection(skeletonEl, -100);
+    const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -100);
 
     document.title = `Spark | @${channel.name}`;
     setChannelUrl(channel.id.toString());
-
-    function handleScroll() {
-        if (scrollEl.current) {
-            if (lastScrollHeight === 0 || sendingMessage) {
-                sendingMessage = false;
-
-                const t = setTimeout(() => {
-                    spacerEl.current?.scrollIntoView();
-                }, 50);
-
-                return () => clearTimeout(t);
-            }
-
-            const scrollDif = scrollEl.current.scrollHeight - lastScrollHeight;
-            scrollEl.current.scrollTop += scrollDif;
-        }
-    }
-
-    useEffect(() => {
-        handleScroll();
-    });
 
     useEffect(() => {
         const load = shouldLoad && hasMore && !isLoading && messages.length > 0;
         if (load) setSize(size + 1);
     }, [shouldLoad]);
+
+    const scrollToBottom = () => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        container.scrollTop = container.scrollHeight;
+    };
+
+    const checkIfAtBottom = () => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 1;
+        setIsAtBottom(isBottom);
+    };
+
+    // Attach scroll listener
+    useLayoutEffect(() => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const onScroll = () => checkIfAtBottom();
+        container.addEventListener("scroll", onScroll);
+
+        return () => container.removeEventListener("scroll", onScroll);
+    }, []);
+
+    // Observe size changes
+    useEffect(() => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
+        });
+
+        const mutationObserver = new MutationObserver(() => {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
+        });
+
+        resizeObserver.observe(container);
+        mutationObserver.observe(container, { childList: true, subtree: true });
+
+        // Force scroll on first load
+        scrollToBottom();
+
+        return () => {
+            resizeObserver.disconnect();
+            mutationObserver.disconnect();
+        };
+    }, [isAtBottom]);
+
+    function handleUpdateMessages(
+        type: "add" | "update" | "delete",
+        id: number,
+        message?: Partial<ResponseMessage>
+    ) {
+        sendingMessage = true;
+
+        if (type === "add") {
+            mutate(
+                (prev) => {
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    // Add the message to the beginning of the first inner array
+                    return [[message, ...prev[0]], ...prev.slice(1)];
+                },
+                { revalidate: false }
+            );
+        } else if (type === "update") {
+            mutate(
+                (prev) => {
+                    // Find the message and update it
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    return prev.map((a) => a.map((m) => (m.id === id ? message : m)));
+                },
+                { revalidate: false }
+            );
+        } else if (type === "delete") {
+            mutate(
+                (prev) => {
+                    // Find the message and remove it
+                    return prev.map((a) => a.filter((m) => m.id !== id));
+                },
+                { revalidate: false }
+            );
+        }
+
+        sendingMessage = false;
+    }
 
     return useMemo(
         () => (
@@ -127,39 +218,9 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
 
                                         <Message
                                             message={message}
-                                            setMessages={(
-                                                type: "add" | "update" | "delete",
-                                                id: number,
-                                                message?: TMessage
-                                            ): void => {
-                                                sendingMessage = true;
-
-                                                if (type === "add") {
-                                                    mutate((prev) => [message, ...prev], {
-                                                        revalidate: false,
-                                                    });
-                                                } else if (type === "update") {
-                                                    mutate(
-                                                        (prev) =>
-                                                            prev?.map((m) =>
-                                                                m.id === id ? message : m
-                                                            ),
-                                                        { revalidate: false }
-                                                    );
-                                                } else if (type === "delete") {
-                                                    mutate(
-                                                        (prev) =>
-                                                            prev?.map((a) =>
-                                                                a.filter((m) => m.id !== id)
-                                                            ),
-                                                        { revalidate: false }
-                                                    );
-                                                }
-
-                                                sendingMessage = false;
-                                            }}
-                                            large={isLarge(messages, index)}
                                             channel={channel}
+                                            large={isLarge(messages, index)}
+                                            setMessages={handleUpdateMessages}
                                         />
                                     </div>
                                 ))}
@@ -175,12 +236,8 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
 
                 <TextArea
                     channel={channel}
-                    setMessages={(message: TMessage) => {
-                        sendingMessage = true;
-                        mutate((prev) => [message, ...prev], {
-                            revalidate: false,
-                        });
-                        sendingMessage = false;
+                    setMessages={(message: ResponseMessage) => {
+                        handleUpdateMessages("add", message.id, message);
                     }}
                 />
             </main>
@@ -189,25 +246,105 @@ export default function Content({ channel, friend }: { channel: Channel; friend:
     );
 }
 
-function FirstMessage({ channel, friend }: { channel: Channel; friend: User }) {
-    const requestsR = useData((state) => state.received).map((u) => u.id);
-    const requestsS = useData((state) => state.sent).map((u) => u.id);
-    const friends = useData((state) => state.friends).map((u) => u.id);
-    const blocked = useData((state) => state.blocked).map((u) => u.id);
+function FirstMessage({ channel, friend }: { channel: AppChannel; friend?: Friend }) {
+    const [loading, setLoading] = useState<{
+        [key: string]: boolean;
+    }>({});
 
+    const { friends, blocked, received, sent, addUser, removeUser } = useData();
     const { sendRequest } = useFetchHelper();
 
     const mutualGuilds: Guild[] = [];
     const guildIcons = mutualGuilds.filter((guild) => !!guild.icon);
 
+    const isFriend = friends.find((f) => f.id === friend?.id);
+    const isSent = sent.find((f) => f.id === friend?.id);
+    const isReceived = received.find((f) => f.id === friend?.id);
+    const isBlocked = blocked.find((f) => f.id === friend?.id);
+
+    async function addFriend() {
+        setLoading((prev) => ({ ...prev, addFriend: true }));
+
+        try {
+            const { errors } = await sendRequest({
+                query: "ADD_FRIEND",
+                body: { username: friend?.username },
+            });
+
+            if (!errors) {
+                addUser(friend, isReceived ? "friends" : "sent");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading((prev) => ({ ...prev, addFriend: false }));
+    }
+
+    async function removeFriend() {
+        setLoading((prev) => ({ ...prev, removeFriend: true }));
+
+        try {
+            const { errors } = await sendRequest({
+                query: "REMOVE_FRIEND",
+                body: { username: friend?.username },
+            });
+
+            if (!errors) {
+                removeUser(friend?.id, isFriend ? "friends" : isReceived ? "received" : "sent");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading((prev) => ({ ...prev, removeFriend: false }));
+    }
+
+    async function blockUser() {
+        setLoading((prev) => ({ ...prev, blockUser: true }));
+
+        try {
+            const { errors } = await sendRequest({
+                query: "BLOCK_USER",
+                params: { userId: friend?.id },
+            });
+
+            if (!errors) {
+                addUser(friend, "blocked");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading((prev) => ({ ...prev, blockUser: false }));
+    }
+
+    async function unblockUser() {
+        setLoading((prev) => ({ ...prev, unblockUser: true }));
+
+        try {
+            const { errors } = await sendRequest({
+                query: "UNBLOCK_USER",
+                params: { userId: friend?.id },
+            });
+
+            if (!errors) {
+                removeUser(friend?.id, "blocked");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading((prev) => ({ ...prev, unblockUser: false }));
+    }
+
     return (
         <div className={styles.header}>
             <div className={styles.imageWrapper}>
                 <Avatar
-                    src={channel.icon as string}
-                    alt={channel.name as string}
-                    type="icons"
                     size={80}
+                    src={channel.icon}
+                    alt={channel.name}
                 />
             </div>
 
@@ -233,11 +370,11 @@ function FirstMessage({ channel, friend }: { channel: Channel; friend: User }) {
                                 {guildIcons
                                     .map((guild) => (
                                         <Image
-                                            key={guild.id}
-                                            src={`${cdnUrl}/${guild.icon}`}
-                                            alt={guild.name}
                                             width={24}
                                             height={24}
+                                            key={guild.id}
+                                            alt={guild.name}
+                                            src={`${getCdnUrl()}/${guild.icon}`}
                                         />
                                     ))
                                     .slice(0, 3)}
@@ -260,71 +397,48 @@ function FirstMessage({ channel, friend }: { channel: Channel; friend: User }) {
 
                         {mutualGuilds.length > 0 && <div className={styles.mutualGuildDot} />}
 
-                        {friends.includes(friend.id) ? (
+                        {isFriend ? (
                             <button
                                 className="button grey"
-                                onClick={() => {
-                                    sendRequest({
-                                        query: "REMOVE_FRIEND",
-                                        body: { username: friend.username },
-                                    });
-                                }}
+                                onClick={() => removeFriend()}
                             >
-                                Remove Friend
+                                {loading.removeFriend ? <LoadingDots /> : "Remove Friend"}
                             </button>
-                        ) : requestsS.includes(friend.id) ? (
-                            <button className="button blue disabled">Friend Request Sent</button>
-                        ) : requestsR.includes(friend.id) ? (
+                        ) : isSent ? (
+                            <button className="button blue disabled">
+                                {loading.addFriend ? <LoadingDots /> : "Friend Request Sent"}
+                            </button>
+                        ) : isReceived ? (
                             <button
                                 className="button grey"
-                                onClick={() => {
-                                    sendRequest({
-                                        query: "ADD_FRIEND",
-                                        body: { username: friend.username },
-                                    });
-                                }}
+                                onClick={() => addFriend()}
                             >
-                                Accept Friend Request
+                                {loading.addFriend ? <LoadingDots /> : "Accept Friend Request"}
                             </button>
                         ) : (
-                            !blocked.includes(friend.id) && (
+                            !isBlocked && (
                                 <button
                                     className="button blue"
-                                    onClick={() => {
-                                        sendRequest({
-                                            query: "ADD_FRIEND",
-                                            body: { username: friend.username },
-                                        });
-                                    }}
+                                    onClick={() => addFriend()}
                                 >
-                                    Add Friend
+                                    {loading.addFriend ? <LoadingDots /> : "Add Friend"}
                                 </button>
                             )
                         )}
 
-                        {!blocked.includes(friend.id) ? (
+                        {!isBlocked ? (
                             <button
                                 className="button grey"
-                                onClick={() => {
-                                    sendRequest({
-                                        query: "BLOCK_USER",
-                                        params: { userId: friend.id },
-                                    });
-                                }}
+                                onClick={() => blockUser()}
                             >
-                                Block
+                                {loading.blockUser ? <LoadingDots /> : "Block"}
                             </button>
                         ) : (
                             <button
                                 className="button grey"
-                                onClick={() => {
-                                    sendRequest({
-                                        query: "UNBLOCK_USER",
-                                        params: { userId: friend.id },
-                                    });
-                                }}
+                                onClick={() => unblockUser()}
                             >
-                                Unblock
+                                {loading.unblockUser ? <LoadingDots /> : "Unblock"}
                             </button>
                         )}
                     </div>

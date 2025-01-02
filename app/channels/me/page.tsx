@@ -1,6 +1,6 @@
 import styles from "./FriendsPage.module.css";
 import { AppHeader } from "@components";
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import Content from "./Content";
 import Aside from "./Aside";
 

@@ -1,69 +1,20 @@
+import type { Channels, DB, Guilds, Messages, Users } from "./db.types";
 import { type ExpressionBuilder, type Selectable, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/mysql";
-import type { Channels, DB, Guilds, Messages, Users } from "./db.types";
+import type { AppChannel, AppUser, Channel, Friend, UnknownUser, User } from "@/type";
 import { cookies } from "next/headers";
 import { db } from "./db";
 
-export const selfUserSelect: (keyof Users)[] = [
-    "id",
-    "username",
-    "displayName",
-    "avatar",
-    "banner",
-    "primaryColor",
-    "accentColor",
-    "description",
-    "customStatus",
-    "status",
-    "createdAt",
-];
+export const SelectAppUnknownUser: (keyof User)[] = ["id", "username", "avatar"];
+export const selectAppRequest: (keyof User)[] = [...SelectAppUnknownUser, "displayName"];
+export const SelectAppFriend: (keyof User)[] = [...selectAppRequest, "status"];
 
-export const userSelect: (keyof Users)[] = [
-    "id",
-    "username",
-    "displayName",
-    "avatar",
-    "banner",
-    "primaryColor",
-    "accentColor",
-];
-
-const messageSelect: (keyof Messages)[] = [
-    "id",
-    "type",
-    "content",
-    "attachments",
-    "embeds",
-    "edited",
-    "pinned",
-    "mentionEveryone",
-    "userMentions",
-    "roleMentions",
-    "createdAt",
-    "channelId",
-];
-
-const channelSelect: (keyof Channels)[] = [
+export const SelectAppChannel: (keyof Channel)[] = [
     "id",
     "type",
     "name",
+    "icon",
     "topic",
-    "icon",
-    "ownerId",
-    "updatedAt",
-    "guildId",
-    "position",
-    "parentId",
-];
-
-const guildSelect: (keyof Guilds)[] = [
-    "id",
-    "name",
-    "icon",
-    "banner",
-    "description",
-    "systemChannelId",
-    "createdAt",
     "ownerId",
 ];
 
@@ -75,7 +26,7 @@ export async function doesUserExist({ id, username }: Selectable<Users>) {
             .selectFrom("users")
             .select("id")
             .$if(!!id, (q) => q.where("id", "=", id))
-            .$if(!!username, (q) => q.where("username", "=", sql<string>`BINARY ${username}`))
+            .$if(!!username, (q) => q.where("username", "=", username))
             .executeTakeFirst();
 
         return !!user;
@@ -90,20 +41,23 @@ export async function getUser({
     select,
 }: {
     where?: Partial<Selectable<Users>>;
-    select?: (keyof Users)[] | keyof Users;
-}): Promise<Selectable<Users> | null> {
-    const refreshToken = cookies().get("token")?.value;
+    select?: (keyof User)[] | keyof User;
+}): Promise<User | null> {
+    const miam = await cookies();
+    const refreshToken = miam.get("token")?.value;
+
     if (!where?.id && !where?.username && !refreshToken) return null;
 
     try {
         const user = await db
             .selectFrom("users")
+            .leftJoin("userTokens", "userTokens.userId", "users.id")
             .select("id")
             .$if(select!?.length > 0, (q) => q.select(select))
             .$if(!where?.id && !where?.username, (q) =>
-                q.where(sql<string>`JSON_CONTAINS(tokens, JSON_OBJECT('token', ${refreshToken}))`)
+                q.where("userTokens.token", "=", refreshToken as string)
             )
-            .$if(!!where?.id, (q) => q.where("id", "=", where?.id))
+            .$if(!!where?.id, (q) => q.where("id", "=", where!.id as number))
             .$if(!!where?.username, (q) =>
                 q.where("username", "=", sql<string>`BINARY ${where?.username}`)
             )
@@ -119,7 +73,7 @@ export async function getUser({
 export async function canUserAccessChannel(userId: number, channelId: number) {
     try {
         const channel = await db
-            .selectFrom("channelrecipients")
+            .selectFrom("channelRecipients")
             .select("channelId")
             .where("userId", "=", userId)
             .where("channelId", "=", channelId)
@@ -132,215 +86,67 @@ export async function canUserAccessChannel(userId: number, channelId: number) {
     }
 }
 
-export function getUserLight(table: string, withUsername = false) {
-    return ["id", withUsername ? "username" : void 0, "displayName", "avatar"].map(
-        (key) => `${table}.${key}`
-    );
-}
-
 export async function getInitialData() {
-    const refreshToken = cookies().get("token")?.value;
+    const miam = await cookies();
+    const refreshToken = miam.get("token")?.value;
+
     if (!refreshToken) return null;
 
     try {
-        // Calculate time taken to fetch all data
-        let start = Date.now();
-
-        // Instead of doing what's commented below, fetch the user and add those properties to the user object
-        // and user inner and left joins instead so it's faster
+        const start = Date.now();
 
         const user = await db
             .selectFrom("users")
-            .leftJoin("friends", (join) =>
-                join.on(({ eb, ref, or }) =>
-                    or([
-                        eb("friends.A", "=", ref("users.id")),
-                        eb("friends.B", "=", ref("users.id")),
-                    ])
-                )
-            )
-            .leftJoin("users as f", (join) =>
-                join.on(({ eb, ref, and, or }) =>
-                    and([
-                        or([
-                            eb("f.id", "=", ref("friends.B")), // Friend is `B` and user is `A`
-                            eb("f.id", "=", ref("friends.A")), // Friend is `A` and user is `B`
-                        ]),
-                        eb("f.id", "!=", ref("users.id")), // Don't include the user in the friends list
-                    ])
-                )
-            )
-            .leftJoin("blocked", "blocked.blockerId", "users.id")
-            .leftJoin("users as b", "b.id", "blocked.blockerId")
-            .leftJoin("requests as received", (join) =>
-                join.onRef("received.requestedId", "=", "users.id")
-            )
-            .leftJoin("requests as sent", (join) => join.onRef("sent.requesterId", "=", "users.id"))
-            .leftJoin("users as r", (join) => join.onRef("r.id", "=", "received.requesterId"))
-            .leftJoin("users as s", (join) => join.onRef("s.id", "=", "sent.requestedId"))
-            .leftJoin("channelrecipients", (join) =>
-                join.on(
-                    ({ eb, ref }) => eb("channelrecipients.userId", "=", ref("users.id"))
-                    // .and("channelrecipients.channelId", "=", 1)
-                )
-            )
-            .leftJoin("channels", (join) =>
-                join.on(
-                    ({ eb, ref }) => eb("channels.id", "=", ref("channelrecipients.channelId"))
-                    // .and("channels.id", "=", 1)
-                )
-            )
-            .leftJoin("channelrecipients as cr", (join) =>
-                join.onRef("cr.channelId", "=", "channels.id")
-            )
-            .leftJoin("users as recipient", "recipient.id", "cr.userId")
-            .leftJoin("guildmembers", (join) =>
-                join.on(
-                    ({ eb, ref }) => eb("guildmembers.userId", "=", ref("users.id"))
-                    // .and("guildmembers.guildId", "=", 1)
-                )
-            )
-            .leftJoin("guilds", (join) =>
-                join.on(
-                    ({ eb, ref }) => eb("guilds.id", "=", ref("guildmembers.guildId"))
-                    // .and("guilds.id", "=", 1)
-                )
-            )
+            .innerJoin("userTokens", "userTokens.userId", "users.id")
             .select([
-                "users.id",
-                "users.username",
-                "users.displayName",
-                "users.avatar",
-                "users.banner",
-                "users.primaryColor",
-                "users.accentColor",
-                "users.description",
-                "users.customStatus",
-                "users.status",
-                "users.createdAt",
-                sql`IF(f.id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', f.id, 'username', f.username, 'displayName', f.display_name, 'avatar', f.avatar)), JSON_ARRAY()) as friends`,
-                sql`IF(b.id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', b.id, 'username', b.username, 'displayName', b.display_name, 'avatar', b.avatar)), JSON_ARRAY()) as blocked`,
-                sql`IF(received.requested_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', r.id, 'username', r.username, 'displayName', r.display_name, 'avatar', r.avatar)), JSON_ARRAY()) as received`,
-                sql`IF(sent.requester_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', s.id, 'username', s.username, 'displayName', s.display_name, 'avatar', s.avatar)), JSON_ARRAY()) as sent`,
-                sql`IF(
-                        channelrecipients.user_id IS NOT NULL,
-                        JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', channels.id,
-                                'type', channels.type,
-                                'name', channels.name,
-                                'topic', channels.topic,
-                                'icon', channels.icon,
-                                'ownerId', channels.owner_id,
-                                'updatedAt', channels.updated_at
-                            )
-                        ),
-                        JSON_ARRAY()
-                    ) as channels`,
-                //  Get all recipients for each channel
-                sql`IF(
-                    recipient.id IS NOT NULL,
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'channelId', channels.id,
-                            'id', recipient.id,
-                            'username', recipient.username,
-                            'displayName', recipient.display_name,
-                            'avatar', recipient.avatar
-                            )
-                        ),
-                        JSON_ARRAY()
-                    ) as channelRecipients`,
-                sql`IF(guildmembers.user_id IS NOT NULL, JSON_ARRAYAGG(JSON_OBJECT('id', guilds.id, 'name', guilds.name, 'icon', guilds.icon, 'banner', guilds.banner, 'description', guilds.description, 'systemChannelId', guilds.system_channel_id, 'createdAt', guilds.created_at, 'ownerId', guilds.owner_id)), JSON_ARRAY()) as guilds`,
+                "id",
+                "email",
+                "phone",
+                "username",
+                "displayName",
+                "avatar",
+                "banner",
+                "primaryColor",
+                "accentColor",
+                "description",
+                "customStatus",
+                "status",
+                "createdAt",
+                "twoFactorEnabled",
             ])
-            .where(sql`JSON_CONTAINS(users.tokens, JSON_OBJECT('token', ${refreshToken}))`)
-            .groupBy([
-                "users.id",
-                "users.username",
-                "users.displayName",
-                "users.avatar",
-                "users.banner",
-                "users.primaryColor",
-                "users.accentColor",
-                "users.description",
-                "users.customStatus",
-                "users.status",
-                "users.createdAt",
-                "f.id",
-                "b.id",
-                "r.id",
-                "s.id",
-                "received.requestedId",
-                "sent.requesterId",
-                "channelrecipients.userId",
-                "channels.id",
-                "guildmembers.userId",
-                "guilds.id",
-                "recipient.id",
-            ])
+            .where("userTokens.token", "=", refreshToken)
             .executeTakeFirst();
-
-        let end = Date.now();
-        console.log(`Initial data fetched in ${end - start}ms for user ${user?.id}`);
-        console.log(user);
 
         if (!user) return null;
 
-        const friends = Array.from(user.friends);
-        delete user.friends;
+        const friends = await getFriends(user.id);
+        const blocked = await getBlocked(user.id);
+        const sent = await getRequestsSent(user.id);
+        const received = await getRequestsReceived(user.id);
+        const channels = await getUserChannels({ userId: user.id, getRecipients: true });
 
-        const blocked = Array.from(user.blocked);
-        delete user.blocked;
+        const end = Date.now();
 
-        const received = Array.from(user.received);
-        delete user.received;
+        console.log(`Initial data fetched in ${end - start}ms.`);
 
-        const sent = Array.from(user.sent);
-        delete user.sent;
-
-        const channels = Array.from(user.channels).map((channel) => {
-            const recipients = user.channelRecipients.filter(
-                (recipient) => recipient.channelId === channel.id
-            );
-
-            channel.recipients = [
-                ...recipients.map((recipient) => {
-                    delete recipient.channelId;
-                    return recipient;
-                }),
-                {
-                    id: user.id,
-                    username: user.username,
-                    displayName: user.displayName,
-                    avatar: user.avatar,
-                },
-            ];
-
-            return channel;
-        });
-        delete user.channels;
-        delete user.channelRecipients;
-
-        const guilds = Array.from(user.guilds);
-        delete user.guilds;
-
-        console.log({
-            user,
-            friends,
-            received,
-            sent,
-            channels: JSON.stringify(channels, null, 4),
-            guilds,
-        });
+        // console.log("User: ", {
+        //     ...user,
+        //     friends,
+        //     blocked,
+        //     received,
+        //     sent,
+        //     channels,
+        // });
 
         return {
-            user,
-            friends,
-            blocked,
-            received,
-            sent,
-            channels,
-            guilds,
+            user: user as AppUser,
+            friends: friends as Friend[],
+            blocked: blocked as UnknownUser[],
+            received: received as UnknownUser[],
+            sent: sent as UnknownUser[],
+            // @ts-ignore - Need to figure this one out
+            channels: channels as AppChannel[],
+            guilds: [],
         };
     } catch (error) {
         console.log(error);
@@ -352,25 +158,19 @@ export async function getFriends(userId: number) {
     try {
         const friends = await db
             .selectFrom("friends")
-            .innerJoin(
-                (eb) =>
-                    eb
-                        .selectFrom("users")
-                        .select(selfUserSelect)
-                        .where("id", "!=", userId)
-                        .as("users"),
-                (join) =>
-                    join.on(({ eb, ref }) =>
-                        eb("users.id", "=", ref("friends.A")).or("users.id", "=", ref("friends.B"))
-                    )
+            .innerJoin("users", (join) =>
+                join.on(({ eb, ref, and, or }) =>
+                    and([
+                        or([
+                            eb("users.id", "=", ref("friends.A")),
+                            eb("users.id", "=", ref("friends.B")),
+                        ]),
+                        eb("users.id", "!=", userId),
+                    ])
+                )
             )
-            .select(selfUserSelect)
-            .where(({ eb, or, and }) =>
-                or([
-                    and([eb("A", "=", userId), eb("B", "!=", userId)]),
-                    and([eb("A", "!=", userId), eb("B", "=", userId)]),
-                ])
-            )
+            .select(SelectAppFriend)
+            .where(({ eb, or }) => or([eb("A", "=", userId), eb("B", "=", userId)]))
             .execute();
 
         return friends || [];
@@ -382,17 +182,14 @@ export async function getFriends(userId: number) {
 
 export async function getRequestsSent(userId: number) {
     try {
-        const requests = await db
+        const sent = await db
             .selectFrom("requests")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "requests.requestedId")
-            )
-            .select(selfUserSelect)
+            .innerJoin("users", "users.id", "requests.requestedId")
+            .select(selectAppRequest)
             .where("requests.requesterId", "=", userId)
             .execute();
 
-        return requests || [];
+        return sent || [];
     } catch (error) {
         console.error(error);
         return [];
@@ -401,17 +198,14 @@ export async function getRequestsSent(userId: number) {
 
 export async function getRequestsReceived(userId: number) {
     try {
-        const requests = await db
+        const received = await db
             .selectFrom("requests")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "requests.requesterId")
-            )
-            .select(selfUserSelect)
+            .innerJoin("users", "users.id", "requests.requesterId")
+            .select(selectAppRequest)
             .where("requests.requestedId", "=", userId)
             .execute();
 
-        return requests || [];
+        return received || [];
     } catch (error) {
         console.error(error);
         return [];
@@ -422,11 +216,8 @@ export async function getBlocked(userId: number) {
     try {
         const blocked = await db
             .selectFrom("blocked")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "blocked.blockedId")
-            )
-            .select(selfUserSelect)
+            .innerJoin("users", "users.id", "blocked.blockedId")
+            .select(SelectAppUnknownUser)
             .where("blocked.blockerId", "=", userId)
             .execute();
 
@@ -439,17 +230,14 @@ export async function getBlocked(userId: number) {
 
 export async function getBlockedBy(userId: number) {
     try {
-        const blocked = await db
+        const blockedBy = await db
             .selectFrom("blocked")
-            .innerJoin(
-                (eb) => eb.selectFrom("users").select(selfUserSelect).as("users"),
-                (join) => join.onRef("users.id", "=", "blocked.blockerId")
-            )
-            .select(selfUserSelect)
+            .innerJoin("users", "users.id", "blocked.blockerId")
+            .select(SelectAppUnknownUser)
             .where("blocked.blockedId", "=", userId)
             .execute();
 
-        return blocked || [];
+        return blockedBy || [];
     } catch (error) {
         console.error(error);
         return [];
@@ -462,28 +250,36 @@ export async function getBlockedBy(userId: number) {
 
 export async function getUserChannels({
     userId,
-    select,
+    select = SelectAppChannel,
     getRecipients = false,
+    recipientSelect = SelectAppFriend,
 }: {
     userId: number;
-    select?: (keyof Channels)[];
+    select?: (keyof Channel)[];
     getRecipients?: boolean;
+    recipientSelect?: (keyof User)[];
 }) {
+    if (!select.length) {
+        select = SelectAppChannel;
+    }
+
     try {
         const channels = await db
             .selectFrom("channels")
-            .select("id")
-            .$if(!!select && select.length > 0, (q) => q.select(select))
-            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb)))
+            .innerJoin("channelRecipients", "channelRecipients.channelId", "channels.id")
+            .innerJoin("users", "users.id", "channelRecipients.userId")
+            .select(select.map((key) => `channels.${key}`) as (keyof Channels)[])
+            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb, recipientSelect)))
             .where(({ exists, selectFrom }) =>
                 exists(
-                    selectFrom("channelrecipients")
+                    selectFrom("channelRecipients")
                         .select("userId")
-                        .where("channelrecipients.userId", "=", userId)
-                        .whereRef("channelrecipients.channelId", "=", "channels.id")
+                        .where("channelRecipients.userId", "=", userId)
+                        .whereRef("channelRecipients.channelId", "=", "channels.id")
                 )
             )
             .orderBy("updatedAt", "desc")
+            .groupBy("channels.id")
             .execute();
 
         return channels || [];
@@ -495,19 +291,24 @@ export async function getUserChannels({
 
 export async function getChannel({
     id,
-    select,
+    select = SelectAppChannel,
     getRecipients = false,
+    recipientSelect = SelectAppFriend,
 }: {
     id: number;
-    select?: (keyof Channels)[];
+    select?: (keyof Channel)[];
     getRecipients?: boolean;
+    recipientSelect?: (keyof User)[];
 }) {
+    if (!select.length) {
+        select = SelectAppChannel;
+    }
+
     try {
         const channel = await db
             .selectFrom("channels")
-            .select("id")
-            .$if(!!select && select.length > 0, (q) => q.select(select))
-            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb)))
+            .select(select)
+            .$if(getRecipients, (q) => q.select((eb) => withRecipients(eb, recipientSelect)))
             .where("id", "=", id)
             .executeTakeFirst();
 
@@ -521,7 +322,7 @@ export async function getChannel({
 export async function getChannelRecipientCount(channelId: number) {
     try {
         const result = await db
-            .selectFrom("channelrecipients")
+            .selectFrom("channelRecipients")
             .select((eb) => eb.fn.countAll<number>().as("count"))
             .where("channelId", "=", channelId)
             .executeTakeFirst();
@@ -533,23 +334,23 @@ export async function getChannelRecipientCount(channelId: number) {
     }
 }
 
-export function withRecipients(eb: ExpressionBuilder<DB, "channels">, select = selfUserSelect) {
+export function withRecipients(eb: ExpressionBuilder<DB, "channels">, select = SelectAppFriend) {
     return jsonArrayFrom(
         eb
-            .selectFrom("channelrecipients")
+            .selectFrom("channelRecipients")
             .innerJoin(
                 (eb) => eb.selectFrom("users as recipient").select(select).as("recipient"),
-                (join) => join.onRef("recipient.id", "=", "channelrecipients.userId")
+                (join) => join.onRef("recipient.id", "=", "channelRecipients.userId")
             )
             .select(select)
-            .whereRef("channelrecipients.channelId", "=", "channels.id")
+            .whereRef("channelRecipients.channelId", "=", "channels.id")
     ).as("recipients");
 }
 
 export async function isUserInChannel(userId: number, channelId: number) {
     try {
         const channel = await db
-            .selectFrom("channelrecipients")
+            .selectFrom("channelRecipients")
             .select("userId")
             .where("userId", "=", userId)
             .where("channelId", "=", channelId)
@@ -589,10 +390,10 @@ export async function getUserGuilds({
             .$if(getRoles, (q) => q.select((eb) => withRoles(eb)))
             .where(({ exists, selectFrom }) =>
                 exists(
-                    selectFrom("guildmembers")
+                    selectFrom("guildMembers")
                         .select("userId")
-                        .where("guildmembers.userId", "=", userId)
-                        .whereRef("guildmembers.guildId", "=", "guilds.id")
+                        .where("guildMembers.userId", "=", userId)
+                        .whereRef("guildMembers.guildId", "=", "guilds.id")
                 )
             )
             .orderBy("createdAt", "desc")
@@ -639,7 +440,7 @@ export async function getGuild({
 export async function getGuildMemberCount(guildId: number) {
     try {
         const result = await db
-            .selectFrom("guildmembers")
+            .selectFrom("guildMembers")
             .select((eb) => eb.fn.countAll<number>().as("count"))
             .where("guildId", "=", guildId)
             .executeTakeFirst();
@@ -654,14 +455,14 @@ export async function getGuildMemberCount(guildId: number) {
 export function withMembers(eb: ExpressionBuilder<DB, "guilds">, select = userSelect) {
     return jsonArrayFrom(
         eb
-            .selectFrom("guildmembers")
+            .selectFrom("guildMembers")
             .innerJoin(
                 (eb) => eb.selectFrom("users as member").select(select).as("member"),
-                (join) => join.onRef("member.id", "=", "guildmembers.userId")
+                (join) => join.onRef("member.id", "=", "guildMembers.userId")
             )
             .select(select)
             .select("profile")
-            .whereRef("guildmembers.guildId", "=", "guilds.id")
+            .whereRef("guildMembers.guildId", "=", "guilds.id")
     ).as("members");
 }
 
@@ -692,7 +493,7 @@ export function withRoles(eb: ExpressionBuilder<DB, "guilds">) {
 export async function isUserInGuild(userId: number, guildId: number) {
     try {
         const guild = await db
-            .selectFrom("guildmembers")
+            .selectFrom("guildMembers")
             .select("userId")
             .where("userId", "=", userId)
             .where("guildId", "=", guildId)

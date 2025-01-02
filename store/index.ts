@@ -1,7 +1,25 @@
 import { persist, createJSONStorage } from "zustand/middleware";
 import { create } from "zustand";
-
 export { useData } from "./data";
+
+type DialogOpenType = {
+    type: string;
+    data?: {
+        [key: string]: any;
+    };
+};
+
+type TriggerDialogType = {
+    open: DialogOpenType[];
+    triggerDialog: (dialog: DialogOpenType) => void;
+    removeDialog: (dialog: DialogOpenType["type"]) => void;
+};
+
+export const useTriggerDialog = create<TriggerDialogType>((set) => ({
+    open: [],
+    triggerDialog: (dialog) => set((state) => ({ open: [...state.open, dialog] })),
+    removeDialog: (type) => set((state) => ({ open: state.open.filter((d) => d.type !== type) })),
+}));
 
 // Settings
 

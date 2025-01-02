@@ -1,0 +1,24 @@
+.alert {
+    top: 20px;
+    left: 50%;
+    z-index: 1000;
+    position: fixed;
+    font-size: 17px;
+    font-weight: 600;
+    padding: 16px 28px;
+    border-radius: 100vw;
+    color: var(--foreground-1);
+    transform: translateX(-50%);
+    background-color: var(--error-1);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    animation: pop 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes pop {
+    0% {
+        transform: translateX(-50%) translateY(-200px);
+    }
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+}

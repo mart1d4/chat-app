@@ -40,7 +40,7 @@ export { FilePreview } from "./TextArea/FilePreview";
 export { EmojiPicker } from "./TextArea/EmojPicker";
 export { TextArea } from "./TextArea/TextArea";
 
-export { MessageAttachments } from "./Message/Attachments";
+export { AttachmentList } from "./Message/Attachments";
 export { ClickLayer } from "./ClickLayer/ClickLayer";
 export { MessageInvite } from "./Message/Invite";
 export { MessageEmbeds } from "./Message/Embeds";
@@ -63,3 +63,13 @@ export { Pinned } from "./Layers/Popover/PinnedMessages/Pinned";
 export { UserCard } from "./Layers/Popover/UserCard/UserCard";
 
 export { Tooltip, TooltipTrigger, TooltipContent } from "./Layers/Tooltip/Tooltip";
+
+export { TabFocusHighlighter } from "./Layers/FocusOverlay/FocusOverlay";
+
+export { Alert } from "./Layers/Alert/Alert";
+
+export { Dialog, DialogContent, DialogTrigger, DialogProtip } from "./Layers/Dialog/Dialog";
+export { DialogOverlay } from "./Layers/Dialog/DialogOverlay";
+export { ImageViewer } from "./Layers/Dialog/ImageViewer";
+
+export { EventManager } from "./Layers/EventManager/EventManager";

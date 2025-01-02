@@ -1,6 +1,6 @@
 "use client";
 
-import { Channels, Guilds, Users } from "@/lib/db/db.types";
+import type { AppChannel, AppUser, Friend, Guild, UnknownUser } from "@/type";
 import { AppSpinner } from "./Spinner";
 import { useData } from "@/store";
 import { useEffect } from "react";
@@ -11,13 +11,13 @@ export function Loading({
 }: {
     children: React.ReactNode;
     data: {
-        user: Partial<Users>;
-        friends: Partial<Users>[];
-        blocked: Partial<Users>[];
-        received: Partial<Users>[];
-        sent: Partial<Users>[];
-        channels: Partial<Channels>[];
-        guilds: Partial<Guilds>[];
+        user: AppUser;
+        friends: Friend[];
+        blocked: UnknownUser[];
+        received: UnknownUser[];
+        sent: UnknownUser[];
+        channels: AppChannel[];
+        guilds: Guild[];
     };
 }) {
     const setReceived = useData((state) => state.setReceived);
@@ -39,6 +39,6 @@ export function Loading({
         setGuilds(data.guilds);
     }, []);
 
-    if (user) return children;
-    return <AppSpinner />;
+    if (!user) return <AppSpinner />;
+    return <>{children}</>;
 }

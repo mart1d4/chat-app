@@ -9,7 +9,7 @@ import { usePopoverContext } from "../Popover";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
-import { statuses } from "@/lib/statuses";
+import { colors, masks, statuses } from "@/lib/statuses";
 import { useData } from "@/store";
 
 const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
@@ -228,10 +228,11 @@ export function UserCard({
                             <Tooltip>
                                 <TooltipTrigger>
                                     <rect
-                                        mask="url(#status-mask-offline)"
-                                        fill="#80848e"
+                                        mask={`url(#${masks[user.status]})`}
+                                        fill={colors[user.status]}
                                         height="16"
                                         width="16"
+                                        rx="8"
                                         x="60"
                                         y="60"
                                     />

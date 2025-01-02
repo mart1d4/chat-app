@@ -23,23 +23,23 @@ export function AddFriend() {
     async function handleSubmit(e: React.MouseEvent | React.KeyboardEvent) {
         e.preventDefault();
         if (!input.length || loading) return;
-        setLoading(true);
 
         try {
+            setLoading(true);
+
             const { errors, data } = await sendRequest({
                 query: "ADD_FRIEND",
                 body: { username: input },
             });
 
-            console.log({ errors, data });
-
             if (data) setValid(data.message);
             else if (errors) setErrors(errors);
         } catch (error) {
+            console.error(error);
             setErrors({ server: "Something went wrong." });
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     }
 
     const isError = errors?.username || errors?.server;

@@ -53,8 +53,6 @@ export default function fetchHelper() {
                 throw { errors: data.errors || { server: "Something went wrong." } };
             } else {
                 const data = await response.json();
-                console.log(data);
-
                 return data;
             }
         } catch (error) {

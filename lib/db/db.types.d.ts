@@ -24,11 +24,19 @@ export interface Users {
     passwordResetToken: string | null;
     passwordResetExpires: Date | null;
 
+    twoFactorEnabled: Generated<boolean>;
+    twoFactorTempSecret: string | null;
+    twoFactorSecret: string | null;
+    recoveryCodes:
+        | {
+              code: string;
+              used: boolean;
+          }[]
+        | null;
+
     email: string | null;
-    emailVerified: Generated<boolean>;
-    emailVerificationLink: string | null;
+    emailVerificationToken: string | null;
     emailVerificationCode: string | null;
-    emailVerificationExpires: Date | null;
 
     phone: string | null;
     phoneVerified: Generated<boolean>;
@@ -277,7 +285,11 @@ export interface Embeds {
         inline: number;
     }[];
 
-    image: string;
+    image: {
+        url: string;
+        width: number;
+        height: number;
+    };
     thumbnail: string;
     video: string;
 
@@ -302,6 +314,7 @@ export interface Attachments {
     filename: string;
     alt: string;
     spoiler: boolean;
+    description: string;
 
     height: IfImageOrVideo<this, number>;
     width: IfImageOrVideo<this, number>;

@@ -32,6 +32,9 @@
     align-items: center;
     justify-content: center;
     background-color: var(--background-1);
+    background-image: url("/assets/app/bg-pattern.png");
+    background-size: 45%;
+    background-repeat: repeat;
 }
 
 .wrapper form {
@@ -90,53 +93,6 @@
     margin-bottom: 40px;
 }
 
-.loginBlock label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02rem;
-    user-select: none;
-}
-
-.loginBlock label > span {
-    color: var(--error-light);
-    padding-left: 4px;
-}
-
-.errorLabel {
-    font-size: 12px;
-    font-weight: 500;
-    font-style: italic;
-    text-transform: none;
-}
-
-.errorLabel > span {
-    padding: 0 4px;
-}
-
-.inputContainer {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    border-radius: 3px;
-    background-color: var(--background-1);
-    border: none;
-}
-
-.inputContainer > input {
-    width: 100%;
-    border: none;
-    background-color: transparent;
-    padding: 10px;
-    height: 40px;
-    border-radius: 3px;
-    color: var(--foreground-3);
-}
-
 .passwordForgot {
     display: block;
     margin: 4px 0 20px 0;
@@ -153,7 +109,7 @@
     text-decoration: underline;
 }
 
-.buttonSubmit {
+.submit {
     color: var(--foreground-1);
     background-color: var(--accent-1);
     font-size: 1rem;
@@ -165,11 +121,11 @@
     cursor: pointer;
 }
 
-.buttonSubmit:hover {
+.submit:hover {
     background-color: var(--accent-2);
 }
 
-.buttonSubmit:active {
+.submit:active {
     background-color: var(--accent-3);
 }
 

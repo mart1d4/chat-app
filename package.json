@@ -1,38 +1,42 @@
 {
   "author": {
     "name": "Martin Danton (@mart1d4)",
-    "email": "git@mart1d4.dev",
+    "email": "git@mart1d4.me",
     "url": "https://www.mart1d4.dev"
   },
   "description": "Connect, Chat, and Share Effortlessly with Spark.",
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 3000"
   },
   "dependencies": {
-    "@floating-ui/react": "^0.26.24",
-    "@uploadthing/react": "^7.0.3",
-    "framer-motion": "^11.11.7",
+    "@floating-ui/react": "^0.27.2",
+    "@uploadthing/react": "^7.1.5",
+    "file-type": "^19.6.0",
+    "framer-motion": "^11.15.0",
+    "highlight.js": "^11.11.1",
+    "jose": "^5.9.6",
     "keen-slider": "^6.8.6",
-    "kysely": "^0.27.4",
-    "mysql2": "^3.11.3",
-    "nanoid": "^5.0.7",
-    "next": "^14.2.15",
+    "kysely": "^0.27.5",
+    "mysql2": "^3.12.0",
+    "nanoid": "^5.0.9",
+    "next": "14",
     "prismjs": "^1.29.0",
     "pusher": "^5.2.0",
     "pusher-js": "^8.3.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-qr-code": "^2.0.15",
-    "react-router-dom": "^6.26.2",
+    "react-router-dom": "^7.1.1",
+    "react-window": "^1.8.11",
     "simple-markdown": "^0.7.3",
-    "slate": "^0.103.0",
-    "slate-history": "^0.109.0",
-    "slate-react": "^0.110.1",
-    "swr": "^2.2.5",
-    "uploadthing": "^7.1.0",
-    "zustand": "^4.5.5"
+    "slate": "^0.112.0",
+    "slate-history": "^0.110.3",
+    "slate-react": "^0.112.0",
+    "swr": "^2.3.0",
+    "uploadthing": "^7.4.4",
+    "zustand": "^5.0.2"
   },
   "name": "spark",
   "version": "1.0.0",
@@ -68,10 +72,12 @@
   },
   "homepage": "https://spark.mart1d4.dev",
   "devDependencies": {
-    "@types/bun": "^1.1.11",
-    "@types/cookie": "^0.6.0",
+    "@types/bun": "^1.1.14",
+    "@types/cookie": "^1.0.0",
     "@types/draft-js": "^0.11.18",
-    "@types/react": "18.3.11",
-    "typescript": "5.6.3"
+    "@types/prismjs": "^1.26.5",
+    "@types/react": "19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "5.7.2"
   }
 }

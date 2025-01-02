@@ -25,7 +25,7 @@ export function Pinned({ channel }: { channel: Channel }) {
             });
 
             if (data) {
-                setPinned(data.data.messages);
+                setPinned(data);
             } else {
                 console.error(errors);
             }

@@ -5,7 +5,7 @@ import { translateCap, sanitizeString } from "@/lib/strings";
 import { useState, useEffect, useRef, useMemo } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
-import { useSettings, useUrls } from "@/store";
+import { useData, useSettings, useUrls } from "@/store";
 import styles from "./MemberList.module.css";
 import { useRouter } from "next/navigation";
 import { UserItem } from "./UserItem";
@@ -37,15 +37,18 @@ const masks = {
     offline: "status-mask-offline",
 };
 
-export function MemberList({
-    channel,
-    guild,
-    friend,
-}: {
-    channel: Channel;
-    guild?: Guild;
-    friend?: ChannelRecipient | null;
-}) {
+export function MemberList({ channelId, guildId }: { channelId: Channel; guildId?: Guild }) {
+    const channels = useData((state) => state.channels);
+    const guilds = useData((state) => state.guilds);
+    const user = useData((state) => state.user);
+
+    const channel = channels.find((c) => c.id === channelId);
+    const guild = guilds.find((g) => g.id === guildId);
+
+    const [friend, setFriend] = useState<User | ChannelRecipient | null>(
+        channel.type === 0 ? channel.recipients.find((r) => r.id !== user!.id) : null
+    );
+
     const [showFriends, setShowFriends] = useState(false);
     const [showGuilds, setShowGuilds] = useState(false);
     const [originalNote, setOriginalNote] = useState("");
@@ -80,7 +83,7 @@ export function MemberList({
         }
 
         async function getMutuals() {
-            if (!friend) return;
+            if (!friend || friend.primaryColor) return;
 
             const { data } = await sendRequest({
                 query: "GET_USER_PROFILE",
@@ -94,6 +97,7 @@ export function MemberList({
             if (data) {
                 setMutualFriends(data.mutualFriends);
                 setMutualGuilds(data.mutualGuilds);
+                setFriend(data.user);
             }
         }
 
@@ -102,6 +106,7 @@ export function MemberList({
     }, [friend]);
 
     if (!settings.showUsers) return null;
+    if (friend && !friend.primaryColor) return null;
 
     if (friend) {
         return (
@@ -250,13 +255,13 @@ export function MemberList({
                                     }}
                                     onBlur={async () => {
                                         if (note !== originalNote) {
-                                            const response = await sendRequest({
+                                            const { data, errors } = await sendRequest({
                                                 query: "SET_NOTE",
                                                 params: { userId: friend.id },
                                                 body: { note: sanitizeString(note) },
                                             });
 
-                                            if (response.success) {
+                                            if (data) {
                                                 setOriginalNote(sanitizeString(note));
                                             }
                                         }
@@ -350,17 +355,8 @@ export function MemberList({
             </aside>
         );
     } else {
-        let online, offline: User[];
-
-        if (guild) {
-            online = recipients.filter((r) =>
-                ["ONLINE", "IDLE", "DO_NOT_DISTURB"].includes(r.status)
-            );
-            offline = recipients.filter((r) => r.status === "offline");
-        } else {
-            online = recipients.filter((r) => ["online", "idle", "dnd"].includes(r.status));
-            offline = recipients.filter((r) => r.status === "offline");
-        }
+        const online = recipients.filter((r) => ["online", "idle", "dnd"].includes(r.status));
+        const offline = recipients.filter((r) => r.status === "offline");
 
         return (
             <aside className={styles.memberList}>

@@ -14,18 +14,20 @@ import {
 } from "@components";
 import { useWindowSettings, useShowChannels, useSettings, useData } from "@/store";
 import useRequestHelper from "@/hooks/useFetchHelper";
-import type { Channel, User } from "@/type";
 import styles from "./AppHeader.module.css";
 import { useState } from "react";
 
-export function AppHeader({
-    channel,
-    friend,
-}: {
-    channel?: Channel;
-    friend?: User;
-    requests?: number;
-}) {
+export function AppHeader({ id }: { id: number; requests?: number }) {
+    const user = useData((state) => state.user);
+    const channels = useData((state) => state.channels);
+
+    const channel = channels.find((channel) => channel.id === id);
+    let friend = null;
+
+    if (channel?.type === 0) {
+        friend = channel.recipients.find((r) => r.id === user.id);
+    }
+
     const [name, setName] = useState(channel?.name || "");
     const [loading, setLoading] = useState(false);
 

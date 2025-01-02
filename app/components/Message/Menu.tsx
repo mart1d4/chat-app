@@ -1,39 +1,33 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
-import { useData, useLayers, useWindowSettings } from "@/store";
-import type { Channel, Guild, Message } from "@/type";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { useRef, type LegacyRef } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger, Icon } from "@components";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import type { MessageFunctions } from "./Message";
+import { useWindowSettings } from "@/store";
 import styles from "./Message.module.css";
-import { Icon } from "@components";
+import type { AppMessage } from "@/type";
 
 export function MessageMenu({
     message,
-    channel,
-    guild,
+    functions,
     large,
     inline,
     show,
     hide,
 }: {
-    message: Message;
-    channel: Channel;
-    guild?: Guild;
+    message: AppMessage;
+    functions: MessageFunctions;
     large?: boolean;
     inline?: boolean;
     show?: boolean;
     hide?: boolean;
 }) {
     const shift = useWindowSettings((state) => state.shiftKeyDown);
+    const user = useAuthenticatedUser();
 
-    const user = useData((state) => state.user);
-    const { sendRequest } = useFetchHelper();
+    const menuSender = message.author.id === user.id;
 
-    const moreButton = useRef<HTMLButtonElement>(null);
-    const menuSender = message.author.id === user?.id;
-
-    if (message.loading) return null;
+    if ("loading" in message && message.loading) return null;
 
     const buttons: {
         [key: string]: {
@@ -42,35 +36,29 @@ export function MessageMenu({
             icon: string;
             iconViewbox?: string;
             dangerous?: boolean;
-            ref?: LegacyRef<HTMLButtonElement>;
         };
     } = {
         COPY_ID: {
             text: "Copy Message ID",
-            onClick: () => message.functions?.copyId(),
+            onClick: () => functions.copyMessageId(),
             icon: "id",
         },
         PIN_MESSAGE: {
             text: `${message.pinned ? "Unpin" : "Pin"} Message`,
             onClick: () => {
-                sendRequest({
-                    query: message.pinned ? "UNPIN_MESSAGE" : "PIN_MESSAGE",
-                    params: {
-                        channelId: message.channelId,
-                        messageId: message.id,
-                    },
-                });
+                if (message.pinned) functions.unpinMessage();
+                else functions.pinMessage();
             },
             icon: "pin",
         },
         COPY_TEXT: {
             text: "Copy Text",
-            onClick: () => message.functions?.copyText(),
+            onClick: () => functions.copyMessageContent(),
             icon: "copy",
         },
         TRANSLATE: {
             text: "Translate",
-            onClick: () => message.functions?.translate(),
+            onClick: () => functions.translateMessageContent(),
             icon: "translate",
             iconViewbox: "0 96 960 960",
         },
@@ -81,12 +69,12 @@ export function MessageMenu({
         },
         COPY_LINK: {
             text: "Copy Message Link",
-            onClick: () => message.functions?.copyLink(),
+            onClick: () => functions.copyMessageLink(),
             icon: "link",
         },
         SPEAK: {
             text: "Speak Message",
-            onClick: () => message.functions?.speak(),
+            onClick: () => functions.speakMessageContent(),
             icon: "speak",
         },
         ADD_REACTION: {
@@ -96,69 +84,55 @@ export function MessageMenu({
         },
         EDIT: {
             text: "Edit",
-            onClick: () => message.functions?.editState(),
+            onClick: () => functions.startEditingMessage(),
             icon: "edit",
         },
         REPLY: {
             text: "Reply",
-            onClick: () => message.functions?.replyState(),
+            onClick: () => functions.setReplyToMessage(),
             icon: "reply",
         },
         MORE: {
             text: "More",
             onClick: () => {
-                setLayers({
-                    settings: {
-                        type: "MENU",
-                        element: moreButton.current,
-                        firstSide: "LEFT",
-                        gap: 5,
-                    },
-                    content: {
-                        type: "MESSAGE",
-                        message,
-                        channel,
-                        guild,
-                    },
-                });
+                // setLayers({
+                //     settings: {
+                //         type: "MENU",
+                //         element: moreButton.current,
+                //         firstSide: "LEFT",
+                //         gap: 5,
+                //     },
+                //     content: {
+                //         type: "MESSAGE",
+                //         message,
+                //         channel,
+                //         guild,
+                //     },
+                // });
             },
             icon: "dots",
-            ref: moreButton,
         },
         DELETE: {
             text: "Delete",
-            onClick: () => {
-                sendRequest({
-                    query: "DELETE_MESSAGE",
-                    params: {
-                        channelId: message.channelId,
-                        messageId: message.id,
-                    },
-                });
-            },
+            onClick: () => functions.deleteMessage(),
             icon: "delete",
             dangerous: true,
         },
         REPORT: {
             text: "Report Message",
-            onClick: () => message.functions?.report(),
+            onClick: () => {},
             icon: "report",
             dangerous: true,
         },
         RETRY: {
             text: "Retry",
-            onClick: () => message.functions?.retry(),
+            onClick: () => functions.sendMessage(),
             icon: "retry",
         },
     };
 
     function renderButton(button: keyof typeof buttons) {
-        const { text, onClick, icon, iconViewbox, dangerous, ref } = buttons[button];
-        let backgroundColor = "";
-
-        // if (ref && layers.MENU?.settings?.element === ref.current) {
-        //     backgroundColor = "var(--background-hover-2)";
-        // }
+        const { text, onClick, icon, iconViewbox, dangerous } = buttons[button];
 
         return (
             <Tooltip>
@@ -166,8 +140,6 @@ export function MessageMenu({
                     <button
                         key={text}
                         onClick={onClick}
-                        ref={ref ? ref : undefined}
-                        style={{ backgroundColor }}
                         className={dangerous ? styles.red : undefined}
                     >
                         <Icon
@@ -192,7 +164,7 @@ export function MessageMenu({
                 style={{ top: large ? "-16px" : "-25px" }}
             >
                 <div className={styles.buttons}>
-                    {!message.error ? (
+                    {!("error" in message && message.error) ? (
                         <>
                             {shift && !inline && (
                                 <>

@@ -413,29 +413,27 @@ img[alt] {
 
 * {
     margin: 0;
-    padding: 0;
     border: 0;
-    font-weight: inherit;
+    padding: 0;
+    font-size: 100%;
     font-style: inherit;
     font-family: inherit;
-    font-size: 100%;
-    vertical-align: baseline;
+    font-weight: inherit;
     box-sizing: border-box;
+    vertical-align: baseline;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     outline: 0px solid var(--accent-light);
     -webkit-tap-highlight-color: transparent;
-}
-
-*:focus-visible {
-    outline: 4px solid var(--accent-light);
 }
 
 html,
 body {
     font-size: 16px;
-    font-family: "gg sans", "Noto sans", sans-serif;
     scroll-behavior: smooth;
     color: var(--foreground-2);
     background-color: var(--background-1);
+    font-family: "gg sans", "Noto sans", sans-serif;
 }
 
 html {
@@ -453,25 +451,25 @@ h6 {
 }
 
 .button {
-    color: var(--foreground-1);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    background: none;
-    white-space: nowrap;
-    overflow: hidden;
-    border: none;
     width: auto;
     height: 32px;
-    cursor: pointer;
-    border-radius: 3px;
+    border: none;
+    display: flex;
     font-size: 14px;
+    cursor: pointer;
+    background: none;
+    overflow: hidden;
     font-weight: 500;
     line-height: 16px;
     padding: 2px 16px;
     user-select: none;
+    border-radius: 3px;
+    position: relative;
+    white-space: nowrap;
+    align-items: center;
+    box-sizing: border-box;
+    justify-content: center;
+    color: var(--foreground-1);
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
         box-shadow 0.15s ease-in-out;
 }
@@ -480,17 +478,13 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    transition: background-color 0s ease-in-out 1000000s;
-    -webkit-text-fill-color: var(--foreground-2);
     caret-color: var(--foreground-2);
+    -webkit-text-fill-color: var(--foreground-2);
+    transition: background-color 0s ease-in-out 1000000s;
 }
 
 input::placeholder {
     user-select: none;
-}
-
-.button:focus-visible {
-    outline-offset: 2px;
 }
 
 .button.blue {
@@ -610,9 +604,9 @@ input::placeholder {
     }
 
     pre {
+        color: #fff;
         background: #0d0d0d;
         border-radius: 0.5rem;
-        color: #fff;
         font-family: "JetBrainsMono", monospace;
         padding: 0.75rem 1rem;
 
@@ -623,4 +617,19 @@ input::placeholder {
             padding: 0;
         }
     }
+}
+
+code {
+    font-family: var(--font-code);
+}
+
+.hljs {
+    display: block;
+    padding: 0.5rem;
+    min-height: 100px;
+    line-height: 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
 }

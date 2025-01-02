@@ -1,23 +1,24 @@
 "use client";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { AttachmentList, Avatar, Dialog, DialogTrigger, Icon } from "@components";
 import { getLongDate, getMidDate } from "@/lib/time";
 import styles from "./FixedMessage.module.css";
-import { Avatar, Icon } from "@components";
-import { useState, useMemo } from "react";
 import { FormatMessage } from "./Format";
-import type { Message } from "@/type";
-import { useLayers } from "@/store";
+import type { AppMessage } from "@/type";
+import { useState } from "react";
 
-export function FixedMessage({ message, pinned }: { message: Message; pinned?: boolean }) {
+export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?: boolean }) {
     const [messageContent, setMessageContent] = useState<JSX.Element | null>(null);
     const [referenceContent, setReferenceContent] = useState<JSX.Element | null>(null);
+
+    const isLocal = "send" in message;
 
     if (message.content && messageContent === null) {
         setMessageContent(FormatMessage({ message: message, fixed: true }));
     }
 
-    if (message.reference?.content && referenceContent === null) {
+    if (!isLocal && message.reference?.content && referenceContent === null) {
         setReferenceContent(FormatMessage({ message: message.reference, fixed: true }));
     }
 
@@ -46,44 +47,34 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
                         <div>Jump</div>
                     </div>
 
-                    <svg
-                        aria-hidden="true"
-                        role="img"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        onClick={() => {
-                            // setLayers(
-                            //     {
-                            //         settings: { type: "POPUP" },
-                            //         content: {
-                            //             type: "UNPIN_MESSAGE",
-                            //             channelId: message.channelId,
-                            //             message: message,
-                            //         },
-                            //     },
-                            //     true
-                            // );
-                        }}
-                    >
-                        <path
-                            fill="currentColor"
-                            d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
-                        />
-                    </svg>
+                    <Dialog>
+                        <DialogTrigger>
+                            <svg
+                                aria-hidden="true"
+                                role="img"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
+                                />
+                            </svg>
+                        </DialogTrigger>
+                    </Dialog>
                 </div>
             )}
 
             <div>
                 {message.type === 1 && (
                     <div className={styles.messageReply}>
-                        {message.messageReference ? (
+                        {!isLocal && message.reference ? (
                             <div className={styles.userAvatarReply}>
                                 <Avatar
-                                    src={message.messageReference?.author.avatar}
-                                    alt={message.messageReference?.author.displayName}
-                                    type="avatars"
                                     size={16}
+                                    src={message.reference.author.avatar}
+                                    alt={message.reference.author.displayName}
                                 />
                             </div>
                         ) : (
@@ -101,24 +92,26 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
                             </div>
                         )}
 
-                        {message.messageReference && (
-                            <span>{message.messageReference.author.displayName}</span>
+                        {!isLocal && message.reference && (
+                            <span>{message.reference.author.displayName}</span>
                         )}
 
                         {referenceContent ? (
                             <div className={styles.referenceContent}>
                                 {referenceContent}{" "}
-                                {message.reference.edited && edited(message.reference.edited)}
+                                {!isLocal &&
+                                    message.reference?.edited &&
+                                    edited(message.reference.edited)}
                             </div>
                         ) : (
                             <div className={styles.italic}>
-                                {message.reference?.attachments.length > 0
+                                {!isLocal && (message.reference?.attachments.length || 0) > 0
                                     ? "Click to see attachment"
                                     : "Original message was deleted"}
                             </div>
                         )}
 
-                        {message.reference?.attachments?.length > 0 && (
+                        {!isLocal && (message.reference?.attachments.length || 0) > 0 && (
                             <Icon
                                 name="image"
                                 size={20}
@@ -130,10 +123,9 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
                 <div className={styles.messageContent}>
                     <div className={styles.userAvatar}>
                         <Avatar
+                            size={40}
                             src={message.author.avatar}
                             alt={message.author.displayName}
-                            type="avatars"
-                            size={40}
                         />
                     </div>
 
@@ -163,7 +155,7 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
                             </>
                         )}
 
-                        {message.attachments.length > 0 && <MessageAttachments message={message} />}
+                        {message.attachments.length > 0 && <AttachmentList message={message} />}
                         {message.edited && message.attachments.length > 0 && edited(message.edited)}
                     </div>
                 </div>
@@ -171,198 +163,3 @@ export function FixedMessage({ message, pinned }: { message: Message; pinned?: b
         </li>
     );
 }
-
-const MessageAttachments = ({ message }: { message: Message }) => {
-    const ImageComponent = ({ attachment }: { attachment }) => (
-        <Image
-            key={attachment.id}
-            attachment={attachment}
-            message={message}
-        />
-    );
-
-    return (
-        <div className={styles.attachments}>
-            <div>
-                {message.attachments.length === 1 && (
-                    <div className={styles.gridOneBig}>
-                        <ImageComponent attachment={message.attachments[0]} />
-                    </div>
-                )}
-
-                {message.attachments.length === 2 && (
-                    <div className={styles.gridTwo}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length === 3 && (
-                    <div className={styles.gridTwo}>
-                        <div className={styles.gridOneSolo}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridTwoColumn}>
-                            <div>
-                                <div>
-                                    {message.attachments.slice(1, 2).map((attachment) => (
-                                        <ImageComponent attachment={attachment} />
-                                    ))}
-                                </div>
-
-                                <div>
-                                    {message.attachments.slice(2, 3).map((attachment) => (
-                                        <ImageComponent attachment={attachment} />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {message.attachments.length === 4 && (
-                    <div className={styles.gridFour}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length === 5 && (
-                    <>
-                        <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 5).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length === 6 && (
-                    <div className={styles.gridThree}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length === 7 && (
-                    <>
-                        <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 7).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length === 8 && (
-                    <>
-                        <div className={styles.gridTwo}>
-                            {message.attachments.slice(0, 2).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(2, 8).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {message.attachments.length === 9 && (
-                    <div className={styles.gridThree}>
-                        {message.attachments.map((attachment) => (
-                            <ImageComponent attachment={attachment} />
-                        ))}
-                    </div>
-                )}
-
-                {message.attachments.length === 10 && (
-                    <>
-                        <div className={styles.gridOne}>
-                            {message.attachments.slice(0, 1).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-
-                        <div className={styles.gridThree}>
-                            {message.attachments.slice(1, 10).map((attachment) => (
-                                <ImageComponent attachment={attachment} />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const Image = ({ attachment }) => {
-    const [hideSpoiler, setHideSpoiler] = useState<boolean>(false);
-    const isHidden = attachment.isSpoiler && !hideSpoiler;
-
-    return useMemo(
-        () => (
-            <div
-                className={styles.image}
-                onClick={() => {
-                    if (isHidden) {
-                        setHideSpoiler(true);
-                    }
-                }}
-                style={{ cursor: isHidden ? "pointer" : "default" }}
-            >
-                <div>
-                    <div>
-                        <div style={{ cursor: isHidden ? "pointer" : "default" }}>
-                            <div>
-                                <img
-                                    src={`${process.env.NEXT_PUBLIC_CDN_URL}${
-                                        attachment.id
-                                    }/-/resize/x${
-                                        attachment.dimensions.height >= 350
-                                            ? 350
-                                            : attachment.dimensions.height
-                                    }/-/format/webp/`}
-                                    alt={attachment?.name}
-                                    style={{ filter: isHidden ? "blur(44px)" : "none" }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {isHidden && <div className={styles.spoilerButton}>Spoiler</div>}
-                {attachment.description && (!attachment.isSpoiler || hideSpoiler) && (
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <button className={styles.imageAlt}>ALT</button>
-                        </TooltipTrigger>
-
-                        <TooltipContent>{attachment.description}</TooltipContent>
-                    </Tooltip>
-                )}
-            </div>
-        ),
-        [attachment, hideSpoiler]
-    );
-};

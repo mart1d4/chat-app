@@ -1,35 +1,38 @@
-import type { Channel, Guild, User } from "@/type";
+import type { AppChannel, AppUser, Friend, Guild, UnknownUser } from "@/type";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
 
 export interface UseDataState {
-    user: User | null;
+    user: AppUser | null;
     token: string | null;
 
-    channels: Channel[];
+    channels: AppChannel[];
     guilds: Guild[];
-    friends: User[];
-    blocked: User[];
-    received: User[];
-    sent: User[];
+    friends: Friend[];
+    blocked: UnknownUser[];
+    received: UnknownUser[];
+    sent: UnknownUser[];
 
-    setUser: (user: User | null) => void;
-    setToken: (token: string | null | undefined) => void;
+    setUser: (user: AppUser | null) => void;
+    setToken: (token: string | null) => void;
 
-    setChannels: (channels: Channel[]) => void;
+    setChannels: (channels: AppChannel[]) => void;
     setGuilds: (guilds: Guild[]) => void;
-    setFriends: (friends: User[]) => void;
-    setBlocked: (blocked: User[]) => void;
-    setReceived: (received: User[]) => void;
-    setSent: (sent: User[]) => void;
+    setFriends: (friends: Friend[]) => void;
+    setBlocked: (blocked: UnknownUser[]) => void;
+    setReceived: (received: UnknownUser[]) => void;
+    setSent: (sent: UnknownUser[]) => void;
 
-    modifyUser: (user: User) => void;
+    modifyUser: (user: Partial<AppUser>) => void;
 
-    addUser: (user: User, type: string) => void;
+    addUser: <T extends "friends" | "blocked" | "received" | "sent">(
+        user: T extends "friends" ? Friend : UnknownUser,
+        type: T
+    ) => void;
     removeUser: (id: number, type: string) => void;
 
-    addChannel: (channel: Channel) => void;
-    updateChannel: (id: number, channel: Partial<Channel>) => void;
+    addChannel: (channel: AppChannel) => void;
+    updateChannel: (id: number, channel: Partial<AppChannel>) => void;
     removeChannel: (id: number) => void;
     moveChannelUp: (id: number) => void;
 
@@ -57,7 +60,7 @@ export const useData = create<UseDataState>()((set) => ({
 
     setChannels: (channels) => {
         set((state) => ({
-            channels: channels.map((c) => getFullChannel(c, state.user as User)),
+            channels: channels.map((c) => getFullChannel(c, state.user)).filter((c) => !!c),
         }));
     },
 
@@ -85,28 +88,30 @@ export const useData = create<UseDataState>()((set) => ({
                 if (r.id === user.id) return { ...r, ...user };
                 return r;
             }),
-            channels: state.channels.map((c) => {
-                if (c.recipients.map((r) => r.id).includes(user.id)) {
-                    const newChannel = {
-                        ...c,
-                        recipients: c.recipients.map((r) => {
-                            if (r.id === user.id) return { ...r, ...user };
-                            return r;
-                        }),
-                    };
+            channels: state.channels
+                .map((c) => {
+                    if (c.recipients.some((r) => r.id === user.id)) {
+                        const newChannel = {
+                            ...c,
+                            recipients: c.recipients.map((r) => {
+                                if (r.id === user.id) return { ...r, ...user };
+                                return r;
+                            }),
+                        };
 
-                    return getFullChannel(newChannel, state.user as User);
-                }
+                        return getFullChannel(newChannel, state.user);
+                    }
 
-                return c;
-            }),
+                    return c;
+                })
+                .filter((c) => !!c),
         })),
 
     addUser: (user, type) => {
         return set((state) => {
             if (type === "friends") {
                 return {
-                    friends: [user, ...state.friends],
+                    friends: [user as Friend, ...state.friends],
                     received: state.received.filter((r) => r.id !== user.id),
                     sent: state.sent.filter((r) => r.id !== user.id),
                 };
@@ -136,14 +141,20 @@ export const useData = create<UseDataState>()((set) => ({
                     ].filter((u) => u.id !== id),
                 };
             }
+
             return state;
         });
     },
 
     addChannel: (channel) => {
-        return set((state) => ({
-            channels: [getFullChannel(channel, state.user as User), ...state.channels],
-        }));
+        return set((state) => {
+            const newChan = getFullChannel(channel, state.user);
+            if (!newChan) return state;
+
+            return {
+                channels: [newChan, ...state.channels],
+            };
+        });
     },
 
     updateChannel: (id, data) => {

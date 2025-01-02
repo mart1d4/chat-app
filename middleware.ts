@@ -23,6 +23,7 @@ export async function middleware(req: NextRequest) {
         "/download",
         "/channels/me",
         "/channels/discover",
+        "/verify",
         "/test",
     ];
 

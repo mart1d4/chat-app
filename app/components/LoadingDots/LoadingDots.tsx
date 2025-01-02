@@ -1,36 +1,11 @@
-import styles from './LoadingDots.module.css';
+import styles from "./LoadingDots.module.css";
 
-type Props = {};
-
-export const LoadingDots = (props: Props) => {
+export function LoadingDots() {
     return (
-        <svg
-            width='24.5'
-            height='7'
-            className={styles.svg}
-        >
-            <g>
-                <circle
-                    cx='3.5'
-                    cy='3.5'
-                    r='3.5'
-                    fill='currentColor'
-                />
-
-                <circle
-                    cx='12.25'
-                    cy='3.5'
-                    r='3.5'
-                    fill='currentColor'
-                />
-
-                <circle
-                    cx='21'
-                    cy='3.5'
-                    r='3.5'
-                    fill='currentColor'
-                />
-            </g>
-        </svg>
+        <span className={styles.container}>
+            <span />
+            <span />
+            <span />
+        </span>
     );
-};
+}

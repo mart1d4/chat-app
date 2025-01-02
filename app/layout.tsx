@@ -1,3 +1,4 @@
+import { TabFocusHighlighter } from "./components";
 import { appMetadata } from "@/lib/metadata";
 import { type ReactElement } from "react";
 import type { Metadata } from "next";
@@ -20,6 +21,8 @@ export default function RootLayout({ children }: { children: ReactElement }) {
                 <script>0</script>
 
                 {children}
+
+                <TabFocusHighlighter />
             </body>
         </html>
     );

@@ -48,6 +48,10 @@ const queries = {
         url: "/users/@me",
         method: "PATCH",
     },
+    VERIFY_PASSWORD: {
+        url: "/auth/verify-password",
+        method: "POST",
+    },
     CHANNEL_CREATE: {
         url: "/users/@me/channels",
         method: "POST",
@@ -123,6 +127,14 @@ const queries = {
     GET_USER_PROFILE: {
         url: "/users/:userId/profile",
         method: "GET",
+    },
+    GET_EMAIL_VERIFICATION_CODE: {
+        url: "/users/@me/email",
+        method: "PUT",
+    },
+    VERIFY_EMAIL_CODE: {
+        url: "/users/@me/email/verify",
+        method: "POST",
     },
 };
 
@@ -312,11 +324,19 @@ export default function useRequestHelper() {
                 await new Promise((resolve) => setTimeout(resolve, after));
                 return sendRequest({ query, params, body, attemps: attemps + 1 });
             } else if (response.ok) {
+                // if data is empty, return an empty object
+                if (response.status === 204) {
+                    return {
+                        data: {},
+                        errors: null,
+                    };
+                }
+
                 const data = await response.json();
 
                 return {
-                    data: data || {},
-                    errors: {},
+                    data: data,
+                    errors: null,
                 };
             } else {
                 const data = await response.json();

@@ -5,7 +5,7 @@ import type { Message } from "@/type";
 import { nanoid } from "nanoid";
 import Link from "next/link";
 
-export function FormatMessage({ message, fixed = false }: { message: Message; false?: boolean }) {
+export function FormatMessage({ message, fixed = false }: { message: Message; fixed?: boolean }) {
     const spoilerRule = {
         order: SimpleMarkdown.defaultRules.em.order - 0.5,
         match: (source) => /^\|\|([\s\S]+?)\|\|/.exec(source),

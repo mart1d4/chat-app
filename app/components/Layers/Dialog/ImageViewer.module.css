@@ -1,0 +1,67 @@
+.animated {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.container > a {
+    opacity: 0.5;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--foreground-2);
+    transition: opacity 0.15s ease;
+}
+
+.container > a:hover,
+.container > a:focus-visible {
+    opacity: 1;
+}
+
+.container img {
+    user-select: none;
+    border-radius: 3px;
+}
+
+.previous,
+.next {
+    top: 50%;
+    left: 14px;
+    width: 50px;
+    height: 50px;
+    opacity: 0.6;
+    display: flex;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    background-color: transparent;
+    transition: opacity 0.15s ease;
+    transform: translateY(-50%) rotate(-90deg);
+}
+
+.previous:hover,
+.previous:focus-visible,
+.next:hover,
+.next:focus-visible {
+    opacity: 1;
+}
+
+.next {
+    left: auto;
+    right: 14px;
+    transform: translateY(-50%) rotate(90deg);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

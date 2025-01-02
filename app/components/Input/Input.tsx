@@ -1,82 +1,94 @@
 "use client";
 
-import { useMemo } from "react";
+import { Checkbox } from "../Checkbox/Checkbox";
 import styles from "./Input.module.css";
-import { useLayers } from "@/store";
+import { useEffect, useMemo, useState } from "react";
 
 export function Input({
-    type = "text",
     label = "",
-    placeholder = "",
-    value = "",
-    required = false,
-    minLength = 0,
-    maxLength = 100,
-    disabled = false,
-    error = "",
     name = "",
+    error = "",
+    description = "",
     leftItem = null,
     rightItem = null,
     onChange = () => {},
+    ...props
 }: {
-    type?: string;
-    label?: string;
-    placeholder?: string;
-    value?: string;
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    disabled?: boolean;
-    error?: string;
+    label: string;
     name?: string;
+    error?: string;
+    description?: string;
     leftItem?: React.ReactNode;
     rightItem?: React.ReactNode;
     onChange?: (value: string) => void;
-}) {
-    const id = useMemo(() => Math.random().toString(36).substring(2), []);
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+    const [id, setId] = useState<string>("");
+
+    useEffect(() => {
+        const randomId = Math.random().toString(36).substring(7);
+        setId(randomId);
+    }, []);
 
     const classnames = [leftItem && styles.leftItem, rightItem && styles.rightItem]
         .filter(Boolean)
         .join(" ");
 
+    if (!id) {
+        return (
+            <div className={styles.container}>
+                <span className={`${styles.label} ${styles.load}`} />
+
+                <div className={styles.inputWrapper}>
+                    <input className={classnames} />
+                </div>
+            </div>
+        );
+    }
+
+    if (props.checked !== undefined) {
+        return (
+            <label
+                htmlFor={id}
+                id={`${id}-label`}
+                className={`${styles.checkbox} ${error && styles.error}`}
+            >
+                <Checkbox
+                    box
+                    inputFor={id}
+                    checked={props.checked}
+                    onChange={() => onChange(!props.checked ? "true" : "false")}
+                />
+                {label} {props.required && !error && <span>*</span>}
+                {error && <span className={styles.error}>- {error}</span>}
+            </label>
+        );
+    }
+
     return (
         <div className={styles.container}>
-            {label && (
-                <label
-                    htmlFor={id}
-                    className={`${styles.label} ${error && styles.error}`}
-                >
-                    {label} {required && !error && <span>*</span>}
-                    {error && <span className={styles.error}>- {error}</span>}
-                </label>
-            )}
+            <label
+                htmlFor={id}
+                className={`${styles.label} ${error && styles.error}`}
+            >
+                {label} {props.required && !error && <span>*</span>}
+                {error && <span className={styles.error}>- {error}</span>}
+            </label>
 
             <div className={styles.inputWrapper}>
                 {leftItem && <div>{leftItem}</div>}
 
                 <input
                     id={id}
-                    type={type}
                     name={name}
-                    value={value}
                     aria-label={label}
-                    required={required}
-                    disabled={disabled}
-                    minLength={minLength}
-                    maxLength={maxLength}
                     className={classnames}
                     aria-invalid={!!error}
                     aria-labelledby={name}
-                    aria-required={required}
-                    aria-disabled={disabled}
-                    aria-placeholder={placeholder}
+                    aria-required={props.required}
+                    aria-disabled={props.disabled}
+                    aria-placeholder={props.placeholder}
                     aria-describedby={error ? `${name}-error` : undefined}
                     aria-errormessage={error ? `${name}-error` : undefined}
-                    autoCorrect="off"
-                    autoComplete="off"
-                    spellCheck="false"
-                    autoCapitalize="off"
-                    placeholder={placeholder}
                     onChange={(e) => onChange(e.target.value)}
                     onContextMenu={(e) => {
                         e.preventDefault();
@@ -93,10 +105,13 @@ export function Input({
                         //     },
                         // });
                     }}
+                    {...props}
                 />
 
                 {rightItem && <div>{rightItem}</div>}
             </div>
+
+            {!!description && <p className={styles.description}>{description}</p>}
         </div>
     );
 }

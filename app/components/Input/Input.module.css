@@ -3,6 +3,20 @@
     flex-direction: column;
 }
 
+.checkbox {
+    gap: 8px;
+    display: flex;
+    cursor: pointer;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 0;
+    font-weight: 500;
+    line-height: 1.285;
+    align-items: center;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
 .inputWrapper {
     width: 100%;
     display: flex;
@@ -21,6 +35,8 @@
     padding: 10px;
     height: 40px;
     outline: none;
+    font-weight: 500;
+    border-radius: 3px;
     color: var(--foreground-3);
 }
 
@@ -46,30 +62,58 @@
 }
 
 .label {
-    display: inline-block;
-    margin-bottom: 8px;
+    height: 16px;
     font-size: 12px;
-    line-height: 16px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02rem;
-    color: var(--foreground-3);
+    line-height: 16px;
     user-select: none;
+    margin-bottom: 8px;
+    display: inline-block;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.label.load {
+    width: 40%;
+    border-radius: 3px;
+    animation: loading 1.5s infinite ease-in-out;
+    background-color: var(--background-3);
 }
 
 .label.error {
-    color: var(--error-1);
+    color: var(--error-light);
 }
 
 .label > span:not(.error) {
-    color: var(--error-1);
+    color: var(--error-light);
     padding-left: 2px;
 }
 
 .label > span.error {
-    color: var(--error-1);
+    color: var(--error-light);
     font-size: 12px;
     font-weight: 500;
     font-style: italic;
     text-transform: none;
+}
+
+.description {
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.285;
+    color: var(--foreground-3);
+}
+
+@keyframes loading {
+    0% {
+        background-color: var(--background-3);
+    }
+    50% {
+        background-color: var(--background-2);
+    }
+    100% {
+        background-color: var(--background-3);
+    }
 }

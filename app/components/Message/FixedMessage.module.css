@@ -1,7 +1,9 @@
 .messageContainer {
-    position: relative;
     list-style: none;
-    background-color: var(--background-4);
+    position: relative;
+    border-radius: 5px;
+    box-shadow: var(--elevation-high);
+    background-color: var(--background-5);
 }
 
 .messageContainer > div:last-child {

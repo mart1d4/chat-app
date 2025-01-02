@@ -1,16 +1,16 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Tooltip/Tooltip";
-import { Icon, LoadingDots, EmojiPicker } from "@components";
+import { Icon, LoadingDots, EmojiPicker, Alert } from "@components";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { useUploadThing } from "@/lib/uploadthing";
 import { getButtonColor } from "@/lib/getColors";
 import { getRandomAvatar } from "@/lib/avatars";
-import { useData, useLayers } from "@/store";
 import styles from "./Settings.module.css";
 import type { User } from "@/type";
+import { useData } from "@/store";
 import Image from "next/image";
 
-const allowedFileTypes = ["image/png", "image/jpeg", "image/gif", "image/apng", "image/webp"];
 const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export function Profiles() {
@@ -39,12 +39,63 @@ export function Profiles() {
     const bannerInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLInputElement>(null);
 
+    const [avatarId, setAvatarId] = useState<string | null>(null);
+    const [bannerId, setBannerId] = useState<string | null>(null);
+
+    const { startUpload: uploadAvatar } = useUploadThing("imageUploader", {
+        onClientUploadComplete: (files) => {
+            const { key: fileId } = files[0];
+            if (!fileId) throw new Error("No file ID returned from cdn.");
+            setAvatarId(fileId);
+        },
+        onUploadError: (error) => {
+            console.error(error);
+            setErrors({ avatar: "An error occured while uploading your avatar" });
+            setIsLoading(false);
+
+            setTimeout(() => {
+                setErrors({});
+            }, 5000);
+        },
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+
+    const { startUpload: uploadBanner } = useUploadThing("imageUploader", {
+        onClientUploadComplete: (files) => {
+            const { key: fileId } = files[0];
+            if (!fileId) throw new Error("No file ID returned from cdn.");
+            setBannerId(fileId);
+        },
+        onUploadError: (error) => {
+            console.error(error);
+            setErrors({ banner: "An error occured while uploading your banner" });
+            setIsLoading(false);
+
+            setTimeout(() => {
+                setErrors({});
+            }, 5000);
+        },
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+
+    useEffect(() => {
+        resetState();
+    }, [user]);
+
+    useEffect(() => {
+        if (avatarId || bannerId) {
+            saveUser();
+        }
+    }, [avatarId, bannerId]);
+
     const randomAvatar = getRandomAvatar(user.id);
 
     function resetState() {
         if (!user) return;
-
-        console.log("User: ", user);
 
         setAvatar(user.avatar);
         setBanner(user.banner);
@@ -52,7 +103,10 @@ export function Profiles() {
         setPrimaryColor(user.primaryColor);
         setAccentColor(user.accentColor);
         setDescription(user.description);
+        setAvatarId(null);
+        setBannerId(null);
         setErrors({});
+        setIsLoading(false);
 
         const desc = descriptionRef.current;
         if (desc) desc.innerText = user.description || "";
@@ -67,15 +121,25 @@ export function Profiles() {
         description !== user.description;
 
     async function saveUser() {
-        if (isLoading) return;
+        if (isLoading && !avatarId && !bannerId) return;
         setIsLoading(true);
 
+        if (avatar instanceof File && !avatarId) {
+            uploadAvatar([avatar]);
+            return;
+        }
+
+        if (banner instanceof File && !bannerId) {
+            uploadBanner([banner]);
+            return;
+        }
+
         try {
-            const response = await sendRequest({
+            const { errors, data } = await sendRequest({
                 query: "UPDATE_USER",
                 body: {
-                    avatar: avatar !== user.avatar ? avatar : undefined,
-                    banner: banner !== user.banner ? banner : undefined,
+                    avatar: avatar !== user.avatar ? avatarId || avatar : undefined,
+                    banner: banner !== user.banner ? bannerId || banner : undefined,
                     displayName: displayName !== user.displayName ? displayName : undefined,
                     primaryColor: primaryColor !== user.primaryColor ? primaryColor : undefined,
                     accentColor: accentColor !== user.accentColor ? accentColor : undefined,
@@ -83,23 +147,17 @@ export function Profiles() {
                 },
             });
 
-            if (response.user) {
-                setUser({ ...user, ...response.user });
+            if (data?.user) {
+                setUser({ ...user, ...data.user });
                 setErrors({});
-            } else if (response.errors) {
-                setErrors(response.errors);
+            } else if (errors) {
+                setErrors(errors);
             }
         } catch (err) {
             console.error(err);
             setErrors({ server: "An error occurred while saving your profile" });
         }
-
-        setIsLoading(false);
     }
-
-    useEffect(() => {
-        resetState();
-    }, [user]);
 
     const CardBanner = useMemo(
         () => (
@@ -205,6 +263,13 @@ export function Profiles() {
     return (
         <>
             <div>
+                {(errors.avatar || errors.banner) && (
+                    <Alert
+                        message={errors.avatar || errors.banner}
+                        type="danger"
+                    />
+                )}
+
                 <AnimatePresence>
                     {needsSaving && (
                         <motion.div
@@ -238,9 +303,13 @@ export function Profiles() {
                                                     ? "button green disabled"
                                                     : "button green"
                                             }
-                                            onClick={() =>
-                                                (description?.length || 0) <= 190 && saveUser()
-                                            }
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                if ((description?.length || 0) <= 190) {
+                                                    saveUser();
+                                                }
+                                            }}
                                         >
                                             {isLoading ? <LoadingDots /> : "Save Changes"}
                                         </button>
@@ -264,15 +333,16 @@ export function Profiles() {
                         if (!file) return (e.target.value = "");
 
                         // Run checks
-                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                        const maxFileSize = 1024 * 1024 * 4; // 10MB
                         if (file.size > maxFileSize) {
-                            // setLayers({
-                            //     settings: { type: "POPUP" },
-                            //     content: {
-                            //         type: "WARNING",
-                            //         warning: "FILE_SIZE",
-                            //     },
-                            // });
+                            setErrors({
+                                avatar: "File size is too large. A maximum of 4MB is allowed",
+                            });
+
+                            setTimeout(() => {
+                                setErrors({});
+                            }, 5000);
+
                             return (e.target.value = "");
                         }
 
@@ -296,15 +366,16 @@ export function Profiles() {
                         if (!file) return (e.target.value = "");
 
                         // Run checks
-                        const maxFileSize = 1024 * 1024 * 10; // 10MB
+                        const maxFileSize = 1024 * 1024 * 4; // 10MB
                         if (file.size > maxFileSize) {
-                            // setLayers({
-                            //     settings: { type: "POPUP" },
-                            //     content: {
-                            //         type: "WARNING",
-                            //         warning: "FILE_SIZE",
-                            //     },
-                            // });
+                            setErrors({
+                                banner: "File size is too large. A maximum of 4MB is allowed",
+                            });
+
+                            setTimeout(() => {
+                                setErrors({});
+                            }, 5000);
+
                             return (e.target.value = "");
                         }
 

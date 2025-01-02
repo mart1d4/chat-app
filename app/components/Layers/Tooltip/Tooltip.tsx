@@ -43,6 +43,8 @@ interface TooltipOptions {
     big?: boolean;
     wide?: boolean;
     showOn?: boolean;
+    background?: string;
+    color?: string;
 }
 
 export function useTooltip({
@@ -56,6 +58,8 @@ export function useTooltip({
     big = false,
     wide = false,
     showOn,
+    background,
+    color,
 }: TooltipOptions = {}) {
     const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
 
@@ -113,8 +117,10 @@ export function useTooltip({
             avatar,
             big,
             wide,
+            background,
+            color,
         }),
-        [open, setOpen, interactions, data, arrowRef, avatar, big]
+        [open, setOpen, interactions, data, arrowRef, avatar, big, wide, background, color]
     );
 }
 
@@ -208,13 +214,14 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                             context={context}
                             width={10}
                             height={5}
-                            fill="var(--background-dark-1)"
+                            fill={context.background || "var(--background-dark-1)"}
                         />
 
                         <div
                             className={`${styles.tooltip} ${context.avatar ? styles.avatar : ""} ${
                                 context.big ? styles.big : ""
                             }`}
+                            style={{ backgroundColor: context.background || "" }}
                         >
                             {props.children}
                         </div>
