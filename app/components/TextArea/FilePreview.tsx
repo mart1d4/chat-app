@@ -130,7 +130,7 @@ export function FilePreview({
                             >
                                 <Icon
                                     size={20}
-                                    name={isSpoiler ? "eyeSlash" : "eye"}
+                                    name={isSpoiler ? "eye-slash" : "eye"}
                                 />
                             </button>
                         </TooltipTrigger>
@@ -195,10 +195,10 @@ export function FilePreview({
                                 )}
 
                                 <Input
-                                    type="checkbox"
                                     name="spoiler"
-                                    label="Mark as spoiler"
+                                    type="checkbox"
                                     checked={spoiler}
+                                    label="Mark as spoiler"
                                     onChange={() => setSpoiler((prev) => !prev)}
                                 />
                             </DialogContent>

@@ -1,246 +1,272 @@
 "use client";
 
-import { TooltipContent, TooltipTrigger, Tooltip } from "../Layers/Tooltip/Tooltip";
+import type { KnownUser, UnknownUser } from "@/type";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { translateCap } from "@/lib/strings";
+import { getStatusLabel } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import styles from "./UserItem.module.css";
-import { Avatar, Icon } from "@components";
-import { useRef } from "react";
+import { useData } from "@/store";
+import { useState } from "react";
+import {
+    TooltipContent,
+    TooltipTrigger,
+    MenuTrigger,
+    UserMenu,
+    Tooltip,
+    Avatar,
+    Icon,
+    Menu,
+} from "@components";
 
-export function UserItem({ content, user }) {
+type ContentType = "all" | "online" | "pending" | "blocked";
+
+export function UserItem({
+    content,
+    user,
+}: {
+    content: ContentType;
+    user: ContentType extends "blocked" ? UnknownUser : KnownUser & { req: string };
+}) {
+    const [loading, setLoading] = useState(false);
+
+    const { addUser, removeUser, channels } = useData();
     const { sendRequest } = useFetchHelper();
-    const liRef = useRef(null);
+    const router = useRouter();
+
+    const dmWithUser = channels.find((c) => {
+        return c.recipients.length === 2 && c.recipients.find((r) => r.id === user.id);
+    });
+
+    async function messageUser() {
+        if (loading || !["all", "online"].includes(content)) return;
+
+        if (dmWithUser) {
+            router.push(`/channels/me/${dmWithUser.id}`);
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const { data } = await sendRequest({
+                query: "CHANNEL_CREATE",
+                body: { recipients: [user.id] },
+            });
+
+            if (data?.channelId) {
+                router.push(`/channels/me/${data.channelId}`);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading(false);
+    }
 
     return (
-        <li
-            ref={liRef}
-            tabIndex={0}
-            // className={
-            //     layers.MENU?.content.refElement === liRef.current
-            //         ? styles.liContainer + " " + styles.active
-            //         : styles.liContainer
-            // }
-            className={styles.liContainer}
-            onClick={() => {
-                if (!["all", "online"].includes(content)) return;
-
-                sendRequest({
-                    query: "CHANNEL_CREATE",
-                    body: { recipients: [user.id] },
-                });
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                // setLayers({
-                //     settings: {
-                //         type: "MENU",
-                //         event: e,
-                //     },
-                //     content: {
-                //         type: "USER",
-                //         user: user,
-                //         refElement: liRef.current,
-                //     },
-                // });
-            }}
-            onMouseEnter={() => {
-                // if (layers.MENU?.content.refElement && layers.MENU?.content.user !== user) {
-                //     setLayers({
-                //         settings: {
-                //             type: "MENU",
-                //             setNull: true,
-                //         },
-                //     });
-                // }
-            }}
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    if (!["all", "online"].includes(content)) return;
-
-                    sendRequest({
-                        query: "CHANNEL_CREATE",
-                        body: { recipients: [user.id] },
-                    });
-                } else if (e.key === "Enter" && e.shiftKey) {
-                    // setLayers({
-                    //     settings: {
-                    //         type: "MENU",
-                    //         event: e,
-                    //     },
-                    //     content: {
-                    //         type: "USER",
-                    //         user: user,
-                    //         refElement: liRef.current,
-                    //     },
-                    // });
-                }
-            }}
+        <Menu
+            openOnRightClick
+            placement="right-start"
         >
-            <div className={styles.li}>
-                <div className={styles.userInfo}>
-                    <div className={styles.avatarWrapper}>
-                        <Avatar
-                            src={user.avatar}
-                            alt={user.username}
-                            type="avatars"
-                            size={32}
-                            status={content !== "pending" && content !== "blocked" && user.status}
-                        />
-                    </div>
+            <MenuTrigger>
+                <li
+                    tabIndex={0}
+                    onClick={messageUser}
+                    className={styles.container}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            messageUser();
+                        }
+                    }}
+                >
+                    <div className={styles.li}>
+                        <div className={styles.userInfo}>
+                            <div className={styles.avatarWrapper}>
+                                <Avatar
+                                    size={32}
+                                    type="user"
+                                    alt={user.username}
+                                    fileId={user.avatar}
+                                    generateId={user.id}
+                                    status={
+                                        content !== "pending" &&
+                                        content !== "blocked" &&
+                                        user.status
+                                    }
+                                />
+                            </div>
 
-                    <div className={styles.text}>
-                        <div className={styles.usernames}>
-                            <p>{user.displayName}</p>
-                            <p>{user.username}</p>
+                            <div className={styles.text}>
+                                <div className={styles.usernames}>
+                                    <p>{user.displayName}</p>
+                                    <p className={content === "blocked" ? styles.blocked : ""}>
+                                        {user.username}
+                                    </p>
+                                </div>
+
+                                <p className={styles.textStatus}>
+                                    <span>
+                                        {user.req === "Sent"
+                                            ? "Outgoing Friend Request"
+                                            : user.req === "Received"
+                                            ? "Incoming Friend Request"
+                                            : content === "blocked"
+                                            ? "Blocked"
+                                            : user.customStatus
+                                            ? user.customStatus
+                                            : getStatusLabel(user.status)}
+                                    </span>
+                                </p>
+                            </div>
                         </div>
 
-                        <p className={styles.textStatus}>
-                            <span>
-                                {user?.req === "Sent"
-                                    ? "Outgoing Friend Request"
-                                    : user?.req === "Received"
-                                    ? "Incoming Friend Request"
-                                    : content === "blocked"
-                                    ? "Blocked"
-                                    : user.customStatus
-                                    ? user.customStatus
-                                    : translateCap(user.status)}
-                            </span>
-                        </p>
-                    </div>
-                </div>
+                        <div className={styles.actions}>
+                            {(content === "all" || content === "online") && (
+                                <>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button
+                                                type="button"
+                                                onClick={messageUser}
+                                            >
+                                                <Icon
+                                                    size={20}
+                                                    name="message"
+                                                />
+                                            </button>
+                                        </TooltipTrigger>
 
-                <div className={styles.actions}>
-                    {(content === "all" || content === "online") && (
-                        <>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            sendRequest({
-                                                query: "CHANNEL_CREATE",
-                                                body: { recipients: [user.id] },
-                                            });
-                                        }}
+                                        <TooltipContent>Message</TooltipContent>
+                                    </Tooltip>
+
+                                    <Menu
+                                        openOnClick
+                                        positionOnClick
+                                        placement="right-start"
                                     >
-                                        <Icon
-                                            name="message"
-                                            size={20}
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <MenuTrigger>
+                                                    <button onClick={(e) => e.stopPropagation()}>
+                                                        <Icon
+                                                            size={20}
+                                                            name="more"
+                                                        />
+                                                    </button>
+                                                </MenuTrigger>
+                                            </TooltipTrigger>
+
+                                            <TooltipContent>More</TooltipContent>
+                                        </Tooltip>
+
+                                        <UserMenu
+                                            user={user}
+                                            type="small"
                                         />
-                                    </button>
-                                </TooltipTrigger>
+                                    </Menu>
+                                </>
+                            )}
 
-                                <TooltipContent>Message</TooltipContent>
-                            </Tooltip>
+                            {content === "pending" && (
+                                <>
+                                    {user.req === "Received" && (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <button
+                                                    type="button"
+                                                    className={styles.green}
+                                                    onClick={async () => {
+                                                        const { data } = await sendRequest({
+                                                            query: "ADD_FRIEND",
+                                                            body: { username: user.username },
+                                                        });
 
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            // setLayers({
-                                            //     settings: { type: "MENU", event: e },
-                                            //     content: {
-                                            //         type: "USER_SMALL",
-                                            //         user: user,
-                                            //         userlist: true,
-                                            //         refElement: liRef.current,
-                                            //     },
-                                            // });
-                                        }}
-                                    >
-                                        <Icon
-                                            name="more"
-                                            size={20}
-                                        />
-                                    </button>
-                                </TooltipTrigger>
+                                                        if (data?.user) {
+                                                            addUser(data.user, "friends");
+                                                        }
+                                                    }}
+                                                >
+                                                    <Icon
+                                                        size={20}
+                                                        name="checkmark"
+                                                    />
+                                                </button>
+                                            </TooltipTrigger>
 
-                                <TooltipContent>More</TooltipContent>
-                            </Tooltip>
-                        </>
-                    )}
+                                            <TooltipContent>Accept</TooltipContent>
+                                        </Tooltip>
+                                    )}
 
-                    {content === "pending" && (
-                        <>
-                            {user.req === "Received" && (
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button
+                                                type="button"
+                                                className={styles.red}
+                                                onClick={async () => {
+                                                    const { errors } = await sendRequest({
+                                                        query: "REMOVE_FRIEND",
+                                                        body: {
+                                                            username: user.username,
+                                                        },
+                                                    });
+
+                                                    if (!errors) {
+                                                        removeUser(
+                                                            user.id,
+                                                            user.req === "Sent"
+                                                                ? "sent"
+                                                                : "received"
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                <Icon
+                                                    size={20}
+                                                    name="cancel"
+                                                />
+                                            </button>
+                                        </TooltipTrigger>
+
+                                        <TooltipContent>
+                                            {user.req === "Sent" ? "Cancel" : "Ignore"}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </>
+                            )}
+
+                            {content === "blocked" && (
                                 <Tooltip>
                                     <TooltipTrigger>
                                         <button
-                                            className={styles.green}
-                                            onClick={async (e) => {
-                                                e.stopPropagation();
-                                                sendRequest({
-                                                    query: "ADD_FRIEND",
-                                                    body: { username: user.username },
+                                            type="button"
+                                            className={styles.red}
+                                            onClick={async () => {
+                                                const { errors } = await sendRequest({
+                                                    query: "UNBLOCK_USER",
+                                                    params: { userId: user.id },
                                                 });
+
+                                                if (!errors) {
+                                                    removeUser(user.id, "blocked");
+                                                }
                                             }}
                                         >
                                             <Icon
-                                                name="checkmark"
                                                 size={20}
+                                                name="unblock"
                                             />
                                         </button>
                                     </TooltipTrigger>
 
-                                    <TooltipContent>Accept</TooltipContent>
+                                    <TooltipContent>Unblock</TooltipContent>
                                 </Tooltip>
                             )}
+                        </div>
+                    </div>
+                </li>
+            </MenuTrigger>
 
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <button
-                                        className={styles.red}
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            sendRequest({
-                                                query: "REMOVE_FRIEND",
-                                                body: {
-                                                    username: user.username,
-                                                },
-                                            });
-                                        }}
-                                    >
-                                        <Icon
-                                            name="cancel"
-                                            size={20}
-                                        />
-                                    </button>
-                                </TooltipTrigger>
-
-                                <TooltipContent>
-                                    {user.req === "Sent" ? "Cancel" : "Ignore"}
-                                </TooltipContent>
-                            </Tooltip>
-                        </>
-                    )}
-
-                    {content === "blocked" && (
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <button
-                                    className={styles.red}
-                                    onClick={async (e) => {
-                                        e.stopPropagation();
-                                        sendRequest({
-                                            query: "UNBLOCK_USER",
-                                            params: { userId: user.id },
-                                        });
-                                    }}
-                                >
-                                    <Icon
-                                        name="unblock"
-                                        size={20}
-                                    />
-                                </button>
-                            </TooltipTrigger>
-
-                            <TooltipContent>Unblock</TooltipContent>
-                        </Tooltip>
-                    )}
-                </div>
-            </div>
-        </li>
+            <UserMenu user={user} />
+        </Menu>
     );
 }

@@ -1,34 +1,24 @@
-import { canUserAccessChannel, getUser } from "@/lib/db/helpers";
 import { AppHeader, MemberList } from "@components";
+import { isUserInChannel } from "@/lib/db/helpers";
 import styles from "../FriendsPage.module.css";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Content from "./Content";
 
 export default async function ChannelPage({ params }: { params: { channelId: string } }) {
-    const user = await getUser({});
-    if (!user) redirect("/login");
-
+    const userId = parseInt(headers().get("x-user-id") as string);
     const id = parseInt(params.channelId);
 
-    if (!(await canUserAccessChannel(user.id, id))) {
-        redirect("/channels/me");
+    if (!userId || !id || !(await isUserInChannel(userId, id))) {
+        return redirect("/channels/me");
     }
-
-    const countObj = await db
-        .selectFrom("messages")
-        .select(({ fn }) => fn.count<number>("id").as("count"))
-        .where("channelId", "=", id)
-        .executeTakeFirst();
 
     return (
         <div className={styles.main}>
-            <AppHeader id={id} />
+            <AppHeader channelId={id} />
 
             <div className={styles.content}>
-                <Content
-                    id={id}
-                    count={countObj?.count || 0}
-                />
+                <Content channelId={id} />
                 <MemberList channelId={id} />
             </div>
         </div>

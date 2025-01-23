@@ -40,5 +40,5 @@ export function Loading({
     }, []);
 
     if (!user) return <AppSpinner />;
-    return <>{children}</>;
+    return <div onContextMenu={(e) => e.preventDefault()}>{children}</div>;
 }

@@ -1,45 +1,51 @@
 "use client";
 
-import { Icon, UserSection, Tooltip, TooltipContent, TooltipTrigger } from "@components";
 import { useParams, usePathname } from "next/navigation";
-import type { Channel, Guild, User } from "@/type";
+import type { GuildChannel } from "@/type";
 import styles from "./GuildChannels.module.css";
 import { useCallback } from "react";
 import Link from "next/link";
+import {
+    CreateGuildChannel,
+    TooltipContent,
+    TooltipTrigger,
+    DialogTrigger,
+    UserSection,
+    Tooltip,
+    Dialog,
+    Icon,
+    DialogContent,
+    InviteDialog,
+} from "@components";
 import {
     useCollapsedCategories,
     useWindowSettings,
     useShowChannels,
     useShowSettings,
+    useData,
 } from "@/store";
 
 export const GuildChannels = ({
-    user,
-    guild,
-    initChannels,
+    guildId,
+    channels = [],
 }: {
-    user: User;
-    guild: Guild;
-    initChannels: Channel[];
+    guildId: number;
+    channels?: GuildChannel[];
 }) => {
-    const channels = initChannels.sort((a, b) => a.position - b.position);
-
-    const setCollapsed = useCollapsedCategories((state) => state.setCollapsed);
-    const collapsed = useCollapsedCategories((state) => state.collapsed);
-
-    const params = useParams();
+    const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
 
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
-    const showChannels = useShowChannels((state) => state.showChannels);
-
-    const member = guild.members.find((m) => m.userId === user.id);
-
-    if (!showChannels && !widthLimitPassed) return null;
+    const { collapsed, setCollapsed } = useCollapsedCategories();
+    const { showChannels } = useShowChannels();
+    const params = useParams();
 
     const isCategoryHidden = useCallback(
         (categoryId: number) => collapsed.includes(categoryId),
         [collapsed]
     );
+
+    if (!guild) return null;
+    if (!showChannels && !widthLimitPassed) return null;
 
     return (
         <div className={styles.nav}>
@@ -47,8 +53,7 @@ export const GuildChannels = ({
                 <div
                     tabIndex={0}
                     className={styles.guildSettings}
-                    onClick={(e) => {
-                        // if (layers.MENU?.content?.guild) return;
+                    onClick={() => {
                         // setLayers({
                         //     settings: {
                         //         type: "MENU",
@@ -62,32 +67,10 @@ export const GuildChannels = ({
                         //     },
                         // });
                     }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            // if (layers.MENU?.content.guild) return;
-                            // setLayers({
-                            //     settings: {
-                            //         type: "MENU",
-                            //         element: e.currentTarget,
-                            //         firstSide: "BOTTOM",
-                            //         secondSide: "CENTER",
-                            //     },
-                            //     content: {
-                            //         type: "GUILD",
-                            //         guild: guild,
-                            //     },
-                            // });
-                        }
-                    }}
-                    // style={{
-                    //     backgroundColor:
-                    //         layers.MENU?.content.type === "GUILD"
-                    //             ? "var(--background-hover-1)"
-                    //             : "",
-                    // }}
                 >
                     <div>
                         <div>{guild.name}</div>
+
                         <div
                         // style={{
                         //     transform:
@@ -99,13 +82,14 @@ export const GuildChannels = ({
                             ) : (
                                 <Icon name="caret" />
                             )} */}
+                            <Icon name="caret" />
                         </div>
                     </div>
                 </div>
 
                 <div
                     className={styles.scroller + " scrollbar"}
-                    onContextMenu={(e) => {
+                    onContextMenu={() => {
                         // setLayers({
                         //     settings: {
                         //         type: "MENU",
@@ -126,10 +110,9 @@ export const GuildChannels = ({
                                 if (channel.type === 4) {
                                     return (
                                         <ChannelItem
+                                            guild={guild}
                                             key={channel.id}
                                             channel={channel}
-                                            guild={guild}
-                                            member={member}
                                             hidden={isCategoryHidden(channel.id)}
                                             setHidden={() => setCollapsed(channel.id)}
                                         />
@@ -149,20 +132,18 @@ export const GuildChannels = ({
 
                                     return (
                                         <ChannelItem
+                                            guild={guild}
                                             key={channel.id}
                                             channel={channel}
                                             category={category}
-                                            guild={guild}
-                                            member={member}
                                         />
                                     );
                                 } else {
                                     return (
                                         <ChannelItem
+                                            guild={guild}
                                             key={channel.id}
                                             channel={channel}
-                                            guild={guild}
-                                            member={member}
                                         />
                                     );
                                 }
@@ -182,21 +163,20 @@ export const GuildChannels = ({
     );
 };
 
-const ChannelItem = ({
+function ChannelItem({
     channel,
     category,
     guild,
     hidden,
     setHidden,
 }: {
-    channel: Partial<ChannelTable>;
-    category?: Partial<ChannelTable>;
-    guild: Partial<GuildTable>;
+    channel: GuildChannel;
+    category?: GuildChannel;
+    guild: AppGuild;
     hidden?: boolean;
     setHidden?: any;
-}) => {
-    const setShowSettings = useShowSettings((state) => state.setShowSettings);
-
+}) {
+    const { setShowSettings } = useShowSettings();
     const pathname = usePathname();
     const params = useParams();
 
@@ -208,9 +188,7 @@ const ChannelItem = ({
                 tabIndex={0}
                 className={`${styles.category} ${hidden ? styles.hide : ""}`}
                 onClick={() => setHidden && setHidden()}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                onContextMenu={() => {
                     // setLayers({
                     //     settings: {
                     //         type: "MENU",
@@ -232,8 +210,6 @@ const ChannelItem = ({
                             setHidden((prev: string[]) => prev.filter((id) => id !== channel.id));
                         }
                     } else if (e.key === "Enter" && e.shiftKey) {
-                        e.preventDefault();
-                        e.stopPropagation();
                         // setLayers({
                         //     settings: {
                         //         type: "MENU",
@@ -254,27 +230,27 @@ const ChannelItem = ({
                     <h3>{channel.name}</h3>
                 </div>
 
-                <Tooltip>
-                    <TooltipTrigger>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // setLayers({
-                                //     settings: { type: "POPUP" },
-                                //     content: {
-                                //         type: "GUILD_CHANNEL_CREATE",
-                                //         guild: channel.guildId,
-                                //         category: channel,
-                                //     },
-                                // });
-                            }}
-                        >
-                            <Icon name="add" />
-                        </button>
-                    </TooltipTrigger>
+                <Dialog>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <DialogTrigger>
+                                <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                >
+                                    <Icon name="add" />
+                                </button>
+                            </DialogTrigger>
+                        </TooltipTrigger>
 
-                    <TooltipContent>Create Channel</TooltipContent>
-                </Tooltip>
+                        <TooltipContent>Create Channel</TooltipContent>
+                    </Tooltip>
+
+                    <CreateGuildChannel
+                        guild={guild}
+                        channel={channel}
+                    />
+                </Dialog>
             </li>
         );
     }
@@ -282,9 +258,7 @@ const ChannelItem = ({
     return (
         <li
             className={styles.channel}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            onContextMenu={() => {
                 // setLayers({
                 //     settings: { type: "MENU", event: e },
                 //     content: {
@@ -299,7 +273,7 @@ const ChannelItem = ({
             <div>
                 <div>
                     <Link
-                        href={`/channels/${channel.guildId}/${channel.id}`}
+                        href={`/channels/${guild.id}/${channel.id}`}
                         style={{ backgroundColor: active ? "var(--background-hover-2)" : "" }}
                         onClick={(e) => {
                             if (channel.type === 3 || pathname.includes(channel.id)) {
@@ -311,7 +285,17 @@ const ChannelItem = ({
                             <Tooltip>
                                 <TooltipTrigger>
                                     <div className={styles.icon}>
-                                        <Icon name={channel.type === 2 ? "hashtag" : "voice"} />
+                                        <Icon
+                                            name={
+                                                channel.type === 2
+                                                    ? channel.isPrivate
+                                                        ? "hashtagLock"
+                                                        : "hashtag"
+                                                    : channel.isPrivate
+                                                    ? "voiceLock"
+                                                    : "voice"
+                                            }
+                                        />
                                     </div>
                                 </TooltipTrigger>
 
@@ -338,8 +322,8 @@ const ChannelItem = ({
                                                 }}
                                             >
                                                 <Icon
-                                                    name="message"
                                                     size={16}
+                                                    name="message"
                                                     viewbox="0 0 24 24"
                                                 />
                                             </button>
@@ -349,32 +333,36 @@ const ChannelItem = ({
                                     </Tooltip>
                                 )}
 
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <button
-                                            style={{
-                                                display: active ? "flex" : "",
-                                                flex: active ? "0 0 auto" : "",
-                                            }}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                // setLayers({
-                                                //     settings: { type: "POPUP" },
-                                                //     content: {
-                                                //         type: "GUILD_INVITE",
-                                                //         channel: channel,
-                                                //         guild: guild,
-                                                //     },
-                                                // });
-                                            }}
-                                        >
-                                            <Icon name="addUser" />
-                                        </button>
-                                    </TooltipTrigger>
+                                <Dialog>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <DialogTrigger>
+                                                <button
+                                                    style={{
+                                                        display: active ? "flex" : "",
+                                                        flex: active ? "0 0 auto" : "",
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                    }}
+                                                    onKeyDown={(e) => e.stopPropagation()}
+                                                >
+                                                    <Icon name="user-add" />
+                                                </button>
+                                            </DialogTrigger>
+                                        </TooltipTrigger>
 
-                                    <TooltipContent>Create Invite</TooltipContent>
-                                </Tooltip>
+                                        <TooltipContent>Create Invite</TooltipContent>
+                                    </Tooltip>
+
+                                    <DialogContent blank>
+                                        <InviteDialog
+                                            guild={guild}
+                                            channel={channel}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
 
                                 <Tooltip>
                                     <TooltipTrigger>
@@ -387,6 +375,7 @@ const ChannelItem = ({
                                                     channel: channel,
                                                 });
                                             }}
+                                            onKeyDown={(e) => e.stopPropagation()}
                                             style={{
                                                 display: active ? "flex" : "",
                                                 flex: active ? "0 0 auto" : "",
@@ -405,4 +394,4 @@ const ChannelItem = ({
             </div>
         </li>
     );
-};
+}

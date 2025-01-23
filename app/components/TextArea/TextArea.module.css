@@ -1,8 +1,7 @@
 .form {
     position: relative;
     flex-shrink: 0;
-    padding: 0 16px;
-    margin-top: -8px;
+    margin: -8px 16px 0 16px;
 }
 
 .wrapperBlocked {
@@ -81,29 +80,29 @@
 }
 
 .textArea {
-    background-color: var(--background-5);
-    position: relative;
     width: 100%;
     text-indent: 0;
+    position: relative;
     border-radius: 8px;
+    background-color: var(--background-5);
 }
 
 .scrollableContainer {
-    overflow: hidden scroll;
     max-height: 50vh;
     border-radius: 8px;
+    overflow: hidden scroll;
 }
 
-.scrollableContainer::-webkit-scrollbar {
+div.scrollableContainer::-webkit-scrollbar {
     width: 12px;
 }
 
-.scrollableContainer::-webkit-scrollbar-track {
+div.scrollableContainer::-webkit-scrollbar-track {
     border: 4px var(--background-5) solid;
     background-color: var(--background-5);
 }
 
-.scrollableContainer::-webkit-scrollbar-thumb {
+div.scrollableContainer::-webkit-scrollbar-thumb {
     border: 4px var(--background-5) solid;
     background-color: var(--background-1);
 }
@@ -161,7 +160,7 @@
     border: 0;
     appearance: none;
     font-weight: 400;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.375rem;
     font-weight: 300;
     font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -192,6 +191,7 @@
     text-align: left;
     word-break: break-word;
     white-space: break-spaces;
+    font-family: "gg sans", "Noto sans", sans-serif;
 }
 
 .textbox > div {
@@ -326,18 +326,20 @@
 }
 
 .emoji {
-    background-image: url("https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/");
-    background-repeat: no-repeat;
-    background-size: 242px 110px;
     width: 22px;
     height: 22px;
-    background-position: -176px -66px;
-    background-size: 242px 110px;
     filter: grayscale(100%);
+    background-size: 242px 110px;
+    background-size: 242px 110px;
+    background-repeat: no-repeat;
+    background-position: -176px -66px;
     transition: filter 0.15s ease-in-out, transform 0.15s ease-in-out;
+    background-image: url("https://ucarecdn.com/1eec089f-78a5-4ea5-9fc9-f4d99db3e74c/");
 }
 
-.buttonContainer:hover .emoji {
+.buttonContainer:hover .emoji,
+.buttonContainer:focus-visible .emoji,
+.buttonContainer[data-state="open"] .emoji {
     filter: grayscale(0%);
     transform: scale(1.15);
 }
@@ -534,6 +536,7 @@
 .send::before {
     content: "";
     border-left: 1px solid var(--foreground-2);
+    margin-right: 12px;
     opacity: 0.1;
     height: 65%;
     margin-top: auto;
@@ -548,7 +551,6 @@
 
 .send > div {
     padding: 4px;
-    margin-left: 12px;
     margin-right: 4px;
     display: flex;
     align-items: center;
@@ -665,4 +667,49 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: right;
+}
+
+.voiceRecording .label {
+    font-size: 12px;
+    font-weight: 700;
+    margin: 24px 0 8px 0;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.preview {
+    height: 48px;
+    display: flex;
+    padding: 0 16px;
+    align-items: center;
+    border-radius: 24px;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
+}
+
+.preview > .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--background-6);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.preview > .time {
+    opacity: 0.8;
+    margin: 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-code);
+}
+
+.preview > .title {
+    flex: 1;
+    opacity: 0.8;
+    display: flex;
+    font-size: 16px;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
 }

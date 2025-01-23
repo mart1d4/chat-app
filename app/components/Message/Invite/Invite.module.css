@@ -1,0 +1,144 @@
+.guildInvite {
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    max-width: 432px;
+    min-width: 160px;
+    overflow: hidden;
+    border-radius: 4px;
+    flex-direction: column;
+    background-color: var(--background-3);
+}
+
+.guildInvite > h3 {
+    font-size: 12px;
+    overflow: hidden;
+    font-weight: 700;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.content {
+    gap: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.content > .headline {
+    gap: 16px;
+    display: flex;
+    max-width: 100%;
+    flex: 1000 0 auto;
+    margin-right: 16px;
+    align-items: center;
+}
+
+.content > button {
+    height: 40px;
+    flex: 1 1 auto;
+    align-self: center;
+}
+
+.inviteIconPoop {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background-position: 50%;
+    background-size: 50px 26px;
+    background-repeat: no-repeat;
+}
+
+.inviteIcon {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background-position: 50%;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-clip: padding-box;
+}
+
+.inviteAcronym {
+    height: 50px;
+    display: flex;
+    min-width: 50px;
+    max-width: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    overflow: hidden;
+    user-select: none;
+    align-items: center;
+    text-overflow: clip;
+    border-radius: 15px;
+    justify-content: center;
+    color: var(--foreground-2);
+    background-color: var(--background-4);
+}
+
+.headline > div:last-child {
+    display: flex;
+    min-width: 1px;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.headline h3 {
+    font-size: 16px;
+    max-width: 100%;
+    overflow: hidden;
+    font-weight: 600;
+    line-height: 20px;
+    width: fit-content;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.headline h3.link {
+    color: var(--foreground-2);
+}
+
+.headline h3.link:hover,
+.headline h3.link:focus-visible {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.headline strong {
+    gap: 12px;
+    font-size: 14px;
+    user-select: none;
+    align-items: center;
+    display: inline-flex;
+    color: var(--foreground-3);
+}
+
+.headline .onlineDot,
+.headline .offlineDot {
+    width: 8px;
+    height: 8px;
+    margin-right: 4px;
+    border-radius: 50%;
+    display: inline-block;
+    background-color: var(--success-1);
+}
+
+.headline .offlineDot {
+    background-color: var(--background-5);
+}
+
+.channelName {
+    display: flex;
+    align-items: center;
+}

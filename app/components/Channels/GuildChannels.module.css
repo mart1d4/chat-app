@@ -113,21 +113,21 @@
     }
 }
 
-.scroller::-webkit-scrollbar {
+div.scroller::-webkit-scrollbar {
     width: 8px;
 }
 
-.scroller::-webkit-scrollbar-track {
+div.scroller::-webkit-scrollbar-track {
+    border: 1px var(--background-3) solid;
+    background-color: transparent;
+}
+
+div.scroller::-webkit-scrollbar-thumb {
     border: 2px var(--background-3) solid;
     background-color: transparent;
 }
 
-.scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--background-3) solid;
-    background-color: transparent;
-}
-
-.scroller:hover::-webkit-scrollbar-thumb {
+div.scroller:hover::-webkit-scrollbar-thumb {
     background-color: var(--background-1);
 }
 
@@ -335,7 +335,7 @@
     height: 24px;
     cursor: pointer;
     outline-offset: -4px;
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 .category > div {
@@ -370,25 +370,32 @@
     cursor: pointer;
 }
 
-.category:hover > div {
+.category:hover > div,
+.category:focus-visible > div {
     color: var(--foreground-1);
 }
 
 .category > button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
+    padding: 0;
     width: 18px;
     height: 18px;
+    display: flex;
+    flex: 0 0 auto;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
     color: var(--foreground-4);
     background-color: transparent;
-    padding: 0;
-    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
 }
 
-.category > button:hover {
+.category > button:hover,
+.category > button:focus-visible {
     color: var(--foreground-1);
+}
+
+.category > button:active {
+    transform: translateY(1px);
 }
 
 .channel {

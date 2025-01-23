@@ -1,287 +1,319 @@
+"use client";
+
+import { useRightClick } from "./useRightClick";
+import styles from "./Menu.module.css";
+import { useClick } from "./useClick";
+import { Icon } from "@components";
 import {
-    useFloatingParentNodeId,
     FloatingFocusManager,
-    useFloatingNodeId,
-    useListNavigation,
-    useFloatingTree,
     useInteractions,
     FloatingPortal,
-    FloatingNode,
-    FloatingList,
-    FloatingTree,
-    useTypeahead,
+    type Placement,
     useMergeRefs,
-    safePolygon,
     useFloating,
-    useListItem,
+    safePolygon,
     autoUpdate,
     useDismiss,
-    useClick,
     useHover,
+    useFocus,
     useRole,
     offset,
     shift,
     flip,
 } from "@floating-ui/react";
 import {
-    createContext,
-    forwardRef,
-    useContext,
-    useEffect,
-    useState,
-    useRef,
     type ButtonHTMLAttributes,
     type SetStateAction,
+    isValidElement,
     type HTMLProps,
     type ReactNode,
     type Dispatch,
+    createContext,
+    cloneElement,
+    forwardRef,
+    useContext,
+    useState,
+    useMemo,
 } from "react";
 
-const MenuContext = createContext<{
-    getItemProps: (userProps?: HTMLProps<HTMLElement>) => Record<string, unknown>;
-    activeIndex: number | null;
-    setActiveIndex: Dispatch<SetStateAction<number | null>>;
-    setHasFocusInside: Dispatch<SetStateAction<boolean>>;
-    isOpen: boolean;
-}>({
-    getItemProps: () => ({}),
-    activeIndex: null,
-    setActiveIndex: () => {},
-    setHasFocusInside: () => {},
-    isOpen: false,
-});
-
-interface MenuProps {
-    label: string;
-    icon?: ReactNode;
-    nested?: boolean;
-    children?: ReactNode;
+interface MenuOptions {
+    initialOpen?: boolean;
+    placement?: Placement;
+    modal?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    openOnClick?: boolean;
+    openOnHover?: boolean;
+    openOnFocus?: boolean;
+    openOnRightClick?: boolean;
+    positionOnClick?: boolean;
+    flipMainAxis?: boolean;
+    gap?: number;
 }
 
-export const MenuComponent = forwardRef<
-    HTMLButtonElement,
-    MenuProps & HTMLProps<HTMLButtonElement>
->(({ children, label, ...props }, forwardedRef) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [hasFocusInside, setHasFocusInside] = useState(false);
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+export function useMenu({
+    initialOpen = false,
+    placement = "top",
+    modal,
+    open: controlledOpen,
+    onOpenChange: setControlledOpen,
+    openOnClick = false,
+    openOnHover = false,
+    openOnFocus = false,
+    openOnRightClick = false,
+    positionOnClick,
+    flipMainAxis = false,
+    gap,
+}: MenuOptions = {}) {
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
+    const [labelId, setLabelId] = useState<string | undefined>();
+    const [descriptionId, setDescriptionId] = useState<string | undefined>();
 
-    const elementsRef = useRef<Array<HTMLButtonElement | null>>([]);
-    const labelsRef = useRef<Array<string | null>>([]);
-    const parent = useContext(MenuContext);
+    if (!openOnClick && !openOnHover && !openOnFocus && !openOnRightClick) {
+        openOnClick = true;
+    }
 
-    const tree = useFloatingTree();
-    const nodeId = useFloatingNodeId();
-    const parentId = useFloatingParentNodeId();
-    const item = useListItem();
+    const open = controlledOpen ?? uncontrolledOpen;
+    const setOpen = setControlledOpen ?? setUncontrolledOpen;
 
-    const isNested = parentId != null;
+    if (openOnRightClick || positionOnClick) {
+        gap = 0;
+    }
 
-    const { floatingStyles, refs, context } = useFloating<HTMLButtonElement>({
-        nodeId,
-        open: isOpen,
-        onOpenChange: setIsOpen,
-        placement: isNested ? "right-start" : "bottom-start",
-        middleware: [
-            offset({ mainAxis: isNested ? 0 : 4, alignmentAxis: isNested ? -4 : 0 }),
-            flip(),
-            shift(),
-        ],
+    const data = useFloating({
+        placement,
+        open,
+        onOpenChange: setOpen,
         whileElementsMounted: autoUpdate,
+        middleware: [
+            offset(gap ?? 5),
+            flip({
+                fallbackAxisSideDirection: "end",
+                crossAxis: false,
+                mainAxis: flipMainAxis || placement === "right-start",
+                padding: 12,
+            }),
+            shift({ padding: 12, crossAxis: true, mainAxis: true }),
+        ],
+    });
+
+    const context = data.context;
+
+    const click = useClick(context, {
+        enabled: controlledOpen == null && openOnClick,
+        setPositionToCursor: positionOnClick,
+        toggle: !positionOnClick,
     });
 
     const hover = useHover(context, {
-        enabled: isNested,
-        delay: { open: 75 },
-        handleClose: safePolygon({ blockPointerEvents: true }),
-    });
-    const click = useClick(context, {
-        event: "mousedown",
-        toggle: !isNested,
-        ignoreMouse: isNested,
-    });
-    const role = useRole(context, { role: "menu" });
-    const dismiss = useDismiss(context, { bubbles: true });
-    const listNavigation = useListNavigation(context, {
-        listRef: elementsRef,
-        activeIndex,
-        nested: isNested,
-        onNavigate: setActiveIndex,
-    });
-    const typeahead = useTypeahead(context, {
-        listRef: labelsRef,
-        onMatch: isOpen ? setActiveIndex : undefined,
-        activeIndex,
+        enabled: controlledOpen == null && openOnHover,
+        handleClose: safePolygon(),
     });
 
-    const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
-        hover,
-        click,
-        role,
-        dismiss,
-        listNavigation,
-        typeahead,
-    ]);
+    const focus = useFocus(context, {
+        enabled: controlledOpen == null && openOnFocus,
+    });
 
-    // Event emitter allows you to communicate across tree components.
-    // This effect closes all menus when an item gets clicked anywhere
-    // in the tree.
-    useEffect(() => {
-        if (!tree) return;
+    const rightClick = useRightClick(context, {
+        enabled: controlledOpen == null && openOnRightClick,
+    });
 
-        function handleTreeClick() {
-            setIsOpen(false);
-        }
+    const dismiss = useDismiss(context);
+    const role = useRole(context);
 
-        function onSubMenuOpen(event: { nodeId: string; parentId: string }) {
-            if (event.nodeId !== nodeId && event.parentId === parentId) {
-                setIsOpen(false);
-            }
-        }
+    const interactions = useInteractions([click, hover, focus, rightClick, dismiss, role]);
 
-        tree.events.on("click", handleTreeClick);
-        tree.events.on("menuopen", onSubMenuOpen);
-
-        return () => {
-            tree.events.off("click", handleTreeClick);
-            tree.events.off("menuopen", onSubMenuOpen);
-        };
-    }, [tree, nodeId, parentId]);
-
-    useEffect(() => {
-        if (isOpen && tree) {
-            tree.events.emit("menuopen", { parentId, nodeId });
-        }
-    }, [tree, isOpen, nodeId, parentId]);
-
-    return (
-        <FloatingNode id={nodeId}>
-            <button
-                ref={useMergeRefs([refs.setReference, item.ref, forwardedRef])}
-                tabIndex={!isNested ? undefined : parent.activeIndex === item.index ? 0 : -1}
-                role={isNested ? "menuitem" : undefined}
-                data-open={isOpen ? "" : undefined}
-                data-nested={isNested ? "" : undefined}
-                data-focus-inside={hasFocusInside ? "" : undefined}
-                className={isNested ? "MenuItem" : "RootMenu"}
-                {...getReferenceProps(
-                    parent.getItemProps({
-                        ...props,
-                        onFocus(event: FocusEvent<HTMLButtonElement>) {
-                            props.onFocus?.(event);
-                            setHasFocusInside(false);
-                            parent.setHasFocusInside(true);
-                        },
-                    })
-                )}
-            >
-                {label}
-                {isNested && (
-                    <span
-                        aria-hidden
-                        style={{ marginLeft: 10, fontSize: 10 }}
-                    >
-                        ▶
-                    </span>
-                )}
-            </button>
-            <MenuContext.Provider
-                value={{
-                    activeIndex,
-                    setActiveIndex,
-                    getItemProps,
-                    setHasFocusInside,
-                    isOpen,
-                }}
-            >
-                <FloatingList
-                    elementsRef={elementsRef}
-                    labelsRef={labelsRef}
-                >
-                    {isOpen && (
-                        <FloatingPortal>
-                            <FloatingFocusManager
-                                context={context}
-                                modal={false}
-                                initialFocus={isNested ? -1 : 0}
-                                returnFocus={!isNested}
-                            >
-                                <div
-                                    ref={refs.setFloating}
-                                    className="Menu"
-                                    style={floatingStyles}
-                                    {...getFloatingProps()}
-                                >
-                                    {children}
-                                </div>
-                            </FloatingFocusManager>
-                        </FloatingPortal>
-                    )}
-                </FloatingList>
-            </MenuContext.Provider>
-        </FloatingNode>
+    return useMemo(
+        () => ({
+            open,
+            setOpen,
+            ...interactions,
+            ...data,
+            modal,
+            labelId,
+            descriptionId,
+            setLabelId,
+            setDescriptionId,
+        }),
+        [open, setOpen, interactions, data, modal, labelId, descriptionId]
     );
-});
-
-interface MenuItemProps {
-    label: string;
-    disabled?: boolean;
 }
 
-export const MenuItem = forwardRef<
-    HTMLButtonElement,
-    MenuItemProps & ButtonHTMLAttributes<HTMLButtonElement>
->(({ label, disabled, ...props }, forwardedRef) => {
-    const menu = useContext(MenuContext);
-    const item = useListItem({ label: disabled ? null : label });
-    const tree = useFloatingTree();
-    const isActive = item.index === menu.activeIndex;
+type ContextType =
+    | (ReturnType<typeof useMenu> & {
+          setLabelId: Dispatch<SetStateAction<string | undefined>>;
+          setDescriptionId: Dispatch<SetStateAction<string | undefined>>;
+      })
+    | null;
 
-    return (
-        <button
-            {...props}
-            ref={useMergeRefs([item.ref, forwardedRef])}
-            type="button"
-            role="menuitem"
-            className="MenuItem"
-            tabIndex={isActive ? 0 : -1}
-            disabled={disabled}
-            {...menu.getItemProps({
-                onClick(event: MouseEvent<HTMLButtonElement>) {
-                    props.onClick?.(event);
-                    tree?.events.emit("click");
-                },
-                onFocus(event: FocusEvent<HTMLButtonElement>) {
-                    props.onFocus?.(event);
-                    menu.setHasFocusInside(true);
-                },
-            })}
-        >
-            {label}
-        </button>
-    );
-});
+const MenuContext = createContext<ContextType>(null);
 
-export const Menu = forwardRef<HTMLButtonElement, MenuProps & HTMLProps<HTMLButtonElement>>(
-    (props, ref) => {
-        const parentId = useFloatingParentNodeId();
+export const useMenuContext = () => {
+    const context = useContext(MenuContext);
 
-        if (parentId === null) {
-            return (
-                <FloatingTree>
-                    <MenuComponent
-                        {...props}
-                        ref={ref}
-                    />
-                </FloatingTree>
+    if (context == null) {
+        throw new Error("Menu components must be wrapped in <Menu />");
+    }
+
+    return context;
+};
+
+export function Menu({
+    children,
+    modal = false,
+    ...restOptions
+}: {
+    children: ReactNode;
+} & MenuOptions) {
+    // This can accept any props as options, e.g. `placement`,
+    // or other positioning options.
+    const menu = useMenu({ modal, ...restOptions });
+    return <MenuContext.Provider value={menu}>{children}</MenuContext.Provider>;
+}
+
+interface MenuTriggerProps {
+    children: ReactNode;
+    asChild?: boolean;
+    externalReference?: HTMLElement | null;
+}
+
+export const MenuTrigger = forwardRef<HTMLElement, HTMLProps<HTMLElement> & MenuTriggerProps>(
+    function MenuTrigger({ children, asChild = true, externalReference, ...props }, propRef) {
+        const context = useMenuContext();
+        const childrenRef = (children as any).ref;
+
+        const ref = useMergeRefs([
+            context.refs.setReference,
+            propRef,
+            childrenRef,
+            ...(externalReference ? [() => context.refs.setReference(externalReference)] : []),
+        ]);
+
+        // `asChild` allows the user to pass any element as the anchor
+        if (asChild && isValidElement(children)) {
+            return cloneElement(
+                children,
+                context.getReferenceProps({
+                    ref,
+                    ...props,
+                    // @ts-ignore - `data-state` is a custom prop
+                    ...children.props,
+                    "data-state": context.open ? "open" : "closed",
+                })
             );
         }
 
         return (
-            <MenuComponent
-                {...props}
+            <button
                 ref={ref}
-            />
+                type="button"
+                // The user can style the trigger based on the state
+                data-state={context.open ? "open" : "closed"}
+                {...context.getReferenceProps(props)}
+            >
+                {children}
+            </button>
         );
     }
 );
+
+export const MenuContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>(
+    function MenuContent({ style, ...props }, propRef) {
+        const { context: floatingContext, ...context } = useMenuContext();
+        const ref = useMergeRefs([context.refs.setFloating, propRef]);
+
+        if (!floatingContext.open) return null;
+
+        return (
+            <FloatingPortal>
+                {/* <FloatingOverlay lockScroll> */}
+                <FloatingFocusManager
+                    context={floatingContext}
+                    modal={context.modal}
+                >
+                    <div
+                        ref={ref}
+                        className={styles.menu}
+                        aria-labelledby={context.labelId}
+                        aria-describedby={context.descriptionId}
+                        style={{ ...context.floatingStyles, ...style }}
+                        onClick={(e) => e.stopPropagation()}
+                        {...context.getFloatingProps(props)}
+                    >
+                        {props.children}
+                    </div>
+                </FloatingFocusManager>
+                {/* </FloatingOverlay> */}
+            </FloatingPortal>
+        );
+    }
+);
+
+export function MenuItem({
+    children,
+    disabled,
+    submenu,
+    danger,
+    icon,
+    leftIcon,
+    skipHide,
+    ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+    disabled?: boolean;
+    submenu?: boolean;
+    danger?: boolean;
+    icon?: string;
+    leftIcon?: string;
+    skipHide?: boolean;
+}) {
+    const { setOpen } = useMenuContext();
+
+    const classnames = [styles.item, danger && styles.danger, disabled && styles.disabled]
+        .filter(Boolean)
+        .join(" ");
+
+    return (
+        <button
+            {...props}
+            type="button"
+            className={classnames}
+            tabIndex={disabled ? -1 : 0}
+            onClick={(e) => {
+                if (!disabled && props.onClick) {
+                    props.onClick(e);
+                }
+
+                if (!skipHide) {
+                    setOpen(false);
+                }
+            }}
+        >
+            {leftIcon && (
+                <Icon
+                    size={24}
+                    name={leftIcon}
+                />
+            )}
+
+            <div>{children}</div>
+
+            {submenu && (
+                <Icon
+                    size={18}
+                    name="caret"
+                />
+            )}
+
+            {icon && (
+                <Icon
+                    size={18}
+                    name={icon}
+                />
+            )}
+        </button>
+    );
+}
+
+export function MenuDivider({}) {
+    return <div className={styles.divider} />;
+}

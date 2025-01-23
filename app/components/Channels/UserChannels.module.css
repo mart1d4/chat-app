@@ -62,21 +62,21 @@
     }
 }
 
-.scroller::-webkit-scrollbar {
+div.scroller::-webkit-scrollbar {
     width: 8px;
 }
 
-.scroller::-webkit-scrollbar-track {
+div.scroller::-webkit-scrollbar-track {
+    border: 1px var(--background-3) solid;
+    background-color: transparent;
+}
+
+div.scroller::-webkit-scrollbar-thumb {
     border: 2px var(--background-3) solid;
     background-color: transparent;
 }
 
-.scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--background-3) solid;
-    background-color: transparent;
-}
-
-.scroller:hover::-webkit-scrollbar-thumb {
+div.scroller:hover::-webkit-scrollbar-thumb {
     background-color: var(--background-1);
 }
 
@@ -115,7 +115,8 @@
     color: var(--foreground-4);
 }
 
-.title:hover span {
+.title:hover span,
+.title:focus-visible span {
     color: var(--foreground-2);
 }
 
@@ -143,7 +144,8 @@
     height: 16px;
 }
 
-.title svg:hover {
+.title svg:hover,
+.title svg:focus-visible {
     color: var(--foreground-1);
 }
 
@@ -151,36 +153,31 @@
 
 .liContainer {
     display: flex;
-    position: relative;
     max-width: 224px;
-    margin: 0 0 2px 8px;
+    position: relative;
     border-radius: 4px;
-    color: var(--foreground-4);
+    margin: 0 0 2px 8px;
     text-decoration: none;
+    color: var(--foreground-4);
 }
 
-.liContainer:hover {
-    background-color: var(--background-4) !important;
+.liContainer:hover,
+.liContainer:focus-visible,
+.liContainer:focus-within {
     color: var(--foreground-2) !important;
+    background-color: var(--background-4) !important;
 }
 
-.liContainer:hover .closeButton {
+.liContainer:hover .closeButton,
+.liContainer:focus-visible .closeButton,
+.liContainer:focus-within .closeButton {
     display: block;
 }
 
-.liContainer:active {
-    background-color: var(--background-5);
+.liContainer:active,
+.liContainer[data-state="open"] {
     color: var(--foreground-1);
-}
-
-.liContainer:focus-visible,
-.liContainer:focus-within {
-    background-color: var(--background-4);
-    color: var(--foreground-2);
-}
-
-.liContainer:focus-visible {
-    margin-right: 5px;
+    background-color: var(--background-5);
 }
 
 @media screen and (max-width: 562px) {
@@ -196,21 +193,21 @@
 }
 
 .liWrapper {
-    display: flex;
-    align-items: center;
     width: 100%;
+    display: flex;
     border-radius: 4px;
+    align-items: center;
 }
 
 .link,
 .linkFriends {
-    display: flex;
     min-width: 0;
+    display: flex;
     flex: 1 1 auto;
+    cursor: pointer;
+    align-items: center;
     white-space: nowrap;
     text-overflow: ellipsis;
-    align-items: center;
-    cursor: pointer;
 }
 
 .linkFriends {
@@ -219,12 +216,12 @@
 
 .layout,
 .layoutFriends {
-    display: flex;
-    align-items: center;
     min-width: 0;
     height: 42px;
+    display: flex;
     padding: 0 8px;
     border-radius: 4px;
+    align-items: center;
 }
 
 .layoutFriends {
@@ -232,21 +229,21 @@
 }
 
 .layoutAvatar {
-    display: flex;
-    justify-content: center;
-    flex: 0 0 auto;
     width: 32px;
     height: 32px;
+    display: flex;
+    flex: 0 0 auto;
     margin-right: 12px;
-    align-items: center;
     position: relative;
+    align-items: center;
+    justify-content: center;
 }
 
 .layoutAvatar > div {
-    position: relative;
-    border-radius: 50%;
-    height: 32px;
     width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    position: relative;
 }
 
 .layoutAvatar img {
@@ -254,64 +251,52 @@
 }
 
 .layoutContent {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-width: 0;
     flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .contentName {
     display: flex;
-    justify-content: flex-start;
     align-items: center;
+    justify-content: flex-start;
 }
 
 .nameWrapper {
-    font-size: 16px;
-    line-height: 20px;
-    font-weight: 500;
     flex: 0 1 auto;
-    white-space: nowrap;
+    font-size: 16px;
     overflow: hidden;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 .contentStatus {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-size: 12px;
-    line-height: 16px;
+    overflow: hidden;
     font-weight: 500;
+    line-height: 16px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .closeButton {
-    display: none;
-    box-sizing: content-box;
     width: 16px;
     height: 16px;
-    margin: 2px;
-    padding-right: 8px;
+    display: none;
     border-radius: 2px;
     outline-offset: 3px;
+    box-sizing: content-box;
+    margin: 2px 10px 2px 2px;
     color: var(--foreground-4);
     background-color: transparent;
 }
 
-.liContainer:focus-visible .closeButton,
+.closeButton:hover,
 .closeButton:focus-visible {
-    display: block;
-    padding-right: 0;
-    margin-right: 5px;
-    color: var(--foreground-2);
-}
-
-.liContainer:focus-within .closeButton {
-    display: block;
-}
-
-.closeButton:hover {
     cursor: pointer;
     color: var(--foreground-2);
 }

@@ -1,7 +1,7 @@
 export function getButtonColor(hex1: string, hex2: string) {
     if (!hex1 || !hex2) {
         console.error("Invalid input colors");
-        return null;
+        return "#000000";
     }
 
     const parseHex = (hex: string) => {
@@ -72,7 +72,7 @@ export function getButtonColor(hex1: string, hex2: string) {
 
     if (!rgb1 || !rgb2) {
         console.error("Invalid input colors");
-        return null;
+        return "#000000";
     }
 
     const calculatedColor = [

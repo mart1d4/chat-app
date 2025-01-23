@@ -1,0 +1,304 @@
+.container {
+    width: 498px;
+    user-select: none;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 0 0 1px hsl(none 0% 100% / 0.08);
+    background-color: var(--background-3);
+}
+
+.container > header {
+    z-index: 100;
+    display: flex;
+    padding: 12px;
+    position: relative;
+    align-items: center;
+    border-bottom: 1px solid var(--background-1);
+}
+
+.stylePicker {
+    position: relative;
+}
+
+.style {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+.style:not(.stylePicker > .style) {
+    width: 30px;
+    height: 30px;
+    border: none;
+}
+
+.stylePicker > .style:hover,
+.stylePicker > .style:focus-visible,
+.stylePicker > .style[aria-expanded="true"] {
+    border: 1px solid var(--background-1);
+    background-color: var(--background-2);
+    border-top-left-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+}
+
+.stylePicker > .style[aria-expanded="true"] {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+}
+
+.style > img {
+    width: 24px;
+    height: 24px;
+}
+
+.stylePickerDropdown {
+    left: 0;
+    top: 100%;
+    width: 100%;
+    display: flex;
+    position: absolute;
+    align-items: center;
+    flex-direction: column;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background-color: var(--background-2);
+    border: 1px solid var(--background-1);
+    border-top: none;
+}
+
+.stylePickerDropdown[aria-hidden="true"] {
+    display: none;
+}
+
+.stylePickerDropdown > .style:hover,
+.stylePickerDropdown > .style:focus-visible,
+.stylePicker > .style[aria-expanded="true"]:hover,
+.stylePicker > .style[aria-expanded="true"]:focus-visible {
+    border-radius: 0;
+    background-color: color-mix(
+        in oklab,
+        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
+        hsl(0 0% 0% / 0.3) 0%
+    );
+}
+
+.stylePickerDropdown > .style:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.input {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    margin-right: 8px;
+    border-radius: 4px;
+    color: var(--foreground-3);
+    background-color: var(--background-2);
+}
+
+.input > input {
+    flex: 1;
+    margin: 1px;
+    height: 30px;
+    border: none;
+    padding: 0 8px;
+    font-size: 16px;
+    appearance: none;
+    line-height: 32px;
+    background: transparent;
+}
+
+.input > div {
+    width: 32px;
+    cursor: text;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container > main {
+    width: 498px;
+    height: 440px;
+    display: flex;
+    overflow: hidden;
+    grid-template-columns: 48px auto;
+    grid-template-rows: auto 1fr auto;
+}
+
+.nav {
+    left: 0;
+    bottom: 0;
+    top: 58px;
+    width: 48px;
+    display: flex;
+    padding: 8px 0;
+    margin-top: -2px;
+    position: absolute;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden scroll;
+    border-bottom-left-radius: 8px;
+    background-color: var(--background-1);
+}
+
+.nav::-webkit-scrollbar {
+    width: 0;
+}
+
+.nav > hr {
+    border: none;
+    margin: 12px 0;
+    width: calc(100% - 16px);
+    border-bottom: 1px solid
+        color-mix(in oklab, hsl(228 calc(1 * 6.024%) 32.549% / 0.48) 100%, hsl(0 0% 0% / 0.48) 0%);
+}
+
+.nav > button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+}
+
+.nav > button:first-child {
+    margin-bottom: 0;
+}
+
+.nav > button:hover,
+.nav > button:focus-visible {
+    color: var(--foreground-2);
+    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+}
+
+.nav > button[data-active="true"] {
+    color: var(--foreground-1);
+    background-color: color-mix(in oklab, hsl(222.9, 6.7%, 20.6%) 100%, black 0%);
+}
+
+.container > main > section {
+    width: 100%;
+    display: flex;
+    padding-left: 48px;
+    flex-direction: column;
+}
+
+.list {
+    flex: 1;
+    padding: 0 0 8px 8px;
+    overflow: hidden scroll;
+}
+
+div.list::-webkit-scrollbar {
+    width: 7px;
+    background: transparent;
+}
+
+div.list::-webkit-scrollbar-thumb {
+    border: 1px solid transparent;
+}
+
+div.list::-webkit-scrollbar-track {
+    background: transparent;
+    border: 0 solid transparent;
+}
+
+.category .title {
+    top: 0;
+    gap: 8px;
+    width: 100%;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    position: sticky;
+    user-select: none;
+    margin-left: -8px;
+    padding-left: 8px;
+    align-items: center;
+    color: var(--foreground-4);
+    background-color: transparent;
+    background-color: var(--background-3);
+}
+
+.category .title[aria-expanded="true"] > :last-child {
+    transform: rotate(90deg);
+}
+
+.category .title:hover,
+.category .title:focus-visible {
+    color: var(--foreground-2);
+}
+
+.category .title > div {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.emojis {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+    margin-left: -2px;
+}
+
+.emoji {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+
+.emoji:hover,
+.emoji:focus,
+.emoji[aria-selected="true"] {
+    background-color: color-mix(
+        in oklab,
+        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
+        hsl(0 0% 0% / 0.3) 0%
+    );
+}
+
+.emoji > img {
+    width: 40px;
+    height: 40px;
+}
+
+.preview {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    padding: 0 16px;
+    align-items: center;
+    border-bottom-right-radius: 8px;
+    background-color: var(--background-2);
+}
+
+.preview > div {
+    gap: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview > div > div {
+    font-weight: 500;
+}

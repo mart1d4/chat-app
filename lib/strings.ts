@@ -56,7 +56,7 @@ export function getChannelName(channel: AppChannel, user: AppUser): string {
 }
 
 export function getChannelIcon(channel: AppChannel, user: AppUser): string {
-    if (channel.icon) return channel.icon;
+    if (channel.icon || channel.type === 1) return channel.icon;
 
     const recipients = channel.recipients.filter((r) => r.id !== user.id);
     return recipients[0]?.avatar || "";

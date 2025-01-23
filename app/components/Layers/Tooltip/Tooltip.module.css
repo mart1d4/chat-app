@@ -3,11 +3,13 @@
     font-size: 14px;
     font-weight: 500;
     max-width: 270px;
+    overflow: hidden;
     padding: 8px 12px;
     line-height: 16px;
     user-select: none;
     border-radius: 5px;
-    width: fit-content;
+    word-wrap: break-word;
+    word-break: break-word;
     color: var(--foreground-2);
     box-shadow: var(--elevation-high);
     background-color: var(--background-dark-1);
@@ -23,6 +25,6 @@
 
 .tooltip.big {
     font-size: 16px;
-    line-height: 20px;
     font-weight: 600;
+    line-height: 20px;
 }

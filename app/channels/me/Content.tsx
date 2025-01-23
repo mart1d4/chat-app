@@ -10,8 +10,7 @@ export default function Content() {
     const tab = settings.friendTab;
 
     useEffect(() => {
-        document.title = "Spark | Friends";
-        setChannelUrl("/channels/me");
+        setChannelUrl(null);
     }, []);
 
     if (tab === "add") return <AddFriend />;

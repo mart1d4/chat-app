@@ -49,14 +49,14 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --background-1: hsl(225, 6%, 13%);
-        --background-2: hsl(228, 6%, 15%);
+        --background-2: hsl(228, 7%, 15%);
         --background-3: hsl(220, 7%, 18%);
-        --background-4: hsl(223, 7%, 21%);
+        --background-4: hsl(218, 8%, 20%);
         --background-5: hsl(225, 7%, 24%);
         --background-6: hsl(225, 7%, 29%);
 
         --background-light-1: hsl(217, 8%, 34%);
-        --background-dark-1: hsl(220, 9%, 7%);
+        --background-dark-1: hsl(220, 8%, 7%);
         --background-dark-2: hsla(0, 0%, 0%, 0.9);
         --background-dark-3: hsla(0, 0%, 0%, 0.8);
         --background-dark-4: hsla(0, 0%, 0%, 1);
@@ -72,23 +72,33 @@
         --background-active: hsl(218, 8%, 28%);
         --background-mention: hsla(235, 85.6%, 64.7%, 0.3);
         --background-message-highlight: hsl(235, 86.1%, 77.5%, 0.08);
-        --background-message-highlight-hover: hsl(235, 85.6%, 64.7%, 0.1);
-        --background-message-mentioned: hsla(40, 86.4%, 56.9%, 0.1);
-        --background-message-mentioned-hover: hsl(40, 86%, 57%);
+        --background-message-highlight-hover: hsla(235, 85.5%, 64.7%, 0.1);
+        --background-mentioned: color-mix(
+            in oklab,
+            hsl(40.421 calc(1 * 86.364%) 56.863% / 0.1) 100%,
+            hsl(0 0% 0% / 0.1) 0%
+        );
+        --background-mentioned-hover: color-mix(
+            in oklab,
+            hsl(40.421 calc(1 * 86.364%) 56.863% / 0.08) 100%,
+            hsl(0 0% 0% / 0.08) 0%
+        );
 
+        --foreground-0: hsl(0, 0%, 100%);
         --foreground-1: hsl(210, 9%, 95%, 1);
-        --foreground-2: hsl(210, 9%, 87%, 1);
+        --foreground-2: hsl(216, 8%, 87%);
         --foreground-3: hsl(216, 4%, 74%, 1);
         --foreground-4: hsl(214, 4%, 65%, 1);
         --foreground-5: hsl(223, 6%, 53%, 1);
 
         --foreground-light: hsl(218, 5%, 47%, 1);
 
-        --accent-1: hsl(235, 87%, 65%);
+        --accent-1: hsl(235, 86%, 65%);
         --accent-2: hsl(235, 51%, 52%);
         --accent-3: hsl(235, 47%, 44%);
         --accent-border: hsl(235, 86.1%, 77.5%);
-        --accent-light: hsl(197, 100%, 48%);
+        --accent-light: hsl(200, 98%, 50%);
+        --accent-1-15: hsla(235, 86%, 65%, 0.05);
 
         --success-1: hsl(139, 47%, 33%);
         --success-2: hsl(138, 47%, 24%);
@@ -102,6 +112,11 @@
 
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
+        --warning-foreground: color-mix(
+            in oklab,
+            hsl(40.421 calc(1 * 86.364%) 56.863% / 1) 100%,
+            black 0%
+        );
 
         --default-1: hsl(217, 8%, 34%);
         --default-2: hsl(213, 5%, 43%);
@@ -415,15 +430,15 @@ img[alt] {
     margin: 0;
     border: 0;
     padding: 0;
+    outline: none;
     font-size: 100%;
     font-style: inherit;
-    font-family: inherit;
     font-weight: inherit;
+    font-family: inherit;
     box-sizing: border-box;
     vertical-align: baseline;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
-    outline: 0px solid var(--accent-light);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -431,7 +446,7 @@ html,
 body {
     font-size: 16px;
     scroll-behavior: smooth;
-    color: var(--foreground-2);
+    color: var(--foreground-3);
     background-color: var(--background-1);
     font-family: "gg sans", "Noto sans", sans-serif;
 }
@@ -450,7 +465,12 @@ h6 {
     user-select: none;
 }
 
+strong {
+    font-weight: 600;
+}
+
 .button {
+    gap: 8px;
     width: auto;
     height: 32px;
     border: none;
@@ -459,7 +479,7 @@ h6 {
     cursor: pointer;
     background: none;
     overflow: hidden;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 16px;
     padding: 2px 16px;
     user-select: none;
@@ -472,6 +492,24 @@ h6 {
     color: var(--foreground-1);
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
         box-shadow 0.15s ease-in-out;
+}
+
+.button:has(> svg) {
+    padding-left: 8px;
+}
+
+.button:has(> svg):has(:not(:empty)) {
+    padding-right: 8px;
+}
+
+.button.submit {
+    height: 38px;
+    min-width: 96px;
+}
+
+.button.small {
+    height: 24px;
+    padding: 2px 8px;
 }
 
 input:-webkit-autofill,
@@ -626,10 +664,35 @@ code {
 .hljs {
     display: block;
     padding: 0.5rem;
-    min-height: 100px;
     line-height: 1rem;
     border-radius: 4px;
     font-size: 0.875rem;
     color: var(--foreground-3);
     background-color: var(--background-3);
+}
+
+.emoji {
+    height: 1.31em;
+    margin-bottom: -5px;
+}
+
+/* Image cropper */
+
+.cropper-container * {
+    cursor: grab !important;
+}
+
+.cropper-crop-box,
+.cropper-view-box,
+.cropper-face.cropper-move {
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.cropper-view-box {
+    outline: 6px solid #ffffff !important;
+}
+
+.cropper-center {
+    opacity: 0 !important;
 }

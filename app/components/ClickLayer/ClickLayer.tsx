@@ -1,11 +1,10 @@
 "use client";
 
-import { useShowChannels } from "@/store";
 import styles from "./ClickLayer.module.css";
+import { useShowChannels } from "@/store";
 
-export function ClickLayer({ children }) {
-    const setShowChannels = useShowChannels((state) => state.setShowChannels);
-    const showChannels = useShowChannels((state) => state.showChannels);
+export function ClickLayer({ children }: { children: React.ReactNode }) {
+    const { showChannels, setShowChannels } = useShowChannels();
 
     return (
         <div className={styles.container}>

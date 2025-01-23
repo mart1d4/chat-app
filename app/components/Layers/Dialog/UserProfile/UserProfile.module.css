@@ -1,0 +1,755 @@
+.container {
+    padding: 4px;
+    width: 608px;
+    height: 780px;
+    display: flex;
+    position: relative;
+    border-radius: 8px;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+    background: linear-gradient(
+        var(--card-primary-color),
+        var(--card-primary-color) 90px,
+        var(--card-accent-color)
+    );
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.container.simple {
+    padding: 0;
+    width: 600px;
+    background-color: hsl(220, 8%, 7%);
+}
+
+.container > div {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px 8px 0 0;
+}
+
+.container > div::before {
+    content: "";
+    border-radius: 4px;
+    height: calc(100% - 8px);
+    width: calc(100% - 8px);
+    pointer-events: none;
+    position: absolute;
+    background-color: var(--card-overlay-color);
+}
+
+.banner {
+    z-index: 0;
+    height: 210px;
+    contain: paint;
+    overflow: hidden;
+    min-width: 340px;
+    min-width: 600px;
+}
+
+.banner foreignObject > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    font-size: 12px;
+}
+
+.bannerContent {
+    width: 100%;
+    height: 210px;
+    position: inherit;
+    display: inline-block;
+    background-size: cover;
+    background-position: 50%;
+    border-radius: 3px 3px 0 0;
+    background-repeat: no-repeat;
+}
+
+.noBanner .bannerContent {
+    border-bottom: 1px solid
+        color-mix(in oklab, hsl(0 calc(1 * 0%) 100% / 0.03) 100%, hsl(0 0% 0% / 0.03) 0%);
+}
+
+.avatar {
+    left: 26px;
+    top: 151px;
+    width: 120px;
+    height: 120px;
+    overflow: hidden;
+    position: absolute;
+}
+
+.avatar > div {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.avatar img {
+    border-radius: 50%;
+}
+
+.tools {
+    gap: 8px;
+    display: flex;
+    min-height: 52px;
+    padding-top: 16px;
+    margin-right: 16px;
+    padding-bottom: 6px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.tools > div {
+    display: flex;
+    align-items: center;
+}
+
+.content {
+    flex: 1;
+    margin: 16px;
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+.content > header {
+    margin-bottom: 12px;
+}
+
+.content > header > h1 {
+    cursor: auto;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+    user-select: text;
+    color: var(--foreground-1);
+}
+
+.content > header > span {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 18px;
+    color: var(--foreground-2);
+}
+
+.content > .request,
+.content > .blocked {
+    display: flex;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    align-items: center;
+    justify-content: space-between;
+    background-color: hsl(225, 5%, 15%);
+}
+
+.content > .blocked {
+    padding: 16px;
+}
+
+.content > .request > p,
+.content > .blocked > p {
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+    line-height: 1.285;
+}
+
+.content > .request > p > strong,
+.content > .blocked > p > strong {
+    font-weight: 700;
+}
+
+.content > .blocked > p > strong {
+    color: var(--foreground-3);
+}
+
+.content > .request > div {
+    gap: 8px;
+    display: flex;
+}
+
+.content > div {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    border-radius: 8px;
+    flex-direction: column;
+    background-color: var(--card-background-color);
+}
+
+.simple .content > div {
+    background-color: hsl(225, 5%, 15%);
+}
+
+.scrollContainer {
+    flex: 1;
+    display: flex;
+    padding: 16px;
+    padding-right: 8px;
+    flex-direction: column;
+    overflow: hidden scroll;
+}
+
+.scrollContainer > section {
+    margin-right: -12px;
+}
+
+@-moz-document url-prefix() {
+    .scrollContainer {
+        padding-right: 16px;
+    }
+}
+
+div.scrollContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+div.scrollContainer::-webkit-scrollbar-track {
+    border: 2px solid transparent;
+    background-color: transparent;
+}
+
+div.scrollContainer::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    background-color: transparent;
+}
+
+div.scrollContainer:hover::-webkit-scrollbar-thumb {
+    background-color: var(--card-divider-color);
+}
+
+.cardSection:not(:first-child) {
+    padding-top: 20px;
+}
+
+.cardSection.name > h4 {
+    word-break: break-word;
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    user-select: text;
+    cursor: auto;
+    color: var(--foreground-1);
+}
+
+.cardSection.name > div {
+    line-height: 18px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--foreground-1);
+}
+
+.cardSection:not(.name) > h4 {
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.333;
+    letter-spacing: 0.02rem;
+    color: var(--foreground-4);
+}
+
+.cardSection:not(.name) > div {
+    line-height: 1.375rem;
+    white-space: break-spaces;
+    word-wrap: break-word;
+    user-select: text;
+    display: -webkit-box;
+    line-clamp: 6;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    font-size: 14px;
+    line-height: 18px;
+    overflow: hidden;
+    color: var(--foreground-2);
+}
+
+.cardDivider {
+    margin-top: 12px;
+    height: 1px;
+    position: sticky;
+    top: 0;
+    background-color: var(--card-divider-color);
+}
+
+.cardSectionLarge > h4 {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.333;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.cardSectionLarge > div {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    user-select: none;
+}
+
+.cardSectionLarge > div > div:first-child {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    width: 64px;
+    flex: 0 0 auto;
+    justify-content: center;
+    border-radius: 8px;
+    margin-right: 16px;
+    background-color: var(--accent-3);
+}
+
+.cardTime {
+    flex: 1 1 auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.cardTime > div:first-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-2);
+}
+
+.cardTime > div:last-child > span {
+    font-family: var(--font-code);
+}
+
+.cardSectionLarge > button {
+    width: 100%;
+    margin-top: 12px;
+    background-color: var(--card-button-color);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.cardSectionLarge > button:hover {
+    opacity: 0.8;
+}
+
+.cardSectionLarge > button:active {
+    opacity: 0.7;
+}
+
+.cardInput {
+    width: 100%;
+    padding: 4px;
+    resize: none;
+    outline: none;
+    font-size: 14px;
+    max-height: 88px;
+    line-height: 18px;
+    margin-right: 12px;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+.cardInput:hover,
+.cardInput:focus-visible {
+    border: 1px solid var(--border-light);
+}
+
+.cardInput::placeholder {
+    user-select: none;
+    color: var(--foreground-4);
+}
+
+.cardInput:focus-visible {
+    background-color: var(--card-note-background);
+}
+
+textarea.cardInput::-webkit-scrollbar {
+    width: 6px;
+}
+
+textarea.cardInput::-webkit-scrollbar-thumb {
+    border: 1px solid transparent;
+    background-color: var(--background-dark-1);
+}
+
+textarea.cardInput::-webkit-scrollbar-track {
+    border: 0 solid transparent;
+    background-color: transparent;
+}
+
+.cardMessage {
+    background-color: transparent;
+    font-size: 14px;
+    padding: 10px;
+    height: 40px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    border: none;
+    outline: none;
+    border: 1px solid transparent;
+}
+
+.topTools {
+    gap: 8px;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    position: absolute;
+}
+
+.topTools > button {
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    transition: background-color 0.2s ease;
+    background-color: var(--background-hover-dark-1);
+}
+
+.topTools > button:hover,
+.topTools > button:focus-visible {
+    background-color: var(--background-hover-dark-2);
+}
+
+.nav {
+    margin: 16px 16px 0;
+}
+
+.nav > div {
+    gap: 40px;
+    display: flex;
+    align-items: stretch;
+    border-bottom: thin solid var(--border-light);
+}
+
+.nav .item {
+    padding: 0;
+    height: 25px;
+    display: flex;
+    flex-shrink: 0;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    border-radius: 0;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+    line-height: 1.285;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+}
+
+.nav .item:hover,
+.nav .item:focus-visible {
+    border-color: var(--foreground-1);
+}
+
+.nav .item[aria-selected="true"] {
+    cursor: default;
+    border-color: var(--foreground-1);
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 20px 0;
+}
+
+.empty > div:first-child {
+    background-image: url("https://ucarecdn.com/867f8b77-f202-4ada-a932-348936fe1f8c/");
+    width: 240px;
+    height: 130px;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.empty.noFriends > div:first-child {
+    background-image: url("https://ucarecdn.com/0f30098e-3611-4436-95a6-6718d2dfb1ac/");
+}
+
+.empty > div:last-child {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    margin-top: 12px;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+    user-select: none;
+}
+
+.userItem:first-child {
+    margin-top: -6px;
+}
+
+.userItem {
+    width: 100%;
+    height: auto;
+    padding: 4px;
+    outline: none;
+    display: flex;
+    cursor: pointer;
+    font-weight: 500;
+    transition: none;
+    min-height: 48px;
+    line-height: 30px;
+    user-select: none;
+    border-radius: 4px;
+    align-items: center;
+    margin: 1px -6px;
+    color: var(--foreground-2);
+    justify-content: flex-start;
+    background-color: transparent;
+}
+
+.userItem:hover,
+.userItem:focus-visible,
+.userItem[data-state="open"] {
+    background-color: var(--card-background-color);
+}
+
+.simple .userItem:hover,
+.simple .userItem:focus-visible,
+.simple .userItem[data-state="open"] {
+    background-color: hsl(228, 5%, 20%);
+}
+
+.userItem > div:first-child {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.userItem > div:first-child > img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.guildIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 33%;
+    background-color: var(--accent-1);
+}
+
+.divider {
+    margin-top: 16px;
+    border-top: 1px solid var(--card-divider-color);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+}
+
+/* Custom Status */
+
+.customStatus {
+    top: -10px;
+    z-index: 2;
+    left: 150px;
+    text-align: left;
+    width: fit-content;
+    position: relative;
+    background-color: transparent;
+}
+
+.customStatus > div:not(.statusTools) {
+    cursor: pointer;
+    min-width: 56px;
+    max-width: 184px;
+    position: relative;
+    border-radius: 12px;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.customStatus > div:not(.statusTools)::before {
+    top: -11px;
+    left: 10px;
+    content: "";
+    width: 19px;
+    height: 19px;
+    display: block;
+    position: absolute;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.customStatus > div:not(.statusTools)::after {
+    left: 1px;
+    top: -24px;
+    content: "";
+    width: 10px;
+    height: 10px;
+    display: block;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.statusContent {
+    display: block;
+    position: relative;
+    padding: 10px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.statusContent > div {
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    word-wrap: break-word;
+    word-break: break-word;
+    color: var(--foreground-4);
+}
+
+.statusContent > div > svg {
+    margin-right: 8px;
+}
+
+.statusContent > div > div {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.285;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.customStatus.active:hover .statusContent > div > div {
+    -webkit-line-clamp: 9;
+}
+
+.customStatus:not(.disabled):hover .statusContent > div {
+    color: var(--foreground-2);
+}
+
+.customStatus.active > div {
+    cursor: default;
+}
+
+.customStatus.active:not(.disabled):hover .statusContent,
+.customStatus.active:not(.disabled):hover > div:not(.statusTools)::before,
+.customStatus.active:not(.disabled):hover > div:not(.statusTools)::after {
+    background-color: var(--background-6);
+}
+
+.customStatus.active .statusContent > div {
+    cursor: text;
+    user-select: text;
+    color: var(--foreground-2);
+}
+
+.statusTools {
+    gap: 2px;
+    top: -16px;
+    opacity: 0;
+    padding: 2px;
+    height: auto;
+    overflow: hidden;
+    user-select: none;
+    position: absolute;
+    align-items: center;
+    pointer-events: none;
+    display: inline-flex;
+    border-radius: 1000px;
+    right: min(8px, 50% - 29px);
+    background-color: var(--background-3);
+    transition: box-shadow 0.1s ease-in-out;
+}
+
+.customStatus.active:hover .statusTools,
+.customStatus.active:focus-within .statusTools {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.statusTools > button {
+    padding: 4px;
+    display: flex;
+    cursor: pointer;
+    padding-left: 6px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+    border-radius: 1000px 6px 6px 1000px;
+}
+
+.statusTools > button:last-child {
+    padding-left: 4px;
+    padding-right: 6px;
+    border-radius: 6px 1000px 1000px 6px;
+}
+
+.statusTools > button:hover,
+.statusTools > button:focus-visible {
+    color: var(--foreground-2);
+    background-color: var(--background-6);
+}
+
+.statusTools > button > svg {
+    transition: transform 0.1s ease-in-out;
+}
+
+.statusTools > button:active > svg {
+    transform: translateY(1px);
+}

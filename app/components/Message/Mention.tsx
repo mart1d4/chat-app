@@ -55,7 +55,9 @@ export function UserMention({
                 <TooltipContent>
                     <Avatar
                         size={16}
-                        src={user.avatar}
+                        type="user"
+                        fileId={user.avatar}
+                        generateId={user.id}
                         alt={user.displayName}
                     />
 
@@ -70,7 +72,7 @@ export function UserMention({
             <PopoverTrigger asChild>{content}</PopoverTrigger>
 
             <PopoverContent>
-                <UserCard user={user} />
+                <UserCard initUser={user} />
             </PopoverContent>
         </Popover>
     );

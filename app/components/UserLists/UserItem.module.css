@@ -1,30 +1,32 @@
-.liContainer {
-    position: relative;
-    height: 62px;
+.container {
     opacity: 1;
+    height: 62px;
     display: flex;
-    margin: 0 20px 0 30px;
-    font-weight: 500;
     font-size: 1rem;
-    line-height: 20px;
-    border-top: 1px solid var(--border-light);
-    box-sizing: border-box;
     cursor: pointer;
+    font-weight: 500;
+    line-height: 20px;
+    position: relative;
+    margin: 0 20px 0 30px;
+    box-sizing: border-box;
+    border-top: 1px solid var(--border-light);
 }
 
-.liContainer:hover,
-.active,
-.liContainer:focus-within {
+.container:hover,
+.container:focus-within,
+.container[data-state="open"],
+.container:has([data-state="open"]) {
     border-radius: 8px;
-    margin: 0 10px 0 20px;
     padding: 16px 10px;
-    background-color: var(--background-hover-1);
+    margin: 0 10px 0 20px;
     border-color: transparent;
+    background-color: var(--background-hover-1);
 }
 
-.liContainer:hover + .liContainer,
-.active + .liContainer,
-.liContainer:focus-within + .liContainer {
+.container:hover + .container,
+.container:focus-within + .container,
+.container[data-state="open"] + .container,
+.container:has([data-state="open"]) + .container {
     border-color: transparent;
 }
 
@@ -71,15 +73,21 @@
 
 .usernames > p:last-child {
     font-size: 14px;
+    margin-left: 5px;
     line-height: 16px;
     visibility: hidden;
     color: var(--foreground-3);
-    margin-left: 5px;
 }
 
-.liContainer:hover .usernames > p:last-child,
-.active .usernames > p:last-child,
-.liContainer:focus-within .usernames > p:last-child {
+.usernames > p.blocked {
+    margin: 0;
+    visibility: visible;
+}
+
+.container:hover .usernames > p:last-child,
+.container:focus-within .usernames > p:last-child,
+.container[data-state="open"] .usernames > p:last-child,
+.container:has([data-state="open"]) .usernames > p:last-child {
     visibility: visible;
 }
 
@@ -111,27 +119,29 @@
     justify-content: center;
 }
 
-.liContainer:hover .actions > button,
-.active .actions > button,
-.liContainer:focus-within .actions > button {
+.container:hover .actions > button,
+.container:focus-within .actions > button,
+.container[data-state="open"] .actions > button,
+.container:has([data-state="open"]) .actions > button {
     background-color: var(--background-1);
 }
 
 .actions > button:hover,
-.actions > button:focus {
+.actions > button:focus-visible,
+.actions > button[data-state="open"] {
     color: var(--foreground-1);
 }
 
 .actions > button.green:hover,
-.actions > button.green:focus {
+.actions > button.green:focus-visible {
     color: var(--success-light);
 }
 
 .actions > button.red:hover,
-.actions > button.red:focus {
+.actions > button.red:focus-visible {
     color: var(--error-1);
 }
 
-.liContainer:hover .actions > button:active {
+.container:hover .actions > button:active {
     background-color: var(--background-dark-1);
 }

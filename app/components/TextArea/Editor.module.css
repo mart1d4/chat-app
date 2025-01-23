@@ -1,0 +1,49 @@
+.editor {
+    width: 450px;
+    color: #dedede;
+    max-height: 50vh;
+    min-height: 44px;
+    line-height: 24px;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden auto;
+    background-color: #161616;
+}
+
+.editor [role="textbox"] {
+    padding: 10px;
+}
+
+.placeholder {
+    top: 10px;
+    left: 10px;
+    z-index: 0;
+    opacity: 0.35;
+    user-select: none;
+    position: absolute;
+    pointer-events: none;
+}
+
+.inline-symbol {
+    color: red;
+}
+
+.editor em {
+    font-style: italic;
+}
+
+.editor strong {
+    font-weight: bold;
+}
+
+.editor u {
+    text-decoration: underline;
+}
+
+.editor s {
+    text-decoration: line-through;
+}
+
+.editor a {
+    color: var(--accent-light);
+}

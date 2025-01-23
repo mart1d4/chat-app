@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useData, useLayers } from "@/store";
+import { useMemo, useRef, useState } from "react";
+import { lowercaseContains } from "@/lib/strings";
 import { Icon, UserItem } from "@components";
 import styles from "./UserLists.module.css";
+import { useData } from "@/store";
 import Image from "next/image";
-import { lowercaseContains } from "@/lib/strings";
-
-const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
-
-if (!cdnUrl) {
-    throw new Error("NEXT_PUBLIC_CDN_URL is not defined.");
-}
 
 const contentData: contentType = {
     all: {
@@ -108,13 +102,17 @@ export const UserLists = ({ content }: { content: string }) => {
     const UserItems = useMemo(
         () => (
             <div className={styles.content}>
-                <div className={styles.searchBar}>
+                <div
+                    id="users-search"
+                    className={styles.searchBar}
+                >
                     <div>
                         <input
-                            ref={searchBar}
-                            placeholder="Search"
-                            aria-label="Search"
                             value={search}
+                            ref={searchBar}
+                            aria-label="Search"
+                            placeholder="Search"
+                            focus-id="users-search"
                             onChange={(e) => setSearch(e.target.value)}
                             onContextMenu={(e) => {
                                 e.preventDefault();
@@ -187,13 +185,17 @@ export const UserLists = ({ content }: { content: string }) => {
     if (filteredList.length === 0 && search.length > 0) {
         return (
             <div className={styles.content}>
-                <div className={styles.searchBar}>
+                <div
+                    id="users-search"
+                    className={styles.searchBar}
+                >
                     <div>
                         <input
-                            ref={searchBar}
-                            placeholder="Search"
-                            aria-label="Search"
                             value={search}
+                            ref={searchBar}
+                            aria-label="Search"
+                            placeholder="Search"
+                            focus-id="users-search"
                             onChange={(e) => setSearch(e.target.value)}
                         />
 

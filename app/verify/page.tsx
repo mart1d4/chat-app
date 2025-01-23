@@ -1,20 +1,10 @@
+import { LoadingDots } from "@components";
 import styles from "./verify.module.css";
 import { jwtVerify } from "jose";
 import { db } from "@/lib/db/db";
 import Link from "next/link";
-import { LoadingDots } from "../components";
 
 const { API_URL, EMAIL_TOKEN_SECRET } = process.env;
-
-if (!API_URL) {
-    console.error("Please provide a API_URL in your environment variables.");
-    process.exit(1);
-}
-
-if (!EMAIL_TOKEN_SECRET) {
-    console.error("Please provide a EMAIL_TOKEN_SECRET in your environment variables.");
-    process.exit(1);
-}
 
 const invalid = (
     <div className={styles.container}>

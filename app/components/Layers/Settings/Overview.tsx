@@ -1,14 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./Settings.module.css";
+import type { GuildChannel } from "@/type";
 import { LoadingDots } from "@components";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
-export function Overview({ channel }) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [channelName, setChannelName] = useState(channel.name);
+export function Overview({ channel }: { channel: GuildChannel }) {
     const [channelTopic, setChannelTopic] = useState(channel.topic || "");
+    const [channelName, setChannelName] = useState(channel.name);
+    const [loading, setLoading] = useState(false);
 
     const { sendRequest } = useFetchHelper();
 
@@ -17,19 +18,14 @@ export function Overview({ channel }) {
         setChannelTopic(channel.topic || "");
     }
 
-    const needsSaving = useMemo(
-        () => channelName !== channel.name || channelTopic !== (channel.topic || ""),
-        [channelName, channelTopic, channel.name, channel.topic]
-    );
+    const needsSaving = channelName !== channel.name || channelTopic !== (channel.topic || "");
 
     async function saveChannel() {
-        console.log(isLoading, needsSaving);
-
-        if (isLoading || !needsSaving) return;
-        setIsLoading(true);
+        if (loading || !needsSaving) return;
+        setLoading(true);
 
         try {
-            const response = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "CHANNEL_UPDATE",
                 params: { channelId: channel.id },
                 body: {
@@ -38,14 +34,14 @@ export function Overview({ channel }) {
                 },
             });
 
-            if (response.success) {
+            if (!errors) {
                 resetState();
             }
         } catch (err) {
             console.error(err);
         }
 
-        setIsLoading(false);
+        setLoading(false);
     }
 
     return (
@@ -54,10 +50,10 @@ export function Overview({ channel }) {
                 {needsSaving && (
                     <motion.div
                         className={styles.saveAlert}
+                        transition={{ duration: 0.1 }}
                         initial={{ transform: "translateY(80px)" }}
                         animate={{ transform: "translateY(0)" }}
                         exit={{ transform: "translateY(80px)" }}
-                        transition={{ duration: 0.1 }}
                     >
                         <p>Careful — you have unsaved changes!</p>
 
@@ -73,7 +69,7 @@ export function Overview({ channel }) {
                                 className="button green"
                                 onClick={() => saveChannel()}
                             >
-                                {isLoading ? <LoadingDots /> : "Save Changes"}
+                                {loading ? <LoadingDots /> : "Save Changes"}
                             </button>
                         </div>
                     </motion.div>
@@ -135,10 +131,11 @@ export function Overview({ channel }) {
 
                 <div className={styles.footerImage}>
                     <Image
-                        src="https://discord.com/assets/c1875fc8a42a61903ba1.svg"
-                        alt="Footer Image"
                         width={280}
                         height={165}
+                        draggable={false}
+                        alt="Footer Image"
+                        src="/assets/system/modify-channel.svg"
                     />
                 </div>
             </div>

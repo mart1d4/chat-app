@@ -8,7 +8,7 @@
     position: relative;
     flex-direction: column;
     max-height: calc(100vh - 28px);
-    background-color: var(--background-1);
+    background-color: var(--background-dark-1);
 }
 
 .loading {
@@ -21,7 +21,7 @@
     background-color: var(--background-1);
 }
 
-.container > div {
+.container > div:not(.topTools) {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -39,14 +39,24 @@
     overflow: hidden;
     min-width: 300px;
     min-height: 105px;
+    position: relative;
 }
 
 .banner foreignObject > div {
     display: flex;
+    font-size: 12px;
+    text-align: center;
     flex-direction: column;
     justify-content: space-between;
-    text-align: center;
-    font-size: 12px;
+}
+
+.banner foreignObject > div::before {
+    bottom: 0;
+    content: "";
+    width: 100%;
+    position: absolute;
+    border-bottom: 1px solid
+        color-mix(in oklab, hsl(0 calc(1 * 0%) 100% / 0.03) 100%, hsl(0 0% 0% / 0.03) 0%);
 }
 
 .banner .background {
@@ -73,7 +83,6 @@
 }
 
 .avatar svg {
-    height: 92;
     width: auto;
     display: block;
     content: paint;
@@ -90,6 +99,7 @@
     cursor: pointer;
     grid-area: 1 / 1;
     object-fit: cover;
+    user-select: none;
     pointer-events: none;
     overflow-clip-margin: content-box;
 }
@@ -109,6 +119,7 @@
     width: 100%;
     height: 100%;
     display: grid;
+    position: relative;
 }
 
 .overlay::after {
@@ -125,8 +136,189 @@
     background-color: #11111b;
 }
 
-.avatar:hover .overlay::after {
+.avatar:hover .overlay::after,
+.avatar:focus-within .overlay::after {
     opacity: 0.4;
+}
+
+.overlay > div {
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: none;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.avatar:hover .overlay > div,
+.avatar:focus-within .overlay > div {
+    display: flex;
+}
+
+.customStatus {
+    top: 4px;
+    z-index: 2;
+    left: 106px;
+    text-align: left;
+    width: fit-content;
+    position: relative;
+    background-color: transparent;
+}
+
+.customStatus > div:not(.statusTools) {
+    cursor: pointer;
+    min-width: 56px;
+    max-width: 184px;
+    position: relative;
+    border-radius: 12px;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.customStatus > div:not(.statusTools)::before {
+    top: -11px;
+    left: 10px;
+    content: "";
+    width: 19px;
+    height: 19px;
+    display: block;
+    position: absolute;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.customStatus > div:not(.statusTools)::after {
+    left: 1px;
+    top: -24px;
+    content: "";
+    width: 10px;
+    height: 10px;
+    display: block;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: var(--elevation-low);
+    border: 1px solid hsla(1, 0%, 100%, 0.03);
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.statusContent {
+    display: block;
+    position: relative;
+    padding: 10px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+}
+
+.statusContent > div {
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    word-wrap: break-word;
+    word-break: break-word;
+    color: var(--foreground-4);
+}
+
+.statusContent > div > svg {
+    margin-right: 8px;
+}
+
+.statusContent > div > div {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.285;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.customStatus.active:hover .statusContent > div > div {
+    -webkit-line-clamp: 9;
+}
+
+.customStatus:not(.disabled):hover .statusContent > div {
+    color: var(--foreground-2);
+}
+
+.customStatus.active > div {
+    cursor: default;
+}
+
+.customStatus.active:not(.disabled):hover .statusContent,
+.customStatus.active:not(.disabled):hover > div:not(.statusTools)::before,
+.customStatus.active:not(.disabled):hover > div:not(.statusTools)::after {
+    background-color: var(--background-6);
+}
+
+.customStatus.active .statusContent > div {
+    cursor: text;
+    user-select: text;
+    color: var(--foreground-2);
+}
+
+.statusTools {
+    gap: 2px;
+    top: -16px;
+    opacity: 0;
+    padding: 2px;
+    height: auto;
+    overflow: hidden;
+    user-select: none;
+    position: absolute;
+    align-items: center;
+    pointer-events: none;
+    display: inline-flex;
+    border-radius: 1000px;
+    right: min(8px, 50% - 29px);
+    background-color: var(--background-3);
+    transition: box-shadow 0.1s ease-in-out;
+}
+
+.customStatus.active:hover .statusTools,
+.customStatus.active:focus-within .statusTools {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.statusTools > button {
+    padding: 4px;
+    display: flex;
+    cursor: pointer;
+    padding-left: 6px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+    border-radius: 1000px 6px 6px 1000px;
+}
+
+.statusTools > button:last-child {
+    padding-left: 4px;
+    padding-right: 6px;
+    border-radius: 6px 1000px 1000px 6px;
+}
+
+.statusTools > button:hover,
+.statusTools > button:focus-visible {
+    color: var(--foreground-2);
+    background-color: var(--background-6);
+}
+
+.statusTools > button > svg {
+    transition: transform 0.1s ease-in-out;
+}
+
+.statusTools > button:active > svg {
+    transform: translateY(1px);
 }
 
 .content {
@@ -141,6 +333,7 @@
 }
 
 .message > input {
+    width: 100%;
     height: 40px;
     outline: none;
     padding: 0 10px;
@@ -170,14 +363,16 @@
 
 .content h1 {
     font-size: 20px;
-    cursor: pointer;
     line-height: 1.2;
     font-weight: 700;
     overflow: hidden;
+    user-select: text;
     word-break: break-word;
 }
 
-.content h1:hover {
+.content h1:not(.disabled):hover,
+.content h1:not(.disabled):focus-visible {
+    cursor: pointer;
     text-decoration: underline;
 }
 
@@ -189,7 +384,6 @@
 }
 
 .content > :first-child > :nth-child(2) > p {
-    cursor: pointer;
     font-size: 14px;
     font-weight: 500;
     line-height: 18px;
@@ -197,26 +391,34 @@
     word-break: break-all;
 }
 
-.content > :first-child > :nth-child(2) > p:hover {
+.content p.disabled {
+    cursor: default;
+}
+
+.content > :first-child > :nth-child(2) > p:not(.disabled):hover,
+.content > :first-child > :nth-child(2) > p:not(.disabled):focus-visible {
+    cursor: pointer;
     text-decoration: underline;
 }
 
 .note {
+    opacity: 0;
     display: flex;
     cursor: pointer;
     color: var(--fg-3);
-    visibility: hidden;
     align-items: center;
     justify-content: center;
     background-color: transparent;
+    transition: opacity 0.1s ease-in-out;
 }
 
 .note:hover {
     color: var(--fg-1);
 }
 
-.container:hover .note {
-    visibility: visible;
+.container:hover .note,
+.container:focus-within .note {
+    opacity: 1;
 }
 
 .mutuals {
@@ -264,11 +466,155 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: var(--fg-2);
+    background-color: var(--foreground-2);
 }
 
 .description {
     font-size: 14px;
     font-weight: 500;
     line-height: 1.285;
+}
+
+.menus {
+    gap: 16px;
+    display: flex;
+    padding: 16px;
+    padding-top: 0;
+    flex-direction: column;
+}
+
+.menus > section {
+    padding: 8px;
+    border-radius: 8px;
+    background-color: hsl(225, 5%, 15%);
+}
+
+.menus > section > .divider {
+    height: 1px;
+    margin: 8px 4px;
+    background-color: color-mix(
+        in oklab,
+        hsl(228 calc(1 * 6.024%) 32.549% / 0.48) 100%,
+        hsl(0 0% 0% / 0.48) 0%
+    );
+}
+
+.menus > section > button {
+    gap: 8px;
+    width: 100%;
+    height: 32px;
+    padding: 8px;
+    display: flex;
+    cursor: pointer;
+    transition: none;
+    border-radius: 3px;
+    align-items: center;
+    background-color: transparent;
+    justify-content: space-between;
+    color: color-mix(in oklab, hsl(215 calc(1 * 8.824%) 73.333% / 1) 100%, black 0%);
+}
+
+.menus > section > button:hover,
+.menus > section > button:focus-visible,
+.menus > section > button[data-state="open"] {
+    color: color-mix(in oklab, hsl(210 calc(1 * 9.091%) 87.059% / 1) 100%, black 0%);
+    background-color: color-mix(
+        in oklab,
+        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
+        hsl(0 0% 0% / 0.3) 0%
+    );
+}
+
+.menus > section > button > :nth-child(2) {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.statusItem {
+    width: 100%;
+    display: grid;
+    align-items: center;
+    grid-template-rows: 20px 1fr;
+    grid-template-columns: 20px 1fr;
+    grid-template-areas: "icon status" ". description";
+}
+
+.statusItem .description {
+    font-size: 12px;
+    line-height: 16px;
+    grid-area: description;
+}
+
+.topTools {
+    gap: 8px;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    position: absolute;
+}
+
+.topTools > button {
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    transition: background-color 0.2s ease;
+    background-color: var(--background-hover-dark-1);
+}
+
+.topTools > button:hover,
+.topTools > button:focus-visible {
+    background-color: var(--background-hover-dark-2);
+}
+
+.topTools > button:disabled {
+    opacity: 0.5;
+    cursor: default;
+    background-color: var(--background-hover-dark-1);
+}
+
+.received,
+.blocked {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: var(--background-3);
+}
+
+.received > :first-child {
+    font-size: 14px;
+}
+
+.received > :last-child {
+    gap: 8px;
+    display: flex;
+    margin-top: 8px;
+}
+
+.blocked {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.blocked > div {
+    font-size: 15px;
+    font-weight: 700;
+    user-select: none;
+    line-height: 1.285;
+    color: var(--foreground-3);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.875);
+    }
+    100% {
+        transform: scale(1);
+    }
 }

@@ -8,15 +8,19 @@
     user-select: none;
 }
 
-.liContainer:hover {
-    background-color: var(--background-4);
-    color: var(--foreground-2);
+.liContainer:hover,
+.liContainer:focus-visible {
     opacity: 1 !important;
+    color: var(--foreground-2);
+    background-color: var(--background-4);
 }
 
-.liContainer:active {
-    background-color: var(--background-5);
+.liContainer:active,
+.liContainer[data-state="open"],
+.liContainer[aria-expanded="true"] {
+    opacity: 1 !important;
     color: var(--foreground-1);
+    background-color: var(--background-5);
 }
 
 .liWrapper {

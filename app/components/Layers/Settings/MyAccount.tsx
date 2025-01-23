@@ -282,20 +282,20 @@ export function MyAccount({ setActiveTab }: any) {
                     <div
                         className={styles.userCardHeader}
                         style={{
-                            backgroundColor: !user.banner ? user.primaryColor : "",
-                            backgroundImage: user.banner
-                                ? `url(${getCdnUrl()}/${user.banner})`
-                                : "",
+                            backgroundColor: !user.banner ? user.bannerColor : "",
+                            backgroundImage: user.banner ? `url(${getCdnUrl}${user.banner})` : "",
                         }}
                     />
 
                     <div className={styles.userCardInfo}>
                         <div className={styles.userAvatar}>
                             <Avatar
-                                src={user.avatar}
-                                alt={user.username}
                                 size={80}
+                                type="user"
+                                alt={user.username}
                                 status={user.status}
+                                fileId={user.avatar}
+                                generateId={user.id}
                             />
                         </div>
 
@@ -428,10 +428,10 @@ export function MyAccount({ setActiveTab }: any) {
                                     }
                                     confirmLoading={loading.email}
                                     description={
-                                        askForEmailCode
-                                            ? "Check your email: we sent you a verification code. Enter it here to verify you're really you."
-                                            : askForNewEmail
+                                        askForNewEmail
                                             ? "Enter a new email address and your existing password."
+                                            : askForEmailCode
+                                            ? "Check your email: we sent you a verification code. Enter it here to verify you're really you."
                                             : undefined
                                     }
                                     hideCancel={
@@ -552,7 +552,12 @@ export function MyAccount({ setActiveTab }: any) {
                                 </div>
                             </div>
 
-                            <button className="button grey">{!!user.phone ? "Edit" : "Add"}</button>
+                            <button
+                                disabled
+                                className="button grey disabled"
+                            >
+                                {!!user.phone ? "Edit" : "Add"}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -628,7 +633,12 @@ export function MyAccount({ setActiveTab }: any) {
                     </div>
 
                     <div className={styles.buttonsContainer}>
-                        <button className="button blue disabled">Enable Authenticator App</button>
+                        <button
+                            disabled
+                            className="button blue disabled"
+                        >
+                            Enable Authenticator App
+                        </button>
                     </div>
                 </div>
 
@@ -639,7 +649,12 @@ export function MyAccount({ setActiveTab }: any) {
                     </div>
 
                     <div className={styles.buttonsContainer}>
-                        <button className="button blue disabled">Register a Security Key</button>
+                        <button
+                            disabled
+                            className="button blue disabled"
+                        >
+                            Register a Security Key
+                        </button>
                     </div>
                 </div>
 
@@ -676,7 +691,12 @@ export function MyAccount({ setActiveTab }: any) {
                         action is irreversible.
                     </div>
 
-                    <button className="button red">Delete Account</button>
+                    <button
+                        disabled
+                        className="button red disabled"
+                    >
+                        Delete Account
+                    </button>
                 </div>
             </section>
         </>

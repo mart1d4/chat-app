@@ -1,5 +1,5 @@
+import { useData, useTriggerDialog } from "@/store";
 import { useRouter } from "next/navigation";
-import { useData } from "@/store";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -112,6 +112,10 @@ const queries = {
         url: "/invites/:inviteId",
         method: "GET",
     },
+    GET_INVITES: {
+        url: "/invites",
+        method: "POST",
+    },
     CREATE_INVITE: {
         url: "/channels/:channelId/invites",
         method: "POST",
@@ -136,6 +140,14 @@ const queries = {
         url: "/users/@me/email/verify",
         method: "POST",
     },
+    ADD_REACTION: {
+        url: "/channels/:channelId/messages/:messageId/reactions/:emoji",
+        method: "PUT",
+    },
+    REMOVE_REACTION: {
+        url: "/channels/:channelId/messages/:messageId/reactions/:emoji",
+        method: "DELETE",
+    },
 };
 
 type ReturnType = {
@@ -146,8 +158,8 @@ type ReturnType = {
 };
 
 export default function useRequestHelper() {
-    const channels = useData((state) => state.channels);
-    const user = useData((state) => state.user);
+    const { triggerDialog } = useTriggerDialog();
+    const { channels, user } = useData();
 
     const router = useRouter();
 
@@ -221,23 +233,18 @@ export default function useRequestHelper() {
                             },
                         };
                     } else if (channel.type === 1 && channel.recipients.length !== 1) {
-                        // return setLayers({
-                        //     settings: {
-                        //         type: "POPUP",
-                        //     },
-                        //     content: {
-                        //         type: "CHANNEL_EXISTS",
-                        //         channel: channel,
-                        //         recipients: channel.recipients,
-                        //         addUsers: () => {
-                        //             sendRequest({
-                        //                 query: "CHANNEL_CREATE",
-                        //                 body: body,
-                        //                 skipChannelCheck: true,
-                        //             });
-                        //         },
-                        //     },
-                        // });
+                        triggerDialog({
+                            type: "CHANNEL_EXISTS",
+                            data: { channel, recipients: body.recipients },
+                        });
+
+                        return {
+                            data: null,
+                            errors: {
+                                message: "Channel already exists",
+                                status: 409,
+                            },
+                        };
                     }
                 }
             }
@@ -253,6 +260,7 @@ export default function useRequestHelper() {
                 ":userId",
                 ":guildId",
                 ":inviteId",
+                ":emoji",
             ];
 
             paramsArr.forEach((param) => {
@@ -351,11 +359,11 @@ export default function useRequestHelper() {
             }
         } catch (error: any) {
             return {
+                data: null,
                 errors: {
                     message: error.message,
                     status: error.status,
                 },
-                data: null,
             };
         }
     }

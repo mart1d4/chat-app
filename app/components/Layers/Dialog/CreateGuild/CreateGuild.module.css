@@ -1,0 +1,308 @@
+.container {
+    width: 440px;
+    display: flex;
+    overflow: hidden;
+    max-height: 580px;
+    min-height: 200px;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: var(--elevation-high);
+    transition: height 0.25s ease-in-out;
+    background-color: var(--background-4);
+    animation: popIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.container > div {
+    display: flex;
+    max-height: 580px;
+    height: fit-content;
+    flex-direction: column;
+    min-height: 200px !important;
+}
+
+.container > div > section {
+    flex-grow: 1;
+    margin-top: 24px;
+    padding: 0 8px 8px 16px;
+    overflow: hidden scroll;
+}
+
+.container > div > section::-webkit-scrollbar {
+    width: 13px;
+}
+
+.container > div > section::-webkit-scrollbar-track {
+    border: 0;
+    background-color: transparent;
+}
+
+@-moz-document url-prefix() {
+    .container > div > section {
+        padding-right: 16px;
+    }
+}
+
+.header {
+    text-align: center;
+    position: relative;
+    padding: 24px 16px 0;
+}
+
+.header > h1 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--foreground-1);
+    font-family: var(--font-display);
+}
+
+.header > p {
+    font-size: 16px;
+    margin-top: 8px;
+    line-height: 1.25;
+    color: var(--foreground-3);
+}
+
+.header > button {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
+    padding: 4px;
+    display: flex;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 3px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    background-color: transparent;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.header > button:hover,
+.header > button:focus-visible {
+    opacity: 1;
+}
+
+.footer {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--background-3);
+}
+
+.footer.centered {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.footer.centered > h2 {
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--foreground-1);
+    font-family: var(--font-display);
+}
+
+.footer.centered > button {
+    width: 100%;
+    height: 38px;
+}
+
+.footer > button:nth-of-type(2) {
+    min-width: 96px;
+}
+
+.type {
+    width: 100%;
+    display: flex;
+    cursor: pointer;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    align-items: center;
+    background-color: transparent;
+    border: 1px solid var(--background-6);
+}
+
+.type:last-of-type {
+    margin-bottom: 0;
+}
+
+.type.discover {
+    border-color: transparent;
+    background-color: var(--background-2);
+}
+
+.type:hover,
+.type:focus-visible {
+    background-color: var(--background-5);
+}
+
+.type.discover:hover,
+.type.discover:focus-visible {
+    background-color: var(--background-3);
+}
+
+.type > img {
+    width: 48px;
+    height: 48px;
+    margin: 8px 8px 8px 16px;
+}
+
+.type > p {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    color: var(--foreground-2);
+}
+
+.type > svg {
+    margin: 0 16px 0 auto;
+    color: var(--foreground-5);
+}
+
+.type > div > h2 {
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    overflow: hidden;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    color: var(--foreground-2);
+    font-family: var(--font-display);
+}
+
+.type > div > p {
+    font-size: 12px;
+    overflow: hidden;
+    line-height: 1.33;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+}
+
+.type + p {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.33;
+    margin: 16px 0 8px 0;
+    text-transform: uppercase;
+    color: var(--foreground-2);
+}
+
+.type + span {
+    width: 100%;
+    font-size: 14px;
+    margin-top: 18px;
+    text-align: center;
+    line-height: 1.285;
+    margin-bottom: 16px;
+    display: inline-block;
+}
+
+.type + span > a {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--accent-light);
+}
+
+.type + span > a:hover,
+.type + span > a:focus-visible {
+    text-decoration: underline;
+}
+
+.invite > form {
+    margin-bottom: 16px;
+}
+
+.invite > h2 {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.33;
+    margin-bottom: 8px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.invite > ul {
+    list-style: none;
+    margin-bottom: 16px;
+}
+
+.invite > ul > li {
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--foreground-2);
+}
+
+.invite > ul > li > button {
+    background-color: transparent;
+}
+
+.icon {
+    display: flex;
+    padding-top: 4px;
+    justify-content: center;
+}
+
+.icon > div {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+
+.icon > div > input {
+    top: 0;
+    left: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    font-size: 0;
+    cursor: pointer;
+    position: absolute;
+}
+
+.icon > div > img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+
+.customize > form {
+    margin-top: 24px;
+}
+
+.customize > form > p {
+    font-size: 12px;
+    margin-top: 8px;
+    line-height: 1.33;
+    padding-bottom: 4px;
+    color: var(--foreground-3);
+}
+
+.customize > form > p > a {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--accent-light);
+}
+
+.customize > form > p > a:hover,
+.customize > form > p > a:focus-visible {
+    text-decoration: underline;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

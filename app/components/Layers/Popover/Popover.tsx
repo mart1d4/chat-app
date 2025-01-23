@@ -16,6 +16,7 @@ import {
     useId,
     flip,
     type Placement,
+    FloatingOverlay,
 } from "@floating-ui/react";
 import {
     useLayoutEffect,
@@ -31,6 +32,7 @@ import {
     type HTMLProps,
     type ReactNode,
     type Dispatch,
+    useEffect,
 } from "react";
 
 interface PopoverOptions {
@@ -39,6 +41,8 @@ interface PopoverOptions {
     modal?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+    mainOffset?: number;
+    crossOffset?: number;
 }
 
 export function usePopover({
@@ -47,6 +51,8 @@ export function usePopover({
     modal,
     open: controlledOpen,
     onOpenChange: setControlledOpen,
+    mainOffset = 8,
+    crossOffset,
 }: PopoverOptions = {}) {
     const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
     const [labelId, setLabelId] = useState<string | undefined>();
@@ -61,13 +67,16 @@ export function usePopover({
         onOpenChange: setOpen,
         whileElementsMounted: autoUpdate,
         middleware: [
-            offset(5),
-            flip({
-                crossAxis: placement.includes("-"),
-                fallbackAxisSideDirection: "end",
-                padding: 5,
+            offset({
+                mainAxis: mainOffset,
+                crossAxis: crossOffset,
             }),
-            shift({ padding: 5 }),
+            flip({
+                crossAxis: false,
+                fallbackAxisSideDirection: "end",
+                padding: 12,
+            }),
+            shift({ padding: 12 }),
         ],
     });
 
@@ -132,13 +141,25 @@ export function Popover({
 interface PopoverTriggerProps {
     children: ReactNode;
     asChild?: boolean;
+    externalReference?: HTMLElement | null;
 }
 
 export const PopoverTrigger = forwardRef<HTMLElement, HTMLProps<HTMLElement> & PopoverTriggerProps>(
-    function PopoverTrigger({ children, asChild = false, ...props }, propRef) {
+    function PopoverTrigger({ children, asChild = true, externalReference, ...props }, propRef) {
         const context = usePopoverContext();
         const childrenRef = (children as any).ref;
-        const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
+
+        const ref = useMergeRefs([
+            context.refs.setReference,
+            propRef,
+            childrenRef,
+            ...(externalReference ? [() => context.refs.setReference(externalReference)] : []),
+        ]);
+
+        useEffect(() => {
+            if (!externalReference) return;
+            externalReference.dataset.expanded = context.open ? "true" : "false";
+        }, [context.open]);
 
         // `asChild` allows the user to pass any element as the anchor
         if (asChild && isValidElement(children)) {
@@ -147,6 +168,7 @@ export const PopoverTrigger = forwardRef<HTMLElement, HTMLProps<HTMLElement> & P
                 context.getReferenceProps({
                     ref,
                     ...props,
+                    // @ts-ignore - `data-state` is a custom prop
                     ...children.props,
                     "data-state": context.open ? "open" : "closed",
                 })
@@ -176,21 +198,23 @@ export const PopoverContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
 
         return (
             <FloatingPortal>
-                <FloatingFocusManager
-                    context={floatingContext}
-                    modal={context.modal}
+                <FloatingOverlay
+                    lockScroll
+                    style={{ zIndex: 100 }}
                 >
-                    <div
-                        ref={ref}
-                        className={styles.popover}
-                        style={{ ...context.floatingStyles, ...style }}
-                        aria-labelledby={context.labelId}
-                        aria-describedby={context.descriptionId}
-                        {...context.getFloatingProps(props)}
-                    >
-                        {props.children}
-                    </div>
-                </FloatingFocusManager>
+                    <FloatingFocusManager context={floatingContext}>
+                        <div
+                            ref={ref}
+                            className={styles.popover}
+                            style={{ ...context.floatingStyles, ...style }}
+                            aria-labelledby={context.labelId}
+                            aria-describedby={context.descriptionId}
+                            {...context.getFloatingProps(props)}
+                        >
+                            {props.children}
+                        </div>
+                    </FloatingFocusManager>
+                </FloatingOverlay>
             </FloatingPortal>
         );
     }

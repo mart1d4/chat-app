@@ -10,7 +10,6 @@
 .list {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
 }
 
 .list {
@@ -38,31 +37,34 @@
 
 .wrapper,
 .active {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0;
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    display: flex;
     cursor: pointer;
+    overflow: hidden;
+    border-radius: 50%;
+    position: relative;
+    align-items: center;
+    outline-offset: 2px;
+    text-decoration: none;
+    justify-content: center;
     color: var(--foreground-1);
     background-color: var(--background-4);
     transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out,
         color 0.15s ease-in-out, transform 0.05s ease-in-out;
-    text-decoration: none;
-    padding: 0;
-    outline-offset: 2px;
 }
 
 .wrapper:hover,
+.wrapper:focus-visible,
 .active {
     border-radius: 33%;
     background-color: var(--accent-1);
 }
 
 .green > .active,
-.green > .wrapper:hover {
+.green > .wrapper:hover,
+.green > .wrapper:focus-visible {
     background-color: var(--success-light);
 }
 
@@ -74,6 +76,7 @@
 }
 
 .wrapper:hover img,
+.wrapper:focus-visible img,
 .active img {
     border-radius: 33%;
 }
@@ -82,7 +85,8 @@
     transform: translateY(1px);
 }
 
-.wrapper:hover img {
+.wrapper:hover img,
+.wrapper:focus-visible img {
     border-radius: 33% !important;
 }
 
@@ -91,6 +95,7 @@
 }
 
 .green > .wrapper:hover,
+.green > .wrapper:focus-visible,
 .green > .active {
     color: var(--foreground-1);
 }

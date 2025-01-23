@@ -1,33 +1,33 @@
-import { getGuild, getUser, isUserInGuild } from "@/lib/db/helpers";
 import { GuildChannels, ClickLayer } from "@components";
+import { isUserInGuild } from "@/lib/db/helpers";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import styles from "./page.module.css";
+import { db } from "@lib/db/db";
 
 export default async function GuildPage({ params }: { params: { guildId: string } }) {
-    const user = await getUser({});
-    if (!user) redirect("/login");
-
+    const userId = parseInt(headers().get("x-user-id") as string);
     const guildId = parseInt(params.guildId);
-    if (!(await isUserInGuild(user.id, guildId))) redirect("/channels/me");
 
-    const guild = await getGuild({
-        id: guildId,
-        getMembers: true,
-        getChannels: true,
-    });
+    if (!userId || !guildId || !(await isUserInGuild(userId, guildId))) {
+        return redirect("/channels/me");
+    }
 
-    if (!guild) redirect("/channels/me");
+    const systemChannel = await db
+        .selectFrom("channels")
+        .innerJoin("guilds", "channels.guildId", "guilds.id")
+        .select("channels.id")
+        .where("guildId", "=", guildId)
+        .whereRef("guilds.systemChannelId", "=", "channels.id")
+        .executeTakeFirst();
 
-    const textChannel = guild.channels.find((c) => c.type === 2);
-    if (textChannel) redirect(`/channels/${guildId}/${textChannel.id}`);
+    if (systemChannel) {
+        return redirect(`/channels/${guildId}/${systemChannel.id}`);
+    }
 
     return (
         <>
-            <GuildChannels
-                guild={guild}
-                user={user}
-                initChannels={guild.channels}
-            />
+            <GuildChannels guildId={guildId} />
 
             <ClickLayer>
                 <div className={styles.container}>

@@ -1,0 +1,32 @@
+.container {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    overflow: hidden;
+    max-height: 500px;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-3);
+}
+
+.container > .image {
+    display: block;
+    max-width: 100%;
+}
+
+.controls {
+    width: 90%;
+    display: flex;
+    margin: 20px auto;
+    align-items: center;
+}
+
+.controls > svg {
+    display: block;
+    margin: 0 20px;
+}
+
+.controls > div {
+    flex: 1;
+}

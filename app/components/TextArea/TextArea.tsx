@@ -1,32 +1,40 @@
 "use client";
 
-import type { Attachment, AttachmentType, Channel, ChannelRecipient, Message } from "@/type";
 import { type ChangeEvent, useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { Editor, Transforms, Range, createEditor, Point, Node } from "slate";
+import { Editor, Transforms, Range, createEditor, Point, Node, addMark } from "slate";
 import { Slate, Editable, withReact, ReactEditor } from "slate-react";
+import type { Channel, ChannelRecipient, Message } from "@/type";
 import type { MessageFunctions } from "../Message/Message";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { lowercaseContains } from "@/lib/strings";
-import { getNanoIdInt } from "@/lib/insertions";
 import { fileTypeFromStream } from "file-type";
 import type { CustomEditor } from "@/slate";
 import { withHistory } from "slate-history";
+import { getNanoIdInt } from "@/lib/utils";
 import styles from "./TextArea.module.css";
 import { nanoid } from "nanoid";
 import {
+    useDialogContext,
     TooltipTrigger,
     TooltipContent,
-    EmojiPicker,
+    DialogContent,
+    VoiceMessage,
     FilePreview,
     LoadingDots,
     UserMention,
+    MenuTrigger,
+    MenuContent,
+    EmojiButton,
+    MenuItem,
     Tooltip,
     Avatar,
+    Menu,
     Icon,
 } from "@components";
 import {
     useWindowSettings,
     useTriggerDialog,
+    useEmojiPicker,
     useSettings,
     useMessages,
     useMention,
@@ -169,11 +177,10 @@ export function TextArea({
     const reply = replies.find((r) => r.channelId === channel.id);
     const draft = drafts.find((d) => d.channelId === channel.id);
 
+    const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+    const [voiceMessage, setVoiceMessage] = useState<Blob | null>(null);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [usersTyping, setUsersTyping] = useState<string[]>([]);
-    const [loading, setLoading] = useState<{
-        [key: string]: boolean;
-    }>({});
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
@@ -188,6 +195,8 @@ export function TextArea({
     const renderElement = useCallback((props) => <Element {...props} />, []);
     const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
     const editor = useMemo(() => withMentions(withReact(withHistory(createEditor()))), []);
+
+    const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
 
     const text = serialize(editor.children);
     const canSend = text.length > 0 || attachments.length > 0;
@@ -260,7 +269,7 @@ export function TextArea({
             const stream = file.stream();
             const typeObj = await fileTypeFromStream(stream);
             const mimeType = typeObj?.mime?.split("/")[0];
-            const mime = mimeType ?? file.type.split("/")[0];
+            const mime = mimeType ?? "file";
             const type = ["image", "video", "audio"].includes(mime) ? mime : "file";
 
             const { width, height } = await new Promise<
@@ -368,6 +377,7 @@ export function TextArea({
 
     useEffect(() => {
         if (!mention || edit) return;
+
         insertMention(editor, mention);
         setMention(null);
     }, [mention]);
@@ -402,6 +412,7 @@ export function TextArea({
             mentions: [],
             roleMentions: [],
             channelMentions: [],
+            reactions: [],
             pinned: null,
             edited: null,
             createdAt: new Date(),
@@ -430,7 +441,7 @@ export function TextArea({
         editor.children = [{ type: "paragraph", children: [{ text: "" }] }];
 
         if (edit && messageObject) {
-            functions.editMessage();
+            functions?.startEditingMessage();
             return;
         } else {
             setDraft(channel.id, null);
@@ -461,18 +472,64 @@ export function TextArea({
         setLoading((prev) => ({ ...prev, unblockUser: false }));
     }
 
-    // console.log("Text: ", text);
+    useEffect(() => {
+        if (voiceMessage) {
+            const att = {
+                id: nanoid(),
+                file: voiceMessage,
+                ext: "webm",
+                url: URL.createObjectURL(voiceMessage),
+                type: "audio",
+                size: voiceMessage.size,
+                filename: "voice-message.webm",
+                spoiler: false,
+                voiceMessage: true,
+                description: "",
+                height: 0,
+                width: 0,
+            };
+
+            const temp = {
+                id: nanoid(),
+                content: null,
+                attachments: [att],
+                embeds: [],
+                author: user,
+                reference: reply?.messageId ?? null,
+                mentions: [],
+                roleMentions: [],
+                channelMentions: [],
+                reactions: [],
+                pinned: null,
+                edited: null,
+                createdAt: new Date(),
+                send: true,
+                error: false,
+                loading: true,
+            };
+
+            setMessages(temp);
+            if (reply?.messageId) setReply(channel.id, null);
+
+            setVoiceMessage(null);
+        }
+    }, [voiceMessage]);
 
     const textContainer = useMemo(
         () => (
             <div
                 className={styles.textContainer}
-                style={{ height: textAreaRef.current?.scrollHeight || 44 }}
+                ref={(el) => {
+                    if (el) {
+                        el.style.height = "auto";
+                        el.style.height = `${el.scrollHeight}px`;
+                    }
+                }}
             >
                 <div
                     ref={textAreaRef}
                     className={styles.textbox}
-                    onContextMenu={(e) => {
+                    onContextMenu={() => {
                         // setLayers({
                         //     settings: { type: "MENU", event: e },
                         //     content: {
@@ -546,10 +603,44 @@ export function TextArea({
                         }}
                     >
                         <Editable
+                            autoFocus
                             focus-id="text-area"
-                            renderElement={renderElement}
-                            renderLeaf={renderLeaf}
                             onKeyDown={onKeyDown}
+                            onPaste={async (e) => {
+                                // If text is more than 16000 characters, prevent paste
+                                // and add a .txt file instead to the attachments, unless it's full alreaddy
+                                // and if user is pasting a file, well just add it to the attachments
+                                const items = Array.from(e.clipboardData.items);
+                                const textItem = items.find((i) => i.type === "text/plain");
+
+                                if (textItem) {
+                                    textItem.getAsString((text) => {
+                                        if (text.length > 16000) {
+                                            e.preventDefault();
+
+                                            const blob = new Blob([text], { type: "text/plain" });
+                                            const file = new File([blob], "message.txt", {
+                                                type: "text/plain",
+                                            });
+
+                                            return handleFileSubmit([file], e as any);
+                                        }
+                                    });
+                                }
+
+                                const fileItem = items.find((i) => i.kind === "file");
+
+                                if (fileItem) {
+                                    e.preventDefault();
+                                    const file = fileItem.getAsFile();
+                                    if (file) {
+                                        handleFileSubmit([file], e as any);
+                                    }
+                                }
+                            }}
+                            renderLeaf={renderLeaf}
+                            renderElement={renderElement}
+                            id={`textarea${edit ? "-edit" : ""}-${channel.id}`}
                             placeholder={
                                 edit
                                     ? "Edit Message"
@@ -565,35 +656,53 @@ export function TextArea({
         [text, attachments, edit, draft]
     );
 
+    const container = document.getElementById(`text-area${edit ? "-edit" : ""}-${channel.id}`);
+
     if (edit) {
         return (
             <form
                 className={styles.form}
-                style={{ padding: "0 0 0 0", marginTop: "8px" }}
+                id={`text-area-edit-${channel.id}`}
+                style={{ padding: "0 0 0 0", margin: "8px 0 0 0" }}
             >
                 <div
+                    id="text-area"
                     className={styles.textArea}
                     style={{ marginBottom: "0" }}
                 >
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         <div
-                            id="text-area"
                             className={styles.input}
                             style={{ borderRadius: "8px" }}
                         >
                             {textContainer}
 
                             <div className={styles.toolsContainer}>
-                                <EmojiPicker />
+                                <EmojiButton
+                                    open={
+                                        emojiPickerData.open &&
+                                        emojiPickerData.container === container
+                                    }
+                                    setOpen={() => {
+                                        setEmojiPickerData({
+                                            open: true,
+                                            container,
+                                            placement: "top-end",
+                                        });
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             </form>
         );
-    } else if (!blocked.find((b) => b.id === friend?.id)) {
+    } else if (!blocked.find((b) => b.id === friend?.id) || channel.type !== 0) {
         return (
-            <form className={styles.form}>
+            <form
+                className={styles.form}
+                id={`text-area-${channel.id}`}
+            >
                 {reply && !edit && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
@@ -606,8 +715,8 @@ export function TextArea({
                         >
                             <div>
                                 <Icon
-                                    name="closeFilled"
                                     size={16}
+                                    name="closeFilled"
                                     viewbox={"0 0 14 14"}
                                 />
                             </div>
@@ -616,6 +725,7 @@ export function TextArea({
                 )}
 
                 <div
+                    id="text-area"
                     className={styles.textArea}
                     style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
@@ -648,10 +758,11 @@ export function TextArea({
                                         <div className={styles.avatar}>
                                             <Avatar
                                                 size={24}
-                                                src={recipient.avatar}
-                                                alt={recipient.displayName}
+                                                type="user"
                                                 status={recipient.status}
-                                                type="avatars"
+                                                fileId={recipient.avatar}
+                                                generateId={recipient.id}
+                                                alt={recipient.displayName}
                                             />
                                         </div>
 
@@ -684,7 +795,6 @@ export function TextArea({
                         )}
 
                         <div
-                            id="text-area"
                             className={styles.input}
                             style={{
                                 borderRadius: attachments.length > 0 ? "0 0 8px 8px" : "8px",
@@ -703,38 +813,48 @@ export function TextArea({
                                     style={{ display: "none" }}
                                 />
 
-                                <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        // setLayers({
-                                        //     settings: {
-                                        //         type: "MENU",
-                                        //         element: e.currentTarget,
-                                        //         firstSide: "TOP",
-                                        //         secondSide: "RIGHT",
-                                        //         gap: 10,
-                                        //     },
-                                        //     content: {
-                                        //         type: "FILE_INPUT",
-                                        //         openInput: () => fileInputRef.current?.click(),
-                                        //     },
-                                        // });
-                                    }}
-                                    onDoubleClick={(e) => {
-                                        e.preventDefault();
-                                        fileInputRef.current?.click();
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            fileInputRef.current?.click();
-                                        }
-                                    }}
-                                >
-                                    <div>
-                                        <Icon name="attach" />
-                                    </div>
-                                </button>
+                                <Menu placement="top-start">
+                                    <MenuTrigger>
+                                        <button
+                                            type="button"
+                                            onDoubleClick={(e) => {
+                                                e.preventDefault();
+                                                fileInputRef.current?.click();
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    fileInputRef.current?.click();
+                                                }
+                                            }}
+                                        >
+                                            <div>
+                                                <Icon name="add-circle" />
+                                            </div>
+                                        </button>
+                                    </MenuTrigger>
+
+                                    <MenuContent>
+                                        <MenuItem
+                                            leftIcon="upload"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            Upload File
+                                        </MenuItem>
+
+                                        <MenuItem
+                                            leftIcon="mic"
+                                            onClick={() => {
+                                                triggerDialog({
+                                                    type: "RECORD_VOICE_MESSAGE",
+                                                    data: { setVoiceMessage },
+                                                });
+                                            }}
+                                        >
+                                            Voice Message
+                                        </MenuItem>
+                                    </MenuContent>
+                                </Menu>
                             </div>
 
                             {textContainer}
@@ -742,19 +862,34 @@ export function TextArea({
                             <div className={styles.toolsContainer}>
                                 <button
                                     type="button"
-                                    onClick={() => {}}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setEmojiPickerData({
+                                            open: true,
+                                            container,
+                                            placement: "top-end",
+                                            tab: "gif",
+                                        });
+                                    }}
                                 >
                                     <Icon name="gif" />
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={() => {}}
-                                >
-                                    <Icon name="sticker" />
-                                </button>
-
-                                <EmojiPicker />
+                                {container && (
+                                    <EmojiButton
+                                        open={
+                                            emojiPickerData.open &&
+                                            emojiPickerData.container === container
+                                        }
+                                        setOpen={() => {
+                                            setEmojiPickerData({
+                                                open: true,
+                                                container,
+                                                placement: "top-end",
+                                            });
+                                        }}
+                                    />
+                                )}
 
                                 {(settings.sendButton || !width562) && (
                                     <button
@@ -920,4 +1055,114 @@ function word(
     }
 
     return { anchor: start, focus: end };
+}
+
+export function RecordVoiceMessage({ setVoiceMessage }: { setVoiceMessage: (blob: Blob) => void }) {
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [recording, setRecording] = useState(false);
+
+    const { setOpen } = useDialogContext();
+
+    useEffect(() => {
+        // Update time if recording
+        if (recording) {
+            const interval = setInterval(() => {
+                setRecordingTime((prev) => prev + 1);
+            }, 1000);
+
+            return () => clearInterval(interval);
+        } else {
+            setRecordingTime(0);
+        }
+    }, [recording]);
+
+    async function startRecording() {
+        setAudioBlob(null);
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const localAudioChunks: Blob[] = []; // Local variable to store chunks
+        const mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                localAudioChunks.push(e.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            // Create the Blob when recording stops
+            const blob = new Blob(localAudioChunks, { type: "audio/webm" });
+            setAudioBlob(blob); // Update state with the finalized Blob
+            stream.getTracks().forEach((track) => track.stop()); // Stop the stream
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
+        setMediaRecorder(mediaRecorder);
+    }
+
+    function stopRecording() {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+            setRecording(false);
+        }
+    }
+
+    function send() {
+        if (audioBlob) {
+            const file = new File([audioBlob], "voice-message.webm", {
+                type: "audio/webm",
+            });
+
+            setVoiceMessage(file);
+        }
+    }
+
+    return (
+        <DialogContent
+            showClose
+            confirmLabel="Send"
+            onConfirm={() => {
+                send();
+                setOpen(false);
+            }}
+            heading="Record Voice Message"
+            description="Record a voice message for your friends. Press the button to start recording and press it again to stop."
+        >
+            <div className={styles.voiceRecording}>
+                <button
+                    type="button"
+                    className="button blue submit"
+                    onClick={() => (recording ? stopRecording() : startRecording())}
+                >
+                    {recording ? "Stop Recording" : "Start Recording"}
+                </button>
+
+                <p className={styles.label}>Preview</p>
+
+                {audioBlob && <VoiceMessage blob={audioBlob} />}
+
+                {!audioBlob && (
+                    <div className={styles.preview}>
+                        <div
+                            className={styles.dot}
+                            style={{ backgroundColor: recording ? "var(--error-1)" : "" }}
+                        />
+
+                        <span className={styles.time}>
+                            {recording
+                                ? `${Math.floor(recordingTime / 60)}:${String(
+                                      recordingTime % 60
+                                  ).padStart(2, "0")}`
+                                : "0:00"}
+                        </span>
+
+                        <div className={styles.title}>{recording ? "Recording" : "- - - -"}</div>
+                    </div>
+                )}
+            </div>
+        </DialogContent>
+    );
 }

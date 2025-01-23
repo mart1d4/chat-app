@@ -1,31 +1,39 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger, Icon } from "@components";
+import type { DMChannel, GuildChannel, LocalMessage, ResponseMessage, UserGuild } from "@/type";
+import { TooltipContent, TooltipTrigger, MenuTrigger, Tooltip, Icon, Menu } from "@components";
+import { MessageMenuContent } from "../Layers/Menu/MenuContents/Message";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useEmojiPicker, useWindowSettings } from "@/store";
 import type { MessageFunctions } from "./Message";
-import { useWindowSettings } from "@/store";
 import styles from "./Message.module.css";
-import type { AppMessage } from "@/type";
+import { useRef } from "react";
 
 export function MessageMenu({
     message,
     functions,
+    channel,
+    guild,
     large,
     inline,
-    show,
-    hide,
 }: {
-    message: AppMessage;
+    message: ResponseMessage | LocalMessage;
     functions: MessageFunctions;
+    channel: DMChannel | GuildChannel;
+    guild: UserGuild | undefined;
     large?: boolean;
     inline?: boolean;
-    show?: boolean;
-    hide?: boolean;
 }) {
-    const shift = useWindowSettings((state) => state.shiftKeyDown);
+    const { shiftKeyDown: shift } = useWindowSettings();
     const user = useAuthenticatedUser();
 
+    const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
+    const hasVoice = !!message.attachments.find((a) => a.voiceMessage);
     const menuSender = message.author.id === user.id;
+    const emojiPickerRef = useRef(null);
+
+    const isPickerOpen =
+        emojiPickerData.open && emojiPickerData.container === emojiPickerRef.current;
 
     if ("loading" in message && message.loading) return null;
 
@@ -60,7 +68,6 @@ export function MessageMenu({
             text: "Translate",
             onClick: () => functions.translateMessageContent(),
             icon: "translate",
-            iconViewbox: "0 96 960 960",
         },
         MARK_UNREAD: {
             text: "Mark Unread",
@@ -79,7 +86,14 @@ export function MessageMenu({
         },
         ADD_REACTION: {
             text: "Add Reaction",
-            onClick: () => {},
+            onClick: () => {
+                setEmojiPickerData({
+                    open: true,
+                    container: emojiPickerRef.current,
+                    placement: "left-start",
+                    onClick: (emoji) => functions.addReaction(emoji),
+                });
+            },
             icon: "addReaction",
         },
         EDIT: {
@@ -94,27 +108,18 @@ export function MessageMenu({
         },
         MORE: {
             text: "More",
-            onClick: () => {
-                // setLayers({
-                //     settings: {
-                //         type: "MENU",
-                //         element: moreButton.current,
-                //         firstSide: "LEFT",
-                //         gap: 5,
-                //     },
-                //     content: {
-                //         type: "MESSAGE",
-                //         message,
-                //         channel,
-                //         guild,
-                //     },
-                // });
-            },
+            onClick: () => {},
             icon: "dots",
         },
         DELETE: {
             text: "Delete",
-            onClick: () => functions.deleteMessage(),
+            onClick: () => {
+                if ("error" in message && message.error) {
+                    functions.deleteMessageLocally();
+                } else {
+                    functions.deleteMessage();
+                }
+            },
             icon: "delete",
             dangerous: true,
         },
@@ -134,13 +139,52 @@ export function MessageMenu({
     function renderButton(button: keyof typeof buttons) {
         const { text, onClick, icon, iconViewbox, dangerous } = buttons[button];
 
+        if (button === "MORE") {
+            return (
+                <Menu placement="left-start">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <MenuTrigger>
+                                <button
+                                    key={text}
+                                    onClick={onClick}
+                                    className={dangerous ? styles.red : undefined}
+                                >
+                                    <Icon
+                                        name={icon}
+                                        viewbox={iconViewbox || undefined}
+                                    />
+                                </button>
+                            </MenuTrigger>
+                        </TooltipTrigger>
+
+                        <TooltipContent>{text}</TooltipContent>
+
+                        <MessageMenuContent
+                            guild={guild}
+                            channel={channel}
+                            message={message}
+                            functions={functions}
+                        />
+                    </Tooltip>
+                </Menu>
+            );
+        }
+
+        let id = "";
+        if (button === "ADD_REACTION") {
+            id = `emoji-picker-${message.id}`;
+        }
+
         return (
             <Tooltip>
                 <TooltipTrigger>
                     <button
+                        id={id}
                         key={text}
                         onClick={onClick}
                         className={dangerous ? styles.red : undefined}
+                        ref={button === "ADD_REACTION" ? emojiPickerRef : null}
                     >
                         <Icon
                             name={icon}
@@ -157,7 +201,11 @@ export function MessageMenu({
     return (
         <div
             className={styles.buttonContainer}
-            style={{ visibility: show ? "visible" : hide ? "hidden" : undefined }}
+            onContextMenu={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+            style={{ opacity: isPickerOpen ? 1 : undefined }}
         >
             <div
                 className={styles.buttonWrapper}
@@ -192,7 +240,10 @@ export function MessageMenu({
 
                             {renderButton("ADD_REACTION")}
 
-                            {!inline && (menuSender ? renderButton("EDIT") : renderButton("REPLY"))}
+                            {!inline &&
+                                (menuSender && !hasVoice
+                                    ? renderButton("EDIT")
+                                    : renderButton("REPLY"))}
 
                             {!shift || inline
                                 ? renderButton("MORE")

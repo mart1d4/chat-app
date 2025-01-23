@@ -231,16 +231,6 @@ const fileTypes = [
     },
 ];
 
-export function whichType(ext: string) {
-    for (const { type, extensions } of fileTypes) {
-        if (extensions.includes(ext)) {
-            return type;
-        }
-    }
-
-    return "blank";
-}
-
 const textExtensions = [
     "txt",
     "log",
@@ -348,3 +338,13 @@ const xmlExtensions = [
 export const readableExtensions = [
     ...new Set([...textExtensions, ...codeExtensions, ...xmlLikeExtensions]),
 ];
+
+export function whichType(ext: string) {
+    for (const { type, extensions } of fileTypes) {
+        if (extensions.includes(ext)) {
+            return type;
+        }
+    }
+
+    return "blank";
+}

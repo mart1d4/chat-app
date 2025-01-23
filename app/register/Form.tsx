@@ -1,10 +1,9 @@
 "use client";
 
-import { usernameRegex } from "@/lib/verifications";
 import { Input, LoadingDots } from "@components";
+import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
 import styles from "../Auth.module.css";
-import { getApiUrl } from "@/lib/urls";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -21,7 +20,12 @@ export default function Register() {
         if (isLoading) return;
         setIsLoading(true);
 
-        if (!usernameRegex.test(username)) {
+        if (["spark", "everyone", "here"].includes(username.toLowerCase())) {
+            setErrors((prev) => ({ ...prev, username: "Username is reserved." }));
+            return setIsLoading(false);
+        }
+
+        if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
             setErrors((prev) => ({
                 ...prev,
                 username: "Username can only use letters, numbers, underscores and periods.",
@@ -54,7 +58,7 @@ export default function Register() {
             return setIsLoading(false);
         }
 
-        const response = await fetch(`${getApiUrl()}/auth/register`, {
+        const response = await fetch(`${getApiUrl}/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -95,8 +99,8 @@ export default function Register() {
                             label="Username"
                             value={username}
                             error={errors.username}
-                            onChange={(value) => {
-                                setUsername(value);
+                            onChange={(v) => {
+                                setUsername(v);
                                 setErrors((prev) => ({ ...prev, username: "" }));
                             }}
                         />
@@ -109,8 +113,8 @@ export default function Register() {
                             label="Password"
                             value={password}
                             error={errors.password}
-                            onChange={(value) => {
-                                setPassword(value);
+                            onChange={(v) => {
+                                setPassword(v);
                                 setErrors((prev) => ({ ...prev, password: "" }));
                             }}
                         />
@@ -123,8 +127,8 @@ export default function Register() {
                             name="password-match"
                             error={errors.password}
                             label="Confirm Password"
-                            onChange={(value) => {
-                                setMatch(value);
+                            onChange={(v) => {
+                                setMatch(v);
                                 setErrors((prev) => ({ ...prev, password: "" }));
                             }}
                         />

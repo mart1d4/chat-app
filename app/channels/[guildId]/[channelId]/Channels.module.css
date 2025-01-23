@@ -116,12 +116,13 @@
 .channelIcon {
     width: 68px;
     height: 68px;
+    display: flex;
     margin-top: 16px;
     border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-1);
     background-color: var(--background-hover-2);
-    background-image: url("https://ucarecdn.com/e3633915-f76c-4b2e-be30-ac65a1bdd3be/");
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
 .friendUsername {

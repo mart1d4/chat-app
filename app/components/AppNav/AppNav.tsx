@@ -1,23 +1,25 @@
 "use client";
 
 import { useData, useNotifications, useShowChannels, useWindowSettings } from "@/store";
+import { Dialog, DialogContent, DialogTrigger, CreateGuild } from "@components";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
 
-export const AppNav = () => {
-    const user = useData((state) => state.user) as TCleanUser;
+export function AppNav() {
     const pings = useNotifications((state) => state.pings);
-    const channels = useData((state) => state.channels);
     const guilds = useData((state) => state.guilds);
+    const user = useAuthenticatedUser();
+
+    const channels = useData((state) => state.channels).filter((channel) =>
+        pings.find((ping) => ping.channelId === channel.id)
+    );
 
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
-    const showChannels = useShowChannels((state) => state.showChannels);
+    const { showChannels } = useShowChannels();
 
     if (!showChannels && !widthLimitPassed) return null;
-
-    const filteredChannels = channels.filter((channel) =>
-        pings.map((ping) => ping.channelId).includes(channel.id)
-    );
 
     const chatAppIcon = (
         <svg
@@ -67,52 +69,56 @@ export const AppNav = () => {
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
-                <div>
+                <NavIcon
+                    special={true}
+                    name="Direct Messages"
+                    link={"/channels/me"}
+                    svg={chatAppIcon}
+                />
+
+                {channels.map((channel) => (
                     <NavIcon
-                        special={true}
-                        name="Direct Messages"
-                        link={"/channels/me"}
-                        svg={chatAppIcon}
+                        key={channel.id}
+                        name={channel.name}
+                        link={`/channels/me/${channel.id}`}
+                        src={`${getCdnUrl}${channel.icon}`}
+                        user={channel.recipients.find((r) => r.id !== user.id)}
+                        count={pings.find((p) => p.channelId === channel.id)?.amount}
                     />
+                ))}
 
-                    {filteredChannels.map((channel) => (
-                        <NavIcon
-                            key={channel.id}
-                            name={channel.name}
-                            link={`/channels/me/${channel.id}`}
-                            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${channel.icon}/`}
-                            count={pings.find((p) => p.channelId === channel.id)?.amount}
-                            user={channel.recipients.find((r) => r.id !== user.id)}
-                        />
-                    ))}
-
-                    <div className={styles.listItem}>
-                        <div className={styles.separator} />
-                    </div>
-
-                    {guilds.map((guild) => (
-                        <NavIcon
-                            key={guild.id}
-                            name={guild.name}
-                            guild={guild}
-                            link={`/channels/${guild.id}`}
-                            src={
-                                guild.icon
-                                    ? `${process.env.NEXT_PUBLIC_CDN_URL}/${guild.icon}/`
-                                    : undefined
-                            }
-                            count={0}
-                        />
-                    ))}
-
-                    <NavIcon
-                        green
-                        count={0}
-                        name="Add a Server"
-                        svg={addServerIcon}
-                        link={"/channels/add"}
-                    />
+                <div className={styles.listItem}>
+                    <div className={styles.separator} />
                 </div>
+
+                {guilds.map((guild) => (
+                    <NavIcon
+                        count={0}
+                        guild={guild}
+                        key={guild.id}
+                        name={guild.name}
+                        link={`/channels/${guild.id}`}
+                        src={guild.icon ? `${getCdnUrl}${guild.icon}` : undefined}
+                    />
+                ))}
+
+                <Dialog>
+                    <DialogTrigger>
+                        <div>
+                            <NavIcon
+                                green
+                                count={0}
+                                name="Add a Server"
+                                svg={addServerIcon}
+                                link={"/channels/add"}
+                            />
+                        </div>
+                    </DialogTrigger>
+
+                    <DialogContent blank>
+                        <CreateGuild />
+                    </DialogContent>
+                </Dialog>
 
                 <NavIcon
                     green
@@ -124,4 +130,4 @@ export const AppNav = () => {
             </ul>
         </nav>
     );
-};
+}

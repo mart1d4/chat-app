@@ -1,0 +1,45 @@
+.slider {
+    height: 40px;
+    display: flex;
+    position: relative;
+    align-items: center;
+}
+
+.slider > input {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 4px;
+    background-color: var(--background-6);
+}
+
+.progress {
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 4px;
+    position: absolute;
+    background-color: var(--accent-border);
+}
+
+.thumb {
+    top: 50%;
+    right: 0;
+    width: 10px;
+    height: 24px;
+    cursor: ew-resize;
+    border-radius: 3px;
+    position: absolute;
+    background-color: #ffffff;
+    box-shadow: var(--shadow-low);
+    transform: translate(50%, -50%);
+}

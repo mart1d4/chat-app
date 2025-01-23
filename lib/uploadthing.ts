@@ -17,6 +17,5 @@ export const { useUploadThing, uploadFiles } = generateReactHelpers({
     url: `http://localhost:8080/api/uploadthing`,
 });
 
-export function getCdnUrl() {
-    return `${cdnUrl}`;
-}
+export const getCdnUrl = cdnUrl;
+export const getApiUrl = apiUrl;

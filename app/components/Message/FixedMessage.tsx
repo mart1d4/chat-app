@@ -1,12 +1,20 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
-import { AttachmentList, Avatar, Dialog, DialogTrigger, Icon } from "@components";
 import { getLongDate, getMidDate } from "@/lib/time";
 import styles from "./FixedMessage.module.css";
-import { FormatMessage } from "./Format";
+import { FormatMessage } from "./Formatter/Format";
 import type { AppMessage } from "@/type";
 import { useState } from "react";
+import {
+    AttachmentList,
+    TooltipContent,
+    TooltipTrigger,
+    DialogTrigger,
+    Tooltip,
+    Dialog,
+    Avatar,
+    Icon,
+} from "@components";
 
 export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?: boolean }) {
     const [messageContent, setMessageContent] = useState<JSX.Element | null>(null);
@@ -73,7 +81,9 @@ export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?
                             <div className={styles.userAvatarReply}>
                                 <Avatar
                                     size={16}
-                                    src={message.reference.author.avatar}
+                                    type="user"
+                                    fileId={message.reference.author.avatar}
+                                    generateId={message.reference.author.id}
                                     alt={message.reference.author.displayName}
                                 />
                             </div>
@@ -124,7 +134,9 @@ export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?
                     <div className={styles.userAvatar}>
                         <Avatar
                             size={40}
-                            src={message.author.avatar}
+                            type="user"
+                            fileId={message.author.avatar}
+                            generateId={message.author.id}
                             alt={message.author.displayName}
                         />
                     </div>

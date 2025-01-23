@@ -11,11 +11,11 @@ CREATE TABLE IF NOT EXISTS `users` (
 	`custom_status` VARCHAR(128) NULL,
 	`status` enum('online', 'idle', 'dnd', 'invisible', 'offline') NOT NULL DEFAULT 'online',
 
-	`avatar` VARCHAR(100) NOT NULL,
+	`avatar` VARCHAR(100) NULL,
 	`banner` VARCHAR(100) NULL,
 
-	`primary_color` VARCHAR(7) NOT NULL,
-	`accent_color` VARCHAR(7) NOT NULL,
+	`banner_color` VARCHAR(7) NOT NULL,
+	`accent_color` VARCHAR(7) NULL,
 
 	`password` VARCHAR(255) NOT NULL,
 	`password_reset_token` VARCHAR(255) NULL,
@@ -390,7 +390,8 @@ CREATE TABLE IF NOT EXISTS `channel_mentions` (
 
 CREATE TABLE IF NOT EXISTS `message_reactions` (
 	`message_id` BIGINT NOT NULL,
-	`emoji_id` BIGINT NOT NULL,
+	`emoji_id` BIGINT NULL,
+	`emoji_name` VARCHAR(128) NULL, -- for default emojis that are not in the database
 	`user_id` BIGINT NOT NULL,
 
 	UNIQUE KEY `reactions_message_id_idx` (`message_id`, `user_id`, `emoji_id`),

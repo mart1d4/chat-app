@@ -1,0 +1,84 @@
+.preview {
+    height: 48px;
+    display: flex;
+    padding: 0 16px;
+    min-width: 300px;
+    align-items: center;
+    border-radius: 24px;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
+}
+
+.preview > .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--background-6);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.preview > .time {
+    opacity: 0.8;
+    margin: 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-code);
+}
+
+.preview > .title {
+    flex: 1;
+    opacity: 0.8;
+    display: flex;
+    font-size: 16px;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+}
+
+.preview > .play {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    user-select: none;
+    margin-left: -6px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-1);
+    transition: background 0.1s ease-in-out, transform 0.1s ease-in-out;
+    background: linear-gradient(
+        150deg,
+        hsl(235 85.5% 67.451%) 16.55%,
+        hsl(235 51.44% 52.353%) 104.36%
+    );
+}
+
+.preview > .play:hover,
+.preview > .play:focus-visible {
+    background: linear-gradient(151deg, hsl(235 86.1% 71.76%) 17.78%, hsl(235 85.5% 67.45%) 82.22%);
+}
+
+.preview > .play:active {
+    transform: scale(0.875);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+        linear-gradient(151.11deg, hsl(235 85.5% 67.451%) 16.55%, hsl(235 51.44% 52.353%) 104.36%);
+}
+
+.preview > :last-child {
+    display: flex;
+    cursor: pointer;
+    margin-right: -6px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+}
+
+.waveform {
+    flex: 1;
+    height: 32px;
+    cursor: pointer;
+    margin-left: 12px;
+}

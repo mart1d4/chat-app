@@ -1,6 +1,6 @@
 import { Kysely, CamelCasePlugin, MysqlDialect } from "kysely";
+import type { DB } from "./db.types";
 import { createPool } from "mysql2";
-import { DB } from "./db.types";
 
 const { DB_HOST, DB_NAME, DB_PORT, DB_USER, DB_PASSWORD, DB_CONNECTION_LIMIT } = process.env;
 
@@ -18,21 +18,17 @@ export const db =
     new Kysely<DB>({
         dialect: new MysqlDialect({
             pool: createPool({
-                database: process.env.DB_NAME,
-                host: process.env.DB_HOST,
-                user: process.env.DB_USER,
-                password: process.env.DB_PASSWORD,
-                port: parseInt(process.env.DB_PORT),
-                connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT),
+                database: DB_NAME,
+                host: DB_HOST,
+                user: DB_USER,
+                password: DB_PASSWORD,
+                port: DB_PORT,
+                connectionLimit: DB_CONNECTION_LIMIT,
                 typeCast(field, next) {
-                    if (field.type === "LONGLONG") {
-                        return next();
-                        return field.string();
-                    } else if (field.type === "BLOB") {
+                    if (field.type === "BLOB") {
                         return JSON.parse(field.string() || "{}");
-                    } else {
-                        return next();
                     }
+                    return next();
                 },
             }),
         }),

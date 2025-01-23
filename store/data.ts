@@ -1,4 +1,4 @@
-import type { AppChannel, AppUser, Friend, Guild, UnknownUser } from "@/type";
+import type { AppUser, DMChannelWithRecipients, KnownUser, UnknownUser, UserGuild } from "@/type";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
 
@@ -6,38 +6,44 @@ export interface UseDataState {
     user: AppUser | null;
     token: string | null;
 
-    channels: AppChannel[];
-    guilds: Guild[];
-    friends: Friend[];
+    guilds: UserGuild[];
+    channels: DMChannelWithRecipients[];
+    friends: KnownUser[];
+    received: KnownUser[];
+    sent: KnownUser[];
     blocked: UnknownUser[];
-    received: UnknownUser[];
-    sent: UnknownUser[];
 
     setUser: (user: AppUser | null) => void;
+    updateUser: (user: Partial<AppUser>) => void;
     setToken: (token: string | null) => void;
 
-    setChannels: (channels: AppChannel[]) => void;
-    setGuilds: (guilds: Guild[]) => void;
-    setFriends: (friends: Friend[]) => void;
-    setBlocked: (blocked: UnknownUser[]) => void;
-    setReceived: (received: UnknownUser[]) => void;
-    setSent: (sent: UnknownUser[]) => void;
+    setGuilds: (guilds: UserGuild[]) => void;
 
-    modifyUser: (user: Partial<AppUser>) => void;
+    setChannels: (channels: DMChannelWithRecipients[]) => void;
+    removeChannelRecipient: (channelId: number, userId: number) => void;
+    changeChannelOwner: (channelId: number, userId: number) => void;
+
+    setFriends: (friends: KnownUser[]) => void;
+    setReceived: (received: KnownUser[]) => void;
+    setSent: (sent: KnownUser[]) => void;
+    setBlocked: (blocked: UnknownUser[]) => void;
+
+    modifyUser: (user: Partial<KnownUser | UnknownUser>) => void;
 
     addUser: <T extends "friends" | "blocked" | "received" | "sent">(
-        user: T extends "friends" ? Friend : UnknownUser,
+        user: T extends "blocked" ? UnknownUser : KnownUser,
         type: T
     ) => void;
     removeUser: (id: number, type: string) => void;
 
-    addChannel: (channel: AppChannel) => void;
-    updateChannel: (id: number, channel: Partial<AppChannel>) => void;
+    addChannel: (channel: DMChannelWithRecipients) => void;
+    updateChannel: (id: number, channel: Partial<DMChannelWithRecipients>) => void;
+    changeChannelIcon: (channelId: number, icon: string | null) => void;
     removeChannel: (id: number) => void;
     moveChannelUp: (id: number) => void;
 
-    addGuild: (guild: Guild) => void;
-    updateGuild: (id: number, guild: Partial<Guild>) => void;
+    addGuild: (guild: UserGuild) => void;
+    updateGuild: (id: number, guild: Partial<UserGuild>) => void;
     removeGuild: (id: number) => void;
     moveGuildUp: (id: number) => void;
 
@@ -56,11 +62,57 @@ export const useData = create<UseDataState>()((set) => ({
     sent: [],
 
     setUser: (user) => set(() => ({ user })),
+    updateUser: (user) => set((state) => ({ user: { ...(state.user as AppUser), ...user } })),
     setToken: (token) => set(() => ({ token })),
 
     setChannels: (channels) => {
         set((state) => ({
             channels: channels.map((c) => getFullChannel(c, state.user)).filter((c) => !!c),
+        }));
+    },
+
+    removeChannelRecipient: (channelId, userId) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id === channelId) {
+                    return {
+                        ...c,
+                        recipients: c.recipients.filter((r) => r.id !== userId),
+                    };
+                }
+
+                return c;
+            }),
+        }));
+    },
+
+    changeChannelOwner: (channelId, userId) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id === channelId) {
+                    return {
+                        ...c,
+                        ownerId: userId,
+                    };
+                }
+
+                return c;
+            }),
+        }));
+    },
+
+    changeChannelIcon: (channelId, icon) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id === channelId) {
+                    return {
+                        ...c,
+                        icon,
+                    };
+                }
+
+                return c;
+            }),
         }));
     },
 
@@ -111,21 +163,21 @@ export const useData = create<UseDataState>()((set) => ({
         return set((state) => {
             if (type === "friends") {
                 return {
-                    friends: [user as Friend, ...state.friends],
+                    friends: [user as KnownUser, ...state.friends],
                     received: state.received.filter((r) => r.id !== user.id),
                     sent: state.sent.filter((r) => r.id !== user.id),
                 };
             } else if (type === "blocked") {
                 return {
-                    blocked: [user, ...state.blocked],
+                    blocked: [user as UnknownUser, ...state.blocked],
                     friends: state.friends.filter((f) => f.id !== user.id),
                     received: state.received.filter((r) => r.id !== user.id),
                     sent: state.sent.filter((r) => r.id !== user.id),
                 };
             } else if (type === "received") {
-                return { received: [user, ...state.received] };
+                return { received: [user as KnownUser, ...state.received] };
             } else if (type === "sent") {
-                return { sent: [user, ...state.sent] };
+                return { sent: [user as KnownUser, ...state.sent] };
             }
 
             return state;

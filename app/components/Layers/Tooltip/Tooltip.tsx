@@ -42,7 +42,7 @@ interface TooltipOptions {
     avatar?: boolean;
     big?: boolean;
     wide?: boolean;
-    showOn?: boolean;
+    show?: boolean;
     background?: string;
     color?: string;
 }
@@ -57,14 +57,13 @@ export function useTooltip({
     avatar = false,
     big = false,
     wide = false,
-    showOn,
+    show = true,
     background,
     color,
 }: TooltipOptions = {}) {
     const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
 
-    const open = (controlledOpen ?? uncontrolledOpen) && (showOn ?? true);
-    // const open = true;
+    const open = (controlledOpen ?? uncontrolledOpen) && show;
     const setOpen = setControlledOpen ?? setUncontrolledOpen;
     const arrowRef = useRef<HTMLDivElement | null>(null);
 
@@ -120,7 +119,7 @@ export function useTooltip({
             background,
             color,
         }),
-        [open, setOpen, interactions, data, arrowRef, avatar, big, wide, background, color]
+        [open, setOpen, interactions, data, arrowRef]
     );
 }
 
@@ -160,6 +159,7 @@ export const TooltipTrigger = forwardRef<
             context.getReferenceProps({
                 ref,
                 ...props,
+                // @ts-ignore - this is a hack to add the data-state attribute
                 ...children.props,
                 "data-state": context.open ? "open" : "closed",
             })
@@ -182,14 +182,14 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
         const context = useTooltipContext();
         const ref = useMergeRefs([context.refs.setFloating, propRef]);
 
-        const { isMounted, styles: tStyles } = useTransitionStyles(context, {
+        const { isMounted, styles: tStyles } = useTransitionStyles(context as any, {
             duration: 50,
             initial: {
-                transform: "scale(0.95)",
+                transform: "scale(0.875)",
                 opacity: 0,
             },
             close: {
-                transform: "scale(0.98)",
+                transform: "scale(0.875)",
                 opacity: 0,
             },
         });
@@ -210,10 +210,10 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                 >
                     <div style={{ ...tStyles }}>
                         <FloatingArrow
-                            ref={context.arrowRef}
-                            context={context}
                             width={10}
                             height={5}
+                            context={context}
+                            ref={context.arrowRef}
                             fill={context.background || "var(--background-dark-1)"}
                         />
 

@@ -1,28 +1,71 @@
 "use client";
 
-import { colors, labels, masks, rectPlacements, rectSizes } from "@/lib/avatars";
+import { colors, labels, masks, rectPlacements, rectSizes } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@components";
+import { getRandomImage } from "@/lib/utils";
+import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./Avatar.module.css";
 import type { User } from "@/type";
 
-const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
-
 export function Avatar({
     src,
-    alt,
-    size,
+    alt = "Avatar",
+    size = 40,
+    type,
+    fileId,
+    generateId,
+    guildName,
     status,
-    tooltip,
-    relativeSrc,
+    showStatusTooltip,
 }: {
-    src: string;
+    src?: string;
     alt: string;
-    size: 16 | 24 | 32 | 40 | 80 | 120;
+    size?: 16 | 24 | 32 | 40 | 80 | 120;
+    type?: "user" | "channel" | "guild";
+    fileId?: string | null;
+    generateId?: number;
+    guildName?: string;
     status?: User["status"];
-    tooltip?: boolean;
-    relativeSrc?: boolean;
+    showStatusTooltip?: boolean;
 }) {
-    const url = relativeSrc ? src : `${cdnUrl}${src}`;
+    if (guildName) {
+        return (
+            <div
+                style={{
+                    width: size,
+                    height: size,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: size / 2,
+                    color: "white",
+                    background: "var(--background-5)",
+                    borderRadius: "50%",
+                }}
+            >
+                {guildName
+                    .split(" ")
+                    .map((word) => word[0])
+                    .join("")}
+            </div>
+        );
+    }
+
+    // src is for static images
+    // fileId is for dynamic images such as avatars or channel icons
+    // if fileId is not provided, we will use the provided generateId to get a default avatar or icon
+    let url = src;
+
+    if (fileId) {
+        url = `${getCdnUrl}${fileId}`;
+    } else {
+        if (!generateId) {
+            throw new Error("generateId is required if fileId is not provided");
+        }
+
+        url = getRandomImage(generateId, type === "user" ? "avatar" : "icon");
+    }
+
     const rectPlacement = rectPlacements[size];
     const rectSize = rectSizes[size];
 
@@ -34,10 +77,54 @@ export function Avatar({
             height={rectSize}
             rx={rectSize / 2}
             ry={rectSize / 2}
-            fill={colors[status]}
-            mask={`url(#${masks[status]})`}
+            fill={colors[status as keyof typeof colors]}
+            mask={`url(#${masks[status as keyof typeof masks]})`}
         />
     ) : null;
+
+    if (type === "guild") {
+        <div
+            className={styles.container}
+            style={{ width: size, height: size }}
+        >
+            {/* if no filedId, use first letters of each word of guild name, otherwise display the image*/}
+
+            {fileId ? (
+                <img
+                    src={url}
+                    alt={alt}
+                    width={size}
+                    height={size}
+                    draggable={false}
+                />
+            ) : (
+                <svg
+                    width={size}
+                    height={size}
+                    viewBox={`0 0 ${size} ${size}`}
+                    aria-hidden="true"
+                    className={styles.svg}
+                >
+                    <foreignObject
+                        x={0}
+                        y={0}
+                        width={size}
+                        height={size}
+                        overflow="visible"
+                    >
+                        <div className={styles.container}>
+                            <div className={styles.guildName}>
+                                {guildName
+                                    ?.split(" ")
+                                    .map((word) => word[0])
+                                    .join("")}
+                            </div>
+                        </div>
+                    </foreignObject>
+                </svg>
+            )}
+        </div>;
+    }
 
     if (status) {
         return (
@@ -233,14 +320,14 @@ export function Avatar({
                         </div>
                     </foreignObject>
 
-                    {status && tooltip && (
+                    {status && showStatusTooltip && (
                         <Tooltip>
                             <TooltipTrigger>{statusObject}</TooltipTrigger>
-                            <TooltipContent>{labels[status]}</TooltipContent>
+                            <TooltipContent>{labels[status as keyof typeof labels]}</TooltipContent>
                         </Tooltip>
                     )}
 
-                    {status && !tooltip && statusObject}
+                    {status && !showStatusTooltip && statusObject}
                 </svg>
             </div>
         );

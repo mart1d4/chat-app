@@ -1,0 +1,382 @@
+.popup {
+    width: 440px;
+    min-height: 200px;
+    max-height: 720px;
+    background-color: var(--background-4);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    box-shadow: var(--elevation-low), var(--elevation-high-dark);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.header {
+    z-index: 2;
+    padding: 16px;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    position: relative;
+    overflow-x: hidden;
+    align-items: stretch;
+    word-wrap: break-word;
+    flex-direction: column;
+    border-radius: 4px 4px 0 0;
+    justify-content: flex-start;
+    box-shadow: var(--elevation-high-dark);
+}
+
+.header > button {
+    top: 16px;
+    padding: 0;
+    right: 16px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    position: absolute;
+    color: var(--foreground-5);
+    background-color: transparent;
+}
+
+.header > button:hover,
+.header > button:focus-visible {
+    color: var(--foreground-2);
+}
+
+.header > h1 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 20px;
+    margin-right: 40px;
+    text-transform: none;
+    color: var(--foreground-1);
+}
+
+.header > div:nth-child(2) {
+    margin-top: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 16px;
+    text-transform: none;
+    color: var(--foreground-3);
+}
+
+.input {
+    position: relative;
+    flex: 1 1 auto;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--background-1);
+    height: 32px;
+}
+
+.input > div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.input > div > svg {
+    color: var(--foreground-2);
+    width: 16px;
+    height: 16px;
+}
+
+.input > input {
+    font-size: 16px;
+    line-height: 32px;
+    height: 30px;
+    min-width: 48px;
+    appearance: none;
+    margin: 1px;
+    padding: 0 32px 0 8px;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: none;
+    resize: none;
+    flex: 1;
+    color: var(--foreground-3);
+}
+
+.input > input:focus {
+    outline: none;
+}
+
+.input > input::placeholder {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--foreground-4);
+}
+
+.scroller {
+    flex: 1 1 auto;
+    padding: 14px 0;
+    max-height: 190px;
+    overflow: hidden scroll;
+}
+
+.scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroller::-webkit-scrollbar-track {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller::-webkit-scrollbar-thumb {
+    border: 2px var(--background-4) solid;
+    background-color: var(--background-4);
+}
+
+.scroller:hover::-webkit-scrollbar-thumb {
+    background-color: var(--background-1);
+}
+
+.friend {
+    display: flex;
+    justify-content: space-between;
+    border-radius: 3px;
+    height: 44px;
+    padding: 6px 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 1px 4px 1px 12px;
+    overflow: hidden;
+    transition: none;
+}
+
+.friend:hover,
+.friend:focus-within {
+    background-color: var(--background-5);
+}
+
+.friend > div {
+    display: flex;
+    align-items: center;
+    margin-right: 4px;
+    overflow: hidden;
+}
+
+.friendAvatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.friendAvatar > img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.friendUsername {
+    flex: 1 1 auto;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 16px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--foreground-1);
+    text-transform: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+button.inviteButton {
+    min-width: 72px;
+    transition: all 0s;
+    border: 1px solid var(--success-1);
+}
+
+.inviteButton.failed {
+    border-color: var(--error-1) !important;
+    background-color: var(--error-1) !important;
+}
+
+.inviteButton.sent {
+    cursor: not-allowed;
+    border-color: transparent !important;
+    background-color: transparent !important;
+}
+
+.friend:hover > .inviteButton,
+.friend:focus-visible > .inviteButton {
+    background-color: var(--success-1);
+}
+
+.friend:hover > .inviteButton:hover,
+.inviteButton:focus-visible {
+    border-color: var(--success-2);
+    background-color: var(--success-2);
+}
+
+.friend:hover > .inviteButton:active {
+    border-color: var(--success-3);
+    background-color: var(--success-3);
+}
+
+.separator {
+    height: 1px;
+    margin: 0 10px;
+    box-shadow: 0 -1px 0 hsla(0, 0%, 100%, 0.04);
+}
+
+.footer {
+    flex: 0 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.footer button {
+    height: 38px;
+}
+
+.footer > h1 {
+    margin-bottom: 8px;
+    color: var(--foreground-3);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02rem;
+}
+
+.footer > div:nth-child(2) {
+    flex: 1 1 auto;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-3);
+    background-color: var(--background-2);
+    border: none;
+    flex-wrap: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer > div:nth-child(2) > div {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.footer > div:nth-child(2) > div > input {
+    border: none;
+    padding: 10px;
+    height: 40px;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 3px;
+    color: var(--foreground-2);
+    background-color: var(--background-2);
+}
+
+.footer > div:nth-child(2) > div > input:active,
+.footer > div:nth-child(2) > div > input:focus {
+    outline: none;
+}
+
+.footer > div:nth-child(2) > button {
+    margin-right: 4px;
+    width: 75px;
+    height: 32px;
+}
+
+.footer > div:last-child {
+    color: var(--foreground-3);
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+.noFriends {
+    flex: 1 1 auto;
+    display: flex;
+    font-weight: 500;
+    flex-wrap: nowrap;
+    line-height: 20px;
+    text-align: center;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 20px 40px;
+    color: var(--foreground-5);
+}
+
+.noFriends > div:first-child {
+    width: 171px;
+    height: 86px;
+    margin-bottom: 20px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url("https://ucarecdn.com/01c48cd6-f083-4fe8-870c-328ceec1edbf/");
+}
+
+.noFriends > button {
+    width: 100%;
+    margin-top: 20px;
+    font-weight: 500;
+    color: var(--foreground-1);
+}
+
+.editLink {
+    cursor: pointer;
+    color: var(--accent-light);
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 487px) {
+    .popup {
+        width: 100dvw;
+        min-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .scroller {
+        max-height: unset;
+    }
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+}

@@ -1,0 +1,172 @@
+.controls {
+    width: 100%;
+    display: flex;
+    max-width: 550px;
+    margin-top: 12px;
+    border-radius: 3px;
+    align-items: center;
+    background-color: var(--background-dark-1);
+}
+
+.play,
+.volume {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    display: flex;
+    flex: 0 0 auto;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-4);
+    background-color: transparent;
+    transition: transform 0.15s ease;
+}
+
+.volume {
+    cursor: default;
+}
+
+.play:hover {
+    color: var(--foreground-1);
+}
+
+.play:active {
+    transform: translateY(1px);
+}
+
+.play {
+    margin-right: 8px;
+}
+
+.duration {
+    margin: 4px;
+    height: 12px;
+    flex: 0 0 auto;
+}
+
+.duration > span {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 12px;
+    user-select: none;
+    display: inline-block;
+    vertical-align: text-top;
+    font-family: var(--font-code);
+}
+
+.progressContainer {
+    width: 100%;
+    display: flex;
+    align-self: stretch;
+}
+
+.progressContainer > div {
+    margin: 0 7px;
+    display: flex;
+    flex: 1 1 auto;
+    cursor: pointer;
+    position: relative;
+    align-self: stretch;
+    align-items: center;
+}
+
+.bar {
+    height: 6px;
+    flex: 1 1 auto;
+    position: relative;
+    border-radius: 3px;
+    background-color: hsl(210 9.259% 78.824% /0.3);
+}
+
+.bar > div:not(:last-child) {
+    top: 0;
+    left: 0;
+    height: 100%;
+    position: absolute;
+    border-radius: 3px;
+}
+
+.bar > .progress {
+    z-index: 3;
+    background-color: var(--accent-1);
+}
+
+.bar > .buffer {
+    z-index: 1;
+    opacity: 0.3;
+    background-color: var(--foreground-3);
+}
+
+.bar > .preview {
+    z-index: 2;
+    opacity: 0;
+    max-width: 100%;
+    background-color: var(--foreground-2);
+}
+
+.progressContainer > div:hover .preview {
+    opacity: 0.3;
+}
+
+.bar > .progress > .grabber {
+    top: 50%;
+    right: 0;
+    z-index: 2;
+    width: 10px;
+    height: 10px;
+    cursor: grab;
+    margin-top: -5px;
+    margin-right: -5px;
+    border-radius: 5px;
+    position: absolute;
+    transform: scale(0);
+    transform-origin: 50% 50%;
+    background-color: var(--accent-2);
+    transition: transform 0.25s ease-in-out, background-color 0.25s linear;
+}
+
+.bubble {
+    opacity: 0;
+    top: -28px;
+    width: auto;
+    height: 18px;
+    display: flex;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    user-select: none;
+    border-radius: 3px;
+    position: absolute;
+    text-align: center;
+    align-items: center;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: opacity 0.2s ease-out;
+    background-color: var(--background-dark-2);
+}
+
+.bubble::before {
+    width: 0;
+    height: 0;
+    top: 100%;
+    left: 50%;
+    content: "";
+    margin-left: -5px;
+    position: absolute;
+    pointer-events: none;
+    border: 5px solid transparent;
+    border-top-color: var(--background-dark-2);
+}
+
+.progressContainer > div:hover .bubble {
+    opacity: 1;
+}
+
+.progressContainer > div:hover .progress > .grabber {
+    transform: scale(1);
+}
+
+.controls > :last-child {
+    position: relative;
+}

@@ -32,8 +32,12 @@ export function AddFriend() {
                 body: { username: input },
             });
 
-            if (data) setValid(data.message);
-            else if (errors) setErrors(errors);
+            if (data) {
+                setValid(data.message);
+                setInput("");
+            } else if (errors) {
+                setErrors(errors);
+            }
         } catch (error) {
             console.error(error);
             setErrors({ server: "Something went wrong." });

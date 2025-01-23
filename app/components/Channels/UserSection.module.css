@@ -28,7 +28,7 @@
 }
 
 .avatarWrapper:hover,
-.avatarWrapper.active {
+.avatarWrapper[data-state="open"] {
     background-color: var(--background-5);
 }
 

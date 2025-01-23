@@ -1,0 +1,137 @@
+.channelType {
+    margin-bottom: 20px;
+}
+
+.channelType > h2 {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    margin-bottom: 8px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-2);
+}
+
+.typePick {
+    width: 100%;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
+}
+
+.typePick:hover,
+.typePick:focus-visible {
+    color: var(--foreground-2);
+    background-color: var(--background-hover-1);
+}
+
+.typePick:active,
+.typePick.active {
+    color: var(--foreground-1);
+    background-color: var(--background-hover-2);
+}
+
+.typePick > div {
+    gap: 8px;
+    display: flex;
+    padding: 10px 12px;
+    border-radius: 4px;
+    align-items: center;
+}
+
+.typePick .check {
+    order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.typePick > div > div:last-child {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-right: 8px;
+    order: 1;
+}
+
+.typePick .icon {
+    opacity: 0.6;
+    display: flex;
+    margin-right: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.typePick h3 {
+    display: flex;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+    align-items: center;
+    color: var(--foreground-2);
+}
+
+.typePick .content > div {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 18px;
+    white-space: pre-wrap;
+    color: var(--foreground-3);
+}
+
+.privateCheck {
+    display: flex;
+    margin: 20px 0;
+    user-select: none;
+    flex-direction: column;
+}
+
+.privateCheck > div:first-child {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.privateCheck > div:first-child > label {
+    flex: 1;
+    display: block;
+    overflow: hidden;
+    color: var(--foreground-1);
+    line-height: 24px;
+    font-size: 16px;
+    font-weight: 500;
+    word-wrap: break-word;
+    cursor: pointer;
+}
+
+.privateCheck > div:first-child > label > svg {
+    position: relative;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    opacity: 0.6;
+    margin-right: 3px;
+}
+
+.privateCheck > div:first-child > div {
+    flex: 0 0 auto;
+}
+
+.privateCheck > div:last-child {
+    margin-top: 8px;
+    color: var(--foreground-3);
+    user-select: none;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.channelType + div svg {
+    color: var(--foreground-3);
+}

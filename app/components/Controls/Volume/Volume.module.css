@@ -1,0 +1,104 @@
+.container {
+    position: relative;
+}
+
+.container:hover > .changer,
+.container:focus-within > .changer,
+.container:hover .preventHide,
+.container:focus-within .preventHide {
+    visibility: visible;
+}
+
+.container > button {
+    display: flex;
+    flex: 0 0 auto;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-4);
+    background-color: transparent;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.container > button:hover,
+.container > button:focus-visible {
+    color: var(--foreground-2);
+}
+
+.container > button:active {
+    transform: translateY(1px);
+}
+
+.changer {
+    left: 50%;
+    z-index: 4;
+    height: 82px;
+    display: flex;
+    cursor: pointer;
+    padding: 8px 4px;
+    margin: 4px 0 0 0;
+    visibility: hidden;
+    border-radius: 8px;
+    position: absolute;
+    align-items: center;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    background-color: var(--background-dark-1);
+}
+
+.bar {
+    width: 6px;
+    height: 72px;
+    flex: 1 1 auto;
+    border-radius: 2px;
+    position: relative;
+    background-color: hsl(210 9.259% 78.824% /0.3);
+}
+
+.bar > div:not(:last-child) {
+    top: 0;
+    left: 0;
+    height: 100%;
+    position: absolute;
+    border-radius: 2px;
+}
+
+.progress {
+    z-index: 3;
+    max-height: 100%;
+    transition: height 0.05s ease;
+    background-color: var(--accent-1);
+}
+
+.grabber {
+    top: 0;
+    left: 50%;
+    z-index: 2;
+    width: 10px;
+    height: 10px;
+    cursor: grab;
+    margin-top: -5px;
+    margin-left: -5px;
+    border-radius: 5px;
+    position: absolute;
+    transform: scale(0);
+    transform-origin: 50% 50%;
+    background-color: var(--accent-2);
+    transition: transform 0.25s ease-in-out, background-color 0.25s linear;
+}
+
+.changer:hover .grabber {
+    transform: scale(1);
+}
+
+.preventHide {
+    left: 50%;
+    z-index: 3;
+    opacity: 0;
+    width: 60px;
+    bottom: 100%;
+    height: 110px;
+    position: absolute;
+    visibility: hidden;
+    transform: translateX(-50%);
+}

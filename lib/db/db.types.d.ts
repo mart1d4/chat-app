@@ -17,8 +17,8 @@ export interface Users {
     avatar: string;
     banner: string | null;
 
-    primaryColor: string;
-    accentColor: string;
+    bannerColor: string;
+    accentColor: string | null;
 
     password: string;
     passwordResetToken: string | null;
@@ -155,7 +155,7 @@ export interface Roles {
     hoist: Generated<boolean>;
     position: number;
 
-    permissions: number;
+    permissions: bigint;
     mentionable: Generated<boolean>;
 
     guildId: number;
@@ -243,7 +243,8 @@ export interface ChannelMentions {
 
 export interface MessageReactions {
     messageId: number;
-    emojiId: number;
+    emojiId: number | null;
+    emojiName: string | null;
     userId: number;
 }
 
@@ -307,19 +308,17 @@ type IfImageOrVideo<T, V> = T["type"] extends "image" | "video" ? V : null;
 
 export interface Attachments {
     id: number;
-
     type: "image" | "video" | "audio" | "file";
 
+    ext: string;
     size: number;
     filename: string;
-    alt: string;
     spoiler: boolean;
     description: string;
+    voiceMessage: boolean;
 
     height: IfImageOrVideo<this, number>;
     width: IfImageOrVideo<this, number>;
-
-    proxyUrl: string | null;
 }
 
 export interface WelcomeScreen {
@@ -339,7 +338,7 @@ export interface GuildMemberProfile {
     nickname: string | null;
 
     roles: number[];
-    permissions: number;
+    permissions: bigint;
 
     joinedAt: Date;
 }
@@ -350,8 +349,8 @@ export interface PermissionOverwrites {
 
     type: 0 | 1;
 
-    allow: number;
-    deny: number;
+    allow: bigint;
+    deny: bigint;
 }
 
 export interface Notifications {

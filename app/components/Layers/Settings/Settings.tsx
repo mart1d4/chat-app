@@ -1,19 +1,24 @@
 "use client";
 
+import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
 import { FriendRequests, MyAccount, Profiles, Overview } from "./index";
 import { AnimatePresence, motion } from "framer-motion";
+import useRequestHelper from "@/hooks/useFetchHelper";
+import { getApiUrl } from "@/lib/uploadthing";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./Settings.module.css";
 import { useShowSettings } from "@/store";
-import { Icon } from "@components";
 
 export function Settings() {
     const [activeTab, setActiveTab] = useState("");
     const [minified, setMinified] = useState(false);
     const [hideNav, setHideNav] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const setShowSettings = useShowSettings((state) => state.setShowSettings);
-    const showSettings = useShowSettings((state) => state.showSettings);
+    const { showSettings, setShowSettings } = useShowSettings();
+    const { sendRequest } = useRequestHelper();
+    const router = useRouter();
 
     const guild = showSettings?.guild;
     const channel = showSettings?.channel;
@@ -85,20 +90,7 @@ export function Settings() {
         { name: "separator" },
         { name: "What's New" },
         { name: "separator" },
-        {
-            name: "Log Out",
-            icon: "logout",
-            onClick: () => {
-                // setLayers({
-                //     settings: {
-                //         type: "POPUP",
-                //     },
-                //     content: {
-                //         type: "LOGOUT",
-                //     },
-                // });
-            },
-        },
+        { name: "Log Out", icon: "logout", noInteraction: true },
     ];
 
     const guildTabs = guild
@@ -144,21 +136,7 @@ export function Settings() {
               { name: "Invites", hide: channel.type === 4 },
               { name: "Integrations", hide: channel.type === 4 },
               { name: "separator" },
-              {
-                  name: "Delete Channel",
-                  icon: "delete",
-                  onClick: () => {
-                      //   setLayers({
-                      //       settings: {
-                      //           type: "POPUP",
-                      //       },
-                      //       content: {
-                      //           type: "GUILD_CHANNEL_DELETE",
-                      //           channel: channel,
-                      //       },
-                      //   });
-                  },
-              },
+              { name: "Delete Channel", icon: "delete", noInteraction: true },
           ]
         : [];
 
@@ -169,18 +147,9 @@ export function Settings() {
     }[showSettings?.type ?? "USER"];
 
     return (
-        <AnimatePresence>
-            {showSettings !== null && (
-                <motion.div
-                    className={styles.container}
-                    initial={{ opacity: 0, y: 20, scale: 1.2 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 20, scale: 1.2 }}
-                    transition={{
-                        ease: "easeInOut",
-                        duration: 0.2,
-                    }}
-                >
+        <Dialog open={showSettings !== null}>
+            <DialogContent blank>
+                <div className={styles.container}>
                     {(!minified || !hideNav) && (
                         <div className={styles.sidebar}>
                             <div className={styles.sidebarWrapper}>
@@ -196,83 +165,121 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    {tabs.map(
-                                        (tab, index) =>
-                                            !tab.hide && (
-                                                <div
-                                                    tabIndex={
-                                                        tab.name === "separator" ||
-                                                        tab.type === "title"
-                                                            ? -1
-                                                            : 0
-                                                    }
-                                                    key={tab.name + index}
-                                                    className={
-                                                        tab.type === "title"
-                                                            ? styles.title
-                                                            : tab.name === "separator"
-                                                            ? styles.separator
-                                                            : activeTab === tab.name
-                                                            ? styles.tabActive
-                                                            : styles.tab
-                                                    }
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
+                                    {tabs.map((tab, index) => {
+                                        if (tab.hide) return null;
 
-                                                        if (
-                                                            tab.name === "separator" ||
-                                                            tab.type === "title"
-                                                        ) {
-                                                            return;
-                                                        }
+                                        const noInteraction =
+                                            tab.name === "separator" ||
+                                            tab.type === "title" ||
+                                            tab.noInteraction;
 
-                                                        // @ts-expect-error
-                                                        if (tab.onClick) {
-                                                            // @ts-expect-error
-                                                            return tab.onClick();
-                                                        }
-
+                                        const item = (
+                                            <button
+                                                key={tab.name + index}
+                                                tabIndex={
+                                                    noInteraction && tab.name !== "Log Out" ? -1 : 0
+                                                }
+                                                className={
+                                                    tab.type === "title"
+                                                        ? styles.title
+                                                        : tab.name === "separator"
+                                                        ? styles.separator
+                                                        : activeTab === tab.name
+                                                        ? styles.tabActive
+                                                        : styles.tab
+                                                }
+                                                onClick={() => {
+                                                    if (!noInteraction) {
                                                         setActiveTab(tab.name);
                                                         if (minified) setHideNav(true);
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault();
+                                                    }
+                                                }}
+                                            >
+                                                {tab.name !== "separator" && tab.name}
 
-                                                            if (
-                                                                tab.name === "separator" ||
-                                                                tab.type === "title"
-                                                            ) {
-                                                                return;
-                                                            }
-
-                                                            // @ts-expect-error
-                                                            if (tab.onClick) {
-                                                                // @ts-expect-error
-                                                                return tab.onClick();
-                                                            }
-
-                                                            setActiveTab(tab.name);
-                                                            if (minified) setHideNav(true);
+                                                {tab.icon && (
+                                                    <Icon
+                                                        size={16}
+                                                        name={tab.icon}
+                                                        viewbox={
+                                                            tab.icon === "boost" ? "0 0 8 12" : ""
                                                         }
-                                                    }}
-                                                >
-                                                    {tab.name !== "separator" && tab.name}
+                                                    />
+                                                )}
+                                            </button>
+                                        );
 
-                                                    {tab.icon && (
-                                                        <Icon
-                                                            size={16}
-                                                            name={tab.icon}
-                                                            viewbox={
-                                                                tab.icon === "boost"
-                                                                    ? "0 0 8 12"
-                                                                    : ""
+                                        if (tab.name === "Log Out") {
+                                            return (
+                                                <Dialog key={tab.name + index}>
+                                                    <DialogTrigger>{item}</DialogTrigger>
+
+                                                    <DialogContent
+                                                        heading="Log Out"
+                                                        description="Are you sure you want to logout?"
+                                                        confirmColor="red"
+                                                        confirmLabel="Log Out"
+                                                        confirmLoading={loading}
+                                                        onConfirm={async () => {
+                                                            setLoading(true);
+
+                                                            await fetch(
+                                                                `${getApiUrl}/auth/logout`,
+                                                                {
+                                                                    method: "POST",
+                                                                    credentials: "include",
+                                                                }
+                                                            ).then(() => {
+                                                                setLoading(false);
+                                                                setShowSettings(null);
+                                                                router.refresh();
+                                                            });
+                                                        }}
+                                                    />
+                                                </Dialog>
+                                            );
+                                        }
+
+                                        if (tab.name === "Delete Channel") {
+                                            const type =
+                                                channel.type === 4 ? "Category" : "Channel";
+
+                                            return (
+                                                <Dialog key={tab.name + index}>
+                                                    <DialogTrigger>{item}</DialogTrigger>
+
+                                                    <DialogContent
+                                                        heading={`Delete ${type}`}
+                                                        description={`Are you sure you want to delete ${
+                                                            channel.type === 2 ? "#" : ""
+                                                        }${channel.name}? This cannot be undone.`}
+                                                        confirmColor="red"
+                                                        confirmLabel={`Delete ${type}`}
+                                                        confirmLoading={loading}
+                                                        onConfirm={async () => {
+                                                            setLoading(true);
+
+                                                            const { errors } = await sendRequest({
+                                                                query: "GUILD_CHANNEL_DELETE",
+                                                                params: {
+                                                                    channelId: channel.id,
+                                                                },
+                                                            });
+
+                                                            if (!errors) {
+                                                                setShowSettings(null);
+                                                                router.refresh();
                                                             }
-                                                        />
-                                                    )}
-                                                </div>
-                                            )
-                                    )}
+
+                                                            setLoading(false);
+                                                        }}
+                                                    />
+                                                </Dialog>
+                                            );
+                                        }
+
+                                        return item;
+                                    })}
                                 </nav>
                             </div>
                         </div>
@@ -310,12 +317,15 @@ export function Settings() {
                                 {!minified && (
                                     <div className={styles.closeButton}>
                                         <div>
-                                            <div onClick={() => setShowSettings(null)}>
+                                            <button
+                                                autoFocus
+                                                onClick={() => setShowSettings(null)}
+                                            >
                                                 <Icon
                                                     name="close"
                                                     size={18}
                                                 />
-                                            </div>
+                                            </button>
 
                                             <div>ESC</div>
                                         </div>
@@ -324,8 +334,8 @@ export function Settings() {
                             </div>
                         </div>
                     )}
-                </motion.div>
-            )}
-        </AnimatePresence>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }

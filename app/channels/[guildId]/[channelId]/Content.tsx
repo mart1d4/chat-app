@@ -1,40 +1,55 @@
 "use client";
 
-import type { Channel, Guild, Message as TMessage } from "@/type";
-import { Message, TextArea, MessageSk, Icon } from "@components";
+import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
+import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/type";
+import { useData, useShowSettings, useUrls } from "@/store";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
-import { useShowSettings, useUrls } from "@/store";
-import { useRef, useEffect, useMemo } from "react";
 import { isLarge, isNewDay } from "@/lib/message";
 import styles from "./Channels.module.css";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
 import { getDayDate } from "@/lib/time";
 import Link from "next/link";
+import {
+    InteractiveElement,
+    DialogContent,
+    DialogTrigger,
+    InviteDialog,
+    MessageSk,
+    TextArea,
+    Message,
+    Dialog,
+    Icon,
+} from "@components";
 
-let initMessagesFetch = false;
-let sendingMessage = false;
-let lastScrollHeight = 0;
-const limit = 50;
+const LIMIT = 50;
 
-export default function Content({ guild, channel }: { guild: Guild; channel: Channel }) {
+export default function Content({
+    guildId,
+    channel,
+    members,
+}: {
+    guildId: number;
+    channel: GuildChannel;
+    members: GuildMember[];
+}) {
     const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
         const baseUrl = `/channels/${channel.id}/messages?limit=`;
 
         if (previousData) {
-            if (previousData.length < limit) {
+            if (previousData.length < LIMIT) {
                 return null;
             }
 
             const last = previousData[previousData.length - 1];
-            return `${baseUrl}${limit}&before=${last.createdAt}`;
+            return `${baseUrl}${LIMIT}&before=${last.createdAt}`;
         }
 
-        return `${baseUrl}${limit}`;
+        return `${baseUrl}${LIMIT}`;
     };
 
-    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<TMessage[], Error>(
+    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<ResponseMessage[], Error>(
         getKey,
         fetchHelper().request,
         {
@@ -45,51 +60,121 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
         }
     );
 
-    const messages = data?.flat().reverse() || [];
-    const hasMore = true;
+    const [isAtBottom, setIsAtBottom] = useState(true);
+
+    const messages = useMemo(() => (data ? data.flat().reverse() : []), [data]);
+    const hasMore = useMemo(() => (data ? data[data.length - 1].length === LIMIT : false), [data]);
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
-    const setChannelUrl = useUrls((state) => state.setMe);
-    const shouldLoad = useIntersection(skeletonEl, -150);
+    const guild = useData((state) => state.guilds).find((g) => g.id === guildId) as UserGuild;
 
-    document.title = `${channel.name} | ${guild.name} | Spark`;
-    setChannelUrl(channel.id.toString());
-
-    function handleScroll() {
-        if (scrollEl.current) {
-            if (lastScrollHeight === 0 || sendingMessage) {
-                sendingMessage = false;
-
-                const t = setTimeout(() => {
-                    spacerEl.current?.scrollIntoView();
-                }, 50);
-
-                return () => clearTimeout(t);
-            }
-
-            const scrollDif = scrollEl.current.scrollHeight - lastScrollHeight;
-            scrollEl.current.scrollTop += scrollDif;
-        }
-    }
+    const setGuildUrl = useUrls((state) => state.setGuild);
+    const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
 
     useEffect(() => {
-        handleScroll();
-    });
+        document.title = `${channel.name} | ${guild.name} | Spark`;
+        setGuildUrl(guild.id, channel.id);
+    }, [channel, guild]);
 
     useEffect(() => {
-        console.log("Should load", shouldLoad);
-        console.log("Has more", hasMore);
-        console.log("Is loading", isLoading);
-        console.log("Messages length", messages.length);
-
         const load = shouldLoad && hasMore && !isLoading && messages.length > 0;
         if (load) setSize(size + 1);
-    }, [shouldLoad, hasMore, isLoading, messages.length]);
+    }, [shouldLoad]);
 
-    console.log("Has more", hasMore);
+    const scrollToBottom = () => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        container.scrollTop = container.scrollHeight;
+    };
+
+    const checkIfAtBottom = () => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 1;
+        setIsAtBottom(isBottom);
+    };
+
+    // Attach scroll listener
+    useLayoutEffect(() => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const onScroll = () => checkIfAtBottom();
+        container.addEventListener("scroll", onScroll);
+
+        return () => container.removeEventListener("scroll", onScroll);
+    }, []);
+
+    // Observe size changes
+    useEffect(() => {
+        const container = scrollEl.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
+        });
+
+        const mutationObserver = new MutationObserver(() => {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
+        });
+
+        resizeObserver.observe(container);
+        mutationObserver.observe(container, { childList: true, subtree: true });
+
+        return () => {
+            resizeObserver.disconnect();
+            mutationObserver.disconnect();
+        };
+    }, [isAtBottom]);
+
+    function handleUpdateMessages(
+        type: "add" | "update" | "delete",
+        id: number,
+        message?: Partial<ResponseMessage>
+    ) {
+        if (type === "add") {
+            mutate(
+                (prev: any) => {
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    // Add the message to the beginning of the first inner array
+                    return [[message, ...prev[0]], ...prev.slice(1)];
+                },
+                { revalidate: false }
+            );
+        } else if (type === "update") {
+            mutate(
+                (prev: any) => {
+                    // Find the message and update it
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    return prev.map((a) => a.map((m) => (m.id === id ? message : m)));
+                },
+                { revalidate: false }
+            );
+        } else if (type === "delete") {
+            mutate(
+                (prev: any) => {
+                    // Find the message and remove it
+                    return prev.map((a) => a.filter((m) => m.id !== id));
+                },
+                { revalidate: false }
+            );
+        }
+    }
 
     return useMemo(
         () => (
@@ -97,25 +182,18 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
                 <div>
                     <div
                         ref={scrollEl}
-                        onScroll={() => {
-                            if (!initMessagesFetch && lastScrollHeight === 0) {
-                                initMessagesFetch = true;
-                                return;
-                            }
-
-                            lastScrollHeight = scrollEl.current?.scrollHeight || 0;
-                        }}
                         className={styles.scroller + " scrollbar"}
                     >
                         <div>
                             <ol>
-                                {hasMore || isLoading ? (
+                                {hasMore || (isLoading && !messages.length) ? (
                                     <div ref={hasMore ? skeletonEl : undefined}>
                                         <MessageSk />
                                     </div>
                                 ) : (
                                     <FirstMessage
                                         guild={guild}
+                                        members={members}
                                         channel={channel}
                                     />
                                 )}
@@ -130,38 +208,9 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
 
                                         <Message
                                             message={message}
-                                            setMessages={(
-                                                message: TMessage,
-                                                type: "add" | "update"
-                                            ): void => {
-                                                sendingMessage = true;
-
-                                                if (type === "add") {
-                                                    mutate((prev) => [message, ...prev], {
-                                                        revalidate: false,
-                                                    });
-                                                } else if (type === "update") {
-                                                    mutate(
-                                                        (prev) =>
-                                                            prev?.map((m) =>
-                                                                m.id === id ? message : m
-                                                            ),
-                                                        { revalidate: false }
-                                                    );
-                                                } else if (type === "delete") {
-                                                    mutate(
-                                                        (prev) =>
-                                                            prev?.map((a) =>
-                                                                a.filter((m) => m.id !== id)
-                                                            ),
-                                                        { revalidate: false }
-                                                    );
-                                                }
-
-                                                sendingMessage = false;
-                                            }}
-                                            large={isLarge(messages, index)}
                                             channel={channel}
+                                            large={isLarge(messages, index)}
+                                            setMessages={handleUpdateMessages}
                                         />
                                     </div>
                                 ))}
@@ -177,38 +226,32 @@ export default function Content({ guild, channel }: { guild: Guild; channel: Cha
 
                 <TextArea
                     channel={channel}
-                    setMessages={(message: TMessage) => {
-                        sendingMessage = true;
-                        mutate((prev) => [message, ...prev], {
-                            revalidate: false,
-                        });
-                        sendingMessage = false;
+                    setMessages={(message: ResponseMessage) => {
+                        handleUpdateMessages("add", message.id, message);
                     }}
                 />
             </main>
         ),
-        [data, isLoading, hasMore]
+        [hasMore, isLoading, messages, channel, guild]
     );
 }
 
-export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channel }) {
+export function FirstMessage({
+    guild,
+    channel,
+    members,
+}: {
+    guild: UserGuild;
+    channel: GuildChannel & { isPrivate: boolean };
+    members: GuildMember[];
+}) {
     const setShowSettings = useShowSettings((s) => s.setShowSettings);
 
     const content = [
         {
             text: "Invite your friends",
             icon: "/assets/system/invite.svg",
-            completed: guild.members.length > 1,
-            onClick: () => {
-                // setLayers({
-                //     settings: { type: "POPUP" },
-                //     content: {
-                //         type: "GUILD_INVITE",
-                //         guild: guild,
-                //         channel: channel,
-                //     },
-                // });
-            },
+            completed: members.length > 1,
         },
         {
             text: "Personalize your server with an icon",
@@ -221,12 +264,15 @@ export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channe
         {
             text: "Send your first message",
             icon: "/assets/system/send.svg",
-            onclick: () => {},
+            onClick: () => {
+                const el = document.getElementById(`textarea-${channel.id}`);
+                if (el) el.focus();
+            },
         },
         {
             text: "Add your first app",
             icon: "/assets/system/app.svg",
-            onclick: () => {},
+            onClick: () => {},
         },
     ];
 
@@ -248,40 +294,59 @@ export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channe
                             </div>
                         </div>
 
-                        {content.map((c) => (
-                            <div
-                                key={c.text}
-                                className={styles.welcomeCard}
-                                onClick={c.onClick}
-                            >
-                                <div
-                                    style={{
-                                        backgroundImage: `url(${c.icon})`,
-                                        opacity: c.completed ? 0.6 : 1,
-                                    }}
-                                />
+                        {content.map((c) => {
+                            const item = (
+                                <InteractiveElement
+                                    key={c.text}
+                                    className={styles.welcomeCard}
+                                    {...(c.onClick ? { onClick: c.onClick } : {})}
+                                >
+                                    <div
+                                        style={{
+                                            backgroundImage: `url(${c.icon})`,
+                                            opacity: c.completed ? 0.6 : 1,
+                                        }}
+                                    />
 
-                                <div style={{ opacity: c.completed ? 0.6 : 1 }}>{c.text}</div>
+                                    <div style={{ opacity: c.completed ? 0.6 : 1 }}>{c.text}</div>
 
-                                {c.completed ? (
-                                    <svg
-                                        className={styles.completedMark}
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        width="24"
-                                        height="24"
-                                        fill="none"
-                                    >
-                                        <path
-                                            fill="currentColor"
-                                            d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"
-                                        />
-                                    </svg>
-                                ) : (
-                                    <Icon name="caret" />
-                                )}
-                            </div>
-                        ))}
+                                    {c.completed ? (
+                                        <svg
+                                            className={styles.completedMark}
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            width="24"
+                                            height="24"
+                                            fill="none"
+                                        >
+                                            <path
+                                                fill="currentColor"
+                                                d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        <Icon name="caret" />
+                                    )}
+                                </InteractiveElement>
+                            );
+
+                            if (c.text === "Invite your friends") {
+                                return (
+                                    <Dialog key={c.text}>
+                                        <DialogTrigger>{item}</DialogTrigger>
+
+                                        <DialogContent blank>
+                                            <InviteDialog
+                                                guild={guild}
+                                                channel={channel}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                );
+                            }
+
+                            return item;
+                        })}
                     </div>
                 </div>
             </div>
@@ -290,15 +355,18 @@ export function FirstMessage({ guild, channel }: { guild: Guild; channel: Channe
 
     return (
         <div className={styles.firstTimeMessageContainer}>
-            <div
-                className={styles.channelIcon}
-                style={{ backgroundImage: `url(/assets/system/hashtag.svg)` }}
-            />
+            <div className={styles.channelIcon}>
+                <Icon
+                    size={44}
+                    name={channel.isPrivate ? "hashtagLock" : "hashtag"}
+                />
+            </div>
 
             <h3 className={styles.friendUsername}>Welcome to #{channel.name}!</h3>
 
             <div className={styles.descriptionContainer}>
-                This is the start of the #{channel.name} channel.
+                This is the start of the #{channel.name}{" "}
+                {channel.isPrivate && <strong>private</strong>} channel.
             </div>
         </div>
     );

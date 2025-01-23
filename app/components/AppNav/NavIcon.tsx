@@ -59,11 +59,10 @@ export default function NavIcon({
         }
     }, [pathname, special, guild, link, count]);
 
-    let firstLetters =
-        name
-            .toLowerCase()
-            .match(/\b(\w)/g)
-            ?.join("") ?? "";
+    const firstLetters = name
+        .split(" ")
+        .map((word) => word[0])
+        .join("");
 
     return (
         <div className={`${styles.navIcon} ${green ? styles.green : ""}`}>
@@ -110,7 +109,7 @@ export default function NavIcon({
                             onFocus={() => !active && setMarkHeight(20)}
                             onBlur={() => !active && setMarkHeight(count ? 7 : 0)}
                             onClick={() => router.push(link)}
-                            onContextMenu={(event) => {
+                            onContextMenu={() => {
                                 // setLayers({
                                 //     settings: { type: "MENU", event },
                                 //     content: {
@@ -121,19 +120,9 @@ export default function NavIcon({
                                 // });
                             }}
                             style={{
-                                fontSize:
-                                    !src && !svg
-                                        ? firstLetters?.length < 3
-                                            ? "18px"
-                                            : firstLetters?.length < 4
-                                            ? "16px"
-                                            : firstLetters?.length < 5
-                                            ? "14px"
-                                            : firstLetters?.length < 6
-                                            ? "12px"
-                                            : "10px"
-                                        : "",
+                                fontWeight: !src && !svg ? "500" : "",
                                 backgroundColor: src ? "transparent" : "",
+                                fontSize: !src && !svg ? getFontSize(firstLetters.length) : "",
                             }}
                         >
                             {((requests.length > 0 && special) ||
@@ -189,4 +178,18 @@ export default function NavIcon({
             </Tooltip>
         </div>
     );
+}
+
+function getFontSize(length) {
+    if (length < 3) {
+        return "18px";
+    } else if (length < 4) {
+        return "16px";
+    } else if (length < 5) {
+        return "14px";
+    } else if (length < 6) {
+        return "12px";
+    } else {
+        return "10px";
+    }
 }

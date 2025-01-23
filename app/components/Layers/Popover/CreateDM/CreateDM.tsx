@@ -1,14 +1,14 @@
 "use client";
 
+import { Icon, Avatar, usePopoverContext } from "@components";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { lowercaseContains } from "@/lib/strings";
 import { useData, useSettings } from "@/store";
 import type { Channel, User } from "@/type";
-import { Icon, Avatar } from "@components";
 import styles from "./CreateDM.module.css";
-import { usePopoverContext } from "../Popover";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 
 export function CreateDM({ channel }: { channel?: Channel }) {
     const [filteredList, setFilteredList] = useState<User[]>([]);
@@ -19,11 +19,10 @@ export function CreateDM({ channel }: { channel?: Channel }) {
     const [search, setSearch] = useState("");
 
     const setSettings = useSettings((state) => state.setSettings);
-    const friends = useData((state) => state.friends);
-    const token = useData((state) => state.token);
-    const user = useData((state) => state.user);
+    const { addChannel, friends, token } = useData();
     const { sendRequest } = useFetchHelper();
     const { setOpen } = usePopoverContext();
+    const user = useAuthenticatedUser();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -79,10 +78,15 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                 const friend = channel.recipients.find((r) => r.id !== user?.id);
                 if (!friend) return;
 
-                sendRequest({
+                const { data } = await sendRequest({
                     query: "CHANNEL_CREATE",
                     body: { recipients: [friend.id, ...recipients] },
                 });
+
+                if (data?.channel) {
+                    addChannel(data.channel);
+                    router.push(`/channels/me/${data.channel.id}`);
+                }
             } else if (channel.type === 1) {
                 recipients.forEach((recipient) => {
                     sendRequest({
@@ -95,10 +99,15 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                 });
             }
         } else {
-            sendRequest({
+            const { data } = await sendRequest({
                 query: "CHANNEL_CREATE",
                 body: { recipients: recipients },
             });
+
+            if (data?.channel) {
+                addChannel(data.channel);
+                router.push(`/channels/me/${data.channel.id}`);
+            }
         }
     }
 
@@ -244,11 +253,12 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                 <div>
                                     <div className={styles.friendAvatar}>
                                         <Avatar
-                                            src={friend.avatar}
-                                            alt={friend.username}
-                                            type="avatars"
                                             size={32}
+                                            type="user"
+                                            alt={friend.username}
                                             status={friend.status}
+                                            fileId={friend.avatar}
+                                            generateId={friend.id}
                                         />
                                     </div>
 
@@ -296,7 +306,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                         }
                                         onClick={async () => {
                                             if (!inviteLink) {
-                                                const { data } = await sendRequest({
+                                                const { data, errors } = await sendRequest({
                                                     query: "CREATE_INVITE",
                                                     params: {
                                                         channelId: channel.id,
@@ -308,8 +318,10 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                                     },
                                                 });
 
-                                                if (data) {
-                                                    setInviteLink(data.data.invite.code);
+                                                if (data?.invite) {
+                                                    setInviteLink(data.invite.code);
+                                                } else if (errors) {
+                                                    console.error(errors);
                                                 }
                                             }
 
@@ -322,7 +334,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                     className={copied ? "button green" : "button blue"}
                                     onClick={async () => {
                                         async function getLink() {
-                                            const { data } = await sendRequest({
+                                            const { data, errors } = await sendRequest({
                                                 query: "CREATE_INVITE",
                                                 params: {
                                                     channelId: channel.id,
@@ -334,8 +346,10 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                                 },
                                             });
 
-                                            if (data) {
-                                                setInviteLink(data.data.invite.code);
+                                            if (data?.invite) {
+                                                setInviteLink(data.invite.code);
+                                            } else if (errors) {
+                                                console.error(errors);
                                             }
                                         }
 
@@ -417,7 +431,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                         }
                                         onClick={async () => {
                                             async function getLink() {
-                                                const { data } = await sendRequest({
+                                                const { data, errors } = await sendRequest({
                                                     query: "CREATE_INVITE",
                                                     params: {
                                                         channelId: channel.id,
@@ -429,8 +443,10 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                                     },
                                                 });
 
-                                                if (data) {
-                                                    setInviteLink(data.data.invite.code);
+                                                if (data?.invite) {
+                                                    setInviteLink(data.invite.code);
+                                                } else if (errors) {
+                                                    console.error(errors);
                                                 }
                                             }
 
@@ -447,26 +463,22 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                     className={copied ? "button green" : "button blue"}
                                     onClick={async () => {
                                         const getLink = async () => {
-                                            const response = await fetch(
-                                                `/api/channels/${channel.id}/invites`,
-                                                {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                        Authorization: `Bearer ${token}`,
-                                                    },
-                                                    body: JSON.stringify({
-                                                        maxUses: 100,
-                                                        maxAge: 86400,
-                                                        temporary: false,
-                                                        inviterId: user?.id,
-                                                    }),
-                                                }
-                                            );
+                                            const { data, errors } = await sendRequest({
+                                                query: "CREATE_INVITE",
+                                                params: {
+                                                    channelId: channel.id,
+                                                },
+                                                body: {
+                                                    maxUses: 100,
+                                                    maxAge: 86400,
+                                                    temporary: false,
+                                                },
+                                            });
 
-                                            const data = await response.json();
-                                            if (response.ok) {
-                                                setInviteLink(data.data.invite.code);
+                                            if (data?.invite) {
+                                                setInviteLink(data.invite.code);
+                                            } else if (errors) {
+                                                console.error(errors);
                                             }
                                         };
 

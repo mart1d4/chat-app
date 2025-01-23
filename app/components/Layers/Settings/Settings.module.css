@@ -30,13 +30,14 @@
     position: static;
 }
 
-.sidebar .closeButton > div > div,
-.contentWrapper > .content .closeButton > div > div {
+.sidebar .closeButton button,
+.contentWrapper > .content .closeButton button {
     width: 24px !important;
     height: 24px !important;
     margin: 0 !important;
     flex: 0 0 24px !important;
     cursor: pointer !important;
+    background-color: transparent !important;
 }
 
 .sidebarWrapper {
@@ -65,43 +66,46 @@
 }
 
 .title {
-    padding: 0 10px 6px 10px;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    overflow: hidden;
+    line-height: 16px;
+    user-select: none;
     white-space: nowrap;
     text-overflow: ellipsis;
-    overflow: hidden;
-    flex-shrink: 0;
-    color: var(--foreground-5);
-    user-select: none;
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.02rem;
+    padding: 0 10px 6px 10px;
+    text-transform: uppercase;
+    color: var(--foreground-5);
+    background-color: transparent;
 }
 
 .separator {
-    margin: 8px 10px;
     height: 1px;
+    margin: 8px 10px;
     background-color: var(--background-hover-1);
 }
 
 .tab,
 .tabActive {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-shrink: 0;
+    cursor: pointer;
+    font-weight: 500;
+    overflow: hidden;
+    user-select: none;
     padding: 6px 10px;
     margin-bottom: 2px;
     border-radius: 4px;
     position: relative;
-    cursor: pointer;
-    font-weight: 500;
     white-space: nowrap;
+    align-items: center;
     text-overflow: ellipsis;
-    overflow: hidden;
-    flex-shrink: 0;
     color: var(--foreground-3);
-    user-select: none;
+    background-color: transparent;
+    justify-content: space-between;
 }
 
 .tab path,
@@ -200,47 +204,46 @@
     align-items: center;
 }
 
-.closeButton > div > div:first-child {
-    color: var(--foreground-3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 36px;
-    border: 2px solid var(--foreground-3);
-    border-radius: 50%;
+.closeButton button {
     width: 36px;
     height: 36px;
+    display: flex;
+    flex: 0 0 36px;
     cursor: pointer;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: transparent;
+    border: 2px solid var(--foreground-3);
 }
 
-.closeButton > div > div:first-child:hover {
-    background-color: var(--background-hover-1);
+.closeButton button:hover,
+.closeButton button:focus-visible {
     border-color: var(--foreground-2);
+    background-color: var(--background-hover-1);
 }
 
-.closeButton > div > div:first-child:hover path {
-    fill: var(--foreground-2);
-}
-
-.closeButton > div > div:first-child:hover + div {
+.closeButton button:first-child:hover + div,
+.closeButton button:first-child:focus-visible + div {
     color: var(--foreground-2);
 }
 
-.closeButton > div > div:first-child:active {
-    background-color: var(--background-hover-1);
-    border-color: var(--foreground-1);
+.closeButton button:first-child:active {
     transform: translateY(1px);
+    border-color: var(--foreground-1);
+    background-color: var(--background-hover-1);
 }
 
-.closeButton > div > div:first-child:active path {
+.closeButton button:first-child:active path {
     fill: var(--foreground-1);
 }
 
-.closeButton > div > div:first-child:active + div {
+.closeButton button:first-child:active + div {
     color: var(--foreground-1);
 }
 
-.closeButton > div > div:last-child {
+.closeButton > div > div {
     margin-top: 8px;
     font-weight: 600;
     font-size: 13px;
@@ -499,6 +502,9 @@
 .customSection {
     margin-bottom: 24px;
     padding-bottom: 24px;
+}
+
+.customSection:not(:last-child) {
     border-bottom: 1px solid var(--border-light);
 }
 
@@ -541,16 +547,17 @@
 }
 
 .colorSwatch > div:first-child {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 69px;
     height: 50px;
-    position: relative;
-    border: 1px solid;
-    border-radius: 4px;
-    color: var(--foreground-3);
+    display: flex;
     cursor: pointer;
+    border: 1px solid;
+    position: relative;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    border: 1px solid transparent;
 }
 
 .colorSwatch > div:first-child > svg {
@@ -560,12 +567,13 @@
 }
 
 .colorSwatch > div:last-child {
-    color: var(--foreground-3);
     margin-top: 4px;
     font-size: 12px;
+    font-weight: 500;
+    user-select: none;
     line-height: 16px;
     text-align: center;
-    user-select: none;
+    color: var(--foreground-3);
 }
 
 .inputLarge {

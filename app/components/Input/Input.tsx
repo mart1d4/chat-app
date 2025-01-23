@@ -1,8 +1,8 @@
 "use client";
 
-import { Checkbox } from "../Checkbox/Checkbox";
+import { Checkbox } from "./Checkbox/Checkbox";
+import { useEffect, useState } from "react";
 import styles from "./Input.module.css";
-import { useEffect, useMemo, useState } from "react";
 
 export function Input({
     label = "",
@@ -10,6 +10,7 @@ export function Input({
     error = "",
     description = "",
     leftItem = null,
+    leftItemSmall = false,
     rightItem = null,
     onChange = () => {},
     ...props
@@ -19,9 +20,10 @@ export function Input({
     error?: string;
     description?: string;
     leftItem?: React.ReactNode;
+    leftItemSmall?: boolean;
     rightItem?: React.ReactNode;
     onChange?: (value: string) => void;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
     const [id, setId] = useState<string>("");
 
     useEffect(() => {
@@ -29,7 +31,11 @@ export function Input({
         setId(randomId);
     }, []);
 
-    const classnames = [leftItem && styles.leftItem, rightItem && styles.rightItem]
+    const classnames = [
+        leftItem && styles.leftItem,
+        rightItem && styles.rightItem,
+        leftItemSmall && styles.leftItemSmall,
+    ]
         .filter(Boolean)
         .join(" ");
 
@@ -75,7 +81,7 @@ export function Input({
             </label>
 
             <div className={styles.inputWrapper}>
-                {leftItem && <div>{leftItem}</div>}
+                {leftItem && <div className={leftItemSmall ? styles.small : ""}>{leftItem}</div>}
 
                 <input
                     id={id}

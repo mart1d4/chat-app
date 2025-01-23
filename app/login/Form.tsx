@@ -1,9 +1,9 @@
 "use client";
 
 import { Input, LoadingDots } from "@components";
+import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
 import styles from "../Auth.module.css";
-import { getApiUrl } from "@/lib/urls";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -30,7 +30,7 @@ export default function Form() {
         }
 
         try {
-            const response = await fetch(`${getApiUrl()}/auth/login`, {
+            const response = await fetch(`${getApiUrl}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

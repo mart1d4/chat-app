@@ -73,6 +73,14 @@ export function getDayDate(date: Date) {
 }
 
 export function getRelativeDate(date: Date) {
+    if (!date) {
+        return "Just now";
+    }
+
+    if (typeof date === "string") {
+        date = new Date(date);
+    }
+
     const now = new Date();
     const diff = now.getTime() - date.getTime();
 

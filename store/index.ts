@@ -1,8 +1,11 @@
 import { persist, createJSONStorage } from "zustand/middleware";
 import { create } from "zustand";
+import { nanoid } from "nanoid";
+import { mostUsedEmojiCodes } from "@/lib/emojis";
 export { useData } from "./data";
 
 type DialogOpenType = {
+    id: string;
     type: string;
     data?: {
         [key: string]: any;
@@ -11,14 +14,25 @@ type DialogOpenType = {
 
 type TriggerDialogType = {
     open: DialogOpenType[];
-    triggerDialog: (dialog: DialogOpenType) => void;
-    removeDialog: (dialog: DialogOpenType["type"]) => void;
+    triggerDialog: (dialog: Omit<DialogOpenType, "id">) => void;
+    removeDialog: (id: string) => void;
 };
 
 export const useTriggerDialog = create<TriggerDialogType>((set) => ({
     open: [],
-    triggerDialog: (dialog) => set((state) => ({ open: [...state.open, dialog] })),
-    removeDialog: (type) => set((state) => ({ open: state.open.filter((d) => d.type !== type) })),
+
+    triggerDialog: (dialog) =>
+        set((state) => ({
+            open: [
+                ...state.open,
+                {
+                    ...dialog,
+                    id: nanoid(),
+                },
+            ],
+        })),
+
+    removeDialog: (id) => set((state) => ({ open: state.open.filter((d) => d.id !== id) })),
 }));
 
 // Settings
@@ -257,13 +271,13 @@ export const useMessages = create(
 // Text Area Mention
 
 interface MentionState {
-    userId: Partial<User>["id"] | null;
-    setMention: (user: Partial<User> | null) => void;
+    userId: number | null;
+    setMention: (user: number | null) => void;
 }
 
 export const useMention = create<MentionState>()((set) => ({
     userId: null,
-    setMention: (user) => set(() => ({ userId: user?.id || null })),
+    setMention: (userId) => set(() => ({ userId: userId })),
 }));
 
 // Urls store
@@ -405,6 +419,113 @@ export const useCollapsedCategories = create(
         }),
         {
             name: "collapsedCategories",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
+
+interface EmojiPickerState {
+    data: {
+        open: boolean;
+        container: HTMLElement | null;
+        onClick?: (emoji: string) => void;
+        placement: "top-end" | "left-start" | "right-start" | "left-end";
+        type?: "emoji" | "gif";
+    };
+
+    setData: (data: EmojiPickerState["data"]) => void;
+}
+
+export const useEmojiPicker = create<EmojiPickerState>((set) => ({
+    data: {
+        open: false,
+        type: "emoji",
+        container: null,
+        onClick: undefined,
+        placement: "top-end",
+    },
+
+    setData: (data) => set(() => ({ data })),
+}));
+
+interface MostUsedEmojisState {
+    emojis: string[];
+    addEmoji: (emoji: string) => void;
+}
+
+export const useMostUsedEmojis = create(
+    persist<MostUsedEmojisState>(
+        (set) => ({
+            emojis: mostUsedEmojiCodes,
+
+            addEmoji: (emoji) =>
+                set((state) => {
+                    // Only keep 20 most used emojis
+                    // if emoji already in list, move it to the front
+                    return {
+                        emojis: [emoji, ...state.emojis.filter((e) => e !== emoji)].slice(0, 20),
+                    };
+                }),
+        }),
+        {
+            name: "mostUsedEmojis",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
+
+type MuteDuration = "15m" | "1h" | "3h" | "8h" | "24h" | "always";
+
+interface mutedChannelsState {
+    muted: {
+        started: Date;
+        duration: MuteDuration;
+
+        // If only channelId, it's a DM or group channel
+        // If channelId and guildId, it's a guild channel
+        // If only guildId, it's the whole guild
+        guildId?: number;
+        channelId?: number;
+    }[];
+    muteChannel: (duration: MuteDuration, channelId: number, guildId?: number) => void;
+    unmuteChannel: (channelId: number, guildId?: number) => void;
+}
+
+export const useMutedChannels = create(
+    persist<mutedChannelsState>(
+        (set) => ({
+            muted: [],
+
+            muteChannel: (duration, channelId, guildId) =>
+                set((state) => {
+                    if (
+                        state.muted.find((m) => m.channelId === channelId && m.guildId === guildId)
+                    ) {
+                        return state;
+                    }
+
+                    return {
+                        muted: [
+                            ...state.muted,
+                            {
+                                started: new Date(),
+                                duration: duration,
+                                channelId,
+                                guildId,
+                            },
+                        ],
+                    };
+                }),
+
+            unmuteChannel: (channelId, guildId) =>
+                set((state) => ({
+                    muted: state.muted.filter(
+                        (m) => m.channelId !== channelId || m.guildId !== guildId
+                    ),
+                })),
+        }),
+        {
+            name: "mutedChannels",
             storage: createJSONStorage(() => localStorage),
         }
     )

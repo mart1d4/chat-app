@@ -1,47 +1,56 @@
 "use client";
 
 import {
-    Icon,
-    Avatar,
-    TooltipContent,
-    TooltipTrigger,
-    Tooltip,
-    Pinned,
-    CreateDM,
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@components";
-import { useWindowSettings, useShowChannels, useSettings, useData } from "@/store";
+    useWindowSettings,
+    useShowChannels,
+    useSettings,
+    useData,
+    useTriggerDialog,
+} from "@/store";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import type { GuildChannel, GuildMember } from "@/type";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import styles from "./AppHeader.module.css";
 import { useState } from "react";
+import {
+    TooltipContent,
+    TooltipTrigger,
+    PopoverContent,
+    PopoverTrigger,
+    DialogTrigger,
+    DialogContent,
+    CreateDM,
+    Popover,
+    Tooltip,
+    Avatar,
+    Dialog,
+    Pinned,
+    Icon,
+} from "@components";
 
-export function AppHeader({ id }: { id: number; requests?: number }) {
-    const user = useData((state) => state.user);
-    const channels = useData((state) => state.channels);
+export function AppHeader({
+    channelId,
+    initChannel,
+}: {
+    channelId?: number;
+    requests?: number;
+    initChannel?: GuildChannel & { recipients: GuildMember[] };
+}) {
+    const user = useAuthenticatedUser();
 
-    const channel = channels.find((channel) => channel.id === id);
-    let friend = null;
-
-    if (channel?.type === 0) {
-        friend = channel.recipients.find((r) => r.id === user.id);
-    }
+    const channel =
+        initChannel ||
+        useData((state) => state.channels).find((channel) => channel.id === channelId);
+    const friend = channel?.type === 0 ? channel?.recipients.find((r) => r.id !== user.id) : null;
 
     const [name, setName] = useState(channel?.name || "");
     const [loading, setLoading] = useState(false);
 
-    const width1200 = useWindowSettings((state) => state.widthThresholds)[1200];
-    const width562 = useWindowSettings((state) => state.widthThresholds)[562];
-
-    const setShowChannels = useShowChannels((state) => state.setShowChannels);
-
-    const setSettings = useSettings((state) => state.setSettings);
-    const updateChannel = useData((state) => state.updateChannel);
-
-    const settings = useSettings((state) => state.settings);
-    const requests = useData((state) => state.received);
-
+    const { 1200: width1200, 562: width562 } = useWindowSettings((state) => state.widthThresholds);
+    const { settings, setSettings } = useSettings();
+    const { setShowChannels } = useShowChannels();
+    const { updateChannel, received } = useData();
+    const { triggerDialog } = useTriggerDialog();
     const { sendRequest } = useRequestHelper();
 
     async function updateName(e: React.FocusEvent<HTMLInputElement>) {
@@ -54,16 +63,14 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
         setLoading(true);
 
         try {
-            const response = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "CHANNEL_UPDATE",
                 params: { channelId: channel.id },
                 body: { name },
             });
 
-            if (response?.ok) {
-                updateChannel(channel.id, {
-                    name: name,
-                });
+            if (!errors) {
+                updateChannel(channel.id, { name: name });
             } else {
                 setName(channel.name);
             }
@@ -83,7 +90,7 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
     ];
 
     const toolbarItems = channel
-        ? channel.guildId
+        ? initChannel
             ? [
                   {
                       name: "Threads",
@@ -96,15 +103,16 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
                       func: () => {},
                   },
                   {
-                      name: "Pinned Messages",
                       icon: "pin",
+                      name: "Pinned Messages",
+                      id: "pinned-messages-trigger",
                       popover: <Pinned channel={channel} />,
                   },
                   {
                       name: settings.showUsers
                           ? `Hide ${!channel.type ? " User Profile" : "Member List"}`
                           : `Show ${!channel.type ? " User Profile" : "Member List"}`,
-                      icon: channel.type === 0 ? "userProfile" : "memberList",
+                      icon: channel.type === 0 ? "user-circle-dot" : "users",
                       active: settings.showUsers,
                       disabled: !width1200,
                       func: () => setSettings("showUsers", !settings.showUsers),
@@ -114,20 +122,21 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
                   { name: "Start Voice Call", icon: "call", func: () => {} },
                   { name: "Start Video Call", icon: "video", func: () => {} },
                   {
-                      name: "Pinned Messages",
                       icon: "pin",
+                      name: "Pinned Messages",
+                      id: "pinned-messages-trigger",
                       popover: <Pinned channel={channel} />,
                   },
                   {
                       name: "Add Friends to DM",
-                      icon: "addUser",
+                      icon: "users-add",
                       popover: <CreateDM channel={channel} />,
                   },
                   {
                       name: settings.showUsers
                           ? `Hide ${!channel.type ? " User Profile" : "Member List"}`
                           : `Show ${!channel.type ? " User Profile" : "Member List"}`,
-                      icon: channel.type === 0 ? "userProfile" : "memberList",
+                      icon: channel.type === 0 ? "user-circle-dot" : "users",
                       active: settings.showUsers,
                       disabled: !width1200,
                       func: () => setSettings("showUsers", !settings.showUsers),
@@ -181,8 +190,8 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
                                     >
                                         {tab.name}
 
-                                        {tab.name === "Pending" && requests.length > 0 && (
-                                            <div className={styles.badge}>{requests.length}</div>
+                                        {tab.name === "Pending" && received.length > 0 && (
+                                            <div className={styles.badge}>{received.length}</div>
                                         )}
                                     </li>
                                 ))}
@@ -191,42 +200,38 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
                     ) : (
                         <>
                             <div className={styles.icon}>
-                                {channel.guildId ? (
-                                    <Icon name="hashtag" />
+                                {initChannel ? (
+                                    <Icon name={channel.isPrivate ? "hashtagLock" : "hashtag"} />
                                 ) : (
                                     <Avatar
                                         size={24}
-                                        src={channel.icon}
                                         alt={channel.name}
-                                        type="icons"
-                                        status={friend ? friend.status : undefined}
+                                        generateId={friend?.id || channel.id}
+                                        fileId={friend?.avatar || channel.icon}
+                                        type={channel.type === 0 ? "user" : "channel"}
                                     />
                                 )}
                             </div>
 
                             {channel.type === 0 ? (
-                                <h1
-                                    className={styles.titleFriend}
-                                    onMouseEnter={(e) => {
-                                        if (channel.guildId) return;
-                                        func(e, channel.name);
-                                    }}
-                                    onClick={() => {
-                                        if (channel.type !== 0) return;
-                                        // setLayers({
-                                        //     settings: {
-                                        //         type: "USER_PROFILE",
-                                        //     },
-                                        //     content: {
-                                        //         user: friend,
-                                        //     },
-                                        // });
-                                    }}
-                                    style={{ cursor: channel.guildId ? "default" : "" }}
-                                >
-                                    {channel.name}
-                                </h1>
-                            ) : (
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <h1
+                                            className={styles.titleFriend}
+                                            onClick={() => {
+                                                triggerDialog({
+                                                    type: "USER_PROFILE",
+                                                    data: { user: friend },
+                                                });
+                                            }}
+                                        >
+                                            {channel.name}
+                                        </h1>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>{channel.name}</TooltipContent>
+                                </Tooltip>
+                            ) : !initChannel ? (
                                 <div className={styles.contentWrapper}>
                                     <div className={styles.channelName}>
                                         <div>
@@ -244,25 +249,31 @@ export function AppHeader({ id }: { id: number; requests?: number }) {
                                         </div>
                                     </div>
                                 </div>
+                            ) : (
+                                <h1
+                                    style={{ cursor: "default" }}
+                                    className={styles.titleFriend}
+                                >
+                                    {channel.name}
+                                </h1>
                             )}
 
                             {channel.topic && <div className={styles.divider} />}
 
                             {channel.topic && (
-                                <div
-                                    className={styles.topic}
-                                    onClick={() => {
-                                        // setLayers({
-                                        //     settings: { type: "POPUP" },
-                                        //     content: {
-                                        //         type: "CHANNEL_TOPIC",
-                                        //         channel: channel,
-                                        //     },
-                                        // });
-                                    }}
-                                >
-                                    {channel.topic}
-                                </div>
+                                <Dialog>
+                                    <DialogTrigger>
+                                        <div className={styles.topic}>{channel.topic}</div>
+                                    </DialogTrigger>
+
+                                    <DialogContent
+                                        showClose
+                                        hideFooter
+                                        heading={channel.name}
+                                    >
+                                        <p style={{ userSelect: "text" }}>{channel.topic}</p>
+                                    </DialogContent>
+                                </Dialog>
                             )}
                         </>
                     )}
@@ -335,6 +346,7 @@ function ToolbarIcon({ item }: any) {
                     <TooltipTrigger>
                         <PopoverTrigger asChild>
                             <button
+                                id={item.id}
                                 className={`${styles.toolbarIcon} ${
                                     item.disabled ? styles.disabled : ""
                                 } ${!!item.active ? styles.hideOnMobile : ""}`}

@@ -62,7 +62,12 @@
     color: var(--foreground-2);
 }
 
-.header.centered > h2 {
+.header > h2:last-child {
+    margin-bottom: 0;
+}
+
+.header.centered > h2,
+.header.noGap > h2 {
     font-size: 24px;
     margin-bottom: 0;
     font-weight: 700;
@@ -78,6 +83,7 @@
 
 .header > p {
     font-size: 16px;
+    font-weight: 500;
     line-height: 1.25;
     user-select: none;
     margin-bottom: 4px;
@@ -121,15 +127,21 @@
     opacity: 1;
 }
 
+.dialog > form {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .content {
-    overflow: hidden scroll;
-    padding-right: 8px;
-    padding-bottom: 20px;
-    position: relative;
-    border-radius: 5px 5px 0 0;
-    padding-left: 16px;
     flex: 1 1 auto;
     user-select: none;
+    position: relative;
+    padding-left: 16px;
+    padding-right: 8px;
+    padding-bottom: 20px;
+    overflow: hidden scroll;
+    border-radius: 5px 5px 0 0;
 }
 
 .content.centered {
@@ -192,12 +204,6 @@
 
 .footer.spaced {
     justify-content: space-between;
-}
-
-.footer > button {
-    height: 38px;
-    min-width: 96px;
-    font-weight: 500;
 }
 
 @keyframes fadeIn {
@@ -324,6 +330,61 @@
     line-height: 16px;
     margin-top: 4px;
     margin-bottom: 15px;
+}
+
+.ownerChange {
+    display: flex;
+    user-select: none;
+    padding-top: 10px;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 0px !important;
+}
+
+.ownerAvatars {
+    display: flex;
+    margin-bottom: 20px;
+    justify-content: center;
+    background: no-repeat 50% 0;
+}
+
+.ownerAvatars > :first-child {
+    opacity: 0.3;
+    margin-right: -27px;
+}
+
+.ownerAvatars > :last-child {
+    position: relative;
+    z-index: 1;
+}
+
+.channelItem {
+    padding: 8px;
+    display: flex;
+    margin: 0 -8px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    align-items: center;
+}
+
+.channelItem:hover,
+.channelItem:focus-visible {
+    background-color: var(--background-hover-1);
+}
+
+.channelItem > span:first-of-type {
+    font-size: 14px;
+    margin-left: 8px;
+    font-weight: 500;
+    color: var(--foreground-1);
+}
+
+.channelItem > span:last-of-type {
+    font-size: 12px;
+    margin-top: 2px;
+    margin-left: 8px;
+    color: var(--foreground-4);
 }
 
 @keyframes modalShake {

@@ -1,8 +1,8 @@
 import styles from "./MessageSk.module.css";
+import React, { memo } from "react";
 import { nanoid } from "nanoid";
-import React from "react";
 
-export const MessageSk = () => {
+export const MessageSk = memo(() => {
     const mainBlob = (width: number) => (
         <div
             key={nanoid()}
@@ -91,4 +91,4 @@ export const MessageSk = () => {
             })}
         </>
     );
-};
+});

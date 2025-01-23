@@ -1,71 +1,104 @@
 "use client";
 
-import type { Channel, ChannelRecipient, Guild, User } from "@/type";
-import { translateCap, sanitizeString } from "@/lib/strings";
+import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
+import { useData, useSettings, useTriggerDialog, useUrls } from "@/store";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useState, useEffect, useRef, useMemo } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
-import { useData, useSettings, useUrls } from "@/store";
+import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./MemberList.module.css";
 import { useRouter } from "next/navigation";
 import { UserItem } from "./UserItem";
+import Image from "next/image";
 import {
-    PopoverContent,
+    type ChannelRecipient,
+    type GuildChannel,
+    type MutualFriend,
+    type MutualGuild,
+    type GuildMember,
+    type UserProfile,
+    type Guild,
+    type User,
+} from "@/type";
+import {
     TooltipContent,
     TooltipTrigger,
-    PopoverTrigger,
-    UserCard,
+    MenuTrigger,
+    MenuContent,
+    UserMenu,
+    MenuItem,
     Tooltip,
-    Popover,
     Avatar,
     Icon,
+    Menu,
+    InteractiveElement,
 } from "@components";
 
-const colors = {
-    online: "#22A559",
-    idle: "#F0B232",
-    dnd: "#F23F43",
-    invisible: "#80848E",
-    offline: "#80848E",
-};
+export function MemberList({
+    channelId,
+    guildId,
+    initChannel,
+}: {
+    channelId: number;
+    guildId?: number;
+    initChannel?: GuildChannel & { recipients: GuildMember[] };
+}) {
+    const channel =
+        initChannel ?? useData((state) => state.channels).find((c) => c.id === channelId);
+    const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
+    const user = useAuthenticatedUser();
 
-const masks = {
-    online: "",
-    idle: "status-mask-idle",
-    dnd: "status-mask-dnd",
-    invisible: "status-mask-offline",
-    offline: "status-mask-offline",
-};
-
-export function MemberList({ channelId, guildId }: { channelId: Channel; guildId?: Guild }) {
-    const channels = useData((state) => state.channels);
-    const guilds = useData((state) => state.guilds);
-    const user = useData((state) => state.user);
-
-    const channel = channels.find((c) => c.id === channelId);
-    const guild = guilds.find((g) => g.id === guildId);
-
-    const [friend, setFriend] = useState<User | ChannelRecipient | null>(
-        channel.type === 0 ? channel.recipients.find((r) => r.id !== user!.id) : null
+    const [friend, setFriend] = useState<GuildMember | ChannelRecipient | UserProfile | undefined>(
+        channel?.type === 0 ? channel?.recipients.find((r) => r.id !== user!.id) : undefined
     );
 
     const [showFriends, setShowFriends] = useState(false);
     const [showGuilds, setShowGuilds] = useState(false);
+
     const [originalNote, setOriginalNote] = useState("");
     const [note, setNote] = useState("");
 
-    const [mutualFriends, setMutualFriends] = useState<User>([]);
-    const [mutualGuilds, setMutualGuilds] = useState<Guild>([]);
+    const [mutualFriends, setMutualFriends] = useState<MutualFriend[]>([]);
+    const [mutualGuilds, setMutualGuilds] = useState<MutualGuild[]>([]);
+    const [loading, setLoading] = useState(false);
 
-    const settings = useSettings((state) => state.settings);
+    const { friends, received, sent, blocked, addUser } = useData();
+    const { triggerDialog } = useTriggerDialog();
     const { sendRequest } = useFetchHelper();
-    const noteRef = useRef(null);
+    const { settings } = useSettings();
+    const hasRun = useRef(false);
+
+    const isFriend = friends.find((f) => f.id === friend?.id);
+    const isReceived = received.find((r) => r.id === friend?.id);
+    const isSent = sent.find((s) => s.id === friend?.id);
+    const isBlocked = blocked.find((b) => b.id === friend?.id);
 
     const recipients = useMemo(() => {
-        if (guild) return guild.members;
+        if (initChannel) return initChannel.recipients;
         if (channel) return channel.recipients;
         return [];
-    }, [guild, channel]);
+    }, [initChannel, channel]);
+
+    async function addFriend() {
+        if (loading || !user) return;
+        setLoading(true);
+
+        try {
+            const { errors } = await sendRequest({
+                query: "ADD_FRIEND",
+                body: { username: user.username },
+            });
+
+            if (!errors) {
+                addUser(user, isReceived ? "friends" : "sent");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setLoading(false);
+    }
 
     useEffect(() => {
         async function getNote() {
@@ -83,7 +116,7 @@ export function MemberList({ channelId, guildId }: { channelId: Channel; guildId
         }
 
         async function getMutuals() {
-            if (!friend || friend.primaryColor) return;
+            if (!friend || "bannerColor" in friend) return;
 
             const { data } = await sendRequest({
                 query: "GET_USER_PROFILE",
@@ -101,189 +134,357 @@ export function MemberList({ channelId, guildId }: { channelId: Channel; guildId
             }
         }
 
-        getNote();
-        getMutuals();
+        if (!hasRun.current) {
+            getNote();
+            getMutuals();
+        }
+
+        return () => {
+            hasRun.current = true;
+        };
     }, [friend]);
 
-    if (!settings.showUsers) return null;
-    if (friend && !friend.primaryColor) return null;
+    if (!channel || !settings.showUsers) return null;
 
-    if (friend) {
+    if (channel.type === 0) {
+        if (!friend || !("banner" in friend)) {
+            return null;
+        }
+
         return (
             <aside
-                className={styles.aside}
+                className={styles.usercard}
                 style={
                     {
-                        "--card-primary-color": friend.primaryColor,
+                        "--card-primary-color": friend.bannerColor,
                         "--card-accent-color": friend.accentColor,
                         "--card-overlay-color": "hsla(0, 0%, 0%, 0.6)",
                         "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
                         "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                         "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
                         "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                        "--card-button-color": getButtonColor(
-                            friend.primaryColor,
-                            friend.accentColor
-                        ),
-                        "--card-border-color": friend.primaryColor,
+                        "--card-button-color": friend.accentColor
+                            ? getButtonColor(friend.bannerColor, friend.accentColor)
+                            : "",
+                        "--card-border-color": friend.bannerColor,
                     } as React.CSSProperties
                 }
             >
                 <div>
-                    <svg
-                        className={styles.cardBanner}
-                        viewBox="0 0 340 120"
-                    >
-                        <mask id="card-banner-mask-1">
-                            <rect
-                                fill="white"
+                    <header className={styles.header}>
+                        <svg
+                            viewBox="0 0 340 120"
+                            className={styles.banner}
+                        >
+                            <mask id="card-banner-mask-1">
+                                <rect
+                                    x="0"
+                                    y="0"
+                                    fill="white"
+                                    width="100%"
+                                    height="100%"
+                                />
+                                <circle
+                                    r="46"
+                                    cx="58"
+                                    cy="112"
+                                    fill="black"
+                                />
+                            </mask>
+
+                            <foreignObject
                                 x="0"
                                 y="0"
                                 width="100%"
                                 height="100%"
-                            />
-                            <circle
-                                fill="black"
-                                cx="58"
-                                cy="112"
-                                r="46"
-                            />
-                        </mask>
-
-                        <foreignObject
-                            x="0"
-                            y="0"
-                            width="100%"
-                            height="100%"
-                            overflow="visible"
-                            mask="url(#card-banner-mask-1)"
-                        >
-                            <div>
-                                <div
-                                    className={styles.cardBannerBackground}
-                                    style={{
-                                        backgroundColor: !friend.banner ? friend.primaryColor : "",
-                                        backgroundImage: friend.banner
-                                            ? `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.banner})`
-                                            : "",
-                                        height: "120px",
-                                    }}
-                                />
-                            </div>
-                        </foreignObject>
-                    </svg>
-
-                    <div className={styles.cardAvatar}>
-                        <div
-                            className={styles.avatarImage}
-                            style={{
-                                backgroundImage: `url(${process.env.NEXT_PUBLIC_CDN_URL}${friend.avatar})`,
-                            }}
-                        />
-
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <div className={styles.cardAvatarStatus}>
-                                    <div style={{ backgroundColor: "black" }} />
-
-                                    <svg>
-                                        <rect
-                                            height="100%"
-                                            width="100%"
-                                            rx={8}
-                                            ry={8}
-                                            fill={colors[friend.status]}
-                                            mask={`url(#${masks[friend.status]})`}
-                                        />
-                                    </svg>
+                                overflow="visible"
+                                mask="url(#card-banner-mask-1)"
+                            >
+                                <div>
+                                    <div
+                                        className={styles.background}
+                                        style={{
+                                            backgroundColor: !friend.banner
+                                                ? friend.bannerColor
+                                                : "",
+                                            backgroundImage: friend.banner
+                                                ? `url(${getCdnUrl}${friend.banner})`
+                                                : "",
+                                        }}
+                                    />
                                 </div>
-                            </TooltipTrigger>
+                            </foreignObject>
+                        </svg>
 
-                            <TooltipContent>{translateCap(friend.status)}</TooltipContent>
-                        </Tooltip>
-                    </div>
+                        <div className={styles.avatar}>
+                            <div>
+                                <svg
+                                    width="92"
+                                    height="92"
+                                    viewBox="0 0 92 92"
+                                >
+                                    <foreignObject
+                                        x="0"
+                                        y="0"
+                                        width="80"
+                                        height="80"
+                                        mask="url(#status-mask-80)"
+                                    >
+                                        <div
+                                            tabIndex={0}
+                                            role="button"
+                                            className={styles.overlay}
+                                            onClick={() => {
+                                                triggerDialog({
+                                                    type: "USER_PROFILE",
+                                                    data: { user: friend },
+                                                });
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    triggerDialog({
+                                                        type: "USER_PROFILE",
+                                                        data: { user: friend },
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <Image
+                                                width={80}
+                                                height={80}
+                                                draggable={false}
+                                                alt={`${friend.username}'s avatar`}
+                                                src={
+                                                    friend.avatar
+                                                        ? `${getCdnUrl}${friend.avatar}`
+                                                        : getRandomImage(friend.id, "avatar")
+                                                }
+                                            />
+                                        </div>
+                                    </foreignObject>
 
-                    <div className={styles.cardBadges}></div>
+                                    <Tooltip
+                                        gap={10}
+                                        delay={500}
+                                    >
+                                        <TooltipTrigger>
+                                            <rect
+                                                x="60"
+                                                y="60"
+                                                rx="50%"
+                                                width="16"
+                                                height="16"
+                                                fill={getStatusColor(friend.status)}
+                                                mask={`url(#${getStatusMask(friend.status)})`}
+                                            />
+                                        </TooltipTrigger>
 
-                    <div className={styles.cardBody}>
-                        <div className={styles.cardSection}>
-                            <h4>{friend.displayName}</h4>
-                            <div>{friend.username}</div>
+                                        <TooltipContent>
+                                            {getStatusLabel(friend.status)}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </svg>
+                            </div>
                         </div>
 
-                        {friend.customStatus && (
-                            <div className={styles.cardSection}>
-                                <div>{friend.customStatus}</div>
-                            </div>
-                        )}
+                        <div className={styles.spacer} />
 
-                        <div className={styles.cardDivider} />
+                        <div className={styles.topTools}>
+                            {!isBlocked &&
+                                (!isFriend ? (
+                                    isReceived || isSent ? (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <button disabled>
+                                                    <Icon
+                                                        size={18}
+                                                        name="user-pending"
+                                                    />
+                                                </button>
+                                            </TooltipTrigger>
 
-                        {friend.description && (
-                            <div className={styles.cardSection}>
-                                <h4>About me</h4>
-                                <div>{friend.description}</div>
-                            </div>
-                        )}
+                                            <TooltipContent>Pending</TooltipContent>
+                                        </Tooltip>
+                                    ) : (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <button onClick={addFriend}>
+                                                    <Icon
+                                                        size={18}
+                                                        name="user-add"
+                                                    />
+                                                </button>
+                                            </TooltipTrigger>
 
-                        <div className={styles.cardSection}>
-                            <h4>Spark Member Since</h4>
-                            <div>
-                                {new Intl.DateTimeFormat("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                }).format(new Date(friend.createdAt))}
-                            </div>
+                                            <TooltipContent>Add Friend</TooltipContent>
+                                        </Tooltip>
+                                    )
+                                ) : (
+                                    <Menu placement="right-start">
+                                        <Tooltip>
+                                            <MenuTrigger>
+                                                <TooltipTrigger>
+                                                    <button>
+                                                        <Icon
+                                                            size={18}
+                                                            name="user-friend"
+                                                        />
+                                                    </button>
+                                                </TooltipTrigger>
+                                            </MenuTrigger>
+
+                                            <TooltipContent>Friends</TooltipContent>
+                                        </Tooltip>
+
+                                        <MenuContent>
+                                            <MenuItem
+                                                danger
+                                                onClick={() => {
+                                                    triggerDialog({
+                                                        type: "REMOVE_FRIEND",
+                                                        data: { friend },
+                                                    });
+                                                }}
+                                            >
+                                                Remove Friend
+                                            </MenuItem>
+                                        </MenuContent>
+                                    </Menu>
+                                ))}
+
+                            <Menu placement="right-start">
+                                <Tooltip>
+                                    <MenuTrigger>
+                                        <TooltipTrigger>
+                                            <button>
+                                                <Icon
+                                                    size={18}
+                                                    name="dots"
+                                                />
+                                            </button>
+                                        </TooltipTrigger>
+                                    </MenuTrigger>
+
+                                    <TooltipContent>More</TooltipContent>
+                                </Tooltip>
+
+                                <UserMenu
+                                    type="card"
+                                    user={friend}
+                                />
+                            </Menu>
                         </div>
+                    </header>
 
-                        <div className={styles.cardDivider} />
-
-                        <div className={styles.cardSection}>
-                            <h4>Note</h4>
-                            <div>
-                                <textarea
-                                    className={styles.cardInput + " scrollbar"}
-                                    ref={noteRef}
-                                    value={note}
-                                    placeholder="Click to add a note"
-                                    aria-label="Note"
-                                    maxLength={256}
-                                    autoCorrect="off"
-                                    onInput={(e) => {
-                                        setNote(e.currentTarget.value);
+                    <section>
+                        <div className={styles.body}>
+                            <div className={styles.heading}>
+                                <h2
+                                    tabIndex={0}
+                                    onClick={() => {
+                                        triggerDialog({
+                                            type: "USER_PROFILE",
+                                            data: { user: friend },
+                                        });
                                     }}
-                                    onBlur={async () => {
-                                        if (note !== originalNote) {
-                                            const { data, errors } = await sendRequest({
-                                                query: "SET_NOTE",
-                                                params: { userId: friend.id },
-                                                body: { note: sanitizeString(note) },
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            triggerDialog({
+                                                type: "USER_PROFILE",
+                                                data: { user: friend },
                                             });
-
-                                            if (data) {
-                                                setOriginalNote(sanitizeString(note));
-                                            }
                                         }
                                     }}
-                                />
+                                >
+                                    {friend.displayName}
+                                </h2>
+
+                                <p
+                                    tabIndex={0}
+                                    onClick={() => {
+                                        triggerDialog({
+                                            type: "USER_PROFILE",
+                                            data: { user: friend },
+                                        });
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            triggerDialog({
+                                                type: "USER_PROFILE",
+                                                data: { user: friend },
+                                            });
+                                        }
+                                    }}
+                                >
+                                    {friend.username}
+                                </p>
+                            </div>
+
+                            <div className={styles.panel}>
+                                {friend.description && (
+                                    <section>
+                                        <h3>About me</h3>
+                                        <p>{friend.description}</p>
+                                    </section>
+                                )}
+
+                                <section>
+                                    <h3>Member Since</h3>
+                                    <p>
+                                        {new Intl.DateTimeFormat("en-US", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        }).format(new Date(friend.createdAt))}
+                                    </p>
+                                </section>
+
+                                <section>
+                                    <h3>Note</h3>
+                                    <div>
+                                        <textarea
+                                            value={note}
+                                            ref={(el) => {
+                                                if (el) {
+                                                    el.style.height = "auto";
+                                                    el.style.height = `${el.scrollHeight}px`;
+                                                }
+                                            }}
+                                            maxLength={256}
+                                            aria-label="Note"
+                                            autoCorrect="off"
+                                            placeholder="Click to add a note"
+                                            className={styles.cardInput + " scrollbar"}
+                                            onInput={(e) => {
+                                                setNote(e.currentTarget.value);
+                                            }}
+                                            onBlur={async () => {
+                                                if (note !== originalNote) {
+                                                    const { data } = await sendRequest({
+                                                        query: "SET_NOTE",
+                                                        params: { userId: friend.id },
+                                                        body: { note },
+                                                    });
+
+                                                    if (data) {
+                                                        setOriginalNote(note);
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </section>
                             </div>
                         </div>
-                    </div>
 
-                    <div className={styles.cardMutuals}>
-                        {mutualGuilds.length > 0 && (
-                            <>
-                                <button
-                                    className={"button"}
-                                    onClick={() => setShowGuilds((prev) => !prev)}
-                                >
-                                    <div>
-                                        {mutualGuilds?.length} Mutual Server
-                                        {mutualGuilds?.length > 1 && "s"}
-                                    </div>
-
-                                    <div>
+                        <div className={styles.mutuals}>
+                            {!!mutualGuilds.length && (
+                                <section>
+                                    <button
+                                        className={styles.button}
+                                        onClick={() => setShowGuilds((prev) => !prev)}
+                                    >
+                                        Mutual Servers — {mutualGuilds.length}
                                         <Icon
                                             name="caret"
                                             style={{
@@ -292,106 +493,136 @@ export function MemberList({ channelId, guildId }: { channelId: Channel; guildId
                                                 })`,
                                             }}
                                         />
-                                    </div>
-                                </button>
+                                    </button>
 
-                                {showGuilds && (
-                                    <ul className={styles.mutualItems}>
-                                        {mutualGuilds.map((guild: Guild) => (
-                                            <MutualItem
-                                                key={guild.id}
-                                                guild={guild}
-                                            />
-                                        ))}
-                                    </ul>
-                                )}
-                            </>
-                        )}
+                                    {showGuilds && (
+                                        <ul className={styles.mutualItems}>
+                                            {mutualGuilds.map((guild) => (
+                                                <MutualItem
+                                                    guild={guild}
+                                                    key={guild.id}
+                                                />
+                                            ))}
+                                        </ul>
+                                    )}
+                                </section>
+                            )}
 
-                        {mutualFriends.length > 0 && (
-                            <>
-                                <button
-                                    className={"button"}
-                                    onClick={() => setShowFriends((prev) => !prev)}
-                                >
-                                    <div>
-                                        {mutualFriends.length} Mutual Friend
-                                        {mutualFriends.length > 1 && "s"}
-                                    </div>
+                            {!!mutualGuilds.length && !!mutualFriends.length && <hr />}
 
-                                    <div>
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            height="24"
-                                            width="24"
+                            {!!mutualFriends.length && (
+                                <section>
+                                    <button
+                                        className={styles.button}
+                                        onClick={() => setShowFriends((prev) => !prev)}
+                                    >
+                                        Mutual Friends — {mutualFriends.length}
+                                        <Icon
+                                            name="caret"
                                             style={{
-                                                transform: showFriends ? "rotate(90deg)" : "",
+                                                transform: `rotate(${
+                                                    showFriends ? "90deg" : "0deg"
+                                                })`,
                                             }}
-                                        >
-                                            <path
-                                                fill="currentColor"
-                                                d="M9.3 5.3a1 1 0 0 0 0 1.4l5.29 5.3-5.3 5.3a1 1 0 1 0 1.42 1.4l6-6a1 1 0 0 0 0-1.4l-6-6a1 1 0 0 0-1.42 0Z"
-                                            />
-                                        </svg>
-                                    </div>
-                                </button>
+                                        />
+                                    </button>
 
-                                {showFriends && (
-                                    <ul className={styles.mutualItems}>
-                                        {mutualFriends.map((friend) => (
-                                            <MutualItem
-                                                key={friend.id}
-                                                user={friend}
-                                            />
-                                        ))}
-                                    </ul>
-                                )}
-                            </>
-                        )}
-                    </div>
+                                    {showFriends && (
+                                        <ul className={styles.mutualItems}>
+                                            {mutualFriends.map((friend) => (
+                                                <MutualItem
+                                                    user={friend}
+                                                    key={friend.id}
+                                                />
+                                            ))}
+                                        </ul>
+                                    )}
+                                </section>
+                            )}
+                        </div>
+                    </section>
                 </div>
+
+                <button
+                    type="button"
+                    className={styles.fullProfile}
+                    onClick={() => {
+                        triggerDialog({
+                            type: "USER_PROFILE",
+                            data: { user: friend },
+                        });
+                    }}
+                >
+                    View Full Profile
+                </button>
             </aside>
         );
     } else {
-        const online = recipients.filter((r) => ["online", "idle", "dnd"].includes(r.status));
-        const offline = recipients.filter((r) => r.status === "offline");
+        const offline = recipients.filter((r) => ("status" in r ? r.status === "offline" : true));
+        const online = recipients.filter((r) => !offline.find((o) => o.id === r.id));
 
         return (
             <aside className={styles.memberList}>
                 <div>
-                    {!channel?.guildId && <h2>Members—{channel.recipients.length}</h2>}
-                    {channel?.guildId && online.length > 0 && <h2>Online — {online.length}</h2>}
+                    {!initChannel && <h2>Members—{channel.recipients.length}</h2>}
+                    {initChannel && !!online.length && <h2>Online — {online.length}</h2>}
 
-                    {online?.length > 0 &&
-                        online.map((user: TCleanUser) => (
+                    {!initChannel &&
+                        recipients.map((user) => (
                             <UserItem
-                                key={user.id}
                                 user={user}
+                                key={user.id}
                                 channel={channel}
+                                isGuild={!!guild}
+                                offline={user.status === "offline"}
                                 isOwner={
-                                    guild ? guild.ownerId === user.id : channel.ownerId === user.id
+                                    guild
+                                        ? guild.ownerId === user.id
+                                        : "ownerId" in channel && channel.ownerId === user.id
                                 }
                             />
                         ))}
 
-                    {channel?.guildId && offline?.length > 0 && (
-                        <h2>Offline — {offline?.length}</h2>
+                    {!!initChannel && (
+                        <>
+                            {!!online.length &&
+                                online.map((user) => (
+                                    <UserItem
+                                        user={user}
+                                        key={user.id}
+                                        channel={channel}
+                                        isGuild={!!guild}
+                                        isOwner={
+                                            guild
+                                                ? guild.ownerId === user.id
+                                                : "ownerId" in channel &&
+                                                  channel.ownerId === user.id
+                                        }
+                                    />
+                                ))}
+
+                            {initChannel && !!offline.length && (
+                                <h2>Offline — {offline?.length}</h2>
+                            )}
+
+                            {!!offline.length &&
+                                offline.map((user) => (
+                                    <UserItem
+                                        offline
+                                        user={user}
+                                        key={user.id}
+                                        channel={channel}
+                                        isGuild={!!guild}
+                                        isOwner={
+                                            guild
+                                                ? guild.ownerId === user.id
+                                                : "ownerId" in channel &&
+                                                  channel.ownerId === user.id
+                                        }
+                                    />
+                                ))}
+                        </>
                     )}
-
-                    {offline?.length > 0 &&
-                        offline.map((user: TCleanUser) => (
-                            <UserItem
-                                key={user.id}
-                                user={user}
-                                channel={channel}
-                                offline
-                                isOwner={
-                                    guild ? guild.ownerId === user.id : channel.ownerId === user.id
-                                }
-                            />
-                        ))}
                 </div>
             </aside>
         );
@@ -402,6 +633,7 @@ function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
     if (!user && !guild) return null;
 
     const urls = useUrls((state) => state.guilds);
+    const { triggerDialog } = useTriggerDialog();
     const router = useRouter();
 
     let url: string | null = null;
@@ -412,38 +644,35 @@ function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
     }
 
     return (
-        <Popover placement="left-start">
-            <PopoverTrigger asChild>
-                <div
-                    tabIndex={0}
+        <Menu
+            positionOnClick
+            openOnRightClick
+            placement="right-start"
+        >
+            <MenuTrigger>
+                <InteractiveElement
+                    element="li"
                     className={styles.mutualItem}
                     onClick={() => {
                         if (user) {
+                            triggerDialog({
+                                type: "USER_PROFILE",
+                                data: { user },
+                            });
                         } else if (guild) {
                             router.push(url || `/channels/${guild.id}`);
                         }
-                    }}
-                    onContextMenu={(e) => {
-                        //     setLayers({
-                        //         settings: {
-                        //             type: "MENU",
-                        //             event: e,
-                        //         },
-                        //         content: {
-                        //             type: "GUILD_ICON",
-                        //             guild: guild,
-                        //         },
-                        //     });
                     }}
                 >
                     <div>
                         {user && (
                             <Avatar
-                                src={user.avatar}
-                                alt={user.username}
-                                type="avatars"
                                 size={40}
+                                type="user"
+                                alt={user.username}
                                 status={user.status}
+                                fileId={user.avatar}
+                                generateId={user.id}
                             />
                         )}
 
@@ -454,10 +683,11 @@ function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
                             >
                                 {guild.icon ? (
                                     <Avatar
-                                        src={guild.icon}
-                                        alt={guild.name}
-                                        type="icons"
                                         size={40}
+                                        type="guild"
+                                        alt={guild.name}
+                                        fileId={guild.icon}
+                                        generateId={guild.id}
                                     />
                                 ) : (
                                     guild.name
@@ -473,12 +703,10 @@ function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
                         {user && user.displayName}
                         {guild && guild.name}
                     </div>
-                </div>
-            </PopoverTrigger>
+                </InteractiveElement>
+            </MenuTrigger>
 
-            <PopoverContent>
-                {user ? <UserCard user={user} /> : <div>{guild?.description}</div>}
-            </PopoverContent>
-        </Popover>
+            {user && <UserMenu user={user} />}
+        </Menu>
     );
 }
