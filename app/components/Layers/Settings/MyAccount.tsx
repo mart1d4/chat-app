@@ -9,6 +9,10 @@ import {
     Avatar,
     Input,
     Alert,
+    Menu,
+    Icon,
+    MenuTrigger,
+    UserMenu,
 } from "@components";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getCdnUrl } from "@/lib/uploadthing";
@@ -299,18 +303,22 @@ export function MyAccount({ setActiveTab }: any) {
                             />
                         </div>
 
-                        <Tooltip background={tooltip.color}>
-                            <TooltipTrigger>
-                                <div
-                                    className={styles.username}
-                                    onClick={() => copyToClipboard()}
-                                >
-                                    {user.username}
-                                </div>
-                            </TooltipTrigger>
+                        <div className={styles.username}>
+                            <div>{user.username}</div>
 
-                            <TooltipContent>{tooltip.text}</TooltipContent>
-                        </Tooltip>
+                            <Menu placement="right-start">
+                                <MenuTrigger>
+                                    <div>
+                                        <Icon name="dots" />
+                                    </div>
+                                </MenuTrigger>
+
+                                <UserMenu
+                                    user={user}
+                                    type="profile"
+                                />
+                            </Menu>
+                        </div>
 
                         <button
                             className="button blue"

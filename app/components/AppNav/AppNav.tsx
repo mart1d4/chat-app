@@ -1,20 +1,34 @@
 "use client";
 
-import { useData, useNotifications, useShowChannels, useWindowSettings } from "@/store";
-import { Dialog, DialogContent, DialogTrigger, CreateGuild } from "@components";
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    CreateGuild,
+    Menu,
+    MenuTrigger,
+    UserMenu,
+} from "@components";
+import { doesUserHaveGuildPermission, type PERMISSIONS } from "@/lib/permissions";
+import { useData, useShowChannels, useWindowSettings } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { GuildMenu } from "../Layers/Menu/MenuContents/Guild";
+import { useNotifications } from "@/store/notifications";
 import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./AppNav.module.css";
 import NavIcon from "./NavIcon";
 
 export function AppNav() {
-    const pings = useNotifications((state) => state.pings);
     const guilds = useData((state) => state.guilds);
+    const { notifications } = useNotifications();
     const user = useAuthenticatedUser();
 
-    const channels = useData((state) => state.channels).filter((channel) =>
-        pings.find((ping) => ping.channelId === channel.id)
-    );
+    const dmChannelsWithPings = useData((state) => state.channels)
+        .filter((channel) => notifications.channels.find((c) => c.id === channel.id && c.pings > 0))
+        .map((channel) => ({
+            ...channel,
+            pings: notifications.channels.find((c) => c.id === channel.id)?.pings || 0,
+        }));
 
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
     const { showChannels } = useShowChannels();
@@ -24,8 +38,8 @@ export function AppNav() {
     const chatAppIcon = (
         <svg
             viewBox="0 0 24 24"
-            width="30"
             height="30"
+            width="30"
         >
             <path
                 fill="currentColor"
@@ -71,43 +85,107 @@ export function AppNav() {
             <ul className={styles.list}>
                 <NavIcon
                     special={true}
-                    name="Direct Messages"
-                    link={"/channels/me"}
                     svg={chatAppIcon}
+                    link={"/channels/me"}
+                    name="Direct Messages"
                 />
 
-                {channels.map((channel) => (
-                    <NavIcon
-                        key={channel.id}
-                        name={channel.name}
-                        link={`/channels/me/${channel.id}`}
-                        src={`${getCdnUrl}${channel.icon}`}
-                        user={channel.recipients.find((r) => r.id !== user.id)}
-                        count={pings.find((p) => p.channelId === channel.id)?.amount}
-                    />
-                ))}
+                {dmChannelsWithPings.map((channel) => {
+                    const friend =
+                        channel.type === 0
+                            ? channel.recipients.find((r) => r.id !== user.id)
+                            : null;
+
+                    return (
+                        <Menu
+                            positionOnClick
+                            openOnRightClick
+                            key={channel.id}
+                            placement="right-start"
+                        >
+                            <MenuTrigger>
+                                <div>
+                                    <NavIcon
+                                        name={channel.name}
+                                        pings={channel.pings}
+                                        channelType={channel.type}
+                                        link={`/channels/me/${channel.id}`}
+                                        src={
+                                            channel.icon
+                                                ? `${getCdnUrl}${channel.icon}`
+                                                : channel.type === 0
+                                                ? friend?.id
+                                                : channel.id
+                                        }
+                                    />
+                                </div>
+                            </MenuTrigger>
+
+                            <UserMenu
+                                user={friend}
+                                type="channel"
+                                channelId={channel.id}
+                                channelType={channel.type}
+                                channelName={channel.name}
+                                channelIcon={channel.icon}
+                            />
+                        </Menu>
+                    );
+                })}
 
                 <div className={styles.listItem}>
                     <div className={styles.separator} />
                 </div>
 
-                {guilds.map((guild) => (
-                    <NavIcon
-                        count={0}
-                        guild={guild}
-                        key={guild.id}
-                        name={guild.name}
-                        link={`/channels/${guild.id}`}
-                        src={guild.icon ? `${getCdnUrl}${guild.icon}` : undefined}
-                    />
-                ))}
+                {guilds.map((guild) => {
+                    function hasPerm(permission: keyof typeof PERMISSIONS) {
+                        return (
+                            doesUserHaveGuildPermission(
+                                guild.roles,
+                                guild.members.find((m) => m.id === user.id),
+                                permission
+                            ) || guild.ownerId === user.id
+                        );
+                    }
+
+                    const notificationGuild = notifications.guilds.find((g) => g.id === guild.id);
+
+                    const pings = notificationGuild?.pings || 0;
+                    const hasUnread = notificationGuild?.hasUnread || false;
+
+                    return (
+                        <Menu
+                            key={guild.id}
+                            positionOnClick
+                            openOnRightClick
+                            placement="right-start"
+                        >
+                            <MenuTrigger>
+                                <div>
+                                    <NavIcon
+                                        pings={pings}
+                                        guild={guild}
+                                        name={guild.name}
+                                        hasUnread={hasUnread}
+                                        link={`/channels/${guild.id}`}
+                                        src={guild.icon ? `${getCdnUrl}${guild.icon}` : undefined}
+                                    />
+                                </div>
+                            </MenuTrigger>
+
+                            <GuildMenu
+                                guild={guild}
+                                hasPerm={hasPerm}
+                            />
+                        </Menu>
+                    );
+                })}
 
                 <Dialog>
                     <DialogTrigger>
                         <div>
                             <NavIcon
                                 green
-                                count={0}
                                 name="Add a Server"
                                 svg={addServerIcon}
                                 link={"/channels/add"}
@@ -122,7 +200,6 @@ export function AppNav() {
 
                 <NavIcon
                     green
-                    count={0}
                     svg={discoverIcon}
                     link={"/channels/discover"}
                     name="Explore Discoverable Servers"

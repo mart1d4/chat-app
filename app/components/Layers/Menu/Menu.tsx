@@ -236,7 +236,7 @@ export const MenuContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>
                         className={styles.menu}
                         aria-labelledby={context.labelId}
                         aria-describedby={context.descriptionId}
-                        style={{ ...context.floatingStyles, ...style }}
+                        style={{ ...context.floatingStyles, ...style, width: props.width }}
                         onClick={(e) => e.stopPropagation()}
                         {...context.getFloatingProps(props)}
                     >
@@ -257,6 +257,8 @@ export function MenuItem({
     icon,
     leftIcon,
     skipHide,
+    checked,
+    picked,
     ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
     disabled?: boolean;
@@ -265,10 +267,20 @@ export function MenuItem({
     icon?: string;
     leftIcon?: string;
     skipHide?: boolean;
+    checked?: boolean;
+    picked?: boolean;
 }) {
     const { setOpen } = useMenuContext();
 
-    const classnames = [styles.item, danger && styles.danger, disabled && styles.disabled]
+    const classnames = [
+        styles.item,
+        danger && styles.danger,
+        disabled && styles.disabled,
+        checked !== undefined && styles.hasChecked,
+        picked !== undefined && styles.hasPicked,
+        checked === true && styles.isChecked,
+        picked === true && styles.isPicked,
+    ]
         .filter(Boolean)
         .join(" ");
 
@@ -281,10 +293,10 @@ export function MenuItem({
             onClick={(e) => {
                 if (!disabled && props.onClick) {
                     props.onClick(e);
-                }
 
-                if (!skipHide) {
-                    setOpen(false);
+                    if (!skipHide && checked === undefined && picked === undefined) {
+                        setOpen(false);
+                    }
                 }
             }}
         >
@@ -308,6 +320,20 @@ export function MenuItem({
                 <Icon
                     size={18}
                     name={icon}
+                />
+            )}
+
+            {checked !== undefined && (
+                <Icon
+                    size={18}
+                    name={checked ? "checkbox-filled" : "checkbox"}
+                />
+            )}
+
+            {picked !== undefined && (
+                <Icon
+                    size={18}
+                    name={picked ? "radio-filled" : "radio"}
                 />
             )}
         </button>

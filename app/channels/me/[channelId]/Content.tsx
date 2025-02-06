@@ -2,15 +2,17 @@
 
 import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
 import { Message, TextArea, MessageSk, Avatar, LoadingDots } from "@components";
+import type { DMChannel, Guild, KnownUser, ResponseMessage } from "@/type";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { isInline, isLarge, isNewDay } from "@/lib/message";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
-import type { DMChannel, Guild, KnownUser, ResponseMessage } from "@/type";
+import { useNotifications } from "@/store/notifications";
 import useFetchHelper from "@/hooks/useFetchHelper";
-import { isLarge, isNewDay } from "@/lib/message";
 import { getCdnUrl } from "@/lib/uploadthing";
 import { useData, useUrls } from "@/store";
 import styles from "./Channels.module.css";
+import { useSocket } from "@/store/socket";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
 import { getDayDate } from "@/lib/time";
@@ -47,22 +49,179 @@ export default function Content({ channelId }: { channelId: number }) {
         getKey,
         fetchHelper().request,
         {
-            errorRetryCount: 3,
-            revalidateIfStale: false,
+            errorRetryCount: 0,
+            revalidateIfStale: true,
             revalidateOnFocus: false,
-            revalidateOnReconnect: false,
+            revalidateOnReconnect: true,
         }
     );
 
-    const messages = useMemo(() => (data ? data.flat().reverse() : []), [data]);
+    const messages = useMemo(
+        () =>
+            data
+                ? data
+                      .flat()
+                      .reverse()
+                      .map((m) => ({
+                          ...m,
+                          createdAt: new Date(m.createdAt).toISOString(),
+                      }))
+                : [],
+        [data]
+    );
     const hasMore = useMemo(() => (data ? data[data.length - 1].length === LIMIT : false), [data]);
 
     const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
-    const setChannelUrl = useUrls((state) => state.setMe);
     const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
+    const setChannelUrl = useUrls((state) => state.setMe);
+    const { removeNotification } = useNotifications();
+    const { socket } = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const chan = socket.subscribe(`private-channel-${channel.id}-receive`);
+        const userId = Number(socket.user.user_data?.id);
+
+        chan.bind("message-received", ({ message }: { message: ResponseMessage }) => {
+            if (message.author.id === userId && !isInline(message.type)) return;
+            handleUpdateMessages("add", message.id, message);
+        });
+
+        chan.bind(
+            "message-edited",
+            ({ messageId, updates }: { messageId: number; updates: Partial<ResponseMessage> }) => {
+                handleUpdateMessages("update", messageId, updates);
+            }
+        );
+
+        chan.bind(
+            "message-reaction-added",
+            ({
+                messageId,
+                reactorId,
+                reaction,
+            }: {
+                messageId: number;
+                reactorId: number;
+                reaction: {
+                    id?: number;
+                    name: string;
+                    count: number;
+                };
+            }) => {
+                mutate(
+                    (prev: any) => {
+                        return prev.map((a) =>
+                            a.map((m) => {
+                                if (m.id === messageId) {
+                                    const existing = m.reactions.find((r) =>
+                                        !reaction.id
+                                            ? r.name === reaction.name
+                                            : r.id === reaction.id
+                                    );
+
+                                    return {
+                                        ...m,
+                                        reactions: !existing
+                                            ? [
+                                                  ...m.reactions,
+                                                  {
+                                                      ...reaction,
+                                                      me: reactorId === userId,
+                                                  },
+                                              ]
+                                            : m.reactions.map((r) => {
+                                                  const isSame = !reaction.id
+                                                      ? r.name === reaction.name
+                                                      : r.id === reaction.id;
+
+                                                  return isSame
+                                                      ? {
+                                                            ...r,
+                                                            count: r.count + 1,
+                                                            me: existing.me || reactorId === userId,
+                                                        }
+                                                      : r;
+                                              }),
+                                    };
+                                }
+
+                                return m;
+                            })
+                        );
+                    },
+                    { revalidate: false }
+                );
+            }
+        );
+
+        chan.bind(
+            "message-reaction-removed",
+            ({
+                messageId,
+                reactorId,
+                reaction,
+            }: {
+                messageId: number;
+                reactorId: number;
+                reaction: string;
+            }) => {
+                mutate(
+                    (prev: any) => {
+                        return prev.map((a) =>
+                            a.map((m) => {
+                                if (m.id === messageId) {
+                                    const existing = m.reactions.find((r) => {
+                                        if (typeof reaction === "string") {
+                                            return r.name === reaction;
+                                        }
+
+                                        return r.id === reaction;
+                                    });
+
+                                    return {
+                                        ...m,
+                                        reactions:
+                                            existing?.count === 1
+                                                ? m.reactions.filter((r) => r !== existing)
+                                                : m.reactions.map((r) => {
+                                                      const isSame =
+                                                          typeof reaction === "string"
+                                                              ? r.name === reaction
+                                                              : r.id === reaction;
+
+                                                      return isSame
+                                                          ? {
+                                                                ...r,
+                                                                count: r.count - 1,
+                                                                me: r.me && reactorId !== userId,
+                                                            }
+                                                          : r;
+                                                  }),
+                                    };
+                                }
+
+                                return m;
+                            })
+                        );
+                    },
+                    { revalidate: false }
+                );
+            }
+        );
+
+        chan.bind("message-deleted", ({ messageId }: { messageId: number }) => {
+            handleUpdateMessages("delete", messageId);
+        });
+
+        return () => {
+            socket.unsubscribe(`private-channel-${channel.id}-receive`);
+        };
+    }, [socket]);
 
     useEffect(() => {
         document.title = `Spark | @${channel.name}`;
@@ -78,6 +237,7 @@ export default function Content({ channelId }: { channelId: number }) {
         const container = scrollEl.current;
         if (!container) return;
 
+        removeNotification(channel.id);
         container.scrollTop = container.scrollHeight;
     };
 
@@ -129,40 +289,40 @@ export default function Content({ channelId }: { channelId: number }) {
     function handleUpdateMessages(
         type: "add" | "update" | "delete",
         id: number,
-        message?: Partial<ResponseMessage>
+        message?: Partial<ResponseMessage>,
+        fullyReplace?: boolean
     ) {
         if (type === "add") {
             mutate(
                 (prev: any) => {
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
-
-                    // Add the message to the beginning of the first inner array
+                    if (!prev || prev.length === 0) return [[message]];
                     return [[message, ...prev[0]], ...prev.slice(1)];
                 },
                 { revalidate: false }
             );
         } else if (type === "update") {
             mutate(
-                (prev: any) => {
-                    // Find the message and update it
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
-
-                    return prev.map((a) => a.map((m) => (m.id === id ? message : m)));
-                },
-                { revalidate: false }
+                (prev: any) =>
+                    prev.map((a) =>
+                        a.map((m) =>
+                            m.id === id
+                                ? fullyReplace
+                                    ? message
+                                    : {
+                                          ...m,
+                                          ...message,
+                                      }
+                                : m
+                        )
+                    ),
+                {
+                    revalidate: false,
+                }
             );
         } else if (type === "delete") {
-            mutate(
-                (prev: any) => {
-                    // Find the message and remove it
-                    return prev.map((a) => a.filter((m) => m.id !== id));
-                },
-                { revalidate: false }
-            );
+            mutate((prev: any) => prev.map((a) => a.filter((m) => m.id !== id)), {
+                revalidate: false,
+            });
         }
     }
 
@@ -230,7 +390,7 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
         [key: string]: boolean;
     }>({});
 
-    const { friends, blocked, received, sent, addUser, removeUser } = useData();
+    const { friends, blocked, received, sent } = useData();
     const { sendRequest } = useFetchHelper();
 
     const mutualGuilds: Guild[] = [];
@@ -250,10 +410,6 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                 query: "ADD_FRIEND",
                 body: { username: friend?.username },
             });
-
-            if (!errors) {
-                addUser(friend, isReceived ? "friends" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -270,10 +426,6 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                 query: "REMOVE_FRIEND",
                 body: { username: friend.username },
             });
-
-            if (!errors) {
-                removeUser(friend.id, isFriend ? "friends" : isReceived ? "received" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -290,10 +442,6 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                 query: "BLOCK_USER",
                 params: { userId: friend.id },
             });
-
-            if (!errors) {
-                addUser(friend, "blocked");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -309,10 +457,6 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                 query: "UNBLOCK_USER",
                 params: { userId: friend?.id },
             });
-
-            if (!errors) {
-                removeUser(friend?.id, "blocked");
-            }
         } catch (error) {
             console.error(error);
         }

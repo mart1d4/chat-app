@@ -91,7 +91,7 @@ export function UpdateStatus() {
                             <Icon
                                 size={16}
                                 name="closeFilled"
-                                viewbox="0 0 14 14"
+                                viewBox="0 0 14 14"
                             />
                         </div>
                     )

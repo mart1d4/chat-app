@@ -446,7 +446,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     flex-shrink: 0;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     border-radius: 0;
     overflow: hidden;
     user-select: none;
@@ -667,14 +667,17 @@ textarea.cardInput::-webkit-scrollbar-track {
 .statusContent > div > div {
     font-size: 14px;
     font-weight: 500;
+    max-height: 56px;
+    overflow: hidden;
     line-height: 1.285;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    transition: max-height 0.35s ease-in-out;
 }
 
 .customStatus.active:hover .statusContent > div > div {
+    max-height: 182px;
     -webkit-line-clamp: 9;
 }
 

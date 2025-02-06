@@ -90,73 +90,6 @@ export const useSettings = create(
     )
 );
 
-// Notifications
-
-type TPing = {
-    channelId: Channel["id"];
-    amount: number;
-};
-
-interface NotificationsState {
-    messages: Channel["id"][];
-    pings: TPing[];
-
-    addMessage: (channelId: Channel["id"]) => void;
-    removeMessage: (channelId: Channel["id"]) => void;
-
-    addPing: (channelId: Channel["id"]) => void;
-    removePing: (channelId: Channel["id"]) => void;
-}
-
-export const useNotifications = create<NotificationsState>()((set) => ({
-    messages: [],
-    pings: [],
-
-    addMessage: (channelId) =>
-        set((state) => {
-            if (state.messages.includes(channelId)) return state;
-
-            return {
-                messages: [...state.messages, channelId],
-            };
-        }),
-
-    removeMessage: (channelId) =>
-        set((state) => ({ messages: state.messages.filter((id) => id !== channelId) })),
-
-    addPing: (channelId) =>
-        set((state) => {
-            // If ping already exists, increase amount
-            if (state.pings.find((p) => p.channelId === channelId)) {
-                return {
-                    pings: state.pings.map((p) => {
-                        if (p.channelId === channelId) {
-                            return {
-                                ...p,
-                                amount: p.amount + 1,
-                            };
-                        }
-
-                        return p;
-                    }),
-                };
-            } else {
-                return {
-                    pings: [...state.pings, { channelId, amount: 1 }],
-                };
-            }
-        }),
-
-    removePing: (channelId) =>
-        set((state) => {
-            if (!state.pings.find((p) => p.channelId === channelId)) return state;
-
-            return {
-                pings: state.pings.filter((p) => p.channelId !== channelId),
-            };
-        }),
-}));
-
 // Messages
 
 interface MessagesState {
@@ -469,63 +402,6 @@ export const useMostUsedEmojis = create(
         }),
         {
             name: "mostUsedEmojis",
-            storage: createJSONStorage(() => localStorage),
-        }
-    )
-);
-
-type MuteDuration = "15m" | "1h" | "3h" | "8h" | "24h" | "always";
-
-interface mutedChannelsState {
-    muted: {
-        started: Date;
-        duration: MuteDuration;
-
-        // If only channelId, it's a DM or group channel
-        // If channelId and guildId, it's a guild channel
-        // If only guildId, it's the whole guild
-        guildId?: number;
-        channelId?: number;
-    }[];
-    muteChannel: (duration: MuteDuration, channelId: number, guildId?: number) => void;
-    unmuteChannel: (channelId: number, guildId?: number) => void;
-}
-
-export const useMutedChannels = create(
-    persist<mutedChannelsState>(
-        (set) => ({
-            muted: [],
-
-            muteChannel: (duration, channelId, guildId) =>
-                set((state) => {
-                    if (
-                        state.muted.find((m) => m.channelId === channelId && m.guildId === guildId)
-                    ) {
-                        return state;
-                    }
-
-                    return {
-                        muted: [
-                            ...state.muted,
-                            {
-                                started: new Date(),
-                                duration: duration,
-                                channelId,
-                                guildId,
-                            },
-                        ],
-                    };
-                }),
-
-            unmuteChannel: (channelId, guildId) =>
-                set((state) => ({
-                    muted: state.muted.filter(
-                        (m) => m.channelId !== channelId || m.guildId !== guildId
-                    ),
-                })),
-        }),
-        {
-            name: "mutedChannels",
             storage: createJSONStorage(() => localStorage),
         }
     )

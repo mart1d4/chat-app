@@ -20,9 +20,9 @@ export function MessageInvite({
 }) {
     const [loading, setLoading] = useState(false);
 
-    const { addGuild, addChannel } = useData();
     const { sendRequest } = useFetchHelper();
     const user = useAuthenticatedUser();
+    const { addGuild } = useData();
     const router = useRouter();
 
     const isLocal = "error" in invite;
@@ -52,22 +52,14 @@ export function MessageInvite({
         }
 
         try {
-            const { data } = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "ACCEPT_INVITE",
                 params: {
                     inviteId: invite.code,
                 },
             });
 
-            if (data?.channel || data?.guild) {
-                if (data.guild) {
-                    addGuild(data.guild);
-                    router.push(`/channels/${data.guild.id}/${data.guild.systemChannelId}`);
-                } else {
-                    addChannel(data.channel);
-                    router.push(`/channels/me/${data.channel.id}`);
-                }
-            } else {
+            if (errors) {
                 console.error("Failed to accept invite");
             }
         } catch (error) {

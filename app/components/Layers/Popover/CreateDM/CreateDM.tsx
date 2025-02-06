@@ -19,10 +19,10 @@ export function CreateDM({ channel }: { channel?: Channel }) {
     const [search, setSearch] = useState("");
 
     const setSettings = useSettings((state) => state.setSettings);
-    const { addChannel, friends, token } = useData();
     const { sendRequest } = useFetchHelper();
     const { setOpen } = usePopoverContext();
     const user = useAuthenticatedUser();
+    const { friends } = useData();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -82,11 +82,6 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                     query: "CHANNEL_CREATE",
                     body: { recipients: [friend.id, ...recipients] },
                 });
-
-                if (data?.channel) {
-                    addChannel(data.channel);
-                    router.push(`/channels/me/${data.channel.id}`);
-                }
             } else if (channel.type === 1) {
                 recipients.forEach((recipient) => {
                     sendRequest({
@@ -103,11 +98,6 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                 query: "CHANNEL_CREATE",
                 body: { recipients: recipients },
             });
-
-            if (data?.channel) {
-                addChannel(data.channel);
-                router.push(`/channels/me/${data.channel.id}`);
-            }
         }
     }
 

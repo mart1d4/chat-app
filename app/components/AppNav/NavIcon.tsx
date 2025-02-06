@@ -1,12 +1,16 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "../Layers/Tooltip/Tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@components";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { getRandomImage } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useData, useUrls } from "@/store";
 import styles from "./AppNav.module.css";
 import Link from "next/link";
+import { useNotifications } from "@/store/notifications";
+import { useGuildSettings } from "@/store/settings";
+import { isStillMuted } from "@/lib/mute";
 
 export default function NavIcon({
     green,
@@ -16,18 +20,20 @@ export default function NavIcon({
     link,
     src,
     svg,
-    count,
-    user,
+    pings,
+    hasUnread,
+    channelType,
 }: {
     green?: boolean;
     special?: boolean;
     guild?: any;
     name: string;
     link: string;
-    src?: string;
+    src?: string | number;
     svg?: JSX.Element;
-    count?: number;
-    user?: any;
+    pings?: number;
+    hasUnread?: boolean;
+    channelType?: number;
 }) {
     const [markHeight, setMarkHeight] = useState(0);
     const [active, setActive] = useState(false);
@@ -41,13 +47,21 @@ export default function NavIcon({
         url = !meUrl ? "/channels/me" : `/channels/me/${meUrl}`;
     } else if (guild) {
         const guildUrl = guildUrls.find((obj) => obj.guildId === guild.id);
-        url = guildUrl ? `/channels/${guild.id}/${guildUrl.channelId}` : `/channels/${guild.id}`;
+        url = guildUrl
+            ? `/channels/${guild.id}/${guildUrl.channelId}`
+            : `/channels/${guild.id}` + (guild.systemChannelId ? `/${guild.systemChannelId}` : "");
     } else {
         url = link;
     }
 
+    const { guilds } = useGuildSettings();
     const pathname = usePathname();
     const router = useRouter();
+
+    const guildSettings = guilds[guild?.id];
+    const isMuted = guildSettings
+        ? isStillMuted(guildSettings.duration, guildSettings.started)
+        : false;
 
     useEffect(() => {
         if (pathname.startsWith(special ? "/channels/me" : link)) {
@@ -55,9 +69,9 @@ export default function NavIcon({
             setMarkHeight(40);
         } else {
             setActive(false);
-            setMarkHeight(count ? 7 : 0);
+            setMarkHeight(hasUnread ? 7 : 0);
         }
-    }, [pathname, special, guild, link, count]);
+    }, [pathname, special, guild, link, hasUnread]);
 
     const firstLetters = name
         .split(" ")
@@ -95,38 +109,25 @@ export default function NavIcon({
             </div>
 
             <Tooltip
-                placement="right"
-                gap={15}
                 big
+                gap={15}
+                placement="right"
             >
                 <TooltipTrigger>
                     {name !== "Add a Server" ? (
                         <Link
                             href={url}
+                            onClick={() => router.push(link)}
                             className={`${styles.wrapper} ${active ? styles.active : ""}`}
                             onMouseEnter={() => !active && setMarkHeight(20)}
-                            onMouseLeave={() => !active && setMarkHeight(count ? 7 : 0)}
-                            onFocus={() => !active && setMarkHeight(20)}
-                            onBlur={() => !active && setMarkHeight(count ? 7 : 0)}
-                            onClick={() => router.push(link)}
-                            onContextMenu={() => {
-                                // setLayers({
-                                //     settings: { type: "MENU", event },
-                                //     content: {
-                                //         type: guild ? "GUILD_ICON" : "USER",
-                                //         guild,
-                                //         user,
-                                //     },
-                                // });
-                            }}
+                            onMouseLeave={() => !active && setMarkHeight(hasUnread ? 7 : 0)}
                             style={{
                                 fontWeight: !src && !svg ? "500" : "",
                                 backgroundColor: src ? "transparent" : "",
-                                fontSize: !src && !svg ? getFontSize(firstLetters.length) : "",
                             }}
                         >
                             {((requests.length > 0 && special) ||
-                                (count !== undefined && count > 0)) && (
+                                (pings !== undefined && pings > 0)) && (
                                 <div
                                     className={styles.badgeContainer}
                                     style={{ width: requests.length > 99 ? "30px" : "" }}
@@ -137,20 +138,32 @@ export default function NavIcon({
                                             fontSize: requests.length > 99 ? "10px" : "",
                                         }}
                                     >
-                                        {count ? count : requests.length}
+                                        {pings ? pings : requests.length}
                                     </div>
                                 </div>
                             )}
 
                             {src ? (
                                 <img
-                                    src={src}
+                                    src={
+                                        typeof src === "string"
+                                            ? src
+                                            : channelType === 1
+                                            ? getRandomImage(src, "icon")
+                                            : getRandomImage(src, "avatar")
+                                    }
                                     alt={name}
                                 />
                             ) : svg ? (
                                 svg
                             ) : (
-                                firstLetters
+                                <span
+                                    style={{
+                                        fontSize: getFontSize(firstLetters.length),
+                                    }}
+                                >
+                                    {firstLetters}
+                                </span>
                             )}
                         </Link>
                     ) : (
@@ -174,13 +187,16 @@ export default function NavIcon({
                     )}
                 </TooltipTrigger>
 
-                <TooltipContent>{name}</TooltipContent>
+                <TooltipContent>
+                    <div>{name}</div>
+                    {isMuted && <span data-muted>Muted</span>}
+                </TooltipContent>
             </Tooltip>
         </div>
     );
 }
 
-function getFontSize(length) {
+function getFontSize(length: number) {
     if (length < 3) {
         return "18px";
     } else if (length < 4) {

@@ -13,13 +13,6 @@ export function AddFriend() {
 
     const { sendRequest } = useFetchHelper();
 
-    async function pasteText() {
-        const text = await navigator.clipboard.readText();
-        setInput((prev) => prev + text);
-        const input = document.getElementById(styles.input) as HTMLInputElement;
-        input.focus();
-    }
-
     async function handleSubmit(e: React.MouseEvent | React.KeyboardEvent) {
         e.preventDefault();
         if (!input.length || loading) return;
@@ -59,6 +52,7 @@ export function AddFriend() {
                     </div>
 
                     <div
+                        id="add-friend-input"
                         className={styles.inputWrapper}
                         style={{
                             outline: isError
@@ -70,9 +64,10 @@ export function AddFriend() {
                     >
                         <div>
                             <input
+                                type="text"
+                                focus-id="add-friend-input"
                                 ref={(el) => el?.focus()}
                                 id={styles.input}
-                                type="text"
                                 autoComplete="off"
                                 placeholder="You can add friends with their Spark username."
                                 aria-label="username"

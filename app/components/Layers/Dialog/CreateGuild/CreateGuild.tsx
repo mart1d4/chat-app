@@ -1,9 +1,10 @@
 "use client";
 
+import { Alert, Icon, Input, LoadingDots, useDialogContext } from "@components";
 import { useKeenSlider, type KeenSliderPlugin } from "keen-slider/react";
-import { Icon, Input, LoadingDots, useDialogContext } from "@components";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import useFetchHelper from "@/hooks/useFetchHelper";
+import { useUploadThing } from "@/lib/uploadthing";
 import styles from "./CreateGuild.module.css";
 import { useRouter } from "next/navigation";
 import { Fragment, useState } from "react";
@@ -97,6 +98,22 @@ export function CreateGuild() {
     const [invite, setInvite] = useState("");
     const [error, setError] = useState("");
 
+    const { startUpload } = useUploadThing("imageUploader", {
+        onClientUploadComplete: (files) => {
+            const { key: fileId } = files[0];
+            createServer(fileId);
+        },
+        onUploadError: (error) => {
+            console.error(error);
+            setLoading(false);
+            setError("An error occured while uploading your avatar");
+            setTimeout(() => setError(""), 5000);
+        },
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+
     const [sliderRef, instanceRef] = useKeenSlider(
         {
             initial: 0,
@@ -108,24 +125,27 @@ export function CreateGuild() {
         [AdaptiveHeight]
     );
 
-    async function createServer() {
-        if (loading) return;
+    async function createServer(iconId: string | null = null) {
+        if (loading && !iconId) return;
 
         setLoading(true);
 
         try {
-            const { data, errors } = await sendRequest({
+            if (icon && !iconId) {
+                startUpload([icon]);
+                return;
+            }
+
+            const { errors } = await sendRequest({
                 query: "GUILD_CREATE",
                 body: {
                     name,
-                    icon,
+                    icon: iconId,
                 },
             });
 
-            if (data?.guild) {
-                addGuild(data.guild);
+            if (!errors) {
                 setOpen(false);
-                router.push(`/channels/${data.guild.id}`);
             } else if (errors) {
                 console.error(errors);
                 setError("An error occurred while creating the server.");
@@ -151,7 +171,7 @@ export function CreateGuild() {
         setLoading(true);
 
         try {
-            const { data, errors } = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "ACCEPT_INVITE",
                 params: {
                     inviteId: invite.replace(/(https?:\/\/)?spark.mart1d4.dev\//, ""),
@@ -161,14 +181,8 @@ export function CreateGuild() {
                 },
             });
 
-            if (data) {
+            if (!errors) {
                 setOpen(false);
-
-                if (data?.guildId) {
-                    router.push(`/channels/${data.guildId}`);
-                } else if (data?.channelId) {
-                    router.push(`/channels/me/${data.channelId}`);
-                }
             } else if (errors) {
                 console.error(errors);
                 setError("The invite is invalid or has expired.");
@@ -186,6 +200,13 @@ export function CreateGuild() {
             style={{ width: 440 }}
             className={`keen-slider ${styles.container}`}
         >
+            {error && (
+                <Alert
+                    type="danger"
+                    message={error}
+                />
+            )}
+
             {slides.map((s, i) => (
                 // @ts-ignore inert is not a valid attribute
                 <div
@@ -401,6 +422,14 @@ export function CreateGuild() {
                                             className={styles.iconInput}
                                             onChange={(e) => {
                                                 if (e.target.files) {
+                                                    if (e.target.files[0].size > 4 * 1024 * 1024) {
+                                                        setError(
+                                                            "File size should be less than 4MB"
+                                                        );
+                                                        setTimeout(() => setError(""), 5000);
+                                                        return;
+                                                    }
+
                                                     setIcon(e.target.files[0]);
                                                 }
                                             }}

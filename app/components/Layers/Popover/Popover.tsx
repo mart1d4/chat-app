@@ -200,7 +200,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
             <FloatingPortal>
                 <FloatingOverlay
                     lockScroll
-                    style={{ zIndex: 100 }}
+                    style={{ zIndex: 1000 }}
                 >
                     <FloatingFocusManager context={floatingContext}>
                         <div

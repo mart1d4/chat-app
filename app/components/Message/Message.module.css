@@ -252,6 +252,10 @@
     font-size: 0.75rem;
 }
 
+.mainContent > div {
+    display: inline-block;
+}
+
 .content li {
     margin-left: 1rem;
 }

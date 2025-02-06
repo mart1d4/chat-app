@@ -167,7 +167,13 @@ export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?
                             </>
                         )}
 
-                        {message.attachments.length > 0 && <AttachmentList message={message} />}
+                        {message.attachments.length > 0 && (
+                            <AttachmentList
+                                message={message}
+                                noInteraction={true}
+                            />
+                        )}
+
                         {message.edited && message.attachments.length > 0 && edited(message.edited)}
                     </div>
                 </div>

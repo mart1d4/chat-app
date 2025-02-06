@@ -2,19 +2,11 @@ import { Icon, Tooltip, TooltipContent, TooltipTrigger, UserMention } from "@com
 import type { LocalMessage, ResponseMessage } from "@/type";
 import SimpleMarkdown from "simple-markdown";
 import styles from "../Message.module.css";
-import { get, has } from "node-emoji";
 import { createElement } from "react";
 import { nanoid } from "nanoid";
 import hljs from "highlight.js";
 import Link from "next/link";
-
-function getEmojiHex(name: string) {
-    const char = get(name);
-    if (!char) return null;
-
-    const codePoint = [...char].map((c) => c?.codePointAt(0)?.toString(16)).join("-");
-    return codePoint;
-}
+import { getCodeFromName } from "@/lib/emojis";
 
 export function FormatMessage({
     message,
@@ -37,28 +29,21 @@ export function FormatMessage({
                 /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/;
             const match = emojiRegex.exec(source);
 
-            // console.log("Match", match);
-
-            if (!match) {
-                return null;
-            }
-
-            if (typeof match !== "string") {
-                return null;
-            }
-
-            if (!has(match)) {
+            if (!match || typeof match !== "string") {
                 return null;
             }
 
             return match;
         },
-        parse: (capture) => {
+        parse: (capture: any) => {
             const emoji = capture[0];
-            const emojiHex = getEmojiHex(emoji);
-            return { emoji, emojiHex };
+            console.log(emoji);
+            return null;
+            // const emojiHex = getEmojiHex(emoji);
+            return { emoji };
         },
         react: (node: any, output: any, state: any) => {
+            return null;
             return (
                 <img
                     key={nanoid()}
@@ -95,11 +80,11 @@ export function FormatMessage({
         match: (source: any) => /^:([a-zA-Z0-9_]+):/.exec(source),
         parse: (capture: any) => ({ name: capture[1], id: capture[2] }),
         react: (node: any) => {
-            if (!has(node.name)) {
-                return node;
-            }
+            const hex = getCodeFromName(node.name);
 
-            const hex = getEmojiHex(node.name);
+            if (!hex) {
+                return <span key={nanoid()}>{node.name}</span>;
+            }
 
             return (
                 <img

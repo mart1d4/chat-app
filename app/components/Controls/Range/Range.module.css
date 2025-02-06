@@ -5,6 +5,11 @@
     align-items: center;
 }
 
+.slider.sm {
+    height: 8px;
+    margin: 8px 0;
+}
+
 .slider > input {
     width: 0;
     height: 0;
@@ -42,4 +47,9 @@
     background-color: #ffffff;
     box-shadow: var(--shadow-low);
     transform: translate(50%, -50%);
+}
+
+.slider.sm .thumb {
+    width: 8px;
+    height: 16px;
 }

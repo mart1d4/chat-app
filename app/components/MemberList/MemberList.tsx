@@ -1,7 +1,8 @@
 "use client";
 
+import { useData, useSettings, useTriggerDialog, useUrls, useWindowSettings } from "@/store";
 import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
-import { useData, useSettings, useTriggerDialog, useUrls } from "@/store";
+import type { HasPermissionFunction } from "@/app/channels/[guildId]/[channelId]/client";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useState, useEffect, useRef, useMemo } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -20,8 +21,10 @@ import {
     type UserProfile,
     type Guild,
     type User,
+    type KnownUser,
 } from "@/type";
 import {
+    InteractiveElement,
     TooltipContent,
     TooltipTrigger,
     MenuTrigger,
@@ -32,17 +35,18 @@ import {
     Avatar,
     Icon,
     Menu,
-    InteractiveElement,
 } from "@components";
 
 export function MemberList({
     channelId,
     guildId,
     initChannel,
+    hasPerm,
 }: {
     channelId: number;
     guildId?: number;
     initChannel?: GuildChannel & { recipients: GuildMember[] };
+    hasPerm?: HasPermissionFunction;
 }) {
     const channel =
         initChannel ?? useData((state) => state.channels).find((c) => c.id === channelId);
@@ -59,15 +63,19 @@ export function MemberList({
     const [originalNote, setOriginalNote] = useState("");
     const [note, setNote] = useState("");
 
-    const [mutualFriends, setMutualFriends] = useState<MutualFriend[]>([]);
+    const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
+    const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<MutualGuild[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const { friends, received, sent, blocked, addUser } = useData();
+    const { friends, received, sent, blocked } = useData();
+    const { widthThresholds } = useWindowSettings();
     const { triggerDialog } = useTriggerDialog();
     const { sendRequest } = useFetchHelper();
     const { settings } = useSettings();
     const hasRun = useRef(false);
+
+    const isWidth1200 = widthThresholds[1200];
 
     const isFriend = friends.find((f) => f.id === friend?.id);
     const isReceived = received.find((r) => r.id === friend?.id);
@@ -75,24 +83,30 @@ export function MemberList({
     const isBlocked = blocked.find((b) => b.id === friend?.id);
 
     const recipients = useMemo(() => {
-        if (initChannel) return initChannel.recipients;
-        if (channel) return channel.recipients;
-        return [];
-    }, [initChannel, channel]);
+        let arr: (GuildMember | ChannelRecipient)[] = [];
+
+        if (initChannel) arr = initChannel.recipients;
+        if (channel) arr = channel.recipients;
+        if (guild) arr = arr.map((r) => ({ ...r, ...guild.members.find((m) => m.id === r.id) }));
+
+        if (guildId && hasPerm) {
+            arr = arr.filter((r) =>
+                hasPerm("VIEW_CHANNEL", channel as GuildChannel, r as GuildMember)
+            );
+        }
+
+        return arr;
+    }, [initChannel, channel, guildId, guild]);
 
     async function addFriend() {
         if (loading || !user) return;
         setLoading(true);
 
         try {
-            const { errors } = await sendRequest({
+            await sendRequest({
                 query: "ADD_FRIEND",
                 body: { username: user.username },
             });
-
-            if (!errors) {
-                addUser(user, isReceived ? "friends" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -128,9 +142,12 @@ export function MemberList({
             });
 
             if (data) {
-                setMutualFriends(data.mutualFriends);
+                setMutualFriendIds(data.mutualFriends);
                 setMutualGuilds(data.mutualGuilds);
-                setFriend(data.user);
+                setFriend({
+                    ...data.user,
+                    status: channel?.recipients.find((r) => r.id === data.user.id)?.status,
+                });
             }
         }
 
@@ -142,12 +159,27 @@ export function MemberList({
         return () => {
             hasRun.current = true;
         };
-    }, [friend]);
+    }, [friend, channel]);
+
+    useEffect(() => {
+        if (!channel || channel.type !== 0) return;
+        // @ts-ignore
+        setFriend((prev) => ({
+            ...prev,
+            ...channel.recipients.find((r) => r.id === prev?.id),
+        }));
+    }, [channel]);
+
+    useEffect(() => {
+        if (!mutualFriendIds.length) return;
+
+        setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
+    }, [friends, mutualFriendIds]);
 
     if (!channel || !settings.showUsers) return null;
 
     if (channel.type === 0) {
-        if (!friend || !("banner" in friend)) {
+        if (!friend || !("banner" in friend) || !isWidth1200) {
             return null;
         }
 

@@ -1,7 +1,7 @@
 "use client";
 
+import type { Attachment, DMChannel, GuildChannel, ResponseMessage } from "@/type";
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props";
-import type { AppMessage, Attachment, EitherAttachment } from "@/type";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { readableExtensions, whichType } from "@/lib/files";
 import type { MessageFunctions } from "./Message";
@@ -12,49 +12,62 @@ import { getCdnUrl } from "@/lib/uploadthing";
 import hljs from "highlight.js";
 import Image from "next/image";
 import {
+    MessageMenuContent,
     TooltipContent,
     TooltipTrigger,
+    AudioControls,
     DialogContent,
     DialogTrigger,
     DialogProtip,
     FixedMessage,
+    VoiceMessage,
+    MenuTrigger,
     ImageViewer,
     Tooltip,
     Dialog,
     Icon,
-    VoiceMessage,
-    AudioControls,
+    Menu,
 } from "@components";
 
 export const AttachmentList = memo(
-    ({ message, functions }: { message: AppMessage; functions?: MessageFunctions }) => {
-        const ImageComponent = ({ attachment }: { attachment: EitherAttachment }) => (
-            <Attachment
+    ({
+        message,
+        channel,
+        functions,
+        noInteraction,
+    }: {
+        message: ResponseMessage;
+        channel: DMChannel | GuildChannel;
+        functions: MessageFunctions;
+        noInteraction?: boolean;
+    }) => {
+        const ImageComponent = ({ attachment }: { attachment: Attachment }) => (
+            <DisplayableAttachment
                 message={message}
+                channel={channel}
                 functions={functions}
                 attachment={attachment}
+                noInteraction={noInteraction}
             />
         );
 
         const attachments = message.attachments;
-        const displayableAttachments = attachments.filter((a) =>
-            ["image", "video"].includes(a.type)
-        );
-        const otherAttachments = attachments.filter((a) => !["image", "video"].includes(a.type));
-
-        const displayableLength = displayableAttachments.length;
-        const othersLength = otherAttachments.length;
+        const displayable = attachments.filter((a) => ["image", "video"].includes(a.type));
+        const others = attachments.filter((a) => !["image", "video"].includes(a.type));
+        const displayableLength = displayable.length;
+        const othersLength = others.length;
 
         return (
             <>
                 {othersLength > 0 && (
                     <div className={`${styles.attachments} ${styles.otherAttachments}`}>
-                        {otherAttachments.map((a) => (
+                        {others.map((a) => (
                             <NonVisualAttachment
                                 key={a.id}
                                 attachment={a}
                                 message={message}
                                 functions={functions}
+                                noInteraction={noInteraction}
                             />
                         ))}
                     </div>
@@ -67,13 +80,13 @@ export const AttachmentList = memo(
                                 <div
                                     className={`${styles.oneByOneGrid} ${styles.oneByOneGridSingle}`}
                                 >
-                                    <ImageComponent attachment={displayableAttachments[0]} />
+                                    <ImageComponent attachment={displayable[0]} />
                                 </div>
                             )}
 
                             {displayableLength == 2 && (
                                 <div className={styles.oneByTwoGrid}>
-                                    {displayableAttachments.map((a) => (
+                                    {displayable.map((a) => (
                                         <div
                                             className={styles.oneByTwoGridItem}
                                             key={a.id}
@@ -89,12 +102,12 @@ export const AttachmentList = memo(
                                     className={`${styles.oneByTwoGrid} ${styles.oneByTwoLayoutThreeGrid}`}
                                 >
                                     <div className={styles.oneByTwoSoloItem}>
-                                        <ImageComponent attachment={displayableAttachments[0]} />
+                                        <ImageComponent attachment={displayable[0]} />
                                     </div>
 
                                     <div className={styles.oneByTwoDuoItem}>
                                         <div className={styles.twoByOneGrid}>
-                                            {displayableAttachments.slice(1, 3).map((a) => (
+                                            {displayable.slice(1, 3).map((a) => (
                                                 <div
                                                     className={styles.twoByOneGridItem}
                                                     key={a.id}
@@ -109,7 +122,7 @@ export const AttachmentList = memo(
 
                             {displayableLength == 4 && (
                                 <div className={styles.twoByTwoGrid}>
-                                    {displayableAttachments.map((a) => (
+                                    {displayable.map((a) => (
                                         <ImageComponent
                                             attachment={a}
                                             key={a.id}
@@ -121,7 +134,7 @@ export const AttachmentList = memo(
                             {displayableLength == 5 && (
                                 <>
                                     <div className={styles.oneByTwoGrid}>
-                                        {displayableAttachments.slice(0, 2).map((a) => (
+                                        {displayable.slice(0, 2).map((a) => (
                                             <div
                                                 className={styles.oneByTwoGridItem}
                                                 key={a.id}
@@ -132,7 +145,7 @@ export const AttachmentList = memo(
                                     </div>
 
                                     <div className={styles.threeByThreeGrid}>
-                                        {displayableAttachments.slice(2, 5).map((a) => (
+                                        {displayable.slice(2, 5).map((a) => (
                                             <ImageComponent
                                                 attachment={a}
                                                 key={a.id}
@@ -144,7 +157,7 @@ export const AttachmentList = memo(
 
                             {displayableLength == 6 && (
                                 <div className={styles.threeByThreeGrid}>
-                                    {displayableAttachments.map((a) => (
+                                    {displayable.map((a) => (
                                         <ImageComponent
                                             attachment={a}
                                             key={a.id}
@@ -156,11 +169,11 @@ export const AttachmentList = memo(
                             {displayableLength == 7 && (
                                 <>
                                     <div className={styles.oneByOneGrid}>
-                                        <ImageComponent attachment={displayableAttachments[0]} />
+                                        <ImageComponent attachment={displayable[0]} />
                                     </div>
 
                                     <div className={styles.threeByThreeGrid}>
-                                        {displayableAttachments.slice(1, 7).map((a) => (
+                                        {displayable.slice(1, 7).map((a) => (
                                             <ImageComponent
                                                 attachment={a}
                                                 key={a.id}
@@ -173,7 +186,7 @@ export const AttachmentList = memo(
                             {displayableLength == 8 && (
                                 <>
                                     <div className={styles.oneByTwoGrid}>
-                                        {displayableAttachments.slice(0, 2).map((a) => (
+                                        {displayable.slice(0, 2).map((a) => (
                                             <div
                                                 className={styles.oneByTwoGridItem}
                                                 key={a.id}
@@ -184,7 +197,7 @@ export const AttachmentList = memo(
                                     </div>
 
                                     <div className={styles.threeByThreeGrid}>
-                                        {displayableAttachments.slice(2, 8).map((a) => (
+                                        {displayable.slice(2, 8).map((a) => (
                                             <ImageComponent
                                                 attachment={a}
                                                 key={a.id}
@@ -196,7 +209,7 @@ export const AttachmentList = memo(
 
                             {displayableLength == 9 && (
                                 <div className={styles.threeByThreeGrid}>
-                                    {displayableAttachments.map((a) => (
+                                    {displayable.map((a) => (
                                         <ImageComponent
                                             attachment={a}
                                             key={a.id}
@@ -208,11 +221,11 @@ export const AttachmentList = memo(
                             {displayableLength == 10 && (
                                 <>
                                     <div className={styles.oneByOneGrid}>
-                                        <ImageComponent attachment={displayableAttachments[0]} />
+                                        <ImageComponent attachment={displayable[0]} />
                                     </div>
 
                                     <div className={styles.threeByThreeGrid}>
-                                        {displayableAttachments.slice(1, 10).map((a) => (
+                                        {displayable.slice(1, 10).map((a) => (
                                             <ImageComponent
                                                 attachment={a}
                                                 key={a.id}
@@ -236,14 +249,18 @@ export const AttachmentList = memo(
     }
 );
 
-export function Attachment({
-    attachment,
+export function DisplayableAttachment({
     message,
+    channel,
     functions,
+    attachment,
+    noInteraction,
 }: {
-    attachment: EitherAttachment;
-    message: AppMessage;
-    functions?: MessageFunctions;
+    message: ResponseMessage;
+    channel: DMChannel | GuildChannel;
+    functions: MessageFunctions;
+    attachment: Attachment;
+    noInteraction?: boolean;
 }) {
     const [showImageViewer, setShowImageViewer] = useState(false);
     const [couldntLoad, setCouldntLoad] = useState(false);
@@ -255,6 +272,7 @@ export function Attachment({
     const isAuthor = user.id == message.author.id;
     const isImage = attachment.type === "image";
     const isVideo = attachment.type === "video";
+    const length = message.attachments.length;
 
     const deleteArgs = {
         attachment: {
@@ -269,33 +287,73 @@ export function Attachment({
         },
     };
 
-    const deleteInstead =
-        message.attachments.length === 1 && !message.content && !message.embeds?.length;
+    const deleteInstead = length === 1 && !message.content && !message.embeds?.length;
     const arg = deleteInstead ? deleteArgs.message : deleteArgs.attachment;
     const index = message.attachments.findIndex((a) => a.id === attachment.id);
+    const url = `${getCdnUrl}${attachment.id}`;
 
-    const { width: maxWidth, height: maxHeight } = getMaxDimensions(
-        message.attachments.length,
-        index
-    );
+    const { width: maxWidth, height: maxHeight } = getMaxDimensions(length, index);
+
+    function copyImage() {
+        if (!isImage || noInteraction) return;
+
+        try {
+            fetch(url)
+                .then((response) => response.blob())
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = () => {
+                        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                    };
+                });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function saveImage() {
+        if (!isImage || noInteraction) return;
+
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const newURL = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = newURL;
+            a.download = attachment.filename;
+            a.click();
+            URL.revokeObjectURL(newURL);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(url);
+    }
+
+    function openLink() {
+        window.open(url);
+    }
 
     const { width, height } = getImageDimensions(
         attachment.width,
         attachment.height,
         maxWidth,
         maxHeight,
-        message.attachments.length !== 1
+        length !== 1
     );
 
     if (isVideo) {
         return (
             <div>
                 <video
+                    src={url}
                     width={width}
                     height={height}
-                    controls
                     className={styles.image}
-                    src={`${getCdnUrl}${attachment.id}`}
+                    controls={!noInteraction}
                     style={{
                         filter: isSpoiler ? "blur(44px)" : "",
                         cursor: !functions ? "default" : "",
@@ -310,167 +368,182 @@ export function Attachment({
     }
 
     return (
-        <div
-            className={styles.attachment}
-            onClick={() => isSpoiler && setHideSpoiler(true)}
-            onContextMenu={() => {
-                // setLayers({
-                //     settings: {
-                //         type: "MENU",
-                //         event: e,
-                //     },
-                //     content: {
-                //         type: "MESSAGE",
-                //         message: message,
-                //         attachment: attachment,
-                //         functions: functions,
-                //     },
-                // });
-            }}
-            style={{
-                backgroundColor: couldntLoad ? "var(--background-3)" : "",
-                maxHeight: `min(${maxHeight}px, 100%)`,
-                maxWidth: `min(${maxWidth}px, 100%)`,
-                cursor: couldntLoad ? "default" : "",
-                height: `${height}px`,
-                width: `${width}px`,
-            }}
+        <Menu
+            positionOnClick
+            openOnRightClick
+            placement="bottom-start"
         >
-            {couldntLoad ? (
-                <Image
-                    width={120}
-                    height={120}
-                    draggable={false}
-                    className={styles.image}
-                    src={`/assets/system/poop.svg`}
-                    alt={attachment.filename || "Attachment"}
-                    placeholder={getPlaceholder(width, height)}
-                    style={{
-                        height: "120px",
-                        minWidth: "unset",
-                        minHeight: "unset",
+            <MenuTrigger>
+                <div
+                    className={styles.attachment}
+                    onClick={() => isSpoiler && setHideSpoiler(true)}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                     }}
-                />
-            ) : (
-                <Image
-                    tabIndex={0}
-                    width={width}
-                    height={height}
-                    draggable={false}
-                    className={styles.image}
-                    src={`${getCdnUrl}${attachment.id}`}
-                    alt={attachment.filename || "Attachment"}
-                    placeholder={getPlaceholder(width, height)}
                     style={{
-                        filter: isSpoiler ? "blur(44px)" : "",
-                        cursor: !functions ? "default" : "",
+                        backgroundColor: couldntLoad ? "var(--background-3)" : "",
                         maxHeight: `min(${maxHeight}px, 100%)`,
                         maxWidth: `min(${maxWidth}px, 100%)`,
+                        cursor: couldntLoad ? "default" : "",
                         height: `${height}px`,
                         width: `${width}px`,
                     }}
-                    onError={({ currentTarget }) => {
-                        setCouldntLoad(true);
-                        currentTarget.onerror = null;
-                        currentTarget.src = "/assets/system/poop.svg";
-                    }}
-                    onClick={() => {
-                        if (!isSpoiler) {
-                            setShowImageViewer(true);
-                        }
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSpoiler) {
-                            setShowImageViewer(true);
-                        }
+                >
+                    {couldntLoad ? (
+                        <Image
+                            width={120}
+                            height={120}
+                            draggable={false}
+                            className={styles.image}
+                            src={`/assets/system/poop.svg`}
+                            alt={attachment.filename || "Attachment"}
+                            placeholder={getPlaceholder(width, height)}
+                            style={{
+                                height: "120px",
+                                minWidth: "unset",
+                                minHeight: "unset",
+                            }}
+                        />
+                    ) : (
+                        <Image
+                            src={url}
+                            tabIndex={0}
+                            width={width}
+                            height={height}
+                            draggable={false}
+                            className={styles.image}
+                            alt={attachment.filename || "Attachment"}
+                            placeholder={getPlaceholder(width, height)}
+                            style={{
+                                filter: isSpoiler ? "blur(44px)" : "",
+                                cursor: !functions ? "default" : "",
+                                maxHeight: `min(${maxHeight}px, 100%)`,
+                                maxWidth: `min(${maxWidth}px, 100%)`,
+                                height: `${height}px`,
+                                width: `${width}px`,
+                            }}
+                            onError={({ currentTarget }) => {
+                                setCouldntLoad(true);
+                                currentTarget.onerror = null;
+                                currentTarget.src = "/assets/system/poop.svg";
+                            }}
+                            onClick={() => {
+                                if (!isSpoiler) {
+                                    setShowImageViewer(true);
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !isSpoiler) {
+                                    setShowImageViewer(true);
+                                }
+                            }}
+                        />
+                    )}
+
+                    <Dialog
+                        open={showImageViewer}
+                        onOpenChange={(v) => setShowImageViewer(v)}
+                    >
+                        {!!functions && (
+                            <DialogContent blank>
+                                <ImageViewer
+                                    currentIndex={index}
+                                    attachments={message.attachments}
+                                />
+                            </DialogContent>
+                        )}
+                    </Dialog>
+
+                    {!isSpoiler && isAuthor && functions && !noInteraction && (
+                        <Dialog>
+                            <Tooltip>
+                                <DialogTrigger>
+                                    <TooltipTrigger>
+                                        <button className={styles.deleteImage}>
+                                            <Icon name="delete" />
+                                        </button>
+                                    </TooltipTrigger>
+                                </DialogTrigger>
+
+                                <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+
+                            <DialogContent
+                                confirmColor="red"
+                                heading={arg.title}
+                                confirmLoading={loading}
+                                confirmLabel={arg.confirm}
+                                description={arg.description}
+                                onConfirm={async () => {
+                                    setLoading(true);
+
+                                    if (deleteInstead) {
+                                        await functions.deleteMessage();
+                                    } else if (typeof attachment.id === "string") {
+                                        await functions.deleteAttachment(attachment.id);
+                                    }
+
+                                    setLoading(false);
+                                }}
+                            >
+                                {deleteInstead && (
+                                    <>
+                                        <FixedMessage message={message} />
+
+                                        <DialogProtip>
+                                            You can hold down shift when clicking{" "}
+                                            <strong>delete message</strong> to bypass this
+                                            confirmation entirely.
+                                        </DialogProtip>
+                                    </>
+                                )}
+                            </DialogContent>
+                        </Dialog>
+                    )}
+
+                    {isSpoiler && <button className={styles.spoilerButton}>Spoiler</button>}
+
+                    {attachment.description && !isSpoiler && (
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <button className={styles.imageAlt}>ALT</button>
+                            </TooltipTrigger>
+
+                            <TooltipContent>{attachment.description}</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+            </MenuTrigger>
+
+            {!noInteraction && (
+                <MessageMenuContent
+                    message={message}
+                    channel={channel}
+                    functions={functions}
+                    attachment={attachment}
+                    attachmentFunctions={{
+                        copyImage,
+                        saveImage,
+                        copyLink,
+                        openLink,
                     }}
                 />
             )}
-
-            <Dialog
-                open={showImageViewer}
-                onOpenChange={(v) => setShowImageViewer(v)}
-            >
-                {!!functions && (
-                    <DialogContent blank>
-                        <ImageViewer
-                            currentIndex={index}
-                            attachments={message.attachments}
-                        />
-                    </DialogContent>
-                )}
-            </Dialog>
-
-            {!isSpoiler && isAuthor && functions && (
-                <Dialog>
-                    <Tooltip>
-                        <DialogTrigger>
-                            <TooltipTrigger>
-                                <button className={styles.deleteImage}>
-                                    <Icon name="delete" />
-                                </button>
-                            </TooltipTrigger>
-                        </DialogTrigger>
-
-                        <TooltipContent>Delete</TooltipContent>
-                    </Tooltip>
-
-                    <DialogContent
-                        confirmColor="red"
-                        heading={arg.title}
-                        confirmLabel={arg.confirm}
-                        description={arg.description}
-                        onConfirm={async () => {
-                            setLoading(true);
-
-                            if (deleteInstead) {
-                                await functions.deleteMessage();
-                            } else if (typeof attachment.id === "string") {
-                                await functions.deleteAttachment(attachment.id);
-                            }
-
-                            setLoading(false);
-                        }}
-                        confirmLoading={loading}
-                    >
-                        {deleteInstead && (
-                            <>
-                                <FixedMessage message={message} />
-
-                                <DialogProtip>
-                                    You can hold down shift when clicking{" "}
-                                    <strong>delete message</strong> to bypass this confirmation
-                                    entirely.
-                                </DialogProtip>
-                            </>
-                        )}
-                    </DialogContent>
-                </Dialog>
-            )}
-
-            {isSpoiler && <button className={styles.spoilerButton}>Spoiler</button>}
-
-            {attachment.description && !isSpoiler && (
-                <Tooltip>
-                    <TooltipTrigger>
-                        <button className={styles.imageAlt}>ALT</button>
-                    </TooltipTrigger>
-
-                    <TooltipContent>{attachment.description}</TooltipContent>
-                </Tooltip>
-            )}
-        </div>
+        </Menu>
     );
 }
 
 export function NonVisualAttachment({
+    message,
     functions,
     attachment,
-    message,
+    noInteraction,
 }: {
+    message: ResponseMessage;
     functions: MessageFunctions;
     attachment: Attachment;
-    message: AppMessage;
+    noInteraction?: boolean;
 }) {
     const [textExpanded, setTextExpanded] = useState(false);
     const [fullTextOpen, setFullTextOpen] = useState(false);
@@ -582,6 +655,8 @@ export function NonVisualAttachment({
     }, [textExpanded]);
 
     async function handleDownload() {
+        if (!functions || noInteraction) return;
+
         try {
             const response = await fetch(`${getCdnUrl}${attachment.id}`);
             if (!response.ok) {
@@ -615,7 +690,7 @@ export function NonVisualAttachment({
         >
             {(!previewText || isAuthor) && !attachment.voiceMessage && (
                 <div className={styles.actions}>
-                    {!previewText && (
+                    {!previewText && !noInteraction && (
                         <Tooltip>
                             <TooltipTrigger>
                                 <button onClick={handleDownload}>
@@ -630,7 +705,7 @@ export function NonVisualAttachment({
                         </Tooltip>
                     )}
 
-                    {isAuthor && (
+                    {isAuthor && !noInteraction && (
                         <Dialog>
                             <Tooltip>
                                 <DialogTrigger>
@@ -726,6 +801,7 @@ export function NonVisualAttachment({
                             <TooltipTrigger>
                                 <button
                                     onClick={() => {
+                                        if (noInteraction) return;
                                         setTextExpanded((prev) => !prev);
                                     }}
                                 >
@@ -748,15 +824,17 @@ export function NonVisualAttachment({
                                 </button>
                             </TooltipTrigger>
 
-                            <TooltipContent>
-                                {textExpanded
-                                    ? `Collapse (${expandedText.split("\n").length} lines)`
-                                    : `Expand (${expandedText.split("\n").length} lines)`}
-                            </TooltipContent>
+                            {!noInteraction && (
+                                <TooltipContent>
+                                    {textExpanded
+                                        ? `Collapse (${expandedText.split("\n").length} lines)`
+                                        : `Expand (${expandedText.split("\n").length} lines)`}
+                                </TooltipContent>
+                            )}
                         </Tooltip>
 
                         <Dialog
-                            open={fullTextOpen}
+                            open={fullTextOpen && !noInteraction}
                             onOpenChange={(v) => setFullTextOpen(v)}
                         >
                             <Tooltip>
@@ -777,89 +855,91 @@ export function NonVisualAttachment({
                                     </button>
                                 </TooltipTrigger>
 
-                                <TooltipContent>View whole file</TooltipContent>
+                                {!noInteraction && <TooltipContent>View whole file</TooltipContent>}
 
-                                <DialogContent blank>
-                                    <div className={styles.textModal}>
-                                        <div className="scrollbar">
-                                            <pre>
-                                                <code
-                                                    ref={(el) => {
-                                                        if (el) hljs.highlightElement(el);
-                                                    }}
-                                                    className={`language-${attachment.ext} hljs`}
-                                                >
-                                                    {fullText}
-                                                </code>
-                                            </pre>
-                                        </div>
-
-                                        <div className={styles.tools}>
-                                            <div />
-                                            <div />
-                                            <div />
-
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <span>{attachment.filename}</span>
-                                                </TooltipTrigger>
-
-                                                <TooltipContent>
-                                                    {attachment.filename} (
-                                                    {getSize(attachment.size)})
-                                                </TooltipContent>
-                                            </Tooltip>
-
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <span>{getSize(attachment.size)}</span>
-                                                </TooltipTrigger>
-
-                                                <TooltipContent>
-                                                    {attachment.filename} (
-                                                    {getSize(attachment.size)})
-                                                </TooltipContent>
-                                            </Tooltip>
-
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <a onClick={handleDownload}>
-                                                        <Icon name="download" />
-                                                    </a>
-                                                </TooltipTrigger>
-
-                                                <TooltipContent>
-                                                    Download {attachment.filename} (
-                                                    {getSize(attachment.size)})
-                                                </TooltipContent>
-                                            </Tooltip>
-
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <button
-                                                        aria-label="Change language"
-                                                        aria-expanded="false"
+                                {!noInteraction && (
+                                    <DialogContent blank>
+                                        <div className={styles.textModal}>
+                                            <div className="scrollbar">
+                                                <pre>
+                                                    <code
+                                                        ref={(el) => {
+                                                            if (el) hljs.highlightElement(el);
+                                                        }}
+                                                        className={`language-${attachment.ext} hljs`}
                                                     >
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            height="24"
-                                                            width="24"
-                                                        >
-                                                            <path
-                                                                fill="currentColor"
-                                                                d="M9.6 7.8 4 12l5.6 4.2a1 1 0 0 1 .4.8v1.98c0 .21-.24.33-.4.2l-8.1-6.4a1 1 0 0 1 0-1.56l8.1-6.4c.16-.13.4-.01.4.2V7a1 1 0 0 1-.4.8ZM14.4 7.8 20 12l-5.6 4.2a1 1 0 0 0-.4.8v1.98c0 .21.24.33.4.2l8.1-6.4a1 1 0 0 0 0-1.56l-8.1-6.4a.25.25 0 0 0-.4.2V7a1 1 0 0 0 .4.8Z"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </TooltipTrigger>
+                                                        {fullText}
+                                                    </code>
+                                                </pre>
+                                            </div>
 
-                                                <TooltipContent>Change language</TooltipContent>
-                                            </Tooltip>
+                                            <div className={styles.tools}>
+                                                <div />
+                                                <div />
+                                                <div />
+
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <span>{attachment.filename}</span>
+                                                    </TooltipTrigger>
+
+                                                    <TooltipContent>
+                                                        {attachment.filename} (
+                                                        {getSize(attachment.size)})
+                                                    </TooltipContent>
+                                                </Tooltip>
+
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <span>{getSize(attachment.size)}</span>
+                                                    </TooltipTrigger>
+
+                                                    <TooltipContent>
+                                                        {attachment.filename} (
+                                                        {getSize(attachment.size)})
+                                                    </TooltipContent>
+                                                </Tooltip>
+
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <a onClick={handleDownload}>
+                                                            <Icon name="download" />
+                                                        </a>
+                                                    </TooltipTrigger>
+
+                                                    <TooltipContent>
+                                                        Download {attachment.filename} (
+                                                        {getSize(attachment.size)})
+                                                    </TooltipContent>
+                                                </Tooltip>
+
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <button
+                                                            aria-label="Change language"
+                                                            aria-expanded="false"
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                height="24"
+                                                                width="24"
+                                                            >
+                                                                <path
+                                                                    fill="currentColor"
+                                                                    d="M9.6 7.8 4 12l5.6 4.2a1 1 0 0 1 .4.8v1.98c0 .21-.24.33-.4.2l-8.1-6.4a1 1 0 0 1 0-1.56l8.1-6.4c.16-.13.4-.01.4.2V7a1 1 0 0 1-.4.8ZM14.4 7.8 20 12l-5.6 4.2a1 1 0 0 0-.4.8v1.98c0 .21.24.33.4.2l8.1-6.4a1 1 0 0 0 0-1.56l-8.1-6.4a.25.25 0 0 0-.4.2V7a1 1 0 0 0 .4.8Z"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </TooltipTrigger>
+
+                                                    <TooltipContent>Change language</TooltipContent>
+                                                </Tooltip>
+                                            </div>
                                         </div>
-                                    </div>
-                                </DialogContent>
+                                    </DialogContent>
+                                )}
                             </Tooltip>
                         </Dialog>
 
@@ -892,9 +972,11 @@ export function NonVisualAttachment({
                                 </a>
                             </TooltipTrigger>
 
-                            <TooltipContent>
-                                Download {attachment.filename} ({getSize(attachment.size)})
-                            </TooltipContent>
+                            {!noInteraction && (
+                                <TooltipContent>
+                                    Download {attachment.filename} ({getSize(attachment.size)})
+                                </TooltipContent>
+                            )}
                         </Tooltip>
 
                         <Tooltip>
@@ -918,7 +1000,7 @@ export function NonVisualAttachment({
                                 </button>
                             </TooltipTrigger>
 
-                            <TooltipContent>Change language</TooltipContent>
+                            {!noInteraction && <TooltipContent>Change language</TooltipContent>}
                         </Tooltip>
                     </div>
                 </div>
@@ -926,6 +1008,7 @@ export function NonVisualAttachment({
                 <div>
                     <header>
                         <Icon name={`file-${whichType(attachment.ext)}`} />
+
                         <div>
                             <a
                                 target="_blank"
@@ -933,6 +1016,7 @@ export function NonVisualAttachment({
                             >
                                 {attachment.filename}
                             </a>
+
                             <p>{getSize(attachment.size)}</p>
                         </div>
                     </header>

@@ -116,9 +116,11 @@
 }
 
 .overlay {
+    z-index: 1;
     width: 100%;
     height: 100%;
-    display: grid;
+    display: grdid;
+    cursor: pointer;
     position: relative;
 }
 
@@ -134,11 +136,25 @@
     position: absolute;
     pointer-events: none;
     background-color: #11111b;
+    transition: opacity 0.1s ease-in-out;
+}
+
+.overlay.banner::after {
+    z-index: 1;
+    border-radius: 0;
+    background-color: hsl(0, 0%, 0%, 0.4);
 }
 
 .avatar:hover .overlay::after,
 .avatar:focus-within .overlay::after {
     opacity: 0.4;
+}
+
+.banner:hover .overlay::after,
+.banner:focus-within .overlay::after,
+.banner:hover .overlay > p,
+.banner:focus-within .overlay > p {
+    opacity: 1;
 }
 
 .overlay > div {
@@ -151,11 +167,37 @@
     position: absolute;
     align-items: center;
     justify-content: center;
+    color: var(--foreground-1);
     animation: popIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.overlay.banner > div {
+    animation: none;
+}
+
+.overlay.banner > p {
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    opacity: 0;
+    animation: none;
+    font-size: 14px;
+    font-weight: 500;
+    position: static;
+    user-select: none;
+    line-height: 1.285;
+    position: absolute;
+    width: fit-content;
+    height: fit-content;
+    color: var(--foreground-1);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.1s ease-in-out;
+}
+
 .avatar:hover .overlay > div,
-.avatar:focus-within .overlay > div {
+.avatar:focus-within .overlay > div,
+.banner:hover .overlay > div,
+.banner:focus-within .overlay > div {
     display: flex;
 }
 
@@ -210,11 +252,14 @@
 }
 
 .statusContent {
+    max-height: 80px;
     display: block;
+    overflow: hidden;
     position: relative;
     padding: 10px 12px;
     border-radius: 12px;
     word-wrap: break-word;
+    transition: max-height 0.3s ease-in-out;
     background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
 }
 
@@ -241,11 +286,18 @@
     overflow: hidden;
 }
 
-.customStatus.active:hover .statusContent > div > div {
+.customStatus.active:hover .statusContent,
+.customStatus.active:focus-within .statusContent {
+    max-height: 182px;
+}
+
+.customStatus.active:hover .statusContent > div > div,
+.customStatus.active:focus-within .statusContent > div > div {
     -webkit-line-clamp: 9;
 }
 
-.customStatus:not(.disabled):hover .statusContent > div {
+.customStatus:not(.disabled):hover .statusContent > div,
+.customStatus:not(.disabled):focus-within .statusContent > div {
     color: var(--foreground-2);
 }
 
@@ -612,7 +664,7 @@
 
 @keyframes popIn {
     0% {
-        transform: scale(0.875);
+        transform: scale(0);
     }
     100% {
         transform: scale(1);

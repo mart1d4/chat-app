@@ -185,7 +185,7 @@ export function TextArea({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLDivElement>(null);
 
-    const { blocked, removeUser } = useData();
+    const { blocked } = useData();
     const friend = channel.recipients.find((r) => r.id !== user?.id);
 
     const [target, setTarget] = useState<Range | null>(null);
@@ -404,6 +404,7 @@ export function TextArea({
 
         const temp = {
             id: nanoid(),
+            type: reply?.messageId ? 1 : 0,
             content: text,
             attachments,
             embeds: [],
@@ -415,10 +416,9 @@ export function TextArea({
             reactions: [],
             pinned: null,
             edited: null,
-            createdAt: new Date(),
-            send: true,
+            createdAt: new Date().toISOString(),
+            local: true,
             error: false,
-            loading: true,
         };
 
         // Search for mentions, and add them to the mentions array if they exist
@@ -457,14 +457,10 @@ export function TextArea({
         setLoading((prev) => ({ ...prev, unblockUser: true }));
 
         try {
-            const { errors } = await sendRequest({
+            await sendRequest({
                 query: "UNBLOCK_USER",
                 params: { userId: friend?.id },
             });
-
-            if (!errors) {
-                removeUser(friend?.id, "blocked");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -717,7 +713,7 @@ export function TextArea({
                                 <Icon
                                     size={16}
                                     name="closeFilled"
-                                    viewbox={"0 0 14 14"}
+                                    viewBox={"0 0 14 14"}
                                 />
                             </div>
                         </div>

@@ -37,7 +37,7 @@ export const emojiList = {
         },
         {
             hex: "1f602",
-            names: [":face_with_tears_of_joy:"],
+            names: [":joy:"],
             hasStyles: false,
         },
         {
@@ -332,7 +332,7 @@ export const emojiList = {
         },
         {
             hex: "1f60e",
-            names: [":smiling_face_with_sunglasses:"],
+            names: [":sunglasses:"],
             hasStyles: false,
         },
         {
@@ -567,7 +567,7 @@ export const emojiList = {
         },
         {
             hex: "1f639",
-            names: [":cat_with_tears_of_joy:"],
+            names: [":cat_joy:"],
             hasStyles: false,
         },
         {

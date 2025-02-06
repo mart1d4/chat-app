@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    useImperativeHandle,
     type ElementType,
     type ReactNode,
     createElement,
@@ -19,9 +20,12 @@ export const InteractiveElement = forwardRef<HTMLElement, InteractiveElementProp
     // @ts-ignore - TS doesn't like the ref type here, but it's correct
     function InteractiveElement<T extends ElementType = "div">(
         { element = "div" as T, onClick, children, ...props }: InteractiveElementProps<T>,
-        _: React.Ref<HTMLElement>
+        passedRef: React.Ref<HTMLElement>
     ) {
         const internalRef = useRef<HTMLElement | null>(null);
+
+        // Forward both internal ref and the passed ref
+        useImperativeHandle(passedRef, () => internalRef.current as HTMLElement, []);
 
         useEffect(() => {
             const el = internalRef.current;

@@ -1,20 +1,6 @@
 import styles from "./Icon.module.css";
 
-type Props = {
-    name: string;
-    fill?: string;
-    fill2?: string;
-    size?: number;
-    viewbox?: string;
-    style?: React.CSSProperties;
-};
-
-export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) => {
-    const iconName = name || "default";
-    const fillColor = fill || "currentColor";
-    const fillColor2 = fill2 || "currentColor";
-    const viewBox = viewbox || "0 0 24 24";
-
+export const Icon = ({ name, size = 24, ...props }: { name: string; size?: number }) => {
     if (name === "file-video") {
         return (
             <svg
@@ -282,7 +268,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
                     fillRule="evenodd"
                 >
                     <path
-                        fill={fillColor}
+                        fill="currentColor"
                         d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
                     />
                 </g>
@@ -306,7 +292,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         arrowBig: (
             <polygon
-                fill={fillColor}
+                fill="currentColor"
                 fillRule="nonzero"
                 points="13 20 11 20 11 8 5.5 13.5 4.08 12.08 12 4.16 19.92 12.08 18.5 13.5 13 8"
             />
@@ -368,13 +354,13 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         circleChecked: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                 />
                 <circle
-                    fill={fillColor}
+                    fill="currentColor"
                     cx="12"
                     cy="12"
                     r="5"
@@ -384,7 +370,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         circle: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
@@ -422,7 +408,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         rules: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M33 34.5833V7.49998H35V36.6666H9C6.791 36.6666 5 34.801 5 32.5V7.49998C5 5.19894 6.791 3.33331 9 3.33331H31V30.4166H9C7.8955 30.4166 7 31.3485 7 32.5C7 33.6515 7.8955 34.5833 9 34.5833H33ZM23.9718 9.99998L15.8889 17.9915L12.7086 14.8441L10 17.5058L15.8885 23.3333L26.6667 12.6669L23.9718 9.99998Z"
@@ -450,11 +436,11 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         boost: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     d="M4 0L0 4V8L4 12L8 8V4L4 0ZM7 7.59L4 10.59L1 7.59V4.41L4 1.41L7 4.41V7.59Z"
                 />
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     d="M2 4.83V7.17L4 9.17L6 7.17V4.83L4 2.83L2 4.83Z"
                 />
             </g>
@@ -462,7 +448,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         addCircle: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     d="M12 2.00098C6.486 2.00098 2 6.48698 2 12.001C2 17.515 6.486 22.001 12 22.001C17.514 22.001 22 17.515 22 12.001C22 6.48698 17.514 2.00098 12 2.00098ZM17 13.001H13V17.001H11V13.001H7V11.001H11V7.00098H13V11.001H17V13.001Z"
                 />
             </g>
@@ -544,7 +530,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         crown: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M13.6572 5.42868C13.8879 5.29002 14.1806 5.30402 14.3973 5.46468C14.6133 5.62602 14.7119 5.90068 14.6473 6.16202L13.3139 11.4954C13.2393 11.7927 12.9726 12.0007 12.6666 12.0007H3.33325C3.02725 12.0007 2.76058 11.792 2.68592 11.4954L1.35258 6.16202C1.28792 5.90068 1.38658 5.62602 1.60258 5.46468C1.81992 5.30468 2.11192 5.29068 2.34325 5.42868L5.13192 7.10202L7.44592 3.63068C7.46173 3.60697 7.48377 3.5913 7.50588 3.57559C7.5192 3.56612 7.53255 3.55663 7.54458 3.54535L6.90258 2.90268C6.77325 2.77335 6.77325 2.56068 6.90258 2.43135L7.76458 1.56935C7.89392 1.44002 8.10658 1.44002 8.23592 1.56935L9.09792 2.43135C9.22725 2.56068 9.22725 2.77335 9.09792 2.90268L8.45592 3.54535C8.46794 3.55686 8.48154 3.56651 8.49516 3.57618C8.51703 3.5917 8.53897 3.60727 8.55458 3.63068L10.8686 7.10202L13.6572 5.42868ZM2.66667 12.6673H13.3333V14.0007H2.66667V12.6673Z"
@@ -554,7 +540,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         image: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M6 2C3.79086 2 2 3.79086 2 6V18C2 20.2091 3.79086 22 6 22H18C20.2091 22 22 20.2091 22 18V6C22 3.79086 20.2091 2 18 2H6ZM10 8C10 6.8952 9.1032 6 8 6C6.8944 6 6 6.8952 6 8C6 9.1056 6.8944 10 8 10C9.1032 10 10 9.1056 10 8ZM9 14L6 18H18L15 11L11 16L9 14Z"
@@ -563,7 +549,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         retry: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 d="M12 2C6.485 2 2 6.485 2 12H5.33333C5.33333 8.32333 8.32333 5.33333 12 5.33333C15.6767 5.33333 18.6667 8.32333 18.6667 12C18.6667 15.6767 15.6767 18.6667 12 18.6667C10.2033 18.6667 8.55833 17.9333 7.315 16.6867L10.3333 13.6667H2V22L4.935 19.065C6.79833 20.94 9.30167 22 12 22C17.515 22 22 17.515 22 12C22 6.48667 17.515 2 12 2Z"
             />
         ),
@@ -611,7 +597,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         default: (
             <g>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
                 />
                 <path
@@ -755,7 +741,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         dots: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M7 12.001C7 10.8964 6.10457 10.001 5 10.001C3.89543 10.001 3 10.8964 3 12.001C3 13.1055 3.89543 14.001 5 14.001C6.10457 14.001 7 13.1055 7 12.001ZM14 12.001C14 10.8964 13.1046 10.001 12 10.001C10.8954 10.001 10 10.8964 10 12.001C10 13.1055 10.8954 14.001 12 14.001C13.1046 14.001 14 13.1055 14 12.001ZM19 10.001C20.1046 10.001 21 10.8964 21 12.001C21 13.1055 20.1046 14.001 19 14.001C17.8954 14.001 17 13.1055 17 12.001C17 10.8964 17.8954 10.001 19 10.001Z"
@@ -768,7 +754,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
             >
                 <path
                     d="m20 5h-16c-1.1 0-1.99.9-1.99 2l-.01 10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-10c0-1.1-.9-2-2-2zm-9 3h2v2h-2zm0 3h2v2h-2zm-3-3h2v2h-2zm0 3h2v2h-2zm-1 2h-2v-2h2zm0-3h-2v-2h2zm9 7h-8v-2h8zm0-4h-2v-2h2zm0-3h-2v-2h2zm3 3h-2v-2h2zm0-3h-2v-2h2z"
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="nonzero"
                 />
                 <path d="m0 0h24v24h-24zm0 0h24v24h-24z" />
@@ -800,7 +786,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         at: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 d="M12 2C6.486 2 2 6.486 2 12C2 17.515 6.486 22 12 22C14.039 22 15.993 21.398 17.652 20.259L16.521 18.611C15.195 19.519 13.633 20 12 20C7.589 20 4 16.411 4 12C4 7.589 7.589 4 12 4C16.411 4 20 7.589 20 12V12.782C20 14.17 19.402 15 18.4 15L18.398 15.018C18.338 15.005 18.273 15 18.209 15H18C17.437 15 16.6 14.182 16.6 13.631V12C16.6 9.464 14.537 7.4 12 7.4C9.463 7.4 7.4 9.463 7.4 12C7.4 14.537 9.463 16.6 12 16.6C13.234 16.6 14.35 16.106 15.177 15.313C15.826 16.269 16.93 17 18 17L18.002 16.981C18.064 16.994 18.129 17 18.195 17H18.4C20.552 17 22 15.306 22 12.782V12C22 6.486 17.514 2 12 2ZM12 14.599C10.566 14.599 9.4 13.433 9.4 11.999C9.4 10.565 10.566 9.399 12 9.399C13.434 9.399 14.6 10.565 14.6 11.999C14.6 13.433 13.434 14.599 12 14.599Z"
             />
         ),
@@ -862,7 +848,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
                 d="M13 6a1 1 0 1 0-2 0v5H6a1 1 0 1 0 0 2h5v5a1 1 0 1 0 2 0v-5h5a1 1 0 1 0 0-2h-5V6Z"
             />
         ),
-        logout: (
+        leave: (
             <g>
                 <path
                     fill="currentColor"
@@ -1024,7 +1010,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         checkbox: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M18.625 3H5.375C4.06519 3 3 4.06519 3 5.375V18.625C3 19.936 4.06519 21 5.375 21H18.625C19.936 21 21 19.936 21 18.625V5.375C21.0057 4.08803 19.9197 3 18.625 3ZM19 19V5H4.99999V19H19Z"
@@ -1032,7 +1018,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         closeFilled: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 d="M7.02799 0.333252C3.346 0.333252 0.361328 3.31792 0.361328 6.99992C0.361328 10.6819 3.346 13.6666 7.02799 13.6666C10.71 13.6666 13.6947 10.6819 13.6947 6.99992C13.6947 3.31792 10.7093 0.333252 7.02799 0.333252ZM10.166 9.19525L9.22333 10.1379L7.02799 7.94325L4.83266 10.1379L3.89 9.19525L6.08466 6.99992L3.88933 4.80459L4.832 3.86259L7.02733 6.05792L9.22266 3.86259L10.1653 4.80459L7.97066 6.99992L10.166 9.19525Z"
             />
         ),
@@ -1042,16 +1028,16 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
                 d="M6.6 10.02 14 11.4a.6.6 0 0 1 0 1.18L6.6 14l-2.94 5.87a1.48 1.48 0 0 0 1.99 1.98l17.03-8.52a1.48 1.48 0 0 0 0-2.64L5.65 2.16a1.48 1.48 0 0 0-1.99 1.98l2.94 5.88Z"
             />
         ),
-        checkboxFilled: (
+        "checkbox-filled": (
             <>
                 <path
-                    fill={fillColor}
+                    fill="currentColor"
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M5.37499 3H18.625C19.9197 3 21.0056 4.08803 21 5.375V18.625C21 19.936 19.9359 21 18.625 21H5.37499C4.06518 21 3 19.936 3 18.625V5.375C3 4.06519 4.06518 3 5.37499 3Z"
                 />
                 <path
-                    fill={fillColor2}
+                    fill="currentColor"
                     d="M9.58473 14.8636L6.04944 11.4051L4.50003 12.9978L9.58473 18L19.5 8.26174L17.9656 6.64795L9.58473 14.8636Z"
                 />
             </>
@@ -1066,7 +1052,7 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
         ),
         report: (
             <path
-                fill={fillColor}
+                fill="currentColor"
                 d="M20 6.00201H14V3.00201C14 2.45001 13.553 2.00201 13 2.00201H4C3.447 2.00201 3 2.45001 3 3.00201V22.002H5V14.002H10.586L8.293 16.295C8.007 16.581 7.922 17.011 8.076 17.385C8.23 17.759 8.596 18.002 9 18.002H20C20.553 18.002 21 17.554 21 17.002V7.00201C21 6.45001 20.553 6.00201 20 6.00201Z"
             />
         ),
@@ -1337,18 +1323,92 @@ export const Icon = ({ name, fill, fill2, size = 24, viewbox, style }: Props) =>
                 />
             </g>
         ),
+        arrow: (
+            <path
+                fill="currentColor"
+                d="M12.7 3.3a1 1 0 0 0-1.4 0l-5 5a1 1 0 0 0 1.4 1.4L11 6.42V20a1 1 0 1 0 2 0V6.41l3.3 3.3a1 1 0 0 0 1.4-1.42l-5-5Z"
+            />
+        ),
+        "color-picker": (
+            <path
+                fill="currentColor"
+                d="m16.25 2.25-2 2-.63-.63a3 3 0 0 0-4.24 0l-.85.85c-.3.3-.3.77 0 1.06l9.94 9.94c.3.3.77.3 1.06 0l.85-.85a3 3 0 0 0 0-4.24l-.63-.63 2-2a3.89 3.89 0 1 0-5.5-5.5ZM9.3 9.7a1 1 0 0 1 1.4 0l3.6 3.6a1 1 0 0 1 0 1.4l-4.84 4.84a5 5 0 0 1-2.7 1.39c-.47.08-.86.42-1.1.83a2.5 2.5 0 1 1-3.42-3.42c.41-.24.75-.63.83-1.1a5 5 0 0 1 1.4-2.7L9.28 9.7Z"
+            />
+        ),
+        radio: (
+            <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                fill="currentColor"
+            />
+        ),
+        "radio-filled": (
+            <g>
+                <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                    fill="currentColor"
+                />
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="5"
+                    fill="currentColor"
+                />
+            </g>
+        ),
+        apps: (
+            <path
+                fill="currentColor"
+                d="M2.06 7.61c-.25.95.31 1.92 1.26 2.18l4.3 1.15c.94.25 1.91-.31 2.17-1.26l1.15-4.3c.25-.94-.31-1.91-1.26-2.17l-4.3-1.15c-.94-.25-1.91.31-2.17 1.26l-1.15 4.3ZM12.98 7.87a2 2 0 0 0 1.75 2.95H20a2 2 0 0 0 1.76-2.95l-2.63-4.83a2 2 0 0 0-3.51 0l-2.63 4.83ZM5.86 13.27a.89.89 0 0 1 1.28 0l.75.77a.9.9 0 0 0 .54.26l1.06.12c.5.06.85.52.8 1.02l-.13 1.08c-.02.2.03.42.14.6l.56.92c.27.43.14 1-.28 1.26l-.9.58a.92.92 0 0 0-.37.48l-.36 1.02a.9.9 0 0 1-1.15.57l-1-.36a.89.89 0 0 0-.6 0l-1 .36a.9.9 0 0 1-1.15-.57l-.36-1.02a.92.92 0 0 0-.37-.48l-.9-.58a.93.93 0 0 1-.28-1.26l.56-.93c.11-.17.16-.38.14-.59l-.12-1.08c-.06-.5.3-.96.8-1.02l1.05-.12a.9.9 0 0 0 .54-.26l.75-.77ZM18.52 13.71a1.1 1.1 0 0 0-2.04 0l-.46 1.24c-.19.5-.57.88-1.07 1.07l-1.24.46a1.1 1.1 0 0 0 0 2.04l1.24.46c.5.19.88.57 1.07 1.07l.46 1.24c.35.95 1.7.95 2.04 0l.46-1.24c.19-.5.57-.88 1.07-1.07l1.24-.46a1.1 1.1 0 0 0 0-2.04l-1.24-.46a1.8 1.8 0 0 1-1.07-1.07l-.46-1.24Z"
+            />
+        ),
+        insights: (
+            <path
+                fill="currentColor"
+                fillRule="evenodd"
+                d="M2 19V5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3Zm16-9.59V13a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1h-6a1 1 0 1 0 0 2h3.59l-5.09 5.09-1.8-1.8a1 1 0 0 0-1.4 0l-4 4a1 1 0 1 0 1.4 1.42L9 13.4l1.8 1.8a1 1 0 0 0 1.4 0L18 9.4Z"
+                clipRule="evenodd"
+            />
+        ),
+        dragger: (
+            <path
+                fill="currentColor"
+                fillRule="evenodd"
+                d="M6 4a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm0 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm2 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm6-18a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm2 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm-2 6a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"
+                clipRule="evenodd"
+            />
+        ),
+        user: (
+            <path
+                fill="currentColor"
+                d="M12 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM11.53 11A9.53 9.53 0 0 0 2 20.53c0 .81.66 1.47 1.47 1.47h.22c.24 0 .44-.17.5-.4.29-1.12.84-2.17 1.32-2.91.14-.21.43-.1.4.15l-.26 2.61c-.02.3.2.55.5.55h11.7a.5.5 0 0 0 .5-.55l-.27-2.6c-.02-.26.27-.37.41-.16.48.74 1.03 1.8 1.32 2.9.06.24.26.41.5.41h.22c.81 0 1.47-.66 1.47-1.47A9.53 9.53 0 0 0 12.47 11h-.94Z"
+            />
+        ),
+        "user-shield": (
+            <path
+                fill="#99aab5"
+                fillRule="evenodd"
+                d="M3.47 5.18c.27-.4.64-.74 1.1-.96l6.09-3.05a3 3 0 0 1 2.68 0l6.1 3.05A2.83 2.83 0 0 1 21 6.75v3.5a14.17 14.17 0 0 1-8.42 12.5c-.37.16-.79.16-1.16 0A14.18 14.18 0 0 1 3 9.77V6.75c0-.57.17-1.11.47-1.57Zm2.95 10.3A12.18 12.18 0 0 0 12 20.82a12.18 12.18 0 0 0 5.58-5.32A9.49 9.49 0 0 0 12.47 14h-.94c-1.88 0-3.63.55-5.11 1.49ZM12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+                clipRule="evenodd"
+            />
+        ),
     };
 
     return (
         <svg
+            viewBox={
+                name === "translate" ? "0 96 960 960" : name === "boost" ? "0 0 8 12" : "0 0 24 24"
+            }
             xmlns="http://www.w3.org/2000/svg"
             className={styles.svg}
-            style={style || {}}
-            viewBox={iconName === "translate" ? "0 96 960 960" : viewBox}
             height={size}
             width={size}
+            {...props}
         >
-            {icons[iconName as keyof typeof icons]}
+            {icons[name as keyof typeof icons]}
         </svg>
     );
 };

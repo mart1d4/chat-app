@@ -1,15 +1,17 @@
 "use client";
 
 import { MenuContent, MenuDivider, MenuTrigger, MenuItem, Menu } from "@components";
-import { useData, useMention, useMutedChannels, useTriggerDialog } from "@/store";
+import { useData, useMention, useTriggerDialog } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
+import { useChannelSettings } from "@/store/settings";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useMenuContext } from "../Menu";
 import styles from "../Menu.module.css";
 import type { User } from "@/type";
+import { useNotifications } from "@/store/notifications";
 
 export function UserMenu({
     user,
@@ -30,7 +32,8 @@ export function UserMenu({
 }) {
     const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
 
-    const { muted, muteChannel, unmuteChannel } = useMutedChannels();
+    const { muted, muteChannel, unmuteChannel } = useChannelSettings();
+    const { notifications, removeNotification } = useNotifications();
     const { triggerDialog } = useTriggerDialog();
     const { sendRequest } = useRequestHelper();
     const appUser = useAuthenticatedUser();
@@ -39,12 +42,9 @@ export function UserMenu({
     const router = useRouter();
     const {
         removeChannelRecipient,
-        changeChannelIcon,
         removeChannel,
-        removeUser,
         channels,
         received,
-        addUser,
         friends,
         blocked,
         guilds,
@@ -69,6 +69,8 @@ export function UserMenu({
         }
     }, [muted, channelId]);
 
+    const hasUnread = notifications.channels.find((c) => c.id === channelId)?.hasUnread || false;
+
     const isSameUser = user?.id === appUser.id;
     const isFriend = friends.find((friend) => friend.id === user?.id);
     const isReceived = received.find((friend) => friend.id === user?.id);
@@ -92,7 +94,6 @@ export function UserMenu({
 
             if (!errors) {
                 setOpen(false);
-                addUser(user, isReceived ? "friends" : "sent");
             }
         } catch (error) {
             console.error(error);
@@ -113,7 +114,6 @@ export function UserMenu({
 
             if (!errors) {
                 setOpen(false);
-                removeUser(user.id, isFriend ? "friends" : isReceived ? "received" : "sent");
             }
         } catch (error) {
             console.error(error);
@@ -134,7 +134,6 @@ export function UserMenu({
 
             if (!errors) {
                 setOpen(false);
-                addUser(user, "blocked");
             }
         } catch (error) {
             console.error(error);
@@ -155,7 +154,6 @@ export function UserMenu({
 
             if (!errors) {
                 setOpen(false);
-                removeUser(user.id, "blocked");
             }
         } catch (error) {
             console.error(error);
@@ -176,14 +174,13 @@ export function UserMenu({
         setLoading((prev) => ({ ...prev, message: true }));
 
         try {
-            const { data } = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "CHANNEL_CREATE",
                 body: { recipients: [user.id] },
             });
 
-            if (data?.channelId) {
+            if (!errors) {
                 setOpen(false);
-                router.push(`/channels/me/${data.channelId}`);
             }
         } catch (error) {
             console.error(error);
@@ -198,17 +195,14 @@ export function UserMenu({
 
         try {
             const { errors } = await sendRequest({
-                query: "CHANNEL_RECIPIENT_REMOVE",
+                query: "CHANNEL_DELETE",
                 params: {
                     channelId: dmWithUser.id,
-                    recipientId: appUser.id,
                 },
             });
 
             if (!errors) {
                 setOpen(false);
-                removeChannel(dmWithUser.id);
-                router.push("/channels/me");
             }
         } catch (error) {
             console.error(error);
@@ -254,7 +248,6 @@ export function UserMenu({
 
             if (!errors) {
                 setOpen(false);
-                changeChannelIcon(channelId, null);
             }
         } catch (error) {
             console.error(error);
@@ -268,8 +261,8 @@ export function UserMenu({
             const file = event.target.files[0];
             const size = file.size / 1024 / 1024;
 
-            // If more than 5MB, return
-            if (size > 5) return;
+            // If more than 4MB, return
+            if (size > 4) return;
 
             triggerDialog({
                 type: "CHANNEL_ICON_CHANGE",
@@ -402,7 +395,15 @@ export function UserMenu({
     if (type === "author" && isSameUser) {
         return (
             <MenuContent>
-                {channelType === 0 && <MenuItem disabled>Mark As Read</MenuItem>}
+                {channelType === 0 && (
+                    <MenuItem
+                        disabled={!hasUnread}
+                        onClick={() => removeNotification(channelId as number)}
+                    >
+                        Mark As Read
+                    </MenuItem>
+                )}
+
                 {channelType === 0 && <MenuDivider />}
 
                 <MenuItem
@@ -440,7 +441,12 @@ export function UserMenu({
 
         return (
             <MenuContent>
-                <MenuItem disabled>Mark As Read</MenuItem>
+                <MenuItem
+                    disabled={!hasUnread}
+                    onClick={() => removeNotification(channelId as number)}
+                >
+                    Mark As Read
+                </MenuItem>
 
                 <MenuDivider />
 
@@ -567,7 +573,15 @@ export function UserMenu({
 
     return (
         <MenuContent>
-            {channelType === 0 && <MenuItem disabled>Mark As Read</MenuItem>}
+            {channelType === 0 && (
+                <MenuItem
+                    disabled={!hasUnread}
+                    onClick={() => removeNotification(channelId as number)}
+                >
+                    Mark As Read
+                </MenuItem>
+            )}
+
             {channelType === 0 && <MenuDivider />}
 
             <MenuItem

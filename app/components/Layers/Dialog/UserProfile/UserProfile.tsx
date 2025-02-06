@@ -26,6 +26,9 @@ import {
     Menu,
     Icon,
 } from "@components";
+import { GuildMenu } from "../../Menu/MenuContents/Guild";
+import { doesUserHaveGuildPermission, type PERMISSIONS } from "@/lib/permissions";
+import { hasGuildPermission } from "@/lib/db/permissions";
 
 export function UserProfile({
     initUser,
@@ -38,6 +41,7 @@ export function UserProfile({
 }) {
     const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
     const [activeNavItem, setActiveNavItem] = useState(startingTab ?? 0);
+    const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
     const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<UserGuild[]>([]);
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -51,17 +55,7 @@ export function UserProfile({
     const { setOpen } = useDialogContext();
     const hasRun = useRef(false);
     const router = useRouter();
-    const {
-        setUser: setAppUser,
-        removeUser,
-        addChannel,
-        channels,
-        received,
-        addUser,
-        friends,
-        blocked,
-        sent,
-    } = useData();
+    const { setUser: setAppUser, channels, received, friends, blocked, sent } = useData();
 
     const isReceived = received.find((r) => r.id === initUser.id);
     const isBlocked = blocked.find((b) => b.id === initUser.id);
@@ -114,10 +108,15 @@ export function UserProfile({
 
         if (data?.user) {
             setUser(data.user);
-            setMutualFriends(data.mutualFriends);
+            setMutualFriendIds(data.mutualFriends);
             setMutualGuilds(data.mutualGuilds);
         }
     }
+
+    useEffect(() => {
+        if (!mutualFriendIds.length) return;
+        setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
+    }, [friends, mutualFriendIds]);
 
     async function sendMessage() {
         if (loading.message) return;
@@ -144,16 +143,14 @@ export function UserProfile({
                 return router.push(`/channels/me/${channel.id}`);
             }
 
-            const { data } = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "CHANNEL_CREATE",
                 body: { recipients: [initUser.id] },
             });
 
-            if (data?.channel) {
-                addChannel(data.channel);
+            if (!errors) {
                 setLoading((prev) => ({ ...prev, message: false }));
                 setOpen(false);
-                return router.push(`/channels/me/${data.channel.id}`);
             } else {
                 throw new Error("Failed to create channel");
             }
@@ -173,10 +170,6 @@ export function UserProfile({
                 query: "ADD_FRIEND",
                 body: { username: user.username },
             });
-
-            if (!errors) {
-                addUser(user, isReceived ? "friends" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -193,10 +186,6 @@ export function UserProfile({
                 query: "REMOVE_FRIEND",
                 body: { username: user.username },
             });
-
-            if (!errors) {
-                removeUser(user.id, isFriend ? "friends" : isReceived ? "received" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -791,13 +780,29 @@ export function UserProfile({
 function MutualItem({ friend, guild }: { friend?: KnownUser; guild?: UserGuild }) {
     const urls = useUrls((state) => state.guilds);
     const { triggerDialog } = useTriggerDialog();
+    const appUser = useAuthenticatedUser();
     const { setOpen } = useDialogContext();
     const router = useRouter();
+
+    const appGuild = useData((state) => state.guilds.find((g) => g.id === guild?.id));
+    if (guild && !appGuild) return null;
 
     let url = null;
     if (guild) {
         const guildUrl = urls.find((u) => u.guildId == guild.id);
         if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
+    }
+
+    function hasPerm(permission: keyof typeof PERMISSIONS) {
+        if (!appGuild) return false;
+
+        return (
+            doesUserHaveGuildPermission(
+                appGuild.roles,
+                appGuild.members.find((m) => m.id === appUser.id),
+                permission
+            ) || appGuild.ownerId === appUser.id
+        );
     }
 
     return (
@@ -862,6 +867,13 @@ function MutualItem({ friend, guild }: { friend?: KnownUser; guild?: UserGuild }
             </MenuTrigger>
 
             {friend && <UserMenu user={friend} />}
+
+            {guild && (
+                <GuildMenu
+                    guild={appGuild}
+                    hasPerm={hasPerm}
+                />
+            )}
         </Menu>
     );
 }

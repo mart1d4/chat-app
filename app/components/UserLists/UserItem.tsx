@@ -29,7 +29,7 @@ export function UserItem({
 }) {
     const [loading, setLoading] = useState(false);
 
-    const { addUser, removeUser, channels } = useData();
+    const { channels } = useData();
     const { sendRequest } = useFetchHelper();
     const router = useRouter();
 
@@ -48,14 +48,10 @@ export function UserItem({
         setLoading(true);
 
         try {
-            const { data } = await sendRequest({
+            await sendRequest({
                 query: "CHANNEL_CREATE",
                 body: { recipients: [user.id] },
             });
-
-            if (data?.channelId) {
-                router.push(`/channels/me/${data.channelId}`);
-            }
         } catch (error) {
             console.error(error);
         }
@@ -89,7 +85,7 @@ export function UserItem({
                                     fileId={user.avatar}
                                     generateId={user.id}
                                     status={
-                                        content !== "pending" &&
+                                        (content !== "pending" || user.req === "Received") &&
                                         content !== "blocked" &&
                                         user.status
                                     }
@@ -180,10 +176,6 @@ export function UserItem({
                                                             query: "ADD_FRIEND",
                                                             body: { username: user.username },
                                                         });
-
-                                                        if (data?.user) {
-                                                            addUser(data.user, "friends");
-                                                        }
                                                     }}
                                                 >
                                                     <Icon
@@ -209,15 +201,6 @@ export function UserItem({
                                                             username: user.username,
                                                         },
                                                     });
-
-                                                    if (!errors) {
-                                                        removeUser(
-                                                            user.id,
-                                                            user.req === "Sent"
-                                                                ? "sent"
-                                                                : "received"
-                                                        );
-                                                    }
                                                 }}
                                             >
                                                 <Icon
@@ -245,10 +228,6 @@ export function UserItem({
                                                     query: "UNBLOCK_USER",
                                                     params: { userId: user.id },
                                                 });
-
-                                                if (!errors) {
-                                                    removeUser(user.id, "blocked");
-                                                }
                                             }}
                                         >
                                             <Icon

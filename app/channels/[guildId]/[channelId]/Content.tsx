@@ -5,7 +5,8 @@ import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/ty
 import { useData, useShowSettings, useUrls } from "@/store";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
-import { isLarge, isNewDay } from "@/lib/message";
+import type { HasPermissionFunction } from "./client";
+import { isInline, isLarge, isNewDay } from "@/lib/message";
 import styles from "./Channels.module.css";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
@@ -22,6 +23,7 @@ import {
     Dialog,
     Icon,
 } from "@components";
+import { useSocket } from "@/store/socket";
 
 const LIMIT = 50;
 
@@ -29,10 +31,12 @@ export default function Content({
     guildId,
     channel,
     members,
+    hasPerm,
 }: {
     guildId: number;
     channel: GuildChannel;
     members: GuildMember[];
+    hasPerm: HasPermissionFunction;
 }) {
     const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
         const baseUrl = `/channels/${channel.id}/messages?limit=`;
@@ -53,10 +57,10 @@ export default function Content({
         getKey,
         fetchHelper().request,
         {
-            errorRetryCount: 3,
-            revalidateIfStale: false,
+            errorRetryCount: 0,
+            revalidateIfStale: true,
             revalidateOnFocus: false,
-            revalidateOnReconnect: false,
+            revalidateOnReconnect: true,
         }
     );
 
@@ -70,9 +74,54 @@ export default function Content({
     const spacerEl = useRef<HTMLDivElement>(null);
 
     const guild = useData((state) => state.guilds).find((g) => g.id === guildId) as UserGuild;
-
-    const setGuildUrl = useUrls((state) => state.setGuild);
     const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
+    const setGuildUrl = useUrls((state) => state.setGuild);
+    const { socket } = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const chan = socket.subscribe(`private-channel-${channel.id}-receive`);
+        const userId = Number(socket.user.user_data?.id);
+
+        chan.bind("message-received", ({ message }: { message: ResponseMessage }) => {
+            if (message.author.id === userId && !isInline(message.type)) return;
+
+            mutate(
+                (prev: any) => {
+                    if (prev.some((a) => a.some((m) => m.id === message.id))) {
+                        return prev;
+                    }
+
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    return [[message, ...prev[0]], ...prev.slice(1)];
+                },
+                { revalidate: false }
+            );
+        });
+
+        chan.bind("message-edited", ({ message }: { message: ResponseMessage }) => {
+            if (message.author.id === userId) return;
+
+            mutate(
+                (prev: any) => {
+                    if (!prev || prev.length === 0) {
+                        return [[message]];
+                    }
+
+                    return prev.map((a) => a.map((m) => (m.id === message.id ? message : m)));
+                },
+                { revalidate: false }
+            );
+        });
+
+        return () => {
+            socket.unsubscribe(`private-channel-${channel.id}-receive`);
+        };
+    }, [socket]);
 
     useEffect(() => {
         document.title = `${channel.name} | ${guild.name} | Spark`;
@@ -176,6 +225,9 @@ export default function Content({
         }
     }
 
+    const canInvite = hasPerm("CREATE_INSTANT_INVITE", channel);
+    const canManageGuild = hasPerm("MANAGE_GUILD");
+
     return useMemo(
         () => (
             <main className={styles.container}>
@@ -195,6 +247,8 @@ export default function Content({
                                         guild={guild}
                                         members={members}
                                         channel={channel}
+                                        canInvite={canInvite}
+                                        canManageGuild={canManageGuild}
                                     />
                                 )}
 
@@ -240,10 +294,14 @@ export function FirstMessage({
     guild,
     channel,
     members,
+    canInvite,
+    canManageGuild,
 }: {
     guild: UserGuild;
     channel: GuildChannel & { isPrivate: boolean };
     members: GuildMember[];
+    canInvite: boolean;
+    canManageGuild: boolean;
 }) {
     const setShowSettings = useShowSettings((s) => s.setShowSettings);
 
@@ -252,6 +310,7 @@ export function FirstMessage({
             text: "Invite your friends",
             icon: "/assets/system/invite.svg",
             completed: members.length > 1,
+            disabled: !canInvite,
         },
         {
             text: "Personalize your server with an icon",
@@ -260,6 +319,7 @@ export function FirstMessage({
             onClick: () => {
                 setShowSettings({ type: "GUILD", guild });
             },
+            disabled: !canManageGuild,
         },
         {
             text: "Send your first message",
@@ -273,6 +333,7 @@ export function FirstMessage({
             text: "Add your first app",
             icon: "/assets/system/app.svg",
             onClick: () => {},
+            disabled: !canManageGuild,
         },
     ];
 
@@ -295,6 +356,8 @@ export function FirstMessage({
                         </div>
 
                         {content.map((c) => {
+                            if (c.disabled) return null;
+
                             const item = (
                                 <InteractiveElement
                                     key={c.text}

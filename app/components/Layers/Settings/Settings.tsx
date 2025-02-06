@@ -1,8 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
-import { FriendRequests, MyAccount, Profiles, Overview } from "./index";
-import { AnimatePresence, motion } from "framer-motion";
+import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles } from "./index";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
@@ -90,14 +89,14 @@ export function Settings() {
         { name: "separator" },
         { name: "What's New" },
         { name: "separator" },
-        { name: "Log Out", icon: "logout", noInteraction: true },
+        { name: "Log Out", icon: "leave", noInteraction: true },
     ];
 
     const guildTabs = guild
         ? [
-              { name: `Server Settings`, type: `title` },
+              { name: `Server`, type: `title` },
               { name: "Overview" },
-              { name: "Roles" },
+              { name: "Roles", component: <GuildRoles guildId={guild.id} /> },
               { name: "Emoji" },
               { name: "Stickers" },
               { name: "Soundboard" },
@@ -201,8 +200,10 @@ export function Settings() {
                                                     <Icon
                                                         size={16}
                                                         name={tab.icon}
-                                                        viewbox={
-                                                            tab.icon === "boost" ? "0 0 8 12" : ""
+                                                        viewBox={
+                                                            tab.icon === "boost"
+                                                                ? "0 0 8 12"
+                                                                : "0 0 24 24"
                                                         }
                                                     />
                                                 )}

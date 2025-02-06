@@ -1,11 +1,9 @@
 .container {
-    position: fixed;
-    z-index: 100;
+    width: 100vw;
+    height: 100vh;
     display: flex;
     width: 100dvw;
     height: 100dvh;
-    top: 0;
-    left: 0;
     pointer-events: auto;
 }
 
@@ -279,7 +277,7 @@
     color: var(--foreground-1);
 }
 
-.content h3,
+/* .content h3,
 .content label {
     margin-bottom: 8px;
     font-weight: 700;
@@ -291,7 +289,7 @@
     display: inline-block;
     color: var(--foreground-3);
     user-select: none;
-}
+} */
 
 .userCard {
     background-color: var(--background-2);
@@ -335,16 +333,29 @@
 }
 
 .username {
-    white-space: nowrap;
+    gap: 8px;
+    display: flex;
+    font-size: 20px;
     overflow: hidden;
+    font-weight: 600;
+    line-height: 24px;
+    user-select: none;
+    align-items: center;
+    height: fit-content;
+    white-space: nowrap;
     text-overflow: ellipsis;
     color: var(--foreground-1);
-    font-size: 20px;
-    line-height: 24px;
-    font-weight: 600;
-    user-select: none;
+}
+
+.username > :nth-child(2) {
+    display: flex;
     cursor: pointer;
-    height: fit-content;
+    align-items: center;
+    justify-content: center;
+}
+
+.username svg {
+    color: var(--foreground-3);
 }
 
 .field {
@@ -546,7 +557,7 @@
     margin-left: 16px;
 }
 
-.colorSwatch > div:first-child {
+.colorSwatch > div:first-child > div {
     width: 69px;
     height: 50px;
     display: flex;
@@ -560,7 +571,7 @@
     border: 1px solid transparent;
 }
 
-.colorSwatch > div:first-child > svg {
+.colorSwatch > div:first-child > div > svg {
     position: absolute;
     top: 4px;
     right: 4px;
@@ -1126,4 +1137,450 @@
     justify-content: center;
     flex-wrap: nowrap;
     margin-top: 60px;
+}
+
+/* Roles */
+
+.defaultRoleTab {
+    display: flex;
+    padding: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    padding-right: 24px;
+    align-items: center;
+    color: var(--foreground-3);
+    background-color: var(--background-3);
+}
+
+.defaultRoleTab:hover,
+.defaultRoleTab:focus-visible {
+    color: var(--foreground-2);
+    background-color: var(--background-5);
+}
+
+.defaultRoleTab > :first-child {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.defaultRoleTab > :nth-child(2) {
+    margin-left: 16px;
+    user-select: none;
+}
+
+.defaultRoleTab > :nth-child(2) > :first-child {
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 1.285;
+    margin-bottom: 4px;
+}
+
+.defaultRoleTab > :last-child {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.roleSearch {
+    margin: 32px 0;
+}
+
+.roleSearch > div {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.roleSearch > div > :first-child {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.roleSearch > p {
+    font-size: 14px;
+    user-select: none;
+}
+
+.roleSearch > p > a {
+    text-decoration: none;
+    color: var(--accent-light);
+}
+
+.roleSearch > p > a:hover {
+    text-decoration: underline;
+}
+
+.listItemHeader {
+    display: flex;
+    user-select: none;
+    margin-bottom: 8px;
+    margin-left: -32px;
+    margin-right: -8px;
+    padding-right: 8px;
+}
+
+.listItemHeader > :first-child {
+    flex: 0 0 32px;
+}
+
+.listItemHeader > :nth-child(2) {
+    flex: 0 1 273px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.285;
+    text-transform: uppercase;
+}
+
+.listItemHeader > :nth-child(3) {
+    flex: 0 0 112px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    margin-left: 16px;
+    line-height: 1.285;
+    text-transform: uppercase;
+}
+
+.listItemHeader > :nth-child(4) {
+    flex: 1 0 88px;
+    margin-left: 16px;
+}
+
+.listItemDraggable {
+    height: 61px;
+    display: flex;
+    cursor: pointer;
+    padding-top: 1px;
+    user-select: none;
+    margin-left: -32px;
+    margin-right: -8px;
+    padding-right: 8px;
+    border-radius: 4px;
+    position: relative;
+    align-items: center;
+}
+
+.listItemDraggable:hover,
+.listItemDraggable:focus-visible,
+.listItemDraggable.dragging {
+    background-color: var(--background-5);
+}
+
+.listItemDraggable.dragging > * {
+    opacity: 0;
+}
+
+.listItemDraggable::before {
+    top: 0;
+    left: 32px;
+    right: 8px;
+    height: 1px;
+    content: "";
+    position: absolute;
+    border-radius: 2px;
+    background-color: var(--border-light);
+}
+
+.listItemDraggable:hover:not(.over)::before,
+.listItemDraggable:focus-visible::before,
+.listItemDraggable.dragging::before {
+    background-color: transparent;
+}
+
+.listItemDraggable.over:not(.dragging)::before {
+    height: 4px;
+    transform: translateY(-2px);
+    background-color: var(--success-light) !important;
+}
+
+.listItemDraggable:hover + .listItemDraggable::before,
+.listItemDraggable:focus-visible + .listItemDraggable::before,
+.listItemDraggable.dragging + .listItemDraggable::before {
+    background-color: transparent;
+}
+
+.listItemDraggable > * {
+    display: flex;
+    align-items: center;
+}
+
+.listItemDraggable > .dragger {
+    width: 32px;
+    height: 35px;
+    cursor: grab;
+    visibility: hidden;
+    justify-content: center;
+}
+
+.listItemDraggable:hover > .dragger {
+    visibility: visible;
+}
+
+.listItemDraggable > :nth-child(2) {
+    flex: 0 1 273px;
+}
+
+.listItemDraggable > :nth-child(2) > :first-child {
+    margin-right: 8px;
+}
+
+.listItemDraggable > :nth-child(2) > :last-child {
+    font-weight: 600;
+    color: var(--foreground-1);
+}
+
+.listItemDraggable > :nth-child(3) {
+    height: 100%;
+    flex: 0 0 112px;
+    margin-left: 16px;
+    justify-content: flex-end;
+}
+
+.listItemDraggable > :nth-child(3) > :last-child {
+    margin-left: 4px;
+}
+
+.listItemDraggable > :nth-child(4) {
+    gap: 16px;
+    flex: 1 0 88;
+    margin-left: 16px;
+    justify-content: flex-end;
+}
+
+.listItemDraggable > :nth-child(4) > :first-child {
+    visibility: hidden;
+}
+
+.listItemDraggable:hover > :nth-child(4) > :first-child,
+.listItemDraggable:focus-within > :nth-child(4) > :first-child {
+    visibility: visible;
+}
+
+.roleEditContainer {
+    height: 100%;
+    display: flex;
+    min-width: 460px;
+    max-width: 740px;
+    margin: -60px -40px -80px;
+}
+
+.roleEditContainer > :first-child {
+    height: 100vh;
+    height: 100dvh;
+    flex: 0 0 232px;
+    border-right: 1px solid var(--border-light);
+}
+
+.roleEditAside {
+    display: flex;
+    flex-direction: column;
+}
+
+.roleEditAside > div {
+    display: flex;
+    align-items: center;
+    padding: 60px 8px 16px;
+    margin: 0 8px 8px 16px;
+    justify-content: space-between;
+}
+
+.roleEditAside > div > div {
+    gap: 8px;
+    display: flex;
+    align-items: center;
+    color: var(--foreground-3);
+}
+
+.roleEditAside > div > div > p {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.roleEditAside > div > div > svg {
+    transform: rotate(-90deg);
+}
+
+.roleEditAside > div > div:hover,
+.roleEditAside > div > div:focus-visible {
+    color: var(--foreground-1);
+}
+
+.roleEditAside > div > svg {
+    color: var(--foreground-3);
+}
+
+.roleEditAside > div > svg:hover,
+.roleEditAside > div > svg:focus-visible {
+    color: var(--foreground-1);
+}
+
+.roleEditAside > div > div,
+.roleEditAside > div > svg {
+    cursor: pointer;
+    user-select: none;
+}
+
+.roleList {
+    flex-grow: 0;
+    overflow: hidden scroll;
+    padding: 0 16px 96px 40px;
+}
+
+.roleList > li {
+    gap: 4px;
+    height: 34px;
+    display: flex;
+    cursor: pointer;
+    padding: 6px 10px;
+    margin-left: -6px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    align-items: center;
+    color: var(--foreground-1);
+}
+
+.roleList > li:hover,
+.roleList > li:focus-visible {
+    background-color: var(--background-5);
+}
+
+.roleList > li.active {
+    cursor: default;
+    background-color: var(--background-6);
+}
+
+.roleList > li > div {
+    width: 12px;
+    height: 12px;
+    margin: 0 4px;
+    border-radius: 50%;
+}
+
+.roleList > li > p {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.285;
+}
+
+.roleEditContainer > :last-child {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 232px;
+    padding-left: 24px;
+    overflow: hidden scroll;
+    position: absolute;
+    padding-right: 42px;
+    width: calc(100% - 56px);
+    min-width: calc(460px - 232px);
+    max-width: calc(740px - 232px);
+}
+
+.roleEditHeader {
+    top: 0;
+    z-index: 2;
+    margin: 0 -8px;
+    position: sticky;
+    margin-bottom: 16px;
+    padding: 60px 8px 16px 8px;
+    background-color: var(--background-4);
+}
+
+.roleEditHeader > :first-child {
+    display: flex;
+    margin-bottom: 24px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.roleEditHeader > :first-child > p {
+    overflow: hidden;
+    font-weight: 600;
+    line-height: 1.25;
+    user-select: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    color: var(--foreground-1);
+}
+
+.roleEditHeader > :first-child > svg {
+    cursor: pointer;
+    margin-left: 16px;
+}
+
+.roleEditHeader > :first-child > svg:hover,
+.roleEditHeader > :first-child > svg:focus-visible {
+    color: var(--foreground-1);
+}
+
+.roleEditTabs {
+    display: flex;
+    margin-top: 16px;
+    margin-bottom: -2px;
+    align-items: center;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.roleEditTabs > li {
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+    margin-right: 32px;
+    margin-bottom: -2px;
+    padding-bottom: 16px;
+    color: var(--foreground-3);
+    border-bottom: 2px solid transparent;
+}
+
+.roleEditTabs > li:hover,
+.roleEditTabs > li:focus-visible {
+    color: var(--foreground-2);
+    border-bottom-color: var(--accent-1);
+}
+
+.roleEditTabs > li.active {
+    cursor: default;
+    color: var(--foreground-1);
+    border-bottom-color: var(--accent-border);
+}
+
+.roleEditHeader > :last-child {
+    margin-top: 16px;
+}
+
+.rolePermTitle {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.333;
+    margin-bottom: 20px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    color: var(--foreground-3);
+}
+
+.rolePermItem {
+    display: flex;
+    margin-bottom: 20px;
+    flex-direction: column;
+}
+
+.rolePermItem > p {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    user-select: none;
+    color: var(--foreground-4);
+}
+
+.rolePermItem > :last-child {
+    height: 1px;
+    margin-top: 20px;
+    border-top: 1px solid var(--border-light);
 }

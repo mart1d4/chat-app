@@ -1,8 +1,8 @@
 "use client";
 
+import { useData, useEmojiPicker, useMessages, useTriggerDialog } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { getLongDate, getMidDate, getShortDate } from "@/lib/time";
-import { useData, useEmojiPicker, useMessages, useTriggerDialog } from "@/store";
 import { useState, useMemo, useEffect, memo, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useUploadThing } from "@/lib/uploadthing";
@@ -22,21 +22,21 @@ import {
     TooltipContent,
     MessageInvite,
     MessageEmbeds,
+    DialogTrigger,
+    DialogContent,
     MessageMenu,
     UserMention,
     MenuTrigger,
     TextArea,
+    UserMenu,
     UserCard,
     Popover,
     Tooltip,
     Avatar,
     Pinned,
+    Dialog,
     Icon,
     Menu,
-    UserMenu,
-    Dialog,
-    DialogTrigger,
-    DialogContent,
 } from "@components";
 import type {
     ResponseMessage,
@@ -91,7 +91,8 @@ export const Message = memo(
         setMessages: (
             type: "add" | "update" | "delete",
             messageId: number,
-            message?: ResponseMessage | LocalMessage
+            message?: ResponseMessage | LocalMessage,
+            fullyReplace?: boolean
         ) => void;
         channel: DMChannel | GuildChannel;
         guild?: UserGuild;
@@ -102,10 +103,9 @@ export const Message = memo(
         const [translation, setTranslation] = useState("");
         const [content, setMessageContent] = useState<JSX.Element | null>(null);
         const [contentRef, setReferenceContent] = useState<JSX.Element | null>(null);
-        const [hasMounted, setHasMounted] = useState(false);
-        const [isSending, setIsSending] = useState(false);
         const [attachmentIds, setAttachmentIds] = useState<string[]>([]);
         const [startUploading, setStartUploading] = useState(false);
+        const [hasRun, setHasRun] = useState(false);
 
         const reply = useMessages((state) => state.replies.find((r) => r.messageId === message.id));
         const edit = useMessages((state) => state.edits.find((e) => e.messageId === message.id));
@@ -117,20 +117,17 @@ export const Message = memo(
         const { sendRequest } = useFetchHelper();
         const user = useAuthenticatedUser();
         const emojiPickerRef = useRef(null);
-        const hasRun = useRef(false);
+        const isSending = useRef(true);
 
-        const isLocal = "loading" in message;
+        const isLocal = "local" in message;
         const isMentioned = message.mentions.some((m) => m.id === user.id);
 
-        // const isMenuOpen = layers.MENU?.content?.message?.id === message.id;
-        const isMenuOpen = false;
         const controller = useMemo(() => new AbortController(), []);
-        const hasAttachments = message.attachments?.length > 0;
-        const isEditing = edit?.messageId === message.id;
-        const isReply = reply?.messageId === message.id;
+        const hasAttachments = message.attachments.length > 0;
         const hasEmbeds = message.embeds.length > 0;
         const reactions = message.reactions;
         const inline = isInline(message.type);
+        const [messageContentPlain, setMessageContentPlain] = useState(message.content);
 
         if (message.content && !inline && content === null) {
             setMessageContent(FormatMessage({ message: message }));
@@ -140,21 +137,26 @@ export const Message = memo(
             setReferenceContent(FormatMessage({ message: message.reference }));
         }
 
-        if (isLocal && message.send && hasMounted && (!isSending || attachmentIds.length)) {
-            sendMessage();
-        }
+        useEffect(() => {
+            if (message.content !== messageContentPlain) {
+                setMessageContentPlain(message.content);
+                setMessageContent(FormatMessage({ message: message }));
+            }
+        }, [message.content, messageContentPlain]);
 
         useEffect(() => {
-            setHasMounted(true);
+            if (!hasRun) {
+                setHasRun(true);
+            }
 
-            if (!isLocal && !hasRun.current) {
+            if (!isLocal && !hasRun) {
                 fetchInvites();
             }
 
-            return () => {
-                hasRun.current = true;
-            };
-        }, []);
+            if (isLocal && (isSending.current || !!attachmentIds.length)) {
+                sendMessage();
+            }
+        }, [hasRun, isSending, attachmentIds, message]);
 
         async function fetchInvites() {
             const inviteRegex = /https:\/\/spark.mart1d4.dev\/[a-zA-Z0-9]{7,32}/g;
@@ -196,10 +198,10 @@ export const Message = memo(
         }
 
         async function sendMessage() {
-            if (!isLocal) return;
-            setIsSending(true);
+            if (!isSending.current && !attachmentIds.length) return;
+            isSending.current = false;
 
-            if (!!message.attachments.length && !attachmentIds.length) {
+            if (hasAttachments && !attachmentIds.length) {
                 setStartUploading(true);
                 return;
             }
@@ -230,15 +232,13 @@ export const Message = memo(
                 });
 
                 if (data?.message) {
-                    setMessages("update", message.id, data.message);
+                    setMessages("update", message.id, data.message, true);
                     moveChannelUp(channel.id);
                     setAttachmentIds([]);
                 } else if (errors) {
                     setMessages("update", message.id, {
                         ...message,
                         error: true,
-                        send: false,
-                        loading: false,
                     });
                     setAttachmentIds([...ids]);
                 }
@@ -247,12 +247,8 @@ export const Message = memo(
                 setMessages("update", message.id, {
                     ...message,
                     error: true,
-                    send: false,
-                    loading: false,
                 });
             }
-
-            setIsSending(false);
         }
 
         async function editMessage() {
@@ -282,15 +278,7 @@ export const Message = memo(
                 });
 
                 if (!errors) {
-                    setMessages("update", message.id, {
-                        ...message,
-                        content: content,
-                        edited: new Date().toISOString(),
-                    });
-                    setMessageContent(FormatMessage({ message: { ...message, content } }));
                     setEdit(message.id, null);
-                } else {
-                    throw new Error("Failed to update message");
                 }
             } catch (error) {
                 console.error(error);
@@ -326,162 +314,79 @@ export const Message = memo(
         }
 
         async function deleteMessage() {
-            try {
-                const { errors } = await sendRequest({
-                    query: "DELETE_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                });
-
-                if (!errors) deleteMessageLocally();
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "DELETE_MESSAGE",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                },
+            });
         }
 
-        async function deleteAttachment(attachmentId: string) {
-            const newAttachments = message.attachments.filter((a) => a.id !== attachmentId);
-
-            try {
-                const { errors } = await sendRequest({
-                    query: "UPDATE_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                    body: {
-                        attachments: newAttachments.map((a) => a.id),
-                    },
-                });
-
-                if (!errors) {
-                    setMessages("update", message.id, {
-                        ...message,
-                        attachments: newAttachments,
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+        async function deleteAttachment(id: string) {
+            await sendRequest({
+                query: "UPDATE_MESSAGE",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                },
+                body: {
+                    attachments: message.attachments.map((a) => a.id).filter((a) => a !== id),
+                },
+            });
         }
 
         async function removeEmbeds() {
-            try {
-                const { errors } = await sendRequest({
-                    query: "UPDATE_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                    body: {
-                        hideEmbeds: true,
-                    },
-                });
-
-                if (!errors) {
-                    setMessages("update", message.id, {
-                        ...message,
-                        embeds: [],
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "UPDATE_MESSAGE",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                },
+                body: { hideEmbeds: true },
+            });
         }
 
         async function pinMessage() {
-            try {
-                const { errors } = await sendRequest({
-                    query: "PIN_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                });
-
-                if (!errors) {
-                    setMessages("update", message.id, {
-                        ...message,
-                        pinned: new Date().toISOString(),
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "PIN_MESSAGE",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                },
+            });
         }
 
         async function unpinMessage() {
-            try {
-                const { errors } = await sendRequest({
-                    query: "UNPIN_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                });
-
-                if (!errors) {
-                    setMessages("update", message.id, { ...message, pinned: null });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "UNPIN_MESSAGE",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                },
+            });
         }
 
         async function addReaction(reaction: string | number) {
-            try {
-                const reactionSafe = encodeURIComponent(
-                    typeof reaction === "number" ? reaction : reaction.toLocaleLowerCase()
-                );
-
-                const { data } = await sendRequest({
-                    query: "ADD_REACTION",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                        emoji: reactionSafe,
-                    },
-                });
-
-                if (data?.data.message.reactions) {
-                    const reactions = data.data.message.reactions;
-
-                    setMessages("update", message.id, {
-                        ...message,
-                        reactions,
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "ADD_REACTION",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                    emoji: encodeURIComponent(reaction),
+                },
+            });
         }
 
         async function removeReaction(reaction: string | number) {
-            try {
-                const reactionSafe = encodeURIComponent(reaction);
-
-                const { data } = await sendRequest({
-                    query: "REMOVE_REACTION",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                        emoji: reactionSafe,
-                    },
-                });
-
-                if (data?.data.message.reactions) {
-                    const reactions = data.data.message.reactions;
-
-                    setMessages("update", message.id, {
-                        ...message,
-                        reactions,
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            await sendRequest({
+                query: "REMOVE_REACTION",
+                params: {
+                    channelId: channel.id,
+                    messageId: message.id,
+                    emoji: encodeURIComponent(reaction),
+                },
+            });
         }
 
         async function copyMessageContent() {
@@ -560,7 +465,7 @@ export const Message = memo(
             [
                 styles.container,
                 large && !inline && styles.large,
-                isReply && styles.reply,
+                !!reply && styles.reply,
                 isMentioned && styles.mentioned,
                 inline && styles.inline,
             ]
@@ -760,7 +665,7 @@ export const Message = memo(
                 <MenuTrigger>
                     <li
                         className={classNames()}
-                        style={{ backgroundColor: isEditing ? "var(--background-hover-4)" : "" }}
+                        style={{ backgroundColor: !!edit ? "var(--background-hover-4)" : "" }}
                     >
                         <MessageMenu
                             large={large}
@@ -988,15 +893,9 @@ export const Message = memo(
                                             </Popover>
                                         </Menu>
 
-                                        {isLocal && message.loading && (
+                                        {isLocal && (
                                             <span className={styles.titleTimestamp}>
-                                                Sending...
-                                            </span>
-                                        )}
-
-                                        {isLocal && message.error && (
-                                            <span className={styles.titleTimestamp}>
-                                                Error Sending
+                                                {message.error ? "Error Sending" : "Sending..."}
                                             </span>
                                         )}
 
@@ -1020,10 +919,7 @@ export const Message = memo(
                                 )}
 
                                 {!large && (
-                                    <span
-                                        className={styles.messageTimestamp}
-                                        style={{ visibility: isMenuOpen ? "visible" : undefined }}
-                                    >
+                                    <span className={styles.messageTimestamp}>
                                         <Tooltip
                                             delay={500}
                                             gap={1}
@@ -1043,11 +939,11 @@ export const Message = memo(
                                     className={styles.mainContent}
                                     style={{
                                         opacity:
-                                            isLocal && message.loading && !hasAttachments ? 0.5 : 1,
+                                            isLocal && !message.error && !hasAttachments ? 0.5 : 1,
                                         color: isLocal && message.error ? "var(--error-1)" : "",
                                     }}
                                 >
-                                    {isEditing ? (
+                                    {!!edit ? (
                                         <>
                                             <TextArea
                                                 edit={edit}
@@ -1077,23 +973,19 @@ export const Message = memo(
                                         content && (
                                             <>
                                                 {content}{" "}
-                                                {message.edited &&
-                                                    message.attachments.length === 0 && (
-                                                        <span className={styles.contentTimestamp}>
-                                                            <Tooltip
-                                                                delay={500}
-                                                                gap={1}
-                                                            >
-                                                                <TooltipTrigger>
-                                                                    <span>(edited)</span>
-                                                                </TooltipTrigger>
+                                                {message.edited && !message.attachments.length && (
+                                                    <span className={styles.contentTimestamp}>
+                                                        <Tooltip delay={500}>
+                                                            <TooltipTrigger>
+                                                                <span>(edited)</span>
+                                                            </TooltipTrigger>
 
-                                                                <TooltipContent>
-                                                                    {getLongDate(message.edited)}
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </span>
-                                                    )}
+                                                            <TooltipContent>
+                                                                {getLongDate(message.edited)}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </span>
+                                                )}
                                             </>
                                         )
                                     )}
@@ -1120,6 +1012,7 @@ export const Message = memo(
                                     {hasAttachments && !isLocal && (
                                         <AttachmentList
                                             message={message}
+                                            channel={channel}
                                             functions={functions}
                                         />
                                     )}
@@ -1131,75 +1024,70 @@ export const Message = memo(
                                         />
                                     )}
 
-                                    {hasAttachments &&
-                                        isLocal &&
-                                        (message.loading || message.error) && (
-                                            <div className={styles.imagesUpload}>
-                                                <img
-                                                    src="/assets/system/file-blank.svg"
-                                                    alt="File Upload"
-                                                />
+                                    {hasAttachments && isLocal && (
+                                        <div className={styles.imagesUpload}>
+                                            <img
+                                                src="/assets/system/file-blank.svg"
+                                                alt="File Upload"
+                                            />
+
+                                            <div>
+                                                <div>
+                                                    {message.error ? (
+                                                        <div>Failed uploading files</div>
+                                                    ) : (
+                                                        <>
+                                                            <div>
+                                                                {message.attachments.length === 1
+                                                                    ? message.attachments[0]
+                                                                          .filename
+                                                                    : `${message.attachments.length} files`}
+                                                            </div>
+
+                                                            <div>
+                                                                —{" "}
+                                                                {(
+                                                                    message.attachments.reduce(
+                                                                        (
+                                                                            acc: number,
+                                                                            attachment: any
+                                                                        ) => acc + attachment.size,
+                                                                        0
+                                                                    ) / 1000000
+                                                                ).toFixed(2)}{" "}
+                                                                MB
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
 
                                                 <div>
                                                     <div>
-                                                        {message.error ? (
-                                                            <div>Failed uploading files</div>
-                                                        ) : (
-                                                            <>
-                                                                <div>
-                                                                    {message.attachments.length ===
-                                                                    1
-                                                                        ? message.attachments[0]
-                                                                              .filename
-                                                                        : `${message.attachments.length} files`}
-                                                                </div>
-
-                                                                <div>
-                                                                    —{" "}
-                                                                    {(
-                                                                        message.attachments.reduce(
-                                                                            (
-                                                                                acc: number,
-                                                                                attachment: any
-                                                                            ) =>
-                                                                                acc +
-                                                                                attachment.size,
-                                                                            0
-                                                                        ) / 1000000
-                                                                    ).toFixed(2)}{" "}
-                                                                    MB
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-
-                                                    <div>
-                                                        <div>
-                                                            <div
-                                                                style={{
-                                                                    transform: `translate3d(-${
-                                                                        100 - fileProgress
-                                                                    }%, 0, 0)`,
-                                                                    backgroundColor: message.error
-                                                                        ? "var(--error-1)"
-                                                                        : "",
-                                                                }}
-                                                            />
-                                                        </div>
+                                                        <div
+                                                            style={{
+                                                                transform: `translate3d(-${
+                                                                    100 - fileProgress
+                                                                }%, 0, 0)`,
+                                                                backgroundColor: message.error
+                                                                    ? "var(--error-1)"
+                                                                    : "",
+                                                            }}
+                                                        />
                                                     </div>
                                                 </div>
-
-                                                <button
-                                                    onClick={() => {
-                                                        controller.abort();
-                                                        deleteMessageLocally();
-                                                        // Should also add the files and the message back to the textarea
-                                                    }}
-                                                >
-                                                    <Icon name="close" />
-                                                </button>
                                             </div>
-                                        )}
+
+                                            <button
+                                                onClick={() => {
+                                                    controller.abort();
+                                                    deleteMessageLocally();
+                                                    // Should also add the files and the message back to the textarea
+                                                }}
+                                            >
+                                                <Icon name="close" />
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {message.edited && hasAttachments && (
                                         <span className={styles.contentTimestamp}>
@@ -1286,9 +1174,9 @@ export const Message = memo(
 
                         {startUploading && (
                             <UploadAttachments
-                                message={message}
                                 controller={controller}
                                 setMessages={setMessages}
+                                message={message as LocalMessage}
                                 setAttachmentIds={setAttachmentIds}
                                 setFileProgress={setFileProgress}
                                 setStartUploading={setStartUploading}
@@ -1305,10 +1193,10 @@ export const Message = memo(
                 />
             </Menu>
         );
-    },
-    (prevProps, nextProps) => {
-        return JSON.stringify(prevProps.message) === JSON.stringify(nextProps.message);
     }
+    // (prevProps, nextProps) => {
+    //     return JSON.stringify(prevProps.message) === JSON.stringify(nextProps.message);
+    // }
 );
 
 function UploadAttachments({
@@ -1318,6 +1206,17 @@ function UploadAttachments({
     message,
     setMessages,
     controller,
+}: {
+    setAttachmentIds: (ids: string[]) => void;
+    setFileProgress: (progress: number) => void;
+    setStartUploading: (uploading: boolean) => void;
+    message: LocalMessage;
+    setMessages: (
+        type: "add" | "update" | "delete",
+        messageId: number,
+        message?: ResponseMessage | LocalMessage
+    ) => void;
+    controller: AbortController;
 }) {
     const { triggerDialog } = useTriggerDialog();
     const hasRun = useRef(false);
@@ -1355,4 +1254,6 @@ function UploadAttachments({
             startUpload(message.attachments.map((a) => a.file));
         }
     }, []);
+
+    return null;
 }

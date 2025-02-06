@@ -31,6 +31,7 @@ declare module "bun" {
         UPLOADTHING_TOKEN: string;
 
         RESEND_TOKEN: string;
+        NEXT_PUBLIC_PUSHER_KEY: string;
     }
 }
 
@@ -99,7 +100,10 @@ export type GuildChannelRecipient = Pick<
 export type Guild = Selectable<Guilds>;
 export type OptionalGuild = Partial<Guild>;
 
-export type UserGuild = Pick<Guild, "id" | "name" | "icon" | "systemChannelId" | "ownerId">;
+export type UserGuild = Pick<Guild, "id" | "name" | "icon" | "systemChannelId" | "ownerId"> & {
+    roles: GuildRole[];
+    members: GuildMember[];
+};
 
 export type GuildMember = Pick<User, "id" | "displayName" | "avatar" | "status"> & {
     nickname: string | null;
@@ -115,15 +119,7 @@ export type OptionalMessage = Partial<Message>;
 
 export type ResponseMessage = Pick<
     Message,
-    | "id"
-    | "type"
-    | "content"
-    | "attachments"
-    | "embeds"
-    | "edited"
-    | "pinned"
-    | "mentionEveryone"
-    | "createdAt"
+    "id" | "type" | "content" | "embeds" | "edited" | "pinned" | "mentionEveryone" | "createdAt"
 > & {
     author: Pick<User, "id" | "displayName" | "avatar">;
     reference:
@@ -133,17 +129,34 @@ export type ResponseMessage = Pick<
         | null;
     mentions: Pick<User, "id" | "displayName" | "avatar">[];
     channelMentions: Pick<Channel, "id" | "name" | "icon">[];
+    attachments: Attachment[];
     reactions: { id: number | null; name: string; count: number; me: boolean }[];
 };
 
 export type LocalMessage = Omit<ResponseMessage, "attachments"> & {
-    attachments: Message["attachments"] & {
+    attachments: (Attachment & {
         file: File;
         url: string;
-    };
-    send: boolean;
+    })[];
+    local: boolean;
     error: boolean;
-    loading: boolean;
+};
+
+type IfImageOrVideo<T, V> = T["type"] extends "image" | "video" ? V : null;
+
+export type Attachment = {
+    id: string;
+    type: "image" | "video" | "audio" | "file";
+
+    ext: string;
+    size: number;
+    filename: string;
+    spoiler: boolean;
+    description: string;
+    voiceMessage: boolean;
+
+    height: IfImageOrVideo<this, number>;
+    width: IfImageOrVideo<this, number>;
 };
 
 // Emoji
@@ -156,7 +169,10 @@ export type OptionalEmoji = Partial<Emoji>;
 export type Role = Selectable<Roles>;
 export type OptionalRole = Partial<Role>;
 
-export type GuildRole = Pick<Role, "id" | "name" | "color" | "position" | "hoist" | "permissions">;
+export type GuildRole = Pick<
+    Role,
+    "id" | "name" | "color" | "position" | "hoist" | "permissions" | "everyone"
+>;
 
 // Invite
 

@@ -71,12 +71,6 @@ export const UserLists = ({ content }: { content: string }) => {
     const friends = useData((state) => state.friends);
     const searchBar = useRef<HTMLInputElement>(null);
 
-    const pasteText = async () => {
-        const text = await navigator.clipboard.readText();
-        setSearch((prev) => prev + text);
-        searchBar.current?.focus();
-    };
-
     const list = useMemo(() => {
         if (content === "online") {
             return friends.filter((user) => user.status !== "offline");
@@ -93,7 +87,7 @@ export const UserLists = ({ content }: { content: string }) => {
 
     const filteredList = useMemo(() => {
         if (search) {
-            return list.filter((user) => lowercaseContains(user.username, search));
+            return list.filter((user) => lowercaseContains(user.displayName, search));
         }
 
         return list;
@@ -146,19 +140,63 @@ export const UserLists = ({ content }: { content: string }) => {
                     </div>
                 </div>
 
-                <h2 className={styles.title}>
-                    {contentData[content]?.title} — {filteredList.length}
-                </h2>
+                {contentData[content]?.title === "Pending" ? (
+                    <>
+                        {filteredList.filter((user) => user.req === "Received").length > 0 && (
+                            <>
+                                <h2 className={styles.title}>
+                                    Received —{" "}
+                                    {filteredList.filter((user) => user.req === "Received").length}
+                                </h2>
 
-                <ul className={styles.listContainer + " scrollbar"}>
-                    {filteredList.map((user) => (
-                        <UserItem
-                            key={user.id}
-                            user={user}
-                            content={content}
-                        />
-                    ))}
-                </ul>
+                                {filteredList
+                                    .filter((user) => user.req === "Received")
+                                    .map((user) => (
+                                        <UserItem
+                                            user={user}
+                                            key={user.id}
+                                            content={content}
+                                        />
+                                    ))}
+                            </>
+                        )}
+
+                        {filteredList.filter((user) => user.req === "Sent").length > 0 && (
+                            <>
+                                <h2 className={styles.title}>
+                                    Sent —{" "}
+                                    {filteredList.filter((user) => user.req === "Sent").length}
+                                </h2>
+
+                                {filteredList
+                                    .filter((user) => user.req === "Sent")
+                                    .map((user) => (
+                                        <UserItem
+                                            user={user}
+                                            key={user.id}
+                                            content={content}
+                                        />
+                                    ))}
+                            </>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <h2 className={styles.title}>
+                            {contentData[content]?.title} — {filteredList.length}
+                        </h2>
+
+                        <ul className={styles.listContainer + " scrollbar"}>
+                            {filteredList.map((user) => (
+                                <UserItem
+                                    key={user.id}
+                                    user={user}
+                                    content={content}
+                                />
+                            ))}
+                        </ul>
+                    </>
+                )}
             </div>
         ),
         [filteredList]

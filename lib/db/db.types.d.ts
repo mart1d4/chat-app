@@ -154,6 +154,7 @@ export interface Roles {
 
     hoist: Generated<boolean>;
     position: number;
+    everyone: Generated<boolean>;
 
     permissions: bigint;
     mentionable: Generated<boolean>;

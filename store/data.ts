@@ -1,14 +1,23 @@
-import type { AppUser, DMChannelWithRecipients, KnownUser, UnknownUser, UserGuild } from "@/type";
+import { combinePermissions } from "@/lib/permissions";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
-
+import type {
+    DMChannelWithRecipients,
+    ChannelRecipient,
+    UnknownUser,
+    KnownUser,
+    UserGuild,
+    AppUser,
+} from "@/type";
 export interface UseDataState {
     user: AppUser | null;
     token: string | null;
 
     guilds: UserGuild[];
     channels: DMChannelWithRecipients[];
-    friends: KnownUser[];
+    friends: (KnownUser & {
+        dbStatus: KnownUser["status"];
+    })[];
     received: KnownUser[];
     sent: KnownUser[];
     blocked: UnknownUser[];
@@ -20,10 +29,19 @@ export interface UseDataState {
     setGuilds: (guilds: UserGuild[]) => void;
 
     setChannels: (channels: DMChannelWithRecipients[]) => void;
+    addChannelRecipient: (channelId: number, user: ChannelRecipient) => void;
     removeChannelRecipient: (channelId: number, userId: number) => void;
-    changeChannelOwner: (channelId: number, userId: number) => void;
+    addChannel: (channel: DMChannelWithRecipients) => void;
+    updateChannel: (id: number, channel: Partial<DMChannelWithRecipients>) => void;
+    removeChannel: (id: number) => void;
+    moveChannelUp: (id: number) => void;
+    setOnlineRecipients: (channelId: number, ids: number[]) => void;
+    addOnlineRecipient: (channelId: number, user: KnownUser) => void;
+    removeOnlineRecipient: (channelId: number, id: number) => void;
 
     setFriends: (friends: KnownUser[]) => void;
+    setFriendsStatus: (ids: number[], status: "online" | "offline") => void;
+
     setReceived: (received: KnownUser[]) => void;
     setSent: (sent: KnownUser[]) => void;
     setBlocked: (blocked: UnknownUser[]) => void;
@@ -36,16 +54,13 @@ export interface UseDataState {
     ) => void;
     removeUser: (id: number, type: string) => void;
 
-    addChannel: (channel: DMChannelWithRecipients) => void;
-    updateChannel: (id: number, channel: Partial<DMChannelWithRecipients>) => void;
-    changeChannelIcon: (channelId: number, icon: string | null) => void;
-    removeChannel: (id: number) => void;
-    moveChannelUp: (id: number) => void;
-
     addGuild: (guild: UserGuild) => void;
     updateGuild: (id: number, guild: Partial<UserGuild>) => void;
     removeGuild: (id: number) => void;
     moveGuildUp: (id: number) => void;
+    setOnlineMembers: (guildId: number, users: KnownUser[]) => void;
+    addOnlineMember: (guildId: number, user: KnownUser) => void;
+    removeOnlineMember: (guildId: number, id: number) => void;
 
     reset: () => void;
 }
@@ -67,7 +82,40 @@ export const useData = create<UseDataState>()((set) => ({
 
     setChannels: (channels) => {
         set((state) => ({
-            channels: channels.map((c) => getFullChannel(c, state.user)).filter((c) => !!c),
+            channels: channels
+                .map((c) => getFullChannel(c, state.user))
+                .filter((c) => !!c)
+                .map((c) => ({
+                    ...c,
+                    recipients: c.recipients.map((r) => ({
+                        ...r,
+                        dbStatus: r.status,
+                        status: "offline",
+                    })),
+                })),
+        }));
+    },
+
+    addChannelRecipient: (channelId, user) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id === channelId) {
+                    return {
+                        ...c,
+                        name: getFullChannel(c, state.user)?.name,
+                        recipients: [
+                            ...c.recipients,
+                            {
+                                ...user,
+                                dbStatus: user.status,
+                                status: "offline",
+                            },
+                        ],
+                    };
+                }
+
+                return c;
+            }),
         }));
     },
 
@@ -77,6 +125,7 @@ export const useData = create<UseDataState>()((set) => ({
                 if (c.id === channelId) {
                     return {
                         ...c,
+                        name: getFullChannel(c, state.user)?.name,
                         recipients: c.recipients.filter((r) => r.id !== userId),
                     };
                 }
@@ -86,41 +135,142 @@ export const useData = create<UseDataState>()((set) => ({
         }));
     },
 
-    changeChannelOwner: (channelId, userId) => {
-        set((state) => ({
+    addChannel: (channel) => {
+        return set((state) => {
+            const newChan = getFullChannel(channel, state.user);
+            if (!newChan) return state;
+
+            return {
+                channels: [
+                    {
+                        ...newChan,
+                        recipients: newChan.recipients.map((r) => ({
+                            ...r,
+                            dbStatus: r.status,
+                            status: "offline",
+                        })),
+                    },
+                    ...state.channels,
+                ],
+            };
+        });
+    },
+
+    updateChannel: (id, data) => {
+        return set((state) => ({
             channels: state.channels.map((c) => {
-                if (c.id === channelId) {
+                if (c.id === id)
                     return {
                         ...c,
-                        ownerId: userId,
+                        ...data,
+                        name: getFullChannel({ ...c, ...data }, state.user)?.name,
                     };
-                }
-
                 return c;
             }),
         }));
     },
 
-    changeChannelIcon: (channelId, icon) => {
+    removeChannel: (id) => {
+        set((state) => ({ channels: state.channels.filter((c) => c.id !== id) }));
+    },
+
+    moveChannelUp: (id) => {
+        set((state) => {
+            const channel = state.channels.find((c) => c.id === id);
+
+            if (channel) {
+                const newChannels = [channel, ...state.channels.filter((c) => c.id !== id)];
+                return { channels: newChannels };
+            }
+
+            return state;
+        });
+    },
+
+    setOnlineRecipients: (channelId, ids) => {
         set((state) => ({
             channels: state.channels.map((c) => {
-                if (c.id === channelId) {
-                    return {
-                        ...c,
-                        icon,
-                    };
-                }
+                if (c.id !== channelId) return c;
 
-                return c;
+                return {
+                    ...c,
+                    recipients: c.recipients.map((r) => {
+                        if (ids.includes(r.id)) {
+                            return { ...r, status: r.dbStatus };
+                        }
+
+                        return { ...r, status: "offline" };
+                    }),
+                };
             }),
         }));
     },
 
-    setGuilds: (guilds) => set(() => ({ guilds })),
-    setFriends: (friends) => set(() => ({ friends })),
+    addOnlineRecipient: (channelId, user) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id !== channelId) return c;
+
+                return {
+                    ...c,
+                    recipients: c.recipients.map((r) => {
+                        if (r.id === user.id) {
+                            return {
+                                ...r,
+                                ...user,
+                                dbStatus: user.status,
+                            };
+                        }
+
+                        return r;
+                    }),
+                };
+            }),
+        }));
+    },
+
+    removeOnlineRecipient: (channelId, id) => {
+        set((state) => ({
+            channels: state.channels.map((c) => {
+                if (c.id !== channelId) return c;
+
+                return {
+                    ...c,
+                    recipients: c.recipients.map((r) => {
+                        if (r.id === id) {
+                            return { ...r, status: "offline" };
+                        }
+
+                        return r;
+                    }),
+                };
+            }),
+        }));
+    },
+
+    setGuilds: (guilds) => set(() => ({ guilds: guilds.map((g) => ({ ...g, members: [] })) })),
+
+    setFriends: (friends) => {
+        return set(() => ({
+            friends: friends.map((f) => ({ ...f, dbStatus: f.status, status: "offline" })),
+        }));
+    },
+
+    setFriendsStatus: (ids, status) => {
+        set((state) => ({
+            friends: state.friends.map((f) => {
+                if (ids.includes(f.id)) {
+                    return { ...f, status: status === "offline" ? "offline" : f.dbStatus };
+                }
+
+                return f;
+            }),
+        }));
+    },
+
     setBlocked: (blocked) => set(() => ({ blocked })),
+    setSent: (sent) => set(() => ({ sent: sent.map((s) => ({ ...s, status: "offline" })) })),
     setReceived: (received) => set(() => ({ received })),
-    setSent: (sent) => set(() => ({ sent })),
 
     modifyUser: (user) =>
         set((state) => ({
@@ -163,7 +313,14 @@ export const useData = create<UseDataState>()((set) => ({
         return set((state) => {
             if (type === "friends") {
                 return {
-                    friends: [user as KnownUser, ...state.friends],
+                    friends: [
+                        {
+                            ...(user as KnownUser),
+                            dbStatus: (user as KnownUser).status,
+                            status: "offline",
+                        },
+                        ...state.friends,
+                    ],
                     received: state.received.filter((r) => r.id !== user.id),
                     sent: state.sent.filter((r) => r.id !== user.id),
                 };
@@ -175,7 +332,9 @@ export const useData = create<UseDataState>()((set) => ({
                     sent: state.sent.filter((r) => r.id !== user.id),
                 };
             } else if (type === "received") {
-                return { received: [user as KnownUser, ...state.received] };
+                return {
+                    received: [user as KnownUser, ...state.received],
+                };
             } else if (type === "sent") {
                 return { sent: [user as KnownUser, ...state.sent] };
             }
@@ -198,44 +357,7 @@ export const useData = create<UseDataState>()((set) => ({
         });
     },
 
-    addChannel: (channel) => {
-        return set((state) => {
-            const newChan = getFullChannel(channel, state.user);
-            if (!newChan) return state;
-
-            return {
-                channels: [newChan, ...state.channels],
-            };
-        });
-    },
-
-    updateChannel: (id, data) => {
-        return set((state) => ({
-            channels: state.channels.map((c) => {
-                if (c.id === id) return { ...c, ...data };
-                return c;
-            }),
-        }));
-    },
-
-    removeChannel: (id) => {
-        set((state) => ({ channels: state.channels.filter((c) => c.id !== id) }));
-    },
-
-    moveChannelUp: (id) => {
-        set((state) => {
-            const channel = state.channels.find((c) => c.id === id);
-
-            if (channel) {
-                const newChannels = [channel, ...state.channels.filter((c) => c.id !== id)];
-                return { channels: newChannels };
-            }
-
-            return state;
-        });
-    },
-
-    addGuild: (guild) => set((state) => ({ guilds: [guild, ...state.guilds] })),
+    addGuild: (guild) => set((state) => ({ guilds: [{ ...guild, members: [] }, ...state.guilds] })),
 
     updateGuild: (id, data) => {
         set((state) => ({
@@ -246,9 +368,7 @@ export const useData = create<UseDataState>()((set) => ({
         }));
     },
 
-    removeGuild: (id) => {
-        set((state) => ({ guilds: state.guilds.filter((g) => g.id !== id) }));
-    },
+    removeGuild: (id) => set((state) => ({ guilds: state.guilds.filter((g) => g.id !== id) })),
 
     moveGuildUp: (id) => {
         set((state) => {
@@ -261,6 +381,73 @@ export const useData = create<UseDataState>()((set) => ({
 
             return state;
         });
+    },
+
+    setOnlineMembers: (guildId, users) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    members: g.members.map((m) => {
+                        const user = users.find((u) => u.id === m.id);
+
+                        if (user) {
+                            return {
+                                ...m,
+                                ...user,
+                                dbStatus: user.status,
+                            };
+                        }
+
+                        return { ...m, status: "offline" };
+                    }),
+                };
+            }),
+        }));
+    },
+
+    addOnlineMember: (guildId, user) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    members: g.members.map((m) => {
+                        if (m.id === user.id) {
+                            return {
+                                ...m,
+                                ...user,
+                                dbStatus: user.status,
+                            };
+                        }
+
+                        return m;
+                    }),
+                };
+            }),
+        }));
+    },
+
+    removeOnlineMember: (guildId, id) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    members: g.members.map((m) => {
+                        if (m.id === id) {
+                            return { ...m, status: "offline" };
+                        }
+
+                        return m;
+                    }),
+                };
+            }),
+        }));
     },
 
     reset: () => {

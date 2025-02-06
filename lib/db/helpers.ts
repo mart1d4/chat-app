@@ -1,4 +1,15 @@
-import type { AppChannel, AppUser, Channel, Friend, UnknownUser, User } from "@/type";
+import type {
+    AppChannel,
+    AppUser,
+    Channel,
+    DMChannel,
+    DMChannelWithRecipients,
+    Friend,
+    KnownUser,
+    UnknownUser,
+    User,
+    UserGuild,
+} from "@/type";
 import { type ExpressionBuilder, type Selectable, sql } from "kysely";
 import type { Channels, DB, Guilds, Users } from "./db.types";
 import { jsonArrayFrom } from "kysely/helpers/mysql";
@@ -187,26 +198,16 @@ export async function getInitialData() {
 
         console.log(`Initial data fetched in ${end - start}ms.`);
 
-        // console.log("User: ", {
-        //     ...user,
-        //     friends,
-        //     blocked,
-        //     received,
-        //     sent,
-        //     channels,
-        //     guilds,
-        // });
-
         return {
             user: user as AppUser,
-            friends: friends as Friend[],
+            friends: friends as KnownUser[],
             blocked: blocked as UnknownUser[],
             received: received as UnknownUser[],
             sent: sent as UnknownUser[],
             // @ts-ignore - Need to figure this one out
-            channels: channels as AppChannel[],
+            channels: channels as DMChannelWithRecipients[],
             // @ts-ignore - Need to figure this one out
-            guilds: guilds as Guilds[],
+            guilds: guilds as UserGuild[],
         };
     } catch (error) {
         console.log(error);
@@ -338,6 +339,7 @@ export async function getUserChannels({
             .where("channels.isDeleted", "=", false)
             .orderBy("updatedAt", "desc")
             .groupBy("channels.id")
+            .limit(50)
             .execute();
 
         return channels || [];
@@ -414,6 +416,7 @@ export async function isUserInChannel(userId: number, channelId: number) {
             .where("userId", "=", userId)
             .where("channelId", "=", channelId)
             .where("channels.isDeleted", "=", false)
+            .where("channelRecipients.isHidden", "=", false)
             .executeTakeFirst();
 
         return !!channel;
@@ -430,34 +433,41 @@ export async function isUserInChannel(userId: number, channelId: number) {
 export async function getUserGuilds({
     userId,
     select = SelectAppGuild,
-    getMembers = false,
-    getChannels = false,
-    getRoles = false,
 }: {
     userId: number;
     select?: (keyof Guilds)[];
-    getMembers?: boolean;
-    getChannels?: boolean;
-    getRoles?: boolean;
 }) {
     try {
         const guilds = await db
             .selectFrom("guilds")
-            .select("id")
-            .$if(!!select && select.length > 0, (q) => q.select(select as (keyof Guilds)[]))
-            .$if(getMembers, (q) => q.select((eb) => withMembers(eb)))
-            .$if(getChannels, (q) => q.select((eb) => withChannels(eb)))
-            .$if(getRoles, (q) => q.select((eb) => withRoles(eb)))
-            .where(({ exists, selectFrom }) =>
-                exists(
-                    selectFrom("guildMembers")
-                        .select("userId")
-                        .where("guildMembers.userId", "=", userId)
-                        .whereRef("guildMembers.guildId", "=", "guilds.id")
-                )
+            .innerJoin("guildMembers", (join) =>
+                join
+                    .onRef("guildMembers.guildId", "=", "guilds.id")
+                    .on("guildMembers.userId", "=", userId)
             )
-            .where("isDeleted", "=", false)
-            .orderBy("createdAt", "desc")
+            // .innerJoin("guildMembers as members", "members.guildId", "guilds.id")
+            .innerJoin("roles", "roles.guildId", "guilds.id")
+            .select(select.map((key) => `guilds.${key}`) as (keyof Guilds)[])
+            // @ts-ignore - Need to figure this one out
+            .select([
+                JsonArray({
+                    table: "roles",
+                    columns: [
+                        "id",
+                        "name",
+                        "color",
+                        "permissions",
+                        "position",
+                        "everyone",
+                        "hoist",
+                        "mentionable",
+                    ],
+                    as: "roles",
+                }),
+                // JsonArray({ table: "members", columns: ["profile"], as: "members" }),
+            ])
+            .where("guilds.isDeleted", "=", false)
+            .groupBy("guilds.id")
             .execute();
 
         return guilds || [];
@@ -575,4 +585,67 @@ export function toString(obj: any) {
         (_, value) => (typeof value === "bigint" ? value.toString() : value),
         4
     );
+}
+
+export function camelCaseToSnakeCase(str: string) {
+    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+type JsonObjectOptions = {
+    table: string;
+    columns: string[];
+    as?: string;
+    otherTable?: string;
+    otherColumns?: string[];
+    otherAs?: string;
+};
+
+export function JsonObject({
+    table,
+    columns,
+    as,
+    otherTable,
+    otherColumns,
+    otherAs,
+}: JsonObjectOptions): string | ReturnType<typeof sql> {
+    let fields = columns.map((c) => `'${c}', ${table}.${camelCaseToSnakeCase(c)}`).join(", ");
+
+    if (otherTable && otherColumns) {
+        const otherFields = otherColumns
+            .map(
+                (c) =>
+                    `'${
+                        otherAs + c[0].toUpperCase() + c.slice(1)
+                    }', ${otherTable}.${camelCaseToSnakeCase(c)}`
+            )
+            .join(", ");
+
+        fields += `, ${otherFields}`;
+    }
+
+    return sql`
+        CASE
+            WHEN ${sql.raw(`${table}.${columns[0]}`)} IS NULL
+            THEN NULL
+            ELSE JSON_OBJECT(${sql.raw(fields)})
+        END
+        ${as ? sql.raw(` as ${as}`) : sql.raw(``)}`;
+}
+
+export function JsonArray({
+    table,
+    columns,
+    as,
+}: {
+    table: string;
+    columns: string[];
+    as?: string;
+}) {
+    return sql`
+        CASE
+            WHEN COUNT(${sql.raw(`${table}.${columns[0]}`)}) = 0
+            THEN JSON_ARRAY()
+            ELSE JSON_ARRAYAGG(${JsonObject({ table, columns })})
+        END
+        ${as ? sql.raw(` as ${as}`) : sql.raw(``)}`;
 }

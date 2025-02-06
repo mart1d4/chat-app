@@ -2,7 +2,7 @@
 
 import { useEmojiPicker, useMostUsedEmojis, useTriggerDialog, useWindowSettings } from "@/store";
 import { Menu, MenuContent, MenuDivider, MenuItem, MenuTrigger, useMenuContext } from "../Menu";
-import type { DMChannel, GuildChannel, ResponseMessage, UserGuild } from "@/type";
+import type { Attachment, DMChannel, GuildChannel, ResponseMessage, UserGuild } from "@/type";
 import type { MessageFunctions } from "@/app/components/Message/Message";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { isInline as isMessageInline } from "@/lib/message";
@@ -13,11 +13,20 @@ export function MessageMenuContent({
     channel,
     guild,
     functions,
+    attachment,
+    attachmentFunctions,
 }: {
     message: ResponseMessage;
     channel: DMChannel | GuildChannel;
     guild: UserGuild | undefined;
     functions: MessageFunctions;
+    attachment?: Attachment;
+    attachmentFunctions?: {
+        copyImage: () => void;
+        saveImage: () => void;
+        copyLink: () => void;
+        openLink: () => void;
+    };
 }) {
     const { setData: setEmojiPicker } = useEmojiPicker();
     const { shiftKeyDown: shift } = useWindowSettings();
@@ -225,6 +234,20 @@ export function MessageMenuContent({
             )}
 
             {(canDelete || !isAuthor) && <MenuDivider />}
+
+            {attachment && attachmentFunctions && (
+                <>
+                    <MenuItem onClick={attachmentFunctions.copyImage}>Copy Image</MenuItem>
+                    <MenuItem onClick={attachmentFunctions.saveImage}>Save Image</MenuItem>
+
+                    <MenuDivider />
+
+                    <MenuItem onClick={attachmentFunctions.copyLink}>Copy Link</MenuItem>
+                    <MenuItem onClick={attachmentFunctions.openLink}>Open Link</MenuItem>
+
+                    <MenuDivider />
+                </>
+            )}
 
             <MenuItem
                 icon="id"

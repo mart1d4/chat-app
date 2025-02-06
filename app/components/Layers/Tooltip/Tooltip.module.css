@@ -27,4 +27,12 @@
     font-size: 16px;
     font-weight: 600;
     line-height: 20px;
+    flex-direction: column;
+}
+
+.tooltip > span {
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+    color: var(--foreground-4);
 }

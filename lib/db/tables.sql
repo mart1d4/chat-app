@@ -197,6 +197,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
 
 	`hoist` TINYINT(1) NOT NULL DEFAULT '0',
 	`position` INT NOT NULL,
+	`everyone` TINYINT(1) NOT NULL DEFAULT '0',
 
 	`permissions` BIGINT NOT NULL,
 	`mentionable` TINYINT(1) NOT NULL DEFAULT '0',

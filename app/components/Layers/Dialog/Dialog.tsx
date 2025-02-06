@@ -64,6 +64,8 @@ interface DialogContentProps {
     artFullUrl?: boolean;
     blank?: boolean;
     noContentOverflow?: boolean;
+    leftLabel?: string;
+    leftConfirm?: () => void;
     onCancel?: () => void;
     onConfirm?: () => void;
 }
@@ -402,33 +404,51 @@ export const DialogContent = forwardRef<
 
                                 {!props.hideFooter && (
                                     <footer className={styles.footer}>
-                                        <button
-                                            type="submit"
-                                            className={`button submit ${
-                                                props.confirmColor || "blue"
-                                            } ${props.confirmDisabled ? "disabled" : ""}`}
-                                        >
-                                            {props.confirmLoading ? (
-                                                <LoadingDots />
-                                            ) : (
-                                                props.confirmLabel || "Confirm"
-                                            )}
-                                        </button>
-
-                                        {!props.buttonFull && !props.hideCancel && (
+                                        {props.leftLabel ? (
                                             <button
                                                 type="button"
-                                                className="button underline submit"
+                                                className="button underline"
                                                 onClick={() => {
-                                                    context.setOpen(false);
-                                                    if (props.onCancel) {
-                                                        props.onCancel();
+                                                    if (props.leftConfirm) {
+                                                        props.leftConfirm();
                                                     }
                                                 }}
                                             >
-                                                Cancel
+                                                {props.leftLabel}
                                             </button>
+                                        ) : (
+                                            <div />
                                         )}
+
+                                        <div>
+                                            <button
+                                                type="submit"
+                                                className={`button submit ${
+                                                    props.confirmColor || "blue"
+                                                } ${props.confirmDisabled ? "disabled" : ""}`}
+                                            >
+                                                {props.confirmLoading ? (
+                                                    <LoadingDots />
+                                                ) : (
+                                                    props.confirmLabel || "Confirm"
+                                                )}
+                                            </button>
+
+                                            {!props.buttonFull && !props.hideCancel && (
+                                                <button
+                                                    type="button"
+                                                    className="button underline submit"
+                                                    onClick={() => {
+                                                        context.setOpen(false);
+                                                        if (props.onCancel) {
+                                                            props.onCancel();
+                                                        }
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            )}
+                                        </div>
                                     </footer>
                                 )}
                             </form>

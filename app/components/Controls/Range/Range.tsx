@@ -5,17 +5,23 @@ import styles from "./Range.module.css";
 
 export function Range({
     onChange,
+    val,
     min,
     max,
+    step,
     size,
     initValue,
+    homogeneousBg,
     ...props
 }: {
     onChange: (v: number) => void;
+    val?: number;
     min?: number;
     max?: number;
-    size?: number;
+    step?: number;
+    size?: "sm" | "md" | "lg";
     initValue?: number;
+    homogeneousBg?: string;
 }) {
     const [isDragging, setIsDragging] = useState(false);
     const [value, setValue] = useState(initValue ?? 0);
@@ -31,7 +37,19 @@ export function Range({
 
         const rect = slider.current.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
-        const newValue = Math.max(0, Math.min(100, (offsetX / rect.width) * 100));
+
+        const newValue = Math.min(
+            Math.max(
+                Math.round(
+                    ((offsetX / rect.width) * ((max ?? 100) - (min ?? 0)) + (min ?? 0)) /
+                        (step ?? 1)
+                ) * (step ?? 1),
+                min ?? 0
+            ),
+            max ?? 100
+        );
+
+        if (newValue === value) return;
         setValue(newValue);
     };
 
@@ -54,19 +72,27 @@ export function Range({
         };
     }, [isDragging]);
 
+    useEffect(() => {
+        setValue(val ?? 0);
+    }, [val]);
+
     return (
         <div
-            className={styles.slider}
-            style={{ width: `${size}px` }}
+            className={`${styles.slider} ${styles[size ?? "md"]}`}
+            {...props}
         >
             <input
-                step={1}
                 type="range"
-                value={value}
                 min={min ?? 0}
                 max={max ?? 100}
+                step={step ?? 1}
+                value={val ?? value}
                 className={styles.input}
-                onChange={(e) => setValue(Number(e.target.value))}
+                focus-id="range-slider-crop"
+                onChange={(e) => {
+                    if (value === Number(e.target.value)) return;
+                    setValue(Number(e.target.value));
+                }}
             />
 
             <div
@@ -76,12 +102,32 @@ export function Range({
                     setIsDragging(true);
                     handleDrag(e.nativeEvent);
                 }}
+                style={{
+                    background:
+                        homogeneousBg === "hsl"
+                            ? `linear-gradient(to right, ${Array.from(
+                                  { length: (max ?? 100) / (step ?? 1) },
+                                  (_, i) =>
+                                      `hsl(${i * (360 / ((max ?? 100) / (step ?? 1)))}, 100%, 50%)`
+                              ).join(", ")})`
+                            : "",
+                }}
             >
                 <div
                     className={styles.progress}
-                    style={{ width: `${value}%` }}
+                    style={{
+                        width: `${
+                            ((Math.round((value - (min ?? 0)) / (step ?? 1)) * (step ?? 1)) /
+                                ((max ?? 100) - (min ?? 0))) *
+                            100
+                        }%`,
+                        backgroundColor: homogeneousBg ? "transparent" : undefined,
+                    }}
                 >
-                    <div className={styles.thumb} />
+                    <div
+                        id="range-slider-crop"
+                        className={styles.thumb}
+                    />
                 </div>
             </div>
         </div>

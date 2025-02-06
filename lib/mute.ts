@@ -1,7 +1,10 @@
 type MuteDuration = "15m" | "1h" | "3h" | "8h" | "24h" | "always";
 
-export function isStillMuted(duration: MuteDuration, startedAt: Date | string) {
+export function isStillMuted(duration: MuteDuration | null, startedAt: Date | string | null) {
+    if (!duration || !startedAt) return false;
+
     const now = new Date();
+
     const startedAtDate = new Date(startedAt); // Ensure it's a Date object
     const startedAtPlusDuration = new Date(startedAtDate);
 
@@ -28,7 +31,9 @@ export function isStillMuted(duration: MuteDuration, startedAt: Date | string) {
     return now < startedAtPlusDuration;
 }
 
-export function getDateUntilEnd(duration: MuteDuration, startedAt: Date | string) {
+export function getDateUntilEnd(duration: MuteDuration | null, startedAt: Date | string | null) {
+    if (!duration || !startedAt) return null;
+
     const startedAtDate = new Date(startedAt);
     const startedAtPlusDuration = new Date(startedAt);
 

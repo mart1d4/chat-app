@@ -1,17 +1,15 @@
 "use client";
 
-import {
-    useData,
-    useMutedChannels,
-    useNotifications,
-    useShowChannels,
-    useWindowSettings,
-} from "@/store";
+import { useData, useShowChannels, useWindowSettings } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 import type { ChannelRecipient, DMChannel } from "@/type";
 import { usePathname, useRouter } from "next/navigation";
+import { useNotifications } from "@/store/notifications";
+import { useChannelSettings } from "@/store/settings";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import styles from "./UserChannels.module.css";
+import { useMemo, useRef } from "react";
 import Link from "next/link";
 import {
     PopoverContent,
@@ -21,6 +19,7 @@ import {
     DialogTrigger,
     UserSection,
     MenuTrigger,
+    LeaveGroup,
     CreateDM,
     UserMenu,
     Tooltip,
@@ -29,10 +28,7 @@ import {
     Avatar,
     Icon,
     Menu,
-    LeaveGroup,
 } from "@components";
-import { useMemo, useRef } from "react";
-import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 
 export function UserChannels() {
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
@@ -103,12 +99,14 @@ function Title() {
 }
 
 function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelRecipient[] } }) {
-    const ping = useNotifications((state) => state.pings).find((p) => p.channelId === channel?.id);
     const requests = useData((state) => state.received).length;
+    const { notifications } = useNotifications();
     const { sendRequest } = useFetchHelper();
-    const { muted } = useMutedChannels();
+    const { muted } = useChannelSettings();
     const { removeChannel } = useData();
     const user = useAuthenticatedUser();
+
+    const hasPing = notifications.channels.find((c) => c.id === channel?.id && c.pings > 0);
 
     const statusRef = useRef<HTMLDivElement>(null);
     const nameRef = useRef<HTMLDivElement>(null);
@@ -163,10 +161,7 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                     <div className={styles.linkFriends}>
                         <div className={styles.layoutFriends}>
                             <div className={styles.layoutAvatar}>
-                                <Icon
-                                    name="friends"
-                                    fill={`var(--foreground-${sameUrl ? 1 : 3})`}
-                                />
+                                <Icon name="friends" />
                             </div>
 
                             <div className={styles.layoutContent}>
@@ -198,7 +193,7 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                     href={`/channels/me/${channel.id}`}
                     style={{
                         backgroundColor: sameUrl ? "var(--background-5)" : "",
-                        color: sameUrl || ping ? "var(--foreground-1)" : "",
+                        color: sameUrl || hasPing ? "var(--foreground-1)" : "",
                         borderColor: sameUrl ? "var(--background-1)" : "",
                         opacity: isMuted ? 0.3 : undefined,
                     }}
@@ -211,6 +206,7 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                                         <Avatar
                                             size={32}
                                             alt={channel.name}
+                                            status={friend?.status}
                                             generateId={friend?.id || channel.id}
                                             fileId={friend?.avatar || channel.icon}
                                             type={channel.type === 0 ? "user" : "channel"}

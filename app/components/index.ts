@@ -94,3 +94,5 @@ export { VoiceMessage } from "./Controls/VoiceMessage/VoiceMessage";
 
 export { InteractiveElement } from "./Accessibility/InteractiveElement";
 export { Range } from "./Controls/Range/Range";
+export { ImageCropper } from "./Images/Cropper";
+export { ColorPicker } from "./Controls/ColorPicker/ColorPicker";

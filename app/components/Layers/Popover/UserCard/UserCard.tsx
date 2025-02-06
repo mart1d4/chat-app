@@ -4,39 +4,43 @@ import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@
 import type { AppUser, KnownUser, User, UserGuild, UserProfile } from "@/type";
 import { useData, useShowSettings, useTriggerDialog } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useState, useEffect, Fragment } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
 import { sanitizeString } from "@/lib/strings";
 import { usePopoverContext } from "../Popover";
 import { getCdnUrl } from "@/lib/uploadthing";
-import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./UserCard.module.css";
+import Image from "next/image";
 import {
+    InteractiveElement,
     TooltipContent,
     TooltipTrigger,
     LoadingCubes,
-    MenuTrigger,
     MenuContent,
     MenuDivider,
+    MenuTrigger,
+    UserMenu,
     MenuItem,
     Tooltip,
     Avatar,
     Icon,
     Menu,
-    UserMenu,
-    InteractiveElement,
 } from "@components";
-import Image from "next/image";
 
 export function UserCard({
     initUser,
     me,
     mode,
+    onAvatarClick,
+    onBannerClick,
 }: {
     initUser: typeof mode extends "edit" ? AppUser : User["id"] & Partial<User>;
     me?: boolean;
     mode?: "edit";
+    onAvatarClick?: () => void;
+    onBannerClick?: () => void;
 }) {
     const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<UserGuild[]>([]);
@@ -48,22 +52,12 @@ export function UserCard({
     const [message, setMessage] = useState("");
     const [note, setNote] = useState("");
 
-    const {
-        channels,
-        addChannel,
-        addUser,
-        removeUser,
-        updateUser,
-        friends,
-        received,
-        sent,
-        blocked,
-    } = useData();
+    const { channels, updateUser, friends, received, sent, blocked } = useData();
+    const { setOpen } = !mode ? usePopoverContext() : { setOpen: () => {} };
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
     const currentUser = useAuthenticatedUser();
     const { sendRequest } = useFetchHelper();
-    const { setOpen } = !mode ? usePopoverContext() : { setOpen: () => {} };
     const router = useRouter();
 
     const isFriend = friends.find((friend) => friend.id === initUser.id);
@@ -122,7 +116,6 @@ export function UserCard({
                 });
 
                 if (data?.channel) {
-                    addChannel(data.channel);
                     channelId = data.channel.id;
                 }
             }
@@ -143,9 +136,7 @@ export function UserCard({
                 },
             });
 
-            if (!errors) {
-                return router.push(`/channels/me/${channel?.id || channelId}`);
-            } else {
+            if (errors) {
                 console.error(errors);
             }
         }
@@ -211,10 +202,6 @@ export function UserCard({
                 query: "ADD_FRIEND",
                 body: { username: user.username },
             });
-
-            if (!errors) {
-                addUser(user, isReceived ? "friends" : "sent");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -231,10 +218,6 @@ export function UserCard({
                 query: "REMOVE_FRIEND",
                 body: { username: user.username },
             });
-
-            if (!errors) {
-                removeUser(user.id, "received");
-            }
         } catch (error) {
             console.error(error);
         }
@@ -285,9 +268,16 @@ export function UserCard({
             }
         >
             <header style={{ paddingBottom: isSameUser || user.customStatus ? "0" : "" }}>
-                <svg
+                <InteractiveElement
+                    element="svg"
                     viewBox="0 0 300 105"
+                    tabIndex={mode ? 0 : -1}
                     className={styles.banner}
+                    onClick={() => {
+                        if (onBannerClick) {
+                            onBannerClick();
+                        }
+                    }}
                 >
                     <mask id="card-banner-mask">
                         <rect
@@ -313,7 +303,9 @@ export function UserCard({
                         overflow="visible"
                         mask="url(#card-banner-mask)"
                     >
-                        <div>
+                        <div
+                            className={`${mode === "edit" ? styles.overlay : ""} ${styles.banner}`}
+                        >
                             <div
                                 className={styles.background}
                                 style={{
@@ -326,29 +318,26 @@ export function UserCard({
                                     backgroundColor: !user.banner ? user.bannerColor : "",
                                 }}
                             />
+
+                            {mode === "edit" && <p>Change Banner</p>}
                         </div>
                     </foreignObject>
-                </svg>
+                </InteractiveElement>
 
-                <div
-                    tabIndex={0}
-                    role="button"
+                <InteractiveElement
+                    element="div"
                     className={styles.avatar}
                     onClick={() => {
+                        if (onAvatarClick) {
+                            onAvatarClick();
+                            return;
+                        }
+
                         triggerDialog({
                             type: "USER_PROFILE",
                             data: { user },
                         });
                         setOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            triggerDialog({
-                                type: "USER_PROFILE",
-                                data: { user },
-                            });
-                            setOpen(false);
-                        }
                     }}
                 >
                     <div
@@ -375,7 +364,9 @@ export function UserCard({
                                         draggable={false}
                                         src={
                                             user.avatar
-                                                ? `${getCdnUrl}${user.avatar}`
+                                                ? user.avatar instanceof File
+                                                    ? URL.createObjectURL(user.avatar)
+                                                    : `${getCdnUrl}${user.avatar}`
                                                 : getRandomImage(user.id, "avatar")
                                         }
                                         alt={`${user.username}, ${getStatusLabel(user.status)}`}
@@ -383,13 +374,19 @@ export function UserCard({
 
                                     {mode === "edit" && (
                                         <div>
-                                            <Icon name="edit" />
+                                            <Icon
+                                                size={20}
+                                                name="edit"
+                                            />
                                         </div>
                                     )}
                                 </div>
                             </foreignObject>
 
-                            <Tooltip>
+                            <Tooltip
+                                gap={10}
+                                delay={500}
+                            >
                                 <TooltipTrigger>
                                     <rect
                                         x="60"
@@ -406,7 +403,7 @@ export function UserCard({
                             </Tooltip>
                         </svg>
                     </div>
-                </div>
+                </InteractiveElement>
 
                 {(isSameUser || user.customStatus) && (
                     <div style={{ maxHeight: "58px" }}>

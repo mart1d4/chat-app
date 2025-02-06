@@ -38,12 +38,7 @@ export function LeaveGroup({ channelId, channelName }: { channelId: number; chan
                 setLoading(false);
 
                 if (!errors) {
-                    removeChannel(channelId);
                     setOpen(false);
-
-                    if (sameUrl) {
-                        router.push("/channels/me");
-                    }
                 }
             }}
         >

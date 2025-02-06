@@ -23,7 +23,6 @@ export function CreateGuildChannel({
 
     const { sendRequest } = useRequestHelper();
     const { setOpen } = useDialogContext();
-    const router = useRouter();
 
     async function createChannel() {
         if (loading || !name) return;
@@ -48,12 +47,6 @@ export function CreateGuildChannel({
                 setLock(false);
                 setType("text");
                 setOpen(false);
-
-                if (type === "text") {
-                    router.push(`/channels/${guild.id}/${data.channelId}`);
-                } else {
-                    router.refresh();
-                }
             }
         } catch (e) {
             console.error(e);

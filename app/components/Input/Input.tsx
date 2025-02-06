@@ -5,23 +5,29 @@ import { useEffect, useState } from "react";
 import styles from "./Input.module.css";
 
 export function Input({
-    label = "",
-    name = "",
-    error = "",
-    description = "",
-    leftItem = null,
-    leftItemSmall = false,
-    rightItem = null,
+    label,
+    name,
+    error,
+    size,
+    description,
+    leftItem,
+    leftItemSmall,
+    rightItem,
+    hideLabel,
+    noBox,
     onChange = () => {},
     ...props
 }: {
     label: string;
     name?: string;
     error?: string;
+    size?: "small" | "large";
     description?: string;
     leftItem?: React.ReactNode;
     leftItemSmall?: boolean;
     rightItem?: React.ReactNode;
+    hideLabel?: boolean;
+    noBox?: boolean;
     onChange?: (value: string) => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
     const [id, setId] = useState<string>("");
@@ -56,15 +62,20 @@ export function Input({
             <label
                 htmlFor={id}
                 id={`${id}-label`}
-                className={`${styles.checkbox} ${error && styles.error}`}
+                className={`${styles.checkbox} ${error && styles.error} ${noBox && styles.noBox}`}
+                style={{
+                    opacity: hideLabel ? 0 : 1,
+                    width: hideLabel ? 0 : "auto",
+                    height: hideLabel ? 0 : "auto",
+                }}
             >
                 <Checkbox
-                    box
+                    box={!noBox}
                     inputFor={id}
                     checked={props.checked}
                     onChange={() => onChange(!props.checked ? "true" : "false")}
                 />
-                {label} {props.required && !error && <span>*</span>}
+                <span>{label}</span> {props.required && !error && <span>*</span>}
                 {error && <span className={styles.error}>- {error}</span>}
             </label>
         );
@@ -75,6 +86,12 @@ export function Input({
             <label
                 htmlFor={id}
                 className={`${styles.label} ${error && styles.error}`}
+                style={{
+                    opacity: hideLabel ? 0 : 1,
+                    width: hideLabel ? 0 : "auto",
+                    height: hideLabel ? 0 : "auto",
+                    marginBottom: hideLabel ? 0 : undefined,
+                }}
             >
                 {label} {props.required && !error && <span>*</span>}
                 {error && <span className={styles.error}>- {error}</span>}
@@ -110,6 +127,9 @@ export function Input({
                         //         pasteText: (text: string) => onChange(text),
                         //     },
                         // });
+                    }}
+                    style={{
+                        height: size === "small" ? 32 : 40,
                     }}
                     {...props}
                 />

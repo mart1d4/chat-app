@@ -1,23 +1,28 @@
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { useEffect, useState, useRef, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { useUploadThing } from "@/lib/uploadthing";
-import { getButtonColor } from "@/lib/getColors";
-import { getCdnUrl } from "@/lib/uploadthing";
-import { getRandomImage } from "@/lib/utils";
 import styles from "./Settings.module.css";
+import type Cropper from "cropperjs";
 import { useData } from "@/store";
-import Image from "next/image";
 import {
     TooltipContent,
     TooltipTrigger,
-    LoadingDots,
+    DialogContent,
+    ImageCropper,
     EmojiPicker,
+    LoadingDots,
+    UserCard,
     Tooltip,
+    Dialog,
     Alert,
     Icon,
-    UserCard,
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    ColorPicker,
+    InteractiveElement,
 } from "@components";
 
 export function Profiles() {
@@ -31,6 +36,10 @@ export function Profiles() {
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
     const [isLoading, setIsLoading] = useState(false);
 
+    const [cropper, setCropper] = useState<Cropper | null>(null);
+    const [fileTemp, setFileTemp] = useState<File | null>(null);
+    const [fileType, setFileType] = useState<"avatar" | "banner">("avatar");
+
     const [avatar, setAvatar] = useState<string | File | null>(user.avatar);
     const [banner, setBanner] = useState<string | File | null>(user.banner);
     const [displayName, setDisplayName] = useState(user.displayName);
@@ -38,8 +47,6 @@ export function Profiles() {
     const [accentColor, setAccentColor] = useState(user.accentColor);
     const [description, setDescription] = useState(user.description);
 
-    const bannerColorInputRef = useRef<HTMLInputElement>(null);
-    const accentColorInputRef = useRef<HTMLInputElement>(null);
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLInputElement>(null);
@@ -161,198 +168,122 @@ export function Profiles() {
         }
     }
 
-    const CardBanner = useMemo(
-        () => (
-            <svg
-                className={styles.cardBanner}
-                viewBox={`0 0 340 ${banner || banner ? "120" : "90"}`}
-            >
-                <mask id="card-banner-mask">
-                    <rect
-                        fill="white"
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="100%"
-                    />
-                    <circle
-                        fill="black"
-                        cx="58"
-                        cy={banner || banner ? 112 : 82}
-                        r="46"
-                    />
-                </mask>
+    async function handleFileChange(
+        e: React.ChangeEvent<HTMLInputElement> & { target: { files: FileList | null } },
+        type: "avatar" | "banner"
+    ) {
+        const file = e.target.files ? e.target.files[0] : null;
+        if (!file) return (e.target.value = "");
 
-                <foreignObject
-                    x="0"
-                    y="0"
-                    width="100%"
-                    height="100%"
-                    overflow="visible"
-                    mask="url(#card-banner-mask)"
-                >
-                    <div>
-                        <button
-                            className={styles.cardBannerBackground}
-                            style={{
-                                backgroundColor: !banner ? bannerColor : "",
-                                backgroundImage: banner
-                                    ? `url(${
-                                          typeof banner === "string"
-                                              ? `${getCdnUrl}${banner}`
-                                              : URL.createObjectURL(banner as File)
-                                      })`
-                                    : "",
-                                height: banner ? "120px" : "90px",
-                            }}
-                            onClick={() => bannerInputRef.current?.click()}
-                        />
+        // Run checks
+        const maxFileSize = 1024 * 1024 * 4; // 4MB
+        if (file.size > maxFileSize) {
+            setErrors({
+                avatar: "File size is too large. A maximum of 4MB is allowed",
+            });
 
-                        <div
-                            className={styles.cardBannerButton}
-                            aria-hidden="true"
-                        >
-                            Change Banner
-                        </div>
-                    </div>
-                </foreignObject>
-            </svg>
-        ),
-        [banner, bannerColor]
-    );
+            setTimeout(() => {
+                setErrors({});
+            }, 5000);
 
-    const CardAvatar = useMemo(
-        () => (
-            <div
-                className={styles.cardAvatar}
-                style={{ top: banner ? "76px" : "46px" }}
-            >
-                <button
-                    className={styles.avatarImage}
-                    style={{
-                        backgroundImage: avatar
-                            ? `url(${
-                                  typeof avatar === "string"
-                                      ? `${getCdnUrl}${avatar}`
-                                      : URL.createObjectURL(avatar as File)
-                              })`
-                            : `url(${getRandomImage(user.id, "avatar")}`,
-                    }}
-                    onClick={() => avatarInputRef.current?.click()}
-                />
+            return (e.target.value = "");
+        }
 
-                <div className={styles.avatarOverlay}>
-                    <Icon name="edit" />
-                </div>
+        const newFile = new File([file], "image", {
+            type: file.type,
+        });
 
-                <div className={styles.cardAvatarStatus}>
-                    <div style={{ backgroundColor: "black" }} />
+        if (type === "avatar") {
+            setFileType("avatar");
+        } else {
+            setFileType("banner");
+        }
 
-                    <svg>
-                        <rect
-                            height="100%"
-                            width="100%"
-                            rx={8}
-                            ry={8}
-                            fill="var(--success-light)"
-                            mask="url(#svg-mask-status-online)"
-                        />
-                    </svg>
-                </div>
-            </div>
-        ),
-        [avatar, banner]
-    );
+        setFileTemp(newFile);
+
+        e.target.value = "";
+    }
+
+    async function handleCrop(canvas: HTMLCanvasElement) {
+        if (!fileTemp) return;
+
+        const blob = await new Promise<Blob>((resolve) =>
+            canvas.toBlob((blob) => resolve(blob as any))
+        );
+
+        const newFile = new File([blob], "image", {
+            type: fileTemp.type,
+        });
+
+        if (fileType === "avatar") {
+            setAvatar(newFile);
+        } else {
+            setBanner(newFile);
+        }
+
+        setFileTemp(null);
+    }
 
     return (
         <div>
             {(errors.avatar || errors.banner) && (
                 <Alert
-                    message={errors.avatar || errors.banner}
                     type="danger"
+                    message={errors.avatar || errors.banner}
                 />
             )}
 
+            {fileTemp && (
+                <Dialog
+                    open={!!fileTemp}
+                    onOpenChange={(v) => !v && setFileTemp(null)}
+                >
+                    <DialogContent
+                        width={600}
+                        leftLabel="Skip"
+                        heading="Edit Image"
+                        confirmLabel="Apply"
+                        leftConfirm={() => {
+                            if (fileType === "avatar") {
+                                setAvatar(fileTemp);
+                            } else {
+                                setBanner(fileTemp);
+                            }
+
+                            setFileTemp(null);
+                        }}
+                        onConfirm={() => {
+                            if (cropper) {
+                                handleCrop(cropper.getCroppedCanvas());
+                            }
+                        }}
+                    >
+                        <ImageCropper
+                            setCropper={setCropper}
+                            src={URL.createObjectURL(fileTemp)}
+                            aspectRatio={fileType === "avatar" ? 1 : 3}
+                            alt={fileType === "avatar" ? "Crop Avatar" : "Crop Banner"}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
+
             <input
+                type="file"
                 tabIndex={-1}
                 ref={avatarInputRef}
                 className={styles.hiddenInput}
-                type="file"
-                accept="image/png, image/jpeg, image/gif, image/apng, image/webp"
-                onChange={async (e) => {
-                    const file = e.target.files ? e.target.files[0] : null;
-                    if (!file) return (e.target.value = "");
-
-                    // Run checks
-                    const maxFileSize = 1024 * 1024 * 4; // 10MB
-                    if (file.size > maxFileSize) {
-                        setErrors({
-                            avatar: "File size is too large. A maximum of 4MB is allowed",
-                        });
-
-                        setTimeout(() => {
-                            setErrors({});
-                        }, 5000);
-
-                        return (e.target.value = "");
-                    }
-
-                    const newFile = new File([file], "image", {
-                        type: file.type,
-                    });
-
-                    setAvatar(newFile);
-                    e.target.value = "";
-                }}
+                onChange={(e) => handleFileChange(e, "avatar")}
+                accept="image/png,image/jpeg,image/gif,image/apng,image/webp"
             />
 
             <input
+                type="file"
                 tabIndex={-1}
                 ref={bannerInputRef}
                 className={styles.hiddenInput}
-                type="file"
+                onChange={(e) => handleFileChange(e, "banner")}
                 accept="image/png, image/jpeg, image/gif, image/apng, image/webp"
-                onChange={async (e) => {
-                    const file = e.target.files ? e.target.files[0] : null;
-                    if (!file) return (e.target.value = "");
-
-                    // Run checks
-                    const maxFileSize = 1024 * 1024 * 4; // 10MB
-                    if (file.size > maxFileSize) {
-                        setErrors({
-                            banner: "File size is too large. A maximum of 4MB is allowed",
-                        });
-
-                        setTimeout(() => {
-                            setErrors({});
-                        }, 5000);
-
-                        return (e.target.value = "");
-                    }
-
-                    const newFile = new File([file], "image", {
-                        type: file.type,
-                    });
-
-                    setBanner(newFile);
-                    e.target.value = "";
-                }}
-            />
-
-            <input
-                tabIndex={-1}
-                ref={bannerColorInputRef}
-                className={styles.hiddenInput}
-                type="color"
-                onChange={async (e) => setBannerColor(e.target.value)}
-            />
-
-            <input
-                tabIndex={-1}
-                ref={accentColorInputRef}
-                className={styles.hiddenInput}
-                type="color"
-                onChange={async (e) => setAccentColor(e.target.value)}
             />
 
             <div className={styles.sectionTitle}>
@@ -441,36 +372,65 @@ export function Profiles() {
                         <label>Profile Theme</label>
 
                         <div className={styles.sectionContainer}>
-                            <div className={styles.colorSwatch}>
-                                <div
-                                    style={{
-                                        borderColor: bannerColor,
-                                        backgroundColor: bannerColor,
-                                    }}
-                                    onClick={() => bannerColorInputRef.current?.click()}
-                                >
-                                    <Icon
-                                        size={14}
-                                        name="edit"
-                                    />
-                                </div>
+                            {!banner && (
+                                <div className={styles.colorSwatch}>
+                                    <Popover placement="right-start">
+                                        <PopoverTrigger>
+                                            <div>
+                                                <InteractiveElement
+                                                    element="div"
+                                                    style={{
+                                                        borderColor: bannerColor,
+                                                        backgroundColor: bannerColor,
+                                                    }}
+                                                >
+                                                    <Icon
+                                                        size={14}
+                                                        name="edit"
+                                                    />
+                                                </InteractiveElement>
+                                            </div>
+                                        </PopoverTrigger>
 
-                                <div>Banner</div>
-                            </div>
+                                        <PopoverContent>
+                                            <ColorPicker
+                                                initColor={bannerColor}
+                                                onColorChange={(color) => setBannerColor(color)}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    <div>Banner</div>
+                                </div>
+                            )}
 
                             <div className={styles.colorSwatch}>
-                                <div
-                                    style={{
-                                        backgroundColor: accentColor,
-                                        borderColor: accentColor || "var(--border-light)",
-                                    }}
-                                    onClick={() => accentColorInputRef.current?.click()}
-                                >
-                                    <Icon
-                                        size={14}
-                                        name={accentColor ? "edit" : "add"}
-                                    />
-                                </div>
+                                <Popover placement="right-start">
+                                    <PopoverTrigger>
+                                        <div>
+                                            <InteractiveElement
+                                                element="div"
+                                                style={{
+                                                    backgroundColor: accentColor,
+                                                    borderColor:
+                                                        accentColor || "var(--border-light)",
+                                                }}
+                                            >
+                                                <Icon
+                                                    size={14}
+                                                    name={accentColor ? "edit" : "add"}
+                                                />
+                                            </InteractiveElement>
+                                        </div>
+                                    </PopoverTrigger>
+
+                                    <PopoverContent>
+                                        <ColorPicker
+                                            initColor={accentColor}
+                                            onColorChange={(color) => setAccentColor(color)}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
 
                                 <div>Accent</div>
                             </div>
@@ -509,7 +469,7 @@ export function Profiles() {
                                             onInput={(e) => {
                                                 const input = e.target as HTMLDivElement;
                                                 const text = input.innerText.toString();
-                                                setDescription(text);
+                                                setDescription(text === "" ? null : text);
                                             }}
                                         />
                                     </div>
@@ -560,6 +520,8 @@ export function Profiles() {
                             accentColor,
                             description,
                         }}
+                        onAvatarClick={() => avatarInputRef.current?.click()}
+                        onBannerClick={() => bannerInputRef.current?.click()}
                     />
                 </div>
             </div>

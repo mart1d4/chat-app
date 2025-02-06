@@ -1,3 +1,4 @@
+import { InteractiveElement } from "../../Accessibility/InteractiveElement";
 import styles from "./Checkbox.module.css";
 
 export const Checkbox = ({
@@ -57,26 +58,24 @@ export const Checkbox = ({
     }
 
     return (
-        <div
-            tabIndex={0}
+        <InteractiveElement
             className={styles.container}
-            style={{ backgroundColor: checked ? "var(--success-light)" : "var(--default-2)" }}
             onClick={onChange ? onChange : () => {}}
-            onKeyDown={(e) => (e.key === "Enter" && onChange ? onChange() : {})}
+            style={{ backgroundColor: checked ? "var(--success-light)" : "var(--default-2)" }}
         >
             <svg
+                aria-hidden="true"
                 viewBox="0 0 28 20"
                 preserveAspectRatio="xMinYMid meet"
-                aria-hidden="true"
                 style={{ left: checked ? "12px" : "-3px" }}
             >
                 <rect
-                    fill="white"
                     x="4"
                     y="0"
-                    height="20"
-                    width="20"
                     rx="10"
+                    width="20"
+                    height="20"
+                    fill="white"
                 />
 
                 {checked ? (
@@ -109,13 +108,6 @@ export const Checkbox = ({
                     </svg>
                 )}
             </svg>
-
-            <input
-                id={inputFor}
-                tabIndex={-1}
-                type="checkbox"
-                onChange={onChange ? onChange : () => {}}
-            />
-        </div>
+        </InteractiveElement>
     );
 };

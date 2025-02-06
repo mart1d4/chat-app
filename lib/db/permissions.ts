@@ -1,8 +1,7 @@
 import { PERMISSIONS, combinePermissions, hasPermission } from "@lib/permissions";
+import type { PermissionOverwrites } from "./db.types";
 import { areUsersBlocked } from "./helpers";
 import { db } from "@lib/db/db";
-import type { PermissionOverwrites } from "./db.types";
-import type { GuildChannel, GuildMember, GuildRole } from "@/type";
 
 export async function hasChannelPermission({
     userId,
@@ -10,6 +9,7 @@ export async function hasChannelPermission({
     permission,
     dontAllowDMs = false,
     returnGuildId = false,
+    returnGuildOwner = false,
     returnChannelType = false,
 }: {
     userId: number;
@@ -17,6 +17,7 @@ export async function hasChannelPermission({
     permission: keyof typeof PERMISSIONS;
     dontAllowDMs?: boolean;
     returnGuildId?: boolean;
+    returnGuildOwner?: boolean;
     returnChannelType?: boolean;
 }) {
     try {
@@ -69,6 +70,7 @@ export async function hasChannelPermission({
 
         if (channel.guildId && channel.guildOwnerId === userId) {
             if (returnGuildId) return channel.guildId;
+            if (returnGuildOwner) return channel.guildOwnerId;
             return true;
         }
 
@@ -83,6 +85,7 @@ export async function hasChannelPermission({
                     return false;
                 } else if (hasPermission(overwrite.allow, PERMISSIONS[permission])) {
                     if (returnGuildId) return channel.guildId;
+                    if (returnGuildOwner) return channel.guildOwnerId;
                     return true;
                 }
             } else if (overwrite.type === 1 && overwrite.id === userId) {
@@ -90,6 +93,7 @@ export async function hasChannelPermission({
                     return false;
                 } else if (hasPermission(overwrite.allow, PERMISSIONS[permission])) {
                     if (returnGuildId) return channel.guildId;
+                    if (returnGuildOwner) return channel.guildOwnerId;
                     return true;
                 }
             }
@@ -100,6 +104,7 @@ export async function hasChannelPermission({
             hasPermission(permissions, PERMISSIONS.ADMINISTRATOR)
         ) {
             if (returnGuildId) return channel.guildId;
+            if (returnGuildOwner) return channel.guildOwnerId;
             return true;
         }
 
@@ -163,71 +168,6 @@ export function isChannelPrivate(overwrites: PermissionOverwrites[], everyoneRol
         if (overwrite.type === 0 && overwrite.id === everyoneRole) {
             return hasPermission(overwrite.deny, PERMISSIONS.VIEW_CHANNEL);
         }
-    }
-
-    return false;
-}
-
-export function doesUserHaveChannelPermission(
-    channels: GuildChannel[],
-    roles: GuildRole[],
-    channel: GuildChannel,
-    user: GuildMember,
-    permission: keyof typeof PERMISSIONS
-) {
-    // Check for permissions, if channel has no overwrites, use its category's overwrites (it channel has a category)
-    // remember that deny rules always take precedence over allow rules
-    // Also need to take into the account that each role has its own permissions, and that some roles are higher than others
-
-    const userRoles = user.roles.sort(
-        // Sort roles so that the highest role is first
-        // a higher role is a role with a lower position
-        (a, b) => roles.find((r) => r.id === b)?.position - roles.find((r) => r.id === a)?.position
-    );
-
-    const userPermissions = user.permissions;
-
-    // First check if any of the roles user has makes the user an admin
-    if (hasPermission(userPermissions, PERMISSIONS.ADMINISTRATOR)) return true;
-
-    for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS.ADMINISTRATOR)) return true;
-    }
-
-    const overwrites = channel.permissionOverwrites;
-    const category = channels.find((c) => c.id === channel.parentId);
-    const categoryOverwrites = category?.permissionOverwrites || [];
-
-    // Check channel overwrites
-    for (const overwrite of overwrites) {
-        if (overwrite.type === 0 && userRoles.includes(overwrite.id)) {
-            if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
-            if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
-        } else if (overwrite.type === 1 && overwrite.id === user.id) {
-            if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
-            if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
-        }
-    }
-
-    // Check category overwrites
-    for (const overwrite of categoryOverwrites) {
-        if (overwrite.type === 0 && userRoles.includes(overwrite.id)) {
-            if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
-            if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
-        } else if (overwrite.type === 1 && overwrite.id === user.id) {
-            if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
-            if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
-        }
-    }
-
-    // Check guild permissions
-    if (hasPermission(userPermissions, PERMISSIONS[permission])) return true;
-
-    // Check role permissions
-    for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS[permission])) return true;
     }
 
     return false;

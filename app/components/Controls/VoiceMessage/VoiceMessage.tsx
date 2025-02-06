@@ -3,16 +3,28 @@
 import { Icon, VolumeChanger } from "@components";
 import { useWavesurfer } from "@wavesurfer/react";
 import styles from "./VoiceMessage.module.css";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 
 export function VoiceMessage({ url, blob }: { url?: string; blob?: Blob }) {
     const containerRef = useRef(null);
+
+    const urlToUse = useMemo(() => {
+        if (url) {
+            return url;
+        }
+
+        if (blob) {
+            return URL.createObjectURL(blob);
+        }
+
+        throw new Error("No url or blob provided");
+    }, [url, blob]);
 
     const { wavesurfer, isPlaying, currentTime } = useWavesurfer({
         container: containerRef,
         waveColor: "hsl(228, 6%, 33%)",
         progressColor: "#ffffff",
-        url: url ?? URL.createObjectURL(blob as Blob),
+        url: urlToUse,
         height: 32,
         barGap: 6,
         barRadius: 1000,
@@ -21,17 +33,17 @@ export function VoiceMessage({ url, blob }: { url?: string; blob?: Blob }) {
         cursorColor: "transparent",
     });
 
-    const onPlayPause = () => {
+    function onPlayPause() {
         wavesurfer && wavesurfer.playPause();
-    };
+    }
 
-    const setVolume = (v: number) => {
+    function setVolume(v: number) {
         wavesurfer && wavesurfer.setVolume(v);
-    };
+    }
 
-    const setIsMuted = (m: boolean) => {
+    function setIsMuted(m: boolean) {
         wavesurfer && wavesurfer.setMuted(m);
-    };
+    }
 
     const duration = wavesurfer?.getDuration() ?? 0;
 

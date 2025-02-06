@@ -1,9 +1,10 @@
 "use client";
 
+import type { HasPermissionFunction } from "@/app/channels/[guildId]/[channelId]/client";
 import { useParams, usePathname } from "next/navigation";
-import type { GuildChannel } from "@/type";
+import type { GuildChannel, UserGuild } from "@/type";
 import styles from "./GuildChannels.module.css";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import {
     CreateGuildChannel,
@@ -16,6 +17,9 @@ import {
     Icon,
     DialogContent,
     InviteDialog,
+    InteractiveElement,
+    Menu,
+    MenuTrigger,
 } from "@components";
 import {
     useCollapsedCategories,
@@ -24,18 +28,25 @@ import {
     useShowSettings,
     useData,
 } from "@/store";
+import { GuildMenu } from "../Layers/Menu/MenuContents/Guild";
+import { useNotifications } from "@/store/notifications";
 
 export const GuildChannels = ({
     guildId,
     channels = [],
+    hasPerm,
 }: {
     guildId: number;
     channels?: GuildChannel[];
+    hasPerm: HasPermissionFunction;
 }) => {
     const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
 
+    const [showMenu, setShowMenu] = useState(false);
+
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
     const { collapsed, setCollapsed } = useCollapsedCategories();
+    const { notifications } = useNotifications();
     const { showChannels } = useShowChannels();
     const params = useParams();
 
@@ -47,45 +58,40 @@ export const GuildChannels = ({
     if (!guild) return null;
     if (!showChannels && !widthLimitPassed) return null;
 
+    const canManageChannels = hasPerm("MANAGE_CHANNELS");
+
     return (
         <div className={styles.nav}>
             <div className={styles.privateChannels}>
-                <div
-                    tabIndex={0}
-                    className={styles.guildSettings}
-                    onClick={() => {
-                        // setLayers({
-                        //     settings: {
-                        //         type: "MENU",
-                        //         element: e.currentTarget,
-                        //         firstSide: "BOTTOM",
-                        //         secondSide: "CENTER",
-                        //     },
-                        //     content: {
-                        //         type: "GUILD",
-                        //         guild: guild,
-                        //     },
-                        // });
-                    }}
+                <Menu
+                    open={showMenu}
+                    placement="bottom"
+                    onOpenChange={setShowMenu}
                 >
-                    <div>
-                        <div>{guild.name}</div>
+                    <MenuTrigger>
+                        <div>
+                            <InteractiveElement
+                                element="div"
+                                className={styles.guildSettings}
+                                onClick={() => setShowMenu(!showMenu)}
+                            >
+                                <div>
+                                    <div>{guild.name}</div>
 
-                        <div
-                        // style={{
-                        //     transform:
-                        //         layers.MENU?.content?.type !== "GUILD" ? "rotate(-90deg)" : "",
-                        // }}
-                        >
-                            {/* {layers.MENU?.content.type === "GUILD" ? (
-                                <Icon name="close" />
-                            ) : (
-                                <Icon name="caret" />
-                            )} */}
-                            <Icon name="caret" />
+                                    <div>
+                                        <Icon name={showMenu ? "close" : "caret"} />
+                                    </div>
+                                </div>
+                            </InteractiveElement>
                         </div>
-                    </div>
-                </div>
+                    </MenuTrigger>
+
+                    <GuildMenu
+                        guild={guild}
+                        type="settings"
+                        hasPerm={hasPerm}
+                    />
+                </Menu>
 
                 <div
                     className={styles.scroller + " scrollbar"}
@@ -112,16 +118,22 @@ export const GuildChannels = ({
                                         <ChannelItem
                                             guild={guild}
                                             key={channel.id}
+                                            hasPerm={hasPerm}
                                             channel={channel}
+                                            canManage={canManageChannels}
                                             hidden={isCategoryHidden(channel.id)}
                                             setHidden={() => setCollapsed(channel.id)}
                                         />
                                     );
                                 }
 
+                                const hasUnread = notifications.channels.find(
+                                    (c) => c.id === channel.id && c.hasUnread
+                                );
+
                                 const isHidden = isCategoryHidden(channel.parentId || 0);
 
-                                if (isHidden && params.channelId != channel.id) {
+                                if (isHidden && params.channelId != channel.id && !hasUnread) {
                                     return null;
                                 }
 
@@ -135,7 +147,9 @@ export const GuildChannels = ({
                                             guild={guild}
                                             key={channel.id}
                                             channel={channel}
+                                            hasPerm={hasPerm}
                                             category={category}
+                                            canManage={canManageChannels}
                                         />
                                     );
                                 } else {
@@ -143,7 +157,9 @@ export const GuildChannels = ({
                                         <ChannelItem
                                             guild={guild}
                                             key={channel.id}
+                                            hasPerm={hasPerm}
                                             channel={channel}
+                                            canManage={canManageChannels}
                                         />
                                     );
                                 }
@@ -169,18 +185,27 @@ function ChannelItem({
     guild,
     hidden,
     setHidden,
+    canManage,
+    hasPerm,
 }: {
     channel: GuildChannel;
     category?: GuildChannel;
-    guild: AppGuild;
+    guild: UserGuild;
     hidden?: boolean;
     setHidden?: any;
+    canManage: boolean;
+    hasPerm: HasPermissionFunction;
 }) {
     const { setShowSettings } = useShowSettings();
+    const { notifications } = useNotifications();
     const pathname = usePathname();
     const params = useParams();
 
     const active = params.channelId == channel.id;
+    const hasUnread = notifications.channels.find((c) => c.id === channel.id && c.hasUnread);
+    const pings = notifications.channels.find((c) => c.id === channel.id)?.pings || 0;
+
+    const canInvite = hasPerm("CREATE_INSTANT_INVITE", channel);
 
     if (channel.type === 4) {
         return (
@@ -230,34 +255,36 @@ function ChannelItem({
                     <h3>{channel.name}</h3>
                 </div>
 
-                <Dialog>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <DialogTrigger>
-                                <button
-                                    onClick={(e) => e.stopPropagation()}
-                                    onKeyDown={(e) => e.stopPropagation()}
-                                >
-                                    <Icon name="add" />
-                                </button>
-                            </DialogTrigger>
-                        </TooltipTrigger>
+                {canManage && (
+                    <Dialog>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <DialogTrigger>
+                                    <button
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                        <Icon name="add" />
+                                    </button>
+                                </DialogTrigger>
+                            </TooltipTrigger>
 
-                        <TooltipContent>Create Channel</TooltipContent>
-                    </Tooltip>
+                            <TooltipContent>Create Channel</TooltipContent>
+                        </Tooltip>
 
-                    <CreateGuildChannel
-                        guild={guild}
-                        channel={channel}
-                    />
-                </Dialog>
+                        <CreateGuildChannel
+                            guild={guild}
+                            channel={channel}
+                        />
+                    </Dialog>
+                )}
             </li>
         );
     }
 
     return (
         <li
-            className={styles.channel}
+            className={`${styles.channel} ${hasUnread ? styles.unread : ""}`}
             onContextMenu={() => {
                 // setLayers({
                 //     settings: { type: "MENU", event: e },
@@ -270,6 +297,8 @@ function ChannelItem({
                 // });
             }}
         >
+            {hasUnread && <span className={styles.unread} />}
+
             <div>
                 <div>
                     <Link
@@ -282,7 +311,7 @@ function ChannelItem({
                         }}
                     >
                         <div>
-                            <Tooltip>
+                            <Tooltip delay={500}>
                                 <TooltipTrigger>
                                     <div className={styles.icon}>
                                         <Icon
@@ -301,6 +330,7 @@ function ChannelItem({
 
                                 <TooltipContent>
                                     {channel.type === 2 ? "Text" : "Voice"}
+                                    {channel.isPrivate ? " (Limited)" : ""}
                                 </TooltipContent>
                             </Tooltip>
 
@@ -312,6 +342,8 @@ function ChannelItem({
                             </div>
 
                             <div className={styles.tools}>
+                                {pings > 0 && <span className={styles.pings}>{pings}</span>}
+
                                 {channel.type === 3 && (
                                     <Tooltip>
                                         <TooltipTrigger>
@@ -324,7 +356,7 @@ function ChannelItem({
                                                 <Icon
                                                     size={16}
                                                     name="message"
-                                                    viewbox="0 0 24 24"
+                                                    viewBox="0 0 24 24"
                                                 />
                                             </button>
                                         </TooltipTrigger>
@@ -333,60 +365,64 @@ function ChannelItem({
                                     </Tooltip>
                                 )}
 
-                                <Dialog>
+                                {canInvite && (
+                                    <Dialog>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <DialogTrigger>
+                                                    <button
+                                                        style={{
+                                                            display: active ? "flex" : "",
+                                                            flex: active ? "0 0 auto" : "",
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                        }}
+                                                        onKeyDown={(e) => e.stopPropagation()}
+                                                    >
+                                                        <Icon name="user-add" />
+                                                    </button>
+                                                </DialogTrigger>
+                                            </TooltipTrigger>
+
+                                            <TooltipContent>Create Invite</TooltipContent>
+                                        </Tooltip>
+
+                                        <DialogContent blank>
+                                            <InviteDialog
+                                                guild={guild}
+                                                channel={channel}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
+
+                                {canManage && (
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            <DialogTrigger>
-                                                <button
-                                                    style={{
-                                                        display: active ? "flex" : "",
-                                                        flex: active ? "0 0 auto" : "",
-                                                    }}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                    }}
-                                                    onKeyDown={(e) => e.stopPropagation()}
-                                                >
-                                                    <Icon name="user-add" />
-                                                </button>
-                                            </DialogTrigger>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setShowSettings({
+                                                        type: "CHANNEL",
+                                                        channel: channel,
+                                                    });
+                                                }}
+                                                onKeyDown={(e) => e.stopPropagation()}
+                                                style={{
+                                                    display: active ? "flex" : "",
+                                                    flex: active ? "0 0 auto" : "",
+                                                }}
+                                            >
+                                                <Icon name="cog" />
+                                            </button>
                                         </TooltipTrigger>
 
-                                        <TooltipContent>Create Invite</TooltipContent>
+                                        <TooltipContent>Edit Channel</TooltipContent>
                                     </Tooltip>
-
-                                    <DialogContent blank>
-                                        <InviteDialog
-                                            guild={guild}
-                                            channel={channel}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
-
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setShowSettings({
-                                                    type: "CHANNEL",
-                                                    channel: channel,
-                                                });
-                                            }}
-                                            onKeyDown={(e) => e.stopPropagation()}
-                                            style={{
-                                                display: active ? "flex" : "",
-                                                flex: active ? "0 0 auto" : "",
-                                            }}
-                                        >
-                                            <Icon name="cog" />
-                                        </button>
-                                    </TooltipTrigger>
-
-                                    <TooltipContent>Edit Channel</TooltipContent>
-                                </Tooltip>
+                                )}
                             </div>
                         </div>
                     </Link>

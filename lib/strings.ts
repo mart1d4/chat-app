@@ -1,4 +1,4 @@
-import type { AppChannel, AppUser } from "@/type";
+import type { AppUser, DMChannel, KnownUser } from "@/type";
 
 export function translateCap(str: string) {
     if (typeof str !== "string") {
@@ -37,7 +37,12 @@ export function sanitizeString(content: string) {
     return content;
 }
 
-export function getChannelName(channel: AppChannel, user: AppUser): string {
+export function getChannelName(
+    channel: DMChannel & {
+        recipients: KnownUser[];
+    },
+    user: AppUser
+): string {
     if (channel.name) return channel.name;
 
     if (channel.recipients.length === 1) {
@@ -55,14 +60,24 @@ export function getChannelName(channel: AppChannel, user: AppUser): string {
     }
 }
 
-export function getChannelIcon(channel: AppChannel, user: AppUser): string {
+export function getChannelIcon(
+    channel: DMChannel & {
+        recipients: KnownUser[];
+    },
+    user: AppUser
+): string {
     if (channel.icon || channel.type === 1) return channel.icon;
 
     const recipients = channel.recipients.filter((r) => r.id !== user.id);
     return recipients[0]?.avatar || "";
 }
 
-export function getFullChannel(channel: AppChannel, user: AppUser | null): AppChannel | null {
+export function getFullChannel(
+    channel: DMChannel & {
+        recipients: KnownUser[];
+    },
+    user: AppUser | null
+) {
     if (!user) return null;
 
     return {

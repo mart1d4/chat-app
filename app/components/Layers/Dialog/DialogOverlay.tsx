@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { ImageUpload } from "./ImageUpload/ImageUpload";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import type { KnownUser, UnknownUser } from "@/type";
 import { useData, useTriggerDialog } from "@/store";
@@ -15,12 +16,10 @@ import {
     UpdateStatus,
     FixedMessage,
     UserProfile,
+    LeaveGroup,
     Dialog,
     Avatar,
-    LeaveGroup,
 } from "@components";
-import { ImageCropper } from "../../Images/Cropper";
-import { ImageUpload } from "./ImageUpload/ImageUpload";
 
 const warnings = {
     MESSAGE_LIMIT: {
@@ -55,10 +54,10 @@ export function DialogOverlay() {
     const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
     const [close, setClose] = useState(false);
 
-    const { addUser, removeUser, friends, changeChannelOwner, addChannel } = useData();
     const { open, removeDialog } = useTriggerDialog();
     const { sendRequest } = useRequestHelper();
     const appUser = useAuthenticatedUser();
+    const { friends } = useData();
     const router = useRouter();
 
     function remove(id: string) {
@@ -93,7 +92,6 @@ export function DialogOverlay() {
 
             if (!errors) {
                 remove(id);
-                removeUser(user.id, "friends");
             }
         } catch (error) {
             console.error(error);
@@ -114,7 +112,6 @@ export function DialogOverlay() {
 
             if (!errors) {
                 remove(id);
-                addUser(user, "blocked");
             }
         } catch (error) {
             console.error(error);
@@ -138,7 +135,6 @@ export function DialogOverlay() {
 
             if (!errors) {
                 remove(id);
-                changeChannelOwner(channelId, userId);
             }
         } catch (error) {
             console.error(error);
@@ -160,8 +156,6 @@ export function DialogOverlay() {
 
             if (!errors && data?.channel) {
                 remove(id);
-                addChannel(data.channel);
-                router.push(`/channels/me/${data.channel.id}`);
             }
         } catch (error) {
             console.error(error);

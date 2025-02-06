@@ -71,7 +71,6 @@ function SendToServer({
     const [error, setError] = useState<string | null>(null);
 
     const { sendRequest } = useRequestHelper();
-    const { changeChannelIcon } = useData();
     const hasRun = useRef(false);
 
     const { startUpload: uploadAvatar } = useUploadThing("imageUploader", {
@@ -105,7 +104,6 @@ function SendToServer({
                 setError(null);
             }, 5000);
         } else {
-            changeChannelIcon(channelId, fileId);
             remove();
         }
     }

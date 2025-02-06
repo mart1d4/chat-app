@@ -42,7 +42,6 @@ export function MessageMenu({
             text: string;
             onClick: () => void;
             icon: string;
-            iconViewbox?: string;
             dangerous?: boolean;
         };
     } = {
@@ -137,7 +136,7 @@ export function MessageMenu({
     };
 
     function renderButton(button: keyof typeof buttons) {
-        const { text, onClick, icon, iconViewbox, dangerous } = buttons[button];
+        const { text, onClick, icon, dangerous } = buttons[button];
 
         if (button === "MORE") {
             return (
@@ -150,10 +149,7 @@ export function MessageMenu({
                                     onClick={onClick}
                                     className={dangerous ? styles.red : undefined}
                                 >
-                                    <Icon
-                                        name={icon}
-                                        viewbox={iconViewbox || undefined}
-                                    />
+                                    <Icon name={icon} />
                                 </button>
                             </MenuTrigger>
                         </TooltipTrigger>
@@ -186,10 +182,7 @@ export function MessageMenu({
                         className={dangerous ? styles.red : undefined}
                         ref={button === "ADD_REACTION" ? emojiPickerRef : null}
                     >
-                        <Icon
-                            name={icon}
-                            viewbox={iconViewbox || undefined}
-                        />
+                        <Icon name={icon} />
                     </button>
                 </TooltipTrigger>
 

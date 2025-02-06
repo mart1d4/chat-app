@@ -525,6 +525,11 @@ input::placeholder {
     user-select: none;
 }
 
+ol,
+ul {
+    list-style: none;
+}
+
 .button.blue {
     background-color: var(--accent-1);
 }
@@ -590,6 +595,24 @@ input::placeholder {
     margin: auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+}
+
+.circle-button {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-3);
+    background-color: var(--background-2);
+}
+
+.circle-button:hover,
+.circle-button:focus-visible {
+    color: var(--foreground-1);
+    background-color: var(--background-1);
 }
 
 .smallTitle {
@@ -682,11 +705,21 @@ code {
     cursor: grab !important;
 }
 
+.cropper-wrap-box,
+.cropper-drag-box {
+    border-radius: 4px;
+}
+
 .cropper-crop-box,
 .cropper-view-box,
 .cropper-face.cropper-move {
-    border-radius: 50%;
     pointer-events: none;
+}
+
+.round .cropper-crop-box,
+.round .cropper-view-box,
+.round .cropper-face.cropper-move {
+    border-radius: 50%;
 }
 
 .cropper-view-box {

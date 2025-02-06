@@ -42,7 +42,6 @@
     height: 48px;
     display: flex;
     cursor: pointer;
-    overflow: hidden;
     border-radius: 50%;
     position: relative;
     align-items: center;
@@ -56,15 +55,17 @@
 }
 
 .wrapper:hover,
-.wrapper:focus-visible,
 .active {
     border-radius: 33%;
     background-color: var(--accent-1);
 }
 
+.wrapper > span {
+    overflow: hidden;
+}
+
 .green > .active,
-.green > .wrapper:hover,
-.green > .wrapper:focus-visible {
+.green > .wrapper:hover {
     background-color: var(--success-light);
 }
 
@@ -76,7 +77,6 @@
 }
 
 .wrapper:hover img,
-.wrapper:focus-visible img,
 .active img {
     border-radius: 33%;
 }
@@ -85,8 +85,7 @@
     transform: translateY(1px);
 }
 
-.wrapper:hover img,
-.wrapper:focus-visible img {
+.wrapper:hover img {
     border-radius: 33% !important;
 }
 
@@ -95,7 +94,6 @@
 }
 
 .green > .wrapper:hover,
-.green > .wrapper:focus-visible,
 .green > .active {
     color: var(--foreground-1);
 }

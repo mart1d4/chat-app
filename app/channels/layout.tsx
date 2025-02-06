@@ -51,12 +51,11 @@ export async function GetData({ children }: { children: ReactElement }) {
                     <div className={styles.channelsContainer}>{children}</div>
                 </div>
 
-                <div className={styles.layers}>
-                    <Settings />
-                    <DialogOverlay />
-                    <EventManager />
-                    <EmojiPicker />
-                </div>
+                {/* Layers */}
+                <Settings />
+                <DialogOverlay />
+                <EventManager />
+                <EmojiPicker />
             </div>
         </Loading>
     );

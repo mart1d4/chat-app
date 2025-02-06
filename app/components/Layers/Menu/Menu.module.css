@@ -123,3 +123,36 @@
     align-items: center;
     justify-content: center;
 }
+
+.item.isChecked > svg > :first-child {
+    color: var(--accent-border);
+}
+
+.item.isChecked > svg > :last-child {
+    color: #ffffff;
+}
+
+.item.isChecked:hover > svg > :first-child,
+.item.isChecked:focus-visible > svg > :first-child,
+.item.isChecked:active > svg > :first-child,
+.menu [data-state="open"] .item.isChecked > svg > :first-child {
+    color: var(--foreground-1);
+}
+
+.item.isChecked:hover > svg > :last-child,
+.item.isChecked:focus-visible > svg > :last-child,
+.item.isChecked:active > svg > :last-child,
+.menu [data-state="open"] .item.isChecked > svg > :last-child {
+    color: var(--accent-1);
+}
+
+.item.isPicked circle {
+    color: var(--accent-border);
+}
+
+.item.isPicked:hover circle,
+.item.isPicked:focus-visible circle,
+.item.isPicked:active circle,
+.menu [data-state="open"] .item.isPicked circle {
+    color: var(--foreground-1);
+}
