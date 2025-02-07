@@ -1,12 +1,14 @@
 "use client";
 
 import { UserChannels } from "@/app/components";
-import { getNanoId } from "@/lib/insertions";
 import styles from "./Discover.module.css";
+import { nanoid } from "nanoid";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function DiscoverPage() {
+    return <div>E</div>;
+
     const token = localStorage.getItem("token");
 
     async function postData() {
@@ -17,7 +19,7 @@ export default function DiscoverPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: getNanoId(),
+                    username: nanoid(10),
                     password: "Password",
                 }),
             });
