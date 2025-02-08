@@ -1,14 +1,26 @@
 {
+    "version": "1.0.0",
+    "name": "spark",
+    "description": "Connect, Chat, and Share Effortlessly with Spark.",
     "author": {
         "name": "Martin Danton (@mart1d4)",
         "email": "git@mart1d4.me",
         "url": "https://www.mart1d4.dev"
     },
-    "description": "Connect, Chat, and Share Effortlessly with Spark.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mart1d4/spark.git"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/mart1d4/spark/issues"
+    },
+    "homepage": "https://spark.mart1d4.dev",
+    "main": "index.ts",
     "scripts": {
         "dev": "next dev --turbo",
         "build": "next build",
-        "start": "next start -p 3000"
+        "start": "next start"
     },
     "dependencies": {
         "@dnd-kit/core": "^6.3.1",
@@ -47,13 +59,6 @@
         "uploadthing": "^7.4.4",
         "zustand": "^5.0.2"
     },
-    "name": "spark",
-    "version": "1.0.0",
-    "main": "index.ts",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mart1d4/spark.git"
-    },
     "keywords": [
         "chat",
         "app",
@@ -75,11 +80,6 @@
         "typescript",
         "uploadcare"
     ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/mart1d4/spark/issues"
-    },
-    "homepage": "https://spark.mart1d4.dev",
     "devDependencies": {
         "@types/bun": "^1.1.14",
         "@types/color-convert": "^2.0.4",

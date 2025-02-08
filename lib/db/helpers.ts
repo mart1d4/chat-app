@@ -1,20 +1,17 @@
-import type {
-    AppChannel,
-    AppUser,
-    Channel,
-    DMChannel,
-    DMChannelWithRecipients,
-    Friend,
-    KnownUser,
-    UnknownUser,
-    User,
-    UserGuild,
-} from "@/type";
 import { type ExpressionBuilder, type Selectable, sql } from "kysely";
 import type { Channels, DB, Guilds, Users } from "./db.types";
 import { jsonArrayFrom } from "kysely/helpers/mysql";
 import { cookies } from "next/headers";
 import { db } from "./db";
+import type {
+    DMChannelWithRecipients,
+    UnknownUser,
+    UserGuild,
+    KnownUser,
+    AppUser,
+    Channel,
+    User,
+} from "@/type";
 
 export const SelectAppUnknownUser: (keyof User)[] = ["id", "username", "avatar"];
 export const selectAppRequest: (keyof User)[] = [...SelectAppUnknownUser, "displayName"];
