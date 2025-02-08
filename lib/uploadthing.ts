@@ -14,7 +14,7 @@ if (!cdnUrl) {
 }
 
 export const { useUploadThing, uploadFiles } = generateReactHelpers({
-    url: `http://localhost:8080/api/uploadthing`,
+    url: `${apiUrl.replace(/\/v\d+$/, "")}/uploadthing`,
 });
 
 export const getCdnUrl = cdnUrl;

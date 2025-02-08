@@ -136,7 +136,7 @@ export default function Register() {
 
                     <button
                         type="submit"
-                        className={"button " + styles.submit}
+                        className={`button ${styles.button} ${styles.submit}`}
                     >
                         {isLoading ? <LoadingDots /> : "Register"}
                     </button>

@@ -109,7 +109,7 @@
     text-decoration: underline;
 }
 
-.submit {
+.button.submit {
     color: var(--foreground-1);
     background-color: var(--accent-1);
     font-size: 1rem;
@@ -121,11 +121,12 @@
     cursor: pointer;
 }
 
-.submit:hover {
+.button.submit:hover,
+.button.submit:focus-visible {
     background-color: var(--accent-2);
 }
 
-.submit:active {
+.button.submit:active {
     background-color: var(--accent-3);
 }
 
