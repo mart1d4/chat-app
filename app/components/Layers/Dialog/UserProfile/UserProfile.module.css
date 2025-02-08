@@ -44,7 +44,6 @@
     height: 210px;
     contain: paint;
     overflow: hidden;
-    min-width: 340px;
     min-width: 600px;
 }
 
@@ -755,4 +754,24 @@ textarea.cardInput::-webkit-scrollbar-track {
 
 .statusTools > button:active > svg {
     transform: translateY(1px);
+}
+
+.close {
+    visibility: hidden;
+}
+
+@media (max-width: 562px) {
+    .container {
+        width: 100vw;
+        height: 100vh;
+        animation: none;
+        overflow: hidden;
+        max-width: 100vw;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .close {
+        visibility: visible;
+    }
 }

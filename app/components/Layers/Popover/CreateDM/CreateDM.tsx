@@ -104,6 +104,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
     return (
         <div
             ref={containerRef}
+            data-full-on-mobile
             className={styles.popup}
         >
             <div className={styles.header}>

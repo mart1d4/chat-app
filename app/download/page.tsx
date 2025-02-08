@@ -2,11 +2,8 @@ import PopoverButton from "../web-components/PopoverButton/Popover";
 import Header from "../web-components/Header/Header";
 import Footer from "../web-components/Footer/Footer";
 import styles from "./Download.module.css";
-import { assets } from "@/lib/assets";
 import type { Metadata } from "next";
 import Link from "next/link";
-
-const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export const metadata: Metadata = {
     title: "Download Spark to Talk, Chat and Hang Out",
@@ -72,8 +69,8 @@ export default function DownloadPage() {
 
                         <div>
                             <a
-                                href="/app/download/latest/ChatApp-Setup.exe"
-                                download="ChatApp-Setup.exe"
+                                download="Spark-Setup.exe"
+                                href="/app/download/latest/Spark-Setup.exe"
                             >
                                 <svg
                                     width="24"

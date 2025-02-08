@@ -6,7 +6,7 @@ export const config = {
     matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api)(.*)"],
 };
 
-export async function middleware(req: NextRequest, res: NextResponse) {
+export async function middleware(req: NextRequest) {
     const token = req.cookies.get("token")?.value;
     const { pathname } = req.nextUrl;
 
@@ -17,16 +17,7 @@ export async function middleware(req: NextRequest, res: NextResponse) {
         });
     }
 
-    const publicPaths = [
-        "/",
-        "/login",
-        "/register",
-        "/reset",
-        "/verify",
-        "/invite",
-        "/download",
-        "/test",
-    ];
+    const publicPaths = ["/", "/login", "/register", "/reset", "/verify", "/invite", "/download"];
 
     const authorizedRegex = /^\/channels\/discover\/?$/;
     const channelsRegex = /^\/channels\/me(\/[0-9]{14})?\/?$/;
@@ -35,11 +26,11 @@ export async function middleware(req: NextRequest, res: NextResponse) {
 
     if (!publicPaths.includes(pathname)) {
         if (!pathname.startsWith("/channels")) {
-            return NextResponse.rewrite(new URL("/", req.url));
+            return NextResponse.redirect(new URL("/", req.url));
         }
 
         if (!token) {
-            return NextResponse.rewrite(new URL("/login", req.url));
+            return NextResponse.redirect(new URL("/login", req.url));
         }
 
         const secret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
@@ -57,7 +48,7 @@ export async function middleware(req: NextRequest, res: NextResponse) {
 
             if (!payload?.id) {
                 req.cookies.delete("token");
-                return NextResponse.rewrite(new URL("/login", req.url));
+                return NextResponse.redirect(new URL("/login", req.url));
             }
 
             if (
@@ -66,7 +57,7 @@ export async function middleware(req: NextRequest, res: NextResponse) {
                 !guildsRegex.test(pathname) &&
                 !onlyGuildRegex.test(pathname)
             ) {
-                return NextResponse.rewrite(new URL("/channels/me", req.url));
+                return NextResponse.redirect(new URL("/channels/me", req.url));
             }
 
             const requestHeaders = new Headers(req.headers);
@@ -83,7 +74,7 @@ export async function middleware(req: NextRequest, res: NextResponse) {
         } catch (error) {
             console.error(error);
             req.cookies.delete("token");
-            return NextResponse.rewrite(new URL("/login", req.url));
+            return NextResponse.redirect(new URL("/login", req.url));
         }
     }
 

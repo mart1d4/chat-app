@@ -680,11 +680,11 @@
 .imagesUpload {
     width: 100%;
     padding: 16px;
-    display: flex;
     margin-top: 2px;
     max-width: 520px;
     border-radius: 8px;
     align-items: center;
+    display: flex !important;
     border: 1px solid var(--background-1);
     background-color: var(--background-3);
 }

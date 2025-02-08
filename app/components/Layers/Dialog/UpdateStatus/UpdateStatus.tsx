@@ -200,12 +200,7 @@ export function UpdateStatus() {
                                         {getStatusLabel(s)}
                                     </div>
 
-                                    {status === s && (
-                                        <Icon
-                                            name="selected"
-                                            fill="var(--accent-1)"
-                                        />
-                                    )}
+                                    {status === s && <Icon name="selected" />}
                                 </li>
                             ))}
                         </ul>

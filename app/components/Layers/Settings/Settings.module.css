@@ -18,9 +18,9 @@
 .contentWrapper > .content .closeButton {
     margin: 0;
     padding: 0;
-    align-self: flex-end;
     width: 24px;
     display: none;
+    align-self: flex-end;
 }
 
 .sidebar .closeButton > div,
@@ -30,23 +30,23 @@
 
 .sidebar .closeButton button,
 .contentWrapper > .content .closeButton button {
+    margin: 0 !important;
     width: 24px !important;
     height: 24px !important;
-    margin: 0 !important;
     flex: 0 0 24px !important;
     cursor: pointer !important;
     background-color: transparent !important;
 }
 
 .sidebarWrapper {
-    overflow: hidden scroll;
-    padding-right: 0;
-    flex: 1 0 auto;
-    align-items: flex-start;
     display: flex;
-    justify-content: flex-end;
-    position: relative;
     min-height: 0;
+    flex: 1 0 auto;
+    padding-right: 0;
+    position: relative;
+    overflow: hidden scroll;
+    align-items: flex-start;
+    justify-content: flex-end;
     background-color: var(--background-3);
 }
 
@@ -1583,4 +1583,39 @@
     height: 1px;
     margin-top: 20px;
     border-top: 1px solid var(--border-light);
+}
+
+.returnBack {
+    gap: 6px;
+    display: flex;
+    cursor: pointer;
+    font-weight: 500;
+    padding: 8px 8px;
+    user-select: none;
+    border-radius: 4px;
+    align-items: center;
+    margin: -36px 0 36px 0;
+    color: var(--foreground-2);
+    background-color: var(--background-2);
+}
+
+nav > .returnBack {
+    margin-top: -14px;
+}
+
+.returnBack:hover,
+.returnBack:focus-visible {
+    color: var(--foreground-1);
+    background-color: var(--background-5);
+}
+
+.returnBack > svg {
+    transform: rotate(-90deg);
+}
+
+@media (max-width: 562px) {
+    .contentWrapper > .content {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
 }

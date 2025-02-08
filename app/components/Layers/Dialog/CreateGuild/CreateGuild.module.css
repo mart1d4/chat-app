@@ -12,6 +12,26 @@
     animation: popIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@media (max-width: 562px) {
+    .container {
+        animation: none;
+        transition: none;
+        border-radius: 0;
+        max-height: 100vh;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+
+    .container > div {
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100% !important;
+        max-height: 100% !important;
+    }
+}
+
 .container > div {
     display: flex;
     max-height: 580px;

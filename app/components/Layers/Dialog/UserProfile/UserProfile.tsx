@@ -438,6 +438,22 @@ export function UserProfile({
                 )}
 
                 <div className={styles.topTools}>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <button
+                                className={styles.close}
+                                onClick={() => setOpen(false)}
+                            >
+                                <Icon
+                                    size={18}
+                                    name="close"
+                                />
+                            </button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>Close</TooltipContent>
+                    </Tooltip>
+
                     {isFriend && (
                         <Menu placement="right-start">
                             <Tooltip>

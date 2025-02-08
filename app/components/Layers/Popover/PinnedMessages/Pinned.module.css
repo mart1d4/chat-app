@@ -132,17 +132,17 @@
 }
 
 .close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 14px;
     padding: 0;
+    right: 16px;
     width: 24px;
     height: 24px;
+    cursor: pointer;
+    position: absolute;
+    visibility: hidden;
+    border-radius: 4px;
     color: var(--foreground-3);
     background-color: transparent;
-    visibility: hidden;
-    cursor: pointer;
-    border-radius: 4px;
 }
 
 .close:hover {

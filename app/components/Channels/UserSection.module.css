@@ -1,30 +1,30 @@
 .userSectionContainer {
+    z-index: 1;
     flex: 0 0 auto;
     background-color: var(--background-2);
-    z-index: 1;
 }
 
 .userSection {
     height: 52px;
+    display: flex;
+    padding: 0 8px;
     font-size: 14px;
     font-weight: 500;
-    display: flex;
-    align-items: center;
-    padding: 0 8px;
-    margin-bottom: 1px;
     user-select: none;
+    margin-bottom: 1px;
+    align-items: center;
 }
 
 .avatarWrapper {
-    display: flex;
-    align-items: center;
-    margin-left: -2px;
     width: 122px;
+    display: flex;
+    cursor: pointer;
+    margin-left: -2px;
     padding-left: 2px;
     margin-right: 8px;
-    cursor: pointer;
-    position: relative;
     border-radius: 4px;
+    position: relative;
+    align-items: center;
 }
 
 .avatarWrapper:hover,
@@ -164,4 +164,14 @@
 
 .toolbar > button:active {
     color: var(--foreground-1);
+}
+
+@media (max-width: 562px) {
+    .userSection {
+        justify-content: space-between;
+    }
+
+    .avatarWrapper {
+        width: 100%;
+    }
 }

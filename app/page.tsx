@@ -5,9 +5,6 @@ import styles from "./Home.module.css";
 import type { Metadata } from "next";
 import { Icon } from "@components";
 import Link from "next/link";
-import { assets } from "@/lib/assets";
-
-const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
 
 export const metadata: Metadata = {
     title: appMetadata.homeTitle,

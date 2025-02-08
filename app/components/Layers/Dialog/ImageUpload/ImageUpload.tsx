@@ -3,7 +3,6 @@ import useRequestHelper from "@/hooks/useFetchHelper";
 import { useEffect, useRef, useState } from "react";
 import { useUploadThing } from "@/lib/uploadthing";
 import { Alert, DialogContent } from "@components";
-import { useData } from "@/store";
 import Cropper from "cropperjs";
 
 export function ImageUpload({

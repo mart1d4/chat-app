@@ -4,8 +4,8 @@
     outline: none !important;
 }
 
-@media (max-width: 480px) {
-    .popover {
+@media (max-width: 562px) {
+    .popover:has([data-full-on-mobile="true"]) {
         transform: none !important;
     }
 }

@@ -111,6 +111,10 @@
     height: 20px;
 }
 
+.options > li > svg path {
+    color: var(--accent-1);
+}
+
 .options > li:hover {
     background-color: var(--background-4);
 }

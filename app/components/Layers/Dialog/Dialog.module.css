@@ -1,19 +1,19 @@
 .overlay {
+    z-index: 999;
     display: grid;
     place-items: center;
     background-color: hsla(0, 0%, 0%, 0.8);
     animation: fadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-    z-index: 999;
 }
 
 .dialog {
-    display: flex;
-    flex-direction: column;
     width: 440px;
-    max-height: min(720px, calc(100dvh - 40px));
+    display: flex;
     min-height: 200px;
-    background-color: var(--background-4);
     border-radius: 4px;
+    flex-direction: column;
+    background-color: var(--background-4);
+    max-height: min(720px, calc(100dvh - 40px));
     box-shadow: var(--elevation-high), var(--elevation-low);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
@@ -484,5 +484,32 @@
     to {
         transform: translate3d(44px, -6px, 0) rotate(30deg);
         opacity: 1;
+    }
+}
+
+@media (max-width: 562px) {
+    .overlay {
+        transition: none;
+    }
+
+    .dialog {
+        animation: none;
+        max-width: unset;
+        border-radius: 0;
+        max-height: unset;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+
+    .icon {
+        position: unset;
+        padding-top: 16px;
+        align-self: center;
+        top: unset !important;
+        left: unset !important;
+    }
+
+    .header.withIcon {
+        padding-top: 0;
     }
 }

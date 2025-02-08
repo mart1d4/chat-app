@@ -158,6 +158,7 @@
 
 .list {
     display: flex;
+    overflow: auto hidden;
 }
 
 @-moz-document url-prefix() {

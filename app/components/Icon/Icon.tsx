@@ -261,7 +261,7 @@ export const Icon = ({ name, size = 24, ...props }: { name: string; size?: numbe
                     r="8"
                     cx="12"
                     cy="12"
-                    fill="white"
+                    fill="currentColor"
                 />
                 <g
                     fill="none"

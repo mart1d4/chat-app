@@ -153,16 +153,29 @@ export function Settings() {
                         <div className={styles.sidebar}>
                             <div className={styles.sidebarWrapper}>
                                 <nav>
-                                    <div className={styles.closeButton}>
-                                        <div>
-                                            <div onClick={() => setShowSettings(null)}>
-                                                <Icon
-                                                    name="close"
-                                                    size={16}
-                                                />
+                                    {minified ? (
+                                        <div
+                                            className={styles.returnBack}
+                                            onClick={() => setShowSettings(null)}
+                                        >
+                                            <Icon
+                                                size={20}
+                                                name="close"
+                                            />
+                                            Close
+                                        </div>
+                                    ) : (
+                                        <div className={styles.closeButton}>
+                                            <div>
+                                                <div onClick={() => setShowSettings(null)}>
+                                                    <Icon
+                                                        name="close"
+                                                        size={16}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     {tabs.map((tab, index) => {
                                         if (tab.hide) return null;
@@ -300,15 +313,15 @@ export function Settings() {
                                     }}
                                 >
                                     {!!minified && (
-                                        <div className={styles.closeButton}>
-                                            <div>
-                                                <div onClick={() => setHideNav(false)}>
-                                                    <Icon
-                                                        name="close"
-                                                        size={16}
-                                                    />
-                                                </div>
-                                            </div>
+                                        <div
+                                            className={styles.returnBack}
+                                            onClick={() => setHideNav(false)}
+                                        >
+                                            <Icon
+                                                size={20}
+                                                name="arrow"
+                                            />
+                                            Back
                                         </div>
                                     )}
 

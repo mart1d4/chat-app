@@ -2,6 +2,7 @@ import { TabFocusHighlighter } from "./components";
 import { appMetadata } from "@/lib/metadata";
 import { type ReactElement } from "react";
 import type { Metadata } from "next";
+import { Init } from "./Init";
 import "./global.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactElement }) {
                 {children}
 
                 <TabFocusHighlighter />
+                <Init />
             </body>
         </html>
     );

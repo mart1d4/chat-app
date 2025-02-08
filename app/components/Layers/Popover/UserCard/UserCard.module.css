@@ -634,6 +634,7 @@
 
 .received,
 .blocked {
+    user-select: none;
     padding: 10px 12px;
     border-radius: 8px;
     background-color: var(--background-3);

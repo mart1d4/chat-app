@@ -79,20 +79,27 @@
 }
 
 .noData {
-    flex: 1 1 auto;
-    max-width: 440px;
-    margin: 0 auto;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: center;
-    align-items: center;
     display: flex;
-    pointer-events: none;
+    flex: 1 1 auto;
+    margin: 0 auto;
+    padding: 0 80px;
+    max-width: 440px;
+    flex-wrap: nowrap;
     user-select: none;
+    align-items: center;
+    pointer-events: none;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .noData > img {
     margin-bottom: 40px;
+}
+
+@media (max-width: 562px) {
+    .noData > img {
+        max-width: 100%;
+    }
 }
 
 .noData > div {

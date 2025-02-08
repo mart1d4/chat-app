@@ -297,6 +297,12 @@ export const DialogContent = forwardRef<
                                 ...props
                             }: any) => props
                         )}
+                        style={{
+                            height: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
                     >
                         <div
                             style={{

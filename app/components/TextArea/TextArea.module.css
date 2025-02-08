@@ -170,15 +170,20 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     position: relative;
 }
 
+.textContainer [data-slate-placeholder="true"] {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 .placeholder {
-    padding: 11px 10px 11px 0;
-    position: absolute;
     left: 0;
     right: 10px;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     user-select: none;
+    position: absolute;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 11px 10px 11px 0;
     color: var(--foreground-light);
 }
 
@@ -572,8 +577,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 @media screen and (max-width: 562px) {
-    .toolsContainer > :nth-child(1),
-    .toolsContainer > :nth-child(2) {
+    .toolsContainer > :nth-child(1) {
         display: none !important;
     }
 }
