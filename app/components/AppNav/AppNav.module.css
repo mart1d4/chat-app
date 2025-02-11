@@ -66,7 +66,7 @@
 
 .green > .active,
 .green > .wrapper:hover {
-    background-color: var(--success-light);
+    background-color: var(--accent-1);
 }
 
 .wrapper img {
@@ -90,7 +90,7 @@
 }
 
 .green > .wrapper {
-    color: var(--success-light);
+    color: var(--foreground-1);
 }
 
 .green > .wrapper:hover,

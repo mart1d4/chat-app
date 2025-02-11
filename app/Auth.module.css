@@ -1,40 +1,41 @@
 .disclaimer {
-    position: fixed;
-    z-index: 100;
-    bottom: 20px;
     top: auto;
     left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 12px;
-    background-color: var(--error-1);
-    font-weight: 600;
-    color: var(--foreground-1);
+    width: 100%;
+    z-index: 100;
+    bottom: 20px;
     display: flex;
+    position: fixed;
     font-size: 16px;
+    font-weight: 600;
     font-weight: 500;
     line-height: 28px;
+    padding: 8px 12px;
+    border-radius: 4px;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    color: var(--foreground-1);
+    transform: translateX(-50%);
+    background-color: var(--error-1);
+    max-width: clamp(300px, 90dvw, 850px);
     max-width: clamp(300px, 90vw, 850px);
-    width: 100%;
 }
 
 .disclaimer a {
-    color: var(--foreground-1);
     font-weight: 700;
+    color: var(--foreground-1);
 }
 
 .wrapper {
-    width: 100dvw;
-    height: 100dvh;
     display: flex;
+    width: var(--dvw);
+    height: var(--dvh);
     align-items: center;
+    background-size: 45%;
     justify-content: center;
+    background-repeat: repeat;
     background-color: var(--background-1);
     background-image: url("/assets/app/bg-pattern.png");
-    background-size: 45%;
-    background-repeat: repeat;
 }
 
 .wrapper form {

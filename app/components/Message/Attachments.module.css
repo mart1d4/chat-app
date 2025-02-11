@@ -380,11 +380,11 @@
     overflow: auto;
     min-height: 400px;
     border-radius: 8px 8px 0 0;
-    max-height: calc(100vh - 120px);
+    max-height: calc(var(--dvh) - 120px);
     border: 1px solid var(--background-2);
     background-color: var(--background-3);
-    min-width: min(800px, calc(100vw - 32px));
-    max-width: min(960px, calc(100vw - 32px));
+    min-width: min(800px, calc(var(--dvw) - 32px));
+    max-width: min(960px, calc(var(--dvw) - 32px));
 }
 
 .actions {

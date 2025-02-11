@@ -102,50 +102,50 @@
 }
 
 .heroText > h1 {
-    font-family: "Ginto Nord", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: clamp(24px, 5vw, 44px);
+    cursor: initial;
     font-weight: 800;
     line-height: 95%;
+    user-select: text;
     text-transform: uppercase;
     text-rendering: geometricPrecision;
-    user-select: text;
-    cursor: initial;
+    font-size: clamp(24px, 5vw, 44px);
+    font-family: "Ginto Nord", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .heroText > div {
-    margin-top: 24px;
-    font-size: clamp(16px, 2vw, 20px);
-    line-height: 1.625;
     font-weight: 300;
+    margin-top: 24px;
+    line-height: 1.625;
+    font-size: clamp(16px, 2vw, 20px);
 }
 
 .heroButtons {
     display: flex;
-    align-self: center;
     flex-wrap: wrap;
+    align-self: center;
 }
 
 .heroButtons > a {
-    margin-top: 24px;
-    border-radius: 28px;
     font-size: 20px;
-    padding: 16px 32px;
-    background-color: hsl(206, 9%, 15%);
-    color: hsl(0, 0%, 100%);
-    text-decoration: none;
-    line-height: 24px;
     cursor: pointer;
+    margin-top: 24px;
     font-weight: 500;
-    display: inline-flex;
+    line-height: 24px;
+    padding: 16px 32px;
+    border-radius: 28px;
     align-items: center;
+    display: inline-flex;
+    text-decoration: none;
+    color: hsl(0, 0%, 100%);
+    background-color: hsl(206, 9%, 15%);
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
         box-shadow 0.15s ease-in-out;
 }
 
 .heroButtons > a:first-child {
     margin-right: 24px;
-    background-color: hsl(0, 0%, 100%);
     color: hsl(206, 9%, 15%);
+    background-color: hsl(0, 0%, 100%);
 }
 
 .heroButtons > a:first-child:hover {

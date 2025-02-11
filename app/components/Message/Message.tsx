@@ -54,6 +54,20 @@ const messageIcons = {
     7: "pin",
 };
 
+const welcomeMessages = [
+    "Good to see you, {user}!",
+    "{user} joined the party.",
+    "{user} just showed up!",
+    "{user} hopped into the server.",
+    "A wild {user} appeared.",
+    "{user} just landed.",
+    "Welcome, {user}!",
+    "Swoooosh. {user} just landed.",
+    "Brace yourselves. {user} just joined the server.",
+    "{user} just joined. Everyone, look busy!",
+    "{user} is here.",
+];
+
 function serialize(nodes: Node[]) {
     if (!nodes) return "";
     return nodes.map((n) => Node.string(n)).join("\n");
@@ -475,6 +489,8 @@ export const Message = memo(
         const pinnedTrigger = document.getElementById("pinned-messages-trigger");
 
         if (inline) {
+            const welcome = welcomeMessages[message.author.id % welcomeMessages.length];
+
             return (
                 <Menu
                     positionOnClick
@@ -506,7 +522,13 @@ export const Message = memo(
 
                                 <div className={styles.content}>
                                     <div style={{ whiteSpace: "pre-line" }}>
-                                        {(message.type === 2 || message.type === 3) && (
+                                        {(message.type === 2 || message.type === 3) && guild ? (
+                                            <span>
+                                                {welcome.slice(0, welcome.indexOf("{user}"))}
+                                                <UserMention user={message.author} />
+                                                {welcome.slice(welcome.indexOf("{user}") + 6)}{" "}
+                                            </span>
+                                        ) : (
                                             <span>
                                                 <UserMention user={message.author} />{" "}
                                                 {!!message.mentions.length ? (
@@ -574,8 +596,9 @@ export const Message = memo(
                                         {message.type === 8 && <span></span>}
 
                                         <Tooltip
-                                            delay={500}
                                             gap={1}
+                                            delay={500}
+                                            bigMaxWidth
                                         >
                                             <TooltipTrigger>
                                                 <span className={styles.contentTimestamp}>
@@ -784,6 +807,7 @@ export const Message = memo(
                                                     <Tooltip
                                                         gap={1}
                                                         delay={500}
+                                                        bigMaxWidth
                                                     >
                                                         <TooltipTrigger>
                                                             <span>(edited)</span>
@@ -901,8 +925,9 @@ export const Message = memo(
 
                                         {!isLocal && (
                                             <Tooltip
-                                                delay={500}
                                                 gap={1}
+                                                delay={500}
+                                                bigMaxWidth
                                             >
                                                 <TooltipTrigger>
                                                     <span className={styles.titleTimestamp}>
@@ -921,8 +946,9 @@ export const Message = memo(
                                 {!large && (
                                     <span className={styles.messageTimestamp}>
                                         <Tooltip
-                                            delay={500}
                                             gap={1}
+                                            delay={500}
+                                            bigMaxWidth
                                         >
                                             <TooltipTrigger>
                                                 <span>{getShortDate(message.createdAt)}</span>
@@ -975,7 +1001,10 @@ export const Message = memo(
                                                 {content}{" "}
                                                 {message.edited && !message.attachments.length && (
                                                     <span className={styles.contentTimestamp}>
-                                                        <Tooltip delay={500}>
+                                                        <Tooltip
+                                                            delay={500}
+                                                            bigMaxWidth
+                                                        >
                                                             <TooltipTrigger>
                                                                 <span>(edited)</span>
                                                             </TooltipTrigger>
@@ -990,7 +1019,7 @@ export const Message = memo(
                                         )
                                     )}
 
-                                    {translation && (
+                                    {translation && !edit && (
                                         <Dialog>
                                             <DialogTrigger>
                                                 <button
@@ -1001,10 +1030,16 @@ export const Message = memo(
                                                 </button>
                                             </DialogTrigger>
 
-                                            <DialogContent blank>
-                                                <div className={styles.translateDialog}>
-                                                    <p>{translation}</p>
-                                                </div>
+                                            <DialogContent
+                                                showClose
+                                                hideCancel
+                                                width={600}
+                                                confirmLabel="Okay"
+                                                heading="Translation"
+                                            >
+                                                <p className={styles.translationText}>
+                                                    {translation}
+                                                </p>
                                             </DialogContent>
                                         </Dialog>
                                     )}
@@ -1092,8 +1127,9 @@ export const Message = memo(
                                     {message.edited && hasAttachments && (
                                         <span className={styles.contentTimestamp}>
                                             <Tooltip
-                                                delay={500}
                                                 gap={1}
+                                                delay={500}
+                                                bigMaxWidth
                                             >
                                                 <TooltipTrigger>
                                                     <span>(edited)</span>

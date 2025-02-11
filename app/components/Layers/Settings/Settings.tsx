@@ -1,7 +1,7 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
 import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles } from "./index";
+import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
 import useRequestHelper from "@/hooks/useFetchHelper";
 import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";

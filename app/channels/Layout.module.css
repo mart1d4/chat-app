@@ -1,10 +1,8 @@
 .appContainer {
-    width: 100vw;
-    width: 100dvw;
-    height: 100vh;
-    height: 100dvh;
     display: flex;
     overflow: hidden;
+    width: var(--dvw);
+    height: var(--dvh);
 }
 
 .appWrapper {
@@ -29,11 +27,9 @@
 }
 
 .error {
-    width: 100vw;
-    height: 100vh;
     display: flex;
-    width: 100dvw;
-    height: 100dvh;
+    width: var(--dvw);
+    height: var(--dvh);
     align-items: center;
     justify-content: center;
 }

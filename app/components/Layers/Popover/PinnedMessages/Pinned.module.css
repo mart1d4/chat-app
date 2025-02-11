@@ -149,17 +149,13 @@
     color: var(--foreground-1);
 }
 
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 562px) {
     .container {
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        width: 100dvw;
-        max-width: 100dvw;
-        height: 100dvh;
-        max-height: 100dvh;
         border-radius: 0;
+        width: var(--dvw);
+        height: var(--dvh);
+        max-width: var(--dvw);
+        max-height: var(--dvh);
     }
 
     .close {

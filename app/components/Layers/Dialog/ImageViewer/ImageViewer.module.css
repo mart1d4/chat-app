@@ -19,6 +19,7 @@
 }
 
 .container img {
+    max-width: 100%;
     user-select: none;
     border-radius: 3px;
 }
@@ -63,5 +64,11 @@
     100% {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+@media (max-width: 562px) {
+    .container img {
+        border-radius: 0;
     }
 }

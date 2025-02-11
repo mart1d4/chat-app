@@ -375,10 +375,10 @@
 
 @media (max-width: 562px) {
     .popup {
-        width: 100vw;
-        height: 100vh;
         border-radius: 0;
-        max-height: 100vh;
+        width: var(--dvw);
+        height: var(--dvh);
+        max-height: var(--dvh);
     }
 
     .closeButton {

@@ -6,7 +6,7 @@
     position: relative;
     border-radius: 8px;
     flex-direction: column;
-    max-height: calc(100vh - 80px);
+    max-height: calc(var(--dvh) - 80px);
     background: linear-gradient(
         var(--card-primary-color),
         var(--card-primary-color) 90px,
@@ -67,8 +67,7 @@
 }
 
 .noBanner .bannerContent {
-    border-bottom: 1px solid
-        color-mix(in oklab, hsl(0 calc(1 * 0%) 100% / 0.03) 100%, hsl(0 0% 0% / 0.03) 0%);
+    border-bottom: 1px solid hsl(0 calc(1 * 0%) 100% / 0.03);
 }
 
 .avatar {
@@ -609,7 +608,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     border-radius: 12px;
     box-shadow: var(--elevation-low);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+    background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
 }
 
 .customStatus > div:not(.statusTools)::before {
@@ -624,7 +623,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     position: absolute;
     box-shadow: var(--elevation-low);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+    background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
 }
 
 .customStatus > div:not(.statusTools)::after {
@@ -638,7 +637,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     position: absolute;
     box-shadow: var(--elevation-low);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+    background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
 }
 
 .statusContent {
@@ -647,7 +646,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     padding: 10px 12px;
     border-radius: 12px;
     word-wrap: break-word;
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
+    background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
 }
 
 .statusContent > div {
@@ -762,16 +761,24 @@ textarea.cardInput::-webkit-scrollbar-track {
 
 @media (max-width: 562px) {
     .container {
-        width: 100vw;
-        height: 100vh;
         animation: none;
         overflow: hidden;
-        max-width: 100vw;
         border-radius: 0;
-        max-height: 100vh;
+        width: var(--dvw);
+        height: var(--dvh);
+        max-width: var(--dvw);
+        max-height: var(--dvh);
     }
 
     .close {
         visibility: visible;
+    }
+
+    .bannerContent {
+        border-radius: 0;
+    }
+
+    .tools {
+        padding-top: 36px;
     }
 }

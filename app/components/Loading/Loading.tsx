@@ -17,6 +17,7 @@ import type {
     UserGuild,
     KnownUser,
     AppUser,
+    GuildMember,
 } from "@/type";
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -77,9 +78,9 @@ export function Loading({
     const pathname = usePathname();
     const router = useRouter();
 
-    const mutedRef = useRef(muted);
     const guildsSettingsRef = useRef(guildsSettings);
     const pathnameRef = useRef(pathname);
+    const mutedRef = useRef(muted);
 
     useEffect(() => {
         mutedRef.current = muted;
@@ -226,8 +227,36 @@ export function Loading({
     }
 
     function subToGuild(socket: Pusher, guild: UserGuild) {
+        const presence = socket.subscribe(`presence-guild-${guild.id}`);
         const chan = socket.subscribe(`private-guild-${guild.id}`);
         const userId = Number(socket.user.user_data?.id);
+
+        presence.bind(
+            "pusher:subscription_succeeded",
+            ({
+                members,
+            }: {
+                members: {
+                    [key: string]: GuildMember;
+                };
+            }) => {
+                setOnlineMembers(
+                    guild.id,
+                    Object.values(members).map((m) => ({
+                        ...m,
+                        id: Number(m.id),
+                    }))
+                );
+            }
+        );
+
+        presence.bind("pusher:member_added", ({ info: user }: { info: GuildMember }) => {
+            addOnlineMember(guild.id, { ...user, id: Number(user.id) });
+        });
+
+        presence.bind("pusher:member_removed", ({ id }: { id: string }) => {
+            removeOnlineMember(guild.id, Number(id));
+        });
 
         chan.bind(
             "message",
@@ -282,6 +311,12 @@ export function Loading({
                 } else {
                     addUser(user, type);
                 }
+
+                if (type === "received" && typeof user !== "number") {
+                    const audio = new Audio("/assets/sounds/ping.mp3");
+                    audio.volume = 0.5;
+                    audio.play();
+                }
             }
         );
 
@@ -298,11 +333,18 @@ export function Loading({
             }
         );
 
-        userChannel.bind("join-guild", ({ guild }: { guild: UserGuild }) => {
-            addGuild(guild);
-            subToGuild(socket, guild);
-            otherGuildsSubs.push(guild.id);
-        });
+        userChannel.bind(
+            "join-guild",
+            ({ guild, redirect }: { guild: UserGuild; redirect: number }) => {
+                addGuild(guild);
+                subToGuild(socket, guild);
+                otherGuildsSubs.push(guild.id);
+
+                if (redirect === user.id) {
+                    router.push(`/channels/${guild.id}/${guild.systemChannelId}`);
+                }
+            }
+        );
 
         userChannel.bind("leave-guild", ({ guildId }: { guildId: number }) => {
             removeGuild(guildId);

@@ -180,18 +180,6 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     background-color: var(--background-5);
 }
 
-@media screen and (max-width: 562px) {
-    .liContainer {
-        max-width: 100%;
-        border-radius: 10px;
-        border: 1px solid transparent;
-    }
-
-    .liContainer:hover {
-        border: 1px solid var(--background-1);
-    }
-}
-
 .liWrapper {
     width: 100%;
     display: flex;
@@ -324,6 +312,17 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 
 @media screen and (max-width: 562px) {
     .nav {
-        width: calc(100vw - 72px - 40px);
+        width: calc(var(--dvw)- 72px - 40px);
+    }
+
+    .liContainer {
+        max-width: 100%;
+        border-radius: 10px;
+        border: 1px solid transparent;
+    }
+
+    .liContainer:hover {
+        border: 1px solid var(--border-light);
+        background-color: var(--background-5) !important;
     }
 }

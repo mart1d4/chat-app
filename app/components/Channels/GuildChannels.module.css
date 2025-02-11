@@ -512,8 +512,8 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 
 @media screen and (max-width: 562px) {
     .nav {
-        width: calc(100vw - 72px - 40px);
         max-width: 350px;
+        width: calc(var(--dvw) - 72px - 40px);
     }
 }
 

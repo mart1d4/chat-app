@@ -100,6 +100,7 @@ function Title() {
 
 function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelRecipient[] } }) {
     const requests = useData((state) => state.received).length;
+    const { setShowChannels } = useShowChannels();
     const { notifications } = useNotifications();
     const { sendRequest } = useFetchHelper();
     const { muted } = useChannelSettings();
@@ -151,9 +152,10 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
             <Link
                 href={`/channels/me`}
                 className={styles.liContainer}
+                onClick={() => setShowChannels(false)}
                 style={{
                     color: sameUrl ? "var(--foreground-1)" : "",
-                    borderColor: sameUrl ? "var(--background-1)" : "",
+                    borderColor: sameUrl ? "var(--border-light)" : "",
                     backgroundColor: sameUrl ? "var(--background-5)" : "",
                 }}
             >
@@ -191,10 +193,11 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                 <Link
                     className={styles.liContainer}
                     href={`/channels/me/${channel.id}`}
+                    onClick={() => setShowChannels(false)}
                     style={{
                         backgroundColor: sameUrl ? "var(--background-5)" : "",
                         color: sameUrl || hasPing ? "var(--foreground-1)" : "",
-                        borderColor: sameUrl ? "var(--background-1)" : "",
+                        borderColor: sameUrl ? "var(--border-light)" : "",
                         opacity: isMuted ? 0.3 : undefined,
                     }}
                 >

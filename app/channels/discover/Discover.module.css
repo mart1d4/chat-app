@@ -1,28 +1,258 @@
 .container {
     width: 100%;
-    background-color: var(--background-4);
-    padding: 10px;
-    padding-bottom: 120px;
-    overflow-y: auto;
+    height: 100%;
+    display: flex;
 }
 
-.container > h1 {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 100%;
+.container > aside {
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-3);
+}
+
+.sidebar {
+    flex: 1;
+}
+
+.sidebar > h2 {
+    height: 60px;
+    padding: 16px;
+    display: flex;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+    align-items: center;
     color: var(--foreground-1);
 }
 
-.buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 40px;
-}
-
-.data {
+.sidebar > nav {
+    flex: 1;
+    gap: 2px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin-top: 40px;
+}
+
+.tab {
+    gap: 12px;
+    padding: 12px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    color: var(--foreground-1);
+    background-color: var(--background-4);
+}
+
+.tab > div {
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.container > main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-4);
+}
+
+.header {
+    height: 288px;
+    display: flex;
+    padding-top: 60px;
+    user-select: none;
+    flex-direction: column;
+    justify-content: center;
+    background: radial-gradient(
+            130.66% 324.98% at -3.95% 0,
+            #2f72c1 0,
+            rgba(37, 34, 154, 0.8) 35.73%,
+            rgba(25, 23, 92, 0) 100%
+        ),
+        #000;
+}
+
+.header > div {
+    width: 100%;
+    display: flex;
+    margin: 0 auto;
+    padding: 0 32px;
+    max-width: 1200px;
+    flex-direction: column;
+}
+
+.header > div > h1 {
+    font-size: 48px;
+    font-weight: 800;
+    max-width: 740px;
+    line-height: 0.955;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    color: var(--foreground-1);
+    font-family: var(--font-heading);
+}
+
+.header > div > p {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--foreground-1);
+}
+
+.servers {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 80px 32px;
+}
+
+.servers > h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--foreground-1);
+}
+
+.servers > ol {
+    display: grid;
+    column-gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.guild {
+    display: flex;
+    height: 320px;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    border-radius: 8px;
+    flex-direction: column;
+    background-color: var(--background-2);
+    will-change: transform, box-shadow, background, border, opacity;
+    transition: box-shadow 0.2s ease-out, transform 0.2s ease-out, background 0.2s ease-out,
+        border 0.2s ease-out, opacity 0.2s ease-in;
+}
+
+.guild:hover,
+.guild:focus-visible {
+    transform: translate(0, -1px);
+    box-shadow: var(--elevation-high);
+    background-color: var(--background-1);
+}
+
+.guild > header {
+    height: 146px;
+    position: relative;
+}
+
+.guild > header > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.guild .icon {
+    left: 16px;
+    bottom: -28px;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.guild .iconMask {
+    padding: 4px;
+    background-color: var(--background-2);
+    transition: background-color 0.2s ease-out;
+}
+
+.guild:hover .iconMask,
+.guild:focus-visible .iconMask {
+    background-color: var(--background-1);
+}
+
+.guild > .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 16px 16px;
+}
+
+.guild > .content > p {
+    font-size: 14px;
+    line-height: 1.285;
+    margin: 4px 0 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    text-overflow: ellipsis;
+    color: var(--foreground-3);
+    -webkit-box-orient: vertical;
+}
+
+.guild .stats {
+    flex: 1;
+    gap: 16px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.guild .stats > div {
+    gap: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.guild .stats > div > div {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: var(--success-light);
+}
+
+.guild .stats > div:nth-child(2) > div {
+    background-color: var(--foreground-2);
+}
+
+.guild .stats > div > span {
+    font-size: 12px;
+    overflow: hidden;
+    line-height: 1.333;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.guild > .content > :first-child {
+    gap: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.guild .badge {
+    display: flex;
+    position: relative;
+    align-items: center;
+}
+
+.guild .badge > :first-child {
+    color: var(--success-light);
+}
+
+.guild .badge > :last-child {
+    top: 50%;
+    left: 50%;
+    position: absolute;
+    color: var(--foreground-1);
+    transform: translate(-50%, -50%);
+    background-color: var(--success-light);
+}
+
+.guild > .content > :first-child > h2 {
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: var(--foreground-1);
 }

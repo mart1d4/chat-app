@@ -7,7 +7,7 @@
     border-radius: 8px;
     position: relative;
     flex-direction: column;
-    max-height: calc(100vh - 28px);
+    max-height: calc(var(--dvh) - 28px);
     background-color: var(--background-dark-1);
 }
 
@@ -26,7 +26,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 8px 8px 0 0;
-    max-height: calc(100vh - 28px);
+    max-height: calc(var(--dvh) - 28px);
 }
 
 .container > header {
@@ -55,8 +55,7 @@
     content: "";
     width: 100%;
     position: absolute;
-    border-bottom: 1px solid
-        color-mix(in oklab, hsl(0 calc(1 * 0%) 100% / 0.03) 100%, hsl(0 0% 0% / 0.03) 0%);
+    border-bottom: 1px solid hsl(0 calc(1 * 0%) 100% / 0.03);
 }
 
 .banner .background {
@@ -218,8 +217,8 @@
     position: relative;
     border-radius: 12px;
     box-shadow: var(--elevation-low);
+    background: hsl(225, 6.667%, 23.529%);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
 }
 
 .customStatus > div:not(.statusTools)::before {
@@ -233,8 +232,8 @@
     border-radius: 50%;
     position: absolute;
     box-shadow: var(--elevation-low);
+    background: hsl(225, 6.667%, 23.529%);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
 }
 
 .customStatus > div:not(.statusTools)::after {
@@ -247,8 +246,8 @@
     border-radius: 50%;
     position: absolute;
     box-shadow: var(--elevation-low);
+    background: hsl(225, 6.667%, 23.529%);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
 }
 
 .statusContent {
@@ -259,8 +258,8 @@
     padding: 10px 12px;
     border-radius: 12px;
     word-wrap: break-word;
+    background: hsl(225, 6.667%, 23.529%);
     transition: max-height 0.3s ease-in-out;
-    background: color-mix(in oklab, hsl(225 calc(1 * 6.667%) 23.529% / 1) 100%, black 0%);
 }
 
 .statusContent > div {
@@ -279,11 +278,11 @@
 .statusContent > div > div {
     font-size: 14px;
     font-weight: 500;
+    overflow: hidden;
     line-height: 1.285;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
 .customStatus.active:hover .statusContent,
@@ -544,11 +543,7 @@
 .menus > section > .divider {
     height: 1px;
     margin: 8px 4px;
-    background-color: color-mix(
-        in oklab,
-        hsl(228 calc(1 * 6.024%) 32.549% / 0.48) 100%,
-        hsl(0 0% 0% / 0.48) 0%
-    );
+    background-color: hsl(228 calc(1 * 6.024%) 32.549% / 0.48);
 }
 
 .menus > section > button {
@@ -563,18 +558,14 @@
     align-items: center;
     background-color: transparent;
     justify-content: space-between;
-    color: color-mix(in oklab, hsl(215 calc(1 * 8.824%) 73.333% / 1) 100%, black 0%);
+    color: hsl(215 calc(1 * 8.824%) 73.333% / 1);
 }
 
 .menus > section > button:hover,
 .menus > section > button:focus-visible,
 .menus > section > button[data-state="open"] {
-    color: color-mix(in oklab, hsl(210 calc(1 * 9.091%) 87.059% / 1) 100%, black 0%);
-    background-color: color-mix(
-        in oklab,
-        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
-        hsl(0 0% 0% / 0.3) 0%
-    );
+    color: hsl(210 calc(1 * 9.091%) 87.059% / 1);
+    background-color: hsl(228 calc(1 * 6.024%) 32.549% / 0.3);
 }
 
 .menus > section > button > :nth-child(2) {

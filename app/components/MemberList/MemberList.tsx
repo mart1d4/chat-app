@@ -2,7 +2,6 @@
 
 import { useData, useSettings, useTriggerDialog, useUrls, useWindowSettings } from "@/store";
 import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
-import type { HasPermissionFunction } from "@/app/channels/[guildId]/[channelId]/client";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useState, useEffect, useRef, useMemo } from "react";
 import useFetchHelper from "@/hooks/useFetchHelper";
@@ -15,7 +14,6 @@ import Image from "next/image";
 import {
     type ChannelRecipient,
     type GuildChannel,
-    type MutualFriend,
     type MutualGuild,
     type GuildMember,
     type UserProfile,
@@ -36,17 +34,16 @@ import {
     Icon,
     Menu,
 } from "@components";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export function MemberList({
     channelId,
     guildId,
     initChannel,
-    hasPerm,
 }: {
     channelId: number;
     guildId?: number;
     initChannel?: GuildChannel & { recipients: GuildMember[] };
-    hasPerm?: HasPermissionFunction;
 }) {
     const channel =
         initChannel ?? useData((state) => state.channels).find((c) => c.id === channelId);
@@ -75,6 +72,11 @@ export function MemberList({
     const { settings } = useSettings();
     const hasRun = useRef(false);
 
+    const { hasPermission } = usePermissions({
+        guildId,
+        channelId,
+    });
+
     const isWidth1200 = widthThresholds[1200];
 
     const isFriend = friends.find((f) => f.id === friend?.id);
@@ -87,16 +89,14 @@ export function MemberList({
 
         if (initChannel) arr = initChannel.recipients;
         if (channel) arr = channel.recipients;
-        if (guild) arr = arr.map((r) => ({ ...r, ...guild.members.find((m) => m.id === r.id) }));
+        if (guild) arr = guild.members;
 
-        if (guildId && hasPerm) {
-            arr = arr.filter((r) =>
-                hasPerm("VIEW_CHANNEL", channel as GuildChannel, r as GuildMember)
-            );
+        if (guildId) {
+            arr = arr.filter((r) => hasPermission({ permission: "VIEW_CHANNEL", userId: r.id }));
         }
 
         return arr;
-    }, [initChannel, channel, guildId, guild]);
+    }, [channel, guild]);
 
     async function addFriend() {
         if (loading || !user) return;

@@ -168,7 +168,7 @@
     display: flex;
     border-radius: 8px;
     flex-direction: column;
-    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+    background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 .usercard .panel > section {
@@ -195,7 +195,7 @@
     margin: 12px 16px;
     border-radius: 8px;
     flex-direction: column;
-    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+    background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 .usercard .mutuals > section {
@@ -248,7 +248,7 @@
 }
 
 .cardInput:focus {
-    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+    background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 textarea.cardInput::-webkit-scrollbar {
@@ -302,7 +302,7 @@ textarea.cardInput::-webkit-scrollbar-track {
 .mutualItem:hover,
 .mutualItem:focus-visible,
 .mutualItem[data-state="open"] {
-    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+    background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 .mutualItem > div:first-child {

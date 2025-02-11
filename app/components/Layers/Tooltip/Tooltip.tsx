@@ -45,6 +45,7 @@ interface TooltipOptions {
     show?: boolean;
     background?: string;
     color?: string;
+    bigMaxWidth?: number;
 }
 
 export function useTooltip({
@@ -58,6 +59,7 @@ export function useTooltip({
     big = false,
     wide = false,
     show = true,
+    bigMaxWidth,
     background,
     color,
 }: TooltipOptions = {}) {
@@ -118,6 +120,7 @@ export function useTooltip({
             wide,
             background,
             color,
+            bigMaxWidth,
         }),
         [open, setOpen, interactions, data, arrowRef]
     );
@@ -221,7 +224,10 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                             className={`${styles.tooltip} ${context.avatar ? styles.avatar : ""} ${
                                 context.big ? styles.big : ""
                             }`}
-                            style={{ backgroundColor: context.background || "" }}
+                            style={{
+                                backgroundColor: context.background || "",
+                                maxWidth: context.bigMaxWidth ? `270px` : "",
+                            }}
                         >
                             {props.children}
                         </div>

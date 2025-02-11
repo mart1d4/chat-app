@@ -1,12 +1,12 @@
 .container {
     display: flex;
-    height: 100vh;
+    height: var(--dvh);
     align-items: center;
+    background-size: 60%;
     justify-content: center;
+    background-repeat: repeat;
     background-color: var(--background-1);
     background-image: url("/assets/app/bg-pattern.png");
-    background-size: 60%;
-    background-repeat: repeat;
 }
 
 .card {

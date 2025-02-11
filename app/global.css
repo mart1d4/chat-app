@@ -73,16 +73,8 @@
         --background-mention: hsla(235, 85.6%, 64.7%, 0.3);
         --background-message-highlight: hsl(235, 86.1%, 77.5%, 0.08);
         --background-message-highlight-hover: hsla(235, 85.5%, 64.7%, 0.1);
-        --background-mentioned: color-mix(
-            in oklab,
-            hsl(40.421 calc(1 * 86.364%) 56.863% / 0.1) 100%,
-            hsl(0 0% 0% / 0.1) 0%
-        );
-        --background-mentioned-hover: color-mix(
-            in oklab,
-            hsl(40.421 calc(1 * 86.364%) 56.863% / 0.08) 100%,
-            hsl(0 0% 0% / 0.08) 0%
-        );
+        --background-mentioned: hsl(40.421 calc(1 * 86.364%) 56.863% / 0.1);
+        --background-mentioned-hover: hsl(40.421 calc(1 * 86.364%) 56.863% / 0.08);
 
         --foreground-0: hsl(0, 0%, 100%);
         --foreground-1: hsl(210, 9%, 95%, 1);
@@ -112,11 +104,7 @@
 
         --warning-1: hsl(38, 96%, 54%);
         --warning-2: hsla(38, 96%, 54%, 0.102);
-        --warning-foreground: color-mix(
-            in oklab,
-            hsl(40.421 calc(1 * 86.364%) 56.863% / 1) 100%,
-            black 0%
-        );
+        --warning-foreground: hsl(40.421 calc(1 * 86.364%) 56.863% / 1);
 
         --default-1: hsl(217, 8%, 34%);
         --default-2: hsl(213, 5%, 43%);
@@ -133,6 +121,12 @@
         --font-code: "Consolas", "Andale Mono WT", "Andale Mono", "Lucida Console",
             "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
             "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+
+        --font-display: "gg sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        --font-heading: "Ginto Nord", "gg sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+
+        --dvw: 100vw;
+        --dvh: 100vh;
     }
 
     .hljs-doctag,
@@ -220,6 +214,13 @@
     .hljs-deletion {
         color: #ffdcd7;
         background-color: #67060c;
+    }
+}
+
+@supports (width: 100dvw) {
+    :root {
+        --dvw: 100dvw;
+        --dvh: 100dvh;
     }
 }
 
@@ -387,6 +388,10 @@ img[alt] {
 
 /* Change scrollbar */
 
+.scrollbar {
+    overflow-y: auto;
+}
+
 @-moz-document url-prefix() {
     .scrollbar {
         scrollbar-color: var(--background-dark-1) var(--background-3);
@@ -447,8 +452,8 @@ body {
     font-size: 16px;
     scroll-behavior: smooth;
     color: var(--foreground-3);
+    font-family: var(--font-display);
     background-color: var(--background-1);
-    font-family: "gg sans", "Noto sans", sans-serif;
 }
 
 html {

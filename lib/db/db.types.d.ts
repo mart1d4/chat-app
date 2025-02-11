@@ -107,6 +107,8 @@ export interface Guilds {
     vanityUrlUses: number | null;
     welcomeScreen: JSONColumnType<WelcomeScreen> | null;
 
+    discoverable: Generated<boolean>;
+
     ownerId: number;
 
     createdAt: Generated<Date>;

@@ -1,12 +1,20 @@
 "use client";
 
-export function getImageDimensions(
-    w: number | null,
-    h: number | null,
-    maxW?: number,
-    maxH?: number,
-    keepMaxAspectRatio?: boolean
-) {
+export function getImageDimensions({
+    w,
+    h,
+    maxW,
+    maxH,
+    keepMaxAspectRatio,
+    maxSize = 0.8,
+}: {
+    w: number;
+    h: number;
+    maxW?: number;
+    maxH?: number;
+    keepMaxAspectRatio?: boolean;
+    maxSize?: number;
+}) {
     if (!w || !h) {
         return { width: 0, height: 0 };
     }
@@ -16,8 +24,8 @@ export function getImageDimensions(
 
     const { innerWidth, innerHeight } = window;
 
-    let maxHeight = innerHeight * 0.8;
-    let maxWidth = innerWidth * 0.8;
+    let maxHeight = innerHeight * maxSize;
+    let maxWidth = innerWidth * maxSize;
 
     // Maintain aspect ratio
     let aspectRatio = w / h;

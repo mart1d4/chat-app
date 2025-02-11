@@ -337,13 +337,13 @@ export function DisplayableAttachment({
         window.open(url);
     }
 
-    const { width, height } = getImageDimensions(
-        attachment.width,
-        attachment.height,
-        maxWidth,
-        maxHeight,
-        length !== 1
-    );
+    const { width, height } = getImageDimensions({
+        w: attachment.width,
+        h: attachment.height,
+        maxW: maxWidth,
+        maxH: maxHeight,
+        keepMaxAspectRatio: length !== 1,
+    });
 
     if (isVideo) {
         return (

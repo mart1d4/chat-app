@@ -3,14 +3,13 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@components";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useGuildSettings } from "@/store/settings";
 import { getRandomImage } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useData, useUrls } from "@/store";
+import { isStillMuted } from "@/lib/mute";
 import styles from "./AppNav.module.css";
 import Link from "next/link";
-import { useNotifications } from "@/store/notifications";
-import { useGuildSettings } from "@/store/settings";
-import { isStillMuted } from "@/lib/mute";
 
 export default function NavIcon({
     green,
@@ -48,7 +47,7 @@ export default function NavIcon({
     } else if (guild) {
         const guildUrl = guildUrls.find((obj) => obj.guildId === guild.id);
         url = guildUrl
-            ? `/channels/${guild.id}/${guildUrl.channelId}`
+            ? `/channels/${guild.id}/${guildUrl.channelId || guild.systemChannelId || ""}`
             : `/channels/${guild.id}` + (guild.systemChannelId ? `/${guild.systemChannelId}` : "");
     } else {
         url = link;
@@ -71,7 +70,7 @@ export default function NavIcon({
             setActive(false);
             setMarkHeight(hasUnread ? 7 : 0);
         }
-    }, [pathname, special, guild, link, hasUnread]);
+    }, [pathname]);
 
     const firstLetters = name
         .split(" ")

@@ -184,12 +184,14 @@ export async function getInitialData() {
 
         if (!user) return null;
 
-        const friends = await getFriends(user.id);
-        const blocked = await getBlocked(user.id);
-        const sent = await getRequestsSent(user.id);
-        const received = await getRequestsReceived(user.id);
-        const channels = await getUserChannels({ userId: user.id, getRecipients: true });
-        const guilds = await getUserGuilds({ userId: user.id });
+        const [friends, blocked, sent, received, channels, guilds] = await Promise.all([
+            getFriends(user.id),
+            getBlocked(user.id),
+            getRequestsSent(user.id),
+            getRequestsReceived(user.id),
+            getUserChannels({ userId: user.id, getRecipients: true }),
+            getUserGuilds({ userId: user.id }),
+        ]);
 
         const end = Date.now();
 
@@ -204,7 +206,7 @@ export async function getInitialData() {
             // @ts-ignore - Need to figure this one out
             channels: channels as DMChannelWithRecipients[],
             // @ts-ignore - Need to figure this one out
-            guilds: guilds as UserGuild[],
+            guilds: guilds.map((g) => ({ ...g, channels: [] })) as UserGuild[],
         };
     } catch (error) {
         console.log(error);

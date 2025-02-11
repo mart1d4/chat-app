@@ -12,8 +12,9 @@
     min-height: 200px;
     border-radius: 4px;
     flex-direction: column;
+    max-width: calc(var(--dvw) - 40px);
     background-color: var(--background-4);
-    max-height: min(720px, calc(100dvh - 40px));
+    max-height: min(720px, calc(var(--dvh) - 40px));
     box-shadow: var(--elevation-high), var(--elevation-low);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
@@ -40,6 +41,7 @@
 }
 
 .icon {
+    user-select: none;
     position: absolute;
 }
 
@@ -497,8 +499,8 @@
         max-width: unset;
         border-radius: 0;
         max-height: unset;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: var(--dvw) !important;
+        height: var(--dvh) !important;
     }
 
     .icon {
@@ -511,5 +513,6 @@
 
     .header.withIcon {
         padding-top: 0;
+        position: static;
     }
 }

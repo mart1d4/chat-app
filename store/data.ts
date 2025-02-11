@@ -1,4 +1,3 @@
-import { combinePermissions } from "@/lib/permissions";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
 import type {
@@ -8,6 +7,7 @@ import type {
     KnownUser,
     UserGuild,
     AppUser,
+    GuildMember,
 } from "@/type";
 export interface UseDataState {
     user: AppUser | null;
@@ -58,8 +58,8 @@ export interface UseDataState {
     updateGuild: (id: number, guild: Partial<UserGuild>) => void;
     removeGuild: (id: number) => void;
     moveGuildUp: (id: number) => void;
-    setOnlineMembers: (guildId: number, users: KnownUser[]) => void;
-    addOnlineMember: (guildId: number, user: KnownUser) => void;
+    setOnlineMembers: (guildId: number, users: GuildMember[]) => void;
+    addOnlineMember: (guildId: number, user: GuildMember) => void;
     removeOnlineMember: (guildId: number, id: number) => void;
 
     reset: () => void;
@@ -248,7 +248,17 @@ export const useData = create<UseDataState>()((set) => ({
         }));
     },
 
-    setGuilds: (guilds) => set(() => ({ guilds: guilds.map((g) => ({ ...g, members: [] })) })),
+    setGuilds: (guilds) =>
+        set(() => ({
+            guilds: guilds.map((g) => ({
+                ...g,
+                members: [],
+                roles: g.roles.map((r) => ({
+                    ...r,
+                    permissions: BigInt(r.permissions),
+                })),
+            })),
+        })),
 
     setFriends: (friends) => {
         return set(() => ({
@@ -273,6 +283,7 @@ export const useData = create<UseDataState>()((set) => ({
     setReceived: (received) => set(() => ({ received })),
 
     modifyUser: (user) =>
+        // @ts-expect-error
         set((state) => ({
             friends: state.friends.map((f) => {
                 if (f.id === user.id) return { ...f, ...user };
@@ -357,7 +368,20 @@ export const useData = create<UseDataState>()((set) => ({
         });
     },
 
-    addGuild: (guild) => set((state) => ({ guilds: [{ ...guild, members: [] }, ...state.guilds] })),
+    addGuild: (guild) =>
+        set((state) => ({
+            guilds: [
+                {
+                    ...guild,
+                    members: [],
+                    roles: guild.roles.map((r) => ({
+                        ...r,
+                        permissions: BigInt(r.permissions),
+                    })),
+                },
+                ...state.guilds,
+            ],
+        })),
 
     updateGuild: (id, data) => {
         set((state) => ({
@@ -390,19 +414,31 @@ export const useData = create<UseDataState>()((set) => ({
 
                 return {
                     ...g,
-                    members: g.members.map((m) => {
-                        const user = users.find((u) => u.id === m.id);
+                    members: [
+                        // Add users that aren't in the members list
+                        ...users
+                            .filter((u) => !g.members.some((m) => m.id === u.id))
+                            .map((u) => ({
+                                ...u,
+                                permissions: BigInt(u.permissions),
+                                dbStatus: u.status,
+                                status: u.status,
+                            })),
+                        ...g.members.map((m) => {
+                            const user = users.find((u) => u.id === m.id);
 
-                        if (user) {
-                            return {
-                                ...m,
-                                ...user,
-                                dbStatus: user.status,
-                            };
-                        }
+                            if (user) {
+                                return {
+                                    ...m,
+                                    ...user,
+                                    dbStatus: user.status,
+                                    status: user.status,
+                                };
+                            }
 
-                        return { ...m, status: "offline" };
-                    }),
+                            return { ...m, status: "online" };
+                        }),
+                    ],
                 };
             }),
         }));
@@ -415,17 +451,14 @@ export const useData = create<UseDataState>()((set) => ({
 
                 return {
                     ...g,
-                    members: g.members.map((m) => {
-                        if (m.id === user.id) {
-                            return {
-                                ...m,
-                                ...user,
-                                dbStatus: user.status,
-                            };
-                        }
-
-                        return m;
-                    }),
+                    members: [
+                        ...g.members.filter((m) => m.id !== user.id),
+                        {
+                            ...user,
+                            dbStatus: user.status,
+                            status: user.status,
+                        },
+                    ],
                 };
             }),
         }));

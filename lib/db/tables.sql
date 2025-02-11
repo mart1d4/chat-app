@@ -120,6 +120,8 @@ CREATE TABLE IF NOT EXISTS `guilds` (
 	`vanity_url_uses` INT,
 	`welcome_screen` JSON,
 
+	`discoverable` TINYINT(1) NOT NULL DEFAULT '0',
+
 	`owner_id` BIGINT NOT NULL,
 
 	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),

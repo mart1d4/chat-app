@@ -1,15 +1,12 @@
-import { doesUserHaveChannelPermission, PERMISSIONS } from "@/lib/permissions";
+import { DefaultGuildChannelSelect, DefaultGuildRoleSelect } from "@/lib/default-selects";
+import { AppHeader, ClickLayer, GuildChannels, MemberList } from "@/app/components";
 import { hasChannelPermission, isChannelPrivate } from "@/lib/db/permissions";
-import type { GuildChannel, GuildMember, GuildRole, KnownUser } from "@/type";
-import { GuildChannelPageClient } from "./client";
+import type { GuildChannel, GuildRole } from "@/type";
+import styles from "../../me/FriendsPage.module.css";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "@lib/db/db";
-import {
-    DefaultGuildChannelSelect,
-    DefaultGuildMemberSelect,
-    DefaultGuildRoleSelect,
-} from "@/lib/default-selects";
+import Content from "./Content";
 
 export default async function GuildChannelPage({
     params,
@@ -36,12 +33,6 @@ export default async function GuildChannelPage({
         return redirect(`/channels/${guildId}`);
     }
 
-    const { count } = (await db
-        .selectFrom("guildMembers")
-        .where("guildId", "=", guildId)
-        .select(({ fn }) => fn.count<number>("userId").as("count"))
-        .executeTakeFirst()) || { count: 0 };
-
     const roles = (
         await db
             .selectFrom("roles")
@@ -59,44 +50,12 @@ export default async function GuildChannelPage({
         .where("guildId", "=", guildId)
         .execute()) as GuildChannel[];
 
-    const members: (GuildMember & KnownUser)[] =
-        // count <= 100
-        false
-            ? (
-                  await db
-                      .selectFrom("guildMembers")
-                      .innerJoin("users", "users.id", "guildMembers.userId")
-                      .select(["profile", ...DefaultGuildMemberSelect])
-                      .where("guildId", "=", guildId)
-                      .execute()
-              ).map((member) => {
-                  const obj = {
-                      ...member,
-                      nickname: member.profile.nickname,
-                      roles: member.profile.roles,
-                      permissions: BigInt(member.profile.permissions),
-                      joinedAt: member.profile.joinedAt,
-                  };
-
-                  // @ts-ignore - we know this is safe
-                  delete obj.profile;
-                  return obj;
-              })
-            : [];
-
-    const member = members.find((member) => member.id === userId);
-
-    if (!member) {
-        // Just for type safety, this should never happen
-        return redirect("/channels/me");
-    }
-
-    const allChannels = channelsQuery
+    const channels = channelsQuery
         .map((channel) => {
             const everyoneRole = roles.find((role) => role.name === "@everyone")?.id;
             const overwrites = channel.permissionOverwrites || [];
 
-            const newOverwrites = overwrites.map((overwrite) => {
+            const newOverwrites = overwrites.map((overwrite: { allow: string; deny: string }) => {
                 return {
                     ...overwrite,
                     allow: BigInt(overwrite.allow),
@@ -116,40 +75,46 @@ export default async function GuildChannelPage({
         })
         .sort((a, b) => a.position - b.position);
 
-    const channel = allChannels.find((channel) => channel.id === channelId);
+    const channel = channels.find((channel) => channel.id === channelId);
 
     if (!channel) {
         // Just for type safety, this should never happen
         return redirect(`/channels/${guildId}`);
     }
 
-    const hasPerm = (permission: keyof typeof PERMISSIONS, specificChannel?: GuildChannel) => {
-        return (
-            doesUserHaveChannelPermission(
-                allChannels,
-                roles,
-                specificChannel ?? channel,
-                member,
-                permission
-            ) || canView === userId
-        );
-    };
-
-    const channels = allChannels.filter((channel) => {
-        return hasPerm("VIEW_CHANNEL", channel);
-    });
-
     return (
-        <GuildChannelPageClient
-            userId={userId}
-            allChannels={allChannels}
-            roles={roles}
-            channel={channel}
-            member={member}
-            ownerId={canView}
-            guildId={guildId}
-            channels={channels}
-            members={members}
-        />
+        <>
+            <GuildChannels
+                guildId={guildId}
+                channels={channels}
+            />
+
+            <ClickLayer>
+                <div className={styles.main}>
+                    <AppHeader
+                        initChannel={{
+                            ...channel,
+                            recipients: [],
+                        }}
+                    />
+
+                    <div className={styles.content}>
+                        <Content
+                            guildId={guildId}
+                            channelId={channel.id}
+                        />
+
+                        <MemberList
+                            guildId={guildId}
+                            channelId={channel.id}
+                            initChannel={{
+                                ...channel,
+                                recipients: [],
+                            }}
+                        />
+                    </div>
+                </div>
+            </ClickLayer>
+        </>
     );
 }

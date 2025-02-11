@@ -65,36 +65,27 @@ export function AddFriend() {
                         <div>
                             <input
                                 type="text"
-                                focus-id="add-friend-input"
-                                ref={(el) => el?.focus()}
-                                id={styles.input}
-                                autoComplete="off"
-                                placeholder="You can add friends with their Spark username."
-                                aria-label="username"
+                                value={input}
                                 minLength={2}
                                 maxLength={32}
-                                value={input}
+                                id={styles.input}
+                                autoComplete="off"
+                                aria-label="username"
+                                ref={(el) => el?.focus()}
+                                focus-id="add-friend-input"
+                                placeholder="You can add friends with their Spark username."
                                 onChange={(e) => {
                                     setInput(e.target.value);
                                     setErrors({});
                                     setValid("");
                                 }}
-                                onContextMenu={(e) => {
-                                    // setLayers({
-                                    //     settings: { type: "MENU", event: e },
-                                    //     content: {
-                                    //         type: "INPUT",
-                                    //         input: true,
-                                    //         pasteText,
-                                    //     },
-                                    // });
-                                }}
                             />
                         </div>
 
                         <button
-                            className={`button blue ${!input.length ? "disabled" : ""}`}
                             onClick={(e) => handleSubmit(e)}
+                            tabIndex={!input.length ? -1 : 0}
+                            className={`button blue ${!input.length ? "disabled" : ""}`}
                         >
                             Send Friend Request
                         </button>

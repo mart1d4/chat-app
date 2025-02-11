@@ -1,23 +1,20 @@
+import useFetchHelper from "@/hooks/useFetchHelper";
+import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./Settings.module.css";
+import { useData } from "@/store";
+import { useState } from "react";
 import {
-    TooltipContent,
-    TooltipTrigger,
     DialogContent,
     DialogTrigger,
-    Tooltip,
+    MenuTrigger,
+    UserMenu,
     Dialog,
     Avatar,
     Input,
     Alert,
     Menu,
     Icon,
-    MenuTrigger,
-    UserMenu,
 } from "@components";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { getCdnUrl } from "@/lib/uploadthing";
-import { useState } from "react";
-import { useData } from "@/store";
 
 const defaultTooltip = {
     text: "Copy user ID",
@@ -28,8 +25,6 @@ export function MyAccount({ setActiveTab }: any) {
     const setUser = useData((state) => state.setUser);
     const user = useData((state) => state.user);
     const { sendRequest } = useFetchHelper();
-
-    const [tooltip, setTooltip] = useState(defaultTooltip);
 
     const [confirmPassword, setConfirmPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -55,28 +50,6 @@ export function MyAccount({ setActiveTab }: any) {
     }>({});
 
     if (!user) return null;
-
-    async function copyToClipboard() {
-        if (!user) return;
-
-        try {
-            await navigator.clipboard.writeText(user.id);
-
-            setTooltip({
-                text: "Copied to clipboard",
-                color: "var(--success-light)",
-            });
-        } catch (err) {
-            setTooltip({
-                text: "Failed to copy to clipboard",
-                color: "var(--error-1)",
-            });
-        }
-
-        setTimeout(() => {
-            setTooltip(defaultTooltip);
-        }, 5000);
-    }
 
     async function handlePasswordChange() {
         if (!newPassword) {

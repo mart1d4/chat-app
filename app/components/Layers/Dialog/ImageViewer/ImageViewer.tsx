@@ -5,8 +5,9 @@ import { getPlaceholder } from "@/app/components/Message/Attachments";
 import { getImageDimensions } from "@/lib/images";
 import styles from "./ImageViewer.module.css";
 import { getCdnUrl } from "@/lib/uploadthing";
+import { useWindowSettings } from "@/store";
+import { useEffect, useState } from "react";
 import type { Attachment } from "@/type";
-import { useState } from "react";
 import Image from "next/image";
 
 export function ImageViewer({
@@ -19,6 +20,8 @@ export function ImageViewer({
     const [attachment, setAttachment] = useState(attachments[currentIndex]);
     const [couldntLoad, setCouldntLoad] = useState(false);
     const [index, setIndex] = useState(currentIndex);
+    const [height, setHeight] = useState(0);
+    const [width, setWidth] = useState(0);
 
     const url = `${getCdnUrl}${attachment.id}`;
 
@@ -61,7 +64,27 @@ export function ImageViewer({
         window.open(url);
     }
 
-    const { width, height } = getImageDimensions(attachment.width, attachment.height);
+    const { widthThresholds } = useWindowSettings();
+    const isWidth562 = widthThresholds[562];
+
+    useEffect(() => {
+        // Recalculate dimensions
+        const getDimensions = () => {
+            const { width: w, height: h } = getImageDimensions({
+                w: attachment.width,
+                h: attachment.height,
+                maxSize: !isWidth562 ? 1 : 0.8,
+            });
+
+            setWidth(w);
+            setHeight(h);
+        };
+
+        getDimensions();
+
+        window.addEventListener("resize", getDimensions);
+        return () => window.removeEventListener("resize", getDimensions);
+    }, [isWidth562]);
 
     return (
         <div className={styles.container}>
@@ -77,6 +100,7 @@ export function ImageViewer({
                     >
                         <Icon name="arrow" />
                     </button>
+
                     <button
                         className={styles.next}
                         onClick={() => {

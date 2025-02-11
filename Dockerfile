@@ -1,15 +1,15 @@
-FROM node:23
+FROM oven/bun:latest
 
 WORKDIR /app
 
 COPY package.json /app
 
-RUN npm install
+RUN bun install
 
 COPY . /app
 
-RUN npm run build
+RUN bun build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["bun", "start"]

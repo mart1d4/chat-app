@@ -1,29 +1,22 @@
 "use client";
 
 import { Menu, MenuContent, MenuDivider, MenuItem, MenuTrigger, useMenuContext } from "../Menu";
-import type { HasPermissionFunction } from "@/app/channels/[guildId]/[channelId]/client";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
+import { useNotifications } from "@/store/notifications";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useSettings, useShowSettings } from "@/store";
 import { useGuildSettings } from "@/store/settings";
 import type { UserGuild } from "@/type";
 import styles from "../Menu.module.css";
-import { useSettings, useShowSettings } from "@/store";
-import { useNotifications } from "@/store/notifications";
 
-export function GuildMenu({
-    guild,
-    type,
-    hasPerm,
-}: {
-    guild: UserGuild;
-    type?: "settings";
-    hasPerm: HasPermissionFunction;
-}) {
+export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings" }) {
     const appUser = useAuthenticatedUser();
     const { setOpen } = useMenuContext();
 
     const { notifications, removeGuildNotifications } = useNotifications();
     const guildSettings = useGuildSettings((s) => s.guilds[guild.id]);
+    const { hasPermission } = usePermissions({ guildId: guild.id });
     const { setGuildSettings } = useGuildSettings();
     const { setShowSettings } = useShowSettings();
     const { settings } = useSettings();
@@ -73,11 +66,11 @@ export function GuildMenu({
 
                 <MenuDivider />
 
-                {hasPerm("CREATE_INSTANT_INVITE", undefined, profile) && (
+                {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && (
                     <MenuItem icon="users-add">Invite People</MenuItem>
                 )}
 
-                {hasPerm("MANAGE_GUILD", undefined, profile) && (
+                {hasPermission({ permission: "MANAGE_GUILD" }) && (
                     <>
                         <MenuItem
                             icon="cog"
@@ -95,14 +88,14 @@ export function GuildMenu({
                     </>
                 )}
 
-                {hasPerm("MANAGE_CHANNELS", undefined, profile) && (
+                {hasPermission({ permission: "MANAGE_CHANNELS" }) && (
                     <>
                         <MenuItem icon="add-circle">Create Channel</MenuItem>
                         <MenuItem icon="folder">Create Category</MenuItem>
                     </>
                 )}
 
-                {hasPerm("CREATE_EVENTS", undefined, profile) && (
+                {hasPermission({ permission: "CREATE_EVENTS" }) && (
                     <MenuItem icon="calendar">Create Event</MenuItem>
                 )}
 
@@ -147,7 +140,7 @@ export function GuildMenu({
 
                 <MenuDivider />
 
-                {hasPerm("MANAGE_GUILD", undefined, profile) && (
+                {hasPermission({ permission: "MANAGE_GUILD" }) && (
                     <>
                         <MenuItem
                             icon="lock"
@@ -192,7 +185,7 @@ export function GuildMenu({
 
             <MenuDivider />
 
-            {hasPerm("CREATE_INSTANT_INVITE", undefined, profile) && (
+            {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && (
                 <>
                     <MenuItem
                         onClick={() => {
@@ -416,7 +409,7 @@ export function GuildMenu({
 
             <MenuDivider />
 
-            {hasPerm("MANAGE_GUILD", undefined, profile) && (
+            {hasPermission({ permission: "MANAGE_GUILD" }) && (
                 <Menu
                     gap={12}
                     openOnHover
@@ -456,7 +449,7 @@ export function GuildMenu({
 
             <MenuDivider />
 
-            {hasPerm("MANAGE_CHANNELS", undefined, profile) && (
+            {hasPermission({ permission: "MANAGE_CHANNELS" }) && (
                 <>
                     <MenuItem
                         onClick={() => {

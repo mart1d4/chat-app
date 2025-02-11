@@ -785,24 +785,20 @@
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--foreground-2);
-    background-color: var(--background-5);
-    border: 1px solid var(--background-2);
+    background-color: var(--background-4);
+    border: 1px solid var(--border-light);
     transition: background-color 0.15s ease;
 }
 
 .translation:hover,
 .translation:focus-visible {
-    background-color: var(--background-3);
+    background-color: var(--background-5);
 }
 
-.translateDialog {
-    padding: 16px;
-    border-radius: 4px;
-    overflow: hidden auto;
-    max-height: calc(100vh - 80px);
-    box-shadow: var(--elevation-high);
-    background-color: var(--background-3);
-    max-width: min(650px, calc(100vw - 40px));
+.translationText {
+    user-select: text;
+    line-height: 1.375;
+    color: var(--foreground-2);
 }
 
 .embed {

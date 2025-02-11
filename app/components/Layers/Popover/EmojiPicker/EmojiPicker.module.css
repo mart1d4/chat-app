@@ -3,7 +3,7 @@
     user-select: none;
     border-radius: 8px;
     position: relative;
-    max-width: calc(100vw - 32px);
+    max-width: calc(var(--dvw) - 32px);
     background-color: var(--background-3);
     box-shadow: 0 0 0 1px hsl(none 0% 100% / 0.08);
 }
@@ -83,11 +83,7 @@
 .stylePicker > .style[aria-expanded="true"]:hover,
 .stylePicker > .style[aria-expanded="true"]:focus-visible {
     border-radius: 0;
-    background-color: color-mix(
-        in oklab,
-        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
-        hsl(0 0% 0% / 0.3) 0%
-    );
+    background-color: hsl(228 calc(1 * 6.024%) 32.549% / 0.3);
 }
 
 .stylePickerDropdown > .style:last-child {
@@ -160,8 +156,7 @@
     border: none;
     margin: 12px 0;
     width: calc(100% - 16px);
-    border-bottom: 1px solid
-        color-mix(in oklab, hsl(228 calc(1 * 6.024%) 32.549% / 0.48) 100%, hsl(0 0% 0% / 0.48) 0%);
+    border-bottom: 1px solid hsl(228 calc(1 * 6.024%) 32.549% / 0.48);
 }
 
 .nav > button {
@@ -184,12 +179,12 @@
 .nav > button:hover,
 .nav > button:focus-visible {
     color: var(--foreground-2);
-    background-color: color-mix(in oklab, hsl(228, 6%, 32.6%, 0.3) 100%, hsl(0, 0%, 0%, 0.3) 0%);
+    background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 .nav > button[data-active="true"] {
     color: var(--foreground-1);
-    background-color: color-mix(in oklab, hsl(222.9, 6.7%, 20.6%) 100%, black 0%);
+    background-color: hsl(222.9, 6.7%, 20.6%);
 }
 
 .container > main > section {
@@ -272,11 +267,7 @@ div.list::-webkit-scrollbar-track {
 .emoji:hover,
 .emoji:focus,
 .emoji[aria-selected="true"] {
-    background-color: color-mix(
-        in oklab,
-        hsl(228 calc(1 * 6.024%) 32.549% / 0.3) 100%,
-        hsl(0 0% 0% / 0.3) 0%
-    );
+    background-color: hsl(228 calc(1 * 6.024%) 32.549% / 0.3);
 }
 
 .emoji > img {

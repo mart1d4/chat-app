@@ -351,6 +351,16 @@ export function isNotBigInt(value: any): value is string | number {
 }
 
 export function hasPermission(permissions: bigint | string, permissionFlag: bigint | string) {
+    if (isNaN(Number(permissions))) {
+        throw new Error("Permissions must be a number or a BigInt. Received: " + permissions);
+    }
+
+    if (isNaN(Number(permissionFlag))) {
+        throw new Error(
+            "Permission flag must be a number or a BigInt. Received: " + permissionFlag
+        );
+    }
+
     if (isNotBigInt(permissions)) {
         permissions = BigInt(permissions);
     }
@@ -435,11 +445,11 @@ export function doesUserHaveChannelPermission(
     // remember that deny rules always take precedence over allow rules
     // Also need to take into the account that each role has its own permissions, and that some roles are higher than others
 
-    const userRoles = user.roles.sort(
-        // Sort roles so that the highest role is first
-        // a higher role is a role with a lower position
-        (a, b) => roles.find((r) => r.id === b)?.position - roles.find((r) => r.id === a)?.position
-    );
+    // Sort roles so that the highest role is first
+    // a higher role is a role with a lower position
+    const userRoles = roles
+        .filter((r) => user.roles.includes(r.id))
+        .sort((a, b) => b.position - a.position);
 
     const userPermissions = user.permissions;
 
@@ -447,8 +457,7 @@ export function doesUserHaveChannelPermission(
     if (hasPermission(userPermissions, PERMISSIONS.ADMINISTRATOR)) return true;
 
     for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS.ADMINISTRATOR)) return true;
+        if (hasPermission(role.permissions, PERMISSIONS.ADMINISTRATOR)) return true;
     }
 
     const overwrites = channel.permissionOverwrites;
@@ -457,7 +466,7 @@ export function doesUserHaveChannelPermission(
 
     // Check channel overwrites
     for (const overwrite of overwrites) {
-        if (overwrite.type === 0 && userRoles.includes(overwrite.id)) {
+        if (overwrite.type === 0 && userRoles.find((r) => r.id === overwrite.id)) {
             if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
             if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
         } else if (overwrite.type === 1 && overwrite.id === user.id) {
@@ -468,7 +477,7 @@ export function doesUserHaveChannelPermission(
 
     // Check category overwrites
     for (const overwrite of categoryOverwrites) {
-        if (overwrite.type === 0 && userRoles.includes(overwrite.id)) {
+        if (overwrite.type === 0 && userRoles.find((r) => r.id === overwrite.id)) {
             if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
             if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
         } else if (overwrite.type === 1 && overwrite.id === user.id) {
@@ -482,8 +491,7 @@ export function doesUserHaveChannelPermission(
 
     // Check role permissions
     for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS[permission])) return true;
+        if (hasPermission(role.permissions, PERMISSIONS[permission])) return true;
     }
 
     return false;

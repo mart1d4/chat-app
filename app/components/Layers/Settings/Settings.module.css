@@ -1,9 +1,7 @@
 .container {
-    width: 100vw;
-    height: 100vh;
     display: flex;
-    width: 100dvw;
-    height: 100dvh;
+    width: var(--dvw);
+    height: var(--dvh);
     pointer-events: auto;
 }
 
@@ -142,17 +140,17 @@
 }
 
 .sidebarWrapper::-webkit-scrollbar-track {
-    border-radius: 100vw;
-    border: 2px var(--background-3) solid;
-    background-color: transparent;
+    border-radius: 1000px;
     background-clip: padding-box;
+    background-color: transparent;
+    border: 2px var(--background-3) solid;
 }
 
 .sidebarWrapper::-webkit-scrollbar-thumb {
-    border-radius: 100vw;
-    border: 2px var(--background-3) solid;
-    background-color: transparent;
+    border-radius: 1000px;
     background-clip: padding-box;
+    background-color: transparent;
+    border: 2px var(--background-3) solid;
 }
 
 .sidebarWrapper:hover::-webkit-scrollbar-thumb {
@@ -182,7 +180,7 @@
     padding: 60px 40px 80px 40px;
     flex: 1 1 auto;
     max-width: 740px;
-    min-width: 460px;
+    /* min-width: 460px; */
     min-height: 100%;
     overflow: hidden;
 }
@@ -277,7 +275,7 @@
     color: var(--foreground-1);
 }
 
-/* .content h3,
+.content h3,
 .content label {
     margin-bottom: 8px;
     font-weight: 700;
@@ -289,7 +287,7 @@
     display: inline-block;
     color: var(--foreground-3);
     user-select: none;
-} */
+}
 
 .userCard {
     background-color: var(--background-2);
@@ -307,11 +305,12 @@
 }
 
 .userCardInfo {
-    height: 72px;
+    gap: 16px;
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
+    padding: 16px 16px 24px 120px;
     justify-content: space-between;
-    padding: 16px 16px 0 120px;
 }
 
 .userCard > div:last-child {
@@ -396,8 +395,8 @@
 }
 
 .field > button {
-    width: 60px;
     margin: auto 0;
+    min-width: 60px;
 }
 
 .section > .content {
@@ -707,7 +706,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 8px 8px 0 0;
-    max-height: calc(100vh - 28px);
+    max-height: calc(var(--dvh) - 28px);
 }
 
 .cardContainer > div::before {
@@ -1369,9 +1368,8 @@
 }
 
 .roleEditContainer > :first-child {
-    height: 100vh;
-    height: 100dvh;
     flex: 0 0 232px;
+    height: var(--dvh);
     border-right: 1px solid var(--border-light);
 }
 
@@ -1594,7 +1592,7 @@
     user-select: none;
     border-radius: 4px;
     align-items: center;
-    margin: -36px 0 36px 0;
+    margin: -50px 0 36px 0;
     color: var(--foreground-2);
     background-color: var(--background-2);
 }
@@ -1615,7 +1613,12 @@ nav > .returnBack {
 
 @media (max-width: 562px) {
     .contentWrapper > .content {
-        padding-left: 24px;
-        padding-right: 24px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .sidebarWrapper > nav {
+        padding-left: 16px;
+        padding-right: 16px;
     }
 }

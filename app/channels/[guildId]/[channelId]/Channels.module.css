@@ -126,18 +126,18 @@
 }
 
 .friendUsername {
-    font-weight: 700;
     margin: 8px 0;
     font-size: 32px;
+    font-weight: 700;
     line-height: 40px;
     color: var(--foreground-1);
 }
 
 .descriptionContainer {
-    color: var(--foreground-3);
     font-size: 16px;
-    line-height: 20px;
     font-weight: 400;
+    line-height: 20px;
+    color: var(--foreground-3);
 }
 
 .descriptionContainer strong {
@@ -145,65 +145,63 @@
 }
 
 .descriptionActions {
-    margin-top: 16px;
     display: flex;
+    margin-top: 16px;
     align-items: center;
 }
 
 .descriptionActions button {
-    margin-right: 8px;
     width: auto;
     height: 24px;
     min-width: 52px;
+    margin-right: 8px;
     pointer-events: all;
 }
 
 .systemChannel {
+    margin: 16px;
     display: flex;
+    margin-bottom: 0;
     flex-direction: column;
     justify-content: flex-end;
-    margin: 16px;
-    margin-bottom: 0;
 }
 
 .systemChannel > div {
     display: flex;
-    flex-direction: column;
     align-items: center;
     padding: 16px 16px 0;
+    flex-direction: column;
 }
 
 .systemChannel > div > div {
-    max-width: 400px;
     display: flex;
-    flex-direction: column;
+    max-width: 400px;
     align-items: center;
+    flex-direction: column;
 }
 
 .welcomeMessage > h3 {
-    text-align: center;
-    font-weight: 700;
-    color: var(--foreground-1);
-    font-family: "gg sans";
     font-size: 32px;
+    font-weight: 700;
     line-height: 40px;
+    text-align: center;
+    color: var(--foreground-1);
 }
 
 .welcomeMessage > div {
-    color: var(--foreground-3);
     margin-top: 8px;
-    margin-bottom: 12px;
-    text-align: center;
-    font-family: "gg sans";
     font-size: 14px;
     line-height: 20px;
     user-select: none;
+    text-align: center;
+    margin-bottom: 12px;
+    color: var(--foreground-3);
 }
 
 .welcomeMessage > div > a {
-    color: var(--accent-light);
-    text-decoration: none;
     cursor: pointer;
+    text-decoration: none;
+    color: var(--accent-light);
 }
 
 .welcomeMessage > div > a:hover {
@@ -211,16 +209,15 @@
 }
 
 .welcomeCard {
-    margin-top: 8px;
-    padding: 16px;
-    border-radius: 8px;
-    background-color: var(--background-1);
     display: flex;
+    padding: 16px;
+    margin-top: 8px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 8px;
     align-items: center;
     align-self: stretch;
-    cursor: pointer;
-    transition: background-color 0.05s ease-in-out;
-    user-select: none;
+    background-color: var(--background-1);
 }
 
 .welcomeCard:hover {
@@ -235,25 +232,25 @@
 }
 
 .welcomeCard > div:last-of-type {
-    color: var(--foreground-2);
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 18px;
     margin-left: 16px;
     margin-right: 16px;
-    flex-grow: 1;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 18px;
+    color: var(--foreground-2);
 }
 
 .welcomeCard > svg {
-    justify-self: flex-end;
     min-width: 24px;
+    justify-self: flex-end;
     color: var(--foreground-3);
 }
 
 .welcomeCard > .completedMark {
     padding: 4px;
     border-radius: 50%;
+    box-sizing: content-box;
     color: var(--foreground-1);
     background-color: var(--success-1);
-    box-sizing: content-box;
 }

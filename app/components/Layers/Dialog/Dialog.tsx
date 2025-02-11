@@ -321,7 +321,7 @@ export const DialogContent = forwardRef<
                                     }}
                                 >
                                     <img
-                                        draggable
+                                        draggable={false}
                                         alt={props.headingIcon}
                                         src={`/assets/system/${
                                             headingIcons[props.headingIcon].icon

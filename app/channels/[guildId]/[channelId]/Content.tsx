@@ -2,11 +2,13 @@
 
 import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
 import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/type";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useData, useShowSettings, useUrls } from "@/store";
+import { isInline, isLarge, isNewDay } from "@/lib/message";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
-import type { HasPermissionFunction } from "./client";
-import { isInline, isLarge, isNewDay } from "@/lib/message";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useSocket } from "@/store/socket";
 import styles from "./Channels.module.css";
 import useSWRInfinite from "swr/infinite";
 import fetchHelper from "@/hooks/useSwr";
@@ -23,23 +25,12 @@ import {
     Dialog,
     Icon,
 } from "@components";
-import { useSocket } from "@/store/socket";
 
 const LIMIT = 50;
 
-export default function Content({
-    guildId,
-    channel,
-    members,
-    hasPerm,
-}: {
-    guildId: number;
-    channel: GuildChannel;
-    members: GuildMember[];
-    hasPerm: HasPermissionFunction;
-}) {
+export default function Content({ guildId, channelId }: { guildId: number; channelId: number }) {
     const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
-        const baseUrl = `/channels/${channel.id}/messages?limit=`;
+        const baseUrl = `/channels/${channelId}/messages?limit=`;
 
         if (previousData) {
             if (previousData.length < LIMIT) {
@@ -77,11 +68,21 @@ export default function Content({
     const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
     const setGuildUrl = useUrls((state) => state.setGuild);
     const { socket } = useSocket();
+    const members = guild.members;
+
+    const channel = {
+        ...(guild.channels?.find((c) => c.id === channelId) as GuildChannel),
+        recipients: guild.members,
+    };
+
+    const { hasPermission } = usePermissions({
+        guildId,
+    });
 
     useEffect(() => {
         if (!socket) return;
 
-        const chan = socket.subscribe(`private-channel-${channel.id}-receive`);
+        const chan = socket.subscribe(`private-channel-${channelId}-receive`);
         const userId = Number(socket.user.user_data?.id);
 
         chan.bind("message-received", ({ message }: { message: ResponseMessage }) => {
@@ -119,7 +120,7 @@ export default function Content({
         });
 
         return () => {
-            socket.unsubscribe(`private-channel-${channel.id}-receive`);
+            socket.unsubscribe(`private-channel-${channelId}-receive`);
         };
     }, [socket]);
 
@@ -225,8 +226,12 @@ export default function Content({
         }
     }
 
-    const canInvite = hasPerm("CREATE_INSTANT_INVITE", channel);
-    const canManageGuild = hasPerm("MANAGE_GUILD");
+    const canInvite = hasPermission({
+        permission: "CREATE_INSTANT_INVITE",
+        specificChannelId: channelId,
+    });
+
+    const canManageGuild = hasPermission({ permission: "MANAGE_GUILD" });
 
     return useMemo(
         () => (
@@ -261,6 +266,7 @@ export default function Content({
                                         )}
 
                                         <Message
+                                            guild={guild}
                                             message={message}
                                             channel={channel}
                                             large={isLarge(messages, index)}

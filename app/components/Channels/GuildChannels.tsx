@@ -1,25 +1,28 @@
 "use client";
 
-import type { HasPermissionFunction } from "@/app/channels/[guildId]/[channelId]/client";
+import type { GuildChannel, GuildMember, KnownUser, UserGuild } from "@/type";
+import { GuildMenu } from "../Layers/Menu/MenuContents/Guild";
 import { useParams, usePathname } from "next/navigation";
-import type { GuildChannel, UserGuild } from "@/type";
+import { useNotifications } from "@/store/notifications";
+import { useCallback, useEffect, useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import styles from "./GuildChannels.module.css";
-import { useCallback, useRef, useState } from "react";
+import { useSocket } from "@/store/socket";
 import Link from "next/link";
 import {
     CreateGuildChannel,
+    InteractiveElement,
     TooltipContent,
     TooltipTrigger,
+    DialogContent,
     DialogTrigger,
+    InviteDialog,
     UserSection,
+    MenuTrigger,
     Tooltip,
     Dialog,
     Icon,
-    DialogContent,
-    InviteDialog,
-    InteractiveElement,
     Menu,
-    MenuTrigger,
 } from "@components";
 import {
     useCollapsedCategories,
@@ -28,17 +31,15 @@ import {
     useShowSettings,
     useData,
 } from "@/store";
-import { GuildMenu } from "../Layers/Menu/MenuContents/Guild";
-import { useNotifications } from "@/store/notifications";
 
 export const GuildChannels = ({
     guildId,
-    channels = [],
-    hasPerm,
+    channels: initChannels,
+    members: initMembers = [],
 }: {
     guildId: number;
-    channels?: GuildChannel[];
-    hasPerm: HasPermissionFunction;
+    channels: GuildChannel[];
+    members?: GuildMember[];
 }) => {
     const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
 
@@ -48,7 +49,19 @@ export const GuildChannels = ({
     const { collapsed, setCollapsed } = useCollapsedCategories();
     const { notifications } = useNotifications();
     const { showChannels } = useShowChannels();
+    const { updateGuild } = useData();
     const params = useParams();
+
+    const { hasPermission } = usePermissions({ guildId });
+
+    useEffect(() => {
+        updateGuild(guildId, { channels: initChannels, members: initMembers });
+    }, []);
+
+    const channels =
+        guild?.channels?.filter((c) =>
+            hasPermission({ permission: "VIEW_CHANNEL", specificChannelId: c.id })
+        ) || [];
 
     const isCategoryHidden = useCallback(
         (categoryId: number) => collapsed.includes(categoryId),
@@ -58,7 +71,7 @@ export const GuildChannels = ({
     if (!guild) return null;
     if (!showChannels && !widthLimitPassed) return null;
 
-    const canManageChannels = hasPerm("MANAGE_CHANNELS");
+    const canManageChannels = hasPermission({ permission: "MANAGE_CHANNELS" });
 
     return (
         <div className={styles.nav}>
@@ -89,7 +102,6 @@ export const GuildChannels = ({
                     <GuildMenu
                         guild={guild}
                         type="settings"
-                        hasPerm={hasPerm}
                     />
                 </Menu>
 
@@ -118,7 +130,6 @@ export const GuildChannels = ({
                                         <ChannelItem
                                             guild={guild}
                                             key={channel.id}
-                                            hasPerm={hasPerm}
                                             channel={channel}
                                             canManage={canManageChannels}
                                             hidden={isCategoryHidden(channel.id)}
@@ -147,7 +158,6 @@ export const GuildChannels = ({
                                             guild={guild}
                                             key={channel.id}
                                             channel={channel}
-                                            hasPerm={hasPerm}
                                             category={category}
                                             canManage={canManageChannels}
                                         />
@@ -157,7 +167,6 @@ export const GuildChannels = ({
                                         <ChannelItem
                                             guild={guild}
                                             key={channel.id}
-                                            hasPerm={hasPerm}
                                             channel={channel}
                                             canManage={canManageChannels}
                                         />
@@ -186,7 +195,6 @@ function ChannelItem({
     hidden,
     setHidden,
     canManage,
-    hasPerm,
 }: {
     channel: GuildChannel;
     category?: GuildChannel;
@@ -194,18 +202,22 @@ function ChannelItem({
     hidden?: boolean;
     setHidden?: any;
     canManage: boolean;
-    hasPerm: HasPermissionFunction;
 }) {
     const { setShowSettings } = useShowSettings();
     const { notifications } = useNotifications();
     const pathname = usePathname();
     const params = useParams();
 
-    const active = params.channelId == channel.id;
     const hasUnread = notifications.channels.find((c) => c.id === channel.id && c.hasUnread);
     const pings = notifications.channels.find((c) => c.id === channel.id)?.pings || 0;
+    const active = params.channelId == channel.id;
 
-    const canInvite = hasPerm("CREATE_INSTANT_INVITE", channel);
+    const { hasPermission } = usePermissions({
+        channelId: channel.id,
+        guildId: guild.id,
+    });
+
+    const canInvite = hasPermission({ permission: "CREATE_INSTANT_INVITE" });
 
     if (channel.type === 4) {
         return (
@@ -356,7 +368,6 @@ function ChannelItem({
                                                 <Icon
                                                     size={16}
                                                     name="message"
-                                                    viewBox="0 0 24 24"
                                                 />
                                             </button>
                                         </TooltipTrigger>

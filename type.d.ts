@@ -79,7 +79,9 @@ export type DMChannel = Pick<Channel, "id" | "type" | "name" | "icon" | "topic" 
 export type ChannelRecipient = Pick<
     User,
     "id" | "displayName" | "username" | "avatar" | "customStatus" | "status"
->;
+> & {
+    dbStatus: string;
+};
 
 export type DMChannelWithRecipients = DMChannel & {
     recipients: ChannelRecipient[];
@@ -88,7 +90,9 @@ export type DMChannelWithRecipients = DMChannel & {
 export type GuildChannel = Pick<
     Channel,
     "id" | "type" | "name" | "topic" | "position" | "parentId" | "nsfw" | "permissionOverwrites"
->;
+> & {
+    isPrivate: boolean;
+};
 
 export type GuildChannelRecipient = Pick<
     User,
@@ -102,7 +106,10 @@ export type OptionalGuild = Partial<Guild>;
 
 export type UserGuild = Pick<Guild, "id" | "name" | "icon" | "systemChannelId" | "ownerId"> & {
     roles: GuildRole[];
-    members: GuildMember[];
+    members: (GuildMember & {
+        dbStatus: string;
+    })[];
+    channels: GuildChannel[];
 };
 
 export type GuildMember = Pick<User, "id" | "displayName" | "avatar" | "status"> & {
