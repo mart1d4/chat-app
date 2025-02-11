@@ -8,7 +8,7 @@ RUN bun install
 
 COPY . /app
 
-RUN bun build
+RUN bun run build
 
 EXPOSE 3000
 
