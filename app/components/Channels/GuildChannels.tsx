@@ -203,6 +203,7 @@ function ChannelItem({
     setHidden?: any;
     canManage: boolean;
 }) {
+    const { setShowChannels } = useShowChannels();
     const { setShowSettings } = useShowSettings();
     const { notifications } = useNotifications();
     const pathname = usePathname();
@@ -320,6 +321,8 @@ function ChannelItem({
                             if (channel.type === 3 || pathname.includes(channel.id)) {
                                 e.preventDefault();
                             }
+
+                            setShowChannels(false);
                         }}
                     >
                         <div>

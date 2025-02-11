@@ -256,3 +256,15 @@
     text-overflow: ellipsis;
     color: var(--foreground-1);
 }
+
+@media (max-width: 800px) {
+    .header > div > h1 {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 650px) {
+    .container > aside {
+        display: none;
+    }
+}

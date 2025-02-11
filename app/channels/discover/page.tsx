@@ -4,6 +4,7 @@ import { ServerCard } from "./ServerCard";
 import { headers } from "next/headers";
 import { db } from "@/lib/db/db";
 import { sql } from "kysely";
+import { Init } from "./Init";
 
 export default async function DiscoverPage() {
     const userId = parseInt(headers().get("x-user-id") as string);
@@ -70,6 +71,8 @@ export default async function DiscoverPage() {
                     </ol>
                 </section>
             </main>
+
+            <Init />
         </div>
     );
 }

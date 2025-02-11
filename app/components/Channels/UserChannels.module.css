@@ -310,9 +310,9 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     letter-spacing: 0.02rem;
 }
 
-@media screen and (max-width: 562px) {
+@media (max-width: 562px) {
     .nav {
-        width: calc(var(--dvw)- 72px - 40px);
+        width: calc(var(--dvw)- 72px);
     }
 
     .liContainer {
@@ -324,5 +324,10 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     .liContainer:hover {
         border: 1px solid var(--border-light);
         background-color: var(--background-5) !important;
+    }
+
+    .layout,
+    .layoutFriends {
+        height: 48px;
     }
 }

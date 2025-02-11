@@ -1,9 +1,9 @@
 .nav {
-    display: flex;
-    flex-direction: column;
     width: 240px;
+    display: flex;
     min-height: 0;
     flex: 0 0 auto;
+    flex-direction: column;
     background-color: var(--background-3);
 }
 
@@ -510,10 +510,9 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     height: 16px;
 }
 
-@media screen and (max-width: 562px) {
+@media (max-width: 562px) {
     .nav {
-        max-width: 350px;
-        width: calc(var(--dvw) - 72px - 40px);
+        width: calc(var(--dvw) - 72px);
     }
 }
 
