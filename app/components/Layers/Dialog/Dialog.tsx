@@ -298,7 +298,6 @@ export const DialogContent = forwardRef<
                             }: any) => props
                         )}
                         style={{
-                            height: "100%",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -429,6 +428,7 @@ export const DialogContent = forwardRef<
                                         <div>
                                             <button
                                                 type="submit"
+                                                tabIndex={props.confirmDisabled ? -1 : 0}
                                                 className={`button submit ${
                                                     props.confirmColor || "blue"
                                                 } ${props.confirmDisabled ? "disabled" : ""}`}

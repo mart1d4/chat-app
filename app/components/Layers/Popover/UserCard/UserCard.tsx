@@ -136,8 +136,10 @@ export function UserCard({
                 },
             });
 
-            if (errors) {
-                console.error(errors);
+            if (!errors) {
+                setMessage("");
+                router.push(`/channels/me/${channelId || channel?.id}`);
+                setOpen(false);
             }
         }
 

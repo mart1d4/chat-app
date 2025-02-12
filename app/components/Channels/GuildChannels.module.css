@@ -98,13 +98,12 @@ div[data-state="open"] .guildSettings {
 }
 
 .scroller {
-    overflow: hidden scroll;
-    padding-right: 0px;
-    position: relative;
     min-height: 0;
     flex: 1 1 auto;
-    padding-bottom: 8px;
     margin-top: 2px;
+    position: relative;
+    padding-bottom: 8px;
+    overflow: hidden scroll !important;
 }
 
 @-moz-document url-prefix() {
@@ -412,24 +411,21 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 }
 
 .channel a {
+    display: flex;
     cursor: pointer;
-    position: relative;
     padding: 6px 8px;
     border-radius: 4px;
-    display: flex;
+    position: relative;
+    text-decoration: none;
     flex-direction: column;
     color: var(--foreground-3);
-    text-decoration: none;
 }
 
 .channel.unread .name {
     color: white;
 }
 
-.channel a:hover {
-    background-color: var(--background-hover-1);
-}
-
+.channel a:hover,
 .channel a:focus-visible,
 .channel a:focus-within {
     background-color: var(--background-hover-1);
@@ -510,12 +506,6 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     height: 16px;
 }
 
-@media (max-width: 562px) {
-    .nav {
-        width: calc(var(--dvw) - 72px);
-    }
-}
-
 .channel > .unread {
     top: 50%;
     width: 4px;
@@ -542,4 +532,22 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 .channel:hover .pings,
 .channel:focus-visible .pings {
     display: none;
+}
+
+@media (max-width: 562px) {
+    .nav {
+        width: calc(var(--dvw) - 72px);
+    }
+
+    .channel a {
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+    }
+
+    .channel a:hover,
+    .channel a:focus-visible,
+    .channel a:focus-within {
+        border-color: var(--border-light);
+    }
 }

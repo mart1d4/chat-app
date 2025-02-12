@@ -1,8 +1,9 @@
 "use client";
 
+import { TextEditor } from "../components/TextArea/TextEditor";
 import { ColorPicker, ImageCropper } from "@components";
-import type Cropper from "cropperjs";
 import { useEffect, useState } from "react";
+import type Cropper from "cropperjs";
 
 export default function TestPage() {
     const [croppedImage, setCroppedImage] = useState<Blob | undefined>();
@@ -45,9 +46,9 @@ export default function TestPage() {
                 justifyContent: "center",
             }}
         >
-            {/* <TextEditor /> */}
+            <TextEditor />
 
-            <div>
+            {/* <div>
                 <ImageCropper
                     alt="avatar"
                     aspectRatio={3}
@@ -67,7 +68,7 @@ export default function TestPage() {
                         />
                     )}
                 </div>
-            </div>
+            </div> */}
 
             {/* <div
                 style={{

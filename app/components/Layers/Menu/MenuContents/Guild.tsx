@@ -5,12 +5,12 @@ import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 import { useNotifications } from "@/store/notifications";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useSettings, useShowSettings } from "@/store";
+import { useSettings, useShowSettings, useTriggerDialog } from "@/store";
 import { useGuildSettings } from "@/store/settings";
 import type { UserGuild } from "@/type";
 import styles from "../Menu.module.css";
 
-export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings" }) {
+export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings" | "channels" }) {
     const appUser = useAuthenticatedUser();
     const { setOpen } = useMenuContext();
 
@@ -19,6 +19,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
     const { hasPermission } = usePermissions({ guildId: guild.id });
     const { setGuildSettings } = useGuildSettings();
     const { setShowSettings } = useShowSettings();
+    const { triggerDialog } = useTriggerDialog();
     const { settings } = useSettings();
 
     const hasUnread = notifications.guilds.find((g) => g.id === guild.id)?.hasUnread || false;
@@ -56,8 +57,78 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
     const isMuted = isStillMuted(guildSettings?.duration, guildSettings?.started);
     const dateUntil = getDateUntilEnd(guildSettings?.duration, guildSettings?.started);
 
+    const inviteChannel =
+        guild.channels.find((c) => c.id === guild.systemChannelId) ||
+        guild.channels.find((c) => c.type === 2) ||
+        guild.channels.find((c) => c.type === 3);
+
     const profile = guild.members.find((m) => m.id === appUser.id);
     if (!profile) return null;
+
+    if (type === "channels") {
+        return (
+            <MenuContent>
+                <MenuItem
+                    checked={guildSettings.hideMutedChannels}
+                    onClick={() => {
+                        setGuildSettings(
+                            guild.id,
+                            "hideMutedChannels",
+                            !guildSettings.hideMutedChannels
+                        );
+                    }}
+                >
+                    Hide Muted Channels
+                </MenuItem>
+
+                {(hasPermission({ permission: "MANAGE_CHANNELS" }) ||
+                    (hasPermission({ permission: "CREATE_INSTANT_INVITE" }) &&
+                        !!inviteChannel)) && <MenuDivider />}
+
+                {hasPermission({ permission: "MANAGE_CHANNELS" }) && (
+                    <>
+                        <MenuItem
+                            onClick={() => {
+                                triggerDialog({
+                                    type: "GUILD_CHANNEL_CREATE",
+                                    data: { guild, isCategory: false },
+                                });
+                                setOpen(false);
+                            }}
+                        >
+                            Create Channel
+                        </MenuItem>
+
+                        <MenuItem
+                            onClick={() => {
+                                triggerDialog({
+                                    type: "GUILD_CHANNEL_CREATE",
+                                    data: { guild, isCategory: true },
+                                });
+                                setOpen(false);
+                            }}
+                        >
+                            Create Category
+                        </MenuItem>
+                    </>
+                )}
+
+                {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && !!inviteChannel && (
+                    <MenuItem
+                        onClick={() => {
+                            triggerDialog({
+                                type: "INVITE",
+                                data: { guild, channel: inviteChannel },
+                            });
+                            setOpen(false);
+                        }}
+                    >
+                        Invite People
+                    </MenuItem>
+                )}
+            </MenuContent>
+        );
+    }
 
     if (type === "settings") {
         return (
@@ -66,8 +137,19 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
                 <MenuDivider />
 
-                {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && (
-                    <MenuItem icon="users-add">Invite People</MenuItem>
+                {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && !!inviteChannel && (
+                    <MenuItem
+                        icon="users-add"
+                        onClick={() => {
+                            triggerDialog({
+                                type: "INVITE",
+                                data: { guild, channel: inviteChannel },
+                            });
+                            setOpen(false);
+                        }}
+                    >
+                        Invite People
+                    </MenuItem>
                 )}
 
                 {hasPermission({ permission: "MANAGE_GUILD" }) && (
@@ -90,8 +172,31 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
                 {hasPermission({ permission: "MANAGE_CHANNELS" }) && (
                     <>
-                        <MenuItem icon="add-circle">Create Channel</MenuItem>
-                        <MenuItem icon="folder">Create Category</MenuItem>
+                        <MenuItem
+                            icon="add-circle"
+                            onClick={() => {
+                                triggerDialog({
+                                    type: "GUILD_CHANNEL_CREATE",
+                                    data: { guild, isCategory: false },
+                                });
+                                setOpen(false);
+                            }}
+                        >
+                            Create Channel
+                        </MenuItem>
+
+                        <MenuItem
+                            icon="folder"
+                            onClick={() => {
+                                triggerDialog({
+                                    type: "GUILD_CHANNEL_CREATE",
+                                    data: { guild, isCategory: true },
+                                });
+                                setOpen(false);
+                            }}
+                        >
+                            Create Category
+                        </MenuItem>
                     </>
                 )}
 
@@ -180,16 +285,19 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                 disabled={!hasUnread}
                 onClick={() => removeGuildNotifications(guild.id)}
             >
-                Mark Unread
+                Mark As Read
             </MenuItem>
 
             <MenuDivider />
 
-            {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && (
+            {hasPermission({ permission: "CREATE_INSTANT_INVITE" }) && !!inviteChannel && (
                 <>
                     <MenuItem
                         onClick={() => {
-                            console.error("Not implemented");
+                            triggerDialog({
+                                type: "INVITE",
+                                data: { guild, channel: inviteChannel },
+                            });
                             setOpen(false);
                         }}
                     >

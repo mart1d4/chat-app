@@ -2,9 +2,8 @@
 
 import { Checkbox, DialogContent, Icon, Input, useDialogContext } from "@components";
 import useRequestHelper from "@/hooks/useFetchHelper";
-import type { AppGuild, GuildChannel } from "@/type";
+import type { GuildChannel, UserGuild } from "@/type";
 import styles from "./CreateGuildChannel.module.css";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function CreateGuildChannel({
@@ -13,7 +12,7 @@ export function CreateGuildChannel({
     isCategory,
 }: {
     channel?: GuildChannel;
-    guild: AppGuild;
+    guild: UserGuild;
     isCategory?: boolean;
 }) {
     const [loading, setLoading] = useState(false);
@@ -29,7 +28,7 @@ export function CreateGuildChannel({
         setLoading(true);
 
         try {
-            const { data } = await sendRequest({
+            const { errors } = await sendRequest({
                 query: "GUILD_CHANNEL_CREATE",
                 params: {
                     guildId: guild.id,
@@ -42,7 +41,7 @@ export function CreateGuildChannel({
                 },
             });
 
-            if (data?.channelId) {
+            if (!errors) {
                 setName("");
                 setLock(false);
                 setType("text");
@@ -75,7 +74,11 @@ export function CreateGuildChannel({
                         <button
                             key={t}
                             type="button"
-                            onClick={() => setType(t)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setType(t);
+                            }}
                             className={`${styles.typePick} ${type === t ? styles.active : ""}`}
                         >
                             <div>
@@ -123,7 +126,7 @@ export function CreateGuildChannel({
                 onChange={(v) => setName(v as string)}
                 placeholder={isCategory ? "New Category" : "new-channel"}
                 leftItem={
-                    !isCategory && (
+                    isCategory ? undefined : (
                         <Icon
                             size={16}
                             name={
@@ -138,7 +141,7 @@ export function CreateGuildChannel({
                         />
                     )
                 }
-                leftItemSmall
+                leftItemSmall={isCategory ? undefined : true}
             />
 
             <div className={styles.privateCheck}>

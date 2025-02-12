@@ -513,6 +513,10 @@
     margin-left: -2px;
 }
 
+.avatars > div > div {
+    overflow: hidden;
+}
+
 .dot {
     width: 4px;
     height: 4px;

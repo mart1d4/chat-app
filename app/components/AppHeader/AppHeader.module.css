@@ -316,17 +316,16 @@
 }
 
 .backButton {
-    background-color: transparent;
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     display: none;
+    cursor: pointer;
+    border-radius: 4px;
     align-items: center;
     justify-content: center;
-    margin: 0 4px;
-    border-radius: 4px;
-    color: var(--foreground-3);
     transform: rotate(-90deg);
-    cursor: pointer;
+    color: var(--foreground-3);
+    background-color: transparent;
 }
 
 .backButton:hover {

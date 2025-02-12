@@ -275,8 +275,7 @@
     color: var(--foreground-1);
 }
 
-.content h3,
-.content label {
+.content .label {
     margin-bottom: 8px;
     font-weight: 700;
     font-size: 12px;

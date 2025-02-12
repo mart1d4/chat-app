@@ -14,10 +14,11 @@ import type {
     DMChannelWithRecipients,
     ChannelRecipient,
     UnknownUser,
+    GuildMember,
     UserGuild,
     KnownUser,
     AppUser,
-    GuildMember,
+    GuildChannel,
 } from "@/type";
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -46,10 +47,12 @@ export function Loading({
         removeOnlineRecipient,
         setOnlineRecipients,
         addChannelRecipient,
+        removeGuildChannel,
         addOnlineRecipient,
         removeOnlineMember,
         setFriendsStatus,
         setOnlineMembers,
+        addGuildChannel,
         addOnlineMember,
         moveChannelUp,
         updateChannel,
@@ -245,13 +248,18 @@ export function Loading({
                     Object.values(members).map((m) => ({
                         ...m,
                         id: Number(m.id),
+                        permissions: BigInt(m.permissions),
                     }))
                 );
             }
         );
 
         presence.bind("pusher:member_added", ({ info: user }: { info: GuildMember }) => {
-            addOnlineMember(guild.id, { ...user, id: Number(user.id) });
+            addOnlineMember(guild.id, {
+                ...user,
+                id: Number(user.id),
+                permissions: BigInt(user.permissions),
+            });
         });
 
         presence.bind("pusher:member_removed", ({ id }: { id: string }) => {
@@ -282,6 +290,29 @@ export function Loading({
                     audio.volume = 0.5;
                     audio.play();
                 }
+            }
+        );
+
+        chan.bind("channel-add", ({ channel }: { channel: GuildChannel }) => {
+            addGuildChannel(guild.id, channel);
+        });
+
+        chan.bind(
+            "channel-remove",
+            ({ channelId, guildId }: { channelId: number; guildId: number }) => {
+                if (pathnameRef.current.includes(channelId.toString())) {
+                    const guild = guilds.find((g) => g.id === guildId);
+
+                    const channel =
+                        guild?.channels.find((c) => c.type === 2) ||
+                        guild?.channels.find((c) => c.type === 3);
+
+                    router.push(
+                        `/channels/${guildId}/${guild?.systemChannelId || channel?.id || ""}`
+                    );
+                }
+
+                removeGuildChannel(guild.id, channelId);
             }
         );
     }

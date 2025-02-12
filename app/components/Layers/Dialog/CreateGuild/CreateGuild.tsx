@@ -107,7 +107,7 @@ export function CreateGuild() {
         initial: 0,
         drag: false,
         defaultAnimation: {
-            duration: 300,
+            duration: 200,
             easing: (t) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
         },
         created(s) {
@@ -124,7 +124,7 @@ export function CreateGuild() {
                 // To prevent layout shift
                 setTimeout(() => {
                     setType(null);
-                }, 300);
+                }, 200);
             }
 
             setCurrentOld(current);

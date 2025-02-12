@@ -60,7 +60,8 @@ export function Avatar({
         url = `${getCdnUrl}${fileId}`;
     } else {
         if (!generateId) {
-            throw new Error("generateId is required if fileId is not provided");
+            console.error("generateId is required if fileId is not provided");
+            return null;
         }
 
         url = getRandomImage(generateId, type === "user" ? "avatar" : "icon");

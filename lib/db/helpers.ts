@@ -193,6 +193,8 @@ export async function getInitialData() {
             getUserGuilds({ userId: user.id }),
         ]);
 
+        console.log("Guilds:", JSON.stringify(guilds, null, 4));
+
         const end = Date.now();
 
         console.log(`Initial data fetched in ${end - start}ms.`);
@@ -206,7 +208,20 @@ export async function getInitialData() {
             // @ts-ignore - Need to figure this one out
             channels: channels as DMChannelWithRecipients[],
             // @ts-ignore - Need to figure this one out
-            guilds: guilds.map((g) => ({ ...g, channels: [] })) as UserGuild[],
+            guilds: guilds.map((g) => ({
+                ...g,
+                members: [
+                    {
+                        ...g.profile.profile,
+                        permissions: BigInt(g.profile.profile.permissions),
+                        username: user.username,
+                        avatar: user.avatar,
+                        status: user.status,
+                        customStatus: user.customStatus,
+                        displayName: user.displayName,
+                    },
+                ],
+            })) as UserGuild[],
         };
     } catch (error) {
         console.log(error);
@@ -436,6 +451,8 @@ export async function getUserGuilds({
     userId: number;
     select?: (keyof Guilds)[];
 }) {
+    // At least get the user's profile in the guild
+
     try {
         const guilds = await db
             .selectFrom("guilds")
@@ -444,7 +461,6 @@ export async function getUserGuilds({
                     .onRef("guildMembers.guildId", "=", "guilds.id")
                     .on("guildMembers.userId", "=", userId)
             )
-            // .innerJoin("guildMembers as members", "members.guildId", "guilds.id")
             .innerJoin("roles", "roles.guildId", "guilds.id")
             .select(select.map((key) => `guilds.${key}`) as (keyof Guilds)[])
             // @ts-ignore - Need to figure this one out
@@ -463,7 +479,11 @@ export async function getUserGuilds({
                     ],
                     as: "roles",
                 }),
-                // JsonArray({ table: "members", columns: ["profile"], as: "members" }),
+                JsonObject({
+                    table: "guild_members",
+                    columns: ["profile"],
+                    as: "profile",
+                }),
             ])
             .where("guilds.isDeleted", "=", false)
             .groupBy("guilds.id")

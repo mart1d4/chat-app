@@ -20,6 +20,7 @@ import {
     type Guild,
     type User,
     type KnownUser,
+    type UserGuild,
 } from "@/type";
 import {
     InteractiveElement,
@@ -33,6 +34,7 @@ import {
     Avatar,
     Icon,
     Menu,
+    GuildMenu,
 } from "@components";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -63,9 +65,10 @@ export function MemberList({
     const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
     const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<MutualGuild[]>([]);
+    const [mutualGuildIds, setMutualGuildIds] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const { friends, received, sent, blocked } = useData();
+    const { guilds, friends, received, sent, blocked } = useData();
     const { widthThresholds } = useWindowSettings();
     const { triggerDialog } = useTriggerDialog();
     const { sendRequest } = useFetchHelper();
@@ -143,7 +146,7 @@ export function MemberList({
 
             if (data) {
                 setMutualFriendIds(data.mutualFriends);
-                setMutualGuilds(data.mutualGuilds);
+                setMutualGuildIds(data.mutualGuilds.map((g: any) => g.id));
                 setFriend({
                     ...data.user,
                     status: channel?.recipients.find((r) => r.id === data.user.id)?.status,
@@ -175,6 +178,11 @@ export function MemberList({
 
         setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
     }, [friends, mutualFriendIds]);
+
+    useEffect(() => {
+        if (!mutualGuildIds.length) return;
+        setMutualGuilds(guilds.filter((g) => mutualGuildIds.includes(g.id)));
+    }, [guilds, mutualGuildIds]);
 
     if (!channel || !settings.showUsers) return null;
 
@@ -661,7 +669,7 @@ export function MemberList({
     }
 }
 
-function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
+function MutualItem({ user, guild }: { user?: KnownUser; guild?: UserGuild }) {
     if (!user && !guild) return null;
 
     const urls = useUrls((state) => state.guilds);
@@ -739,6 +747,7 @@ function MutualItem({ user, guild }: { user?: User; guild?: Guild }) {
             </MenuTrigger>
 
             {user && <UserMenu user={user} />}
+            {guild && <GuildMenu guild={guild} />}
         </Menu>
     );
 }

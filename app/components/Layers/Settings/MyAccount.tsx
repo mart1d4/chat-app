@@ -605,7 +605,7 @@ export function MyAccount({ setActiveTab }: any) {
                     </DialogContent>
                 </Dialog>
 
-                <h3>Authenticator App</h3>
+                <h3 className={styles.label}>Authenticator App</h3>
                 <div className={styles.content}>
                     <div>
                         Protect your account with an extra layer of security. Once configured,
@@ -623,7 +623,7 @@ export function MyAccount({ setActiveTab }: any) {
                     </div>
                 </div>
 
-                <h3>Security keys</h3>
+                <h3 className={styles.label}>Security keys</h3>
                 <div className={styles.content}>
                     <div>
                         Add an additional layer of protection to your account with a Security Key.
@@ -641,7 +641,7 @@ export function MyAccount({ setActiveTab }: any) {
 
                 {user.phone && (
                     <>
-                        <h3>SMS Backup Authentication</h3>
+                        <h3 className={styles.label}>SMS Backup Authentication</h3>
                         <div className={styles.content}>
                             <div>
                                 Add your phone as a backup 2FA method in case you lose your
@@ -663,7 +663,7 @@ export function MyAccount({ setActiveTab }: any) {
 
             <section className={styles.section}>
                 <div className={styles.sectionTitle}>
-                    <h3>Account Removal</h3>
+                    <h3 className={styles.label}>Account Removal</h3>
                 </div>
 
                 <div className={styles.content}>

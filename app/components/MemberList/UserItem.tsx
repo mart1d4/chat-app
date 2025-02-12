@@ -2,6 +2,7 @@
 
 import type { ChannelRecipient, DMChannel, GuildChannel, GuildMember } from "@/type";
 import styles from "./UserItem.module.css";
+import { useMemo, useRef } from "react";
 import {
     PopoverContent,
     PopoverTrigger,
@@ -15,7 +16,6 @@ import {
     Avatar,
     Menu,
 } from "@components";
-import { useMemo, useRef } from "react";
 
 export function UserItem({
     user,
@@ -143,15 +143,15 @@ export function UserItem({
                 <PopoverContent>
                     <UserCard initUser={user} />
                 </PopoverContent>
-
-                <UserMenu
-                    user={user}
-                    type="author"
-                    channelId={channel.id}
-                    channelType={channel.type}
-                    channelOwnerId={"ownerId" in channel ? channel.ownerId : undefined}
-                />
             </Popover>
+
+            <UserMenu
+                user={user}
+                type="author"
+                channelId={channel.id}
+                channelType={channel.type}
+                channelOwnerId={"ownerId" in channel ? channel.ownerId : undefined}
+            />
         </Menu>
     );
 }

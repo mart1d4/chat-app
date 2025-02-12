@@ -6,7 +6,7 @@ import useRequestHelper from "@/hooks/useFetchHelper";
 import type { KnownUser, UnknownUser } from "@/type";
 import { useData, useTriggerDialog } from "@/store";
 import { getRelativeDate } from "@/lib/time";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styles from "./Dialog.module.css";
 import { useState } from "react";
 import {
@@ -19,6 +19,8 @@ import {
     LeaveGroup,
     Dialog,
     Avatar,
+    InviteDialog,
+    CreateGuildChannel,
 } from "@components";
 
 const warnings = {
@@ -57,6 +59,7 @@ export function DialogOverlay() {
     const { open, removeDialog } = useTriggerDialog();
     const { sendRequest } = useRequestHelper();
     const appUser = useAuthenticatedUser();
+    const pathname = usePathname();
     const { friends } = useData();
     const router = useRouter();
 
@@ -164,11 +167,84 @@ export function DialogOverlay() {
         setLoading((prev) => ({ ...prev, createChannel: false }));
     }
 
+    async function deleteChannel(channelId: number, id: string) {
+        try {
+            const { errors } = await sendRequest({
+                query: "GUILD_CHANNEL_DELETE",
+                params: { channelId },
+            });
+
+            if (!errors) {
+                remove(id);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     const animation = `${styles.popOut} 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`;
 
     return open.map((obj, i) => {
         const { id, type, data } = obj;
         const warning = type in warnings ? warnings[type as keyof typeof warnings] : null;
+
+        if (type === "GUILD_CHANNEL_DELETE") {
+            if (!data?.channel) return null;
+
+            return (
+                <Dialog
+                    key={id}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <DialogContent
+                        confirmColor="red"
+                        onConfirm={() => deleteChannel(data.channel.id, id)}
+                        heading={`Delete ${data.channel.type === 4 ? "Category" : "Channel"}`}
+                        confirmLabel={`Delete ${data.channel.type === 4 ? "Category" : "Channel"}`}
+                    >
+                        Are you sure you want to delete <strong>{data.channel.name}</strong>? This
+                        cannot be undone.
+                    </DialogContent>
+                </Dialog>
+            );
+        }
+
+        if (type === "GUILD_CHANNEL_CREATE") {
+            if (!data?.guild) return null;
+
+            return (
+                <Dialog
+                    key={id}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <CreateGuildChannel
+                        guild={data.guild}
+                        isCategory={data.isCategory}
+                    />
+                </Dialog>
+            );
+        }
+
+        if (type === "INVITE") {
+            if (!data?.guild || !data?.channel) return null;
+
+            return (
+                <Dialog
+                    key={id}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <DialogContent blank>
+                        <InviteDialog
+                            guild={data.guild}
+                            channel={data.channel}
+                        />
+                    </DialogContent>
+                </Dialog>
+            );
+        }
 
         if (type === "USER_PROFILE") {
             if (!data?.user.id) return null;

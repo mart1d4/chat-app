@@ -7,22 +7,22 @@ import styles from "./Settings.module.css";
 import type Cropper from "cropperjs";
 import { useData } from "@/store";
 import {
+    InteractiveElement,
     TooltipContent,
     TooltipTrigger,
+    PopoverContent,
+    PopoverTrigger,
     DialogContent,
     ImageCropper,
     EmojiPicker,
     LoadingDots,
+    ColorPicker,
     UserCard,
     Tooltip,
+    Popover,
     Dialog,
     Alert,
     Icon,
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-    ColorPicker,
-    InteractiveElement,
 } from "@components";
 
 export function Profiles() {
@@ -310,7 +310,7 @@ export function Profiles() {
             <div className={styles.contentInner}>
                 <div>
                     <section className={styles.customSection}>
-                        <label>Display Name</label>
+                        <label className={styles.label}>Display Name</label>
 
                         <input
                             className={styles.input}
@@ -325,7 +325,7 @@ export function Profiles() {
                     </section>
 
                     <div className={styles.customSection}>
-                        <h3>Avatar</h3>
+                        <h3 className={styles.label}>Avatar</h3>
 
                         <div className={styles.buttonContainer}>
                             <button
@@ -347,7 +347,7 @@ export function Profiles() {
                     </div>
 
                     <div className={styles.customSection}>
-                        <h3>Profile Banner</h3>
+                        <h3 className={styles.label}>Profile Banner</h3>
 
                         <div className={styles.buttonContainer}>
                             <button
@@ -369,7 +369,7 @@ export function Profiles() {
                     </div>
 
                     <div className={styles.customSection}>
-                        <label>Profile Theme</label>
+                        <label className={styles.label}>Profile Theme</label>
 
                         <div className={styles.sectionContainer}>
                             {!banner && (
@@ -438,7 +438,7 @@ export function Profiles() {
                     </div>
 
                     <div className={styles.customSection}>
-                        <label>About me</label>
+                        <label className={styles.label}>About me</label>
 
                         <div className={styles.description}>
                             You can use markdown and links if you'd like
@@ -507,7 +507,7 @@ export function Profiles() {
                 </div>
 
                 <div>
-                    <h3>Preview</h3>
+                    <h3 className={styles.label}>Preview</h3>
 
                     <UserCard
                         mode="edit"

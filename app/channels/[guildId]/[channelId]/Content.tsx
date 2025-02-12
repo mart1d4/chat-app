@@ -2,11 +2,11 @@
 
 import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
 import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/type";
-import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useData, useShowSettings, useUrls } from "@/store";
 import { isInline, isLarge, isNewDay } from "@/lib/message";
 import { useIntersection } from "@/hooks/useIntersection";
 import type { SWRInfiniteKeyLoader } from "swr/infinite";
+import { useNotifications } from "@/store/notifications";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSocket } from "@/store/socket";
 import styles from "./Channels.module.css";
@@ -67,6 +67,7 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
     const guild = useData((state) => state.guilds).find((g) => g.id === guildId) as UserGuild;
     const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
     const setGuildUrl = useUrls((state) => state.setGuild);
+    const { removeNotification } = useNotifications();
     const { socket } = useSocket();
     const members = guild.members;
 
@@ -138,6 +139,7 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
         const container = scrollEl.current;
         if (!container) return;
 
+        removeNotification(channel.id, guild.id);
         container.scrollTop = container.scrollHeight;
     };
 

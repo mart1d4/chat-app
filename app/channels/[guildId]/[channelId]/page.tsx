@@ -82,11 +82,50 @@ export default async function GuildChannelPage({
         return redirect(`/channels/${guildId}`);
     }
 
+    const guildMemberCount = (
+        await db
+            .selectFrom("guildMembers")
+            .select("userId")
+            .where("guildId", "=", guildId)
+            .execute()
+    ).length;
+
+    // If guild member count is 100 or less, get all members, otherwise return empty array
+    const guildMembers =
+        guildMemberCount <= 100
+            ? (
+                  await db
+                      .selectFrom("guildMembers")
+                      .innerJoin("users", "users.id", "guildMembers.userId")
+                      .select("guildMembers.profile")
+                      .select([
+                          "users.username",
+                          "users.displayName",
+                          "users.avatar",
+                          "users.status",
+                          "users.customStatus",
+                      ])
+                      .where("guildId", "=", guildId)
+                      .execute()
+              ).map((m) => {
+                  const obj = {
+                      ...m,
+                      ...m.profile,
+                      permissions: BigInt(m.profile.permissions),
+                  };
+
+                  // @ts-expect-error - we know profile exists
+                  delete obj.profile;
+                  return obj;
+              })
+            : [];
+
     return (
         <>
             <GuildChannels
                 guildId={guildId}
                 channels={channels}
+                members={guildMembers}
             />
 
             <ClickLayer>

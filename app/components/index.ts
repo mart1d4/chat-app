@@ -69,6 +69,8 @@ export { Alert } from "./Layers/Alert/Alert";
 
 export { Menu, MenuTrigger, MenuContent, MenuDivider, MenuItem } from "./Layers/Menu/Menu";
 export { UserMenu } from "./Layers/Menu/MenuContents/User";
+export { ChannelMenu } from "./Layers/Menu/MenuContents/Channel";
+export { GuildMenu } from "./Layers/Menu/MenuContents/Guild";
 export { MessageMenuContent } from "./Layers/Menu/MenuContents/Message";
 
 export {

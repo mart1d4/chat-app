@@ -90,7 +90,7 @@
 .scrollableContainer {
     max-height: 50vh;
     border-radius: 8px;
-    overflow: hidden scroll;
+    overflow: hidden scroll !important;
 }
 
 div.scrollableContainer::-webkit-scrollbar {
@@ -155,23 +155,23 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .textContainer {
-    padding: 0;
-    resize: none;
     border: 0;
+    padding: 0;
+    width: 100%;
+    resize: none;
+    height: 44px;
+    font-size: 16px;
     appearance: none;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 1.375rem;
-    font-weight: 300;
-    font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    width: 100%;
-    height: 44px;
-    color: var(--foreground-2);
     position: relative;
+    line-height: 1.375rem;
+    color: var(--foreground-2);
+    font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .textContainer [data-slate-placeholder="true"] {
     overflow: hidden;
+    user-select: none;
     white-space: nowrap;
 }
 
