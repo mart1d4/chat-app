@@ -161,7 +161,7 @@ export function MessageMenuContent({
             <MenuItem
                 icon="mark"
                 onClick={() => {
-                    console.error("Not implemented");
+                    console.log("Not implemented");
                     setOpen(false);
                 }}
             >

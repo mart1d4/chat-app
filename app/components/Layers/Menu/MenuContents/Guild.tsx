@@ -44,7 +44,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
         try {
             await navigator.clipboard.writeText(guild.id.toString());
         } catch (err) {
-            console.error(err);
+            console.log(err);
         }
     }
 
@@ -268,7 +268,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                         danger
                         icon="leave"
                         onClick={() => {
-                            console.error("Not implemented");
+                            console.log("Not implemented");
                             setOpen(false);
                         }}
                     >
@@ -539,7 +539,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
             <MenuItem
                 onClick={() => {
-                    console.error("Not implemented");
+                    console.log("Not implemented");
                     setOpen(false);
                 }}
             >
@@ -548,7 +548,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
             <MenuItem
                 onClick={() => {
-                    console.error("Not implemented");
+                    console.log("Not implemented");
                     setOpen(false);
                 }}
             >
@@ -561,7 +561,10 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                 <>
                     <MenuItem
                         onClick={() => {
-                            console.error("Not implemented");
+                            triggerDialog({
+                                type: "GUILD_CHANNEL_CREATE",
+                                data: { guild, isCategory: false },
+                            });
                             setOpen(false);
                         }}
                     >
@@ -570,7 +573,10 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
                     <MenuItem
                         onClick={() => {
-                            console.error("Not implemented");
+                            triggerDialog({
+                                type: "GUILD_CHANNEL_CREATE",
+                                data: { guild, isCategory: true },
+                            });
                             setOpen(false);
                         }}
                     >
@@ -588,7 +594,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                     <MenuItem
                         danger
                         onClick={() => {
-                            console.error("Not implemented");
+                            console.log("Not implemented");
                             setOpen(false);
                         }}
                     >

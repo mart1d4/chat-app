@@ -40,7 +40,7 @@ export function ChannelMenu({ guild, channel }: { guild: UserGuild; channel: Gui
         try {
             await navigator.clipboard.writeText(str.toString());
         } catch (err) {
-            console.error(err);
+            console.log(err);
         }
     }
 
@@ -261,7 +261,7 @@ export function ChannelMenu({ guild, channel }: { guild: UserGuild; channel: Gui
                 <>
                     <MenuItem
                         onClick={() => {
-                            console.error("Not implemented");
+                            console.log("Not implemented");
                             setOpen(false);
                         }}
                     >
@@ -272,7 +272,7 @@ export function ChannelMenu({ guild, channel }: { guild: UserGuild; channel: Gui
                         <>
                             <MenuItem
                                 onClick={() => {
-                                    console.error("Not implemented");
+                                    console.log("Not implemented");
                                     setOpen(false);
                                 }}
                             >

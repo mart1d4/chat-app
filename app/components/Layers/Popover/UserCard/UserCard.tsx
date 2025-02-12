@@ -42,6 +42,8 @@ export function UserCard({
     onAvatarClick?: () => void;
     onBannerClick?: () => void;
 }) {
+    const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
+    const [mutualGuildIds, setMutualGuildIds] = useState<number[]>([]);
     const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
     const [mutualGuilds, setMutualGuilds] = useState<UserGuild[]>([]);
     const [usernameCopied, setUsernameCopied] = useState(false);
@@ -52,7 +54,7 @@ export function UserCard({
     const [message, setMessage] = useState("");
     const [note, setNote] = useState("");
 
-    const { channels, updateUser, friends, received, sent, blocked } = useData();
+    const { guilds, channels, updateUser, friends, received, sent, blocked } = useData();
     const { setOpen } = !mode ? usePopoverContext() : { setOpen: () => {} };
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
@@ -190,8 +192,8 @@ export function UserCard({
 
         if (data?.user) {
             setUser(data.user);
-            setMutualFriends(data.mutualFriends);
-            setMutualGuilds(data.mutualGuilds);
+            setMutualFriendIds(data.mutualFriends);
+            setMutualGuildIds(data.mutualGuilds);
         }
     }
 
@@ -200,7 +202,7 @@ export function UserCard({
         setLoading(true);
 
         try {
-            const { errors } = await sendRequest({
+            await sendRequest({
                 query: "ADD_FRIEND",
                 body: { username: user.username },
             });
@@ -216,7 +218,7 @@ export function UserCard({
         setLoading(true);
 
         try {
-            const { errors } = await sendRequest({
+            await sendRequest({
                 query: "REMOVE_FRIEND",
                 body: { username: user.username },
             });
@@ -239,6 +241,16 @@ export function UserCard({
             setUser(initUser);
         }
     }, [initUser]);
+
+    useEffect(() => {
+        if (!mutualFriendIds.length) return;
+        setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
+    }, [mutualFriendIds, friends]);
+
+    useEffect(() => {
+        if (!mutualGuildIds.length) return;
+        setMutualGuilds(guilds.filter((g) => mutualGuildIds.includes(g.id)));
+    }, [mutualGuildIds, guilds]);
 
     if (!user || !currentUser) {
         return (
@@ -369,7 +381,7 @@ export function UserCard({
                                                 ? user.avatar instanceof File
                                                     ? URL.createObjectURL(user.avatar)
                                                     : `${getCdnUrl}${user.avatar}`
-                                                : getRandomImage(user.id, "avatar")
+                                                : getRandomImage(user.id ?? initUser.id, "avatar")
                                         }
                                         alt={`${user.username}, ${getStatusLabel(user.status)}`}
                                     />

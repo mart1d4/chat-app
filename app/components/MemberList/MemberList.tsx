@@ -4,6 +4,7 @@ import { useData, useSettings, useTriggerDialog, useUrls, useWindowSettings } fr
 import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import useFetchHelper from "@/hooks/useFetchHelper";
 import { getButtonColor } from "@/lib/getColors";
 import { getCdnUrl } from "@/lib/uploadthing";
@@ -17,8 +18,6 @@ import {
     type MutualGuild,
     type GuildMember,
     type UserProfile,
-    type Guild,
-    type User,
     type KnownUser,
     type UserGuild,
 } from "@/type";
@@ -28,15 +27,14 @@ import {
     TooltipTrigger,
     MenuTrigger,
     MenuContent,
+    GuildMenu,
     UserMenu,
     MenuItem,
     Tooltip,
     Avatar,
     Icon,
     Menu,
-    GuildMenu,
 } from "@components";
-import { usePermissions } from "@/hooks/usePermissions";
 
 export function MemberList({
     channelId,
@@ -382,7 +380,7 @@ export function MemberList({
                                                 onClick={() => {
                                                     triggerDialog({
                                                         type: "REMOVE_FRIEND",
-                                                        data: { friend },
+                                                        data: { user: friend },
                                                     });
                                                 }}
                                             >

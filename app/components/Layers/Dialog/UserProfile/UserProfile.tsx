@@ -333,7 +333,7 @@ export function UserProfile({
                                         src={
                                             user.avatar
                                                 ? `${getCdnUrl}${user.avatar}`
-                                                : getRandomImage(user.id, "avatar")
+                                                : getRandomImage(user.id ?? initUser.id, "avatar")
                                         }
                                     />
                                 </div>

@@ -5,6 +5,7 @@ import { getPlaceholder } from "@/app/components/Message/Attachments";
 import { getImageDimensions } from "@/lib/images";
 import styles from "./ImageViewer.module.css";
 import { getCdnUrl } from "@/lib/uploadthing";
+import { useDialogContext } from "../Dialog";
 import { useWindowSettings } from "@/store";
 import { useEffect, useState } from "react";
 import type { Attachment } from "@/type";
@@ -22,6 +23,8 @@ export function ImageViewer({
     const [index, setIndex] = useState(currentIndex);
     const [height, setHeight] = useState(0);
     const [width, setWidth] = useState(0);
+
+    const { setOpen } = useDialogContext();
 
     const url = `${getCdnUrl}${attachment.id}`;
 
@@ -84,7 +87,7 @@ export function ImageViewer({
 
         window.addEventListener("resize", getDimensions);
         return () => window.removeEventListener("resize", getDimensions);
-    }, [isWidth562]);
+    }, [isWidth562, attachment]);
 
     return (
         <div className={styles.container}>
@@ -114,6 +117,13 @@ export function ImageViewer({
                 </>
             )}
 
+            <button
+                className={styles.close}
+                onClick={() => setOpen(false)}
+            >
+                <Icon name="close" />
+            </button>
+
             <Menu
                 positionOnClick
                 openOnRightClick
@@ -132,6 +142,7 @@ export function ImageViewer({
                             />
                         ) : (
                             <Image
+                                key={url}
                                 src={url}
                                 width={width}
                                 height={height}

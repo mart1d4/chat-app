@@ -56,6 +56,28 @@
     transform: translateY(-50%) rotate(90deg);
 }
 
+.close {
+    top: 14px;
+    right: 14px;
+    width: 50px;
+    height: 50px;
+    opacity: 0.6;
+    display: none;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+    color: var(--foreground-2);
+    background-color: transparent;
+    transition: opacity 0.15s ease;
+}
+
+.close:hover,
+.close:focus-visible {
+    opacity: 1;
+}
+
 @keyframes popIn {
     0% {
         transform: scale(0.9);
@@ -68,6 +90,32 @@
 }
 
 @media (max-width: 562px) {
+    .container {
+        display: flex;
+        height: var(--dvh);
+        flex-direction: column;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.99);
+    }
+
+    /* Since the image can take either the whole width or the whole height,
+    we need to move the buttons so they're still visible */
+    .previous,
+    .next {
+        top: unset;
+        bottom: 14px;
+        z-index: 100000;
+        transform: rotate(-90deg);
+    }
+
+    .next {
+        transform: rotate(90deg);
+    }
+
+    .close {
+        display: flex;
+    }
+
     .container img {
         border-radius: 0;
     }

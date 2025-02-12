@@ -8,7 +8,7 @@ import { useSocket } from "@/store/socket";
 import { useEffect, useRef } from "react";
 import { isStillMuted } from "@/lib/mute";
 import { AppSpinner } from "./Spinner";
-import { useData } from "@/store";
+import { useData, useShowChannels } from "@/store";
 import Pusher from "pusher-js";
 import type {
     DMChannelWithRecipients,
@@ -76,6 +76,7 @@ export function Loading({
 
     const { guilds: guildsSettings } = useGuildSettings();
     const { addNotification } = useNotifications();
+    const { setShowChannels } = useShowChannels();
     const { socket, setSocket } = useSocket();
     const { muted } = useChannelSettings();
     const pathname = usePathname();
@@ -372,6 +373,7 @@ export function Loading({
                 otherGuildsSubs.push(guild.id);
 
                 if (redirect === user.id) {
+                    setShowChannels(false);
                     router.push(`/channels/${guild.id}/${guild.systemChannelId}`);
                 }
             }
