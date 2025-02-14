@@ -4,15 +4,15 @@ CREATE TABLE IF NOT EXISTS `users` (
 	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
 	-- Need this for case sensitivity
-	`username` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL UNIQUE,
-	`display_name` VARCHAR(32) NOT NULL,
+	`username` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL UNIQUE,
+	`display_name` VARCHAR(255) NOT NULL,
 
-	`description` VARCHAR(190) NULL,
-	`custom_status` VARCHAR(128) NULL,
+	`description` VARCHAR(255) NULL,
+	`custom_status` VARCHAR(255) NULL,
 	`status` enum('online', 'idle', 'dnd', 'invisible', 'offline') NOT NULL DEFAULT 'online',
 
-	`avatar` VARCHAR(100) NULL,
-	`banner` VARCHAR(100) NULL,
+	`avatar` VARCHAR(255) NULL,
+	`banner` VARCHAR(255) NULL,
 
 	`banner_color` VARCHAR(7) NOT NULL,
 	`accent_color` VARCHAR(7) NULL,
@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS `channels` (
 
 	`type` INT NOT NULL,
 
-	`name` VARCHAR(100),
+	`name` VARCHAR(255),
 	`topic` VARCHAR(1024),
-	`icon` VARCHAR(100),
+	`icon` VARCHAR(255),
 	`nsfw` TINYINT(1),
 
 	`position` INT,
@@ -76,15 +76,15 @@ CREATE TABLE IF NOT EXISTS `channels` (
 	`rate_limit` INT,
 	`user_limit` INT,
 
-	`rtc_region` VARCHAR(191),
-	`video_quality_mode` VARCHAR(191),
+	`rtc_region` VARCHAR(255),
+	`video_quality_mode` VARCHAR(255),
 
 	`owner_id` BIGINT,
 	`guild_id` BIGINT,
 
 	`permission_overwrites` JSON NOT NULL,
 
-	`createdAt` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
+	`created_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3),
 	`updated_at` DATETIME(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
 	`is_deleted` TINYINT(1) NOT NULL DEFAULT '0',
 
@@ -107,16 +107,16 @@ CREATE TABLE IF NOT EXISTS `channels` (
 CREATE TABLE IF NOT EXISTS `guilds` (
 	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` VARCHAR(100) NOT NULL,
-	`icon` VARCHAR(100),
-	`banner` VARCHAR(100),
+	`name` VARCHAR(255) NOT NULL,
+	`icon` VARCHAR(255),
+	`banner` VARCHAR(255),
 	`description` VARCHAR(255),
 
 	`system_channel_id` BIGINT,
 	`afk_channel_id` BIGINT,
 	`afk_timeout` INT,
     
-	`vanity_url` VARCHAR(100),
+	`vanity_url` VARCHAR(255),
 	`vanity_url_uses` INT,
 	`welcome_screen` JSON,
 
@@ -174,8 +174,8 @@ CREATE TABLE IF NOT EXISTS `messages` (
 CREATE TABLE IF NOT EXISTS `emojis` (
 	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` VARCHAR(32) NOT NULL,
-	`url` VARCHAR(256) NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`url` VARCHAR(255) NOT NULL,
 	`animated` TINYINT(1) NOT NULL DEFAULT '0',
 
 	`guild_id` BIGINT NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `emojis` (
 CREATE TABLE IF NOT EXISTS `roles` (
 	`id` BIGINT NOT NULL DEFAULT (UUID_SHORT()),
 
-	`name` VARCHAR(32) NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
 	`color` VARCHAR(7) NOT NULL DEFAULT '#99AAB5',
 
 	`hoist` TINYINT(1) NOT NULL DEFAULT '0',
@@ -258,9 +258,9 @@ CREATE TABLE IF NOT EXISTS `user_tokens` (
     userAgent VARCHAR(255),
     ip VARCHAR(255),
 
-    country VARCHAR(100),
-    region VARCHAR(100),
-    city VARCHAR(100),
+    country VARCHAR(255),
+    region VARCHAR(255),
+    city VARCHAR(255),
 
     FOREIGN KEY (user_id) REFERENCES users(id)
 	KEY `idx_user_tokens_user` (`user_id`)
@@ -394,7 +394,7 @@ CREATE TABLE IF NOT EXISTS `channel_mentions` (
 CREATE TABLE IF NOT EXISTS `message_reactions` (
 	`message_id` BIGINT NOT NULL,
 	`emoji_id` BIGINT NULL,
-	`emoji_name` VARCHAR(128) NULL, -- for default emojis that are not in the database
+	`emoji_name` VARCHAR(255) NULL, -- for default emojis that are not in the database
 	`user_id` BIGINT NOT NULL,
 
 	UNIQUE KEY `reactions_message_id_idx` (`message_id`, `user_id`, `emoji_id`),

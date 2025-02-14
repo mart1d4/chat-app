@@ -1,5 +1,13 @@
 .animated {
+    overflow: hidden;
+    max-width: var(--dvw);
+    max-height: calc(var(--dvh) - 18px);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.container {
+    max-width: var(--dvw);
+    max-height: var(--dvh);
 }
 
 .container > a {
@@ -59,23 +67,24 @@
 .close {
     top: 14px;
     right: 14px;
-    width: 50px;
-    height: 50px;
-    opacity: 0.6;
+    width: 38px;
+    height: 38px;
     display: none;
+    z-index: 10000;
     cursor: pointer;
     position: absolute;
     border-radius: 5px;
     align-items: center;
     justify-content: center;
     color: var(--foreground-2);
-    background-color: transparent;
     transition: opacity 0.15s ease;
+    border: 1px solid var(--border-light);
+    background-color: var(--background-dark-1);
 }
 
 .close:hover,
 .close:focus-visible {
-    opacity: 1;
+    background-color: var(--background-dark-2);
 }
 
 @keyframes popIn {
@@ -90,12 +99,24 @@
 }
 
 @media (max-width: 562px) {
+    .animated {
+        max-height: calc(var(--dvh) - 28px);
+    }
+
     .container {
         display: flex;
+        width: var(--dvw);
         height: var(--dvh);
+        align-items: center;
         flex-direction: column;
         justify-content: center;
-        background-color: rgba(0, 0, 0, 0.99);
+        background-color: rgba(0, 0, 0, 0.95);
+    }
+
+    .container > a {
+        opacity: 0.8;
+        margin: 0 auto;
+        line-height: 28px;
     }
 
     /* Since the image can take either the whole width or the whole height,
