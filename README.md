@@ -1,4 +1,4 @@
-#⚠️ Project Update ⚠️
+# ⚠️ Project Update ⚠️
 
 This repository's main branch is outdated and no longer maintained. Development has moved to the mysql branch, which includes significant updates, including a transition to MySQL.
 
