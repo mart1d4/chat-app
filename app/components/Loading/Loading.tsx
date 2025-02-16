@@ -217,6 +217,7 @@ export function Loading({
                 socket.unsubscribe(`private-channel-${channel.id}`);
 
                 if (pathnameRef.current.includes(channel.id.toString())) {
+                    setShowChannels(true);
                     router.push("/channels/me");
                 }
             } else {
@@ -308,6 +309,7 @@ export function Loading({
                         guild?.channels.find((c) => c.type === 2) ||
                         guild?.channels.find((c) => c.type === 3);
 
+                    setShowChannels(true);
                     router.push(
                         `/channels/${guildId}/${guild?.systemChannelId || channel?.id || ""}`
                     );
@@ -360,6 +362,7 @@ export function Loading({
                 otherChannelsSubs.push(channel.id);
 
                 if (moveTo === user.id) {
+                    setShowChannels(false);
                     router.push(`/channels/me/${channel.id}`);
                 }
             }
@@ -384,6 +387,7 @@ export function Loading({
             socket.unsubscribe(`private-guild-${guildId}`);
 
             if (pathnameRef.current.includes(guildId.toString())) {
+                setShowChannels(true);
                 router.push("/channels/me");
             }
         });
